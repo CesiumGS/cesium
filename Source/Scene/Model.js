@@ -553,9 +553,14 @@ define([
         var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
-                ++model._loadResources.pendingBufferLoads;
-                var bufferPath = model.basePath + buffers[name].path;
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
+                var buffer = buffers[name];
+
+                if (buffer.type === 'arraybuffer') {
+                    ++model._loadResources.pendingBufferLoads;
+                    var bufferPath = model.basePath + buffer.path;
+                    loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
+                }
+                // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/233
             }
         }
     }
