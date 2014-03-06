@@ -255,7 +255,7 @@ define([
             var extent = Extent.fromDegrees(west, south, east, north);
 
             var camera = viewModel._scene.camera;
-            var position = camera.controller.getExtentCameraCoordinates(extent);
+            var position = camera.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;

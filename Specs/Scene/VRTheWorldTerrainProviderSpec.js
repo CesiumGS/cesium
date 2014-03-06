@@ -3,7 +3,7 @@ defineSuite([
          'Scene/VRTheWorldTerrainProvider',
          'Core/defined',
          'Core/loadImage',
-         'Core/loadXML',
+         'Core/loadWithXhr',
          'Core/DefaultProxy',
          'Core/Math',
          'Scene/GeographicTilingScheme',
@@ -14,7 +14,7 @@ defineSuite([
          VRTheWorldTerrainProvider,
          defined,
          loadImage,
-         loadXML,
+         loadWithXhr,
          DefaultProxy,
          CesiumMath,
          GeographicTilingScheme,
@@ -25,7 +25,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     beforeEach(function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =
@@ -56,7 +56,7 @@ defineSuite([
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadXML.loadXML = loadXML.defaultLoadXML;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to TerrainProvider interface', function() {
@@ -148,7 +148,7 @@ defineSuite([
     });
 
     it('raises an error if the SRS is not supported', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =

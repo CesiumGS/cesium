@@ -132,7 +132,7 @@ require([
         selectedTile = undefined;
 
         var ellipsoid = centralBody.ellipsoid;
-        var cartesian = scene.camera.controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
+        var cartesian = scene.camera.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
 
         if (Cesium.defined(cartesian)) {
             var cartographic = ellipsoid.cartesianToCartographic(cartesian);

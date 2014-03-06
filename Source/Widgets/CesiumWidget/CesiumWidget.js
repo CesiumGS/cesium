@@ -177,7 +177,7 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;

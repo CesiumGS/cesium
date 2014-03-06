@@ -4,7 +4,7 @@ defineSuite([
          'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
-         'Core/loadXML',
+         'Core/loadWithXhr',
          'Core/DefaultProxy',
          'Core/Extent',
          'Core/Math',
@@ -20,7 +20,7 @@ defineSuite([
          defined,
          jsonp,
          loadImage,
-         loadXML,
+         loadWithXhr,
          DefaultProxy,
          Extent,
          CesiumMath,
@@ -37,7 +37,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadXML.loadXML = loadXML.defaultLoadXML;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -288,7 +288,7 @@ defineSuite([
     });
 
     it('keeps the extent within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -327,7 +327,7 @@ defineSuite([
     });
 
     it('uses a minimum level if the tilemapresource.xml specifies one and it is reasonable', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -361,7 +361,7 @@ defineSuite([
     });
 
     it('ignores the minimum level in the tilemapresource.xml if it is unreasonable', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -395,7 +395,7 @@ defineSuite([
     });
 
     it('Handles XML with casing differences', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +

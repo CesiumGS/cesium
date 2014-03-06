@@ -48,7 +48,7 @@ defineSuite([
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition), 1e7);
 
-        camera.controller.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
+        camera.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
     }
 
     it('default constructs the moon', function() {
