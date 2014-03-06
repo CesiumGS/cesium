@@ -128,7 +128,7 @@ define([
                     Cartesian3.normalize(yBasis, yBasis);
                     Cartesian3.normalize(zBasis, zBasis);
 
-                    var transform = update3DTransform;
+                    var transform = camera.transform;
                     transform[0]  = xBasis.x;
                     transform[1]  = xBasis.y;
                     transform[2]  = xBasis.z;
@@ -146,43 +146,15 @@ define([
                     transform[14] = cartesian.z;
                     transform[15] = 0.0;
 
-                    camera.transform = transform;
                     successful = true;
                 }
             }
 
             if (!successful) {
-                camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+                Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
             }
 
             that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
-
-            var position = camera.position;
-            Cartesian3.clone(position, that._lastOffset);
-            that._lastDistance = Cartesian3.magnitude(position);
-        }
-    }
-
-    var updateColumbusCartesian4 = new Cartesian4(0.0, 0.0, 0.0, 1.0);
-    function updateColumbus(that, camera, objectChanged, offset, positionProperty, time, ellipsoid, projection) {
-        update3DController(that, camera, objectChanged, offset);
-
-        //The swizzling here is intentional because ColumbusView uses a different coordinate system.
-        var cartesian = positionProperty.getValue(time, that._lastCartesian);
-        if (defined(cartesian)) {
-            var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
-
-            var projectedPosition = projection.project(cartographic);
-            updateColumbusCartesian4.x = projectedPosition.z;
-            updateColumbusCartesian4.y = projectedPosition.x;
-            updateColumbusCartesian4.z = projectedPosition.y;
-
-            var tranform = camera.transform;
-            Matrix4.setColumn(tranform, 3, updateColumbusCartesian4, tranform);
-
-            var controller = that._screenSpaceCameraController;
-            controller.enableTranslate = false;
-            controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);
@@ -352,10 +324,8 @@ define([
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
             update2D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
-        } else if (mode === SceneMode.SCENE3D) {
+        } else if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
             update3D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            updateColumbus(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         }
     };
 

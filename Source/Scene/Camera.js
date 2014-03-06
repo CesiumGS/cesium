@@ -285,7 +285,6 @@ define([
         newXAxis.w = 0.0;
 
         Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
-        Cartesian3.normalize(newXAxis, newXAxis);
 
         var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1), origin, scratchCartesian3);
         ellipsoid.cartesianToCartographic(yAxis, cartographic);
@@ -298,11 +297,14 @@ define([
         newYAxis.w = 0.0;
 
         Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
-        Cartesian3.normalize(newYAxis, newYAxis);
 
         var newZAxis = scratchCartesian4NewZAxis;
         Cartesian3.cross(newXAxis, newYAxis, newZAxis);
         Cartesian3.normalize(newZAxis, newZAxis);
+        Cartesian3.cross(newYAxis, newZAxis, newXAxis);
+        Cartesian3.normalize(newXAxis, newXAxis);
+        Cartesian3.cross(newZAxis, newXAxis, newYAxis);
+        Cartesian3.normalize(newYAxis, newYAxis);
 
         Matrix4.setColumn(camera._actualTransform, 0, newXAxis, camera._actualTransform);
         Matrix4.setColumn(camera._actualTransform, 1, newYAxis, camera._actualTransform);
