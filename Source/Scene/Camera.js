@@ -1386,7 +1386,7 @@ define([
         //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE2D) {
-            Cartesian3.clone(target, this.position);
+            Cartesian2.clone(target, this.position);
             Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
 
             Cartesian3.clone(up, this.up);
@@ -1397,6 +1397,13 @@ define([
             }
 
             Cartesian3.cross(this.direction, this.up, this.right);
+
+            var frustum = this.frustum;
+            var ratio = frustum.top / frustum.right;
+            frustum.right = eye.z;
+            frustum.left = -frustum.right;
+            frustum.top = ratio * frustum.right;
+            frustum.bottom = -frustum.top;
 
             return;
         }

@@ -4,13 +4,8 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Math',
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Quaternion',
         '../Core/Matrix3',
-        '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/Transforms',
         '../Scene/SceneMode'
@@ -19,13 +14,8 @@ define([
          defined,
          DeveloperError,
          CesiumMath,
-         Cartesian2,
          Cartesian3,
-         Cartesian4,
-         Cartographic,
-         Quaternion,
          Matrix3,
-         Matrix4,
          Ellipsoid,
          Transforms,
          SceneMode) {
@@ -38,9 +28,7 @@ define([
     var updateTransformCartesian3Scratch2 = new Cartesian3();
     var updateTransformCartesian3Scratch3 = new Cartesian3();
 
-    function updateTransform(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
-        updateController(that, camera, objectChanged, offset);
-
+    function updateTransform(that, camera, objectChanged, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
             var successful = false;
@@ -112,53 +100,31 @@ define([
             }
 
             that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
-
-            var position = camera.position;
-            Cartesian3.clone(position, that._lastOffset);
-            that._lastDistance = Cartesian3.magnitude(position);
         }
+
+        updateController(that, camera, objectChanged);
     }
 
-    var updateControllerQuaternion = new Quaternion();
-    var updateControllerMatrix3 = new Matrix3();
-
-    function updateController(that, camera, objectChanged, offset) {
+    function updateController(that, camera, objectChanged) {
         var scene = that.scene;
 
-        if (objectChanged) {
-            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        } else if (scene.mode !== that._mode) {
+        if (objectChanged || scene.mode !== that._mode) {
             that._mode = scene.mode;
-
-            //If we're switching from 2D and any rotation was applied to the camera,
-            //apply that same rotation to the last offset used in 3D or Columbus view.
-            var first2dUp = that._first2dUp;
-            var last2dUp = that._last2dUp;
-            if (!Cartesian2.equals(first2dUp, last2dUp)) {
-                var startTheta = Math.acos(first2dUp.x);
-                if (first2dUp.y < 0) {
-                    startTheta = CesiumMath.TWO_PI - startTheta;
-                }
-                var endTheta = Math.acos(last2dUp.x);
-                if (last2dUp.y < 0) {
-                    endTheta = CesiumMath.TWO_PI - endTheta;
-                }
-                last2dUp.x = 0.0;
-                last2dUp.y = 0.0;
-                first2dUp.x = 0.0;
-                first2dUp.y = 0.0;
-
-                var theta = endTheta - startTheta;
-                var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, theta, updateControllerQuaternion);
-                Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, updateControllerMatrix3), offset, offset);
+            if (scene.mode === SceneMode.SCENE2D) {
+                camera.lookAt(that._offset2D, Cartesian3.ZERO, that._up2D);
+            } else {
+                camera.lookAt(that._offset3D, Cartesian3.ZERO, that._up3D);
             }
-            Cartesian3.multiplyByScalar(Cartesian3.normalize(offset, offset), that._lastDistance, offset);
-            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+        }
+
+        if (scene.mode === SceneMode.SCENE2D) {
+            Cartesian3.fromElements(0.0, 0.0, camera.getMagnitude(), that._offset2D);
+            Cartesian3.clone(camera.up, that._up2D);
+        } else {
+            Cartesian3.clone(camera.position, that._offset3D);
+            Cartesian3.clone(camera.up, that._up3D);
         }
     }
-
-    var dynamicObjectViewDefaultOffset = new Cartesian3(10000, -10000, 10000);
-    var dynamicObjectViewCartesian3Scratch = new Cartesian3();
 
     /**
      * A utility object for tracking an object with the camera.
@@ -195,20 +161,13 @@ define([
 
         //Re-usable objects to be used for retrieving position.
         this._lastCartesian = new Cartesian3();
-        this._lastCartographic = new Cartographic();
 
-        //Current distance of dynamicObject from camera so we can maintain view distance across scene modes.
-        this._lastDistance = undefined;
+        this._offset3D = new Cartesian3(10000, -10000, 10000);
+        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D));
+        Cartesian3.normalize(this._up3D, this._up3D);
 
-        //Last viewing offset in 3D/Columbus view, this way we can restore to a sensible view across scene modes.
-        this._lastOffset = new Cartesian3();
-
-        //Scratch value for calculating offsets
-        this._offsetScratch = new Cartesian3();
-
-        //Tracks camera up so that we can detect 2D camera rotation and modify the 3D/Columbus view to match when switching modes.
-        this._first2dUp = new Cartesian2();
-        this._last2dUp = new Cartesian2();
+        this._offset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._offset3D));
+        this._up2D = Cartesian3.clone(Cartesian3.UNIT_Y);
     };
 
     /**
@@ -247,39 +206,10 @@ define([
 
         var positionProperty = dynamicObject.position;
         var objectChanged = dynamicObject !== this._lastDynamicObject;
-
-        //Determine what the current camera offset should be, this is used
-        //to either set the default view when a new object is selected or
-        //maintain a similar view when changing scene modes.
-        var offset = this._offsetScratch;
-        if (objectChanged) {
-            this._lastDynamicObject = dynamicObject;
-
-            var viewFromProperty = this.dynamicObject.viewFrom;
-            if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset))) {
-                Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
-            }
-
-            //Reset object-based cached values.
-            var first2dUp = this._first2dUp;
-            var last2dUp = this._last2dUp;
-            first2dUp.x = first2dUp.y = 0;
-            last2dUp.x = last2dUp.y = 0;
-            Cartesian3.clone(offset, this._lastOffset);
-            this._lastDistance = Cartesian3.magnitude(offset);
-
-            //If looking straight down, move the camera slightly south the avoid gimbal lock.
-            if (Cartesian3.equals(Cartesian3.normalize(offset, dynamicObjectViewCartesian3Scratch), Cartesian3.UNIT_Z)) {
-                offset.y -= 0.01;
-            }
-        } else if (defined(this._lastOffset)) {
-            offset = this._lastOffset;
-        } else {
-            Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
-        }
+        this._lastDynamicObject = dynamicObject;
 
         if (scene.mode !== SceneMode.MORPHING) {
-            updateTransform(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
+            updateTransform(this, scene.camera, objectChanged, positionProperty, time, ellipsoid);
         }
     };
 

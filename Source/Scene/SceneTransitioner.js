@@ -398,6 +398,7 @@ define([
         var scene = transitioner._scene;
 
         var camera = scene.camera;
+        camera.setTransform(Matrix4.IDENTITY);
 
         var startPos = camera.position;
         var startDir = camera.direction;
@@ -434,6 +435,7 @@ define([
         duration = duration * 0.5;
 
         var camera = transitioner._scene.camera;
+        camera.setTransform(Matrix4.IDENTITY);
 
         morphOrthographicToPerspective(transitioner, duration, function() {
             camera.frustum = transitioner._cameraCV.frustum.clone();
@@ -484,6 +486,8 @@ define([
     function morphFromColumbusViewTo2D(transitioner, duration, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
+        camera.setTransform(Matrix4.IDENTITY);
+
         var maxRadii = transitioner._ellipsoid.maximumRadius;
 
         var startPos = Cartesian3.clone(camera.position);
@@ -614,6 +618,7 @@ define([
     function morphFrom2DToColumbusView(transitioner, duration, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
+        camera.setTransform(Matrix4.IDENTITY);
 
         duration = duration * 0.5;
 
@@ -657,6 +662,7 @@ define([
     function morphFrom3DToColumbusView(transitioner, duration, endCamera, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
+        camera.setTransform(Matrix4.IDENTITY);
 
         var startPos = Cartesian3.clone(camera.position);
         var startDir = Cartesian3.clone(camera.direction);
