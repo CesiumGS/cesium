@@ -753,14 +753,55 @@ define([
         }
         //>>includeEnd('debug');
 
-        return Matrix4.multiplyByVector(this.inverseTransform, cartesian, result);
+        updateMembers(this);
+        return Matrix4.multiplyByVector(this._actualInvTransform, cartesian, result);
+    };
+
+    /**
+     * Transform a point from world coordinates to the camera's reference frame.
+     * @memberof Camera
+     *
+     * @param {Cartesian3} cartesian The point to transform.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The transformed point.
+     */
+    Camera.prototype.worldToCameraCoordinatesPoint = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        updateMembers(this);
+        return Matrix4.multiplyByPoint(this._actualInvTransform, cartesian, result);
+    };
+
+    /**
+     * Transform a vector from world coordinates to the camera's reference frame.
+     * @memberof Camera
+     *
+     * @param {Cartesian3} cartesian The vector to transform.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The transformed vector.
+     */
+    Camera.prototype.worldToCameraCoordinatesVector = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        updateMembers(this);
+        return Matrix4.multiplyByPointAsVector(this._actualInvTransform, cartesian, result);
     };
 
     /**
      * Transform a vector or point from the camera's reference frame to world coordinates.
      * @memberof Camera
      *
-     * @param {Cartesian4} vector The vector or point to transform.
+     * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
      *
      * @returns {Cartesian4} The transformed vector or point.
@@ -772,7 +813,48 @@ define([
         }
         //>>includeEnd('debug');
 
-        return Matrix4.multiplyByVector(this.transform, cartesian, result);
+        updateMembers(this);
+        return Matrix4.multiplyByVector(this._actualTransform, cartesian, result);
+    };
+
+    /**
+     * Transform a point from the camera's reference frame to world coordinates.
+     * @memberof Camera
+     *
+     * @param {Cartesian3} cartesian The point to transform.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The transformed point.
+     */
+    Camera.prototype.cameraToWorldCoordinatesPoint = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        updateMembers(this);
+        return Matrix4.multiplyByPoint(this._actualTransform, cartesian, result);
+    };
+
+    /**
+     * Transform a vector from the camera's reference frame to world coordinates.
+     * @memberof Camera
+     *
+     * @param {Cartesian3} cartesian The vector to transform.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @returns {Cartesian3} The transformed vector.
+     */
+    Camera.prototype.cameraToWorldCoordinatesVector = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        updateMembers(this);
+        return Matrix4.multiplyByPointAsVector(this._actualTransform, cartesian, result);
     };
 
     function clampMove2D(camera, position) {
@@ -1500,19 +1582,20 @@ define([
         var south = extent.south;
         var east = extent.east;
         var west = extent.west;
-        var invTransform = camera.inverseTransform;
+        var transform = camera._actualTransform;
+        var invTransform = camera._actualInvTransform;
 
         var cart = viewExtentCVCartographic;
         cart.longitude = east;
         cart.latitude = north;
         var northEast = projection.project(cart, viewExtentCVNorthEast);
-        Matrix4.multiplyByPoint(camera.transform, northEast, northEast);
+        Matrix4.multiplyByPoint(transform, northEast, northEast);
         Matrix4.multiplyByPoint(invTransform, northEast, northEast);
 
         cart.longitude = west;
         cart.latitude = south;
         var southWest = projection.project(cart, viewExtentCVSouthWest);
-        Matrix4.multiplyByPoint(camera.transform, southWest, southWest);
+        Matrix4.multiplyByPoint(transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
@@ -1882,7 +1965,7 @@ define([
 
         var updateCV = function(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time);
-            camera.position = Matrix4.multiplyByPoint(camera.inverseTransform, interp, camera.position);
+            camera.worldToCameraCoordinatesPoint(interp, camera.position);
         };
 
         return {
@@ -1907,12 +1990,12 @@ define([
         var position = camera.position;
         var direction = camera.direction;
 
-        var normal = Matrix4.multiplyByPointAsVector(camera.inverseTransform, Cartesian3.UNIT_X, normalScratch);
+        var normal = camera.worldToCameraCoordinatesVector(Cartesian3.UNIT_X, normalScratch);
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar, centerScratch), centerScratch);
-        center = Matrix4.multiplyByPoint(camera.transform, center, center);
+        camera.cameraToWorldCoordinatesPoint(center, center);
 
-        position = Matrix4.multiplyByPoint(camera.transform, camera.position, posScratch);
+        position = camera.cameraToWorldCoordinatesPoint(camera.position, posScratch);
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;

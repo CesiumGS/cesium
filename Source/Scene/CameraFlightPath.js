@@ -197,9 +197,9 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
-        var start = Matrix4.multiplyByPoint(camera.transform, camera.position, scratchStartPosition);
-        var startDirection = Matrix4.multiplyByPointAsVector(camera.transform, camera.direction, scratchStartDirection);
-        var startUp = Matrix4.multiplyByPointAsVector(camera.transform, camera.up, scratchStartUp);
+        var start = camera.cameraToWorldCoordinatesPoint(camera.position, scratchStartPosition);
+        var startDirection = camera.cameraToWorldCoordinatesVector(camera.direction, scratchStartDirection);
+        var startUp = camera.cameraToWorldCoordinatesVector(camera.up, scratchStartUp);
         var startRight = Cartesian3.cross(startDirection, startUp, scratchStartRight);
 
         var path = createPath3D(camera, ellipsoid, start, startUp, startRight, destination, duration);
@@ -307,11 +307,6 @@ define([
         });
     }
 
-    var transform2D = new Matrix4(0, 0, 1, 0,
-                                  1, 0, 0, 0,
-                                  0, 1, 0, 0,
-                                  0, 0, 0, 1);
-
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
@@ -325,7 +320,7 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             Matrix4.clone(camera.transform, currentFrame);
-            Matrix4.clone(transform2D, camera.transform);
+            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
 
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);

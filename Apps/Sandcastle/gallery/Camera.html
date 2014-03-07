@@ -115,7 +115,7 @@ require(['Cesium'], function(Cesium) {
 
         // View in east-north-up frame
         var camera = scene.camera;
-        camera.transform = transform;
+        Cesium.Matrix4.clone(transform, camera.transform);
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
@@ -131,7 +131,7 @@ require(['Cesium'], function(Cesium) {
         // Show reference frame.  Not required.
         var primitives = scene.primitives;
         var polylines = new Cesium.PolylineCollection();
-        polylines.modelMatrix = transform;
+        Cesium.Matrix4.clone(transform, polylines.modelMatrix);
 
         var xAxis = {
             color : Cesium.Color.RED,
