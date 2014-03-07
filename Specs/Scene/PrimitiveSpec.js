@@ -292,10 +292,6 @@ defineSuite([
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         frameState.camera.viewExtent(extent1);
@@ -330,10 +326,7 @@ defineSuite([
 
         frameState.mode = SceneMode.SCENE2D;
         frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+
         var frustum = new OrthographicFrustum();
         frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
