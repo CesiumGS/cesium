@@ -1367,7 +1367,6 @@ define([
      * @param {Cartesian3} target The position to look at.
      * @param {Cartesian3} up The up vector.
      *
-     * @exception {DeveloperError} lookAt is not supported in 2D mode because there is only one direction to look.
      * @exception {DeveloperError} lookAt is not supported while morphing.
      */
     Camera.prototype.lookAt = function(eye, target, up) {
@@ -1381,13 +1380,26 @@ define([
         if (!defined(up)) {
             throw new DeveloperError('up is required');
         }
-        if (this._mode === SceneMode.SCENE2D) {
-            throw new DeveloperError('lookAt is not supported in 2D mode because there is only one direction to look.');
-        }
         if (this._mode === SceneMode.MORPHING) {
             throw new DeveloperError('lookAt is not supported while morphing.');
         }
         //>>includeEnd('debug');
+
+        if (this._mode === SceneMode.SCENE2D) {
+            Cartesian3.clone(target, this.position);
+            Cartesian3.negate(Cartesian3.UNIT_Z, this.direction);
+
+            Cartesian3.clone(up, this.up);
+            this.up.z = 0.0;
+
+            if (Cartesian3.magnitudeSquared(this.up) < CesiumMath.EPSILON10) {
+                Cartesian3.clone(Cartesian3.UNIT_Y, this.up);
+            }
+
+            Cartesian3.cross(this.direction, this.up, this.right);
+
+            return;
+        }
 
         this.position = Cartesian3.clone(eye, this.position);
         this.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, this.direction), this.direction);

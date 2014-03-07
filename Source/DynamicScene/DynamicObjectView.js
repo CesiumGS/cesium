@@ -39,8 +39,7 @@ define([
     var updateTransformCartesian3Scratch3 = new Cartesian3();
 
     function updateTransform(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
-        // TODO: update lookAt to work as closely as possible in all scene modes.
-        //updateController(that, camera, objectChanged, offset);
+        updateController(that, camera, objectChanged, offset);
 
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
