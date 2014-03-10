@@ -170,7 +170,7 @@ var sections = Object.keys(compat);
 function loadSectionModules(section, callback) {
   var mods = compat[section];
   var modulePaths = mods.map(function(name) {
-    return './Source/' + section + '/' + name;
+    return './node_modules/cesium/Source/' + section + '/' + name;
   });
 
   requirejs(modulePaths, function() {
