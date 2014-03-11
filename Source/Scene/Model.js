@@ -1406,6 +1406,8 @@ define([
                                     jointMatrixUniformName = name;
                                 }
                             } else if (defined(parameter.source)) {
+                                // GLTF_SPEC: Use semantic to know which matrix to use from the node, e.g., model vs. model-view
+                                // https://github.com/KhronosGroup/glTF/issues/93
                                 func = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
                                 // Default technique value that may be overridden by a material
