@@ -21,6 +21,5 @@ void main()
     vec4 transparent = vec4(accum.rgb / clamp(accum.a, 1e-4, 5e4), r);
 #endif
     
-    transparent.rgb = mix(vec3(0.0), transparent.rgb, 1.0 - transparent.a);
     gl_FragColor = (1.0 - transparent.a) * transparent + transparent.a * opaque;
 }

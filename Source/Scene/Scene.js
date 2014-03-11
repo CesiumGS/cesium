@@ -885,16 +885,16 @@ define([
     }
 
     var mrtShaderSource =
-        '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
+        '    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n' +
         '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);\n' +
+        '    float wzi = czm_alphaWeight(v_z, ai);\n' +
         '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
         '    gl_FragData[1] = vec4(ai * wzi);\n';
 
     var colorShaderSource =
         '    vec3 Ci = czm_gl_FragColor.rgb;\n' +
         '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);\n' +
+        '    float wzi = czm_alphaWeight(v_z, ai);\n' +
         '    gl_FragColor = vec4(Ci, ai) * wzi;\n';
 
     var alphaShaderSource =
@@ -909,6 +909,17 @@ define([
             var vs = shaderProgram.vertexShaderSource;
             var fs = shaderProgram.fragmentShaderSource;
 
+            var renamedVS = vs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
+            var hasPositionEC = renamedVS.indexOf('v_positionEC') !== -1;
+            var newSourceVS =
+                'varying float v_z;\n\n' +
+                renamedVS + '\n\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_translucent_main();\n' +
+                '    v_z = ' + (hasPositionEC ? 'v_positionEC.z' : '(czm_modelViewRelativeToEye * czm_computePosition()).z') + ';\n' +
+                '}\n';
+
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
             renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
@@ -916,10 +927,11 @@ define([
 
             // Discarding the fragment in main is a workaround for ANGLE D3D9
             // shader compilation errors.
-            var newSource =
+            var newSourceFS =
                 (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
                 'vec4 czm_gl_FragColor;\n' +
                 'bool czm_discard = false;\n' +
+                'varying float v_z;\n\n' +
                 renamedFS + '\n\n' +
                 'void main()\n' +
                 '{\n' +
@@ -931,7 +943,7 @@ define([
                 source +
                 '}\n';
 
-            shader = scene._context.getShaderCache().getShaderProgram(vs, newSource, attributeLocations);
+            shader = scene._context.getShaderCache().getShaderProgram(newSourceVS, newSourceFS, attributeLocations);
             cache[id] = shader;
         }
 
