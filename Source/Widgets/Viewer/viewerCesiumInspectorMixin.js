@@ -1,30 +1,16 @@
 /*global define*/
 define([
-        '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/requestAnimationFrame',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
-        '../../Core/Event',
-        '../../Core/wrapFunction',
-        '../../DynamicScene/CzmlDataSource',
-        '../../DynamicScene/GeoJsonDataSource',
-        '../CesiumInspector/CesiumInspector',
-        '../../ThirdParty/when',
-        '../getElement'
+        '../../Core/DeveloperError',
+        '../../Core/requestAnimationFrame',
+        '../CesiumInspector/CesiumInspector'
     ], function(
-        defaultValue,
         defined,
-        requestAnimationFrame,
-        DeveloperError,
         defineProperties,
-        Event,
-        wrapFunction,
-        CzmlDataSource,
-        GeoJsonDataSource,
-        CesiumInspector,
-        when,
-        getElement) {
+        DeveloperError,
+        requestAnimationFrame,
+        CesiumInspector) {
     "use strict";
     /*global console*/
 

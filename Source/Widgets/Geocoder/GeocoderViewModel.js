@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../../Core/BingMapsApi',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -9,7 +8,6 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Extent',
         '../../Core/jsonp',
-        '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
@@ -19,7 +17,6 @@ define([
         '../../ThirdParty/when'
     ], function(
         BingMapsApi,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -27,7 +24,6 @@ define([
         Ellipsoid,
         Extent,
         jsonp,
-        Matrix3,
         Matrix4,
         CameraColumbusViewMode,
         CameraFlightPath,
@@ -43,7 +39,7 @@ define([
      * @constructor
      *
      * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -259,7 +255,7 @@ define([
             var extent = Extent.fromDegrees(west, south, east, north);
 
             var camera = viewModel._scene.camera;
-            var position = camera.controller.getExtentCameraCoordinates(extent);
+            var position = camera.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;

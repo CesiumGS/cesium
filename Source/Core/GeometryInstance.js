@@ -3,16 +3,12 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Matrix4',
-        './Geometry',
-        './GeometryInstanceAttribute'
+        './Matrix4'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        Matrix4,
-        Geometry,
-        GeometryInstanceAttribute) {
+        Matrix4) {
     "use strict";
 
     /**

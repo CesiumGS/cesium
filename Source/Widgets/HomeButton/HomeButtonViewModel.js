@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../../Core/Cartesian3',
-        '../../Core/Matrix3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -17,7 +16,6 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         Cartesian3,
-        Matrix3,
         defaultValue,
         defined,
         defineProperties,
@@ -35,8 +33,6 @@ define([
 
     function viewHome(scene, ellipsoid, transitioner, flightDuration) {
         var mode = scene.mode;
-
-        var camera = scene.camera;
         var controller = scene.screenSpaceCameraController;
 
         controller.ellipsoid = ellipsoid;

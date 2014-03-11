@@ -1,78 +1,76 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/combine',
         '../Core/defined',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
+        '../Core/Event',
+        '../Core/IndexDatatype',
         '../Core/loadArrayBuffer',
-        '../Core/loadText',
         '../Core/loadImage',
-        '../Core/Queue',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Quaternion',
+        '../Core/loadText',
+        '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/BoundingSphere',
         '../Core/PrimitiveType',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Renderer/TextureWrap',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/BufferUsage',
+        '../Core/Quaternion',
+        '../Core/Queue',
+        '../Core/RuntimeError',
         '../Renderer/BlendingState',
+        '../Renderer/BufferUsage',
+        '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
-        '../Renderer/createShaderSource',
-        './ModelTypes',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './ModelAnimationCache',
         './ModelAnimationCollection',
-        './ModelNode',
         './ModelMesh',
+        './ModelNode',
+        './ModelTypes',
         './SceneMode',
         '../ThirdParty/gltfDefaults'
     ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
         combine,
         defined,
         defaultValue,
         destroyObject,
         DeveloperError,
-        RuntimeError,
+        Event,
+        IndexDatatype,
         loadArrayBuffer,
-        loadText,
         loadImage,
-        Queue,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Quaternion,
+        loadText,
+        CesiumMath,
         Matrix2,
         Matrix3,
         Matrix4,
-        BoundingSphere,
         PrimitiveType,
-        IndexDatatype,
-        CesiumMath,
-        Event,
-        JulianDate,
-        TextureWrap,
-        TextureMinificationFilter,
-        BufferUsage,
+        Quaternion,
+        Queue,
+        RuntimeError,
         BlendingState,
+        BufferUsage,
+        createShaderSource,
         DrawCommand,
         Pass,
-        createShaderSource,
-        ModelTypes,
+        TextureMinificationFilter,
+        TextureWrap,
         ModelAnimationCache,
         ModelAnimationCollection,
-        ModelNode,
         ModelMesh,
+        ModelNode,
+        ModelTypes,
         SceneMode,
         gltfDefaults) {
     "use strict";
@@ -1003,7 +1001,6 @@ define([
                         matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                     }
                 }
-                // The glTF spec also allows 3D matrices for skinning of 2D models, but we do not support it.
 
                 var bindShapeMatrix;
                 if (!Matrix4.equals(skin.bindShapeMatrix, Matrix4.IDENTITY)) {
@@ -1184,10 +1181,7 @@ define([
         }
     }
 
-    // The glTF spec allows both mat4 (3D) and mat3 (2D) affine transforms and
-    // mat3 (3D) and mat2 (2D) rotations.  We only support 3D.
-    //
-    // This also doesn't support LOCAL, which we could add if it is ever used.
+    // This doesn't support LOCAL, which we could add if it is ever used.
     var gltfSemanticUniforms = {
         MODEL : function(uniformState) {
             return function() {

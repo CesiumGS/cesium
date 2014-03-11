@@ -1,63 +1,61 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/clone',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Matrix4',
-        '../Core/BoundingSphere',
+        '../Core/DeveloperError',
+        '../Core/isArray',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
-        '../Core/ComponentDatatype',
+        '../Core/Matrix4',
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
-        '../Core/clone',
-        '../Core/isArray',
         '../Renderer/BufferUsage',
-        '../Renderer/VertexLayout',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/CullFace',
+        '../Renderer/DrawCommand',
         '../Renderer/Pass',
+        '../Renderer/VertexLayout',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
         '../ThirdParty/when'
     ], function(
+        BoundingSphere,
+        clone,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
-        Matrix4,
-        BoundingSphere,
+        DeveloperError,
+        isArray,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
         GeometryInstanceAttribute,
-        ComponentDatatype,
+        Matrix4,
         TaskProcessor,
         GeographicProjection,
-        clone,
-        isArray,
         BufferUsage,
-        VertexLayout,
-        DrawCommand,
         createShaderSource,
         CullFace,
+        DrawCommand,
         Pass,
+        VertexLayout,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
         when) {
     "use strict";
-
-    var EMPTY_ARRAY = [];
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
@@ -766,9 +764,10 @@ define([
 
         if (createRS) {
             var renderState = appearance.getRenderState();
+            var rs;
 
             if (twoPasses) {
-                var rs = clone(renderState, false);
+                rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -783,18 +782,32 @@ define([
             }
 
             if (allowPicking) {
-                // Only need backface pass for picking when two-pass rendering is used.
-                this._pickRS = this._backFaceRS;
+                if (twoPasses) {
+                    rs = clone(renderState, false);
+                    rs.cull = {
+                        enabled : false
+                    };
+                    this._pickRS = context.createRenderState(rs);
+                } else {
+                    this._pickRS = this._frontFaceRS;
+                }
             } else {
-                // Still occlude if not pickable.
-                var pickRS = clone(renderState, false);
-                pickRS.colorMask = {
+                rs = clone(renderState, false);
+                rs.colorMask = {
                     red : false,
                     green : false,
                     blue : false,
                     alpha : false
                 };
-                this._pickRS = context.createRenderState(pickRS);
+
+                if (twoPasses) {
+                    rs.cull = {
+                        enabled : false
+                    };
+                    this._pickRS = context.createRenderState(rs);
+                } else {
+                    this._pickRS = context.createRenderState(rs);
+                }
             }
         }
 
@@ -828,8 +841,8 @@ define([
             pickCommands.length = this._va.length;
 
             length = colorCommands.length;
-            var vaIndex = 0;
             var m = 0;
+            var vaIndex = 0;
             for (i = 0; i < length; ++i) {
                 if (twoPasses) {
                     colorCommand = colorCommands[i];

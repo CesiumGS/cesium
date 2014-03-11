@@ -285,7 +285,7 @@ define([
          * @memberof CentralBody.prototype
          * @type {ImageryLayerCollection}
          */
-        imageryLayerCollection : {
+        imageryLayers: {
             get : function() {
                 return this._imageryLayerCollection;
             }
@@ -507,7 +507,7 @@ define([
         }
 
         var poleIntensity = 0.0;
-        var baseLayer = centralBody._imageryLayerCollection.getLength() > 0 ? centralBody._imageryLayerCollection.get(0) : undefined;
+        var baseLayer = centralBody._imageryLayerCollection.length > 0 ? centralBody._imageryLayerCollection.get(0) : undefined;
         if (defined(baseLayer) && defined(baseLayer.getImageryProvider()) && defined(baseLayer.getImageryProvider().getPoleIntensity)) {
             poleIntensity = baseLayer.getImageryProvider().getPoleIntensity();
         }

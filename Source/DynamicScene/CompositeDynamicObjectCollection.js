@@ -16,7 +16,6 @@ define(['../Core/createGuid',
         DynamicObjectCollection) {
     "use strict";
 
-    var propertyIdScratch = new Array(3);
     var dynamicObjectIdScratch = new Array(2);
 
     function clean(dynamicObject) {
@@ -27,103 +26,10 @@ define(['../Core/createGuid',
         }
     }
 
-    function createSubPropertyChangedCallback(that, dynamicObject, propertyName) {
-        return function(property, subPropertyName, newValue, oldValue) {
-            var id = dynamicObject.id;
-            var composite = that._composite;
-            var compositeObject = composite.getById(id);
-            var compositeProperty = compositeObject[propertyName];
-            var collections = that._collectionsCopy;
-            var collectionsLength = collections.length;
-            for (var q = collectionsLength - 1; q >= 0; q--) {
-                var object = collections[q].getById(dynamicObject.id);
-                if (defined(object)) {
-                    var objectProperty = object[propertyName];
-                    if (defined(objectProperty)) {
-                        var objectSubProperty = objectProperty[subPropertyName];
-                        if (defined(objectSubProperty)) {
-                            compositeProperty[subPropertyName] = objectSubProperty;
-                            return;
-                        }
-                    }
-                }
-            }
-            compositeProperty[subPropertyName] = undefined;
-        };
-    }
-
-    function createPropertyChangedCallback(that, collectionId) {
-        var composite = that._composite;
-        var eventHash = that._eventHash;
-        return function(dynamicObject, propertyName, newValue, oldValue) {
-            var id = dynamicObject.id;
-            var compositeObject = composite.getById(id);
-            var compositeProperty = compositeObject[propertyName];
-
-            unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
-            subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
-
-            var collections = that._collectionsCopy;
-            var collectionsLength = collections.length;
-            var firstTime = true;
-            for (var q = collectionsLength - 1; q >= 0; q--) {
-                var object = collections[q].getById(dynamicObject.id);
-                if (defined(object)) {
-                    var property = object[propertyName];
-                    if (defined(property)) {
-                        if (firstTime) {
-                            firstTime = false;
-                            //We only want to clone if the property is also mergeable.
-                            //This ensures that leaf properties are referenced and not copied,
-                            //which is the entire point of compositing.
-                            if (defined(property.merge) && defined(property.clone)) {
-                                compositeProperty = property.clone(compositeProperty);
-                            } else {
-                                compositeProperty = property;
-                                break;
-                            }
-                        }
-                        compositeProperty.merge(property);
-                    }
-                }
-            }
-            compositeObject[propertyName] = compositeProperty;
-        };
-    }
-
-    function subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, property) {
-        if (defined(property) && defined(property.definitionChanged)) {
-            var subdefinitionChanged = createSubPropertyChangedCallback(that, dynamicObject, propertyName);
-            propertyIdScratch[0] = collectionId;
-            propertyIdScratch[1] = dynamicObject.id;
-            propertyIdScratch[2] = propertyName;
-            eventHash[JSON.stringify(propertyIdScratch)] = property.definitionChanged.addEventListener(subdefinitionChanged);
-        }
-    }
-
-    function unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName) {
-        propertyIdScratch[0] = collectionId;
-        propertyIdScratch[1] = dynamicObject.id;
-        propertyIdScratch[2] = propertyName;
-        var propertyId = JSON.stringify(propertyIdScratch);
-        var unsubscribeFunc = eventHash[propertyId];
-        if (defined(unsubscribeFunc)) {
-            unsubscribeFunc();
-            eventHash[propertyId] = undefined;
-        }
-    }
-
     function subscribeToDynamicObject(that, eventHash, collectionId, dynamicObject) {
         dynamicObjectIdScratch[0] = collectionId;
         dynamicObjectIdScratch[1] = dynamicObject.id;
-        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.definitionChanged.addEventListener(createPropertyChangedCallback(that, collectionId));
-
-        var properties = dynamicObject.propertyNames;
-        var length = properties.length;
-        for (var i = 0; i < length; i++) {
-            var propertyName = properties[i];
-            subscribeToProperty(that, eventHash, collectionId, dynamicObject, propertyName, dynamicObject[propertyName]);
-        }
+        eventHash[JSON.stringify(dynamicObjectIdScratch)] = dynamicObject.definitionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onDefinitionChanged, that);
     }
 
     function unsubscribeFromDynamicObject(that, eventHash, collectionId, dynamicObject) {
@@ -132,13 +38,6 @@ define(['../Core/createGuid',
         var id = JSON.stringify(dynamicObjectIdScratch);
         eventHash[id]();
         eventHash[id] = undefined;
-
-        var properties = dynamicObject.propertyNames;
-        var length = properties.length;
-        for (var i = 0; i < length; i++) {
-            var propertyName = properties[i];
-            unsubscribeFromProperty(eventHash, collectionId, dynamicObject, propertyName);
-        }
     }
 
     function recomposite(that) {
@@ -318,7 +217,7 @@ define(['../Core/createGuid',
      * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.removeAllCollections = function() {
-        this._collections.length = [];
+        this._collections.length = 0;
         recomposite(this);
     };
 
@@ -505,11 +404,9 @@ define(['../Core/createGuid',
         if (this._shouldRecomposite && this._suspendCount === 0) {
             recomposite(this);
             this._shouldRecomposite = false;
-
         }
 
         this._composite.resumeEvents();
-
     };
 
     /**
@@ -611,6 +508,40 @@ define(['../Core/createGuid',
         }
 
         composite.resumeEvents();
+    };
+
+    CompositeDynamicObjectCollection.prototype._onDefinitionChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+        var collections = this._collections;
+        var composite = this._composite;
+
+        var collectionsLength = collections.length;
+        var id = dynamicObject.id;
+        var compositeObject = composite.getById(id);
+        var compositeProperty = compositeObject[propertyName];
+
+        var firstTime = true;
+        for (var q = collectionsLength - 1; q >= 0; q--) {
+            var object = collections[q].getById(dynamicObject.id);
+            if (defined(object)) {
+                var property = object[propertyName];
+                if (defined(property)) {
+                    if (firstTime) {
+                        firstTime = false;
+                        //We only want to clone if the property is also mergeable.
+                        //This ensures that leaf properties are referenced and not copied,
+                        //which is the entire point of compositing.
+                        if (defined(property.merge) && defined(property.clone)) {
+                            compositeProperty = property.clone(compositeProperty);
+                        } else {
+                            compositeProperty = property;
+                            break;
+                        }
+                    }
+                    compositeProperty.merge(property);
+                }
+            }
+        }
+        compositeObject[propertyName] = compositeProperty;
     };
 
     return CompositeDynamicObjectCollection;

@@ -1,18 +1,16 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../DynamicScene/Property'
-       ], function(
-         defaultValue,
-         defined,
-         defineProperties,
-         DeveloperError,
-         Event,
-         Property) {
+    ], function(
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        Property) {
     "use strict";
 
     function resolve(referenceProperty) {

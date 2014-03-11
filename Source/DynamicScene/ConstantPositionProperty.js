@@ -1,6 +1,5 @@
 /*global define*/
 define(['./PositionProperty',
-        './Property',
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,7 +9,6 @@ define(['./PositionProperty',
         '../Core/ReferenceFrame'
     ], function(
         PositionProperty,
-        Property,
         Cartesian3,
         defaultValue,
         defined,
