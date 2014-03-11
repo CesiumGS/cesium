@@ -598,6 +598,8 @@ define([
         return textureUnitIndex;
     }
 
+    var nextShaderProgramId = 0;
+
     /**
      * DOC_TBA
      *
@@ -648,7 +650,10 @@ define([
          */
         this.fragmentShaderSource = fragmentShaderSource;
 
-        this.id = 0;
+        /**
+         * @private
+         */
+        this.id = nextShaderProgramId++;
     };
 
     /**
@@ -1094,9 +1099,7 @@ define([
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
-        if (!defined(this._vertexAttributes)) {
-            initialize(this);
-        }
+        initialize(this);
         return this._vertexAttributes;
     };
 
@@ -1108,9 +1111,7 @@ define([
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
-        if (!defined(this._numberOfVertexAttributes)) {
-            initialize(this);
-        }
+        initialize(this);
         return this._numberOfVertexAttributes;
     };
 
@@ -1125,9 +1126,7 @@ define([
      * @see ShaderProgram#getManualUniforms
      */
     ShaderProgram.prototype.getAllUniforms = function() {
-        if (!defined(this._uniformsByName)) {
-            initialize(this);
-        }
+        initialize(this);
         return this._uniformsByName;
     };
 
@@ -1140,9 +1139,7 @@ define([
      * @see ShaderProgram#getAllUniforms
      */
     ShaderProgram.prototype.getManualUniforms = function() {
-        if (!defined(this._manualUniforms)) {
-            initialize(this);
-        }
+        initialize(this);
         return this._manualUniforms;
     };
 

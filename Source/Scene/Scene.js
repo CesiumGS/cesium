@@ -30,7 +30,6 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
-        '../Renderer/FramebufferStatus',
         '../Renderer/PassState',
         '../Renderer/Pass',
         '../Renderer/PixelFormat',
@@ -89,7 +88,6 @@ define([
         Context,
         ClearCommand,
         DrawCommand,
-        FramebufferStatus,
         PassState,
         Pass,
         PixelFormat,
@@ -117,6 +115,7 @@ define([
         CompositeOITFS,
         FXAA,
         ViewportQuadVS) {
+    /*global WebGLRenderingContext*/
     "use strict";
 
     /**
@@ -1308,7 +1307,7 @@ define([
                 });
                 scene._translucentFBO.destroyAttachments = false;
 
-                if(scene._translucentFBO.getStatus() !== FramebufferStatus.COMPLETE) {
+                if(scene._translucentFBO.getStatus() !== WebGLRenderingContext.COMPLETE) {
                     scene._translucentFBO.destroy();
                     scene._translucentMRTSupport = false;
                 }
@@ -1322,7 +1321,7 @@ define([
                 });
                 scene._translucentFBO.destroyAttachments = false;
 
-                if(scene._translucentFBO.getStatus() !== FramebufferStatus.COMPLETE) {
+                if(scene._translucentFBO.getStatus() !== WebGLRenderingContext.COMPLETE) {
                     scene._translucentFBO.destroy();
                     scene._opaqueFBO.destroy();
 

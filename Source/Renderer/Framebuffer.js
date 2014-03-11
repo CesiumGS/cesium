@@ -210,10 +210,10 @@ define([
     };
 
     /**
-     * Returns the status of the framebuffer. If the status is not {@link FramebufferStatus#COMPPLETE},
+     * Returns the status of the framebuffer. If the status is not WebGLRenderingContext.COMPLETE,
      * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
      *
-     * @returns {FramebufferStatus} The framebuffer status.
+     * @returns {Number} The framebuffer status.
      */
     Framebuffer.prototype.getStatus = function() {
         this._bind();
