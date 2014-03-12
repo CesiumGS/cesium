@@ -7,7 +7,9 @@ define([
         defined) {
     "use strict";
 
-    function accessorDefaults(accessors) {
+    function accessorDefaults(gltf) {
+        var accessors = gltf.accessors;
+
         if (!defined(accessors)) {
             return;
         }
@@ -20,7 +22,9 @@ define([
         }
     }
 
-    function animationDefaults(animations) {
+    function animationDefaults(gltf) {
+        var animations = gltf.animations;
+
         if (!defined(animations)) {
             return;
         }
@@ -45,7 +49,9 @@ define([
         gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
     }
 
-    function bufferDefaults(buffers) {
+    function bufferDefaults(gltf) {
+        var buffers = gltf.buffers;
+
         if (!defined(buffers)) {
             return;
         }
@@ -58,7 +64,9 @@ define([
         }
     }
 
-    function lightDefaults(lights) {
+    function lightDefaults(gltf) {
+        var lights = gltf.lights;
+
         if (!defined(lights)) {
             return;
         }
@@ -101,7 +109,9 @@ define([
         }
     }
 
-    function meshDefaults(meshes) {
+    function meshDefaults(gltf) {
+        var meshes = gltf.meshes;
+
         if (!defined(meshes)) {
             return;
         }
@@ -119,7 +129,9 @@ define([
         }
     }
 
-    function nodeDefaults(nodes) {
+    function nodeDefaults(gltf) {
+        var nodes = gltf.nodes;
+
         if (!defined(nodes)) {
             return;
         }
@@ -156,7 +168,9 @@ define([
         }
     }
 
-    function samplerDefaults(samplers) {
+    function samplerDefaults(gltf) {
+        var samplers = gltf.samplers;
+
         if (!defined(samplers)) {
             return;
         }
@@ -172,7 +186,9 @@ define([
         }
     }
 
-    function skinDefaults(skins) {
+    function skinDefaults(gltf) {
+        var skins = gltf.skins;
+
         if (!defined(skins)) {
             return;
         }
@@ -192,7 +208,9 @@ define([
         }
     }
 
-    function textureDefaults(textures) {
+    function textureDefaults(gltf) {
+        var textures = gltf.textures;
+
         if (!defined(textures)) {
             return;
         }
@@ -218,16 +236,16 @@ define([
             return undefined;
         }
 
-        accessorDefaults(gltf.accessors);
-        animationDefaults(gltf.animations);
+        accessorDefaults(gltf);
+        animationDefaults(gltf);
         assetDefaults(gltf);
-        bufferDefaults(gltf.buffers);
-        lightDefaults(gltf.lights);
-        meshDefaults(gltf.meshes);
-        nodeDefaults(gltf.nodes);
-        samplerDefaults(gltf.samplers);
-        skinDefaults(gltf.skins);
-        textureDefaults(gltf.textures);
+        bufferDefaults(gltf);
+        lightDefaults(gltf);
+        meshDefaults(gltf);
+        nodeDefaults(gltf);
+        samplerDefaults(gltf);
+        skinDefaults(gltf);
+        textureDefaults(gltf);
 
         gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
         gltf.version = defaultValue(gltf.version, '1.0');
