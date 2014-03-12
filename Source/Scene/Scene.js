@@ -1334,19 +1334,19 @@ define([
             scene._opaqueFBO = context.createFramebuffer({
                 colorTextures : [scene._opaqueTexture],
                 depthTexture : scene._depthTexture,
-                depthRenderbuffer : scene._depthRenderbuffer
+                depthRenderbuffer : scene._depthRenderbuffer,
+                destroyAttachments : false
             });
-            scene._opaqueFBO.destroyAttachments = false;
 
             if (scene._translucentMRTSupport) {
                 scene._translucentFBO = context.createFramebuffer({
                     colorTextures : [scene._accumulationTexture, scene._revealageTexture],
                     depthTexture : scene._depthTexture,
-                    depthRenderbuffer : scene._depthRenderbuffer
+                    depthRenderbuffer : scene._depthRenderbuffer,
+                    destroyAttachments : false
                 });
-                scene._translucentFBO.destroyAttachments = false;
 
-                if(scene._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                if (scene._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
                     scene._translucentFBO.destroy();
                     scene._translucentMRTSupport = false;
                 }
@@ -1356,26 +1356,28 @@ define([
                 scene._translucentFBO = context.createFramebuffer({
                     colorTextures : [scene._accumulationTexture],
                     depthTexture : scene._depthTexture,
-                    depthRenderbuffer : scene._depthRenderbuffer
+                    depthRenderbuffer : scene._depthRenderbuffer,
+                    destroyAttachments : false
                 });
-                scene._translucentFBO.destroyAttachments = false;
+                scene._alphaFBO = context.createFramebuffer({
+                    colorTextures : [scene._revealageTexture],
+                    depthTexture : scene._depthTexture,
+                    depthRenderbuffer : scene._depthRenderbuffer,
+                    destroyAttachments : false
+                });
 
-                if(scene._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                var translucentStatus = scene._translucentFBO.getStatus();
+                var alphaStatus = scene._alphaFBO.getStatus();
+                if (translucentStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE || alphaStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
                     scene._translucentFBO.destroy();
                     scene._opaqueFBO.destroy();
+                    scene._alphaFBO.destroy();
 
                     scene._opaqueTexture = scene._opaqueTexture && scene._opaqueTexture.destroy();
                     scene._accumulationTexture = scene._accumulationTexture && scene._accumulationTexture.destroy();
                     scene._revealageTexture = scene._revealageTexture && scene._revealageTexture.destroy();
 
                     scene._translucentMultipassSupport = false;
-                } else {
-                    scene._alphaFBO = context.createFramebuffer({
-                        colorTextures : [scene._revealageTexture],
-                        depthTexture : scene._depthTexture,
-                        depthRenderbuffer : scene._depthRenderbuffer
-                    });
-                    scene._alphaFBO.destroyAttachments = false;
                 }
             }
         }
@@ -1385,9 +1387,9 @@ define([
 
         if (supported || useFXAA) {
             scene._compositeFBO = context.createFramebuffer({
-                colorTextures : [scene._compositeTexture]
+                colorTextures : [scene._compositeTexture],
+                destroyAttachments : false
             });
-            scene._compositeFBO.destroyAttachments = false;
         } else if (defined(scene._compositeTexture)) {
             scene._compositeTexture = scene._compositeTexture && scene._compositeTexture.destroy();
             scene._depthTexture = scene._depthTexture && scene._depthTexture.destroy();
