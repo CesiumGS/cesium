@@ -26,6 +26,19 @@ define([
         for (var name in animations) {
             if (animations.hasOwnProperty(name)) {
                 var animation = animations[name];
+
+                if (!defined(animation.channels)) {
+                    animation.channels = [];
+                }
+
+                if (!defined(animation.parameters)) {
+                    animation.parameters = {};
+                }
+
+                if (!defined(animation.samplers)) {
+                    animation.samplers = {};
+                }
+
                 var samplers = animations.samplers;
 
                 for (var samplerName in samplers) {
@@ -111,6 +124,16 @@ define([
 
     function materialDefaults(gltf) {
         gltf.materials = defaultValue(gltf.materials, {});
+        var materials = gltf.materials;
+
+        for (var name in materials) {
+            if (materials.hasOwnProperty(name)) {
+                var instanceTechnique = materials[name].instanceTechnique;
+                if (!defined(instanceTechnique.values)) {
+                    instanceTechnique.values = {};
+                }
+            }
+        }
     }
 
     function meshDefaults(gltf) {
@@ -120,11 +143,23 @@ define([
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
+
+                if (!defined(mesh.primitives) {
+                    mesh.primitives = [];
+                }
+
                 var primitives = mesh.primitives.length;
                 var length = primitives.length;
                 for (var i = 0; i < length; ++i) {
                     var primitive = primitives[i];
-                    primitive.primitive = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+
+                    if (!defined(primitive.attributes)) {
+                        primitive.attributes = {};
+                    }
+
+                    if (!defined(primitive.primitive)) {
+                        primitive.primitive = WebGLRenderingContext.TRIANGLES;
+                   }
                 }
             }
         }
@@ -137,6 +172,10 @@ define([
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
+
+                if (!defined(node.children)) {
+                    node.children = [];
+                }
 
                 if (!defined(node.matrix)) {
                     // Add default identity matrix if there is no matrix property and no TRS properties
@@ -168,6 +207,16 @@ define([
 
     function programDefaults(gltf) {
         gltf.programs = defaultValue(gltf.programs, {});
+        var programs = gltf.programs;
+
+        for (var name in programs) {
+            if (programs.hasOwnProperty(name)) {
+                var program = programs[name];
+                if (!defined(program.attributes)) {
+                    program.attributes = [];
+                }
+            }
+        }
     }
 
     function samplerDefaults(gltf) {
@@ -187,6 +236,16 @@ define([
 
     function sceneDefaults(gltf) {
         gltf.scenes = defaultValue(gltf.scenes, {});
+        var scenes = gltf.scenes;
+
+        for (var name in scenes) {
+            if (scenes.hasOwnProperty(name)) {
+                var scene = scenes[name];
+                if (!defined(scene.node)) {
+                    scene.node = [];
+                }
+            }
+        }
     }
 
     function shaderDefaults(gltf) {
@@ -214,6 +273,31 @@ define([
 
     function techniqueDefaults(gltf) {
         gltf.techniques = defaultValue(gltf.techniques, {});
+        var techniques = gltf.techniques;
+
+        for (var name in techniques) {
+            if (techniques.hasOwnProperty(name)) {
+                var technique = techniques[name];
+                if (!defined(technique.parameters)) {
+                    technique.parameters = [];
+                }
+
+                var passes = technique.passes;
+                for (var passName in passes) {
+                    if (techniques.hasOwnProperty(passName)) {
+                        var instanceProgram = passes[passName].instanceProgram;
+
+                        if (!defined(instanceProgram.attributes)) {
+                            instanceProgram.attributes = {};
+                        }
+
+                        if (!defined(instanceProgram.uniforms)) {
+                            instanceProgram.uniforms = {};
+                        }
+                    }
+                }
+            }
+        }
     }
 
     function textureDefaults(gltf) {
