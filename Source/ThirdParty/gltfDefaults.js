@@ -172,22 +172,6 @@ define([
         }
     }
 
-    function textureDefaults(textures) {
-        if (!defined(textures)) {
-            return;
-        }
-
-        for (var name in textures) {
-            if (textures.hasOwnProperty(name)) {
-                var texture = textures[name];
-                texture.format = defaultValue(texture.format, WebGLRenderingContext.RGBA);
-                texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
-                texture.target = defaultValue(texture.target, WebGLRenderingContext.TEXTURE_2D);
-                texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
-            }
-        }
-    }
-
     function skinDefaults(skins) {
         if (!defined(skins)) {
             return;
@@ -204,6 +188,22 @@ define([
                         0.0, 0.0, 0.0, 1.0
                     ];
                 }
+            }
+        }
+    }
+
+    function textureDefaults(textures) {
+        if (!defined(textures)) {
+            return;
+        }
+
+        for (var name in textures) {
+            if (textures.hasOwnProperty(name)) {
+                var texture = textures[name];
+                texture.format = defaultValue(texture.format, WebGLRenderingContext.RGBA);
+                texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
+                texture.target = defaultValue(texture.target, WebGLRenderingContext.TEXTURE_2D);
+                texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
             }
         }
     }
@@ -226,8 +226,8 @@ define([
         meshDefaults(gltf.meshes);
         nodeDefaults(gltf.nodes);
         samplerDefaults(gltf.samplers);
-        textureDefaults(gltf.textures);
         skinDefaults(gltf.skins);
+        textureDefaults(gltf.textures);
 
         gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
         gltf.version = defaultValue(gltf.version, '1.0');
