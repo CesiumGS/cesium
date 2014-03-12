@@ -426,8 +426,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._fullscreenButton = fullscreenButton;
         this._geocoder = geocoder;
         this._eventHelper = eventHelper;
-        this._lastWidth = 0;
-        this._lastHeight = 0;
+        this._lastWidth = undefined;
+        this._lastHeight = undefined;
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
