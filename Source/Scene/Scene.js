@@ -171,6 +171,8 @@ define([
 
         var textureFloat = context.getFloatingPointTexture();
         this._translucentMRTSupport = context.getDrawBuffers() && textureFloat;
+
+        // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = !this._translucentMRTSupport && textureFloat;
 
         this._clearColorCommand = new ClearCommand();
@@ -1272,15 +1274,8 @@ define([
                     sources : [CompositeOITFS]
                 });
 
-                command = new DrawCommand();
-                command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-                command.vertexArray = context.getViewportQuadVertexArray();
-                command.renderState = context.createRenderState();
-                command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, {
-                    position : 0,
-                    textureCoordinates : 1
-                });
 
+                command = context.createViewportQuadCommand(fs, context.createRenderState());
                 scene._compositeCommand = command;
             }
 
@@ -1303,15 +1298,7 @@ define([
                     sources : [FXAA]
                 });
 
-                command = new DrawCommand();
-                command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-                command.vertexArray = context.getViewportQuadVertexArray();
-                command.renderState = context.createRenderState();
-                command.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, fs, {
-                    position : 0,
-                    textureCoordinates : 1
-                });
-
+                command = context.createViewportQuadCommand(fs, context.createRenderState());
                 scene._fxaaCommand = command;
             }
 

@@ -5,17 +5,10 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
-        '../Core/ComponentDatatype',
-        '../Core/PrimitiveType',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         './Material',
-        '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/Pass',
-        '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
         Color,
@@ -23,17 +16,10 @@ define([
         defined,
         DeveloperError,
         BoundingRectangle,
-        ComponentDatatype,
-        PrimitiveType,
-        Geometry,
-        GeometryAttribute,
         Material,
-        BufferUsage,
         BlendingState,
-        DrawCommand,
         createShaderSource,
         Pass,
-        ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
 
@@ -51,13 +37,6 @@ define([
      * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
      */
     var ViewportQuad = function(rectangle, material) {
-
-        this._va = undefined;
-        this._overlayCommand = new DrawCommand();
-        this._overlayCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._overlayCommand.pass = Pass.OVERLAY;
-        this._overlayCommand.owner = this;
-
         /**
          * Determines if the viewport quad primitive will be shown.
          *
@@ -106,11 +85,9 @@ define([
          */
         this.material = material;
         this._material = undefined;
-    };
 
-    var attributeLocations = {
-        position : 0,
-        textureCoordinates : 1
+        this._overlayCommand = undefined;
+        this._rs = undefined;
     };
 
     /**
@@ -135,14 +112,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(this._va)) {
-            this._va = context.getViewportQuadVertexArray();
-            this._overlayCommand.vertexArray = this._va;
-        }
-
-        var rs = this._overlayCommand.renderState;
+        var rs = this._rs;
         if ((!defined(rs)) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
-            this._overlayCommand.renderState = context.createRenderState({
+            this._rs = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 viewport : this.rectangle
             });
@@ -150,13 +122,14 @@ define([
 
         var pass = frameState.passes;
         if (pass.render) {
-            if (this._material !== this.material) {
+            if (this._material !== this.material || !defined(this._overlayCommand)) {
                 // Recompile shader when material changes
                 this._material = this.material;
 
                 var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
-                this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                    this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeLocations);
+                this._overlayCommand = context.createViewportQuadCommand(fsSource, this._rs, this._material._uniforms, this._overlayCommand);
+                this._overlayCommand.owner = this;
+                this._overlayCommand.pass = Pass.OVERLAY;
             }
 
             this._material.update(context);
@@ -202,7 +175,9 @@ define([
      * quad = quad && quad.destroy();
      */
     ViewportQuad.prototype.destroy = function() {
-        this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+        if (defined(this._overlayCommand)) {
+            this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+        }
         return destroyObject(this);
     };
 

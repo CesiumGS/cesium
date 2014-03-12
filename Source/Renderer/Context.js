@@ -18,6 +18,7 @@ define([
         './Buffer',
         './BufferUsage',
         './CubeMap',
+        './DrawCommand',
         './Framebuffer',
         './PixelDatatype',
         './PixelFormat',
@@ -36,7 +37,8 @@ define([
         './VertexArray',
         './VertexLayout',
         './ClearCommand',
-        './PassState'
+        './PassState',
+        '../Shaders/ViewportQuadVS'
     ], function(
         clone,
         defaultValue,
@@ -56,6 +58,7 @@ define([
         Buffer,
         BufferUsage,
         CubeMap,
+        DrawCommand,
         Framebuffer,
         PixelDatatype,
         PixelFormat,
@@ -74,7 +77,8 @@ define([
         VertexArray,
         VertexLayout,
         ClearCommand,
-        PassState) {
+        PassState,
+        ViewportQuadVS) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -2651,55 +2655,69 @@ define([
         return this.createVertexArray(vaAttributes, indexBuffer);
     };
 
+    var viewportQuadAttributeLocations = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
     /**
      * @private
      */
-    Context.prototype.getViewportQuadVertexArray = function() {
+    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, renderState, uniformMap, result) {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
 
-        if (defined(vertexArray)) {
-            return vertexArray;
+        if (!defined(vertexArray)) {
+            var geometry = new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [
+                           -1.0, -1.0,
+                            1.0, -1.0,
+                            1.0,  1.0,
+                           -1.0,  1.0
+                        ]
+                    }),
+
+                    textureCoordinates : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [
+                            0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0
+                        ]
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES
+            });
+
+            vertexArray = this.createVertexArrayFromGeometry({
+                geometry : geometry,
+                attributeLocations : {
+                    position : 0,
+                    textureCoordinates : 1
+                },
+                bufferUsage : BufferUsage.STATIC_DRAW
+            });
+
+            this.cache.viewportQuad_vertexArray = vertexArray;
         }
 
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                       -1.0, -1.0,
-                        1.0, -1.0,
-                        1.0,  1.0,
-                       -1.0,  1.0
-                    ]
-                }),
+        if (!defined(result)) {
+            result = new DrawCommand();
+        }
 
-                textureCoordinates : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
+        result.vertexArray = vertexArray;
+        result.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        result.renderState = renderState;
+        result.shaderProgram = this.getShaderCache().replaceShaderProgram(result.shaderProgram, ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
+        result.uniformMap = uniformMap;
 
-        vertexArray = this.createVertexArrayFromGeometry({
-            geometry : geometry,
-            attributeLocations : {
-                position : 0,
-                textureCoordinates : 1
-            },
-            bufferUsage : BufferUsage.STATIC_DRAW
-        });
-
-        this.cache.viewportQuad_vertexArray = vertexArray;
-        return vertexArray;
+        return result;
     };
 
     /**

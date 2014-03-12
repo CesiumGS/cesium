@@ -4,19 +4,13 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/Color',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/PrimitiveType',
         '../Core/Transforms',
-        '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
@@ -24,26 +18,19 @@ define([
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
-        '../Shaders/PostProcessFilters/PassThrough',
-        '../Shaders/ViewportQuadVS'
+        '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian4,
         Color,
-        ComponentDatatype,
         defaultValue,
         defined,
         destroyObject,
-        Geometry,
-        GeometryAttribute,
         CesiumMath,
         Matrix4,
-        PrimitiveType,
         Transforms,
-        BufferUsage,
         ClearCommand,
-        DrawCommand,
         PassState,
         PixelDatatype,
         PixelFormat,
@@ -51,8 +38,7 @@ define([
         AdditiveBlend,
         BrightPass,
         GaussianBlur1D,
-        PassThrough,
-        ViewportQuadVS) {
+        PassThrough) {
     "use strict";
 
     var SunPostProcess = function() {
@@ -112,11 +98,6 @@ define([
         this._blendCommand.execute(context, this._upSamplePassState);
     };
 
-    var attributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
     var viewportBoundingRectangle  = new BoundingRectangle();
     var downSampleViewportBoundingRectangle = new BoundingRectangle();
     var sunPositionECScratch = new Cartesian4();
@@ -136,22 +117,13 @@ define([
             this._clearFBO2Command = new ClearCommand();
             this._clearFBO2Command.color = new Color();
 
-            var primitiveType = PrimitiveType.TRIANGLE_FAN;
-            var vertexArray = context.getViewportQuadVertexArray();
+            var rs;
+            var uniformMap = {};
 
-            var downSampleCommand = this._downSampleCommand = new DrawCommand();
+            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, rs, uniformMap);
             downSampleCommand.owner = this;
-            downSampleCommand.primitiveType = primitiveType;
-            downSampleCommand.vertexArray = vertexArray;
-            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
-            downSampleCommand.uniformMap = {};
 
-            var brightPassCommand = this._brightPassCommand = new DrawCommand();
-            brightPassCommand.owner = this;
-            brightPassCommand.primitiveType = primitiveType;
-            brightPassCommand.vertexArray = vertexArray;
-            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeLocations);
-            brightPassCommand.uniformMap = {
+            uniformMap = {
                 u_avgLuminance : function() {
                     // A guess at the average luminance across the entire scene
                     return 0.5;
@@ -164,15 +136,13 @@ define([
                 }
             };
 
+            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, rs, uniformMap);
+            brightPassCommand.owner = this;
+
             var delta = 1.0;
             var sigma = 2.0;
 
-            var blurXCommand = this._blurXCommand = new DrawCommand();
-            blurXCommand.owner = this;
-            blurXCommand.primitiveType = primitiveType;
-            blurXCommand.vertexArray = vertexArray;
-            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
-            blurXCommand.uniformMap = {
+            uniformMap = {
                 delta : function() {
                     return delta;
                 },
@@ -184,12 +154,10 @@ define([
                 }
             };
 
-            var blurYCommand = this._blurYCommand = new DrawCommand();
-            blurYCommand.owner = this;
-            blurYCommand.primitiveType = primitiveType;
-            blurYCommand.vertexArray = vertexArray;
-            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
-            blurYCommand.uniformMap = {
+            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, rs, uniformMap);
+            blurXCommand.owner = this;
+
+            uniformMap = {
                 delta : function() {
                     return delta;
                 },
@@ -201,12 +169,10 @@ define([
                 }
             };
 
-            var additiveBlendCommand = this._blendCommand = new DrawCommand();
-            additiveBlendCommand.owner = this;
-            additiveBlendCommand.primitiveType = primitiveType;
-            additiveBlendCommand.vertexArray = vertexArray;
-            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeLocations);
-            additiveBlendCommand.uniformMap = {
+            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, rs, uniformMap);
+            blurYCommand.owner = this;
+
+            uniformMap = {
                 u_center : function() {
                     return that._uCenter;
                 },
@@ -215,12 +181,13 @@ define([
                 }
             };
 
-            var fullScreenCommand = this._fullScreenCommand = new DrawCommand();
+            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, rs, uniformMap);
+            additiveBlendCommand.owner = this;
+
+            uniformMap = {};
+
+            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, rs, uniformMap);
             fullScreenCommand.owner = this;
-            fullScreenCommand.primitiveType = primitiveType;
-            fullScreenCommand.vertexArray = vertexArray;
-            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
-            fullScreenCommand.uniformMap = {};
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);

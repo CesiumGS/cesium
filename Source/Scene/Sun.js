@@ -10,8 +10,6 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/PrimitiveType',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/Color',
         '../Core/BoundingRectangle',
         '../Core/Matrix4',
@@ -24,7 +22,6 @@ define([
         './SceneMode',
         '../Shaders/SunVS',
         '../Shaders/SunFS',
-        '../Shaders/ViewportQuadVS',
         '../Shaders/SunTextureFS'
     ], function(
         BoundingSphere,
@@ -37,8 +34,6 @@ define([
         destroyObject,
         CesiumMath,
         PrimitiveType,
-        Geometry,
-        GeometryAttribute,
         Color,
         BoundingRectangle,
         Matrix4,
@@ -51,7 +46,6 @@ define([
         SceneMode,
         SunVS,
         SunFS,
-        ViewportQuadVS,
         SunTextureFS) {
     "use strict";
 
@@ -120,11 +114,6 @@ define([
         }
     });
 
-    var viewportAttributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
     var scratchPositionWC = new Cartesian2();
     var scratchLimbWC = new Cartesian2();
     var scratchPositionEC = new Cartesian4();
@@ -177,15 +166,13 @@ define([
             clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
             clearCommand.framebuffer = fbo;
 
-            var drawCommand = new DrawCommand();
-            drawCommand.owner = this;
-            drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-            drawCommand.vertexArray = context.getViewportQuadVertexArray();
-            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeLocations);
-            drawCommand.framebuffer = fbo;
-            drawCommand.renderState = context.createRenderState({
+            var rs = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
+
+            var drawCommand = context.createViewportQuadCommand(SunTextureFS, rs);
+            drawCommand.owner = this;
+            drawCommand.framebuffer = fbo;
 
             this._glowLengthTS = this._glowFactor * 5.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
