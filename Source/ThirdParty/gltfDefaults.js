@@ -66,13 +66,31 @@ define([
         for (var name in lights) {
             if (lights.hasOwnProperty(name)) {
                 var light = lights[name];
-                if (light.type === 'point') {
+                if (light.type === 'ambient') {
+                    var ambientLight = light.ambient;
+                    if (!defined(ambientLight.color)) {
+                        ambientLight.color = [1.0, 1.0, 1.0];
+                    }
+                } else if (light.type === 'directional') {
+                    var directionalLight = light.directional;
+                    if (!defined(directionalLight.color)) {
+                        directionalLight.color = [1.0, 1.0, 1.0];
+                    }
+                } else if (light.type === 'point') {
                     var pointLight = light.point;
+                    if (!defined(pointLight.color)) {
+                        pointLight.color = [1.0, 1.0, 1.0];
+                    }
+
                     pointLight.constantAttenuation = defaultValue(pointLight.constantAttenuation, 1.0);
                     pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
                     pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
                 } else if (light.type === 'spot') {
                     var spotLight = light.spot;
+                    if (!defined(spotLight.color)) {
+                        spotLight.color = [1.0, 1.0, 1.0];
+                    }
+
                     spotLight.constantAttenuation = defaultValue(spotLight.constantAttenuation, 1.0);
                     spotLight.fallOffAngle = defaultValue(spotLight.fallOffAngle, 3.14159265);
                     spotLight.fallOffExponent = defaultValue(spotLight.fallOffExponent, 0.0);
