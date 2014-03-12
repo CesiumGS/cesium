@@ -8,11 +8,8 @@ define([
     "use strict";
 
     function accessorDefaults(gltf) {
+        gltf.accessors = defaultValue(gltf.accessors, {});
         var accessors = gltf.accessors;
-
-        if (!defined(accessors)) {
-            return;
-        }
 
         for (var name in accessors) {
             if (accessors.hasOwnProperty(name)) {
@@ -23,11 +20,8 @@ define([
     }
 
     function animationDefaults(gltf) {
+        gltf.animations = defaultValue(gltf.animations, {});
         var animations = gltf.animations;
-
-        if (!defined(animations)) {
-            return;
-        }
 
         for (var name in animations) {
             if (animations.hasOwnProperty(name)) {
@@ -50,11 +44,8 @@ define([
     }
 
     function bufferDefaults(gltf) {
+        gltf.buffers = defaultValue(gltf.buffers, {});
         var buffers = gltf.buffers;
-
-        if (!defined(buffers)) {
-            return;
-        }
 
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
@@ -64,12 +55,21 @@ define([
         }
     }
 
-    function lightDefaults(gltf) {
-        var lights = gltf.lights;
+    function bufferViewDefaults(gltf) {
+        gltf.bufferViews = defaultValue(gltf.bufferViews, {});
+    }
 
-        if (!defined(lights)) {
-            return;
-        }
+    function cameraDefaults(gltf) {
+        gltf.cameras = defaultValue(gltf.cameras, {});
+    }
+
+    function imageDefaults(gltf) {
+        gltf.images = defaultValue(gltf.images, {});
+    }
+
+    function lightDefaults(gltf) {
+        gltf.lights = defaultValue(gltf.lights, {});
+        var lights = gltf.lights;
 
         for (var name in lights) {
             if (lights.hasOwnProperty(name)) {
@@ -109,12 +109,13 @@ define([
         }
     }
 
-    function meshDefaults(gltf) {
-        var meshes = gltf.meshes;
+    function materialDefaults(gltf) {
+        gltf.materials = defaultValue(gltf.materials, {});
+    }
 
-        if (!defined(meshes)) {
-            return;
-        }
+    function meshDefaults(gltf) {
+        gltf.meshes = defaultValue(gltf.meshes, {});
+        var meshes = gltf.meshes;
 
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
@@ -130,11 +131,8 @@ define([
     }
 
     function nodeDefaults(gltf) {
+        gltf.nodes = defaultValue(gltf.nodes, {});
         var nodes = gltf.nodes;
-
-        if (!defined(nodes)) {
-            return;
-        }
 
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
@@ -168,12 +166,13 @@ define([
         }
     }
 
-    function samplerDefaults(gltf) {
-        var samplers = gltf.samplers;
+    function programDefaults(gltf) {
+        gltf.programs = defaultValue(gltf.programs, {});
+    }
 
-        if (!defined(samplers)) {
-            return;
-        }
+    function samplerDefaults(gltf) {
+        gltf.samplers = defaultValue(gltf.samplers, {});
+        var samplers = gltf.samplers;
 
         for (var name in samplers) {
             if (samplers.hasOwnProperty(name)) {
@@ -186,12 +185,17 @@ define([
         }
     }
 
-    function skinDefaults(gltf) {
-        var skins = gltf.skins;
+    function sceneDefaults(gltf) {
+        gltf.scenes = defaultValue(gltf.scenes, {});
+    }
 
-        if (!defined(skins)) {
-            return;
-        }
+    function shaderDefaults(gltf) {
+        gltf.shaders = defaultValue(gltf.shaders, {});
+    }
+
+    function skinDefaults(gltf) {
+        gltf.skins = defaultValue(gltf.skins, {});
+        var skins = gltf.skins;
 
         for (var name in skins) {
             if (skins.hasOwnProperty(name)) {
@@ -208,12 +212,13 @@ define([
         }
     }
 
-    function textureDefaults(gltf) {
-        var textures = gltf.textures;
+    function techniqueDefaults(gltf) {
+        gltf.techniques = defaultValue(gltf.techniques, {});
+    }
 
-        if (!defined(textures)) {
-            return;
-        }
+    function textureDefaults(gltf) {
+        gltf.textures = defaultValue(gltf.textures, {});
+        var textures = gltf.textures;
 
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
@@ -236,19 +241,27 @@ define([
             return undefined;
         }
 
+        gltf.allExtensions = defaultValue(gltf.allExtensions, []);
         accessorDefaults(gltf);
         animationDefaults(gltf);
         assetDefaults(gltf);
         bufferDefaults(gltf);
+        bufferViewDefaults(gltf);
+        cameraDefaults(gltf);
+        imageDefaults(gltf);
         lightDefaults(gltf);
+        materialDefaults(gltf);
         meshDefaults(gltf);
         nodeDefaults(gltf);
+        programDefaults(gltf);
         samplerDefaults(gltf);
+        sceneDefaults(gltf);
+        shaderDefaults(gltf);
         skinDefaults(gltf);
-        textureDefaults(gltf);
-
+        techniqueDefaults(gltf);
         gltf.profile = defaultValue(gltf.profile, 'WebGL 1.0.2');
         gltf.version = defaultValue(gltf.version, '1.0');
+        textureDefaults(gltf);
 
         return gltf;
     };
