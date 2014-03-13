@@ -385,24 +385,8 @@ define([
         this.debugShowFramesPerSecond = false;
 
         /**
-         * Enables order independent translucency. If <code>true</code>, each fragment
-         * that overlaps translucent geometry will appear to be drawn in the correct
-         * back-tofront order, e.g. intersecting translucent geometry. If <code>false</code>,
-         * the translucent geometry will be drawn in the order they are added to {@link Scene#primitives}
-         * which may appear incorrectly for certain views.
-         *
-         * Order independent translucency requires the
-         * <a href='http://www.khronos.org/registry/webgl/extensions/OES_texture_float/'>OES_texture_float</a>
-         * extension and the ability to attach a floating point texture as a render target.
-         *
-         * @type Boolean
-         * @default true
-         */
-        this.orderIndependentTranslucency = true;
-
-        /**
-         * If <code>true</code>, enables Fast Aproximate Anti-aliasing when order independent translucency
-         * is also enabled.
+         * If <code>true</code>, enables Fast Aproximate Anti-aliasing only if order independent translucency
+         * is supported.
          *
          * @type Boolean
          * @default true
@@ -410,8 +394,8 @@ define([
         this.fxaaOrderIndependentTranslucency = true;
 
         /**
-         * When <code>true</code>, enables Fast Approximate Anti-aliasing when order independent translucency
-         * is disabled or unsupported.
+         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
+         * is unsupported.
          *
          * @type Boolean
          * @default false
@@ -1099,7 +1083,7 @@ define([
         updateFramebuffers(scene);
         updatePostCommands(scene);
 
-        var sortTranslucent = !picking && (scene.orderIndependentTranslucency && (scene._translucentMRTSupport || scene._translucentMultipassSupport));
+        var sortTranslucent = !picking && (scene._translucentMRTSupport || scene._translucentMultipassSupport);
         var useFXAA = !picking && (scene.fxaa || (sortTranslucent && scene.fxaaOrderIndependentTranslucency));
 
         if (sortTranslucent) {
@@ -1266,7 +1250,7 @@ define([
         var command;
         var fs;
 
-        var orderIndependentTranslucencySupported = scene.orderIndependentTranslucency && (scene._translucentMRTSupport || scene._translucentMultipassSupport);
+        var orderIndependentTranslucencySupported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
         if (orderIndependentTranslucencySupported) {
             if (!defined(scene._compositeCommand)) {
                 fs = createShaderSource({
@@ -1321,7 +1305,7 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
-        var supported = scene.orderIndependentTranslucency && (scene._translucentMRTSupport || scene._translucentMultipassSupport);
+        var supported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
         var useFXAA = scene.fxaa || (scene.fxaaOrderIndependentTranslucency && supported);
 
         var compositeTexture = scene._compositeTexture;
@@ -1382,7 +1366,7 @@ define([
             }
         }
 
-        supported = scene.orderIndependentTranslucency && (scene._translucentMRTSupport || scene._translucentMultipassSupport);
+        supported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
         useFXAA = scene.fxaa || (scene.fxaaOrderIndependentTranslucency && supported);
 
         if (supported || useFXAA) {
