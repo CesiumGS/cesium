@@ -25,10 +25,6 @@ define([
      * @param {Array} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
      * @param {Array} right An array of Cartesians with length <code>n</code> that is the right side of the system of equations.
      *
-     * @exception {DeveloperError} The array lower is required.
-     * @exception {DeveloperError} The array diagonal is required.
-     * @exception {DeveloperError} The array upper is required.
-     * @exception {DeveloperError} The array right is required.
      * @exception {DeveloperError} diagonal and right must have the same lengths.
      * @exception {DeveloperError} lower and upper must have the same lengths.
      * @exception {DeveloperError} lower and upper must be one less than the length of diagonal.

@@ -3,6 +3,7 @@ define([
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/freezeObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -14,6 +15,7 @@ define([
         clone,
         defaultValue,
         defined,
+        defineProperties,
         freezeObject,
         DeveloperError,
         Event,
@@ -38,9 +40,6 @@ define([
      * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
-     *
-     * @exception {DeveloperError} <code>description.url</code> is required.
-     * @exception {DeveloperError} <code>description.layers</code> is required.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -157,215 +156,226 @@ define([
         return url;
     }
 
-    /**
-     * Gets the URL of the WMS server.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {String} The URL.
-     */
-    WebMapServiceImageryProvider.prototype.getUrl = function() {
-        return this._url;
-    };
 
-    /**
-     * Gets the proxy used by this provider.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Proxy} The proxy.
-     *
-     * @see DefaultProxy
-     */
-    WebMapServiceImageryProvider.prototype.getProxy = function() {
-        return this._proxy;
-    };
+    defineProperties(WebMapServiceImageryProvider.prototype, {
+        /**
+         * Gets the URL of the WMS server.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {String}
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
 
-    /**
-     * Gets the names of the WMS layers, separated by commas.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {String} The layer names.
-     */
-    WebMapServiceImageryProvider.prototype.getLayers = function() {
-        return this._layers;
-    };
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Proxy}
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
+            }
+        },
 
-    /**
-     * Gets the width of each tile, in pixels.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Number} The width.
-     *
-     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getTileWidth = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        /**
+         * Gets the names of the WMS layers, separated by commas.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @returns {String}
+         */
+        layers : {
+            get : function() {
+                return this._layers;
+            }
+        },
+
+        /**
+         * Gets the width of each tile, in pixels. This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProviderr.prototype
+         * @type {Number}
+         */
+        tileWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileWidth;
+            }
+        },
+
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Number}
+         */
+        tileHeight: {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileHeight;
+            }
+        },
+
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Number}
+         */
+        maximumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._maximumLevel;
+            }
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Number}
+         */
+        minimumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return 0;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme.extent;
+            }
+        },
+
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         */
+        tileDiscardPolicy : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileDiscardPolicy;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link WebMapServiceImageryProvider#ready} returns true.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
-        //>>includeEnd('debug');
-
-        return this._tileWidth;
-    };
+    });
 
     /**
-     * Gets the height of each tile, in pixels.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
+     * Gets the credits to be displayed when a given tile is displayed.
      *
      * @memberof WebMapServiceImageryProvider
      *
-     * @returns {Number} The height.
+     * @param {Number} x The tile X coordinate.
+     * @param {Number} y The tile Y coordinate.
+     * @param {Number} level The tile level;
      *
-     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
+     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
+     *
+     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
-    WebMapServiceImageryProvider.prototype.getTileHeight = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tileHeight;
-    };
-
-    /**
-     * Gets the minimum level-of-detail that can be requested.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Number} The minimum level.
-     *
-     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getMinimumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return 0;
-    };
-
-    /**
-     * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Number} The maximum level.
-     *
-     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getMaximumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._maximumLevel;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {TilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getTilingScheme = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme;
-    };
-
-    /**
-     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Extent} The extent.
-     *
-     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getExtent = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme.getExtent();
-    };
-
-    /**
-     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-     * returns undefined, no tiles are filtered.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {TileDiscardPolicy} The discard policy.
-     *
-     * @see DiscardMissingTileImagePolicy
-     * @see NeverTileDiscardPolicy
-     *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
-     */
-    WebMapServiceImageryProvider.prototype.getTileDiscardPolicy = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tileDiscardPolicy;
-    };
-
-    /**
-     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Event} The event.
-     */
-    WebMapServiceImageryProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    WebMapServiceImageryProvider.prototype.isReady = function() {
-        return this._ready;
+    WebMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
+        return undefined;
     };
 
     /**
      * Requests the image for a given tile.  This function should
-     * not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
+     * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
      *
      * @memberof WebMapServiceImageryProvider
      *
@@ -389,18 +399,6 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
-    };
-
-    /**
-     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-     * the source of the imagery.  This function should not be called before {@link WebMapServiceImageryProvider#isReady} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    WebMapServiceImageryProvider.prototype.getCredit = function() {
-        return this._credit;
     };
 
     /**

@@ -1,34 +1,32 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './ComponentDatatype',
+        './CylinderGeometryLibrary',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartesian3',
-        './CylinderGeometryLibrary',
-        './Math',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './IndexDatatype',
+        './PrimitiveType'
     ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        ComponentDatatype,
+        CylinderGeometryLibrary,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartesian3,
-        CylinderGeometryLibrary,
-        CesiumMath,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        IndexDatatype,
+        PrimitiveType) {
     "use strict";
 
     var radiusScratch = new Cartesian2();
@@ -86,7 +84,7 @@ define([
         }
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
-       }
+        }
         //>>includeEnd('debug');
 
         this._length = length;
@@ -124,7 +122,7 @@ define([
 
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices * 2);
         var index = 0;
-        for ( var i = 0; i < slices - 1; i++) {
+        for (var i = 0; i < slices - 1; i++) {
             indices[index++] = i;
             indices[index++] = i + 1;
             indices[index++] = i + slices;
@@ -145,9 +143,9 @@ define([
 
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
-            componentDatatype: ComponentDatatype.DOUBLE,
-            componentsPerAttribute: 3,
-            values: positions
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : positions
         });
 
         radiusScratch.x = length * 0.5;

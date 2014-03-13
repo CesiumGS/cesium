@@ -190,10 +190,10 @@ define([
      *
      * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
      * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
-     * @exception {DeveloperError} canvas is required.
      */
     var Context = function(canvas, options) {
-        if (!window.WebGLRenderingContext) {
+        // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+        if (typeof WebGLRenderingContext === 'undefined') {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
@@ -1165,7 +1165,7 @@ define([
      *     position : 0,
      *     normal   : 1
      * };
-     * sp = context.createShaderProgram(vs, fs, attributes);            *
+     * sp = context.createShaderProgram(vs, fs, attributes);
      */
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
         return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
@@ -2156,7 +2156,11 @@ define([
         }
     };
 
-    var scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    var scratchBackBufferArray;
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    }
 
     function beginDraw(context, framebuffer, drawCommand, passState) {
         var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
@@ -2254,10 +2258,6 @@ define([
      *
      * @memberof Context
      *
-     * @exception {DeveloperError} drawCommand is required.
-     * @exception {DeveloperError} drawCommand.primitiveType is required and must be valid.
-     * @exception {DeveloperError} drawCommand.shaderProgram is required.
-     * @exception {DeveloperError} drawCommand.vertexArray is required.
      * @exception {DeveloperError} drawCommand.offset must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} drawCommand.count must be omitted or greater than or equal to zero.
      * @exception {DeveloperError} Program validation failed.
@@ -2506,7 +2506,7 @@ define([
      * <code>creationArguments</code> can have four properties:
      * <ul>
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
-     *   <li><code>attributeIndices</code>:  An object that maps geometry attribute names to vertex shader attribute indices.</li>
+     *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
      *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
@@ -2524,7 +2524,7 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see GeometryPipeline.createAttributeIndices
+     * @see GeometryPipeline.createAttributeLocations
      * @see ShaderProgram
      *
      * @example
@@ -2533,8 +2533,8 @@ define([
      * // interleaved by default.
      * var geometry = new BoxGeometry();
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2542,10 +2542,10 @@ define([
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
-     *     bufferUsage      : BufferUsage.STATIC_DRAW,
-     *     vertexLayout     : VertexLayout.INTERLEAVED
+     *     geometry           : geometry,
+     *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
+     *     bufferUsage        : BufferUsage.STATIC_DRAW,
+     *     vertexLayout       : VertexLayout.INTERLEAVED
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2560,7 +2560,7 @@ define([
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
-        var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
+        var attributeLocations = defaultValue(ca.attributeLocations, defaultValue.EMPTY_OBJECT);
         var interleave = (defined(ca.vertexLayout)) && (ca.vertexLayout === VertexLayout.INTERLEAVED);
         var createdVAAttributes = ca.vertexArrayAttributes;
 
@@ -2585,7 +2585,7 @@ define([
                         if (defined(attribute.values)) {
                             // Common case: per-vertex attributes
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 vertexBuffer : vertexBuffer,
                                 componentDatatype : attribute.componentDatatype,
                                 componentsPerAttribute : attribute.componentsPerAttribute,
@@ -2596,7 +2596,7 @@ define([
                         } else {
                             // Constant attribute for all vertices
                             vaAttributes.push({
-                                index : attributeIndices[name],
+                                index : attributeLocations[name],
                                 value : attribute.value,
                                 componentDatatype : attribute.componentDatatype,
                                 normalize : attribute.normalize
@@ -2622,7 +2622,7 @@ define([
                     }
 
                     vaAttributes.push({
-                        index : attributeIndices[name],
+                        index : attributeLocations[name],
                         vertexBuffer : vertexBuffer,
                         value : attribute.value,
                         componentDatatype : componentDatatype,
@@ -2666,8 +2666,6 @@ define([
      *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *
-     * @exception {DeveloperError} pickColor is required.
-     *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
      *
@@ -2705,7 +2703,6 @@ define([
      *
      * @returns {Object} A PickId object with a <code>color</code> property.
      *
-     * @exception {DeveloperError} object is required.
      * @exception {RuntimeError} Out of unique Pick IDs.
      *
      * @see Context#getObjectByPickColor

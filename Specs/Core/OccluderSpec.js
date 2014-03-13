@@ -273,7 +273,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var positions = extent.subsample(ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
-        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions);
+        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), bs.center, positions);
         var actual = Occluder.computeOccludeePointFromExtent(extent);
         expect(actual).toEqual(point);
     });

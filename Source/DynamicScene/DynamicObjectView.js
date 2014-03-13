@@ -54,7 +54,7 @@ define([
             //We are assigning the position of the camera, not of the object, so modify the height appropriately.
             cartographic.height = viewDistance;
             if (objectChanged || modeChanged) {
-                camera.controller.setPositionCartographic(cartographic);
+                camera.setPositionCartographic(cartographic);
 
                 //z is always zero in 2D for up and right
                 camera.up.z = 0;
@@ -157,7 +157,7 @@ define([
                 camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
             }
 
-            that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);
@@ -184,10 +184,8 @@ define([
 
             var controller = that._screenSpaceCameraController;
             controller.enableTranslate = false;
-            controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
+            controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
             controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
-
-            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
             var position = camera.position;
             Cartesian3.clone(position, that._lastOffset);
@@ -200,10 +198,9 @@ define([
 
     function update3DController(that, camera, objectChanged, offset) {
         var scene = that.scene;
-        camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
-            camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         } else if (scene.mode !== that._mode) {
             that._mode = scene.mode;
 
@@ -230,7 +227,7 @@ define([
                 Matrix3.multiplyByVector(Matrix3.fromQuaternion(rotation, update3DControllerMatrix3), offset, offset);
             }
             Cartesian3.multiplyByScalar(Cartesian3.normalize(offset, offset), that._lastDistance, offset);
-            camera.controller.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+            camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
         }
     }
 
@@ -293,11 +290,6 @@ define([
     * to the latest settings.
     * @param {JulianDate} time The current animation time.
     *
-    * @exception {DeveloperError} time is required.
-    * @exception {DeveloperError} DynamicObjectView.scene is required.
-    * @exception {DeveloperError} DynamicObjectView.dynamicObject is required.
-    * @exception {DeveloperError} DynamicObjectView.ellipsoid is required.
-    * @exception {DeveloperError} DynamicObjectView.dynamicObject.position is required.
     */
     DynamicObjectView.prototype.update = function(time) {
         var scene = this.scene;
@@ -324,7 +316,7 @@ define([
 
         if (scene !== this._lastScene) {
             this._lastScene = scene;
-            this._screenSpaceCameraController = scene.getScreenSpaceCameraController();
+            this._screenSpaceCameraController = scene.screenSpaceCameraController;
         }
 
         var positionProperty = dynamicObject.position;
@@ -362,11 +354,11 @@ define([
 
         var mode = scene.mode;
         if (mode === SceneMode.SCENE2D) {
-            update2D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
+            update2D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         } else if (mode === SceneMode.SCENE3D) {
-            update3D(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid);
+            update3D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            updateColumbus(this, scene.getCamera(), objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
+            updateColumbus(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         }
     };
 

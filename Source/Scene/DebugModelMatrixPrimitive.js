@@ -153,7 +153,8 @@ define([
                 }),
                 appearance : new PolylineColorAppearance(),
                 asynchronous : false,
-                allow3DOnly : Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY)  // Workaround projecting (0, 0, 0)
+                // Workaround projecting (0, 0, 0)
+                allow3DOnly : (this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)
             });
         }
 

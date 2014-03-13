@@ -76,8 +76,6 @@ define([
      *
      * @param {Context} context The context to use to create textures when needed.
      *
-     * @exception {DeveloperError} description is required.
-     *
      * @see Context#createTexture2D
      */
     TexturePool.prototype.createTexture2D = function(context, description) {
@@ -90,9 +88,9 @@ define([
         var source = description.source;
         var width = defined(source) ? source.width : description.width;
         var height = defined(source) ? source.height : description.height;
-        //coerce values to primitive numbers to make textureTypeKey smaller.
         var pixelFormat = (description.pixelFormat || PixelFormat.RGBA);
-        var pixelDatatype = +(description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE);
+        var pixelDatatype = (description.pixelDatatype || PixelDatatype.UNSIGNED_BYTE);
+        //coerce boolean to number to make textureTypeKey smaller.
         var preMultiplyAlpha = +(description.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE);
 
         var textureTypeKey = JSON.stringify([width, height, pixelFormat, pixelDatatype, preMultiplyAlpha]);

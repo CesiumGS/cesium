@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/defaultValue'
+        '../Core/destroyObject'
     ], function(
         defined,
-        destroyObject,
-        defaultValue) {
+        destroyObject) {
     "use strict";
 
     /**
@@ -15,10 +13,10 @@ define([
      * @alias CentralBodySurfaceShaderSet
      * @private
      */
-    function CentralBodySurfaceShaderSet(attributeIndices) {
+    function CentralBodySurfaceShaderSet(attributeLocations) {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
-        this._attributeIndices = attributeIndices;
+        this._attributeLocations = attributeLocations;
         this._shaders = {};
     }
 
@@ -102,10 +100,7 @@ define([
                 '    return color;\n' +
                 '}';
 
-            shader = context.getShaderCache().getShaderProgram(
-                vs,
-                fs,
-                this._attributeIndices);
+            shader = context.getShaderCache().getShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;

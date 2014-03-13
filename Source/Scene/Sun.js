@@ -120,7 +120,7 @@ define([
         }
     });
 
-    var viewportAttributeIndices = {
+    var viewportAttributeLocations = {
         position : 0,
         textureCoordinates : 1
     };
@@ -162,7 +162,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : viewportAttributeIndices,
+            attributeLocations : viewportAttributeLocations,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -226,7 +226,7 @@ define([
             drawCommand.owner = this;
             drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
             drawCommand.vertexArray = getVertexArray(context);
-            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeIndices);
+            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeLocations);
             drawCommand.framebuffer = fbo;
             drawCommand.renderState = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
@@ -255,7 +255,7 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var attributeIndices = {
+            var attributeLocations = {
                 direction : 0
             };
 
@@ -274,7 +274,7 @@ define([
 
             var vertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
             var attributes = [{
-                index : attributeIndices.direction,
+                index : attributeLocations.direction,
                 vertexBuffer : vertexBuffer,
                 componentsPerAttribute : 2,
                 normalize : true,
@@ -283,7 +283,7 @@ define([
             command.vertexArray = context.createVertexArray(attributes);
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeIndices);
+            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });

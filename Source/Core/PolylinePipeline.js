@@ -1,27 +1,27 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartographic',
-        './Cartesian3',
-        './Cartesian4',
         './Ellipsoid',
         './EllipsoidGeodesic',
         './IntersectionTests',
+        './isArray',
         './Math',
         './Matrix4',
         './Plane'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
-        Cartographic,
-        Cartesian3,
-        Cartesian4,
         Ellipsoid,
         EllipsoidGeodesic,
         IntersectionTests,
+        isArray,
         CesiumMath,
         Matrix4,
         Plane) {
@@ -56,8 +56,8 @@ define([
         var first = ellipsoid.scaleToGeodeticSurface(p1, scaleFirst);
         var last = ellipsoid.scaleToGeodeticSurface(p2, scaleLast);
         var separationAngle = Cartesian3.angleBetween(first, last);
-        var numPoints = Math.ceil(separationAngle/granularity);
-        var result = new Array(numPoints*3);
+        var numPoints = Math.ceil(separationAngle / granularity);
+        var result = new Array(numPoints * 3);
         var start = ellipsoid.cartesianToCartographic(first, carto1);
         var end = ellipsoid.cartesianToCartographic(last, carto2);
 
@@ -137,7 +137,7 @@ define([
             var prev = cartesians[0];
 
             var length = positions.length;
-            for ( var i = 1; i < length; ++i) {
+            for (var i = 1; i < length; ++i) {
                 var cur = positions[i];
 
                 // intersects the IDL if either endpoint is on the negative side of the yz-plane
@@ -184,8 +184,6 @@ define([
      *
      * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
-     * @exception {DeveloperError} positions is required.
-     *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var positions = [
@@ -196,7 +194,7 @@ define([
      */
     PolylinePipeline.removeDuplicates = function(positions) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions )) {
+        if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
         //>>includeEnd('debug');
@@ -232,8 +230,6 @@ define([
      *
      * @returns {Array} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
-     * @exception {DeveloperError} positions is required
-     *
      * @example
      * var positions = ellipsoid.cartographicArrayToCartesianArray([
      *      Cesium.Cartographic.fromDegrees(-105.0, 40.0),
@@ -257,11 +253,11 @@ define([
         var newPositions = [];
         for (var i = 0; i < length - 1; i++) {
             var p0 = positions[i];
-            var p1 = positions[i+1];
+            var p1 = positions[i + 1];
             newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
         }
 
-        var lastPoint = positions[length-1];
+        var lastPoint = positions[length - 1];
         var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
         carto.height = 0;
         var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
@@ -320,7 +316,7 @@ define([
         }
 
         if (height === 0) {
-            for(i = 0; i < length; i+=3) {
+            for (i = 0; i < length; i += 3) {
                 p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
                 newPositions[i] = p.x;
                 newPositions[i + 1] = p.y;
@@ -330,12 +326,12 @@ define([
         }
 
         var h;
-        if (Array.isArray(height)) {
-            if (height.length !== length/3) {
+        if (isArray(height)) {
+            if (height.length !== length / 3) {
                 throw new DeveloperError('height.length must be equal to positions.length');
             }
             for (i = 0; i < length; i += 3) {
-                h = height[i/3];
+                h = height[i / 3];
                 p = Cartesian3.fromArray(positions, i, p);
                 p = computeHeight(p, h, ellipsoid);
                 newPositions[i] = p.x;

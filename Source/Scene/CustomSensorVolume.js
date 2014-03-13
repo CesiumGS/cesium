@@ -49,7 +49,7 @@ define([
         SceneMode) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         normal : 1
     };
@@ -338,14 +338,14 @@ define([
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
-            index : attributeIndices.position,
+            index : attributeLocations.position,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : attributeIndices.normal,
+            index : attributeLocations.normal,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
@@ -497,14 +497,16 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
-                var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
+                var fsSource = createShaderSource({
+                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
+                });
 
                 frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
-                frontFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
+                frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
                 backFaceColorCommand.shaderProgram = frontFaceColorCommand.shaderProgram;
-                backFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                backFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
                 backFaceColorCommand.uniformMap.u_normalDirection = function() {
                     return -1.0;
                 };
@@ -537,14 +539,15 @@ define([
                 });
 
                 pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);
+                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
-                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                var uniforms = {
                     czm_pickColor : function() {
                         return that._pickId.color;
                     }
-                }], false, false);
+                };
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._material._uniforms), uniforms);
             }
 
             pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;

@@ -11,7 +11,7 @@ defineSuite([
     it('check binding with constants', function() {
         var div = document.createElement('div');
         div.setAttribute('data-bind', '\
-cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 z", width: 28, height: 40, css: "someClass" }');
+cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 Z", width: 28, height: 40, css: "someClass" }');
 
         document.body.appendChild(div);
 
@@ -25,7 +25,7 @@ cesiumSvgPath: { path: "M 100 100 L 300 100 L 200 300 z", width: 28, height: 40,
 
         var path = div.querySelector('svg > path');
         expect(path).not.toBeNull();
-        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 z');
+        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 Z');
 
         knockout.cleanNode(div);
         document.body.removeChild(div);
@@ -39,7 +39,7 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }');
         document.body.appendChild(div);
 
         knockout.applyBindings({
-            p : knockout.observable('M 100 100 L 300 100 L 200 300 z'),
+            p : knockout.observable('M 100 100 L 300 100 L 200 300 Z'),
             w : knockout.observable(28),
             h : knockout.observable(40),
             c : knockout.observable('someClass')
@@ -53,7 +53,7 @@ cesiumSvgPath: { path: p, width: w, height: h, css: c }');
 
         var path = div.querySelector('svg > path');
         expect(path).not.toBeNull();
-        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 z');
+        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 Z');
 
         knockout.cleanNode(div);
         document.body.removeChild(div);
@@ -68,7 +68,7 @@ cesiumSvgPath: svgPath');
 
         var viewModel = {
             svgPath : knockout.observable({
-                path : knockout.observable('M 100 100 L 300 100 L 200 300 z'),
+                path : knockout.observable('M 100 100 L 300 100 L 200 300 Z'),
                 width : knockout.observable(28),
                 height : knockout.observable(40),
                 css : knockout.observable('someClass')
@@ -84,7 +84,7 @@ cesiumSvgPath: svgPath');
 
         var path = div.querySelector('svg > path');
         expect(path).not.toBeNull();
-        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 z');
+        expect(path.getAttribute('d')).toEqual('M 100 100 L 300 100 L 200 300 Z');
 
         knockout.cleanNode(div);
         document.body.removeChild(div);

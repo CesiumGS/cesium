@@ -28,7 +28,7 @@ require(['Cesium'], function(Cesium) {
     "use strict";
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var primitives = scene.getPrimitives();
+    var primitives = scene.primitives;
 
     // Stripe Material
     primitives.add(new Cesium.Primitive({

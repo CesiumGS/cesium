@@ -14,8 +14,6 @@ define([
      *
      * @returns {Boolean} True if <code>year</code> is a leap yer.
      *
-     * @exception {DeveloperError} year is required and must be a number.
-     *
      * @example
      * var leapYear = Cesium.isLeapYear(2000); // true
      */

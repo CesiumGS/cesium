@@ -2,11 +2,13 @@
 define([
         '../Core/createGuid',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError'
     ], function(
         createGuid,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError) {
     "use strict";
@@ -22,7 +24,7 @@ define([
      * @example
      * // Example 1. Add primitives to a composite.
      * var primitives = new Cesium.CompositePrimitive();
-     * primitives.setCentralBody(new Cesium.CentralBody());
+     * primitives.centralBody = new Cesium.CentralBody();
      * primitives.add(billboards);
      * primitives.add(labels);
      *
@@ -47,7 +49,6 @@ define([
          * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
          *
          * @see CompositePrimitive#destroy
-         * @see CompositePrimitive#setCentralBody
          * @see CompositePrimitive#remove
          * @see CompositePrimitive#removeAll
          *
@@ -77,50 +78,37 @@ define([
          * @default true
          */
         this.show = true;
+    };
+
+    defineProperties(CompositePrimitive.prototype, {
 
         /**
-         * Determines if the primitives in this composite should be sorted. If set to <code>true</code>,
-         * an attempt will be made to sort the primitives; otherwise, the primitives are assumed to be sorted
-         * in the correct drawing order.
-         *
-         * @type Boolean
-         * @default true
+         * Gets or sets the depth-test ellipsoid.
+         * @memberof CompositePrimitive.prototype
+         * @type {CentralBody}
          */
-        this.sortPrimitives = true;
-    };
+        centralBody : {
+            get: function() {
+                return this._centralBody;
+            },
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof CompositePrimitive
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see CompositePrimitive#setCentralBody
-     */
-    CompositePrimitive.prototype.getCentralBody = function() {
-        return this._centralBody;
-    };
+            set: function(centralBody) {
+                this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
+                this._centralBody = centralBody;
+            }
+        },
 
-    /**
-     * DOC_TBA
-     *
-     * Implicitly sets the depth-test ellipsoid.
-     *
-     * @memberof CompositePrimitive
-     *
-     * @see CompositePrimitive#depthTestEllipsoid
-     * @see CompositePrimitive#getCentralBody
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @example
-     * var primitives = new Cesium.CompositePrimitive();
-     * primitives.setCentralBody(new Cesium.CentralBody());
-     */
-    CompositePrimitive.prototype.setCentralBody = function(centralBody) {
-        this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-        this._centralBody = centralBody;
-    };
+        /**
+         * Gets the length of the list of primitives
+         * @memberof CompositePrimitive.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._primitives.length;
+            }
+        }
+    });
 
     /**
      * Adds a primitive to a composite primitive.  When a composite is rendered
@@ -132,7 +120,6 @@ define([
      *
      * @returns {Object} The primitive added to the composite.
      *
-     * @exception {DeveloperError} primitive is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see CompositePrimitive#add
@@ -363,7 +350,6 @@ define([
      *
      * @memberof CompositePrimitive
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see CompositePrimitive#getLength
@@ -371,7 +357,7 @@ define([
      * @example
      * // Toggle the show property of every primitive in the composite -
      * // not recursive on child composites.
-     * var len = primitives.getLength();
+     * var len = primitives.length;
      * for (var i = 0; i < len; ++i) {
      *   var p = primitives.get(i);
      *   p.show = !p.show;
@@ -388,30 +374,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * @memberof CompositePrimitive
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see CompositePrimitive#get
-     *
-     * @example
-     * // Toggle the show property of every primitive in the composite -
-     * // not recursive on child composites.
-     * var len = primitives.getLength();
-     * for (var i = 0; i < len; ++i) {
-     *   var p = primitives.get(i);
-     *   p.show = !p.show;
-     * }
-     */
-    CompositePrimitive.prototype.getLength = function() {
-        return this._primitives.length;
-    };
-
-    var scratchCommandList = [];
-
-    /**
      * @private
      */
     CompositePrimitive.prototype.update = function(context, frameState, commandList) {
@@ -425,25 +387,8 @@ define([
 
         var primitives = this._primitives;
         var length = primitives.length;
-        var i;
-
-        if (this.sortPrimitives) {
-            for (i = 0; i < length; ++i) {
-                primitives[i].update(context, frameState, commandList);
-            }
-        } else {
-            for (i = 0; i < length; ++i) {
-                scratchCommandList.length = 0;
-                primitives[i].update(context, frameState, scratchCommandList);
-
-                var tempCommandListLength = scratchCommandList.length;
-                var commandListLength = commandList.length;
-                for (var j = 0; j < tempCommandListLength; ++j) {
-                    var command = scratchCommandList[j];
-                    command.index = tempCommandListLength + j;
-                    commandList.push(command);
-                }
-            }
+        for (var i = 0; i < length; ++i) {
+            primitives[i].update(context, frameState, commandList);
         }
     };
 

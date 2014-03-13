@@ -1,12 +1,16 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/DeveloperError'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError) {
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../DynamicScene/Property'
+    ], function(
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        Property) {
     "use strict";
 
     function resolve(referenceProperty) {
@@ -32,10 +36,6 @@ define([
      * @param {DynamicObjectCollection} dynamicObjectCollection The object collection which will be used to resolve the reference.
      * @param {String} targetObjectId The id of the object which is being referenced.
      * @param {String} targetPropertyName The name of the property on the target object which we will use.
-     *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} targetObjectId is required.
-     * @exception {DeveloperError} targetPropertyName is required.
      */
     var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
         //>>includeStart('debug', pragmas.debug);
@@ -55,7 +55,34 @@ define([
         this._targetObjectId = targetObjectId;
         this._targetObject = undefined;
         this._targetPropertyName = targetPropertyName;
+        this._definitionChanged = new Event();
     };
+
+    defineProperties(ReferenceProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.
+         * This property always returns <code>true</code>.
+         * @memberof ConstantProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return Property.isConstant(resolve(this));
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is changed whenever setValue is called with data different
+         * than the current value.
+         * @memberof ConstantProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        }
+    });
 
     /**
      * Creates a new reference property given the dynamic object collection that will
@@ -67,8 +94,6 @@ define([
      *
      * @returns A new instance of ReferenceProperty.
      *
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     * @exception {DeveloperError} referenceString is required.
      * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
      */
     ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
@@ -100,8 +125,6 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      *
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -112,6 +135,27 @@ define([
 
         var targetProperty = resolve(this);
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
+    };
+
+    /**
+     * Gets the value of the property at the provided time and in the provided reference frame.
+     * This method is only valid if the property being referenced is a {@link PositionProperty}.
+     * @memberof ReferenceProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
+     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     */
+    ReferenceProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        //>>includeEnd('debug');
+
+        var targetProperty = resolve(this);
+        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValueInReferenceFrame(time, referenceFrame, result) : undefined;
     };
 
     /**

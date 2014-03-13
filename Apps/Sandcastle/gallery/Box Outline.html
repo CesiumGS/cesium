@@ -29,8 +29,8 @@ require(['Cesium'], function(Cesium) {
     
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var primitives = scene.getPrimitives();
-    var ellipsoid = viewer.centralBody.getEllipsoid();
+    var primitives = scene.primitives;
+    var ellipsoid = viewer.centralBody.ellipsoid;
        
     var dimensions = new Cesium.Cartesian3(400000.0, 400000.0, 400000.0);
     var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-106.0, 45.0));
@@ -57,7 +57,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(1.0, scene.getContext().getMaximumAliasedLineWidth())
+                lineWidth : Math.min(1.0, scene.context.getMaximumAliasedLineWidth())
             }
         })
     }));

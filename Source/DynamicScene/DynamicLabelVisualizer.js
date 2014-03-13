@@ -32,22 +32,16 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicLabel
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicLabelVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
@@ -61,7 +55,7 @@ define([
         this._dynamicObjectCollection = undefined;
 
         var labelCollection = this._labelCollection = new LabelCollection();
-        scene.getPrimitives().add(labelCollection);
+        scene.primitives.add(labelCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -107,13 +101,11 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicLabelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
 
@@ -176,7 +168,7 @@ define([
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
         this.setDynamicObjectCollection(undefined);
-        this._scene.getPrimitives().remove(this._labelCollection);
+        this._scene.primitives.remove(this._labelCollection);
         return destroyObject(this);
     };
 
@@ -224,11 +216,11 @@ define([
                 labelVisualizerIndex = unusedIndexes.pop();
                 label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
             } else {
-                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.getLength();
+                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.length;
                 label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
-            label.dynamicObject = dynamicObject;
+            label.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             label.setText('');

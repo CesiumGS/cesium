@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Event',
         '../Core/Math',
@@ -11,6 +12,7 @@ define([
         DeveloperError,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         Event,
         CesiumMath,
@@ -65,6 +67,19 @@ define([
         this.layerShownOrHidden = new Event();
     };
 
+    defineProperties(ImageryLayerCollection.prototype, {
+        /**
+         * Gets the number of layers in this collection.
+         * @memberof ImageryLayerCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._layers.length;
+            }
+        }
+    });
+
     /**
      * Adds a layer to the collection.
      *
@@ -74,7 +89,6 @@ define([
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
      *
-     * @exception {DeveloperError} layer is required.
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
@@ -114,8 +128,6 @@ define([
      *                         added on top of all existing layers.
      *
      * @returns {ImageryLayer} The newly created layer.
-     *
-     * @exception {DeveloperError} imageryProvider is required.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
         //>>includeStart('debug', pragmas.debug);
@@ -217,7 +229,6 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.get = function(index) {
@@ -228,17 +239,6 @@ define([
         //>>includeEnd('debug');
 
         return this._layers[index];
-    };
-
-    /**
-     * Gets the number of layers in this collection.
-     *
-     * @memberof ImageryLayerCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    ImageryLayerCollection.prototype.getLength = function() {
-        return this._layers.length;
     };
 
     function getLayerIndex(layers, layer) {

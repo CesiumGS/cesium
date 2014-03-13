@@ -103,8 +103,6 @@ define([
      *
      * @param {ClockViewModel} clockViewModel The ClockViewModel instance to use.
      *
-     * @exception {DeveloperError} clockViewModel is required.
-     *
      * @see Animation
      */
     var AnimationViewModel = function(clockViewModel) {
@@ -422,8 +420,6 @@ define([
      * @memberof AnimationViewModel
      *
      * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
-     *
-     * @exception {DeveloperError} positiveTicks is required.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
         //>>includeStart('debug', pragmas.debug);

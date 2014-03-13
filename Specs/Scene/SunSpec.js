@@ -33,16 +33,16 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.getContext().getUniformState();
-        var camera = scene.getCamera();
+        var us = scene.context.getUniformState();
+        var camera = scene.camera;
 
         var sunPosition = us.getSunPositionWC();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('draws in Columbus view', function() {
@@ -52,23 +52,23 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.getContext().getUniformState();
-        var camera = scene.getCamera();
+        var us = scene.context.getUniformState();
+        var camera = scene.camera;
 
         var sunPosition = us.getSunPositionColumbusView();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
         var sun = new Sun();
         sun.show = false;
 
-        var context = scene.getContext();
+        var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.getUniformState();
@@ -76,7 +76,7 @@ defineSuite([
 
         var sunPosition = us.getSunPositionWC();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        frameState.camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
 
@@ -89,7 +89,7 @@ defineSuite([
     it('does not render in 2D', function() {
         var sun = new Sun();
 
-        var context = scene.getContext();
+        var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.mode = SceneMode.SCENE2D;
@@ -98,7 +98,7 @@ defineSuite([
 
         var sunPosition = us.getSunPositionWC();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        frameState.camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
 
@@ -111,7 +111,7 @@ defineSuite([
     it('does not render without a render pass', function() {
         var sun = new Sun();
 
-        var context = scene.getContext();
+        var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.passes.render = false;
@@ -120,7 +120,7 @@ defineSuite([
 
         var sunPosition = us.getSunPositionWC();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        frameState.camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
 
@@ -144,16 +144,16 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.getContext().getUniformState();
-        var camera = scene.getCamera();
+        var us = scene.context.getUniformState();
+        var camera = scene.camera;
 
         var sunPosition = us.getSunPositionWC();
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
-        camera.controller.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
+        camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('isDestroyed', function() {

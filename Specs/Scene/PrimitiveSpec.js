@@ -296,9 +296,9 @@ defineSuite([
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode, frameState.scene2D);
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -307,7 +307,7 @@ defineSuite([
         render(context, frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        frameState.camera.controller.viewExtent(extent2);
+        frameState.camera.viewExtent(extent2);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -335,14 +335,14 @@ defineSuite([
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
         var frustum = new OrthographicFrustum();
-        frustum.right = Ellipsoid.WGS84.getMaximumRadius() * Math.PI;
+        frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode, frameState.scene2D);
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -351,7 +351,7 @@ defineSuite([
         render(context, frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        frameState.camera.controller.viewExtent(extent2);
+        frameState.camera.viewExtent(extent2);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -366,16 +366,16 @@ defineSuite([
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        scene.getPrimitives().add(new Primitive({
+        scene.primitives.add(new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
             asynchronous : false,
             debugShowBoundingVolume : true
         }));
-        scene.getCamera().controller.viewExtent(extent1);
+        scene.camera.viewExtent(extent1);
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -392,7 +392,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -401,7 +401,7 @@ defineSuite([
         render(context, frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        frameState.camera.controller.viewExtent(extent2);
+        frameState.camera.viewExtent(extent2);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -424,7 +424,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -433,7 +433,7 @@ defineSuite([
         render(context, frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        frameState.camera.controller.viewExtent(extent2);
+        frameState.camera.viewExtent(extent2);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -482,7 +482,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -515,7 +515,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
@@ -545,14 +545,14 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
         expect(pickObject.id).toEqual('extent1');
 
-        frameState.camera.controller.viewExtent(extent2);
+        frameState.camera.viewExtent(extent2);
         us.update(context, frameState);
 
         pickObject = pick(context, frameState, primitive);
@@ -571,7 +571,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
@@ -710,7 +710,7 @@ defineSuite([
             appearance : new PerInstanceColorAppearance()
         });
 
-        frameState.camera.controller.viewExtent(extent1);
+        frameState.camera.viewExtent(extent1);
         us.update(context, frameState);
 
         waitsFor(function() {

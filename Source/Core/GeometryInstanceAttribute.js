@@ -20,10 +20,7 @@ define([
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
      * @param {Array} [options.value=undefined] The value for the attribute.
      *
-     * @exception {DeveloperError} options.componentDatatype is required.
-     * @exception {DeveloperError} options.componentsPerAttribute is required.
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
-     * @exception {DeveloperError} options.value is required.
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
@@ -66,7 +63,7 @@ define([
 
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
-         * {@see GeometryInstanceAttribute#value}.
+         * {@link GeometryInstanceAttribute#value}.
          *
          * @type ComponentDatatype
          *
@@ -98,7 +95,7 @@ define([
          * indicate that the components should be mapped to the range [0, 1] (unsigned)
          * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
          * <p>
-         * This is commonly used when storing colors using {@ ComponentDatatype.UNSIGNED_BYTE}.
+         * This is commonly used when storing colors using {@link ComponentDatatype.UNSIGNED_BYTE}.
          * </p>
          *
          * @type Boolean

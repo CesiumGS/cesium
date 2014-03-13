@@ -128,8 +128,9 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        var material = Material.fromType(Material.ColorType);
-        material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
+        var material = Material.fromType(Material.ColorType, {
+            color : new Color(1.0, 1.0, 0.0, 0.5)
+        });
 
         /**
          * The surface appearance of the primitive.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
@@ -177,7 +178,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}

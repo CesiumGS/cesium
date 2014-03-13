@@ -57,7 +57,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var tilingScheme = terrainProvider.getTilingScheme();
+        var tilingScheme = terrainProvider.tilingScheme;
 
         var i;
 

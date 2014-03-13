@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './CustomSensorVolume',
@@ -8,6 +9,7 @@ define([
         './SceneMode'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         CustomSensorVolume,
@@ -26,6 +28,19 @@ define([
     var SensorVolumeCollection = function() {
         this._sensors = [];
     };
+
+    defineProperties(SensorVolumeCollection.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof SensorVolumeCollection.prototype
+         * @type {Event}
+         */
+        length : {
+            get : function() {
+                return this._sensors.length;
+            }
+        }
+    });
 
     /**
      * DOC_TBA
@@ -120,17 +135,6 @@ define([
         //>>includeEnd('debug');
 
         return this._sensors[index];
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof SensorVolumeCollection
-     *
-     * @see SensorVolumeCollection#get
-     */
-    SensorVolumeCollection.prototype.getLength = function() {
-        return this._sensors.length;
     };
 
     /**

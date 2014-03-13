@@ -4,7 +4,7 @@ defineSuite([
          'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
-         'Core/loadXML',
+         'Core/loadWithXhr',
          'Core/DefaultProxy',
          'Core/Extent',
          'Core/Math',
@@ -20,7 +20,7 @@ defineSuite([
          defined,
          jsonp,
          loadImage,
-         loadXML,
+         loadWithXhr,
          DefaultProxy,
          Extent,
          CesiumMath,
@@ -37,7 +37,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadXML.loadXML = loadXML.defaultLoadXML;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -57,7 +57,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -82,7 +82,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -106,20 +106,20 @@ defineSuite([
             url : 'made/up/tms/server/'
         });
 
-        expect(provider.getUrl()).toEqual('made/up/tms/server/');
+        expect(provider.url).toEqual('made/up/tms/server/');
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(18);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(18);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -144,7 +144,7 @@ defineSuite([
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
-        expect(provider.getCredit()).toBeUndefined();
+        expect(provider.credit).toBeUndefined();
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -152,7 +152,7 @@ defineSuite([
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getCredit()).toBeDefined();
+        expect(providerWithCredit.credit).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -163,7 +163,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -171,7 +171,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/tms/server'))).toEqual(0);
-                expect(provider.getProxy()).toEqual(proxy);
+                expect(provider.proxy).toEqual(proxy);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -199,16 +199,16 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(18);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(extent);
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(18);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(extent);
+            expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -230,11 +230,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getMaximumLevel()).toEqual(5);
+            expect(provider.maximumLevel).toEqual(5);
         });
     });
 
@@ -246,7 +246,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -266,7 +266,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -288,7 +288,7 @@ defineSuite([
     });
 
     it('keeps the extent within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -311,23 +311,23 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getExtent().west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
-            expect(provider.getExtent().west).toBeGreaterThanOrEqualTo(provider.getTilingScheme().getExtent().west);
-            expect(provider.getExtent().east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
-            expect(provider.getExtent().east).toBeLessThanOrEqualTo(provider.getTilingScheme().getExtent().east);
-            expect(provider.getExtent().south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.getExtent().south).toBeGreaterThanOrEqualTo(provider.getTilingScheme().getExtent().south);
-            expect(provider.getExtent().north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.getExtent().north).toBeLessThanOrEqualTo(provider.getTilingScheme().getExtent().north);
+            expect(provider.extent.west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
+            expect(provider.extent.west).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.west);
+            expect(provider.extent.east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
+            expect(provider.extent.east).toBeLessThanOrEqualTo(provider.tilingScheme.extent.east);
+            expect(provider.extent.south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
+            expect(provider.extent.south).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.south);
+            expect(provider.extent.north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
+            expect(provider.extent.north).toBeLessThanOrEqualTo(provider.tilingScheme.extent.north);
         });
     });
 
     it('uses a minimum level if the tilemapresource.xml specifies one and it is reasonable', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -351,17 +351,17 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getMaximumLevel()).toBe(8);
-            expect(provider.getMinimumLevel()).toBe(7);
+            expect(provider.maximumLevel).toBe(8);
+            expect(provider.minimumLevel).toBe(7);
         });
     });
 
     it('ignores the minimum level in the tilemapresource.xml if it is unreasonable', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -385,17 +385,17 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getMaximumLevel()).toBe(8);
-            expect(provider.getMinimumLevel()).toBe(0);
+            expect(provider.maximumLevel).toBe(8);
+            expect(provider.minimumLevel).toBe(0);
         });
     });
 
     it('Handles XML with casing differences', function() {
-        loadXML.loadXML = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
                 "<Tilemap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
@@ -419,12 +419,12 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getMaximumLevel()).toBe(8);
-            expect(provider.getMinimumLevel()).toBe(7);
+            expect(provider.maximumLevel).toBe(8);
+            expect(provider.minimumLevel).toBe(7);
         });
     });
 });

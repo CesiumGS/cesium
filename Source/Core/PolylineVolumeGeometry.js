@@ -1,49 +1,47 @@
 /*global define*/
 define([
+        './BoundingRectangle',
+        './BoundingSphere',
+        './ComponentDatatype',
+        './CornerType',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './CornerType',
-        './ComponentDatatype',
         './Ellipsoid',
         './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
-        './BoundingRectangle',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './VertexFormat',
         './WindingOrder'
     ], function(
+        BoundingRectangle,
+        BoundingSphere,
+        ComponentDatatype,
+        CornerType,
+        defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        CornerType,
-        ComponentDatatype,
         Ellipsoid,
         Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
-        defaultValue,
-        BoundingSphere,
-        BoundingRectangle,
-        GeometryAttribute,
-        GeometryAttributes,
         VertexFormat,
         WindingOrder) {
     "use strict";
 
-    function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
+    function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -188,9 +186,6 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @exception {DeveloperError} options.polylinePositions is required.
-     * @exception {DeveloperError} options.shapePositions is required.
-     *
      * @see PolylineVolumeGeometry#createGeometry
      *
      * @example
@@ -260,7 +255,7 @@ define([
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
 
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeGeometry, true);
-        return computeAttributes(computedPositions, shape2D, boundingRectangle, polylineVolumeGeometry._vertexFormat, polylineVolumeGeometry._ellipsoid);
+        return computeAttributes(computedPositions, shape2D, boundingRectangle, polylineVolumeGeometry._vertexFormat);
     };
 
     return PolylineVolumeGeometry;

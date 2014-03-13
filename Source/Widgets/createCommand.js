@@ -26,9 +26,7 @@ define([
      * @exports createCommand
      *
      * @param {Function} func The function to execute.
-     * @param {Boolean|Observable} [canExecute=true] A boolean, or observable, indicating whether the function can currently be executed.
-     *
-     * @exception {DeveloperError} func is required.
+     * @param {Boolean} [canExecute=true] A boolean indicating whether the function can currently be executed.
      */
     var createCommand = function(func, canExecute) {
         //>>includeStart('debug', pragmas.debug);

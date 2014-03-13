@@ -1,33 +1,31 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
         './Math',
         './PrimitiveType',
         './WallGeometryLibrary'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
         CesiumMath,
         PrimitiveType,
         WallGeometryLibrary) {
@@ -51,7 +49,6 @@ define([
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      *
-     * @exception {DeveloperError} positions is required.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      *
@@ -115,8 +112,6 @@ define([
      * @param {Number} [minimumHeight] A constant that defines the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
-     *
-     * @exception {DeveloperError} positions is required.
      *
      * @see WallOutlineGeometry#createGeometry
      *
@@ -236,7 +231,7 @@ define([
         });
 
         var numVertices = size / 3;
-        size = 2*numVertices - 4 + numVertices;
+        size = 2 * numVertices - 4 + numVertices;
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;

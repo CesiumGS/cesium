@@ -1,32 +1,30 @@
 /*global define*/
 define([
-        './defined',
         './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
         './CornerType',
         './EllipsoidTangentPlane',
-        './PolylinePipeline',
+        './Math',
         './Matrix3',
         './Matrix4',
+        './PolylinePipeline',
         './Quaternion',
-        './Transforms',
-        './Math'
+        './Transforms'
     ], function(
-        defined,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         CornerType,
         EllipsoidTangentPlane,
-        PolylinePipeline,
+        CesiumMath,
         Matrix3,
         Matrix4,
+        PolylinePipeline,
         Quaternion,
-        Transforms,
-        CesiumMath) {
+        Transforms) {
     "use strict";
 
     var scratch2Array = [new Cartesian3(), new Cartesian3()];
@@ -51,7 +49,7 @@ define([
     var cartographic = new Cartographic();
     function scaleToSurface(positions, ellipsoid) {
         var heights = new Array(positions.length);
-        for ( var i = 0; i < positions.length; i++) {
+        for (var i = 0; i < positions.length; i++) {
             var pos = positions[i];
             cartographic = ellipsoid.cartesianToCartographic(pos, cartographic);
             heights[i] = cartographic.height;
@@ -120,8 +118,8 @@ define([
         var scale = scaleMatrix;
         scale[0] = xScalar;
 
-        for ( var j = 0; j < repeat; j++) {
-            for ( var i = 0; i < shape.length; i += 3) {
+        for (var j = 0; j < repeat; j++) {
+            for (var i = 0; i < shape.length; i += 3) {
                 finalPosition = Cartesian3.fromArray(shape, i, finalPosition);
                 finalPosition = Matrix3.multiplyByVector(scale, finalPosition, finalPosition);
                 finalPosition = Matrix4.multiplyByPoint(transform, finalPosition, finalPosition);
@@ -134,7 +132,7 @@ define([
 
     var centerScratch = new Cartesian3();
     function addPositions(centers, left, shape, finalPositions, ellipsoid, heights, xScalar) {
-        for ( var i = 0; i < centers.length; i += 3) {
+        for (var i = 0; i < centers.length; i += 3) {
             var center = Cartesian3.fromArray(centers, i, centerScratch);
             finalPositions = addPosition(center, left, shape, finalPositions, ellipsoid, heights[i / 3], xScalar, 1);
         }
@@ -152,7 +150,7 @@ define([
         shape[index++] = point.x - xOffset;
         shape[index++] = 0.0;
         shape[index++] = point.y - yOffset;
-        for ( var i = 1; i < length; i++) {
+        for (var i = 1; i < length; i++) {
             point = shape2D[i];
             var x = point.x - xOffset;
             var z = point.y - yOffset;
@@ -179,7 +177,7 @@ define([
         var xOffset = boundingRectangle.x + boundingRectangle.width / 2;
         var yOffset = boundingRectangle.y + boundingRectangle.height / 2;
 
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             shape[index++] = shape2D[i].x - xOffset;
             shape[index++] = 0;
             shape[index++] = shape2D[i].y - yOffset;
@@ -207,7 +205,7 @@ define([
         startPoint = Cartesian3.clone(startPoint, startPointScratch);
         if (granularity > 0) {
             var repeat = duplicatePoints ? 2 : 1;
-            for ( var i = 0; i < granularity; i++) {
+            for (var i = 0; i < granularity; i++) {
                 startPoint = Matrix3.multiplyByVector(m, startPoint, startPoint);
                 left = Cartesian3.subtract(startPoint, pivot, scratch1);
                 left = Cartesian3.normalize(left, left);
@@ -242,7 +240,7 @@ define([
     PolylineVolumeGeometryLibrary.removeDuplicatesFromShape = function(shapePositions) {
         var length = shapePositions.length;
         var cleanedPositions = [];
-        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
+        for (var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
             var v0 = shapePositions[i0];
             var v1 = shapePositions[i1];
 
@@ -332,7 +330,7 @@ define([
         backward = Cartesian3.negate(forward, backward);
         var subdividedHeights;
         var subdividedPositions;
-        for ( var i = 1; i < length - 1; i++) {
+        for (var i = 1; i < length - 1; i++) {
             var repeat = duplicatePoints ? 2 : 1;
             nextPosition = positions[i + 1];
             forward = Cartesian3.subtract(nextPosition, position, forward);

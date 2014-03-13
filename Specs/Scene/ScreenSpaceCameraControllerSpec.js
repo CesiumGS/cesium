@@ -56,7 +56,7 @@ defineSuite([
                 return canvas.clientHeight * 2;
             }
         });
-        controller = new ScreenSpaceCameraController(canvas, camera.controller);
+        controller = new ScreenSpaceCameraController(canvas, camera);
     });
 
     afterEach(function() {
@@ -76,13 +76,13 @@ defineSuite([
     });
 
     it('get/set ellipsoid', function() {
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.WGS84);
-        controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
-        expect(controller.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(controller.ellipsoid).toEqual(Ellipsoid.WGS84);
+        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        expect(controller.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     function updateController(frameState) {
-        camera.controller.update(frameState.mode, frameState.scene2D);
+        camera.update(frameState.mode, frameState.scene2D);
         controller.update(frameState.mode);
     }
 
@@ -95,7 +95,7 @@ defineSuite([
                 projection : projection
             }
         };
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
@@ -407,7 +407,7 @@ defineSuite([
             }
         };
 
-        var maxRadii = ellipsoid.getMaximumRadius();
+        var maxRadii = ellipsoid.maximumRadius;
         camera.position = new Cartesian3(0.0, 0.0, maxRadii);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -658,7 +658,7 @@ defineSuite([
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(3 * canvas.clientWidth / 8, canvas.clientHeight / 2);
-        camera.controller.constrainedAxis = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.constrainedAxis = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
@@ -758,12 +758,12 @@ defineSuite([
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON14);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).toBeDefined();
     });
 
@@ -773,17 +773,17 @@ defineSuite([
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
 
-        camera.controller.lookRight(CesiumMath.PI_OVER_TWO);
+        camera.lookRight(CesiumMath.PI_OVER_TWO);
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.getEllipsoid());
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
         expect(intersection).not.toBeDefined();
 
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON14);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
     it('does not tilt in the wrong direction', function() {
@@ -816,7 +816,7 @@ defineSuite([
         var height = Ellipsoid.WGS84.cartesianToCartographic(camera.position).height;
         expect(height).toBeLessThan(controller.minimumZoomDistance);
         expect(Cartesian3.cross(camera.direction, camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
-        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
+        expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
     it('looks in 3D', function() {
@@ -836,13 +836,13 @@ defineSuite([
 
     it('pans with constrained axis other than z-axis', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var axis = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.controller.constrainedAxis = axis;
+        camera.constrainedAxis = axis;
 
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
         var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
@@ -859,7 +859,7 @@ defineSuite([
         var frameState = setUp3D();
 
         var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.controller.constrainedAxis = axis;
+        camera.constrainedAxis = axis;
 
         var startPosition = new Cartesian2(0.0, 0.0);
         var endPosition = new Cartesian2(0.0, canvas.clientHeight);
@@ -875,13 +875,13 @@ defineSuite([
 
     it('pans with constrained axis and is tilted', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.controller.constrainedAxis = axis;
+        camera.constrainedAxis = axis;
 
         var startPosition = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.25);
         var endPosition = new Cartesian2(canvas.clientWidth * 0.5, canvas.clientHeight * 0.75);
@@ -897,13 +897,13 @@ defineSuite([
 
     it('rotates with constrained axis and is tilted', function() {
         var frameState = setUp3D();
-        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
+        camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.maximumRadius, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.clone(Cartesian3.UNIT_X);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var axis = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.controller.constrainedAxis = axis;
+        camera.constrainedAxis = axis;
 
         var startPosition = new Cartesian2(0.0, 0.0);
         var endPosition = new Cartesian2(0.0, canvas.clientHeight);
