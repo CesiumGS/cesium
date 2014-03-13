@@ -693,29 +693,32 @@ define([
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
             // Assumes bounding volume is a bounding sphere.
-
-            if (!defined(scene._debugSphere)) {
-                var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                    ellipsoid : Ellipsoid.UNIT_SPHERE,
-                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                }));
-                scene._debugSphere = new Primitive({
-                    geometryInstances : new GeometryInstance({
-                        geometry : GeometryPipeline.toWireframe(geometry),
-                        attributes : {
-                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                        }
-                    }),
-                    appearance : new PerInstanceColorAppearance({
-                        flat : true,
-                        translucent : false
-                    }),
-                    asynchronous : false
-                });
+            if (defined(scene._debugSphere)) {
+                scene._debugSphere.destroy();
             }
 
-            var m = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, command.boundingVolume.center);
-            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(m, command.boundingVolume.radius);
+            var boundingVolume = command.boundingVolume;
+            var radius = boundingVolume.radius;
+            var center = boundingVolume.center;
+            var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                radii : new Cartesian3(radius, radius, radius),
+                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            })));
+
+            scene._debugSphere = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : geometry,
+                    modelMatrix : Matrix4.multiplyByTranslation(Matrix4.IDENTITY, center),
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false
+                }),
+                asynchronous : false
+            });
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
