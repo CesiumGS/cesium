@@ -981,16 +981,20 @@ define([
         return getTranslucentShaderProgram(scene, shaderProgram, scene._alphaShaderCache, alphaShaderSource);
     }
 
-    function executeTranslucentCommandsInOrder(scene, passState, frustumCommands) {
+    function executeTranslucentCommandsSorted(scene, passState, frustumCommands) {
         var context = scene._context;
         var commands = frustumCommands.translucentCommands;
         var length = commands.length = frustumCommands.translucentIndex;
+
+        var translucentCompare = createTranslucentCompareFunction(scene._camera.positionWC);
+        sort(commands, translucentCompare);
+
         for (var j = 0; j < length; ++j) {
             executeCommand(commands[j], scene, context, passState);
         }
     }
 
-    function executeTranslucentCommandsSorted(scene, passState, frustumCommands) {
+    function executeTranslucentCommandsSortedMultipass(scene, passState, frustumCommands) {
         var command;
         var renderState;
         var shaderProgram;
@@ -1193,9 +1197,9 @@ define([
         var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (sortTranslucent) {
-            executeTranslucentCommands = scene._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSorted;
+            executeTranslucentCommands = scene._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSortedMultipass;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsInOrder;
+            executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
         var frustumCommandsList = scene._frustumCommandsList;

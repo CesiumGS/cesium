@@ -170,7 +170,6 @@ Beta Releases
 * `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
 * Added `Quaternion.fastSlerp` and `Quaternion.fastSquad`.
 * Upgraded Tween.js to version r12.
-* Improved visual quality of overlapping translucent objects.
 
 ### b24 - 2014-01-06
 
