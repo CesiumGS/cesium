@@ -679,6 +679,12 @@ define([
         }
     }
 
+    var transformFrom2D = Matrix4.inverseTransformation(//
+                            new Matrix4(0.0, 0.0, 1.0, 0.0, //
+                                        1.0, 0.0, 0.0, 0.0, //
+                                        0.0, 1.0, 0.0, 0.0, //
+                                        0.0, 0.0, 0.0, 1.0));
+
     function executeCommand(command, scene, context, passState) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -697,13 +703,22 @@ define([
                 scene._debugSphere.destroy();
             }
 
+            var frameState = scene._frameState;
             var boundingVolume = command.boundingVolume;
             var radius = boundingVolume.radius;
             var center = boundingVolume.center;
+
             var geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : new Cartesian3(radius, radius, radius),
                 vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
             })));
+
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                center = Matrix4.multiplyByPoint(transformFrom2D, center);
+                var projection = frameState.scene2D.projection;
+                var centerCartographic = projection.unproject(center);
+                center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+            }
 
             scene._debugSphere = new Primitive({
                 geometryInstances : new GeometryInstance({
@@ -721,7 +736,7 @@ define([
             });
 
             var commandList = [];
-            scene._debugSphere.update(context, scene._frameState, commandList);
+            scene._debugSphere.update(context, frameState, commandList);
             commandList[0].execute(context, passState);
         }
     }
