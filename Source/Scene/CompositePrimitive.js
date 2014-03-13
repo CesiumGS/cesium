@@ -75,6 +75,7 @@ define([
          * Determines if primitives in this composite will be shown.
          *
          * @type Boolean
+         * @default true
          */
         this.show = true;
     };

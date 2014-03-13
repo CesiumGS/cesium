@@ -1039,6 +1039,61 @@ define([
         passState.framebuffer = framebuffer;
     }
 
+    function createTranslucentCompareFunction(position) {
+        return function(a, b) {
+            if (defined(a.index) && defined(b.index)) {
+                return a.index - b.index;
+            }
+            return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
+        };
+    }
+
+    function merge(array, compare, start, middle, end) {
+        var leftLength = middle - start + 1;
+        var rightLength = end - middle;
+        var left = new Array(leftLength);
+        var right = new Array(rightLength);
+
+        var i;
+        var j;
+
+        for (i = 0; i < leftLength; ++i) {
+            left[i] = array[start + i];
+        }
+
+        for (j = 0; j < rightLength; ++j) {
+            right[j] = array[middle + j + 1];
+        }
+
+        i = 0;
+        j = 0;
+        for (var k = start; k <= end; ++k) {
+            var leftElement = left[i];
+            var rightElement = right[j];
+            if (defined(leftElement) && (!defined(rightElement) || compare(leftElement, rightElement) <= 0)) {
+                array[k] = leftElement;
+                ++i;
+            } else {
+                array[k] = rightElement;
+                ++j;
+            }
+        }
+    }
+
+    function sort(array, compare, start, end) {
+        start = defaultValue(start, 0);
+        end = defaultValue(end, array.length - 1);
+
+        if (start >= end) {
+            return;
+        }
+
+        var middle = Math.floor((start + end) * 0.5);
+        sort(array, compare, start, middle);
+        sort(array, compare, middle + 1, end);
+        merge(array, compare, start, middle, end);
+    }
+
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
     var scratchPerspectiveOffCenterFrustum = new PerspectiveOffCenterFrustum();
     var scratchOrthographicFrustum = new OrthographicFrustum();

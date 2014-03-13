@@ -427,6 +427,13 @@ defineSuite([
         expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
     });
 
+    it('estimated distance squared to point', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var position = new Cartesian3(-2.0, 1.0, 0.0);
+        var expected = Cartesian3.magnitudeSquared(position) - 1.0;
+        expect(bs.distanceSquaredTo(position)).toEqual(expected);
+    });
+
     it('projectTo2D', function() {
         var positions = getPositions();
         var projection = new GeographicProjection();
@@ -532,6 +539,18 @@ defineSuite([
         expect(function() {
             BoundingSphere.transform(sphere);
         }).toThrowDeveloperError();
+    });
+
+    it('static distanceSquaredTo throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.distanceSquaredTo();
+        }).toThrow();
+    });
+
+    it('static distanceSquaredTo throws without a cartesian', function() {
+        expect(function() {
+            BoundingSphere.distanceSquaredTo(new BoundingSphere());
+        }).toThrow();
     });
 
     it('static transformWithoutScale throws without a sphere', function() {
