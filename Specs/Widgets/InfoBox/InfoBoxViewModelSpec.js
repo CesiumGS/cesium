@@ -24,6 +24,7 @@ defineSuite([
         expect(viewModel.descriptionRawHtml).toBe('');
         expect(viewModel.maxHeightOffset(0)).toBeDefined();
         expect(viewModel.sanitizer).toBeDefined();
+        expect(viewModel.loadingIndicatorHtml).toBeDefined();
     });
 
     it('allows some HTML in description', function() {
@@ -31,7 +32,7 @@ defineSuite([
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = safeString;
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== '';
+            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
             expect(viewModel.descriptionSanitizedHtml).toBe(safeString);
@@ -43,7 +44,7 @@ defineSuite([
         var viewModel = new InfoBoxViewModel();
         viewModel.descriptionRawHtml = evilString;
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== '';
+            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
             expect(viewModel.descriptionSanitizedHtml).toContain('Testing.');
@@ -56,7 +57,7 @@ defineSuite([
         expect(viewModel._bodyless).toBe(true);
         viewModel.descriptionRawHtml = 'Testing';
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== '';
+            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
             expect(viewModel._bodyless).toBe(false);
@@ -73,7 +74,7 @@ defineSuite([
 
         viewModel.descriptionRawHtml = testString;
         waitsFor(function() {
-            return viewModel.descriptionSanitizedHtml !== '';
+            return viewModel.descriptionSanitizedHtml !== viewModel.loadingIndicatorHtml;
         });
         runs(function() {
             expect(viewModel.descriptionSanitizedHtml).toBe(testString);
