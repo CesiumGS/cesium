@@ -1,7 +1,8 @@
-var EventEmitter = require('events').EventEmitter;
-var Cesium = module.exports = new EventEmitter();
+var Cesium = module.exports = {};
 var requirejs = require('requirejs');
 var async = require('async');
+var q = require('q');
+
 var compat = {
   'Core': [
     'AxisAlignedBoundingBox',
@@ -170,7 +171,11 @@ var sections = Object.keys(compat);
 function loadSectionModules(section, callback) {
   var mods = compat[section];
   var modulePaths = mods.map(function(name) {
-    return './node_modules/cesium/Source/' + section + '/' + name;
+    return './Source/' + section + '/' + name;
+  });
+  
+  requirejs.config({
+    baseUrl: "./node_modules/cesium"
   });
 
   requirejs(modulePaths, function() {
@@ -185,6 +190,12 @@ function loadSectionModules(section, callback) {
   });
 }
 
+var deferred = q.defer();
+
+Cesium.isReady = deferred.promise;
+  
 async.forEach(sections, loadSectionModules, function() {
-  Cesium.emit('ready');
+  deferred.resolve();
 });
+
+ 
