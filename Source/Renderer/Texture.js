@@ -286,8 +286,12 @@ define([
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
-        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
-        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
+//        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
+//        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
+
+        gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, TextureMinificationFilter.NEAREST);
+        gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, TextureMagnificationFilter.NEAREST);
+
         gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
         gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
         if (defined(this._textureFilterAnisotropic)) {

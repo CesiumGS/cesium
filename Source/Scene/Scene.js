@@ -1349,8 +1349,8 @@ define([
         var context = scene._context;
         var canvas = scene._canvas;
 
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+        var width = context.getDrawingBufferWidth();
+        var height = context.getDrawingBufferHeight();
 
         var supported = scene._translucentMRTSupport || scene._translucentMultipassSupport;
         var useFXAA = scene.fxaa || (scene.fxaaOrderIndependentTranslucency && supported);
