@@ -67,11 +67,11 @@ require([
         checked: Cesium.defined(tileBoundariesLayer),
         onChange: function(b) {
             if (b && !Cesium.defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.imageryLayerCollection.addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
-                    tilingScheme : centralBody.terrainProvider.getTilingScheme()
+                tileBoundariesLayer = centralBody.imageryLayers.addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
+                    tilingScheme : centralBody.terrainProvider.tilingScheme
                 }));
             } else if (!b && Cesium.defined(tileBoundariesLayer)) {
-                centralBody.imageryLayerCollection.remove(tileBoundariesLayer);
+                centralBody.imageryLayers.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
 
@@ -132,7 +132,7 @@ require([
         selectedTile = undefined;
 
         var ellipsoid = centralBody.ellipsoid;
-        var cartesian = scene.camera.controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
+        var cartesian = scene.camera.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
 
         if (Cesium.defined(cartesian)) {
             var cartographic = ellipsoid.cartesianToCartographic(cartesian);

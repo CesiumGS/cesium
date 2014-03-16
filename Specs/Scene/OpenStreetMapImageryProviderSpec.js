@@ -50,7 +50,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -75,7 +75,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -99,20 +99,20 @@ defineSuite([
             url : 'made/up/osm/server/'
         });
 
-        expect(provider.getUrl()).toEqual('made/up/osm/server/');
+        expect(provider.url).toEqual('made/up/osm/server/');
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(18);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(18);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -137,7 +137,7 @@ defineSuite([
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server'
         });
-        expect(provider.getCredit()).toBeDefined();
+        expect(provider.credit).toBeDefined();
     });
 
     it('turns the supplied credit into a logo', function() {
@@ -145,7 +145,7 @@ defineSuite([
             url : 'made/up/osm/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getCredit()).toBeDefined();
+        expect(providerWithCredit.credit).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -156,7 +156,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -164,7 +164,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/osm/server'))).toEqual(0);
-                expect(provider.getProxy()).toEqual(proxy);
+                expect(provider.proxy).toEqual(proxy);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -192,16 +192,16 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(18);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getExtent()).toEqual(extent);
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(18);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.extent).toEqual(extent);
+            expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -221,7 +221,7 @@ defineSuite([
             url : 'made/up/osm/server',
             maximumLevel : 5
         });
-        expect(provider.getMaximumLevel()).toEqual(5);
+        expect(provider.maximumLevel).toEqual(5);
     });
 
     it('uses minimumLevel passed to constructor', function() {
@@ -229,7 +229,7 @@ defineSuite([
             url : 'made/up/osm/server',
             minimumLevel : 0
         });
-        expect(provider.getMinimumLevel()).toEqual(0);
+        expect(provider.minimumLevel).toEqual(0);
     });
 
     it('raises error event when image cannot be loaded', function() {
@@ -240,7 +240,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -260,7 +260,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;

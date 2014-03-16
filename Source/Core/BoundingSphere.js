@@ -1,23 +1,21 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './Cartesian4',
-        './Cartographic',
         './Ellipsoid',
         './GeographicProjection',
         './Intersect',
         './Interval',
         './Matrix4'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
         Ellipsoid,
         GeographicProjection,
         Intersect,
@@ -99,7 +97,7 @@ define([
         var zMax = Cartesian3.clone(currentPos, fromPointsZMax);
 
         var numPositions = positions.length;
-        for ( var i = 1; i < numPositions; i++) {
+        for (var i = 1; i < numPositions; i++) {
             Cartesian3.clone(positions[i], currentPos);
 
             var x = currentPos.x;
@@ -826,7 +824,7 @@ define([
 
         projection = defaultValue(projection, projectTo2DProjection);
 
-        var ellipsoid = projection.getEllipsoid();
+        var ellipsoid = projection.ellipsoid;
         var center = sphere.center;
         var radius = sphere.radius;
 

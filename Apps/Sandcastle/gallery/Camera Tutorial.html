@@ -33,51 +33,15 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    //A real application should require only the subset of modules that
-    //are actually used, instead of requiring the Cesium module, which
-    //includes everything.
+    var viewer = new Cesium.Viewer('cesiumContainer');
 
-    var canvas = document.createElement('canvas');
-    canvas.className = 'fullSize';
-    document.getElementById('cesiumContainer').appendChild(canvas);
-
+    var scene = viewer.scene;
+    var canvas = scene.canvas;
     canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
     canvas.onclick = function() {
         canvas.focus();
     };
-
-    var scene = new Cesium.Scene(canvas);
-
-    scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-
-    var skyBoxBaseUrl = '../../../Source/Assets/Textures/SkyBox/tycho2t3_80';
-    scene.skyBox = new Cesium.SkyBox({
-        positiveX : skyBoxBaseUrl + '_px.jpg',
-        negativeX : skyBoxBaseUrl + '_mx.jpg',
-        positiveY : skyBoxBaseUrl + '_py.jpg',
-        negativeY : skyBoxBaseUrl + '_my.jpg',
-        positiveZ : skyBoxBaseUrl + '_pz.jpg',
-        negativeZ : skyBoxBaseUrl + '_mz.jpg'
-    });
-
-    var primitives = scene.primitives;
-
-    // Bing Maps
-    var bing = new Cesium.BingMapsImageryProvider({
-        url : '//dev.virtualearth.net',
-        mapStyle : Cesium.BingMapsStyle.AERIAL,
-        // Some versions of Safari support WebGL, but don't correctly implement
-        // cross-origin image loading, so we need to load Bing imagery using a proxy.
-        proxy : Cesium.FeatureDetection.supportsCrossOriginImagery() ? undefined : new Cesium.DefaultProxy('/proxy/')
-    });
-
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-    var centralBody = new Cesium.CentralBody(ellipsoid);
-    centralBody.imageryLayerCollection.addImageryProvider(bing);
-
-    primitives.centralBody = centralBody;
-
-    var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
+    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // disable the default event handlers
     scene.screenSpaceCameraController.enableRotate = false;
@@ -97,55 +61,6 @@ require(['Cesium'], function(Cesium) {
         moveLeft : false,
         moveRight : false
     };
-
-    function animate() {
-        var camera = scene.camera;
-        var controller = camera.controller;
-
-        if (flags.looking) {
-            var width = canvas.clientWidth;
-            var height = canvas.clientHeight;
-
-            // Coordinate (0.0, 0.0) will be where the mouse was clicked.
-            var x = (mousePosition.x - startMousePosition.x) / width;
-            var y = -(mousePosition.y - startMousePosition.y) / height;
-
-            var lookFactor = 0.05;
-            controller.lookRight(x * lookFactor);
-            controller.lookUp(y * lookFactor);
-        }
-
-        // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
-        var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
-        var moveRate = cameraHeight / 100.0;
-
-        if (flags.moveForward) {
-            controller.moveForward(moveRate);
-        }
-        if (flags.moveBackward) {
-            controller.moveBackward(moveRate);
-        }
-        if (flags.moveUp) {
-            controller.moveUp(moveRate);
-        }
-        if (flags.moveDown) {
-            controller.moveDown(moveRate);
-        }
-        if (flags.moveLeft) {
-            controller.moveLeft(moveRate);
-        }
-        if (flags.moveRight) {
-            controller.moveRight(moveRate);
-        }
-    }
-
-    function tick() {
-        scene.initializeFrame();
-        animate();
-        scene.render();
-        Cesium.requestAnimationFrame(tick);
-    }
-    tick();
 
     var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 
@@ -195,28 +110,45 @@ require(['Cesium'], function(Cesium) {
         }
     }, false);
 
-    // Prevent right-click from opening a context menu.
-    canvas.oncontextmenu = function() {
-        return false;
-    };
+    viewer.clock.onTick.addEventListener(function(clock) {
+        var camera = scene.camera;
 
-    ///////////////////////////////////////////////////////////////////////////
-    // Example resize handler
+        if (flags.looking) {
+            var width = canvas.clientWidth;
+            var height = canvas.clientHeight;
 
-    var onResize = function() {
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
+            // Coordinate (0.0, 0.0) will be where the mouse was clicked.
+            var x = (mousePosition.x - startMousePosition.x) / width;
+            var y = -(mousePosition.y - startMousePosition.y) / height;
 
-        if (canvas.width === width && canvas.height === height) {
-            return;
+            var lookFactor = 0.05;
+            camera.lookRight(x * lookFactor);
+            camera.lookUp(y * lookFactor);
         }
 
-        canvas.width = width;
-        canvas.height = height;
-        scene.camera.frustum.aspectRatio = width / height;
-    };
-    window.addEventListener('resize', onResize, false);
-    onResize();
+        // Change movement speed based on the distance of the camera to the surface of the ellipsoid.
+        var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
+        var moveRate = cameraHeight / 100.0;
+
+        if (flags.moveForward) {
+            camera.moveForward(moveRate);
+        }
+        if (flags.moveBackward) {
+            camera.moveBackward(moveRate);
+        }
+        if (flags.moveUp) {
+            camera.moveUp(moveRate);
+        }
+        if (flags.moveDown) {
+            camera.moveDown(moveRate);
+        }
+        if (flags.moveLeft) {
+            camera.moveLeft(moveRate);
+        }
+        if (flags.moveRight) {
+            camera.moveRight(moveRate);
+        }
+    });
 
     Sandcastle.finishedLoading();
 });

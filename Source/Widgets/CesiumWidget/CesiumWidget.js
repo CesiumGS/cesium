@@ -177,7 +177,7 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;
@@ -211,15 +211,12 @@ define([
             var imageryProvider = options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net',
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesiumjs.org/proxy/')
+                    url : '//dev.virtualearth.net'
                 });
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayerCollection.addImageryProvider(imageryProvider);
+                centralBody.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
@@ -230,8 +227,8 @@ define([
             this._container = container;
             this._canvas = canvas;
             this._zoomDetector = zoomDetector;
-            this._canvasWidth = canvas.width;
-            this._canvasHeight = canvas.height;
+            this._canvasWidth = 0;
+            this._canvasHeight = 0;
             this._scene = scene;
             this._centralBody = centralBody;
             this._clock = defaultValue(options.clock, new Clock());

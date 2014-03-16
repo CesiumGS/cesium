@@ -1,36 +1,36 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
+        '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/Math',
+        '../Core/Matrix4',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/Ellipsoid',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Matrix4',
         '../ThirdParty/Tween',
         './OrthographicFrustum',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
-        CesiumMath,
+        Ellipsoid,
         Event,
+        CesiumMath,
+        Matrix4,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        Ellipsoid,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Matrix4,
         Tween,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -152,21 +152,30 @@ define([
         this._completeMorph = undefined;
     };
 
-    /**
-     * @memberof SceneTransitioner
-     * @returns {Scene} The scene to be transitioned.
-     */
-    SceneTransitioner.prototype.getScene = function() {
-        return this._scene;
-    };
 
-    /**
-     * @memberof SceneTransitioner
-     * @returns {Ellipsoid} The ellipsoid to be transitioned.
-     */
-    SceneTransitioner.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(SceneTransitioner.prototype, {
+        /**
+         * Gets the ellipsoid to be transitioned.
+         * @memberof SceneTransitioner.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the scene to be transitioned.
+         * @memberof SceneTransitioner.prototype
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        }
+    });
 
     /**
      * Instantly transitions the scene to 2D.

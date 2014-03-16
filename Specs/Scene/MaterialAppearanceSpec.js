@@ -52,7 +52,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent);
+        frameState.camera.viewExtent(extent);
         var us = context.getUniformState();
         us.update(context, frameState);
     });
@@ -73,7 +73,7 @@ defineSuite([
         expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, false));
         expect(a.vertexFormat).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat);
         expect(a.flat).toEqual(false);
-        expect(a.faceForward).toEqual(false);
+        expect(a.faceForward).toEqual(true);
         expect(a.translucent).toEqual(true);
         expect(a.closed).toEqual(false);
     });

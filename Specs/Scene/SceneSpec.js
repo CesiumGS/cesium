@@ -110,37 +110,30 @@ defineSuite([
         expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    function getMockPrimitive(options) {
-        return {
+    it('calls afterRender functions', function() {
+        var spyListener = jasmine.createSpy('listener');
+
+        var primitive = {
             update : function(context, frameState, commandList) {
-                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-                if (defined(options.command)) {
-                    commandList.push(options.command);
-                }
-
-                if (defined(options.event)) {
-                    frameState.events.push(options.event);
-                }
+                frameState.afterRender.push(spyListener);
             },
             destroy : function() {
             }
         };
-    }
-
-    it('fires FrameState events', function() {
-        var spyListener = jasmine.createSpy('listener');
-        var event = new Event();
-        event.addEventListener(spyListener);
-
-        scene.primitives.add(getMockPrimitive({
-            event : event
-        }));
+        scene.primitives.add(primitive);
 
         scene.initializeFrame();
         scene.render();
         expect(spyListener).toHaveBeenCalled();
     });
+
+    function CommandMockPrimitive(command) {
+        this.update = function(context, frameState, commandList) {
+            commandList.push(command);
+        };
+        this.destroy = function() {
+        };
+    }
 
     it('debugCommandFilter filters commands', function() {
         var c = new DrawCommand();
@@ -148,9 +141,7 @@ defineSuite([
         c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.primitives.add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
             return command !== c;   // Do not execute command
@@ -167,9 +158,7 @@ defineSuite([
         c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.primitives.add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.initializeFrame();
@@ -184,9 +173,7 @@ defineSuite([
         c.debugShowBoundingVolume = true;
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
-        scene.primitives.add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
@@ -201,9 +188,7 @@ defineSuite([
             'void main() { gl_Position = vec4(1.0); }',
             'void main() { gl_FragColor = vec4(1.0); }');
 
-        scene.primitives.add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugShowCommands = true;
         scene.initializeFrame();
@@ -216,6 +201,7 @@ defineSuite([
         scene.debugShowFramesPerSecond = true;
         scene.render();
         expect(scene._performanceDisplay).toBeDefined();
+        scene.debugShowFramesPerSecond = false;
     });
 
     it('opaque/translucent render order (1)', function() {
@@ -238,7 +224,7 @@ defineSuite([
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.camera.controller.viewExtent(extent);
+        scene.camera.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();
@@ -277,7 +263,7 @@ defineSuite([
         primitives.add(extentPrimitive1);
         primitives.add(extentPrimitive2);
 
-        scene.camera.controller.viewExtent(extent);
+        scene.camera.viewExtent(extent);
 
         scene.initializeFrame();
         scene.render();

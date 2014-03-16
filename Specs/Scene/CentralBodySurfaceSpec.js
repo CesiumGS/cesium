@@ -87,8 +87,8 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+        frameState.camera.update(frameState.mode, frameState.scene2D);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
     }
 
     var context;
@@ -137,7 +137,7 @@ defineSuite([
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
-            var layerCollection = cb.imageryLayerCollection;
+            var layerCollection = cb.imageryLayers;
 
             layerCollection.removeAll();
             var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -163,7 +163,7 @@ defineSuite([
         });
 
         it('adding a layer adds it to all tiles after update', function() {
-            var layerCollection = cb.imageryLayerCollection;
+            var layerCollection = cb.imageryLayers;
 
             layerCollection.removeAll();
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -199,7 +199,7 @@ defineSuite([
         });
 
         it('moving a layer moves the corresponding TileImagery instances on every tile', function() {
-            var layerCollection = cb.imageryLayerCollection;
+            var layerCollection = cb.imageryLayers;
 
             layerCollection.removeAll();
             var layer1 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
@@ -254,7 +254,7 @@ defineSuite([
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -269,7 +269,7 @@ defineSuite([
     });
 
     it('renders in 2D web mercator', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -284,12 +284,12 @@ defineSuite([
     });
 
     it('renders in Columbus View geographic', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -299,12 +299,12 @@ defineSuite([
     });
 
     it('renders in Columbus View web mercator', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -314,11 +314,11 @@ defineSuite([
     });
 
     it('renders in 3D', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -328,19 +328,19 @@ defineSuite([
     });
 
     it('renders in 3D and then Columbus View', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
         runs(function() {
             expect(render(context, frameState, cb)).toBeGreaterThan(0);
 
-            frameState.camera.controller.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-            frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+            frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
         updateUntilDone(cb);
@@ -351,7 +351,7 @@ defineSuite([
     });
 
     it('renders even if imagery root tiles fail to load', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
 
         var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
@@ -361,7 +361,7 @@ defineSuite([
 
         layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -371,7 +371,7 @@ defineSuite([
     });
 
     it('passes layer adjustment values as uniforms', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -382,7 +382,7 @@ defineSuite([
         layer.saturation = 0.123;
         layer.hue = 0.456;
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -415,7 +415,7 @@ defineSuite([
     });
 
     it('passes functional layer adjustment values as uniforms', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -437,7 +437,7 @@ defineSuite([
         layer.saturation = createFunction(0.123);
         layer.hue = createFunction(0.456);
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -470,13 +470,13 @@ defineSuite([
     });
 
     it('skips layer with uniform alpha value of zero', function() {
-        var layerCollection = cb.imageryLayerCollection;
+        var layerCollection = cb.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         layer.alpha = 0.0;
 
-        frameState.camera.controller.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 

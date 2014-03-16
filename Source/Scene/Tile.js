@@ -367,7 +367,7 @@ define([
 
             if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
                 var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.getImageryProvider().isReady()) {
+                if (imageryLayer.getImageryProvider().ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
                     tileImagery.freeResources();
@@ -415,14 +415,14 @@ define([
         }
 
         // Map imagery tiles to this terrain tile
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for (var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 layer._createTileImagerySkeletons(tile, terrainProvider);
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = tile.tilingScheme.ellipsoid;
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;

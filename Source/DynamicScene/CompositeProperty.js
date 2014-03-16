@@ -23,7 +23,7 @@ define(['./Property',
 
         var items = [];
         eventHelper.removeAll();
-        var length = intervals.getLength();
+        var length = intervals.length;
         for (var i = 0; i < length; i++) {
             var interval = intervals.get(i);
             if (defined(interval.data) && items.indexOf(interval.data) === -1) {
@@ -59,7 +59,7 @@ define(['./Property',
         this._eventHelper = new EventHelper();
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
-        this._intervals.getChangedEvent().addEventListener(CompositeProperty.prototype._intervalsChanged, this);
+        this._intervals.changedEvent.addEventListener(CompositeProperty.prototype._intervalsChanged, this);
     };
 
     defineProperties(CompositeProperty.prototype, {
@@ -71,7 +71,7 @@ define(['./Property',
          */
         isConstant : {
             get : function() {
-                return this._intervals.isEmpty();
+                return this._intervals.empty;
             }
         },
         /**

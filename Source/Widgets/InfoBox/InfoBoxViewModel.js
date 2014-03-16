@@ -67,6 +67,12 @@ define([
          */
         this.titleText = '';
 
+        /**
+         * Gets or sets the HTML for the loading indicator during sanitization of the raw description.
+         * @type {String}
+         */
+        this.loadingIndicatorHtml = '<div class="cesium-infoBox-loadingContainer"><span class="cesium-infoBox-loading"></span></div>';
+
         knockout.track(this, ['showInfo', 'titleText', '_descriptionRawHtml', '_descriptionSanitizedHtml', 'maxHeight', 'enableCamera', 'isCameraTracking']);
 
         /**
@@ -81,7 +87,7 @@ define([
             set : function(value) {
                 if (this._descriptionRawHtml !== value) {
                     this._descriptionRawHtml = value;
-                    this._descriptionSanitizedHtml = '';
+                    this._descriptionSanitizedHtml = this.loadingIndicatorHtml;
                     var that = this;
                     when(this.sanitizer(value), function(sanitized) {
                         // make sure the raw HTML still matches the input we sanitized,

@@ -48,9 +48,10 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toRadians(-90.0),
                 Cesium.Math.toRadians(20.0)),
             rotation : Cesium.Math.toRadians(45),
-            material : Cesium.Material.fromType(Cesium.Material.ColorType)
+            material : Cesium.Material.fromType(Cesium.Material.ColorType, {
+                color : new Cesium.Color(1.0, 0.0, 1.0, 0.75)
+            })
         }));
-        polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 1.0, 0.75);
         Sandcastle.declare(polygon);
 
         // Create a nested polygon with holes
@@ -88,9 +89,10 @@ require(['Cesium'], function(Cesium) {
         };
         var polygonHierarchy = primitives.add(new Cesium.Polygon({
             polygonHierarchy : hierarchy,
-            material : Cesium.Material.fromType('Color')
+            material : Cesium.Material.fromType('Color', {
+                color : new Cesium.Color(0.0, 1.0, 1.0, 0.75)
+            })
         }));
-        polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
         Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
 
         // Create a polygon from an extent

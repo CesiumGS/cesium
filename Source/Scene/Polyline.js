@@ -7,6 +7,7 @@ define([
         '../Core/Color',
         '../Core/PolylinePipeline',
         '../Core/Matrix4',
+        '../Core/Cartesian3',
         './Material'
     ], function(
         defaultValue,
@@ -16,14 +17,24 @@ define([
         Color,
         PolylinePipeline,
         Matrix4,
+        Cartesian3,
         Material) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * A renderable polyline. Create this by calling {@link PolylineCollection#add}
      *
      * @alias Polyline
      * @internalConstructor
+     *
+     * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
+     * @param {Number} [options.width=1.0] The width of the polyline in pixels.
+     * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
+     * @param {Material} [options.material=Material.ColorType] The material.
+     * @param {Array} [options.positions] The positions.
+     * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
+     *
+     * @see PolylineCollection
      *
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
      */
@@ -32,11 +43,13 @@ define([
 
         this._show = defaultValue(options.show, true);
         this._width = defaultValue(options.width, 1.0);
+        this._loop = defaultValue(options.loop, false);
 
         this._material = options.material;
         if (!defined(this._material)) {
-            this._material = Material.fromType(Material.ColorType);
-            this._material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+            this._material = Material.fromType(Material.ColorType, {
+                color : new Color(1.0, 1.0, 1.0, 1.0)
+            });
         }
 
         var positions = options.positions;
@@ -45,6 +58,10 @@ define([
         }
 
         this._positions = positions;
+        if (this._loop && positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+            positions.push(Cartesian3.clone(positions[0]));
+        }
+
         this._length = positions.length;
         this._id = options.id;
 
@@ -158,6 +175,10 @@ define([
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
+
+        if (this._loop && value.length > 2 && !Cartesian3.equals(value[0], value[value.length - 1])) {
+            value.push(Cartesian3.clone(value[0]));
+        }
 
         if (this._positions.length !== value.length || this._positions.length !== this._length) {
             makeDirty(this, POSITION_SIZE_INDEX);
@@ -283,6 +304,52 @@ define([
         if (value !== width) {
             this._width = value;
             makeDirty(this, WIDTH_INDEX);
+        }
+    };
+
+    /**
+     * Gets whether a line segment will be added between the first and last polyline positions.
+     *
+     * @memberof Polyline
+     *
+     * @returns {Boolean} <code>true</code> if the polyline is a loop; otherwise, <code>false</code>.
+     *
+     * @see Polyline#setLoop
+     */
+    Polyline.prototype.getLoop = function() {
+        return this._loop;
+    };
+
+    /**
+     * Sets whether a line segment will be added between the first and last polyline positions.
+     *
+     * @memberof Polyline
+     *
+     * @param {Boolean} value <code>true</code> if the polyline is to be a loop; otherwise, <code>false</code>.
+     *
+     * @see Polyline#getLoop
+     */
+    Polyline.prototype.setLoop = function(value) {
+        //>>includeStart('debug', pragmas.debug)
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (value !== this._loop) {
+            var positions = this._positions;
+            if (value) {
+                if (positions.length > 2 && !Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                    positions.push(Cartesian3.clone(positions[0]));
+                }
+            } else {
+                if (positions.length > 2 && Cartesian3.equals(positions[0], positions[positions.length - 1])) {
+                    positions.pop();
+                }
+            }
+
+            this._loop = value;
+            makeDirty(this, POSITION_SIZE_INDEX);
         }
     };
 

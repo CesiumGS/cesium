@@ -259,7 +259,7 @@ defineSuite([
         var startUp = Cartesian3.clone(camera.up);
 
         var endPosition = Cartesian3.negate(startPosition);
-        var endCartographic = frameState.scene2D.projection.getEllipsoid().cartesianToCartographic(endPosition);
+        var endCartographic = frameState.scene2D.projection.ellipsoid.cartesianToCartographic(endPosition);
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
@@ -285,13 +285,13 @@ defineSuite([
     it('creates an animation in 3d with extent', function() {
         var camera = frameState.camera;
 
-        var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
+        var startPosition = frameState.scene2D.projection.ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         var startDirection = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
 
         var endPosition = Cartesian3.negate(startPosition);
-        var endCartographic = frameState.scene2D.projection.getEllipsoid().cartesianToCartographic(endPosition);
+        var endCartographic = frameState.scene2D.projection.ellipsoid.cartesianToCartographic(endPosition);
         var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
@@ -399,9 +399,9 @@ defineSuite([
     it('creates an animation in Columbus view with extent', function() {
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var camera = frameState.camera;
-        camera.controller._mode = SceneMode.COLUMBUS_VIEW;
+        camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
+        var startPosition = frameState.scene2D.projection.ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -535,7 +535,7 @@ defineSuite([
     it('creates an animation in 2D with extent', function() {
         frameState.mode = SceneMode.SCENE2D;
         var camera = frameState.camera;
-        camera.controller._mode = SceneMode.SCENE2D;
+        camera._mode = SceneMode.SCENE2D;
 
         camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);

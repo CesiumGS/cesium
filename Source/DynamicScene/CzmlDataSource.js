@@ -46,6 +46,7 @@ define(['../Core/Cartesian2',
         './DynamicEllipsoid',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './DynamicModel',
         './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPath',
@@ -110,6 +111,7 @@ define(['../Core/Cartesian2',
         DynamicEllipsoid,
         GridMaterialProperty,
         ImageMaterialProperty,
+        DynamicModel,
         DynamicObject,
         DynamicObjectCollection,
         DynamicPath,
@@ -213,6 +215,16 @@ define(['../Core/Cartesian2',
 
     function unwrapImageInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapUriInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
@@ -359,6 +371,8 @@ define(['../Core/Cartesian2',
                 }
             }
             return unitQuaternion;
+        case Uri:
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
@@ -790,12 +804,7 @@ define(['../Core/Cartesian2',
         }
     }
 
-    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var vertexPositionsData = packet.vertexPositions;
-        if (!defined(vertexPositionsData)) {
-            return;
-        }
-
+    function processVertexData(dynamicObject, vertexPositionsData, dynamicObjectCollection) {
         var i;
         var len;
         var references = vertexPositionsData.references;
@@ -842,8 +851,24 @@ define(['../Core/Cartesian2',
                 }
             }
             if (defined(vertexPositionsData.array)) {
-                processPacketData(Array, dynamicObject, 'vertexPositions', vertexPositionsData, undefined, sourceUri);
+                processPacketData(Array, dynamicObject, 'vertexPositions', vertexPositionsData);
             }
+        }
+    }
+
+    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var vertexPositionsData = packet.vertexPositions;
+        if (!defined(vertexPositionsData)) {
+            return;
+        }
+
+        if (isArray(vertexPositionsData)) {
+            var length = vertexPositionsData.length;
+            for (var i = 0; i < length; i++) {
+                processVertexData(dynamicObject, vertexPositionsData[i], dynamicObjectCollection);
+            }
+        } else {
+            processVertexData(dynamicObject, vertexPositionsData, dynamicObjectCollection);
         }
     }
 
@@ -1051,6 +1076,27 @@ define(['../Core/Cartesian2',
         processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri);
     }
 
+    function processModel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var modelData = packet.model;
+        if (typeof modelData === 'undefined') {
+            return;
+        }
+
+        var interval = modelData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var model = dynamicObject.model;
+        if (!defined(model)) {
+            dynamicObject.model = model = new DynamicModel();
+        }
+
+        processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri);
+        processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri);
+        processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri);
+    }
+
     function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
@@ -1179,6 +1225,28 @@ define(['../Core/Cartesian2',
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
+    function processDirectionData(pyramid, directions, interval, sourceUri) {
+        var i;
+        var len;
+        var values = [];
+        var tmp = directions.unitSpherical;
+        if (defined(tmp)) {
+            for (i = 0, len = tmp.length; i < len; i += 2) {
+                values.push(new Spherical(tmp[i], tmp[i + 1]));
+            }
+            directions.array = values;
+        }
+
+        tmp = directions.unitCartesian;
+        if (defined(tmp)) {
+            for (i = 0, len = tmp.length; i < len; i += 3) {
+                values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+            }
+            directions.array = values;
+        }
+        processPacketData(Array, pyramid, 'directions', directions, interval, sourceUri);
+    }
+
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
         if (!defined(pyramidData)) {
@@ -1204,26 +1272,16 @@ define(['../Core/Cartesian2',
 
         //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
         //We pre-process this into Spherical instances and then process it like any other array.
-        if (defined(pyramidData.directions)) {
-            var i;
-            var len;
-            var values = [];
-            var tmp = pyramidData.directions.unitSpherical;
-            if (defined(tmp)) {
-                for (i = 0, len = tmp.length; i < len; i += 2) {
-                    values.push(new Spherical(tmp[i], tmp[i + 1]));
+        var directions = pyramidData.directions;
+        if (defined(directions)) {
+            if (isArray(directions)) {
+                var length = directions.length;
+                for (var i = 0; i < length; i++) {
+                    processDirectionData(pyramid, directions[i], interval, sourceUri);
                 }
-                pyramidData.directions.array = values;
+            } else {
+                processDirectionData(pyramid, directions, interval, sourceUri);
             }
-
-            tmp = pyramidData.directions.unitCartesian;
-            if (defined(tmp)) {
-                for (i = 0, len = tmp.length; i < len; i += 3) {
-                    values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
-                }
-                pyramidData.directions.array = values;
-            }
-            processPacketData(Array, pyramid, 'directions', pyramidData.directions, interval, sourceUri);
         }
     }
 
@@ -1364,6 +1422,7 @@ define(['../Core/Cartesian2',
     processEllipsoid, //
     processCone, //
     processLabel, //
+    processModel, //
     processName, //
     processDescription, //
     processPath, //

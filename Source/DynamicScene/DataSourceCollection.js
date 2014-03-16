@@ -2,11 +2,13 @@
 define([
         '../Core/DeveloperError',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Event'
     ], function(
         DeveloperError,
         defined,
+        defineProperties,
         destroyObject,
         Event) {
     "use strict";
@@ -33,6 +35,19 @@ define([
          */
         this.dataSourceRemoved = new Event();
     };
+
+    defineProperties(DataSourceCollection.prototype, {
+        /**
+         * Gets the number of data sources in this collection.
+         * @memberof DataSourceCollection.prototype
+         * @type {Event}
+         */
+        length : {
+            get : function() {
+                return this._dataSources.length;
+            }
+        }
+    });
 
     /**
      * Adds a data source to the collection.
@@ -135,17 +150,6 @@ define([
         //>>includeEnd('debug');
 
         return this._dataSources[index];
-    };
-
-    /**
-     * Gets the number of data sources in this collection.
-     *
-     * @memberof DataSourceCollection
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    DataSourceCollection.prototype.getLength = function() {
-        return this._dataSources.length;
     };
 
     /**

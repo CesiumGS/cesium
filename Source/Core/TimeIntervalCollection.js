@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Event',
         './binarySearch',
@@ -8,6 +9,7 @@ define([
         './JulianDate'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         Event,
         binarySearch,
@@ -33,15 +35,66 @@ define([
         this._intervalsChanged =  new Event();
     };
 
-    /**
-     * Gets an event that is raised whenever the collection of intervals change.
-     * @memberof TimeIntervalCollection
-     *
-     * @returns {Event} The event
-     */
-    TimeIntervalCollection.prototype.getChangedEvent = function() {
-        return this._intervalsChanged;
-    };
+    defineProperties(TimeIntervalCollection.prototype, {
+        /**
+         * Gets an event that is raised whenever the collection of intervals change.
+         * @memberof TimeIntervalCollection.prototype
+         * @type {Event}
+         */
+        changedEvent : {
+            get : function() {
+                return this._intervalsChanged;
+            }
+        },
+
+        /**
+         * Gets the start date of the collection.
+         * @memberof TimeIntervalCollection.prototype
+         * @type {JulianDate}
+         */
+        start : {
+            get : function() {
+                var thisIntervals = this._intervals;
+                return thisIntervals.length === 0 ? undefined : thisIntervals[0].start;
+            }
+        },
+
+        /**
+         * Gets the stop date of the collection.
+         * @memberof TimeIntervalCollection.prototype
+         * @type {JulianDate}
+         */
+        stop : {
+            get : function() {
+                var thisIntervals = this._intervals;
+                var length = thisIntervals.length;
+                return length === 0 ? undefined : thisIntervals[length - 1].stop;
+            }
+        },
+
+        /**
+         * Gets the number of intervals in the collection.
+         * @memberof TimeIntervalCollection.prototype
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return this._intervals.length;
+            }
+        },
+
+        /**
+         * Returns true if the collection is empty, false otherwise.
+         * @memberof TimeIntervalCollection.prototype
+         * @type {Boolean}
+         */
+        empty : {
+            get : function() {
+                return this._intervals.length === 0;
+            }
+        }
+    });
+
 
     /**
      * Compares the provided TimeIntervalCollections and returns
@@ -92,39 +145,6 @@ define([
     };
 
     /**
-     * Gets the start date of the collection.
-     *
-     * @memberof TimeIntervalCollection
-     * @returns {JulianDate} The start date of the collection or undefined if the collection is empty.
-     */
-    TimeIntervalCollection.prototype.getStart = function() {
-        var thisIntervals = this._intervals;
-        return thisIntervals.length === 0 ? undefined : thisIntervals[0].start;
-    };
-
-    /**
-     * Gets the stop date of the collection.
-     *
-     * @memberof TimeIntervalCollection
-     * @returns {JulianDate} The stop date of the collection or undefined if the collection is empty.
-     */
-    TimeIntervalCollection.prototype.getStop = function() {
-        var thisIntervals = this._intervals;
-        var length = thisIntervals.length;
-        return length === 0 ? undefined : thisIntervals[length - 1].stop;
-    };
-
-    /**
-     * Gets the number of intervals in the collection.
-     *
-     * @memberof TimeIntervalCollection
-     * @returns {Number} The number of intervals in the collection.
-     */
-    TimeIntervalCollection.prototype.getLength = function() {
-        return this._intervals.length;
-    };
-
-    /**
      * Clears the collection.
      *
      * @memberof TimeIntervalCollection
@@ -134,17 +154,6 @@ define([
             this._intervals.length = 0;
             this._intervalsChanged.raiseEvent(this);
         }
-    };
-
-    /**
-     * Returns true if the collection is empty, false otherwise.
-     *
-     * @memberof TimeIntervalCollection
-     *
-     * @returns true if the collection is empty, false otherwise.
-     */
-    TimeIntervalCollection.prototype.isEmpty = function() {
-        return this._intervals.length === 0;
     };
 
     /**

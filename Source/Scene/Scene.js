@@ -130,7 +130,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(context);
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera.controller);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
 
@@ -457,11 +457,11 @@ define([
         frameState.morphTime = scene.morphTime;
         frameState.scene2D = scene.scene2D;
         frameState.frameNumber = frameNumber;
-        frameState.time = time;
+        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
-        frameState.events.length = 0;
+        frameState.afterRender.length = 0;
 
         clearPasses(frameState.passes);
     }
@@ -877,14 +877,14 @@ define([
         }
     }
 
-    function executeEvents(frameState) {
-        // Events are queued up during primitive update and executed here in case
-        // the callback modifies scene state that should remain constant over the frame.
-        var events = frameState.events;
-        var length = events.length;
-        for (var i = 0; i < length; ++i) {
-            events[i].raiseEvent();
+    function callAfterRenderFunctions(frameState) {
+        // Functions are queued up during primitive update and executed here in case
+        // the function modifies scene state that should remain constant over the frame.
+        var functions = frameState.afterRender;
+        for (var i = 0, length = functions.length; i < length; ++i) {
+            functions[i]();
         }
+        functions.length = 0;
     }
 
     /**
@@ -899,7 +899,7 @@ define([
         }
 
         this._animations.update();
-        this._camera.controller.update(this.mode, this.scene2D);
+        this._camera.update(this.mode, this.scene2D);
         this._screenSpaceCameraController.update(this.mode);
     };
 
@@ -956,7 +956,7 @@ define([
         }
 
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -1102,7 +1102,7 @@ define([
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
-        executeEvents(frameState);
+        callAfterRenderFunctions(frameState);
         return object;
     };
 
