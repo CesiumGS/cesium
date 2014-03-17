@@ -3,21 +3,26 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Renderer/createShaderSource',
         '../Renderer/BlendFunction',
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
-        '../Renderer/RenderbufferFormat'
+        '../Renderer/RenderbufferFormat',
+        '../Shaders/CompositeOITFS'
     ], function(
         defined,
         destroyObject,
         Color,
+        createShaderSource,
         BlendFunction,
         ClearCommand,
         PixelDatatype,
         PixelFormat,
-        RenderbufferFormat) {
+        RenderbufferFormat,
+        CompositeOITFS) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     var OITResourceManager = function(context) {
         var textureFloat = context.getFloatingPointTexture();
@@ -190,12 +195,31 @@ define([
         return getTranslucentShaderProgram(context, shaderProgram, this._alphaShaderCache, alphaShaderSource);
     };
 
-    function updateTextures(that, width, height, supportedOIT) {
-        if (!supportedOIT) {
-            return;
-        }
+    function destroyResources(that) {
+        that._opaqueFBO = that._opaqueFBO && that._opaqueFBO.destroy();
+        that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
+        that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
 
-        var context = that._context;
+        that._opaqueTexture = that._opaqueTexture && that._opaqueTexture.destroy();
+        that._accumulationTexture = that._accumulationTexture && that._accumulationTexture.destroy();
+        that._revealageTexture = that._revealageTexture && that._revealageTexture.destroy();
+
+        that._depthTexture = that._depthTexture && that._depthTexture.destroy();
+        that._depthRenderbuffer = that._depthRenderbuffer && that._depthRenderbuffer.destroy();
+
+        that._opaqueFBO = undefined;
+        that._translucentFBO = undefined;
+        that._alphaFBO = undefined;
+
+        that._opaqueTexture = undefined;
+        that._accumulationTexture = undefined;
+        that._revealageTexture = undefined;
+
+        that._depthTexture = undefined;
+        that._depthRenderbuffer = undefined;
+    }
+
+    function updateTextures(that, context, width, height) {
         that._opaqueTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -231,8 +255,135 @@ define([
         }
     }
 
-    OITResourceManager.prototype.update = function(context) {
+    function updateFramebuffers(that, context) {
+        that._opaqueFBO = context.createFramebuffer({
+            colorTextures : [that._opaqueTexture],
+            depthTexture : that._depthTexture,
+            depthRenderbuffer : that._depthRenderbuffer,
+            destroyAttachments : false
+        });
 
+        // if MRT is supported, attempt to make an FBO with multiple color attachments
+        if (that._translucentMRTSupport) {
+            that._translucentFBO = context.createFramebuffer({
+                colorTextures : [that._accumulationTexture, that._revealageTexture],
+                depthTexture : that._depthTexture,
+                depthRenderbuffer : that._depthRenderbuffer,
+                destroyAttachments : false
+            });
+
+            if (that._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                that._translucentFBO.destroy();
+                that._translucentMRTSupport = false;
+            }
+        }
+
+        // either MRT isn't supported or FBO creation failed, attempt multipass
+        if (!that._translucentMRTSupport) {
+            that._translucentFBO = context.createFramebuffer({
+                colorTextures : [that._accumulationTexture],
+                depthTexture : that._depthTexture,
+                depthRenderbuffer : that._depthRenderbuffer,
+                destroyAttachments : false
+            });
+            that._alphaFBO = context.createFramebuffer({
+                colorTextures : [that._revealageTexture],
+                depthTexture : that._depthTexture,
+                depthRenderbuffer : that._depthRenderbuffer,
+                destroyAttachments : false
+            });
+
+            var translucentStatus = that._translucentFBO.getStatus();
+            var alphaStatus = that._alphaFBO.getStatus();
+            if (translucentStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE || alphaStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                destroyResources(that);
+                that._translucentMultipassSupport = false;
+            }
+        }
+    }
+
+    function updateCompositeCommand(that, context) {
+        var fs = createShaderSource({
+            defines : [that._translucentMRTSupport ? 'MRT' : ''],
+            sources : [CompositeOITFS]
+        });
+
+        that._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState());
+        that._compositeCommand.uniformMap = {
+            u_opaque : function() {
+                return that._opaqueTexture;
+            },
+            u_accumulation : function() {
+                return that._accumulationTexture;
+            },
+            u_revealage : function() {
+                return that._revealageTexture;
+            }
+        };
+    }
+
+    OITResourceManager.prototype.update = function(context) {
+        if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
+            return;
+        }
+
+        var width = context.getDrawingBufferWidth();
+        var height = context.getDrawingBufferHeight();
+
+        var opaqueTexture = this._opaqueTexture;
+        var textureChanged = !defined(opaqueTexture) || opaqueTexture.getWidth() !== width || opaqueTexture.getHeight() !== height;
+        if (textureChanged) {
+            updateTextures(this, context, width, height);
+        }
+
+        if (!defined(this._opaqueFBO)) {
+            updateFramebuffers(this, context);
+
+            // framebuffer creation failed
+            if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
+                return;
+            }
+        }
+
+        if (!defined(this._compositeCommand)) {
+            updateCompositeCommand(this, context);
+        }
+    };
+
+    OITResourceManager.prototype.clear = function(context, passState, clearColor) {
+        if(!this.isSupported()) {
+            return;
+        }
+
+        var framebuffer = passState.framebuffer;
+
+        passState.framebuffer = this._opaqueFBO;
+        Color.clone(clearColor, this._opaqueClearCommand.color);
+        this._opaqueClearCommand.execute(context, passState);
+
+        passState.framebuffer = this._translucentFBO;
+        var translucentClearCommand = this._translucentMRTSupport ? this._translucentMRTClearCommand : this._translucentMultipassClearCommand;
+        translucentClearCommand.execute(context, passState);
+
+        if (this._translucentMultipassSupport) {
+            passState.framebuffer = this._alphaFBO;
+            this._alphaClearCommand.execute(context, passState);
+        }
+
+        passState.framebuffer = framebuffer;
+    };
+
+    OITResourceManager.prototype.isSupported = function() {
+        return this._translucentMRTSupport || this._translucentMultipassSupport;
+    };
+
+    OITResourceManager.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    OITResourceManager.prototype.destroy = function() {
+        destroyResources(this);
+        return destroyObject(this);
     };
 
     return OITResourceManager;
