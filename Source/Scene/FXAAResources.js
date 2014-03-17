@@ -44,6 +44,11 @@ define([
 
         that._fxaaFBO = undefined;
         that._fxaaTexture = undefined;
+
+        if (defined(that._fxaaCommand)) {
+            that._fxaaCommand.shaderProgram = that._fxaaCommand.shaderProgram && that._fxaaCommand.shaderProgram.release();
+            that._fxaaCommand = undefined;
+        }
     }
 
     FXAAResources.prototype.update = function(context) {
@@ -88,16 +93,18 @@ define([
             this._fxaaCommand = context.createViewportQuadCommand(fs, context.createRenderState());
         }
 
-        var that = this;
-        var step = new Cartesian2(1.0 / this._fxaaTexture.getWidth(), 1.0 / this._fxaaTexture.getHeight());
-        this._fxaaCommand.uniformMap = {
-            u_texture : function() {
-                return that._fxaaTexture;
-            },
-            u_step : function() {
-                return step;
-            }
-        };
+        if (textureChanged) {
+            var that = this;
+            var step = new Cartesian2(1.0 / this._fxaaTexture.getWidth(), 1.0 / this._fxaaTexture.getHeight());
+            this._fxaaCommand.uniformMap = {
+                u_texture : function() {
+                    return that._fxaaTexture;
+                },
+                u_step : function() {
+                    return step;
+                }
+            };
+        }
     };
 
     FXAAResources.prototype.clear = function(context, passState, clearColor) {

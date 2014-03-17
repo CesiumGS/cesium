@@ -193,21 +193,13 @@ define([
         return getTranslucentShaderProgram(context, shaderProgram, this._alphaShaderCache, alphaShaderSource);
     };
 
-    function destroyResources(that) {
-        that._opaqueFBO = that._opaqueFBO && that._opaqueFBO.destroy();
-        that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
-        that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
-
+    function destroyTextures(that) {
         that._opaqueTexture = that._opaqueTexture && that._opaqueTexture.destroy();
         that._accumulationTexture = that._accumulationTexture && that._accumulationTexture.destroy();
         that._revealageTexture = that._revealageTexture && that._revealageTexture.destroy();
 
         that._depthTexture = that._depthTexture && that._depthTexture.destroy();
         that._depthRenderbuffer = that._depthRenderbuffer && that._depthRenderbuffer.destroy();
-
-        that._opaqueFBO = undefined;
-        that._translucentFBO = undefined;
-        that._alphaFBO = undefined;
 
         that._opaqueTexture = undefined;
         that._accumulationTexture = undefined;
@@ -217,7 +209,24 @@ define([
         that._depthRenderbuffer = undefined;
     }
 
+    function destroyFramebuffers(that) {
+        that._opaqueFBO = that._opaqueFBO && that._opaqueFBO.destroy();
+        that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
+        that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
+
+        that._opaqueFBO = undefined;
+        that._translucentFBO = undefined;
+        that._alphaFBO = undefined;
+    }
+
+    function destroyResources(that) {
+        destroyTextures(that);
+        destroyFramebuffers(that);
+    }
+
     function updateTextures(that, context, width, height) {
+        destroyTextures(that);
+
         that._opaqueTexture = context.createTexture2D({
             width : width,
             height : height,
@@ -254,6 +263,8 @@ define([
     }
 
     function updateFramebuffers(that, context) {
+        destroyFramebuffers(that);
+
         that._opaqueFBO = context.createFramebuffer({
             colorTextures : [that._opaqueTexture],
             depthTexture : that._depthTexture,
@@ -300,26 +311,6 @@ define([
         }
     }
 
-    function updateCompositeCommand(that, context) {
-        var fs = createShaderSource({
-            defines : [that._translucentMRTSupport ? 'MRT' : ''],
-            sources : [CompositeOITFS]
-        });
-
-        that._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState());
-        that._compositeCommand.uniformMap = {
-            u_opaque : function() {
-                return that._opaqueTexture;
-            },
-            u_accumulation : function() {
-                return that._accumulationTexture;
-            },
-            u_revealage : function() {
-                return that._revealageTexture;
-            }
-        };
-    }
-
     OITResources.prototype.update = function(context) {
         if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
             return;
@@ -334,7 +325,7 @@ define([
             updateTextures(this, context, width, height);
         }
 
-        if (!defined(this._opaqueFBO)) {
+        if (!defined(this._opaqueFBO) || textureChanged) {
             updateFramebuffers(this, context);
 
             // framebuffer creation failed
@@ -344,7 +335,27 @@ define([
         }
 
         if (!defined(this._compositeCommand)) {
-            updateCompositeCommand(this, context);
+            var fs = createShaderSource({
+                defines : [this._translucentMRTSupport ? 'MRT' : ''],
+                sources : [CompositeOITFS]
+            });
+
+            this._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState());
+        }
+
+        if (textureChanged) {
+            var that = this;
+            this._compositeCommand.uniformMap = {
+                u_opaque : function() {
+                    return that._opaqueTexture;
+                },
+                u_accumulation : function() {
+                    return that._accumulationTexture;
+                },
+                u_revealage : function() {
+                    return that._revealageTexture;
+                }
+            };
         }
     };
 
@@ -381,6 +392,25 @@ define([
 
     OITResources.prototype.destroy = function() {
         destroyResources(this);
+        if (defined(this._compositeCommand)) {
+            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
+        }
+
+        var name;
+        var cache = this._translucentShaderCache;
+        for (name in cache) {
+            if (cache.hasOwnProperty(name) && defined(cache[name])) {
+                cache[name].release();
+            }
+        }
+
+        cache = this._alphaShaderCache;
+        for (name in cache) {
+            if (cache.hasOwnProperty(name) && defined(cache[name])) {
+                cache[name].release();
+            }
+        }
+
         return destroyObject(this);
     };
 
