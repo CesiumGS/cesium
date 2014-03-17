@@ -8,7 +8,9 @@ define([
     "use strict";
 
     function accessorDefaults(gltf) {
-        gltf.accessors = defaultValue(gltf.accessors, {});
+        if (!defined(gltf.accessors)) {
+            gltf.accessors = {};
+        }
         var accessors = gltf.accessors;
 
         for (var name in accessors) {
@@ -20,7 +22,9 @@ define([
     }
 
     function animationDefaults(gltf) {
-        gltf.animations = defaultValue(gltf.animations, {});
+        if (!defined(gltf.animations)) {
+            gltf.animations = {};
+        }
         var animations = gltf.animations;
 
         for (var name in animations) {
@@ -52,12 +56,16 @@ define([
     }
 
     function assetDefaults(gltf) {
-        gltf.asset = defaultValue(gltf.asset, {});
+        if (!defined(gltf.asset)) {
+            gltf.asset = {};
+        }
         gltf.asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
     }
 
     function bufferDefaults(gltf) {
-        gltf.buffers = defaultValue(gltf.buffers, {});
+        if (!defined(gltf.buffers)) {
+            gltf.buffers = {};
+        }
         var buffers = gltf.buffers;
 
         for (var name in buffers) {
@@ -69,36 +77,56 @@ define([
     }
 
     function bufferViewDefaults(gltf) {
-        gltf.bufferViews = defaultValue(gltf.bufferViews, {});
+        if (!defined(gltf.bufferViews)) {
+            gltf.bufferViews = {};
+        }
     }
 
     function cameraDefaults(gltf) {
-        gltf.cameras = defaultValue(gltf.cameras, {});
+        if (!defined(gltf.cameras)) {
+            gltf.cameras = {};
+        }
     }
 
     function imageDefaults(gltf) {
-        gltf.images = defaultValue(gltf.images, {});
+        if (!defined(gltf.images)) {
+            gltf.images = {};
+        }
     }
 
     function lightDefaults(gltf) {
-        gltf.lights = defaultValue(gltf.lights, {});
+        if (!defined(gltf.lights)) {
+            gltf.lights = {};
+        }
         var lights = gltf.lights;
 
         for (var name in lights) {
             if (lights.hasOwnProperty(name)) {
                 var light = lights[name];
                 if (light.type === 'ambient') {
+                    if (!defined(light.ambient)) {
+                        light.ambient = {};
+                    }
                     var ambientLight = light.ambient;
+
                     if (!defined(ambientLight.color)) {
                         ambientLight.color = [1.0, 1.0, 1.0];
                     }
                 } else if (light.type === 'directional') {
+                    if (!defined(light.directional)) {
+                        light.directional = {};
+                    }
                     var directionalLight = light.directional;
+
                     if (!defined(directionalLight.color)) {
                         directionalLight.color = [1.0, 1.0, 1.0];
                     }
                 } else if (light.type === 'point') {
+                    if (!defined(light.point)) {
+                        light.point = {};
+                    }
                     var pointLight = light.point;
+
                     if (!defined(pointLight.color)) {
                         pointLight.color = [1.0, 1.0, 1.0];
                     }
@@ -107,7 +135,11 @@ define([
                     pointLight.linearAttenuation = defaultValue(pointLight.linearAttenuation, 0.0);
                     pointLight.quadraticAttenuation = defaultValue(pointLight.quadraticAttenuation, 0.0);
                 } else if (light.type === 'spot') {
+                    if (!defined(light.spot)) {
+                        light.spot = {};
+                    }
                     var spotLight = light.spot;
+
                     if (!defined(spotLight.color)) {
                         spotLight.color = [1.0, 1.0, 1.0];
                     }
@@ -123,7 +155,9 @@ define([
     }
 
     function materialDefaults(gltf) {
-        gltf.materials = defaultValue(gltf.materials, {});
+        if (!defined(gltf.materials)) {
+            gltf.materials = {};
+        }
         var materials = gltf.materials;
 
         for (var name in materials) {
@@ -137,7 +171,9 @@ define([
     }
 
     function meshDefaults(gltf) {
-        gltf.meshes = defaultValue(gltf.meshes, {});
+        if (!defined(gltf.meshes)) {
+            gltf.meshes = {};
+        }
         var meshes = gltf.meshes;
 
         for (var name in meshes) {
@@ -157,16 +193,16 @@ define([
                         primitive.attributes = {};
                     }
 
-                    if (!defined(primitive.primitive)) {
-                        primitive.primitive = WebGLRenderingContext.TRIANGLES;
-                   }
+                    primitive.primitive = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
                 }
             }
         }
     }
 
     function nodeDefaults(gltf) {
-        gltf.nodes = defaultValue(gltf.nodes, {});
+        if (!defined(gltf.nodes)) {
+            gltf.nodes = {};
+        }
         var nodes = gltf.nodes;
 
         for (var name in nodes) {
@@ -206,7 +242,9 @@ define([
     }
 
     function programDefaults(gltf) {
-        gltf.programs = defaultValue(gltf.programs, {});
+        if (!defined(gltf.programs)) {
+            gltf.programs = {};
+        }
         var programs = gltf.programs;
 
         for (var name in programs) {
@@ -220,7 +258,9 @@ define([
     }
 
     function samplerDefaults(gltf) {
-        gltf.samplers = defaultValue(gltf.samplers, {});
+        if (!defined(gltf.samplers)) {
+            gltf.samplers = {};
+        }
         var samplers = gltf.samplers;
 
         for (var name in samplers) {
@@ -235,7 +275,9 @@ define([
     }
 
     function sceneDefaults(gltf) {
-        gltf.scenes = defaultValue(gltf.scenes, {});
+        if (!defined(gltf.scenes)) {
+            gltf.scenes = {};
+        }
         var scenes = gltf.scenes;
 
         for (var name in scenes) {
@@ -249,11 +291,15 @@ define([
     }
 
     function shaderDefaults(gltf) {
-        gltf.shaders = defaultValue(gltf.shaders, {});
+        if (!defined(gltf.shaders)) {
+            gltf.shaders = {};
+        }
     }
 
     function skinDefaults(gltf) {
-        gltf.skins = defaultValue(gltf.skins, {});
+        if (!defined(gltf.skins)) {
+            gltf.skins = {};
+        }
         var skins = gltf.skins;
 
         for (var name in skins) {
@@ -272,14 +318,16 @@ define([
     }
 
     function techniqueDefaults(gltf) {
-        gltf.techniques = defaultValue(gltf.techniques, {});
+        if (!defined(gltf.techniques)) {
+            gltf.techniques = {};
+        }
         var techniques = gltf.techniques;
 
         for (var name in techniques) {
             if (techniques.hasOwnProperty(name)) {
                 var technique = techniques[name];
                 if (!defined(technique.parameters)) {
-                    technique.parameters = [];
+                    technique.parameters = {};
                 }
 
                 var passes = technique.passes;
@@ -301,7 +349,9 @@ define([
     }
 
     function textureDefaults(gltf) {
-        gltf.textures = defaultValue(gltf.textures, {});
+        if (!defined(gltf.textures)) {
+            gltf.textures = {};
+        }
         var textures = gltf.textures;
 
         for (var name in textures) {
@@ -325,7 +375,9 @@ define([
             return undefined;
         }
 
-        gltf.allExtensions = defaultValue(gltf.allExtensions, []);
+        if (!defined(gltf.allExtensions)) {
+            gltf.allExtensions = [];
+        }
         accessorDefaults(gltf);
         animationDefaults(gltf);
         assetDefaults(gltf);
