@@ -28,8 +28,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
         '../Renderer/Pass',
-        '../Renderer/PixelFormat',
-        '../Renderer/PixelDatatype',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',
@@ -48,7 +46,7 @@ define([
         './SunPostProcess',
         './CreditDisplay',
         './OITResourceManager',
-        '../Shaders/PostProcessFilters/FXAA'
+        './FXAA'
     ], function(
         CesiumMath,
         Color,
@@ -78,8 +76,6 @@ define([
         ClearCommand,
         PassState,
         Pass,
-        PixelFormat,
-        PixelDatatype,
         Camera,
         ScreenSpaceCameraController,
         CompositePrimitive,
@@ -153,6 +149,7 @@ define([
         this._overlayCommandList = [];
 
         this._oitResourceManager = new OITResourceManager(context);
+        this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -363,10 +360,6 @@ define([
         this._performanceDisplay = undefined;
 
         this._debugSphere = undefined;
-
-        this._fxaaTexture = undefined;
-        this._fxaaFBO = undefined;
-        this._fxaaCommand = undefined;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -951,20 +944,16 @@ define([
 
         scene._oitResourceManager.update(context);
 
-        updateFramebuffers(scene);
-        updatePostCommands(scene);
+        scene._fxaa.enabled = scene.fxaa || (scene._oitResourceManager.isSupported() && scene.fxaaOrderIndependentTranslucency);
+        scene._fxaa.update(context);
 
         var useOIT = !picking && scene._oitResourceManager.isSupported();
-        var useFXAA = !picking && (scene.fxaa || (useOIT && scene.fxaaOrderIndependentTranslucency));
+        var useFXAA = !picking && scene._fxaa.enabled;
 
         scene._oitResourceManager.clear(context, passState, clearColor);
+        scene._fxaa.clear(context, passState, clearColor);
 
-        if (useFXAA) {
-            passState.framebuffer = scene._fxaaFBO;
-            clear.execute(context, passState);
-        }
-
-        var opaqueFramebuffer = useOIT ? scene._oitResourceManager._opaqueFBO : (useFXAA ? scene._fxaaFBO : passState.framebuffer);
+        var opaqueFramebuffer = useOIT ? scene._oitResourceManager._opaqueFBO : (useFXAA ? scene._fxaa._fxaaFBO : passState.framebuffer);
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -1032,13 +1021,13 @@ define([
         }
 
         if (useOIT) {
-            passState.framebuffer = useFXAA ? scene._fxaaFBO : undefined;
+            passState.framebuffer = useFXAA ? scene._fxaa._fxaaFBO : undefined;
             scene._oitResourceManager._compositeCommand.execute(context, passState);
         }
 
         if (useFXAA) {
             passState.framebuffer = undefined;
-            scene._fxaaCommand.execute(context, passState);
+            scene._fxaa._fxaaCommand.execute(context, passState);
         }
     }
 
@@ -1048,72 +1037,6 @@ define([
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             commandList[i].execute(context, passState);
-        }
-    }
-
-    function updateTextures(scene, width, height, useFXAA) {
-        var context = scene._context;
-
-        if (useFXAA) {
-            scene._fxaaTexture = context.createTexture2D({
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.RGB,
-                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
-            });
-        }
-    }
-
-    function updatePostCommands(scene) {
-        var context = scene._context;
-
-        var supported = scene._oitResourceManager.isSupported();
-        var useFXAA = scene.fxaa || (scene.fxaaOrderIndependentTranslucency && supported);
-
-        if (useFXAA) {
-            if (!defined(scene._fxaaCommand)) {
-                var fs = createShaderSource({
-                    sources : [FXAA]
-                });
-
-                scene._fxaaCommand = context.createViewportQuadCommand(fs, context.createRenderState());
-            }
-
-            var step = new Cartesian2(1.0 / scene._fxaaTexture.getWidth(), 1.0 / scene._fxaaTexture.getHeight());
-            scene._fxaaCommand.uniformMap = {
-                u_texture : function() {
-                    return scene._fxaaTexture;
-                },
-                u_step : function() {
-                    return step;
-                }
-            };
-        }
-    }
-
-    function updateFramebuffers(scene) {
-        var context = scene._context;
-
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
-
-        var supported = scene._oitResourceManager.isSupported();
-        var useFXAA = scene.fxaa || (scene.fxaaOrderIndependentTranslucency && supported);
-
-        var compositeTexture = scene._fxaaTexture;
-        var textureChanged = !defined(compositeTexture) || compositeTexture.getWidth() !== width || compositeTexture.getHeight() !== height;
-        if (textureChanged) {
-            updateTextures(scene, width, height, supported, useFXAA);
-        }
-
-        if (useFXAA && !defined(scene._fxaaFBO)) {
-            scene._fxaaFBO = context.createFramebuffer({
-                colorTextures : [scene._fxaaTexture],
-                destroyAttachments : false
-            });
-        } else if (!useFXAA && defined(scene._fxaaFBO)) {
-            scene._fxaaTexture = scene._fxaaTexture && scene._fxaaTexture.destroy();
-            scene._fxaaFBO = scene._fxaaFBO && scene._fxaaFBO.destroy();
         }
     }
 

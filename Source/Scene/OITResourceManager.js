@@ -63,11 +63,6 @@ define([
         alphaClearCommand.owner = this;
         this._alphaClearCommand = alphaClearCommand;
 
-        var depthClearCommand = new ClearCommand();
-        depthClearCommand.depth = 1.0;
-        depthClearCommand.owner = this;
-        this._depthClearCommand = depthClearCommand;
-
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};
         this._translucentShaderCache = {};
