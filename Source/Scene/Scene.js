@@ -792,67 +792,16 @@ define([
         };
     }
 
-    function executeTranslucentCommandsSorted(scene, passState, frustumCommands) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
         var context = scene._context;
-        var commands = frustumCommands.translucentCommands;
-        var length = commands.length = frustumCommands.translucentIndex;
 
         var translucentCompare = createTranslucentCompareFunction(scene._camera.positionWC);
         mergeSort(commands, translucentCompare);
 
+        var length = commands.length;
         for (var j = 0; j < length; ++j) {
-            executeCommand(commands[j], scene, context, passState);
+            executeFunction(commands[j], scene, context, passState);
         }
-    }
-
-    function executeTranslucentCommandsSortedMultipass(scene, passState, frustumCommands) {
-        var command;
-        var renderState;
-        var shaderProgram;
-        var j;
-
-        var context = scene._context;
-        var framebuffer = passState.framebuffer;
-        var commands = frustumCommands.translucentCommands;
-        var length = commands.length = frustumCommands.translucentIndex;
-
-        passState.framebuffer = scene._oitResources._translucentFBO;
-
-        for (j = 0; j < length; ++j) {
-            command = commands[j];
-            renderState = scene._oitResources.getTranslucentColorRenderState(context, command.renderState);
-            shaderProgram = scene._oitResources.getTranslucentColorShaderProgram(context, command.shaderProgram);
-            executeCommand(command, scene, context, passState, renderState, shaderProgram);
-        }
-
-
-        passState.framebuffer = scene._oitResources._alphaFBO;
-
-        for (j = 0; j < length; ++j) {
-            command = commands[j];
-            renderState = scene._oitResources.getTranslucentAlphaRenderState(context, command.renderState);
-            shaderProgram = scene._oitResources.getTranslucentAlphaShaderProgram(context, command.shaderProgram);
-            executeCommand(command, scene, context, passState, renderState, shaderProgram);
-        }
-
-        passState.framebuffer = framebuffer;
-    }
-
-    function executeTranslucentCommandsSortedMRT(scene, passState, frustumCommands) {
-        var context = scene._context;
-        var framebuffer = passState.framebuffer;
-        var commands = frustumCommands.translucentCommands;
-        var length = commands.length = frustumCommands.translucentIndex;
-
-        passState.framebuffer = scene._oitResources._translucentFBO;
-        for (var j = 0; j < length; ++j) {
-            var command = commands[j];
-            var renderState = scene._oitResources.getTranslucentMRTRenderState(context, command.renderState);
-            var shaderProgram = scene._oitResources.getTranslucentMRTShaderProgram(context, command.shaderProgram);
-            executeCommand(command, scene, context, passState, renderState, shaderProgram);
-        }
-
-        passState.framebuffer = framebuffer;
     }
 
     var scratchPerspectiveFrustum = new PerspectiveFrustum();
@@ -907,7 +856,10 @@ define([
         scene._oitResources.clear(context, passState, clearColor);
         scene._fxaaResources.clear(context, passState, clearColor);
 
-        var opaqueFramebuffer = useOIT ? scene._oitResources._opaqueFBO : (useFXAA ? scene._fxaaResources._fxaaFBO : passState.framebuffer);
+        var opaqueFramebuffer = scene._oitResources.getColorFBO();
+        if (!defined(opaqueFramebuffer)) {
+            opaqueFramebuffer = scene._fxaaResources.getColorFBO();
+        }
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -941,7 +893,10 @@ define([
         var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (useOIT) {
-            executeTranslucentCommands = scene._oitResources._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSortedMultipass;
+            // TODO: how to bind 'this' to a function.
+            executeTranslucentCommands = function(scene, executeFunction, passState, commands) {
+                scene._oitResources.executeCommands(scene, executeFunction, passState, commands);
+            };
         } else {
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
@@ -971,18 +926,15 @@ define([
             frustum.near = frustumCommands.near;
             us.updateFrustum(frustum);
 
-            executeTranslucentCommands(scene, passState, frustumCommands);
+            commands = frustumCommands.translucentCommands;
+            commands.length = frustumCommands.translucentIndex;
+            executeTranslucentCommands(scene, executeCommand, passState, commands);
         }
 
-        if (useOIT) {
-            passState.framebuffer = useFXAA ? scene._fxaaResources._fxaaFBO : undefined;
-            scene._oitResources._compositeCommand.execute(context, passState);
-        }
-
-        if (useFXAA) {
-            passState.framebuffer = undefined;
-            scene._fxaaResources._fxaaCommand.execute(context, passState);
-        }
+        passState.framebuffer = scene._fxaaResources.getColorFBO();
+        scene._oitResources.execute(context, passState);
+        passState.framebuffer = undefined;
+        scene._fxaaResources.execute(context, passState);
     }
 
     function executeOverlayCommands(scene, passState) {

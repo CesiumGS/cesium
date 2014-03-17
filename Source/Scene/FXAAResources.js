@@ -26,7 +26,7 @@ define([
      * @private
      */
     var FXAAResources = function(context) {
-        this.enable = false;
+        this.enabled = false;
 
         this._fxaaTexture = undefined;
         this._fxaaFBO = undefined;
@@ -107,6 +107,14 @@ define([
         }
     };
 
+    FXAAResources.prototype.execute = function(context, passState) {
+        if (!this.enabled) {
+            return;
+        }
+
+        this._fxaaCommand.execute(context, passState);
+    };
+
     FXAAResources.prototype.clear = function(context, passState, clearColor) {
         if(!this.enabled) {
             return;
@@ -119,6 +127,14 @@ define([
         this._fxaaClearCommand.execute(context, passState);
 
         passState.framebuffer = framebuffer;
+    };
+
+    FXAAResources.prototype.getColorFBO = function() {
+        if (!this.enabled) {
+            return undefined;
+        }
+
+        return this._fxaaFBO;
     };
 
     FXAAResources.prototype.isDestroyed = function() {
