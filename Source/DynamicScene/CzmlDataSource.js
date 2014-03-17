@@ -342,7 +342,11 @@ define(['../Core/Cartesian2',
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
-            return unwrapImageInterval(czmlInterval, sourceUri);
+            // Backwards compatibility: new files use 'uri', old files use 'image'
+            if (defined(czmlInterval.image)) {
+                return unwrapImageInterval(czmlInterval, sourceUri);
+            }
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case JulianDate:
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
