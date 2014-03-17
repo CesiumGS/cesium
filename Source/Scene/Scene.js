@@ -1242,29 +1242,24 @@ define([
         var context = scene._context;
 
         if (supportedOIT) {
-            var sampler = context.createSampler({
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            });
             var opaqueTexture = scene._opaqueTexture = context.createTexture2D({
                 width : width,
-                height : height
+                height : height,
+                pixelFormat : PixelFormat.RGB,
+                pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
-            opaqueTexture.setSampler(sampler);
             var accumulationTexture = scene._accumulationTexture = context.createTexture2D({
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT
             });
-            accumulationTexture.setSampler(sampler);
             var revealageTexture = scene._revealageTexture = context.createTexture2D({
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT
             });
-            revealageTexture.setSampler(sampler);
         }
 
         if (useFXAA || supportedOIT) {
