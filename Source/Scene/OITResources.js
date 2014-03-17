@@ -312,7 +312,7 @@ define([
     }
 
     OITResources.prototype.update = function(context) {
-        if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
+        if (!this.isSupported()) {
             return;
         }
 
@@ -329,7 +329,7 @@ define([
             updateFramebuffers(this, context);
 
             // framebuffer creation failed
-            if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
+            if (!this.isSupported()) {
                 return;
             }
         }
