@@ -32,11 +32,11 @@ define(['../Core/Color',
         this._horizontal = undefined;
         this._horizontalSubscription = undefined;
 
-        this._lightColor = undefined;
-        this._lightColorSubscription = undefined;
+        this._evenColor = undefined;
+        this._evenColorSubscription = undefined;
 
-        this._darkColor = undefined;
-        this._darkColorSubscription = undefined;
+        this._oddColor = undefined;
+        this._oddColorSubscription = undefined;
 
         this._offset = undefined;
         this._offsetSubscription = undefined;
@@ -45,8 +45,8 @@ define(['../Core/Color',
         this._repeatSubscription = undefined;
 
         this.horizontal = new ConstantProperty(true);
-        this.lightColor = new ConstantProperty(Color.WHITE);
-        this.darkColor = new ConstantProperty(Color.BLACK);
+        this.evenColor = new ConstantProperty(Color.WHITE);
+        this.oddColor = new ConstantProperty(Color.BLACK);
         this.offset = new ConstantProperty(0);
         this.repeat = new ConstantProperty(1);
     };
@@ -61,8 +61,8 @@ define(['../Core/Color',
         isConstant : {
             get : function() {
                 return Property.isConstant(this._horizontal) && //
-                       Property.isConstant(this._lightColor) && //
-                       Property.isConstant(this._darkColor) && //
+                       Property.isConstant(this._evenColor) && //
+                       Property.isConstant(this._oddColor) && //
                        Property.isConstant(this._offset) && //
                        Property.isConstant(this._repeat);
             }
@@ -90,13 +90,13 @@ define(['../Core/Color',
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        lightColor : createDynamicPropertyDescriptor('lightColor'),
+        evenColor : createDynamicPropertyDescriptor('evenColor'),
         /**
          * Gets or sets the {@link Color} property which determines the second color.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        darkColor : createDynamicPropertyDescriptor('darkColor'),
+        oddColor : createDynamicPropertyDescriptor('oddColor'),
         /**
          * Gets or sets the numeric property which determines the stripe offset from the edge.
          * @memberof StripeMaterialProperty.prototype
@@ -135,8 +135,8 @@ define(['../Core/Color',
             result = {};
         }
         result.horizontal = defined(this._horizontal) ? this._horizontal.getValue(time) : undefined;
-        result.lightColor = defined(this._lightColor) ? this._lightColor.getValue(time, result.lightColor) : undefined;
-        result.darkColor = defined(this._darkColor) ? this._darkColor.getValue(time, result.darkColor) : undefined;
+        result.evenColor = defined(this._evenColor) ? this._evenColor.getValue(time, result.evenColor) : undefined;
+        result.oddColor = defined(this._oddColor) ? this._oddColor.getValue(time, result.oddColor) : undefined;
         result.offset = defined(this._offset) ? this._offset.getValue(time) : undefined;
         result.repeat = defined(this._repeat) ? this._repeat.getValue(time) : undefined;
         return result;
@@ -154,8 +154,8 @@ define(['../Core/Color',
         return this === other || //
                (other instanceof StripeMaterialProperty && //
                        Property.equals(this._horizontal, other._horizontal) && //
-                       Property.equals(this._lightColor, other._lightColor) && //
-                       Property.equals(this._darkColor, other._darkColor) && //
+                       Property.equals(this._evenColor, other._evenColor) && //
+                       Property.equals(this._oddColor, other._oddColor) && //
                        Property.equals(this._offset, other._offset) && //
                        Property.equals(this._repeat, other._repeat));
     };

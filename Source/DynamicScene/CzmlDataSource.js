@@ -761,8 +761,8 @@ define(['../Core/Cartesian2',
             }
             materialData = packetData.stripe;
             processPacketData(Boolean, existingMaterial, 'horizontal', materialData.horizontal, undefined, sourceUri);
-            processPacketData(Color, existingMaterial, 'lightColor', materialData.lightColor, undefined, sourceUri);
-            processPacketData(Color, existingMaterial, 'darkColor', materialData.darkColor, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri);
             processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri);
             processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri);
         }
