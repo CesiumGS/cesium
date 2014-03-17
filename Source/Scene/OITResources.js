@@ -24,7 +24,10 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
-    var OITResourceManager = function(context) {
+    /**
+     * @private
+     */
+    var OITResources = function(context) {
         var textureFloat = context.getFloatingPointTexture();
         this._translucentMRTSupport = context.getDrawBuffers() && textureFloat;
 
@@ -112,15 +115,15 @@ define([
         return translucentState;
     }
 
-    OITResourceManager.prototype.getTranslucentMRTRenderState = function(context, renderState) {
+    OITResources.prototype.getTranslucentMRTRenderState = function(context, renderState) {
         return getTranslucentRenderState(context, translucentMRTBlend, this._translucentRenderStateCache, renderState);
     };
 
-    OITResourceManager.prototype.getTranslucentColorRenderState = function(context, renderState) {
+    OITResources.prototype.getTranslucentColorRenderState = function(context, renderState) {
         return getTranslucentRenderState(context, translucentColorBlend, this._translucentRenderStateCache, renderState);
     };
 
-    OITResourceManager.prototype.getTranslucentAlphaRenderState = function(context, renderState) {
+    OITResources.prototype.getTranslucentAlphaRenderState = function(context, renderState) {
         return getTranslucentRenderState(context, translucentAlphaBlend, this._alphaRenderStateCache, renderState);
     };
 
@@ -178,15 +181,15 @@ define([
         return shader;
     }
 
-    OITResourceManager.prototype.getTranslucentMRTShaderProgram = function(context, shaderProgram) {
+    OITResources.prototype.getTranslucentMRTShaderProgram = function(context, shaderProgram) {
         return getTranslucentShaderProgram(context, shaderProgram, this._translucentShaderCache, mrtShaderSource);
     };
 
-    OITResourceManager.prototype.getTranslucentColorShaderProgram = function(context, shaderProgram) {
+    OITResources.prototype.getTranslucentColorShaderProgram = function(context, shaderProgram) {
         return getTranslucentShaderProgram(context, shaderProgram, this._translucentShaderCache, colorShaderSource);
     };
 
-    OITResourceManager.prototype.getTranslucentAlphaShaderProgram = function(context, shaderProgram) {
+    OITResources.prototype.getTranslucentAlphaShaderProgram = function(context, shaderProgram) {
         return getTranslucentShaderProgram(context, shaderProgram, this._alphaShaderCache, alphaShaderSource);
     };
 
@@ -317,7 +320,7 @@ define([
         };
     }
 
-    OITResourceManager.prototype.update = function(context) {
+    OITResources.prototype.update = function(context) {
         if (!this._translucentMRTSupport && !this._translucentMultipassSupport) {
             return;
         }
@@ -345,7 +348,7 @@ define([
         }
     };
 
-    OITResourceManager.prototype.clear = function(context, passState, clearColor) {
+    OITResources.prototype.clear = function(context, passState, clearColor) {
         if(!this.isSupported()) {
             return;
         }
@@ -368,18 +371,18 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    OITResourceManager.prototype.isSupported = function() {
+    OITResources.prototype.isSupported = function() {
         return this._translucentMRTSupport || this._translucentMultipassSupport;
     };
 
-    OITResourceManager.prototype.isDestroyed = function() {
+    OITResources.prototype.isDestroyed = function() {
         return false;
     };
 
-    OITResourceManager.prototype.destroy = function() {
+    OITResources.prototype.destroy = function() {
         destroyResources(this);
         return destroyObject(this);
     };
 
-    return OITResourceManager;
+    return OITResources;
 });

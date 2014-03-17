@@ -45,8 +45,8 @@ define([
         './PerInstanceColorAppearance',
         './SunPostProcess',
         './CreditDisplay',
-        './OITResourceManager',
-        './FXAA'
+        './OITResources',
+        './FXAAResources'
     ], function(
         CesiumMath,
         Color,
@@ -93,8 +93,8 @@ define([
         PerInstanceColorAppearance,
         SunPostProcess,
         CreditDisplay,
-        OITResourceManager,
-        FXAA) {
+        OITResources,
+        FXAAResources) {
     "use strict";
 
     /**
@@ -148,8 +148,8 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oitResourceManager = new OITResourceManager(context);
-        this._fxaa = new FXAA();
+        this._oitResources = new OITResources(context);
+        this._fxaaResources = new FXAAResources();
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -807,22 +807,22 @@ define([
         var commands = frustumCommands.translucentCommands;
         var length = commands.length = frustumCommands.translucentIndex;
 
-        passState.framebuffer = scene._oitResourceManager._translucentFBO;
+        passState.framebuffer = scene._oitResources._translucentFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = scene._oitResourceManager.getTranslucentColorRenderState(context, command.renderState);
-            shaderProgram = scene._oitResourceManager.getTranslucentColorShaderProgram(context, command.shaderProgram);
+            renderState = scene._oitResources.getTranslucentColorRenderState(context, command.renderState);
+            shaderProgram = scene._oitResources.getTranslucentColorShaderProgram(context, command.shaderProgram);
             executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
 
-        passState.framebuffer = scene._oitResourceManager._alphaFBO;
+        passState.framebuffer = scene._oitResources._alphaFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = scene._oitResourceManager.getTranslucentAlphaRenderState(context, command.renderState);
-            shaderProgram = scene._oitResourceManager.getTranslucentAlphaShaderProgram(context, command.shaderProgram);
+            renderState = scene._oitResources.getTranslucentAlphaRenderState(context, command.renderState);
+            shaderProgram = scene._oitResources.getTranslucentAlphaShaderProgram(context, command.shaderProgram);
             executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
@@ -835,11 +835,11 @@ define([
         var commands = frustumCommands.translucentCommands;
         var length = commands.length = frustumCommands.translucentIndex;
 
-        passState.framebuffer = scene._oitResourceManager._translucentFBO;
+        passState.framebuffer = scene._oitResources._translucentFBO;
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var renderState = scene._oitResourceManager.getTranslucentMRTRenderState(context, command.renderState);
-            var shaderProgram = scene._oitResourceManager.getTranslucentMRTShaderProgram(context, command.shaderProgram);
+            var renderState = scene._oitResources.getTranslucentMRTRenderState(context, command.renderState);
+            var shaderProgram = scene._oitResources.getTranslucentMRTShaderProgram(context, command.shaderProgram);
             executeCommand(command, scene, context, passState, renderState, shaderProgram);
         }
 
@@ -942,18 +942,18 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        scene._oitResourceManager.update(context);
+        scene._oitResources.update(context);
 
-        scene._fxaa.enabled = scene.fxaa || (scene._oitResourceManager.isSupported() && scene.fxaaOrderIndependentTranslucency);
-        scene._fxaa.update(context);
+        scene._fxaaResources.enabled = scene.fxaa || (scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
+        scene._fxaaResources.update(context);
 
-        var useOIT = !picking && scene._oitResourceManager.isSupported();
-        var useFXAA = !picking && scene._fxaa.enabled;
+        var useOIT = !picking && scene._oitResources.isSupported();
+        var useFXAA = !picking && scene._fxaaResources.enabled;
 
-        scene._oitResourceManager.clear(context, passState, clearColor);
-        scene._fxaa.clear(context, passState, clearColor);
+        scene._oitResources.clear(context, passState, clearColor);
+        scene._fxaaResources.clear(context, passState, clearColor);
 
-        var opaqueFramebuffer = useOIT ? scene._oitResourceManager._opaqueFBO : (useFXAA ? scene._fxaa._fxaaFBO : passState.framebuffer);
+        var opaqueFramebuffer = useOIT ? scene._oitResources._opaqueFBO : (useFXAA ? scene._fxaaResources._fxaaFBO : passState.framebuffer);
 
         if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
@@ -987,7 +987,7 @@ define([
         var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (useOIT) {
-            executeTranslucentCommands = scene._oitResourceManager._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSortedMultipass;
+            executeTranslucentCommands = scene._oitResources._translucentMRTSupport ? executeTranslucentCommandsSortedMRT : executeTranslucentCommandsSortedMultipass;
         } else {
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
@@ -1021,13 +1021,13 @@ define([
         }
 
         if (useOIT) {
-            passState.framebuffer = useFXAA ? scene._fxaa._fxaaFBO : undefined;
-            scene._oitResourceManager._compositeCommand.execute(context, passState);
+            passState.framebuffer = useFXAA ? scene._fxaaResources._fxaaFBO : undefined;
+            scene._oitResources._compositeCommand.execute(context, passState);
         }
 
         if (useFXAA) {
             passState.framebuffer = undefined;
-            scene._fxaa._fxaaCommand.execute(context, passState);
+            scene._fxaaResources._fxaaCommand.execute(context, passState);
         }
     }
 
@@ -1372,7 +1372,8 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
-        this._oitResourceManager.destroy();
+        this._oitResources.destroy();
+        this._fxaaResources.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();

@@ -22,7 +22,10 @@ define([
     "use strict";
     /*global WebGLRenderingContext*/
 
-    var FXAA = function(context) {
+    /**
+     * @private
+     */
+    var FXAAResources = function(context) {
         this.enable = false;
 
         this._fxaaTexture = undefined;
@@ -43,7 +46,7 @@ define([
         that._fxaaTexture = undefined;
     }
 
-    FXAA.prototype.update = function(context) {
+    FXAAResources.prototype.update = function(context) {
         if (!this.enabled) {
             if (defined(this._fxaaTexture)) {
                 destroyResources(this);
@@ -97,7 +100,7 @@ define([
         };
     };
 
-    FXAA.prototype.clear = function(context, passState, clearColor) {
+    FXAAResources.prototype.clear = function(context, passState, clearColor) {
         if(!this.enabled) {
             return;
         }
@@ -111,14 +114,14 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    FXAA.prototype.isDestroyed = function() {
+    FXAAResources.prototype.isDestroyed = function() {
         return false;
     };
 
-    FXAA.prototype.destroy = function() {
+    FXAAResources.prototype.destroy = function() {
         destroyResources(this);
         return destroyObject(this);
     };
 
-    return FXAA;
+    return FXAAResources;
 });
