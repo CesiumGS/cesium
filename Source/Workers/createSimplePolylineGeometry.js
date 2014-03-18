@@ -1,22 +1,6 @@
 /*global define*/
-define([
-        '../Core/SimplePolylineGeometry',
-        '../Scene/PrimitivePipeline'
-    ], function(
-        SimplePolylineGeometry,
-        PrimitivePipeline) {
+define(['../Core/SimplePolylineGeometry'], function(SimplePolylineGeometry) {
     "use strict";
 
-    function createSimplePolylineGeometry(parameters, transferableObjects) {
-        var polylineGeometry = parameters.geometry;
-        var geometry = SimplePolylineGeometry.createGeometry(polylineGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
-    }
-
-    return createSimplePolylineGeometry;
+    return SimplePolylineGeometry.createGeometry;
 });

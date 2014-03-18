@@ -1,25 +1,14 @@
 /*global define*/
-define([
-        '../Core/PolygonOutlineGeometry',
-        '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline'
+define(['../Core/PolygonOutlineGeometry',
+        '../Core/Ellipsoid'
     ], function(
         PolygonOutlineGeometry,
-        Ellipsoid,
-        PrimitivePipeline) {
+        Ellipsoid) {
     "use strict";
 
-    function createPolygonOutlineGeometry(parameters, transferableObjects) {
-        var polygonGeometry = parameters.geometry;
+    function createPolygonOutlineGeometry(polygonGeometry) {
         polygonGeometry._ellipsoid = Ellipsoid.clone(polygonGeometry._ellipsoid);
-
-        var geometry = PolygonOutlineGeometry.createGeometry(polygonGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
+        return PolygonOutlineGeometry.createGeometry(polygonGeometry);
     }
 
     return createPolygonOutlineGeometry;

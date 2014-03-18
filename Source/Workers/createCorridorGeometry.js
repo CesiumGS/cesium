@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/CorridorGeometry',
+define(['../Core/CorridorGeometry',
         '../Core/Ellipsoid',
         '../Scene/PrimitivePipeline'
     ], function(
@@ -9,17 +8,9 @@ define([
         PrimitivePipeline) {
     "use strict";
 
-    function createCorridorGeometry(parameters, transferableObjects) {
-        var corridorGeometry = parameters.geometry;
+    function createCorridorGeometry(corridorGeometry) {
         corridorGeometry._ellipsoid = Ellipsoid.clone(corridorGeometry._ellipsoid);
-
-        var geometry = CorridorGeometry.createGeometry(corridorGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
+        return CorridorGeometry.createGeometry(corridorGeometry);
     }
 
     return createCorridorGeometry;

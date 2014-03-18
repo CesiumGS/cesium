@@ -1,28 +1,17 @@
 /*global define*/
-define([
-        '../Core/Cartesian3',
+define(['../Core/Cartesian3',
         '../Core/EllipseOutlineGeometry',
-        '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline'
+        '../Core/Ellipsoid'
     ], function(
         Cartesian3,
         EllipseOutlineGeometry,
-        Ellipsoid,
-        PrimitivePipeline) {
+        Ellipsoid) {
     "use strict";
 
-    function createEllipseOutlineGeometry(parameters, transferableObjects) {
-        var ellipseGeometry = parameters.geometry;
+    function createEllipseOutlineGeometry(ellipseGeometry) {
         ellipseGeometry._center = Cartesian3.clone(ellipseGeometry._center);
         ellipseGeometry._ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid);
-
-        var geometry = EllipseOutlineGeometry.createGeometry(ellipseGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
+        return EllipseOutlineGeometry.createGeometry(ellipseGeometry);
     }
 
     return createEllipseOutlineGeometry;

@@ -3,11 +3,13 @@ define([
         'require',
         './createTaskProcessorWorker',
         '../Core/defined',
+        '../Scene/PrimitivePipeline',
         '../ThirdParty/when'
     ], function(
         require,
         createTaskProcessorWorker,
         defined,
+        PrimitivePipeline,
         when) {
     "use strict";
 
@@ -16,7 +18,13 @@ define([
     function createTask(taskWorkerName, taskWorker, task, transferableObjects, deferred, results) {
         return function(taskWorker) {
             geometryCreatorCache[taskWorkerName] = taskWorker;
-            results.push(taskWorker(task, transferableObjects));
+
+            var geometry = taskWorker(task.geometry);
+            PrimitivePipeline.transferGeometry(geometry, transferableObjects);
+            results.push({
+                geometry : geometry,
+                index : task.index
+            });
             deferred.resolve();
         };
     }
@@ -29,13 +37,19 @@ define([
         var promises = [];
 
         for (var i = 0; i < tasks.length; i++) {
-            var taskWorkerName = tasks[i].workerName;
+            var task = tasks[i];
+            var taskWorkerName = task.workerName;
             var taskWorker = geometryCreatorCache[taskWorkerName];
             if (defined(taskWorker)) {
-                results.push(taskWorker(tasks[i], transferableObjects));
+                var geometry = taskWorker(task.geometry);
+                PrimitivePipeline.transferGeometry(geometry, transferableObjects);
+                results.push({
+                    geometry : geometry,
+                    index : task.index
+                });
             } else {
                 var innerDefer = when.defer();
-                require(['./' + taskWorkerName], createTask(taskWorkerName, taskWorker, tasks[i], transferableObjects, innerDefer, results));
+                require(['./' + taskWorkerName], createTask(taskWorkerName, taskWorker, task, transferableObjects, innerDefer, results));
                 promises.push(innerDefer.promise);
             }
         }

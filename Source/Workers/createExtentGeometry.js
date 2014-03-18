@@ -1,28 +1,17 @@
 /*global define*/
-define([
-        '../Core/ExtentGeometry',
+define(['../Core/ExtentGeometry',
         '../Core/Ellipsoid',
-        '../Core/Extent',
-        '../Scene/PrimitivePipeline'
+        '../Core/Extent'
     ], function(
         ExtentGeometry,
         Ellipsoid,
-        Extent,
-        PrimitivePipeline) {
+        Extent) {
     "use strict";
 
-    function createExtentGeometry(parameters, transferableObjects) {
-        var extentGeometry = parameters.geometry;
+    function createExtentGeometry(extentGeometry) {
         extentGeometry._ellipsoid = Ellipsoid.clone(extentGeometry._ellipsoid);
         extentGeometry._extent = Extent.clone(extentGeometry._extent);
-
-        var geometry = ExtentGeometry.createGeometry(extentGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
+        return ExtentGeometry.createGeometry(extentGeometry);
     }
 
     return createExtentGeometry;
