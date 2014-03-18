@@ -15,6 +15,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
         '../Core/Matrix4',
+        '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
         '../Renderer/BufferUsage',
@@ -43,6 +44,7 @@ define([
         GeometryInstance,
         GeometryInstanceAttribute,
         Matrix4,
+        subdivideArray,
         TaskProcessor,
         GeographicProjection,
         BufferUsage,
@@ -519,20 +521,30 @@ define([
         return pickColors;
     }
 
-    Primitive.numberOfCores = 4;
-    var taskProcessors;
+    var numberOfCores = 3;
+    var createGeometryTaskProcessors;
+    var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
-
-    function split(a, n) {
-        var len = a.length;
-        var out = [];
-        var i = 0;
-        while (i < len) {
-            var size = Math.ceil((len - i) / n--);
-            out.push(a.slice(i, i += size));
+    defineProperties(Primitive, {
+        /**
+         * Gets or sets the maximum number of worker threads to be used when processing geometry.
+         * This value must be set before any geometry is processed.
+         * @memberof Primitive
+         * @type {Number}
+         * @default 4
+         */
+        numberOfCores : {
+            get : function() {
+                return numberOfCores + 1;
+            },
+            set : function(value) {
+                if (defined(createGeometryTaskProcessors)) {
+                    throw new DeveloperError('Primitive.numberOfCores can only be set before any geometry is created.');
+                }
+                numberOfCores = value - 1;
+            }
         }
-        return out;
-    }
+    });
 
     /**
      * @private
@@ -576,7 +588,7 @@ define([
                     length = instances.length;
                     var promises = [];
 
-                    var tasks = [];
+                    var subTasks = [];
 
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
@@ -588,26 +600,25 @@ define([
                                 index : i
                             });
                         } else {
-                            tasks.push({
-                                task : geometry._workerName,
+                            subTasks.push({
+                                workerName : geometry._workerName,
                                 geometry : geometry,
                                 index : i
                             });
                         }
                     }
 
-                    if (!defined(taskProcessors)) {
-                        taskProcessors = new Array(Primitive.numberOfCores);
-                        for (i = 0; i < Primitive.numberOfCores; i++) {
-                            taskProcessors[i] = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
+                    if (!defined(createGeometryTaskProcessors)) {
+                        createGeometryTaskProcessors = new Array(numberOfCores);
+                        for (i = 0; i < numberOfCores; i++) {
+                            createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
                         }
                     }
 
-                    var taskss = split(tasks, Primitive.numberOfCores);
-                    for (i = 0; i < Primitive.numberOfCores; i++) {
-                        promises.push(taskProcessors[i].scheduleTask({
-                            task : 'createGeometry',
-                            geometry : taskss[i]
+                    subTasks = subdivideArray(subTasks, numberOfCores);
+                    for (i = 0; i < subTasks.length; i++) {
+                        promises.push(createGeometryTaskProcessors[i].scheduleTask({
+                            tasks : subTasks[i]
                         }));
                     }
 
@@ -636,8 +647,7 @@ define([
                     var transferableObjects = [];
                     PrimitivePipeline.transferInstances(clonedInstances, transferableObjects);
 
-                    promise = taskProcessors[0].scheduleTask({
-                        task : 'combineGeometry',
+                    promise = combineGeometryTaskProcessor.scheduleTask({
                         instances : clonedInstances,
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.ellipsoid,
