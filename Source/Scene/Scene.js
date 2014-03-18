@@ -845,12 +845,23 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
+        var renderTranslucentCommands = false;
+        var i;
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (i = 0; i < numFrustums; ++i) {
+            if (frustumCommandsList[i].translucentIndex > 0) {
+                renderTranslucentCommands = true;
+                break;
+            }
+        }
+
         scene._oitResources.update(context);
 
-        scene._fxaaResources.enabled = scene.fxaa || (scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
+        scene._fxaaResources.enabled = scene.fxaa || (renderTranslucentCommands && scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
         scene._fxaaResources.update(context);
 
-        var useOIT = !picking && scene._oitResources.isSupported();
+        var useOIT = !picking && renderTranslucentCommands && scene._oitResources.isSupported();
         var useFXAA = !picking && scene._fxaaResources.enabled;
 
         scene._oitResources.clear(context, passState, clearColor);
@@ -902,9 +913,7 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
+        for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
