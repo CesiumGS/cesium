@@ -2,13 +2,11 @@
 define([
         '../Core/CorridorOutlineGeometry',
         '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         CorridorOutlineGeometry,
         Ellipsoid,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createCorridorOutlineGeometry(parameters, transferableObjects) {
@@ -24,5 +22,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createCorridorOutlineGeometry);
+    return createCorridorOutlineGeometry;
 });

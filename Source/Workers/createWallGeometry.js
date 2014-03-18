@@ -2,13 +2,11 @@
 define([
         '../Core/WallGeometry',
         '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         WallGeometry,
         Ellipsoid,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createWallGeometry(parameters, transferableObjects) {
@@ -24,5 +22,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createWallGeometry);
+    return createWallGeometry;
 });

@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/SphereGeometry',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         SphereGeometry,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createSphereGeometry(parameters, transferableObjects) {
@@ -20,5 +18,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createSphereGeometry);
+    return createSphereGeometry;
 });

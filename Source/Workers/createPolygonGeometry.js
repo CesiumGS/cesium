@@ -2,13 +2,11 @@
 define([
         '../Core/PolygonGeometry',
         '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         PolygonGeometry,
         Ellipsoid,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createPolygonGeometry(parameters, transferableObjects) {
@@ -24,5 +22,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createPolygonGeometry);
+    return createPolygonGeometry;
 });

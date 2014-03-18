@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined'
+        '../Core/defined',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        when) {
     "use strict";
 
     /**
@@ -50,25 +52,27 @@ define([
             responseMessage.error = undefined;
             responseMessage.result = undefined;
 
-            try {
-                responseMessage.result = workerFunction(data.parameters, transferableObjects);
-            } catch (e) {
-                responseMessage.error = e;
-            }
+            when(workerFunction(data.parameters, transferableObjects)).then(function(result) {
+                try {
+                    responseMessage.result = result;
+                } catch (e) {
+                    responseMessage.error = e;
+                }
 
-            if (!defined(postMessage)) {
-                postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
-            }
+                if (!defined(postMessage)) {
+                    postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
+                }
 
-            try {
-                postMessage(responseMessage, transferableObjects);
-            } catch (e) {
-                // something went wrong trying to post the message, post a simpler
-                // error that we can be sure will be cloneable
-                responseMessage.result = undefined;
-                responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
-                postMessage(responseMessage);
-            }
+                try {
+                    postMessage(responseMessage, transferableObjects);
+                } catch (e) {
+                    // something went wrong trying to post the message, post a simpler
+                    // error that we can be sure will be cloneable
+                    responseMessage.result = undefined;
+                    responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
+                    postMessage(responseMessage);
+                }
+            });
         };
     };
 

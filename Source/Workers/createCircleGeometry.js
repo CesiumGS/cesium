@@ -3,14 +3,12 @@ define([
         '../Core/Cartesian3',
         '../Core/CircleGeometry',
         '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         Cartesian3,
         CircleGeometry,
         Ellipsoid,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createCircleGeometry(parameters, transferableObjects) {
@@ -27,5 +25,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createCircleGeometry);
+    return createCircleGeometry;
 });

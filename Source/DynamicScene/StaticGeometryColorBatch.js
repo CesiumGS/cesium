@@ -61,7 +61,7 @@ define(['../Core/Color',
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new this.appearanceType({
                         translucent : this.translucent,

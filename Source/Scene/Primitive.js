@@ -519,7 +519,20 @@ define([
         return pickColors;
     }
 
-    var taskProcessor = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
+    Primitive.numberOfCores = 4;
+    var taskProcessors;
+
+
+    function split(a, n) {
+        var len = a.length;
+        var out = [];
+        var i = 0;
+        while (i < len) {
+            var size = Math.ceil((len - i) / n--);
+            out.push(a.slice(i, i += size));
+        }
+        return out;
+    }
 
     /**
      * @private
@@ -563,6 +576,8 @@ define([
                     length = instances.length;
                     var promises = [];
 
+                    var tasks = [];
+
                     for (i = 0; i < length; ++i) {
                         geometry = instances[i].geometry;
                         this._instanceIds.push(instances[i].id);
@@ -573,18 +588,33 @@ define([
                                 index : i
                             });
                         } else {
-                            promises.push(taskProcessor.scheduleTask({
+                            tasks.push({
                                 task : geometry._workerName,
                                 geometry : geometry,
                                 index : i
-                            }));
+                            });
                         }
+                    }
+
+                    if (!defined(taskProcessors)) {
+                        taskProcessors = new Array(Primitive.numberOfCores);
+                        for (i = 0; i < Primitive.numberOfCores; i++) {
+                            taskProcessors[i] = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
+                        }
+                    }
+
+                    var taskss = split(tasks, Primitive.numberOfCores);
+                    for (i = 0; i < Primitive.numberOfCores; i++) {
+                        promises.push(taskProcessors[i].scheduleTask({
+                            task : 'createGeometry',
+                            geometry : taskss[i]
+                        }));
                     }
 
                     this._state = PrimitiveState.CREATING;
 
                     when.all(promises, function(results) {
-                        that._geometries = results;
+                        that._geometries = Array.prototype.concat.apply(that._geometries, results);
                         that._state = PrimitiveState.CREATED;
                     }, function(error) {
                         that._error = error;
@@ -606,7 +636,7 @@ define([
                     var transferableObjects = [];
                     PrimitivePipeline.transferInstances(clonedInstances, transferableObjects);
 
-                    promise = taskProcessor.scheduleTask({
+                    promise = taskProcessors[0].scheduleTask({
                         task : 'combineGeometry',
                         instances : clonedInstances,
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,

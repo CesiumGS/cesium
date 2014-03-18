@@ -3,14 +3,12 @@ define([
         '../Core/Cartesian3',
         '../Core/EllipseOutlineGeometry',
         '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         Cartesian3,
         EllipseOutlineGeometry,
         Ellipsoid,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createEllipseOutlineGeometry(parameters, transferableObjects) {
@@ -27,5 +25,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createEllipseOutlineGeometry);
+    return createEllipseOutlineGeometry;
 });

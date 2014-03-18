@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/EllipsoidGeometry',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         EllipsoidGeometry,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createEllipsoidGeometry(parameters, transferableObjects) {
@@ -20,5 +18,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createEllipsoidGeometry);
+    return createEllipsoidGeometry;
 });

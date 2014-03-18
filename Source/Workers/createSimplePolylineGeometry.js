@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/SimplePolylineGeometry',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         SimplePolylineGeometry,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createSimplePolylineGeometry(parameters, transferableObjects) {
@@ -20,5 +18,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createSimplePolylineGeometry);
+    return createSimplePolylineGeometry;
 });

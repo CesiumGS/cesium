@@ -3,14 +3,12 @@ define([
         '../Core/ExtentOutlineGeometry',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
+        '../Scene/PrimitivePipeline'
     ], function(
         ExtentOutlineGeometry,
         Ellipsoid,
         Extent,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+        PrimitivePipeline) {
     "use strict";
 
     function createExtentOutlineGeometry(parameters, transferableObjects) {
@@ -27,5 +25,5 @@ define([
         };
     }
 
-    return createTaskProcessorWorker(createExtentOutlineGeometry);
+    return createExtentOutlineGeometry;
 });
