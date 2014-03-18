@@ -895,7 +895,6 @@ define([
         var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (useOIT) {
-            // TODO: how to bind 'this' to a function.
             executeTranslucentCommands = function(scene, executeFunction, passState, commands) {
                 scene._oitResources.executeCommands(scene, executeFunction, passState, commands);
             };
