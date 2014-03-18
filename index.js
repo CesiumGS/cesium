@@ -164,6 +164,10 @@ var compat = {
     'throttleRequestByServer',
     'wrapFunction',
     'writeTextToCanvas'
+  ],
+    'Scene': [
+    'GeographicTilingScheme',
+    'WebMercatorTilingScheme'
   ]
 };
 var sections = Object.keys(compat);
