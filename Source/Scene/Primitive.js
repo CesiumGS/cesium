@@ -521,27 +521,30 @@ define([
         return pickColors;
     }
 
-    var numberOfCores = 3;
+    var numberOfWorkers = 3;
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
     defineProperties(Primitive, {
         /**
-         * Gets or sets the maximum number of worker threads to be used when processing geometry.
-         * This value must be set before any geometry is processed.
+         * Gets or sets the maximum number of web workers to be used when processing geometry.
+         * This value must be set before any primitives are created.
          * @memberof Primitive
          * @type {Number}
          * @default 4
          */
-        numberOfCores : {
+        numberOfWorkers : {
             get : function() {
-                return numberOfCores + 1;
+                return numberOfWorkers + 1;
             },
             set : function(value) {
                 if (defined(createGeometryTaskProcessors)) {
-                    throw new DeveloperError('Primitive.numberOfCores can only be set before any geometry is created.');
+                    throw new DeveloperError('numberOfWorkers can only be set before any geometry is created.');
                 }
-                numberOfCores = value - 1;
+                if (numberOfWorkers < 2) {
+                    throw new DeveloperError('numberOfWorkers must be 2 or greater.');
+                }
+                numberOfWorkers = value - 1;
             }
         }
     });
@@ -609,13 +612,13 @@ define([
                     }
 
                     if (!defined(createGeometryTaskProcessors)) {
-                        createGeometryTaskProcessors = new Array(numberOfCores);
-                        for (i = 0; i < numberOfCores; i++) {
+                        createGeometryTaskProcessors = new Array(numberOfWorkers);
+                        for (i = 0; i < numberOfWorkers; i++) {
                             createGeometryTaskProcessors[i] = new TaskProcessor('createGeometry', Number.POSITIVE_INFINITY);
                         }
                     }
 
-                    subTasks = subdivideArray(subTasks, numberOfCores);
+                    subTasks = subdivideArray(subTasks, numberOfWorkers);
                     for (i = 0; i < subTasks.length; i++) {
                         promises.push(createGeometryTaskProcessors[i].scheduleTask({
                             tasks : subTasks[i]

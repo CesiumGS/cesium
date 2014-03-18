@@ -15,16 +15,19 @@ define([
 
     var geometryCreatorCache = {};
 
+    function runTask(task, taskWorker, transferableObjects, results) {
+        var geometry = taskWorker(task.geometry);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
+        results.push({
+            geometry : geometry,
+            index : task.index
+        });
+    }
+
     function createTask(taskWorkerName, taskWorker, task, transferableObjects, deferred, results) {
         return function(taskWorker) {
             geometryCreatorCache[taskWorkerName] = taskWorker;
-
-            var geometry = taskWorker(task.geometry);
-            PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-            results.push({
-                geometry : geometry,
-                index : task.index
-            });
+            runTask(task, taskWorker, transferableObjects, results);
             deferred.resolve();
         };
     }
@@ -41,12 +44,7 @@ define([
             var taskWorkerName = task.workerName;
             var taskWorker = geometryCreatorCache[taskWorkerName];
             if (defined(taskWorker)) {
-                var geometry = taskWorker(task.geometry);
-                PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-                results.push({
-                    geometry : geometry,
-                    index : task.index
-                });
+                runTask(task, taskWorker, transferableObjects, results);
             } else {
                 var innerDefer = when.defer();
                 require(['./' + taskWorkerName], createTask(taskWorkerName, taskWorker, task, transferableObjects, innerDefer, results));
