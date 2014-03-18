@@ -98,7 +98,10 @@ define(['../Core/Color',
          */
         oddColor : createDynamicPropertyDescriptor('oddColor'),
         /**
-         * Gets or sets the numeric property which determines the stripe offset from the edge.
+         * Gets or sets the numeric property which determines at which point into the pattern
+         * to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning
+         * of the odd color, 2.0 being the even color again, and any multiple or fractional values
+         * being in between.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
