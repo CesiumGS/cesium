@@ -7,7 +7,8 @@ define(['../Core/Color',
         '../Core/Event',
         './createDynamicPropertyDescriptor',
         './ConstantProperty',
-        './Property'
+        './Property',
+        './StripeOrientation'
     ], function(
         Color,
         defaultValue,
@@ -17,7 +18,8 @@ define(['../Core/Color',
         Event,
         createDynamicPropertyDescriptor,
         ConstantProperty,
-        Property) {
+        Property,
+        StripeOrientation) {
     "use strict";
 
     /**
@@ -29,8 +31,8 @@ define(['../Core/Color',
     var StripeMaterialProperty = function() {
         this._definitionChanged = new Event();
 
-        this._horizontal = undefined;
-        this._horizontalSubscription = undefined;
+        this._orientation = undefined;
+        this._orientationSubscription = undefined;
 
         this._evenColor = undefined;
         this._evenColorSubscription = undefined;
@@ -44,7 +46,7 @@ define(['../Core/Color',
         this._repeat = undefined;
         this._repeatSubscription = undefined;
 
-        this.horizontal = new ConstantProperty(true);
+        this.orientation = new ConstantProperty(StripeOrientation.HORIZONTAL);
         this.evenColor = new ConstantProperty(Color.WHITE);
         this.oddColor = new ConstantProperty(Color.BLACK);
         this.offset = new ConstantProperty(0);
@@ -60,7 +62,7 @@ define(['../Core/Color',
          */
         isConstant : {
             get : function() {
-                return Property.isConstant(this._horizontal) && //
+                return Property.isConstant(this._orientation) && //
                        Property.isConstant(this._evenColor) && //
                        Property.isConstant(this._oddColor) && //
                        Property.isConstant(this._offset) && //
@@ -80,11 +82,11 @@ define(['../Core/Color',
             }
         },
         /**
-         * Gets or sets the boolean property which determines if the stripes are horizontal or vertical.
+         * Gets or sets the {@link StripeOrientation} property which determines if the stripes are horizontal or vertical.
          * @memberof StripeMaterialProperty.prototype
          * @type {Property}
          */
-        horizontal : createDynamicPropertyDescriptor('horizontal'),
+        orientation : createDynamicPropertyDescriptor('orientation'),
         /**
          * Gets or sets the {@link Color} property which determines the first color.
          * @memberof StripeMaterialProperty.prototype
@@ -137,7 +139,8 @@ define(['../Core/Color',
         if (!defined(result)) {
             result = {};
         }
-        result.horizontal = defined(this._horizontal) ? this._horizontal.getValue(time) : undefined;
+        var orientation = defined(this._orientation) ? this._orientation.getValue(time) : undefined;
+        result.horizontal = defined(orientation) ? orientation === StripeOrientation.HORIZONTAL : undefined;
         result.evenColor = defined(this._evenColor) ? this._evenColor.getValue(time, result.evenColor) : undefined;
         result.oddColor = defined(this._oddColor) ? this._oddColor.getValue(time, result.oddColor) : undefined;
         result.offset = defined(this._offset) ? this._offset.getValue(time) : undefined;
@@ -156,7 +159,7 @@ define(['../Core/Color',
     StripeMaterialProperty.prototype.equals = function(other) {
         return this === other || //
                (other instanceof StripeMaterialProperty && //
-                       Property.equals(this._horizontal, other._horizontal) && //
+                       Property.equals(this._orientation, other._orientation) && //
                        Property.equals(this._evenColor, other._evenColor) && //
                        Property.equals(this._oddColor, other._oddColor) && //
                        Property.equals(this._offset, other._offset) && //

@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite(['DynamicScene/StripeMaterialProperty',
+             'DynamicScene/StripeOrientation',
              'DynamicScene/ConstantProperty',
              'DynamicScene/TimeIntervalCollectionProperty',
              'Core/Color',
@@ -8,6 +9,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
              'Specs/testDefinitionChanged'
      ], function(
              StripeMaterialProperty,
+             StripeOrientation,
              ConstantProperty,
              TimeIntervalCollectionProperty,
              Color,
@@ -19,7 +21,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('constructor provides the expected defaults', function() {
         var property = new StripeMaterialProperty();
-        expect(property.horizontal).toEqual(new ConstantProperty(true));
+        expect(property.orientation).toEqual(new ConstantProperty(StripeOrientation.HORIZONTAL));
         expect(property.evenColor).toEqual(new ConstantProperty(Color.WHITE));
         expect(property.oddColor).toEqual(new ConstantProperty(Color.BLACK));
         expect(property.offset).toEqual(new ConstantProperty(0));
@@ -30,7 +32,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('works with constant values', function() {
         var property = new StripeMaterialProperty();
-        property.horizontal = new ConstantProperty(false);
+        property.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
         property.evenColor = new ConstantProperty(Color.RED);
         property.oddColor = new ConstantProperty(Color.BLUE);
         property.offset = new ConstantProperty(10);
@@ -46,7 +48,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('works with undefined values', function() {
         var property = new StripeMaterialProperty();
-        property.horizontal = new ConstantProperty();
+        property.orientation = new ConstantProperty();
         property.evenColor = new ConstantProperty();
         property.oddColor = new ConstantProperty();
         property.offset = new ConstantProperty();
@@ -67,7 +69,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('works with dynamic values', function() {
         var property = new StripeMaterialProperty();
-        property.horizontal = new TimeIntervalCollectionProperty();
+        property.orientation = new TimeIntervalCollectionProperty();
         property.evenColor = new TimeIntervalCollectionProperty();
         property.oddColor = new TimeIntervalCollectionProperty();
         property.offset = new TimeIntervalCollectionProperty();
@@ -75,7 +77,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.horizontal.intervals.addInterval(new TimeInterval(start, stop, true, true, false));
+        property.orientation.intervals.addInterval(new TimeInterval(start, stop, true, true, false));
         property.evenColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.RED));
         property.oddColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
         property.offset.intervals.addInterval(new TimeInterval(start, stop, true, true, 10));
@@ -93,7 +95,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('works with a result parameter', function() {
         var property = new StripeMaterialProperty();
-        property.horizontal = new ConstantProperty(false);
+        property.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
         property.evenColor = new ConstantProperty(Color.RED);
         property.oddColor = new ConstantProperty(Color.BLUE);
         property.offset = new ConstantProperty(10);
@@ -117,14 +119,14 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('equals works', function() {
         var left = new StripeMaterialProperty();
-        left.horizontal = new ConstantProperty(false);
+        left.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
         left.evenColor = new ConstantProperty(Color.RED);
         left.oddColor = new ConstantProperty(Color.BLUE);
         left.offset = new ConstantProperty(10);
         left.repeat = new ConstantProperty(20);
 
         var right = new StripeMaterialProperty();
-        right.horizontal = new ConstantProperty(false);
+        right.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
         right.evenColor = new ConstantProperty(Color.RED);
         right.oddColor = new ConstantProperty(Color.BLUE);
         right.offset = new ConstantProperty(10);
@@ -132,10 +134,10 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
         expect(left.equals(right)).toEqual(true);
 
-        right.horizontal = new ConstantProperty(true);
+        right.orientation = new ConstantProperty(StripeOrientation.HORIZONTAL);
         expect(left.equals(right)).toEqual(false);
 
-        right.horizontal = new ConstantProperty(false);
+        right.orientation = new ConstantProperty(StripeOrientation.VERTICAL);
         right.evenColor = new ConstantProperty(Color.BLACK);
         expect(left.equals(right)).toEqual(false);
 
@@ -157,7 +159,7 @@ defineSuite(['DynamicScene/StripeMaterialProperty',
 
     it('raises definitionChanged when a property is assigned or modified', function() {
         var property = new StripeMaterialProperty();
-        testDefinitionChanged(property, 'horizontal', false, true);
+        testDefinitionChanged(property, 'orientation', false, true);
         testDefinitionChanged(property, 'evenColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'oddColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'offset', 2, 5);

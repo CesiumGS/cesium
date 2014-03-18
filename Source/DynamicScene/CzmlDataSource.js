@@ -60,6 +60,7 @@ define(['../Core/Cartesian2',
         './SampledPositionProperty',
         './SampledProperty',
         './StripeMaterialProperty',
+        './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
         '../ThirdParty/Uri',
@@ -126,6 +127,7 @@ define(['../Core/Cartesian2',
         SampledPositionProperty,
         SampledProperty,
         StripeMaterialProperty,
+        StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         Uri,
@@ -341,6 +343,8 @@ define(['../Core/Cartesian2',
             return unwrapCartesianInterval(czmlInterval);
         case Color:
             return unwrapColorInterval(czmlInterval);
+        case StripeOrientation:
+            return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
@@ -760,7 +764,7 @@ define(['../Core/Cartesian2',
                 existingMaterial = new StripeMaterialProperty();
             }
             materialData = packetData.stripe;
-            processPacketData(Boolean, existingMaterial, 'horizontal', materialData.horizontal, undefined, sourceUri);
+            processPacketData(StripeOrientation, existingMaterial, 'orientation', materialData.orientation, undefined, sourceUri);
             processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri);
             processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri);
             processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri);
