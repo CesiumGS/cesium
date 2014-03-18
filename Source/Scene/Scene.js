@@ -703,7 +703,7 @@ define([
         }
     }
 
-    function executeCommand(command, scene, context, passState, renderState, shaderProgram) {
+    function executeCommand(command, scene, context, passState, renderState, shaderProgram, useOIT) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
@@ -745,15 +745,14 @@ define([
             scene._debugSphere.update(context, scene._frameState, commandList);
 
             var framebuffer;
-            var renderToTexture = scene._oitResources.isSupported();
-            if (renderToTexture) {
+            if (useOIT) {
                 framebuffer = passState.framebuffer;
                 passState.framebuffer = scene._oitResources.getColorFBO();
             }
 
             commandList[0].execute(context, passState);
 
-            if (renderToTexture) {
+            if (useOIT) {
                 passState.framebuffer = framebuffer;
             }
         }
@@ -800,7 +799,7 @@ define([
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
-            executeFunction(commands[j], scene, context, passState);
+            executeFunction(commands[j], scene, context, passState, undefined, undefined, false);
         }
     }
 

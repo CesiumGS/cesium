@@ -375,7 +375,7 @@ define([
             command = commands[j];
             renderState = getTranslucentColorRenderState(that, context, command.renderState);
             shaderProgram = getTranslucentColorShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
         }
 
 
@@ -385,7 +385,7 @@ define([
             command = commands[j];
             renderState = getTranslucentAlphaRenderState(that, context, command.renderState);
             shaderProgram = getTranslucentAlphaShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
         }
 
         passState.framebuffer = framebuffer;
@@ -401,7 +401,7 @@ define([
             var command = commands[j];
             var renderState = getTranslucentMRTRenderState(that, context, command.renderState);
             var shaderProgram = getTranslucentMRTShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
         }
 
         passState.framebuffer = framebuffer;
