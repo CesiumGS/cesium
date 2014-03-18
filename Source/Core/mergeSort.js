@@ -62,6 +62,15 @@ define([
      *        items are equal, it should return 0.
      */
     var mergeSort = function(array, comparator) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required.');
+        }
+        if (!defined(comparator)) {
+            throw new DeveloperError('comparator is required.');
+        }
+        //>>includeEnd('debug');
+
         sort(array, comparator, 0, array.length - 1);
     };
 
