@@ -856,8 +856,10 @@ define([
         scene._oitResources.clear(context, passState, clearColor);
         scene._fxaaResources.clear(context, passState, clearColor);
 
-        var opaqueFramebuffer = scene._oitResources.getColorFBO();
-        if (!defined(opaqueFramebuffer)) {
+        var opaqueFramebuffer = passState.framebuffer;
+        if (useOIT) {
+            opaqueFramebuffer = scene._oitResources.getColorFBO();
+        } else if (useFXAA) {
             opaqueFramebuffer = scene._fxaaResources.getColorFBO();
         }
 
@@ -931,10 +933,15 @@ define([
             executeTranslucentCommands(scene, executeCommand, passState, commands);
         }
 
-        passState.framebuffer = scene._fxaaResources.getColorFBO();
-        scene._oitResources.execute(context, passState);
-        passState.framebuffer = undefined;
-        scene._fxaaResources.execute(context, passState);
+        if (useOIT) {
+            passState.framebuffer = scene._fxaaResources.getColorFBO();
+            scene._oitResources.execute(context, passState);
+        }
+
+        if (useFXAA) {
+            passState.framebuffer = undefined;
+            scene._fxaaResources.execute(context, passState);
+        }
     }
 
     function executeOverlayCommands(scene, passState) {
