@@ -22,8 +22,8 @@ define([
      * Cesium.loadText('http://someUrl.com/someJson.txt', {
      *   'X-Custom-Header' : 'some value'
      * }).then(function(text) {
-     *     //Do something with the text
-     * }, function() {
+     *     // Do something with the text
+     * }, function(error) {
      *     // an error occurred
      * });
      *

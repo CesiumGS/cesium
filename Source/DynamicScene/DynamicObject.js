@@ -5,8 +5,6 @@ define(['../Core/createGuid',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/TimeInterval',
         './createDynamicPropertyDescriptor'
     ], function(
         createGuid,
@@ -15,8 +13,6 @@ define(['../Core/createGuid',
         defineProperties,
         DeveloperError,
         Event,
-        JulianDate,
-        TimeInterval,
         createDynamicPropertyDescriptor) {
     "use strict";
 
@@ -197,6 +193,12 @@ define(['../Core/createGuid',
          * @type {DynamicLabel}
          */
         label : createDynamicPropertyDescriptor('label'),
+        /**
+         * Gets or sets the model.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicLabel}
+         */
+        model : createDynamicPropertyDescriptor('model', '_model'),
         /**
          * Gets or sets the parent object.
          * @memberof DynamicObject.prototype

@@ -7,6 +7,7 @@ define(['../Core/defaultValue',
         './DynamicBillboardVisualizer',
         './DynamicConeVisualizerUsingCustomSensor',
         './DynamicLabelVisualizer',
+        './DynamicModelVisualizer',
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPyramidVisualizer',
@@ -25,6 +26,7 @@ define(['../Core/defaultValue',
         DynamicBillboardVisualizer,
         DynamicConeVisualizerUsingCustomSensor,
         DynamicLabelVisualizer,
+        DynamicModelVisualizer,
         DynamicPathVisualizer,
         DynamicPointVisualizer,
         DynamicPyramidVisualizer,
@@ -45,6 +47,7 @@ define(['../Core/defaultValue',
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
                 new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
                 new DynamicLabelVisualizer(scene, dynamicObjects),
+                new DynamicModelVisualizer(scene, dynamicObjects),
                 new DynamicPointVisualizer(scene, dynamicObjects),
                 new DynamicVectorVisualizer(scene, dynamicObjects),
                 new DynamicPyramidVisualizer(scene, dynamicObjects),
@@ -80,7 +83,7 @@ define(['../Core/defaultValue',
         this._staticSourcesToUpdate = [];
         this._visualizersCallback = defaultValue(visualizersCallback, createDefaultVisualizers);
 
-        for (var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+        for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
     };
@@ -136,7 +139,7 @@ define(['../Core/defaultValue',
         this._eventHelper.removeAll();
 
         var dataSourceCollection = this._dataSourceCollection;
-        for (var i = 0, length = dataSourceCollection.getLength(); i < length; ++i) {
+        for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
 

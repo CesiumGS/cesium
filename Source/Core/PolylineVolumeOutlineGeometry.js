@@ -1,47 +1,43 @@
 /*global define*/
 define([
+        './BoundingRectangle',
+        './BoundingSphere',
+        './ComponentDatatype',
+        './CornerType',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './CornerType',
-        './ComponentDatatype',
         './Ellipsoid',
         './Geometry',
-        './GeometryPipeline',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
-        './BoundingRectangle',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './WindingOrder'
     ], function(
+        BoundingRectangle,
+        BoundingSphere,
+        ComponentDatatype,
+        CornerType,
+        defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        CornerType,
-        ComponentDatatype,
         Ellipsoid,
         Geometry,
-        GeometryPipeline,
+        GeometryAttribute,
+        GeometryAttributes,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
-        defaultValue,
-        BoundingSphere,
-        BoundingRectangle,
-        GeometryAttribute,
-        GeometryAttributes,
         WindingOrder) {
     "use strict";
 
-    function computeAttributes(positions, shape, boundingRectangle, ellipsoid) {
+    function computeAttributes(positions, shape) {
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -171,7 +167,7 @@ define([
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
 
         var computedPositions = PolylineVolumeGeometryLibrary.computePositions(cleanPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry, false);
-        return computeAttributes(computedPositions, shape2D, boundingRectangle, polylineVolumeOutlineGeometry._ellipsoid);
+        return computeAttributes(computedPositions, shape2D);
     };
 
     return PolylineVolumeOutlineGeometry;

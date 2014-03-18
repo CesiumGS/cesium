@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Transforms',
         './AxisAlignedBoundingBox',
@@ -15,6 +16,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Transforms,
         AxisAlignedBoundingBox,
@@ -65,6 +67,30 @@ define([
         this._plane = Plane.fromPointNormal(origin, normal);
     };
 
+    defineProperties(EllipsoidTangentPlane.prototype, {
+        /**
+         * Gets the ellipsoid.
+         * @memberof EllipsoidTangentPlane.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the origin.
+         * @memberof EllipsoidTangentPlane.prototype
+         * @type {Cartesian3}
+         */
+        origin : {
+            get : function() {
+                return this._origin;
+            }
+        }
+    });
+
     var tmp = new AxisAlignedBoundingBox();
     /**
      * Creates a new instance from the provided ellipsoid and the center
@@ -83,22 +109,6 @@ define([
 
         var box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
         return new EllipsoidTangentPlane(box.center, ellipsoid);
-    };
-
-    /**
-     * @memberof EllipsoidTangentPlane
-     * @returns {Ellipsoid} Gets the ellipsoid.
-     */
-    EllipsoidTangentPlane.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
-
-    /**
-     * @memberof EllipsoidTangentPlane
-     * @returns {Cartesian3} Gets the origin.
-     */
-    EllipsoidTangentPlane.prototype.getOrigin = function() {
-        return this._origin;
     };
 
     var projectPointOntoPlaneRay = new Ray();

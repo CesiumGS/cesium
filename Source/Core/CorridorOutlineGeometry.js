@@ -1,45 +1,45 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian3',
+        './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
-        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './Ellipsoid',
         './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
-        './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
-        './GeometryAttribute',
-        './GeometryAttributes'
+        './PrimitiveType'
     ], function(
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian3,
+        ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
-        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         Ellipsoid,
         Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
-        PrimitiveType,
-        defaultValue,
-        BoundingSphere,
-        GeometryAttribute,
-        GeometryAttributes) {
+        PrimitiveType) {
     "use strict";
 
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
 
-    function combine(computedPositions, ellipsoid, cornerType) {
+    function combine(computedPositions, cornerType) {
         var wallIndices = [];
         var positions = computedPositions.positions;
         var corners = computedPositions.corners;
@@ -255,7 +255,7 @@ define([
     function computePositionsExtruded(params) {
         var ellipsoid = params.ellipsoid;
         var computedPositions = CorridorGeometryLibrary.computePositions(params);
-        var attr = combine(computedPositions, ellipsoid, params.cornerType);
+        var attr = combine(computedPositions, params.cornerType);
         var wallIndices = attr.wallIndices;
         var height = params.height;
         var extrudedHeight = params.extrudedHeight;
@@ -391,7 +391,7 @@ define([
             attr = computePositionsExtruded(params);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
-            attr = combine(computedPositions, ellipsoid, params.cornerType);
+            attr = combine(computedPositions, params.cornerType);
             attr.attributes.position.values = PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
         }
         var attributes = attr.attributes;

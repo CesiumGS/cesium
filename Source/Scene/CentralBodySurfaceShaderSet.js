@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/defaultValue'
+        '../Core/destroyObject'
     ], function(
         defined,
-        destroyObject,
-        defaultValue) {
+        destroyObject) {
     "use strict";
 
     /**
@@ -102,10 +100,7 @@ define([
                 '    return color;\n' +
                 '}';
 
-            shader = context.getShaderCache().getShaderProgram(
-                vs,
-                fs,
-                this._attributeLocations);
+            shader = context.getShaderCache().getShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;

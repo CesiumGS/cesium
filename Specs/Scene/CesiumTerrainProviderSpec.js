@@ -32,11 +32,11 @@ defineSuite([
 
     function returnTileJson(path) {
         var oldLoad = loadWithXhr.load;
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
                 return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
-                return oldLoad(url, responseType, method, data, headers, deferred);
+                return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
         };
     }
@@ -72,11 +72,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            var tilingScheme = provider.getTilingScheme();
+            var tilingScheme = provider.tilingScheme;
             expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
         });
     });
@@ -85,8 +85,8 @@ defineSuite([
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getErrorEvent()).toBeDefined();
-        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+        expect(provider.errorEvent).toBeDefined();
+        expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 
     it('returns reasonable geometric error for various levels', function() {
@@ -107,11 +107,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit()).toBeUndefined();
+            expect(provider.credit).toBeUndefined();
         });
     });
 
@@ -124,11 +124,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit()).toBeDefined();
+            expect(provider.credit).toBeDefined();
         });
     });
 
@@ -140,7 +140,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
@@ -156,7 +156,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -177,7 +177,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -198,7 +198,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -219,7 +219,7 @@ defineSuite([
         });
 
         var error;
-        provider.getErrorEvent().addEventListener(function(e) {
+        provider.errorEvent.addEventListener(function(e) {
             error = e;
         });
 
@@ -240,11 +240,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         });
 
         runs(function() {
-            expect(provider.getCredit().getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider.credit.getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 
@@ -252,7 +252,7 @@ defineSuite([
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
 
                 // Just return any old file, as long as its big enough
@@ -267,7 +267,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loaded = false;
@@ -288,7 +288,7 @@ defineSuite([
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Just return any old file, as long as its big enough
                 return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
@@ -300,7 +300,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loadedData;
@@ -325,7 +325,7 @@ defineSuite([
         it('provides QuantizedMeshTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
             };
 
@@ -336,7 +336,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             var loadedData;
@@ -363,7 +363,7 @@ defineSuite([
 
             var deferreds = [];
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };
@@ -375,7 +375,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return terrainProvider.isReady();
+                return terrainProvider.ready;
             });
 
             runs(function() {

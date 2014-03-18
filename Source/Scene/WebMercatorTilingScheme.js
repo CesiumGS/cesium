@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/Cartesian2',
@@ -10,6 +11,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Ellipsoid,
         Extent,
         Cartesian2,
@@ -64,38 +66,40 @@ define([
                                   northeast.longitude, northeast.latitude);
     };
 
-    /**
-     * Gets the ellipsoid that is tiled by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    WebMercatorTilingScheme.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(WebMercatorTilingScheme.prototype, {
+        /**
+         * Gets the ellipsoid that is tiled by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
 
-    /**
-     * Gets the extent, in radians, covered by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Extent} The extent.
-     */
-    WebMercatorTilingScheme.prototype.getExtent = function() {
-        return this._extent;
-    };
+        /**
+         * Gets the extent, in radians, covered by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                return this._extent;
+            }
+        },
 
-    /**
-     * Gets the map projection used by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Projection} The map projection.
-     */
-    WebMercatorTilingScheme.prototype.getProjection = function() {
-        return this._projection;
-    };
+        /**
+         * Gets the map projection used by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Projection}
+         */
+        projection : {
+            get : function() {
+                return this._projection;
+            }
+        }
+    });
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.

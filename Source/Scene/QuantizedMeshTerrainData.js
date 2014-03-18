@@ -1,37 +1,25 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
-        '../Core/Cartographic',
+        '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/TaskProcessor',
-        './GeographicTilingScheme',
-        './HeightmapTerrainData',
         './TerrainMesh',
-        './TerrainProvider',
         '../ThirdParty/when'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
+        defaultValue,
+        defined,
         DeveloperError,
-        Ellipsoid,
-        HeightmapTessellator,
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
         TerrainMesh,
-        TerrainProvider,
         when) {
     "use strict";
 
@@ -240,7 +228,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
@@ -331,7 +319,7 @@ define([
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
-        var ellipsoid = tilingScheme.getEllipsoid();
+        var ellipsoid = tilingScheme.ellipsoid;
         var childExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
@@ -359,7 +347,6 @@ define([
         var eastSkirtHeight = isEastChild ? this._eastSkirtHeight : (shortestSkirt * 0.5);
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
-        var that = this;
         return when(upsamplePromise, function(result) {
             return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),

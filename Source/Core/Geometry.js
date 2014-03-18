@@ -2,13 +2,11 @@
 define([
         './defaultValue',
         './defined',
-        './DeveloperError',
-        './BoundingSphere'
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
-        BoundingSphere) {
+        DeveloperError) {
     "use strict";
 
     /**

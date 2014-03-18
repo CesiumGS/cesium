@@ -82,23 +82,23 @@ defineSuite([
             url : baseUrl
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(128);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(2);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getCredit()).toBeDefined();
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.tileWidth).toEqual(128);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -109,7 +109,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
@@ -163,23 +163,23 @@ defineSuite([
             url : baseUrl
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(128);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(2);
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getCredit()).toBeDefined();
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.tileWidth).toEqual(128);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -190,7 +190,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
@@ -228,23 +228,23 @@ defineSuite([
             url : baseUrl
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toBeUndefined();
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getCredit()).toBeDefined();
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
-            expect(provider.isUsingPrecachedTiles()).toEqual(false);
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeUndefined();
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.usingPrecachedTiles).toEqual(false);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url).toMatch(baseUrl);
@@ -312,24 +312,24 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(128);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(2);
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getCredit()).toBeDefined();
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
-            expect(provider.getProxy()).toEqual(proxy);
-            expect(provider.isUsingPrecachedTiles()).toEqual(true);
+            expect(provider.tileWidth).toEqual(128);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.proxy).toEqual(proxy);
+            expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -340,7 +340,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
 
                 // Just return any old image.
@@ -394,10 +394,10 @@ defineSuite([
             url : baseUrl
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf('WKID') >= 0).toEqual(true);
             ++tries;
             if (tries < 3) {
@@ -406,11 +406,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady() || tries >= 3;
+            return provider.ready || tries >= 3;
         }, 'imagery provider to become ready or retry maximum number of times');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(tries).toEqual(3);
         });
     });
@@ -422,20 +422,20 @@ defineSuite([
             url : baseUrl
         });
 
-        expect(provider.getUrl()).toEqual(baseUrl);
+        expect(provider.url).toEqual(baseUrl);
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf(baseUrl) >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -460,7 +460,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -480,7 +480,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;

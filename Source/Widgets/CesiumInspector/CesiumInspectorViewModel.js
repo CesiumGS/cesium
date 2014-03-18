@@ -1,24 +1,22 @@
 /*global define*/
 define([
+        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/BoundingRectangle',
-        '../../Scene/PerformanceDisplay',
         '../../Scene/DebugModelMatrixPrimitive',
+        '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
-        '../../Core/Color',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
+        Color,
         defined,
         defineProperties,
         DeveloperError,
-        BoundingRectangle,
-        PerformanceDisplay,
         DebugModelMatrixPrimitive,
+        PerformanceDisplay,
         TileCoordinatesImageryProvider,
-        Color,
         createCommand,
         knockout) {
     "use strict";
@@ -257,17 +255,17 @@ define([
         });
 
         this._toggleGeneral = createCommand(function() {
-            that.generalVisible = ! that.generalVisible;
+            that.generalVisible = !that.generalVisible;
             that.generalSwitchText = that.generalVisible ? '-' : '+';
         });
 
         this._togglePrimitives = createCommand(function() {
-            that.primitivesVisible = ! that.primitivesVisible;
+            that.primitivesVisible = !that.primitivesVisible;
             that.primitivesSwitchText = that.primitivesVisible ? '-' : '+';
         });
 
         this._toggleTerrain = createCommand(function() {
-            that.terrainVisible = ! that.terrainVisible;
+            that.terrainVisible = !that.terrainVisible;
             that.terrainSwitchText = that.terrainVisible ? '-' : '+';
         });
 
@@ -283,12 +281,12 @@ define([
         this._showPerformance = createCommand(function() {
             if (that.performance) {
                 that._performanceDisplay = new PerformanceDisplay({
-                    container: performanceContainer,
-                    backgroundColor: bc,
-                    font: '12px arial,sans-serif'
+                    container : performanceContainer,
+                    backgroundColor : bc,
+                    font : '12px arial,sans-serif'
                 });
             } else {
-                performanceContainer.innerHTML= '';
+                performanceContainer.innerHTML = '';
             }
             return true;
         });
@@ -301,9 +299,11 @@ define([
         this._showPrimitiveReferenceFrame = createCommand(function() {
             if (that.primitiveReferenceFrame) {
                 var modelMatrix = that._primitive.modelMatrix;
-                that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({modelMatrix: modelMatrix});
+                that._modelMatrixPrimitive = new DebugModelMatrixPrimitive({
+                    modelMatrix : modelMatrix
+                });
                 that._scene.primitives.add(that._modelMatrixPrimitive);
-            } else if (defined(that._modelMatrixPrimitive)){
+            } else if (defined(that._modelMatrixPrimitive)) {
                 that._scene.primitives.remove(that._modelMatrixPrimitive);
                 that._modelMatrixPrimitive = undefined;
             }
@@ -316,7 +316,7 @@ define([
                     if (defined(that._modelMatrixPrimitive) && command.owner === that._modelMatrixPrimitive._primitive) {
                         return true;
                     } else if (defined(that._primitive)) {
-                        return command.owner ===  that._primitive|| command.owner === that._primitive._billboardCollection;
+                        return command.owner === that._primitive || command.owner === that._primitive._billboardCollection;
                     }
                     return false;
                 };
@@ -342,11 +342,11 @@ define([
         var tileBoundariesLayer;
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.imageryLayerCollection.addImageryProvider(new TileCoordinatesImageryProvider({
-                    tilingScheme : centralBody.terrainProvider.getTilingScheme()
+                tileBoundariesLayer = centralBody.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
+                    tilingScheme : centralBody.terrainProvider.tilingScheme
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
-                centralBody.imageryLayerCollection.remove(tileBoundariesLayer);
+                centralBody.imageryLayers.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
             return true;
@@ -392,7 +392,10 @@ define([
         var pickPrimitive = function(e) {
             that._canvas.removeEventListener('mousedown', pickPrimitive, false);
             that.pickPrimitiveActive = false;
-            var newPick = that._scene.pick({x: e.clientX, y: e.clientY});
+            var newPick = that._scene.pick({
+                x : e.clientX,
+                y : e.clientY
+            });
             if (defined(newPick)) {
                 that.primitive = defined(newPick.collection) ? newPick.collection : newPick.primitive;
             }
@@ -407,10 +410,13 @@ define([
             }
         });
 
-        var selectTile = function (e) {
+        var selectTile = function(e) {
             var selectedTile;
             var ellipsoid = centralBody.ellipsoid;
-            var cartesian = that._scene.camera.controller.pickEllipsoid({x: e.clientX, y: e.clientY}, ellipsoid);
+            var cartesian = that._scene.camera.pickEllipsoid({
+                x : e.clientX,
+                y : e.clientY
+            }, ellipsoid);
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
@@ -688,7 +694,7 @@ define([
          *
          * @type {Command}
          */
-        selectNE: {
+        selectNE : {
             get : function() {
                 var that = this;
                 return createCommand(function() {
@@ -733,7 +739,7 @@ define([
          *
          * @type {Command}
          */
-        primitive: {
+        primitive : {
             set : function(newPrimitive) {
                 var oldPrimitive = this._primitive;
                 if (newPrimitive !== oldPrimitive) {
@@ -748,7 +754,7 @@ define([
                     }
                     this._primitive = newPrimitive;
                     newPrimitive.show = false;
-                    setTimeout(function(){
+                    setTimeout(function() {
                         newPrimitive.show = true;
                     }, 50);
                     this.showPrimitiveBoundingSphere();
@@ -768,7 +774,7 @@ define([
          *
          * @type {Command}
          */
-        tile: {
+        tile : {
             set : function(newTile) {
                 if (defined(newTile)) {
                     this.hasPickedTile = true;
@@ -793,7 +799,7 @@ define([
             }
         },
 
-        update :  {
+        update : {
             get : function() {
                 var that = this;
                 return function() {

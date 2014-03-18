@@ -3,14 +3,14 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Ellipsoid',
-        '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        Extent,
+        FeatureDetection,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";
@@ -86,8 +86,10 @@ define([
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, extent, parameters.northSkirtHeight, true);
         vertexBufferIndex += parameters.northIndices.length * vertexStride;
 
-        transferableObjects.push(vertexBuffer.buffer);
-        transferableObjects.push(indexBuffer.buffer);
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(vertexBuffer.buffer);
+            transferableObjects.push(indexBuffer.buffer);
+        }
 
         return {
             vertices : vertexBuffer.buffer,

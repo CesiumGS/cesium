@@ -450,6 +450,47 @@ defineSuite([
         expect(dynamicObject.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
+    it('can handle image intervals both of type uri and image', function() {
+        var source = 'http://some.url.invalid/';
+        var packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    uri : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    uri : 'image2.png'
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet, source);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var imageProperty = dynamicObject.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+
+        packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    image : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    image : 'image2.png'
+                }]
+            }
+        };
+
+        dataSource = new CzmlDataSource();
+        dataSource.load(packet, source);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        imageProperty = dynamicObject.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+    });
+
     it('CZML adds data for constrained billboard.', function() {
         var billboardPacket = {
             billboard : {
@@ -534,11 +575,11 @@ defineSuite([
         var clockPacket = {
             id : 'notTheDocument',
             clock : {
-                interval : "2012-03-15T10:00:00Z/2012-03-16T10:00:00Z",
-                currentTime : "2012-03-15T10:00:00Z",
+                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                currentTime : '2012-03-15T10:00:00Z',
                 multiplier : 60.0,
-                range : "LOOP_STOP",
-                step : "SYSTEM_CLOCK_MULTIPLIER"
+                range : 'LOOP_STOP',
+                step : 'SYSTEM_CLOCK_MULTIPLIER'
             }
         };
 
@@ -779,7 +820,7 @@ defineSuite([
 
         var czml = {
             position : {
-                referenceFrame : "INERTIAL",
+                referenceFrame : 'INERTIAL',
                 epoch : epoch.toIso8601(),
                 cartesian : [1.0, 2.0, 3.0]
             }
@@ -791,7 +832,7 @@ defineSuite([
 
         czml = {
             position : {
-                referenceFrame : "FIXED",
+                referenceFrame : 'FIXED',
                 epoch : epoch.toIso8601(),
                 cartesian : [1.0, 2.0, 3.0]
             }
@@ -808,7 +849,7 @@ defineSuite([
 
         var czml = {
             position : {
-                referenceFrame : "INERTIAL",
+                referenceFrame : 'INERTIAL',
                 epoch : epoch.toIso8601(),
                 cartesian : [1.0, 2.0, 3.0]
             }
@@ -1131,6 +1172,21 @@ defineSuite([
         dataSource.load(packet);
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
         expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
+
+        packet = {
+            vertexPositions : [{
+                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                cartesian : [1.0, 2.0, 3.0]
+            }, {
+                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian : [4.0, 5.0, 6.0]
+            }]
+        };
+        dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
+        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual([new Cartesian3(4.0, 5.0, 6.0)]);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1148,7 +1204,7 @@ defineSuite([
 
     it('CZML description works.', function() {
         var packet = {
-            description : "this is a description"
+            description : 'this is a description'
         };
 
         var dataSource = new CzmlDataSource();
@@ -1168,7 +1224,7 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         var interval = TimeInterval.fromIso8601(packet1.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
 
         var packet2 = {
@@ -1178,7 +1234,7 @@ defineSuite([
 
         dataSource.process(packet2);
         interval = TimeInterval.fromIso8601(packet2.availability);
-        expect(dynamicObject.availability.getLength()).toEqual(1);
+        expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
     });
 
@@ -1194,7 +1250,7 @@ defineSuite([
 
         var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
         var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
 
@@ -1206,7 +1262,7 @@ defineSuite([
 
         interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
         interval2 = TimeInterval.fromIso8601(packet2.availability[1]);
-        expect(dynamicObject.availability.getLength()).toEqual(2);
+        expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
     });
@@ -1515,6 +1571,29 @@ defineSuite([
         expect(dynamicObject.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
     });
 
+    it('pyramid directions supports intervals.', function() {
+        var pyramidPacket = {
+            pyramid : {
+                directions : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    unitSpherical : [1.0, 2.0]
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    unitSpherical : [3.0, 4.0]
+                }]
+            }
+        };
+
+        var expected1 = [new Spherical(pyramidPacket.pyramid.directions[0].unitSpherical[0], pyramidPacket.pyramid.directions[0].unitSpherical[1])];
+        var expected2 = [new Spherical(pyramidPacket.pyramid.directions[1].unitSpherical[0], pyramidPacket.pyramid.directions[1].unitSpherical[1])];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(pyramidPacket);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(expected1);
+        expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(expected2);
+    });
+
     it('CZML adds data for constrained pyramid.', function() {
         var pyramidPacket = {
             pyramid : {
@@ -1755,5 +1834,54 @@ defineSuite([
         dataSource.load(packets);
 
         expect(spy.callCount).toEqual(1);
+    });
+
+    it('CZML materials work with composite interval', function() {
+        var before = JulianDate.fromIso8601('2012-03-15T09:23:59Z');
+        var solid = JulianDate.fromIso8601('2012-03-15T10:00:00Z');
+        var grid1 = JulianDate.fromIso8601('2012-03-15T11:00:00Z');
+        var grid2 = JulianDate.fromIso8601('2012-03-15T12:00:00Z');
+        var after = JulianDate.fromIso8601('2012-03-15T12:00:01Z');
+
+        var packet = {
+            polygon : {
+                material : [{
+                    interval : '2012-03-15T10:00:00Z/2012-03-15T11:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T10:00:00Z',
+                    solidColor : {
+                        color : {
+                            rgba : [240, 0, 0, 0]
+                        }
+                    }
+                }, {
+                    interval : '2012-03-15T11:00:00Z/2012-03-15T12:00:00Z',
+                    interpolationAlgorithm : 'LINEAR',
+                    interpolationDegree : 1,
+                    epoch : '2012-03-15T11:00:00Z',
+                    grid : {
+                        color : {
+                            rgba : [240, 255, 255, 255]
+                        },
+                        cellAlpha : 0,
+                        rowCount : 36,
+                        rowThickness : 1,
+                        columnCount : 9,
+                        columnThickness : 1
+                    }
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(dynamicObject.polygon.material.getType(solid)).toBe('Color');
+        expect(dynamicObject.polygon.material.getType(grid1)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(grid2)).toBe('Grid');
+        expect(dynamicObject.polygon.material.getType(before)).toBeUndefined();
+        expect(dynamicObject.polygon.material.getType(after)).toBeUndefined();
+
     });
 });

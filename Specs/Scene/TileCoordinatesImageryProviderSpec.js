@@ -24,18 +24,18 @@ defineSuite([
         var provider = new TileCoordinatesImageryProvider();
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toBeUndefined();
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.tileDiscardPolicy).toBeUndefined();
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
 
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;
@@ -58,11 +58,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTilingScheme()).toBe(tilingScheme);
+            expect(provider.tilingScheme).toBe(tilingScheme);
         });
     });
 
@@ -73,12 +73,12 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(123);
-            expect(provider.getTileHeight()).toEqual(456);
+            expect(provider.tileWidth).toEqual(123);
+            expect(provider.tileHeight).toEqual(456);
         });
     });
 });

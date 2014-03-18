@@ -195,7 +195,7 @@ defineSuite([
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode, frameState.scene2D);
 
         viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
@@ -264,7 +264,7 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode, frameState.scene2D);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
         context.getUniformState().update(context, frameState);
@@ -587,7 +587,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+                frameState.camera.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
         });
@@ -595,7 +595,7 @@ defineSuite([
         it('renders wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -808,7 +808,7 @@ defineSuite([
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+                frameState.camera.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
         });
@@ -816,7 +816,7 @@ defineSuite([
         it('renders north wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -824,7 +824,7 @@ defineSuite([
         it('renders south wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -832,7 +832,7 @@ defineSuite([
         it('renders west wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -840,7 +840,7 @@ defineSuite([
         it('renders east wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1002,7 +1002,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+                frameState.camera.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
         });
@@ -1010,7 +1010,7 @@ defineSuite([
         it('renders wall 1', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateUp(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateUp(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1018,7 +1018,7 @@ defineSuite([
         it('renders wall 2', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1026,7 +1026,7 @@ defineSuite([
         it('renders wall 3', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1034,9 +1034,55 @@ defineSuite([
         it('renders wall 4', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
+        });
+
+        it('renders with correct winding order in southern hemisphere', function() {
+            var primitive = new Primitive({
+                geometryInstances : new GeometryInstance({
+                    geometry : PolygonGeometry.fromPositions({
+                        vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                        ellipsoid : ellipsoid,
+                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                            Cartographic.fromDegrees(-108.0, -25.0, 500000),
+                            Cartographic.fromDegrees(-100.0, -25.0, 500000),
+                            Cartographic.fromDegrees(-100.0, -30.0, 500000),
+                            Cartographic.fromDegrees(-108.0, -30.0, 500000)
+                        ]),
+                        perPositionHeight : true,
+                        extrudedHeight: 0
+                    }),
+                    id : 'extrudedPolygon',
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                    }
+                }),
+                appearance : new PerInstanceColorAppearance({
+                    closed : true,
+                    translucent : false
+                }),
+                asynchronous : false
+            });
+
+            var frameState = createFrameState();
+            primitive.update(context, frameState, []);
+            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+            var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+            frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+            frameState.camera.moveForward(primitive._boundingSphere.radius * 0.75);
+
+            context.getUniformState().update(context, frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, primitive);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            primitive = primitive && primitive.destroy();
         });
     }, 'WebGL');
 
@@ -1065,16 +1111,16 @@ defineSuite([
 
             afterView3D = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.zoomIn(primitive._boundingSphere.radius * 0.99);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.zoomIn(primitive._boundingSphere.radius * 0.99);
             };
 
             afterViewCV = function(frameState, primitive) {
                 var translation = Cartesian3.clone(frameState.camera.position);
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.zoomIn(primitive._boundingSphere.radius * 1.85);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.zoomIn(primitive._boundingSphere.radius * 1.85);
             };
         });
 
@@ -1216,7 +1262,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+                frameState.camera.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
         });
@@ -1224,7 +1270,7 @@ defineSuite([
         it('renders north wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1232,7 +1278,7 @@ defineSuite([
         it('renders south wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1240,7 +1286,7 @@ defineSuite([
         it('renders west wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1248,7 +1294,7 @@ defineSuite([
         it('renders east wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1308,7 +1354,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+                frameState.camera.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
         });
@@ -1316,7 +1362,7 @@ defineSuite([
         it('renders north wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1324,7 +1370,7 @@ defineSuite([
         it('renders south wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1332,7 +1378,7 @@ defineSuite([
         it('renders west wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1340,7 +1386,7 @@ defineSuite([
         it('renders east wall', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
-                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });

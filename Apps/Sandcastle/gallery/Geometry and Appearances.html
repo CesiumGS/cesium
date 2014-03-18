@@ -817,14 +817,13 @@ require(['Cesium'], function(Cesium) {
             positions : positions
         })
     });
-    var wallMaterial = Cesium.Material.fromType('Checkerboard');
-    wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
 
     scene.primitives.add(new Cesium.Primitive({
         geometryInstances : wallInstance,
         appearance : new Cesium.MaterialAppearance({
-            material : wallMaterial,
-            faceForward : true
+            material : Cesium.Material.fromType('Checkerboard', {
+                repeat : new Cesium.Cartesian2(20.0, 6.0)
+            })
         })
     }));
 
@@ -886,8 +885,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [corridor, extrudedCorridor, corridorFill],
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : true,
-            closed : true,
-            faceForward : true
+            closed : true
         })
     }));
 

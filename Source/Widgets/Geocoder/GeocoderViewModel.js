@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../../Core/BingMapsApi',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -9,7 +8,6 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Extent',
         '../../Core/jsonp',
-        '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
@@ -19,7 +17,6 @@ define([
         '../../ThirdParty/when'
     ], function(
         BingMapsApi,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -27,7 +24,6 @@ define([
         Ellipsoid,
         Extent,
         jsonp,
-        Matrix3,
         Matrix4,
         CameraColumbusViewMode,
         CameraFlightPath,
@@ -43,7 +39,7 @@ define([
      * @constructor
      *
      * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -211,8 +207,6 @@ define([
             1.0, 0.0, 0.0, 0.0,
             0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 1.0);
-    var inverseTransform2D = Matrix4.inverseTransformation(transform2D);
-    var scratchTransform = new Matrix4();
 
     function geocode(viewModel) {
         var query = viewModel.searchText;
@@ -261,7 +255,7 @@ define([
             var extent = Extent.fromDegrees(west, south, east, north);
 
             var camera = viewModel._scene.camera;
-            var position = camera.controller.getExtentCameraCoordinates(extent);
+            var position = camera.getExtentCameraCoordinates(extent);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;
@@ -272,28 +266,11 @@ define([
                 duration : viewModel._flightDuration,
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
-                    screenSpaceCameraController.setEllipsoid(viewModel._ellipsoid);
+                    screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
-                }
+                },
+                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
             };
-
-            if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-                var transform = Matrix4.clone(camera.transform, scratchTransform);
-
-                if (viewModel._scene.mode !== SceneMode.SCENE3D) {
-                    Matrix4.clone(transform2D, camera.transform);
-                    Matrix4.multiply(inverseTransform2D, transform, transform);
-                } else {
-                    Matrix4.clone(Matrix4.IDENTITY, camera.transform);
-                }
-
-                Matrix4.multiplyByPoint(transform, camera.position, camera.position);
-
-                var rotation = Matrix4.getRotation(transform);
-                Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
-                Matrix3.multiplyByVector(rotation, camera.up, camera.up);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-            }
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
             viewModel._scene.animations.add(flight);

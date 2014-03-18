@@ -95,7 +95,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(new JulianDate());
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
     });
 
     it('object with no position does not create a billboard.', function() {
@@ -109,7 +109,7 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
     });
 
     it('object with no image does not create a billboard.', function() {
@@ -123,7 +123,7 @@ defineSuite([
 
         visualizer.update(new JulianDate());
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
     });
 
     it('A DynamicBillboard causes a Billboard to be created and updated.', function() {
@@ -131,7 +131,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -159,7 +159,7 @@ defineSuite([
 
             visualizer.update(time);
 
-            expect(billboardCollection.getLength()).toEqual(1);
+            expect(billboardCollection.length).toEqual(1);
 
             bb = billboardCollection.get(0);
 
@@ -240,7 +240,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -251,7 +251,7 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
 
         waitsFor(function() {
@@ -272,7 +272,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
         var billboardCollection = scene.primitives.get(0);
-        expect(billboardCollection.getLength()).toEqual(0);
+        expect(billboardCollection.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
@@ -283,7 +283,7 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
     });
@@ -309,13 +309,13 @@ defineSuite([
         var billboardCollection = scene.primitives.get(0);
 
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(time);
-        expect(billboardCollection.getLength()).toEqual(1);
+        expect(billboardCollection.length).toEqual(1);
         bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject2);
     });

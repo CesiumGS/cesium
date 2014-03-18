@@ -68,7 +68,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -93,7 +93,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -122,7 +122,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -154,7 +154,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -185,21 +185,21 @@ defineSuite([
             layers : 'someLayer'
         });
 
-        expect(provider.getUrl()).toEqual('made/up/wms/server');
-        expect(provider.getLayers()).toEqual('someLayer');
+        expect(provider.url).toEqual('made/up/wms/server');
+        expect(provider.layers).toEqual('someLayer');
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toBeUndefined();
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -230,7 +230,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
@@ -253,14 +253,14 @@ defineSuite([
             url : 'made/up/wms/server?foo=bar',
             layers : 'someLayer'
         });
-        expect(provider.getCredit()).toBeUndefined();
+        expect(provider.credit).toBeUndefined();
 
         var providerWithCredit = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server?foo=bar',
             layers : 'someLayer',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getCredit()).toBeDefined();
+        expect(providerWithCredit.credit).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {
@@ -272,7 +272,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -280,7 +280,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 expect(url.indexOf(proxy.getURL('made/up/wms/server'))).toEqual(0);
-                expect(provider.getProxy()).toEqual(proxy);
+                expect(provider.proxy).toEqual(proxy);
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -309,16 +309,16 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toBeUndefined();
-            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getExtent()).toEqual(extent);
-            expect(provider.getTileDiscardPolicy()).toBeUndefined();
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toBeUndefined();
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.extent).toEqual(extent);
+            expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -344,7 +344,7 @@ defineSuite([
             layers : 'someLayer',
             maximumLevel : 5
         });
-        expect(provider.getMaximumLevel()).toEqual(5);
+        expect(provider.maximumLevel).toEqual(5);
     });
 
     it('raises error event when image cannot be loaded', function() {
@@ -356,7 +356,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -376,7 +376,7 @@ defineSuite([
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;

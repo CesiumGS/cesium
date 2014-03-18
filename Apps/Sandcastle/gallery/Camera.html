@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -62,7 +62,7 @@ require(['Cesium'], function(Cesium) {
         var north = Cesium.Math.toRadians(42.0);
 
         var extent = new Cesium.Extent(west, south, east, north);
-        scene.camera.controller.viewExtent(extent, ellipsoid);
+        scene.camera.viewExtent(extent, ellipsoid);
 
         // Show the extent.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
@@ -116,14 +116,14 @@ require(['Cesium'], function(Cesium) {
         // View in east-north-up frame
         var camera = scene.camera;
         camera.transform = transform;
-        camera.controller.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
+        camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
-        controller.setEllipsoid(Cesium.Ellipsoid.UNIT_SPHERE);
+        controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
         controller.enableTilt = false;
 
         // Zoom in
-        camera.controller.lookAt(
+        camera.lookAt(
                 new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
@@ -172,15 +172,15 @@ require(['Cesium'], function(Cesium) {
             return;
         }
 
-        camera.transform = Cesium.Matrix4.IDENTITY;
-        camera.controller.constrainedAxis = undefined;
-        camera.controller.lookAt(
+        Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY, camera.transform);
+        camera.constrainedAxis = undefined;
+        camera.lookAt(
                 Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
 
         var controller = scene.screenSpaceCameraController;
-        controller.setEllipsoid(ellipsoid);
+        controller.ellipsoid = ellipsoid;
         controller.enableTilt = true;
     }
 

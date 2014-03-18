@@ -4,18 +4,33 @@ Change Log
 Beta Releases
 -------------
 
+### b27 - 2014-04-01
+
+* Breaking changes:
+  * All `CameraController` functions have been moved up to the `Camera`. Removed `CameraController`. For example, code that looked like:
+
+           scene.camera.controller.viewExtent(extent);
+
+    should now look like:
+
+           scene.camera.viewExtent(extent);
+  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
+* `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
+* Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
+* Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
+* Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+
 ### b26 - 2014-03-03
 
 * Breaking changes:
-  * Renamed `Viewer.automaticallyTrackFirstDataSourceClock` to `Viewer.automaticallyTrackDataSourceClocks`.
-  * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
   * Replaced getter/setter functions with properties:
     * `Scene`
       * `getCanvas` -> `canvas`
       * `getContext` -> `context`
       * `getPrimitives` -> `primitives`
       * `getCamera` -> `camera`
-      * `getScreenSpaceCameraController`  -> `screenSpaceController`
+      * `getScreenSpaceCameraController`  -> `screenSpaceCameraController`
       * `getFrameState` -> `frameState`
       * `getAnimations` -> `animations`
     * `CompositePrimitive`
@@ -31,10 +46,71 @@ Beta Releases
       * `getMaximumRadius` -> `maximumRadius`
     * `CentralBody`
       * `getEllipsoid` -> `ellipsoid`
-      * `getImageryLayers` -> `imageryLayerCollection`
+      * `getImageryLayers` -> `imageryLayers`
     * `EllipsoidalOccluder`
       * `getEllipsoid` -> `ellipsoid`
       * `getCameraPosition`, `setCameraPosition` -> `cameraPosition`
+    * `EllipsoidTangentPlane`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getOrigin` -> `origin`
+    * `GeographicProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `WebMercatorProjection`
+      * `getEllipsoid` -> `ellipsoid`
+    * `SceneTransitioner`
+      * `getScene` -> `scene`
+      * `getEllipsoid` -> `ellipsoid`
+    * `ScreenSpaceCameraController`
+      * `getEllipsoid`, `setEllipsoid` -> `ellipsoid`
+    * `SkyAtmosphere`
+      * `getEllipsoid` -> `ellipsoid`
+    * `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingSheme`
+      * `getEllipsoid` -> `ellipsoid`
+      * `getExtent` -> `extent`
+      * `getProjection` -> `projection`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `GridImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileCoordinatesImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getProxy` -> `proxy`
+      * `getTileWidth` -> `tileWidth`
+      * `getTileHeight` -> `tileHeight`
+      * `getMaximumLevel` -> `maximumLevel`
+      * `getMinimumLevel` -> `minimumLevel`
+      * `getTilingScheme` -> `tilingScheme`
+      * `getExtent` -> `extent`
+      * `getTileDiscardPolicy` -> `tileDiscardPolicy`
+      * `getErrorEvent` -> `errorEvent`
+      * `isReady` -> `ready`
+      * `getCredit` -> `credit`
+    * `ArcGisMapServerImageryProvider`, `BingMapsImageryProvider`, `GoogleEarthImageryProvider`, `OpenStreetMapImageryProvider`, `SingleTileImageryProvider`, `TileMapServiceImageryProvider`, `WebMapServiceImageryProvider`
+      * `getUrl` -> `url`
+    * `ArcGisMapServerImageryProvider`
+      * `isUsingPrecachedTiles` - > `usingPrecachedTiles`
+    * `BingMapsImageryProvider`
+      * `getKey` -> `key`
+      * `getMapStyle` -> `mapStyle`
+    * `GoogleEarthImageryProvider`
+      * `getPath` -> `path`
+      * `getChannel` -> `channel`
+      * `getVersion` -> `version`
+      * `getRequestType` -> `requestType`
+    * `WebMapServiceImageryProvider`
+      * `getLayers` -> `layers`
+    * `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `ArcGisImageServerTerrainProvider`, `VRTheWorldTerrainProvider`
+      * `getErrorEvent` -> `errorEvent`
+      * `getCredit` -> `credit`
+      * `getTilingScheme` -> `tilingScheme`
+      * `isReady` -> `ready`
+    * `TimeIntervalCollection`
+      * `getChangedEvent` -> `changedEvent`
+      * `getStart` -> `start`
+      * `getStop` -> `stop`
+      * `getLength` -> `length`
+      * `isEmpty` -> `empty`
+    * `DataSourceCollection`, `ImageryLayerCollection`, `LabelCollection`, `PolylineCollection`, `SensorVolumeCollection`
+      * `getLength` -> `length`
+    * `BillboardCollection`
+      * `getLength` -> `length`
+      * `getTextureAtlas`, `setTextureAtlas` -> `textureAtlas`
+      * `getDestroyTextureAtlas`, `setDestroyTextureAtlas` -> `destroyTextureAtlas`
   * Removed `Scene.getUniformState()`.  Use `scene.context.getUniformState()`.
   * Visualizers no longer create a `dynamicObject` property on the primitives they create.  Instead, they set the `id` property that is standard for all primitives.
   * The `propertyChanged` on DynamicScene objects has been renamed to `definitionChanged`.  Also, the event is now raised in the case of an existing property being modified as well as having a new property assigned (previously only property assignment would raise the event).
@@ -42,28 +118,39 @@ Beta Releases
   * `DynamicDirectionsProperty` and `DynamicVertexPositionsProperty` were both removed, they have been superseded by `PropertyArray` and `PropertyPositionArray`, which make it easy for DataSource implementations to create time-dynamic arrays.
   * `VisualizerCollection` has been removed.  It is superseded by `DataSourceDisplay`.
   * `DynamicEllipsoidVisualizer`, `DynamicPolygonVisualizer`, and `DynamicPolylineVisualizer` have been removed.  They are superseded by `GeometryVisualizer` and corresponding `GeometryUpdater` implementations; `EllipsoidGeometryUpdater`, `PolygonGeometryUpdater`, `PolylineGeometryUpdater`.
-* DynamicScene now makes use of Geometry and Appearances, which provides a tremendous improvements to DataSource visualization (CZML, GeoJSON, etc..).  Extruded geometries are now supported and in many use cases performance is now GPU bound.
+  * Modified `CameraFlightPath` functions to take place in the camera's current reference frame. The arguments to the function now need to be given in world coordinates and an optional reference frame can be given when the flight is completed.
+  * `PixelDatatype` properties are now JavaScript numbers, not `Enumeration` instances.
+  * `combine` now takes two objects instead of an array, and defaults to copying shallow references.  The `allowDuplicates` parameter has been removed.  In the event of duplicate properties, the first object's properties will be used.
+  * Removed `FeatureDetection.supportsCrossOriginImagery`.  This check was only useful for very old versions of WebKit.
+* Added `Model` for drawing 3D models using glTF.  See the [tutorial](http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/) and [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html&label=Showcases).
+* DynamicScene now makes use of [Geometry and Appearances](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/), which provides a tremendous improvements to DataSource visualization (CZML, GeoJSON, etc..).  Extruded geometries are now supported and in many use cases performance is an order of magnitude faster.
 * Added new `SelectionIndicator` and `InfoBox` widgets to `Viewer`, activated by `viewerDynamicObjectMixin`.
-* Fix developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
-* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
-* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
-* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by STK Terrain Server.
-* Added `Intersections2D` class containing operations on 2D triangles.
-* Fixed viewing an extent. [#1431](https://github.com/AnalyticalGraphicsInc/cesium/issues/1431)
-* Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
-* Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
-* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
-* `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
-* `RequestErrorEvent` now includes the headers that were returned with the error response.
-* Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`.
-* Fixed `WallGeometry` bug that failed by removing positions that were less close together by less than 6 decimal places. [#1483](https://github.com/AnalyticalGraphicsInc/cesium/pull/1483)
+* `CesiumTerrainProvider` now supports mesh-based terrain like the tiles created by [STK Terrain Server](https://groups.google.com/forum/#!topic/cesium-dev/cP01iP7YOCU).
+* Fixed rendering artifact on translucent objects when zooming in or out.
+* Added `CesiumInspector` widget for graphics debugging.  In Cesium Viewer, it is enabled by using the query parameter `inspector=true`.  Also see the [Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html&label=Showcases).
+* Improved compatibility with Internet Explorer 11.
 * `DynamicEllipse`, `DynamicPolygon`, and `DynamicEllipsoid` now have properties matching their geometry counterpart, i.e. `EllipseGeometry`, `EllipseOutlineGeometry`, etc. These properties are also available in CZML.
 * Added a `definitionChanged` event to the `Property` interface as well as most `DynamicScene` objects.  This makes it easy for a client to observe when new data is loaded into a property or object.
 * Added an `isConstant` property to the `Property` interface.  Constant properties do not change in regards to simulation time, i.e. `Property.getValue` will always return the same result for all times.
 * `ConstantProperty` is now mutable; it's value can be updated via `ConstantProperty.setValue`.
+* Improved the quality of imagery near the poles when the imagery source uses a `GeographicTilingScheme`.
+* `OpenStreetMapImageryProvider` now supports imagery with a minimum level.
+* `BingMapsImageryProvider` now uses HTTPS by default for metadata and tiles when the document is loaded over HTTPS.
+* Added the ability for imagery providers to specify view-dependent attribution to be display in the `CreditDisplay`.
+* View-dependent imagery source attribution is now added to the `CreditDisplay` by the `BingMapsImageryProvider`.
+* Fixed viewing an extent. [#1431](https://github.com/AnalyticalGraphicsInc/cesium/issues/1431)
+* Fixed camera tilt in ICRF. [#544](https://github.com/AnalyticalGraphicsInc/cesium/issues/544)
+* Fixed developer error when zooming in 2D. If the zoom would create an invalid frustum, nothing is done. [#1432](https://github.com/AnalyticalGraphicsInc/cesium/issues/1432)
+* Fixed `WallGeometry` bug that failed by removing positions that were less close together by less than 6 decimal places. [#1483](https://github.com/AnalyticalGraphicsInc/cesium/pull/1483)
+* Fixed `EllipsoidGeometry` texture coordinates. [#1454](https://github.com/AnalyticalGraphicsInc/cesium/issues/1454)
+* Added a loop property to `Polyline`s to join the first and last point. [#960](https://github.com/AnalyticalGraphicsInc/cesium/issues/960)
+* Use `performance.now()` instead of `Date.now()`, when available, to limit time spent loading terrain and imagery tiles.  This results in more consistent frame rates while loading tiles on some systems.
+* `RequestErrorEvent` now includes the headers that were returned with the error response.
 * Added `AssociativeArray`, which is a helper class for maintaining a hash of objects that also needs to be iterated often.
 * Added `TimeIntervalCollection.getChangedEvent` which returns an event that will be raised whenever intervals are updated.
-* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Added a second parameter to `Material.fromType` to override default uniforms. [#1522](https://github.com/AnalyticalGraphicsInc/cesium/pull/1522)
+* Added `Intersections2D` class containing operations on 2D triangles.
+* Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
 ### b25 - 2014-02-03
 

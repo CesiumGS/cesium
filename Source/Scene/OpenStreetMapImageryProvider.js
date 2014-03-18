@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         './ImageryProvider',
@@ -10,6 +11,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Event,
         ImageryProvider,
@@ -74,7 +76,7 @@ define([
         this._minimumLevel = defaultValue(description.minimumLevel, 0);
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
-        this._extent = defaultValue(description.extent, this._tilingScheme.getExtent());
+        this._extent = defaultValue(description.extent, this._tilingScheme.extent);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
@@ -108,200 +110,193 @@ define([
         return url;
     }
 
-    /**
-     * Gets the URL of the service hosting the imagery.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {String} The URL.
-     */
-    OpenStreetMapImageryProvider.prototype.getUrl = function() {
-        return this._url;
-    };
+    defineProperties(OpenStreetMapImageryProvider.prototype, {
+        /**
+         * Gets the URL of the service hosting the imagery.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {String}
+         */
+        url : {
+            get : function() {
+                return this._url;
+            }
+        },
 
-    /**
-     * Gets the proxy used by this provider.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Proxy} The proxy.
-     *
-     * @see DefaultProxy
-     */
-    OpenStreetMapImageryProvider.prototype.getProxy = function() {
-        return this._proxy;
-    };
+        /**
+         * Gets the proxy used by this provider.
+         * @memberof OpenStreetMapImageryProvider
+         * @type {Proxy}
+         */
+        proxy : {
+            get : function() {
+                return this._proxy;
+            }
+        },
 
-    /**
-     * Gets the width of each tile, in pixels.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Number} The width.
-     *
-     * @exception {DeveloperError} <code>getTileWidth</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getTileWidth = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileWidth must not be called before the imagery provider is ready.');
+        /**
+         * Gets the width of each tile, in pixels. This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         */
+        tileWidth : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileWidth;
+            }
+        },
+
+        /**
+         * Gets the height of each tile, in pixels.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         */
+        tileHeight: {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileHeight;
+            }
+        },
+
+        /**
+         * Gets the maximum level-of-detail that can be requested.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         */
+        maximumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._maximumLevel;
+            }
+        },
+
+        /**
+         * Gets the minimum level-of-detail that can be requested.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Number}
+         */
+        minimumLevel : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._minimumLevel;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProviderr.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._extent;
+            }
+        },
+
+        /**
+         * Gets the tile discard policy.  If not undefined, the discard policy is responsible
+         * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
+         * returns undefined, no tiles are filtered.  This function should
+         * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {TileDiscardPolicy}
+         */
+        tileDiscardPolicy : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._tileDiscardPolicy;
+            }
+        },
+
+        /**
+         * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
+         * the source of the imagery.  This function should not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
-        //>>includeEnd('debug');
-
-        return this._tileWidth;
-    };
-
-    /**
-     * Gets the height of each tile, in pixels.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Number} The height.
-     *
-     * @exception {DeveloperError} <code>getTileHeight</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getTileHeight = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tileHeight;
-    };
-
-    /**
-     * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Number} The maximum level.
-     *
-     * @exception {DeveloperError} <code>getMaximumLevel</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getMaximumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._maximumLevel;
-    };
-
-    /**
-     * Gets the minimum level-of-detail that can be requested.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Number} The minimum level.
-     *
-     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getMinimumLevel = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._minimumLevel;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {TilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getTilingScheme = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tilingScheme;
-    };
-
-    /**
-     * Gets the extent, in radians, of the imagery provided by this instance.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Extent} The extent.
-     *
-     * @exception {DeveloperError} <code>getExtent</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getExtent = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getExtent must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._extent;
-    };
-
-    /**
-     * Gets the tile discard policy.  If not undefined, the discard policy is responsible
-     * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
-     * returns undefined, no tiles are filtered.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {TileDiscardPolicy} The discard policy.
-     *
-     * @see DiscardMissingTileImagePolicy
-     * @see NeverTileDiscardPolicy
-     *
-     * @exception {DeveloperError} <code>getTileDiscardPolicy</code> must not be called before the imagery provider is ready.
-     */
-    OpenStreetMapImageryProvider.prototype.getTileDiscardPolicy = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('getTileDiscardPolicy must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._tileDiscardPolicy;
-    };
-
-    /**
-     * Gets an event that is raised when the imagery provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Event} The event.
-     */
-    OpenStreetMapImageryProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    OpenStreetMapImageryProvider.prototype.isReady = function() {
-        return this._ready;
-    };
+    });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -322,7 +317,7 @@ define([
 
     /**
      * Requests the image for a given tile.  This function should
-     * not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
+     * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
      *
      * @memberof OpenStreetMapImageryProvider
      *
@@ -346,18 +341,6 @@ define([
 
         var url = buildImageUrl(this, x, y, level);
         return ImageryProvider.loadImage(this, url);
-    };
-
-    /**
-     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
-     * the source of the imagery.  This function should not be called before {@link OpenStreetMapImageryProvider#isReady} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    OpenStreetMapImageryProvider.prototype.getCredit = function() {
-        return this._credit;
     };
 
     return OpenStreetMapImageryProvider;

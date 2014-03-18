@@ -67,15 +67,15 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(200000.0, 0.0, -3000000.0)),
                 modelMatrix);
 
-        var material = Cesium.Material.fromType('Stripe'); // Use default colors
-        material.uniforms.repeat = 10;
         var sensors = new Cesium.SensorVolumeCollection();
         rectangularSensor = sensors.addRectangularPyramid({
             modelMatrix : modelMatrix,
             radius : 10000000.0,
             xHalfAngle : Cesium.Math.toRadians(30.0),
             yHalfAngle : Cesium.Math.toRadians(20.0),
-            material : material
+            material : Cesium.Material.fromType('Stripe', {
+                repeat : 10
+            })
         });
         primitives.add(sensors);
     }

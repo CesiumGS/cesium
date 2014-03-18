@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -37,7 +37,7 @@ require(['Cesium'], function(Cesium) {
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
             var textureAtlas = scene.context.createTextureAtlas({image : image});
-            billboards.setTextureAtlas(textureAtlas);
+            billboards.textureAtlas = textureAtlas;
             billboard = billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 imageIndex : 0
@@ -107,7 +107,7 @@ require(['Cesium'], function(Cesium) {
         // Mouse over the globe to see the cartographic position
         handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
         handler.setInputAction(function(movement) {
-            var cartesian = scene.camera.controller.pickEllipsoid(movement.endPosition, ellipsoid);
+            var cartesian = scene.camera.pickEllipsoid(movement.endPosition, ellipsoid);
             if (cartesian) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
                 label.setShow(true);
@@ -376,7 +376,7 @@ require(['Cesium'], function(Cesium) {
 
         DrawExtentHelper.prototype.handleRegionStop = function(movement) {
             this.enableInput();
-            var cartesian = this._scene.camera.controller.pickEllipsoid(movement.position,
+            var cartesian = this._scene.camera.pickEllipsoid(movement.position,
                     this._ellipsoid);
             if (cartesian) {
                 this._click2 = this._ellipsoid.cartesianToCartographic(cartesian);
@@ -387,7 +387,7 @@ require(['Cesium'], function(Cesium) {
         };
 
         DrawExtentHelper.prototype.handleRegionInter = function(movement) {
-            var cartesian = this._scene.camera.controller.pickEllipsoid(movement.endPosition,
+            var cartesian = this._scene.camera.pickEllipsoid(movement.endPosition,
                     this._ellipsoid);
             if (cartesian) {
                 var cartographic = this._ellipsoid.cartesianToCartographic(cartesian);
@@ -396,7 +396,7 @@ require(['Cesium'], function(Cesium) {
         };
 
         DrawExtentHelper.prototype.handleRegionStart = function(movement) {
-            var cartesian = this._scene.camera.controller.pickEllipsoid(movement.position,
+            var cartesian = this._scene.camera.pickEllipsoid(movement.position,
                     this._ellipsoid);
             if (cartesian) {
                 var that = this;

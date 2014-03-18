@@ -1,20 +1,16 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './Intersect',
-        './Matrix3',
-        './BoundingRectangle'
+        './Matrix3'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        Intersect,
-        Matrix3,
-        BoundingRectangle) {
+        Matrix3) {
     "use strict";
 
     /**
@@ -66,7 +62,6 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
     var scratchCartesian5 = new Cartesian3();
-    var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
     var scratchEigenResult = {
         unitary : new Matrix3(),

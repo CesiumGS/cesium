@@ -81,8 +81,9 @@ define([
         this.rectangle = BoundingRectangle.clone(rectangle);
 
         if (!defined(material)) {
-            material = Material.fromType(Material.ColorType);
-            material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+            material = Material.fromType(Material.ColorType, {
+                color : new Color(1.0, 1.0, 1.0, 1.0)
+            });
         }
 
         /**
