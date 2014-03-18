@@ -8,6 +8,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
+        '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
         defined,
@@ -18,6 +19,7 @@ define([
         ClearCommand,
         PixelDatatype,
         PixelFormat,
+        RenderbufferFormat,
         FXAAFS) {
     "use strict";
     /*global WebGLRenderingContext*/
@@ -29,11 +31,14 @@ define([
         this.enabled = false;
 
         this._fxaaTexture = undefined;
+        this._fxaaDepthTexture = undefined;
+        this._fxaaDepthRenderbuffer = undefined;
         this._fxaaFBO = undefined;
         this._fxaaCommand = undefined;
 
         var fxaaClearCommand = new ClearCommand();
         fxaaClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
+        fxaaClearCommand.depth = 1.0;
         fxaaClearCommand.owner = this;
         this._fxaaClearCommand = fxaaClearCommand;
     };
@@ -41,9 +46,13 @@ define([
     function destroyResources(that) {
         that._fxaaFBO = that._fxaaFBO && that._fxaaFBO.destroy();
         that._fxaaTexture = that._fxaaTexture && that._fxaaTexture.destroy();
+        that._fxaaDepthTexture = that._fxaaDepthTexture && that._fxaaDepthTexture.destroy();
+        that._fxaaDepthRenderbuffer = that._fxaaDepthRenderbuffer && that._fxaaDepthRenderbuffer.destroy();
 
         that._fxaaFBO = undefined;
         that._fxaaTexture = undefined;
+        that._fxaaDepthTexture = undefined;
+        that._fxaaDepthRenderbuffer = undefined;
 
         if (defined(that._fxaaCommand)) {
             that._fxaaCommand.shaderProgram = that._fxaaCommand.shaderProgram && that._fxaaCommand.shaderProgram.release();
@@ -67,6 +76,8 @@ define([
         var textureChanged = !defined(fxaaTexture) || fxaaTexture.getWidth() !== width || fxaaTexture.getHeight() !== height;
         if (textureChanged) {
             this._fxaaTexture = this._fxaaTexture && this._fxaaTexture.destroy();
+            this._fxaaDepthTexture = this._fxaaDepthTexture && this._fxaaDepthTexture.destroy();
+            this._fxaaDepthRenderbuffer = this._fxaaDepthRenderbuffer && this._fxaaDepthRenderbuffer.destroy();
 
             this._fxaaTexture = context.createTexture2D({
                 width : width,
@@ -74,6 +85,21 @@ define([
                 pixelFormat : PixelFormat.RGB,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
+
+            if (context.getDepthTexture()) {
+                this._fxaaDepthTexture = context.createTexture2D({
+                    width : width,
+                    height : height,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                });
+            } else {
+                this._fxaaDepthRenderbuffer = context.createRenderbuffer({
+                    width : width,
+                    height : height,
+                    format : RenderbufferFormat.DEPTH_COMPONENT16
+                });
+            }
         }
 
         if (!defined(this._fxaaFBO) || textureChanged) {
@@ -81,6 +107,8 @@ define([
 
             this._fxaaFBO = context.createFramebuffer({
                 colorTextures : [this._fxaaTexture],
+                depthTexture : this._fxaaDepthTexture,
+                depthRenderbuffer : this._depthRenderbuffer,
                 destroyAttachments : false
             });
         }

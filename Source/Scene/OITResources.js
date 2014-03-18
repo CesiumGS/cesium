@@ -414,6 +414,7 @@ define([
 
         if (this._translucentMRTSupport) {
             executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands);
+            return;
         }
 
         executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands);

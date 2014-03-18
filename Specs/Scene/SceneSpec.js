@@ -10,12 +10,14 @@ defineSuite([
          'Renderer/DrawCommand',
          'Renderer/Context',
          'Renderer/Pass',
+         'Renderer/PassState',
          'Renderer/UniformState',
          'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/CompositePrimitive',
          'Scene/ExtentPrimitive',
          'Scene/FrameState',
+         'Scene/OITResources',
          'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
          'Specs/destroyScene'
@@ -30,12 +32,14 @@ defineSuite([
          DrawCommand,
          Context,
          Pass,
+         PassState,
          UniformState,
          AnimationCollection,
          Camera,
          CompositePrimitive,
          ExtentPrimitive,
          FrameState,
+         OITResources,
          ScreenSpaceCameraController,
          createScene,
          destroyScene) {
@@ -49,7 +53,10 @@ defineSuite([
     });
 
     afterEach(function() {
+        scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
+        scene.fxaaOrderIndependentTranslucency = true;
+        scene.fxaa = false;
         scene.primitives.removeAll();
     });
 
@@ -280,6 +287,143 @@ defineSuite([
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders fast path with no translucent primitives', function() {
+        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var extentPrimitive = new ExtentPrimitive({
+            extent : extent,
+            height : 1000.0,
+            asynchronous : false
+        });
+        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(extentPrimitive);
+
+        scene.camera.viewExtent(extent);
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders with OIT and without FXAA', function() {
+        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var extentPrimitive = new ExtentPrimitive({
+            extent : extent,
+            height : 1000.0,
+            asynchronous : false
+        });
+        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(extentPrimitive);
+
+        scene.camera.viewExtent(extent);
+
+        scene.fxaaOrderIndependentTranslucency = false;
+        scene.fxaa = false;
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders with forced FXAA', function() {
+        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var extentPrimitive = new ExtentPrimitive({
+            extent : extent,
+            height : 1000.0,
+            asynchronous : false
+        });
+        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(extentPrimitive);
+
+        scene.camera.viewExtent(extent);
+
+        scene.fxaaOrderIndependentTranslucency = false;
+        scene.fxaa = true;
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders with multipass OIT if MRT is available', function() {
+        if (scene.context.getDrawBuffers()) {
+            var s = createScene();
+            s._oitResources._translucentMRTSupport = false;
+            s._oitResources._translucentMultipassSupport = true;
+
+            var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var extentPrimitive = new ExtentPrimitive({
+                extent : extent,
+                height : 1000.0,
+                asynchronous : false
+            });
+            extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(extentPrimitive);
+
+            s.camera.viewExtent(extent);
+
+            s.initializeFrame();
+            s.render();
+            var pixels = s.context.readPixels();
+            expect(pixels[0]).not.toEqual(0);
+            expect(pixels[1]).toEqual(0);
+            expect(pixels[2]).toEqual(0);
+
+            destroyScene(s);
+        }
+    });
+
+    it('renders with alpha blending if floating point textures are available', function() {
+        if (scene.context.getFloatingPointTexture()) {
+            var s = createScene();
+            s._oitResources._translucentMRTSupport = false;
+            s._oitResources._translucentMultipassSupport = false;
+
+            var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var extentPrimitive = new ExtentPrimitive({
+                extent : extent,
+                height : 1000.0,
+                asynchronous : false
+            });
+            extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(extentPrimitive);
+
+            s.camera.viewExtent(extent);
+
+            s.initializeFrame();
+            s.render();
+            var pixels = s.context.readPixels();
+            expect(pixels[0]).not.toEqual(0);
+            expect(pixels[1]).toEqual(0);
+            expect(pixels[2]).toEqual(0);
+
+            destroyScene(s);
+        }
     });
 
     it('isDestroyed', function() {
