@@ -745,10 +745,10 @@ define([
             scene._debugSphere.update(context, scene._frameState, commandList);
 
             var framebuffer;
-            var renderToTexture = scene._translucentMRTSupport || scene._translucentMultipassSupport;
+            var renderToTexture = scene._oitResources.isSupported();
             if (renderToTexture) {
                 framebuffer = passState.framebuffer;
-                passState.framebuffer = scene._opaqueFBO;
+                passState.framebuffer = scene._oitResources.getColorFBO();
             }
 
             commandList[0].execute(context, passState);
