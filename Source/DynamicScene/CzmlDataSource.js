@@ -857,14 +857,17 @@ define(['../Core/Cartesian2',
                 tmp = vertexPositionsData.cartographicRadians;
                 if (defined(tmp)) {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
-                        values.push(Ellipsoid.WGS84.cartographicToCartesian(new Cartographic(tmp[i], tmp[i + 1], tmp[i + 2])));
+                        scratchCartographic.longitude = tmp[i];
+                        scratchCartographic.latitude = tmp[i + 1];
+                        scratchCartographic.height = tmp[i] + 2;
+                        values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
                     }
                     vertexPositionsData.array = values;
                 } else {
                     tmp = vertexPositionsData.cartographicDegrees;
                     if (defined(tmp)) {
                         for (i = 0, len = tmp.length; i < len; i += 3) {
-                            values.push(Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2])));
+                            values.push(Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2], scratchCartographic)));
                         }
                         vertexPositionsData.array = values;
                     }
