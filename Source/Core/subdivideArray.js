@@ -19,8 +19,8 @@ define(['./defined',
             throw new DeveloperError('array is required');
         }
 
-        if (!defined(numberOfArrays)) {
-            throw new DeveloperError('numberOfArrays is required');
+        if (!defined(numberOfArrays) || numberOfArrays < 1) {
+            throw new DeveloperError('numberOfArrays must be greater than 0');
         }
 
         var result = [];

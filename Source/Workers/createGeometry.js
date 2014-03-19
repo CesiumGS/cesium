@@ -13,10 +13,10 @@ define([
         when) {
     "use strict";
 
-    var geometryCreatorCache = {};
+    var moduleCache = {};
 
-    function runTask(task, taskWorker, transferableObjects, results) {
-        var geometry = taskWorker(task.geometry);
+    function runTask(task, createFunction, transferableObjects, results) {
+        var geometry = createFunction(task.geometry);
         PrimitivePipeline.transferGeometry(geometry, transferableObjects);
         results.push({
             geometry : geometry,
@@ -24,31 +24,31 @@ define([
         });
     }
 
-    function createTask(taskWorkerName, taskWorker, task, transferableObjects, deferred, results) {
-        return function(taskWorker) {
-            geometryCreatorCache[taskWorkerName] = taskWorker;
-            runTask(task, taskWorker, transferableObjects, results);
+    function createTask(moduleName, deferred, task, createFunction, transferableObjects, results) {
+        return function(createFunction) {
+            moduleCache[moduleName] = createFunction;
+            runTask(task, createFunction, transferableObjects, results);
             deferred.resolve();
         };
     }
 
     function createGeometry(parameters, transferableObjects) {
-        var tasks = parameters.tasks;
+        var subTasks = parameters.subTasks;
 
-        var deferred = when.defer();
         var results = [];
         var promises = [];
+        var deferred = when.defer();
 
-        for (var i = 0; i < tasks.length; i++) {
-            var task = tasks[i];
-            var taskWorkerName = task.workerName;
-            var taskWorker = geometryCreatorCache[taskWorkerName];
-            if (defined(taskWorker)) {
-                runTask(task, taskWorker, transferableObjects, results);
+        for (var i = 0; i < subTasks.length; i++) {
+            var task = subTasks[i];
+            var moduleName = task.moduleName;
+            var createFunction = moduleCache[moduleName];
+            if (defined(createFunction)) {
+                runTask(task, createFunction, transferableObjects, results);
             } else {
-                var innerDefer = when.defer();
-                require(['./' + taskWorkerName], createTask(taskWorkerName, taskWorker, task, transferableObjects, innerDefer, results));
-                promises.push(innerDefer.promise);
+                var innedDeferred = when.defer();
+                require(['./' + moduleName], createTask(moduleName, innedDeferred, task, createFunction, transferableObjects, results));
+                promises.push(innedDeferred.promise);
             }
         }
         when.all(promises, function() {

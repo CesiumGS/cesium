@@ -76,7 +76,7 @@ define(['../Core/defined',
             }
             if (geometries.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : true,
+                    asynchronous : false,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : MaterialProperty.getValue(time, this.materialProperty, this.material),
