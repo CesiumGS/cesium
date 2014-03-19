@@ -276,7 +276,9 @@ define([
         }
 
         if (needRedraw) {
-            var cssColor = defaultValue(billboard._visualizerColor, Color.WHITE).toCssColorString();
+            var centerColor = defaultValue(billboard._visualizerColor, Color.WHITE);
+            var centerAlpha = centerColor.alpha;
+            var cssColor = centerColor.toCssColorString();
             var cssOutlineColor = defaultValue(billboard._visualizerOutlineColor, Color.BLACK).toCssColorString();
             var cssPixelSize = defaultValue(billboard._visualizerPixelSize, 3);
             var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
@@ -297,6 +299,17 @@ define([
                     context2D.closePath();
                     context2D.fillStyle = cssOutlineColor;
                     context2D.fill();
+                    // Punch a hole in the center if needed.
+                    if (centerAlpha < 1.0) {
+                        context2D.save();
+                        context2D.globalCompositeOperation = 'destination-out';
+                        context2D.beginPath();
+                        context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
+                        context2D.closePath();
+                        context2D.fillStyle = 'black';
+                        context2D.fill();
+                        context2D.restore();
+                    }
                 }
 
                 context2D.beginPath();
