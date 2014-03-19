@@ -14,10 +14,11 @@ Beta Releases
     should now look like:
 
            scene.camera.viewExtent(extent);
-
+  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
+* Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
 
 ### b26 - 2014-03-03
 

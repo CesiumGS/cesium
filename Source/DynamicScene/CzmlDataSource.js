@@ -59,6 +59,8 @@ define(['../Core/Cartesian2',
         './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
+        './StripeMaterialProperty',
+        './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
         '../ThirdParty/Uri',
@@ -124,6 +126,8 @@ define(['../Core/Cartesian2',
         ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
+        StripeMaterialProperty,
+        StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         Uri,
@@ -339,6 +343,8 @@ define(['../Core/Cartesian2',
             return unwrapCartesianInterval(czmlInterval);
         case Color:
             return unwrapColorInterval(czmlInterval);
+        case StripeOrientation:
+            return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
@@ -753,6 +759,16 @@ define(['../Core/Cartesian2',
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
             existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
+        } else if (defined(packetData.stripe)){
+            if (!(existingMaterial instanceof StripeMaterialProperty)) {
+                existingMaterial = new StripeMaterialProperty();
+            }
+            materialData = packetData.stripe;
+            processPacketData(StripeOrientation, existingMaterial, 'orientation', materialData.orientation, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri);
         }
 
         if (defined(existingInterval)) {
