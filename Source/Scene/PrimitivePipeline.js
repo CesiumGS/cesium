@@ -435,7 +435,7 @@ define([
                     defined(attributes[name].values)) {
                 typedArray = attributes[name].values;
 
-                if (FeatureDetection.supportsTransferringArrayBuffers() && transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
+                if (FeatureDetection.supportsTransferringArrayBuffers()) {
                     transferableObjects.push(typedArray.buffer);
                 }
 
