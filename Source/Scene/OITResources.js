@@ -9,6 +9,7 @@ define([
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
+        '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
         defined,
@@ -20,6 +21,7 @@ define([
         PixelDatatype,
         PixelFormat,
         RenderbufferFormat,
+        AdjustTranslucentFS,
         CompositeOITFS) {
     "use strict";
     /*global WebGLRenderingContext*/
@@ -28,24 +30,22 @@ define([
      * @private
      */
     var OITResources = function(context) {
-        var textureFloat = context.getFloatingPointTexture();
-        this._translucentMRTSupport = context.getDrawBuffers() && textureFloat;
+        var extensionsSupported = context.getFloatingPointTexture() && context.getDepthTexture();
+        this._translucentMRTSupport = context.getDrawBuffers() && extensionsSupported;
 
         // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
-        this._translucentMultipassSupport = !this._translucentMRTSupport && textureFloat;
+        this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
 
         this._opaqueTexture = undefined;
         this._accumulationTexture = undefined;
-        this._revealageTexture = undefined;
-
         this._depthTexture = undefined;
-        this._depthRenderbuffer = undefined;
 
         this._opaqueFBO = undefined;
         this._translucentFBO = undefined;
         this._alphaFBO = undefined;
 
         this._adjustTranslucentFBO = undefined;
+        this._adjustAlphaFBO = undefined;
 
         var opaqueClearCommand = new ClearCommand();
         opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
@@ -71,22 +71,22 @@ define([
         this._alphaRenderStateCache = {};
         this._translucentShaderCache = {};
         this._alphaShaderCache = {};
+
+        this._compositeCommand = undefined;
+        this._adjustTranslucentCommand = undefined;
+        this._adjustAlphaCommand = undefined;
     };
 
     function destroyTextures(that) {
         that._opaqueTexture = that._opaqueTexture && that._opaqueTexture.destroy();
         that._accumulationTexture = that._accumulationTexture && that._accumulationTexture.destroy();
         that._revealageTexture = that._revealageTexture && that._revealageTexture.destroy();
-
         that._depthTexture = that._depthTexture && that._depthTexture.destroy();
-        that._depthRenderbuffer = that._depthRenderbuffer && that._depthRenderbuffer.destroy();
 
         that._opaqueTexture = undefined;
         that._accumulationTexture = undefined;
         that._revealageTexture = undefined;
-
         that._depthTexture = undefined;
-        that._depthRenderbuffer = undefined;
     }
 
     function destroyFramebuffers(that) {
@@ -94,11 +94,13 @@ define([
         that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
         that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
         that._adjustTranslucentFBO = that._adjustTranslucentFBO && that._adjustTranslucentFBO.destroy();
+        that._adjustAlphaFBO = that._adjustAlphaFBO && that._adjustAlphaFBO.destroy();
 
         that._opaqueFBO = undefined;
         that._translucentFBO = undefined;
         that._alphaFBO = undefined;
         that._adjustTranslucentFBO = undefined;
+        that._adjustAlphaFBO = undefined;
     }
 
     function destroyResources(that) {
@@ -127,21 +129,12 @@ define([
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
         });
-
-        if (context.getDepthTexture()) {
-            that._depthTexture = context.createTexture2D({
-                width : width,
-                height : height,
-                pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-            });
-        } else {
-            that._depthRenderbuffer = context.createRenderbuffer({
-                width : width,
-                height : height,
-                format : RenderbufferFormat.DEPTH_COMPONENT16
-            });
-        }
+        that._depthTexture = context.createTexture2D({
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.DEPTH_COMPONENT,
+            pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+        });
     }
 
     function updateFramebuffers(that, context) {
@@ -150,16 +143,16 @@ define([
         that._opaqueFBO = context.createFramebuffer({
             colorTextures : [that._opaqueTexture],
             depthTexture : that._depthTexture,
-            depthRenderbuffer : that._depthRenderbuffer,
             destroyAttachments : false
         });
+
+        var completeFBO = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments
         if (that._translucentMRTSupport) {
             that._translucentFBO = context.createFramebuffer({
                 colorTextures : [that._accumulationTexture, that._revealageTexture],
                 depthTexture : that._depthTexture,
-                depthRenderbuffer : that._depthRenderbuffer,
                 destroyAttachments : false
             });
             that._adjustTranslucentFBO = context.createFramebuffer({
@@ -167,7 +160,7 @@ define([
                 destroyAttachments : false
             });
 
-            if (that._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            if (that._translucentFBO.getStatus() !== completeFBO || that._adjustTranslucentFBO.getStatus() !== completeFBO) {
                 destroyFramebuffers(that);
                 that._translucentMRTSupport = false;
             }
@@ -178,19 +171,27 @@ define([
             that._translucentFBO = context.createFramebuffer({
                 colorTextures : [that._accumulationTexture],
                 depthTexture : that._depthTexture,
-                depthRenderbuffer : that._depthRenderbuffer,
                 destroyAttachments : false
             });
             that._alphaFBO = context.createFramebuffer({
                 colorTextures : [that._revealageTexture],
                 depthTexture : that._depthTexture,
-                depthRenderbuffer : that._depthRenderbuffer,
+                destroyAttachments : false
+            });
+            that._adjustTranslucentFBO = context.createFramebuffer({
+                colorTextures : [that._accumulationTexture],
+                destroyAttachments : false
+            });
+            that._adjustAlphaFBO = context.createFramebuffer({
+                colorTextures : [that._revealageTexture],
                 destroyAttachments : false
             });
 
-            var translucentStatus = that._translucentFBO.getStatus();
-            var alphaStatus = that._alphaFBO.getStatus();
-            if (translucentStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE || alphaStatus !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+            var translucentComplete = that._translucentFBO.getStatus() === completeFBO;
+            var alphaComplete = that._alphaFBO.getStatus() === completeFBO;
+            var adjustTranslucentComplete = that._adjustTranslucentFBO.getStatus() === completeFBO;
+            var adjustAlphaComplete = that._adjustAlphaFBO.getStatus() === completeFBO;
+            if (!translucentComplete || !alphaComplete || !adjustTranslucentComplete || !adjustAlphaComplete) {
                 destroyResources(that);
                 that._translucentMultipassSupport = false;
             }
@@ -244,36 +245,50 @@ define([
             this._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
         }
 
-        if (this._translucentMRTSupport && !defined(this._adjustTranslucentMRTCommand)) {
-            fs =
-                '#extension GL_EXT_draw_buffers : enable \n\n' +
-                'uniform vec4 u_bgColor;\n' +
-                'uniform sampler2D u_depthTexture;\n\n' +
-                'varying vec2 v_textureCoordinates;\n\n' +
-                'void main()\n' +
-                '{\n' +
-                '    if (texture2D(u_depthTexture, v_textureCoordinates).r < 1.0)\n' +
-                '    {\n' +
-                '        gl_FragData[0] = u_bgColor;\n' +
-                '        gl_FragData[1] = vec4(u_bgColor.a);\n' +
-                '        return;\n' +
-                '    }\n' +
-                '    discard;\n' +
-                '}\n';
-            fs = createShaderSource({
-                sources : [fs]
-            });
+        if (!defined(this._adjustTranslucentCommand)) {
+            if (this._translucentMRTSupport) {
+                fs = createShaderSource({
+                    defines : ['MRT'],
+                    sources : [AdjustTranslucentFS]
+                });
 
-            uniformMap = {
-                u_bgColor : function() {
-                    return that._translucentMRTClearCommand.color;
-                },
-                u_depthTexture : function() {
-                    return that._depthTexture;
-                }
-            };
+                uniformMap = {
+                    u_bgColor : function() {
+                        return that._translucentMRTClearCommand.color;
+                    },
+                    u_depthTexture : function() {
+                        return that._depthTexture;
+                    }
+                };
 
-            this._adjustTranslucentMRTCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+            } else if (this._translucentMultipassSupport) {
+                fs = createShaderSource({
+                    sources : [AdjustTranslucentFS]
+                });
+
+                uniformMap = {
+                    u_bgColor : function() {
+                        return that._translucentMultipassClearCommand.color;
+                    },
+                    u_depthTexture : function() {
+                        return that._depthTexture;
+                    }
+                };
+
+                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+
+                uniformMap = {
+                    u_bgColor : function() {
+                        return that._alphaClearCommand.color;
+                    },
+                    u_depthTexture : function() {
+                        return that._depthTexture;
+                    }
+                };
+
+                this._adjustAlphaCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+            }
         }
     };
 
@@ -408,6 +423,11 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        passState.framebuffer = that._adjustTranslucentFBO;
+        that._adjustTranslucentCommand.execute(context, passState);
+        passState.framebuffer = that._adjustAlphaFBO;
+        that._adjustAlphaCommand.execute(context, passState);
+
         passState.framebuffer = that._translucentFBO;
 
         for (j = 0; j < length; ++j) {
@@ -436,7 +456,7 @@ define([
         var length = commands.length;
 
         passState.framebuffer = that._adjustTranslucentFBO;
-        that._adjustTranslucentMRTCommand.execute(context, passState);
+        that._adjustTranslucentCommand.execute(context, passState);
 
         passState.framebuffer = that._translucentFBO;
 
