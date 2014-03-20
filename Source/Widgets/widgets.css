@@ -1,6 +1,7 @@
 @import url(./shared.css);
 @import url(./Animation/Animation.css);
 @import url(./BaseLayerPicker/BaseLayerPicker.css);
+@import url(./CameraControl/CameraControl.css);
 @import url(./CesiumWidget/CesiumWidget.css);
 @import url(./CesiumInspector/CesiumInspector.css);
 @import url(./checkForChromeFrame.css);

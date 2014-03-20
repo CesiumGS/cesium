@@ -1,0 +1,28 @@
+.cesium-cameraControl-dropDown {
+    display: block;
+    position: absolute;
+    top: auto;
+    right: 0;
+    width: 240px;
+    max-height: 500px;
+    margin-top: 5px;
+    background-color: rgba(38, 38, 38, 0.75);
+    color: #edffff;
+    padding: 6px;
+    overflow: auto;
+    border: 1px solid #444;
+    border-radius: 10px;
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
+}
+
+.cesium-cameraControl-dropDown-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.25s linear;
+    -webkit-transition: opacity 0.25s linear;
+    -moz-transition: opacity 0.25s linear;
+}

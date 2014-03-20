@@ -15,6 +15,7 @@ define([
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/createDefaultBaseLayers',
+        '../CameraControl/CameraControl',
         '../CesiumWidget/CesiumWidget',
         '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
@@ -43,6 +44,7 @@ define([
         AnimationViewModel,
         BaseLayerPicker,
         createDefaultBaseLayers,
+        CameraControl,
         CesiumWidget,
         ClockViewModel,
         FullscreenButton,
@@ -107,6 +109,7 @@ define([
      * @param {Object} [options] Configuration options for the widget.
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+     * @param {Boolean} [options.cameraControl=true] If set to false, the CameraControl widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
@@ -132,10 +135,13 @@ define([
      *
      * @see Animation
      * @see BaseLayerPicker
+     * @see CameraControl
      * @see CesiumWidget
      * @see FullscreenButton
+     * @see InfoBox
      * @see HomeButton
      * @see SceneModePicker
+     * @see SelectionIndicator
      * @see Timeline
      * @see viewerDragDropMixin
      * @see viewerDynamicObjectMixin
@@ -270,6 +276,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 scene : cesiumWidget.scene,
                 ellipsoid : cesiumWidget.centralBody.ellipsoid
             });
+        }
+
+        //CameraControl
+        var cameraControl;
+        if (!defined(options.cameraControl) || options.cameraControl !== false) {
+            cameraControl = new CameraControl(toolbar);
+
+            //Grab the dropdown for resize code.
+            this._cameraControlDropDown = toolbar.getElementsByClassName('cesium-cameraControl-dropDown')[0];
         }
 
         //HomeButton
@@ -421,6 +436,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
         this._baseLayerPicker = baseLayerPicker;
+        this._cameraControl = cameraControl;
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
@@ -523,6 +539,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         baseLayerPicker : {
             get : function() {
                 return this._baseLayerPicker;
+            }
+        },
+
+        /**
+         * Gets the CameraControl.
+         * @memberof Viewer.prototype
+         * @type {CameraControl}
+         */
+        cameraControl : {
+            get : function() {
+                return this._cameraControl;
             }
         },
 
@@ -739,9 +766,14 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         var panelMaxHeight = height - 125;
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
+        var cameraControlDropDown = this._cameraControlDropDown;
 
         if (defined(baseLayerPickerDropDown)) {
             baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(cameraControlDropDown)) {
+            cameraControlDropDown.style.maxHeight = panelMaxHeight + 'px';
         }
 
         if (defined(this._infoBox)) {
@@ -861,6 +893,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         if (defined(this._baseLayerPicker)) {
             this._baseLayerPicker = this._baseLayerPicker.destroy();
+        }
+
+        if (defined(this._cameraControl)) {
+            this._cameraControl = this._cameraControl.destroy();
         }
 
         if (defined(this._animation)) {
