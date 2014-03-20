@@ -45,9 +45,10 @@ define([
         this._translucentFBO = undefined;
         this._alphaFBO = undefined;
 
+        this._adjustTranslucentFBO = undefined;
+
         var opaqueClearCommand = new ClearCommand();
         opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        opaqueClearCommand.depth = 1.0;
         opaqueClearCommand.owner = this;
         this._opaqueClearCommand = opaqueClearCommand;
 
@@ -92,10 +93,12 @@ define([
         that._opaqueFBO = that._opaqueFBO && that._opaqueFBO.destroy();
         that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
         that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
+        that._adjustTranslucentFBO = that._adjustTranslucentFBO && that._adjustTranslucentFBO.destroy();
 
         that._opaqueFBO = undefined;
         that._translucentFBO = undefined;
         that._alphaFBO = undefined;
+        that._adjustTranslucentFBO = undefined;
     }
 
     function destroyResources(that) {
@@ -159,9 +162,13 @@ define([
                 depthRenderbuffer : that._depthRenderbuffer,
                 destroyAttachments : false
             });
+            that._adjustTranslucentFBO = context.createFramebuffer({
+                colorTextures : [that._accumulationTexture, that._revealageTexture],
+                destroyAttachments : false
+            });
 
             if (that._translucentFBO.getStatus() !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
-                that._translucentFBO.destroy();
+                destroyFramebuffers(that);
                 that._translucentMRTSupport = false;
             }
         }
@@ -213,18 +220,17 @@ define([
             }
         }
 
+        var that = this;
+        var fs;
+        var uniformMap;
+
         if (!defined(this._compositeCommand)) {
-            var fs = createShaderSource({
+            fs = createShaderSource({
                 defines : [this._translucentMRTSupport ? 'MRT' : ''],
                 sources : [CompositeOITFS]
             });
 
-            this._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState());
-        }
-
-        if (textureChanged) {
-            var that = this;
-            this._compositeCommand.uniformMap = {
+            uniformMap = {
                 u_opaque : function() {
                     return that._opaqueTexture;
                 },
@@ -235,6 +241,39 @@ define([
                     return that._revealageTexture;
                 }
             };
+            this._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+        }
+
+        if (this._translucentMRTSupport && !defined(this._adjustTranslucentMRTCommand)) {
+            fs =
+                '#extension GL_EXT_draw_buffers : enable \n\n' +
+                'uniform vec4 u_bgColor;\n' +
+                'uniform sampler2D u_depthTexture;\n\n' +
+                'varying vec2 v_textureCoordinates;\n\n' +
+                'void main()\n' +
+                '{\n' +
+                '    if (texture2D(u_depthTexture, v_textureCoordinates).r < 1.0)\n' +
+                '    {\n' +
+                '        gl_FragData[0] = u_bgColor;\n' +
+                '        gl_FragData[1] = vec4(u_bgColor.a);\n' +
+                '        return;\n' +
+                '    }\n' +
+                '    discard;\n' +
+                '}\n';
+            fs = createShaderSource({
+                sources : [fs]
+            });
+
+            uniformMap = {
+                u_bgColor : function() {
+                    return that._translucentMRTClearCommand.color;
+                },
+                u_depthTexture : function() {
+                    return that._depthTexture;
+                }
+            };
+
+            this._adjustTranslucentMRTCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
         }
     };
 
@@ -396,7 +435,11 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
+        passState.framebuffer = that._adjustTranslucentFBO;
+        that._adjustTranslucentMRTCommand.execute(context, passState);
+
         passState.framebuffer = that._translucentFBO;
+
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
             var renderState = getTranslucentMRTRenderState(that, context, command.renderState);
