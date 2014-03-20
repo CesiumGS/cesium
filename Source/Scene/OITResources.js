@@ -8,7 +8,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
-        '../Renderer/RenderbufferFormat',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
@@ -20,7 +19,6 @@ define([
         ClearCommand,
         PixelDatatype,
         PixelFormat,
-        RenderbufferFormat,
         AdjustTranslucentFS,
         CompositeOITFS) {
     "use strict";
@@ -374,7 +372,7 @@ define([
 
             var renamedFS = fs.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_translucent_main()');
             renamedFS = renamedFS.replace(/gl_FragColor/g, 'czm_gl_FragColor');
-            renamedFS = renamedFS.replace(/discard/g, 'czm_discard = true');
+            renamedFS = renamedFS.replace(/\bdiscard\b/g, 'czm_discard = true');
             renamedFS = renamedFS.replace(/czm_phong/g, 'czm_translucentPhong');
 
             // Discarding the fragment in main is a workaround for ANGLE D3D9
