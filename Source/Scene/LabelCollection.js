@@ -523,7 +523,7 @@ define([
      * Returns the label in the collection at the specified index.  Indices are zero-based
      * and increase as labels are added.  Removing a label shifts all labels after
      * it to the left, changing their indices.  This function is commonly used with
-     * {@link LabelCollection#getLength} to iterate over all the labels
+     * {@link LabelCollection#length} to iterate over all the labels
      * in the collection.
      *
      * @memberof LabelCollection
@@ -538,7 +538,7 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#getLength
+     * @see LabelCollection#length
      *
      * @example
      * // Toggle the show property of every label in the collection
