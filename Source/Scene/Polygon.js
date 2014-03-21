@@ -129,8 +129,9 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        var material = Material.fromType(Material.ColorType);
-        material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
+        var material = Material.fromType(Material.ColorType, {
+            color : new Color(1.0, 1.0, 0.0, 0.5)
+        });
 
         /**
          * The surface appearance of the primitive.  This can be one of several built-in {@link Material} objects or a custom material, scripted with

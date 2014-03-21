@@ -52,7 +52,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 imageDownloaded = true;
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
@@ -94,7 +94,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
@@ -137,7 +137,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
@@ -197,7 +197,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 return loadWithXhr.defaultLoad('Data/Images/Transparent.png', responseType, method, data, headers, deferred);
             };
 

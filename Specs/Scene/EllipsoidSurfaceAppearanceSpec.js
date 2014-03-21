@@ -51,7 +51,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.controller.viewExtent(extent);
+        frameState.camera.viewExtent(extent);
         var us = context.getUniformState();
         us.update(context, frameState);
     });

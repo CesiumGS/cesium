@@ -59,6 +59,8 @@ define(['../Core/Cartesian2',
         './ReferenceProperty',
         './SampledPositionProperty',
         './SampledProperty',
+        './StripeMaterialProperty',
+        './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
         '../ThirdParty/Uri',
@@ -124,6 +126,8 @@ define(['../Core/Cartesian2',
         ReferenceProperty,
         SampledPositionProperty,
         SampledProperty,
+        StripeMaterialProperty,
+        StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         Uri,
@@ -339,10 +343,16 @@ define(['../Core/Cartesian2',
             return unwrapCartesianInterval(czmlInterval);
         case Color:
             return unwrapColorInterval(czmlInterval);
+        case StripeOrientation:
+            return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
         case Image:
-            return unwrapImageInterval(czmlInterval, sourceUri);
+            // Backwards compatibility: new files use 'uri', old files use 'image'
+            if (defined(czmlInterval.image)) {
+                return unwrapImageInterval(czmlInterval, sourceUri);
+            }
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case JulianDate:
             return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
         case LabelStyle:
@@ -749,6 +759,16 @@ define(['../Core/Cartesian2',
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
             existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
+        } else if (defined(packetData.stripe)){
+            if (!(existingMaterial instanceof StripeMaterialProperty)) {
+                existingMaterial = new StripeMaterialProperty();
+            }
+            materialData = packetData.stripe;
+            processPacketData(StripeOrientation, existingMaterial, 'orientation', materialData.orientation, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri);
+            processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri);
         }
 
         if (defined(existingInterval)) {
@@ -804,12 +824,7 @@ define(['../Core/Cartesian2',
         }
     }
 
-    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var vertexPositionsData = packet.vertexPositions;
-        if (!defined(vertexPositionsData)) {
-            return;
-        }
-
+    function processVertexData(dynamicObject, vertexPositionsData, dynamicObjectCollection) {
         var i;
         var len;
         var references = vertexPositionsData.references;
@@ -856,8 +871,24 @@ define(['../Core/Cartesian2',
                 }
             }
             if (defined(vertexPositionsData.array)) {
-                processPacketData(Array, dynamicObject, 'vertexPositions', vertexPositionsData, undefined, sourceUri);
+                processPacketData(Array, dynamicObject, 'vertexPositions', vertexPositionsData);
             }
+        }
+    }
+
+    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var vertexPositionsData = packet.vertexPositions;
+        if (!defined(vertexPositionsData)) {
+            return;
+        }
+
+        if (isArray(vertexPositionsData)) {
+            var length = vertexPositionsData.length;
+            for (var i = 0; i < length; i++) {
+                processVertexData(dynamicObject, vertexPositionsData[i], dynamicObjectCollection);
+            }
+        } else {
+            processVertexData(dynamicObject, vertexPositionsData, dynamicObjectCollection);
         }
     }
 
@@ -1214,6 +1245,28 @@ define(['../Core/Cartesian2',
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
+    function processDirectionData(pyramid, directions, interval, sourceUri) {
+        var i;
+        var len;
+        var values = [];
+        var tmp = directions.unitSpherical;
+        if (defined(tmp)) {
+            for (i = 0, len = tmp.length; i < len; i += 2) {
+                values.push(new Spherical(tmp[i], tmp[i + 1]));
+            }
+            directions.array = values;
+        }
+
+        tmp = directions.unitCartesian;
+        if (defined(tmp)) {
+            for (i = 0, len = tmp.length; i < len; i += 3) {
+                values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+            }
+            directions.array = values;
+        }
+        processPacketData(Array, pyramid, 'directions', directions, interval, sourceUri);
+    }
+
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
         if (!defined(pyramidData)) {
@@ -1239,26 +1292,16 @@ define(['../Core/Cartesian2',
 
         //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
         //We pre-process this into Spherical instances and then process it like any other array.
-        if (defined(pyramidData.directions)) {
-            var i;
-            var len;
-            var values = [];
-            var tmp = pyramidData.directions.unitSpherical;
-            if (defined(tmp)) {
-                for (i = 0, len = tmp.length; i < len; i += 2) {
-                    values.push(new Spherical(tmp[i], tmp[i + 1]));
+        var directions = pyramidData.directions;
+        if (defined(directions)) {
+            if (isArray(directions)) {
+                var length = directions.length;
+                for (var i = 0; i < length; i++) {
+                    processDirectionData(pyramid, directions[i], interval, sourceUri);
                 }
-                pyramidData.directions.array = values;
+            } else {
+                processDirectionData(pyramid, directions, interval, sourceUri);
             }
-
-            tmp = pyramidData.directions.unitCartesian;
-            if (defined(tmp)) {
-                for (i = 0, len = tmp.length; i < len; i += 3) {
-                    values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
-                }
-                pyramidData.directions.array = values;
-            }
-            processPacketData(Array, pyramid, 'directions', pyramidData.directions, interval, sourceUri);
         }
     }
 

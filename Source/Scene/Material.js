@@ -176,9 +176,9 @@ define([
      *  <li>Stripe</li>
      *  <ul>
      *      <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
-     *      <li><code>lightColor</code>:  rgba color object for the stripe's light alternating color.</li>
-     *      <li><code>darkColor</code>:  rgba color object for the stripe's dark alternating color.</li>
-     *      <li><code>offset</code>:  Number that controls the stripe offset from the edge.</li>
+     *      <li><code>evenColor</code>:  rgba color object for the stripe's first color.</li>
+     *      <li><code>oddColor</code>:  rgba color object for the stripe's second color.</li>
+     *      <li><code>offset</code>:  Number that controls at which point into the pattern to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning of the odd color, 2.0 being the even color again, and any multiple or fractional values being in between.</li>
      *      <li><code>repeat</code>:  Number that controls the total number of stripes, half light and half dark.</li>
      *  </ul>
      *  <li>Checkerboard</li>
@@ -351,27 +351,39 @@ define([
      * Shorthand for: new Material({fabric : {type : type}});
      *
      * @param {String} type The base material type.
+     * @param {Object} [uniforms] Overrides for the default uniforms.
      *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that type does not exist.
      *
      * @example
-     * var material = Cesium.Material.fromType('Color');
-     * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
+     * var material = Cesium.Material.fromType('Color', {
+     *     color : new Cesium.Color(1.0, 0.0, 0.0, 1.0)
+     * });
      */
-    Material.fromType = function(type) {
+    Material.fromType = function(type, uniforms) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         //>>includeEnd('debug');
 
-        return new Material({
+        var material = new Material({
             fabric : {
                 type : type
             }
         });
+
+        if (defined(uniforms)) {
+            for (var name in uniforms) {
+                if (uniforms.hasOwnProperty(name)) {
+                    material.uniforms[name] = uniforms[name];
+                }
+            }
+        }
+
+        return material;
     };
 
     Material.prototype.isTranslucent = function() {
@@ -1186,8 +1198,8 @@ define([
             type : Material.StripeType,
             uniforms : {
                 horizontal : true,
-                lightColor : new Color(1.0, 1.0, 1.0, 0.5),
-                darkColor : new Color(0.0, 0.0, 1.0, 0.5),
+                evenColor : new Color(1.0, 1.0, 1.0, 0.5),
+                oddColor : new Color(0.0, 0.0, 1.0, 0.5),
                 offset : 0.0,
                 repeat : 5.0
             },
@@ -1195,7 +1207,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 0.0);
         }
     });
 
