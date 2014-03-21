@@ -348,8 +348,7 @@ define([
      *
      * @returns {Billboard} The billboard that was added to the collection.
      *
-     * @performance Calling <code>add</code> is expected constant time.  However, when
-     * {@link BillboardCollection#update} is called, the collection's vertex buffer
+     * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
      * best performance, add as many billboards as possible before calling <code>update</code>.
      *
@@ -357,7 +356,6 @@ define([
      *
      * @see BillboardCollection#remove
      * @see BillboardCollection#removeAll
-     * @see BillboardCollection#update
      *
      * @example
      * // Example 1:  Add a billboard, specifying all the default values.
@@ -398,8 +396,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
      *
-     * @performance Calling <code>remove</code> is expected constant time.  However, when
-     * {@link BillboardCollection#update} is called, the collection's vertex buffer
+     * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
      * best performance, remove as many billboards as possible before calling <code>update</code>.
      * If you intend to temporarily hide a billboard, it is usually more efficient to call
@@ -409,7 +406,6 @@ define([
      *
      * @see BillboardCollection#add
      * @see BillboardCollection#removeAll
-     * @see BillboardCollection#update
      * @see Billboard#show
      *
      * @example
@@ -440,7 +436,6 @@ define([
      *
      * @see BillboardCollection#add
      * @see BillboardCollection#remove
-     * @see BillboardCollection#update
      *
      * @example
      * billboards.add(...);
