@@ -232,7 +232,7 @@ define([
             label.style = LabelStyle.FILL;
             label.pixelOffset = Cartesian2.ZERO;
             label.eyeOffset = Cartesian3.ZERO;
-            label.eorizontalOrigin = HorizontalOrigin.CENTER;
+            label.horizontalOrigin = HorizontalOrigin.CENTER;
             label.verticalOrigin = VerticalOrigin.CENTER;
         } else {
             label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
