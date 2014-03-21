@@ -410,7 +410,7 @@ define([
      * @see BillboardCollection#add
      * @see BillboardCollection#removeAll
      * @see BillboardCollection#update
-     * @see Billboard#setShow
+     * @see Billboard#show
      *
      * @example
      * var b = billboards.add(...);
