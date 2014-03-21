@@ -256,6 +256,7 @@ define([
          * Gets the imagery provider for this layer.
          * @memberof ImageryLayer.prototype
          * @type {ImageryProvider}
+         * @readonly
          */
         imageryProvider : {
             get: function() {
@@ -268,6 +269,7 @@ define([
          * {@link ImageryProvider}, only a portion of the imagery provider is shown.
          * @memberof ImageryLayer.prototype
          * @type {Extent}
+         * @readonly
          */
         extent: {
             get: function() {
