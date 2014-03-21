@@ -24,6 +24,19 @@ Beta Releases
 ### b26 - 2014-03-03
 
 * Breaking changes:
+  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
+    * `AxisAlignedBoundingBox.prototype`
+      * `clone`, `equals`
+    * `BoundingRectangle.prototype`
+      * `clone`, `union`, `expand`, `equals`
+    * `BoundingSphere.prototype`
+      * `clone`, `union`, `expand`, `getPlaneDistances`, `projectTo2D`, `equals`
+    * `Plane`
+      * `getPointDistance`
+    * `Ray`
+      * `getPoint`
+    * `Spherical`
+      * `clone`, `normalize`, `equals`, `equalsEpsilon`, `toString`
   * Replaced getter/setter functions with properties:
     * `Scene`
       * `getCanvas` -> `canvas`

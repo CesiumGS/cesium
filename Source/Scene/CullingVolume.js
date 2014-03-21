@@ -1,12 +1,10 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Intersect'
     ], function(
-        BoundingSphere,
         defaultValue,
         defined,
         DeveloperError,
