@@ -52,7 +52,7 @@ defineSuite([
 
     it('Cloning with no result parameter returns a new instance.', function() {
         var v = new Spherical(1, 2, 3);
-        var w = v.clone();
+        var w = Spherical.clone(v);
         expect(v === w).toEqual(false);
         expect(v).toEqual(w);
     });
@@ -61,7 +61,7 @@ defineSuite([
         var v = new Spherical(1, 2, 3);
         var w = new NotSpherical();
         expect(NotSpherical.areEqual(v, w)).toEqual(false);
-        var q = v.clone(w);
+        var q = Spherical.clone(v, w);
         expect(v === w).toEqual(false);
         expect(q === w).toEqual(true);
         expect(NotSpherical.areEqual(v, w)).toEqual(true);
@@ -69,7 +69,7 @@ defineSuite([
 
     it('Normalizing with no result parameter creates new instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
-        var w = v.normalize();
+        var w = Spherical.normalize(v);
         expect(w).toNotEqual(v);
         expect(w.clock).toEqual(0);
         expect(w.cone).toEqual(2);
@@ -79,7 +79,7 @@ defineSuite([
     it('Normalizing with result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
         var w = new NotSpherical();
-        var q = v.normalize(w);
+        var q = Spherical.normalize(v, w);
         expect(w).toNotEqual(v);
         expect(w === q).toEqual(true);
         expect(w.clock).toEqual(0);
@@ -89,7 +89,7 @@ defineSuite([
 
     it('Normalizing with this as result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
-        var q = v.normalize(v);
+        var q = Spherical.normalize(v, v);
         expect(v === q).toEqual(true);
         expect(v.clock).toEqual(0);
         expect(v.cone).toEqual(2);
@@ -107,6 +107,6 @@ defineSuite([
 
     it('toString returns the expected format.', function() {
         var v = new Spherical(1, 2, 3);
-        expect(v.toString()).toEqual('(1, 2, 3)');
+        expect(Spherical.toString(v)).toEqual('(1, 2, 3)');
     });
 });

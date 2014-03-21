@@ -298,40 +298,6 @@ define([
     };
 
     /**
-     * Duplicates this BoundingRectangle instance.
-     * @memberof BoundingRectangle
-     *
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.clone = function(result) {
-        return BoundingRectangle.clone(this, result);
-    };
-
-    /**
-     * Computes a bounding rectangle that contains both this bounding rectangle and the argument rectangle.
-     * @memberof BoundingRectangle
-     *
-     * @param {BoundingRectangle} right The rectangle to enclose in this bounding rectangle.
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.union = function(right, result) {
-        return BoundingRectangle.union(this, right, result);
-    };
-
-    /**
-     * Computes a bounding rectangle that is rectangle expanded to contain point.
-     * @memberof BoundingRectangle
-     *
-     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.expand = function(point, result) {
-        return BoundingRectangle.expand(this, point, result);
-    };
-
-    /**
      * Determines if this rectangle intersects with another.
      * @memberof BoundingRectangle
      *
@@ -341,18 +307,5 @@ define([
     BoundingRectangle.prototype.intersect = function(right) {
         return BoundingRectangle.intersect(this, right);
     };
-
-    /**
-     * Compares this BoundingRectangle against the provided BoundingRectangle componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingRectangle
-     *
-     * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
-     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-     */
-    BoundingRectangle.prototype.equals = function(right) {
-        return BoundingRectangle.equals(this, right);
-    };
-
     return BoundingRectangle;
 });

@@ -200,17 +200,6 @@ define([
     };
 
     /**
-     * Duplicates this AxisAlignedBoundingBox instance.
-     * @memberof AxisAlignedBoundingBox
-     *
-     * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @returns {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if one was not provided.
-     */
-    AxisAlignedBoundingBox.prototype.clone = function(result) {
-        return AxisAlignedBoundingBox.clone(this, result);
-    };
-
-    /**
      * Determines which side of a plane this box is located.
      * @memberof AxisAlignedBoundingBox
      *
@@ -224,18 +213,5 @@ define([
     AxisAlignedBoundingBox.prototype.intersect = function(plane) {
         return AxisAlignedBoundingBox.intersect(this, plane);
     };
-
-    /**
-     * Compares this AxisAlignedBoundingBox against the provided AxisAlignedBoundingBox componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof AxisAlignedBoundingBox
-     *
-     * @param {AxisAlignedBoundingBox} [right] The right hand side AxisAlignedBoundingBox.
-     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-     */
-    AxisAlignedBoundingBox.prototype.equals = function(right) {
-        return AxisAlignedBoundingBox.equals(this, right);
-    };
-
     return AxisAlignedBoundingBox;
 });

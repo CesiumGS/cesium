@@ -83,7 +83,7 @@ defineSuite([
 
     it('clone without a result parameter', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
-        var result = sphere.clone();
+        var result = BoundingSphere.clone(sphere);
         expect(sphere).toNotBe(result);
         expect(sphere).toEqual(result);
     });
@@ -91,34 +91,24 @@ defineSuite([
     it('clone with a result parameter', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = new BoundingSphere();
-        var returnedResult = sphere.clone(result);
+        var returnedResult = BoundingSphere.clone(sphere, result);
         expect(result).toNotBe(sphere);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(sphere);
     });
 
-    it('clone works with "this" result parameter', function() {
-        var expectedCenter = new Cartesian3(1.0, 2.0, 3.0);
-        var expectedRadius = 1.0;
-        var sphere = new BoundingSphere(expectedCenter, expectedRadius);
-        var returnedResult = sphere.clone(sphere);
-        expect(sphere).toBe(returnedResult);
-        expect(sphere.center).toEqual(expectedCenter);
-        expect(sphere.radius).toEqual(expectedRadius);
-    });
-
-    it('static clone clones undefined', function() {
+    it('clone clones undefined', function() {
         expect(BoundingSphere.clone(undefined)).toBe(undefined);
     });
 
     it('equals', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
-        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))).toEqual(true);
-        expect(sphere.equals(new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0))).toEqual(false);
-        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0))).toEqual(false);
-        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0))).toEqual(false);
-        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0))).toEqual(false);
-        expect(sphere.equals(undefined)).toEqual(false);
+        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))).toEqual(true);
+        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0))).toEqual(false);
+        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0))).toEqual(false);
+        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0))).toEqual(false);
+        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0))).toEqual(false);
+        expect(BoundingSphere.equals(sphere, undefined)).toEqual(false);
     });
 
     it('fromPoints without positions returns an empty sphere', function() {
@@ -350,7 +340,7 @@ defineSuite([
         var normal = Cartesian3.negate(Cartesian3.UNIT_X);
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
+        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.INSIDE);
     });
 
     it('sphere on the negative side of a plane', function() {
@@ -358,7 +348,7 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(sphere.intersect(plane)).toEqual(Intersect.OUTSIDE);
+        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.OUTSIDE);
     });
 
     it('sphere intersecting a plane', function() {
@@ -366,21 +356,21 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(sphere.intersect(plane)).toEqual(Intersect.INTERSECTING);
+        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.INTERSECTING);
     });
 
     it('expands to contain another sphere', function() {
         var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
-        expect(bs1.union(bs2)).toEqual(expected);
+        expect(BoundingSphere.union(bs1, bs2)).toEqual(expected);
     });
 
     it('union result parameter is caller', function() {
         var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X), 3.0), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 5.0);
-        bs1.union(bs2, bs1);
+        BoundingSphere.union(bs1, bs2, bs1);
         expect(bs1).toEqual(expected);
     });
 
@@ -388,7 +378,7 @@ defineSuite([
         var bs = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var point = Cartesian3.UNIT_X;
         var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 2.0);
-        expect(bs.expand(point)).toEqual(expected);
+        expect(BoundingSphere.expand(bs, point)).toEqual(expected);
     });
 
     it('applies transform', function() {
@@ -424,7 +414,7 @@ defineSuite([
         var position = new Cartesian3(-2.0, 1.0, 0.0);
         var direction = Cartesian3.UNIT_X;
         var expected = new Interval(1.0, 3.0);
-        expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
+        expect(BoundingSphere.getPlaneDistances(bs, position, direction)).toEqual(expected);
     });
 
     it('projectTo2D', function() {
@@ -439,7 +429,7 @@ defineSuite([
         }
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
-        var boundingSphere2D = boundingSphere3D.projectTo2D(projection);
+        var boundingSphere2D = BoundingSphere.projectTo2D(boundingSphere3D, projection);
         var actualSphere = BoundingSphere.fromPoints(positions2D);
         actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
 
@@ -460,7 +450,7 @@ defineSuite([
         }
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
-        var boundingSphere2D = boundingSphere3D.projectTo2D(projection, sphere);
+        var boundingSphere2D = BoundingSphere.projectTo2D(boundingSphere3D, projection, sphere);
         var actualSphere = BoundingSphere.fromPoints(positions2D);
         actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
 
@@ -469,97 +459,97 @@ defineSuite([
         expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
     });
 
-    it('static projectTo2D throws without sphere', function() {
+    it('projectTo2D throws without sphere', function() {
         expect(function() {
             BoundingSphere.projectTo2D();
         }).toThrowDeveloperError();
     });
 
-    it('static clone returns undefined with no parameter', function() {
+    it('clone returns undefined with no parameter', function() {
         expect(BoundingSphere.clone()).toBeUndefined();
     });
 
-    it('static union throws with no left parameter', function() {
+    it('union throws with no left parameter', function() {
         var right = new BoundingSphere();
         expect(function() {
             BoundingSphere.union(undefined, right);
         }).toThrowDeveloperError();
     });
 
-    it('static union throws with no right parameter', function() {
+    it('union throws with no right parameter', function() {
         var left = new BoundingSphere();
         expect(function() {
             BoundingSphere.union(left, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws without a sphere', function() {
+    it('expand throws without a sphere', function() {
         var plane = new Cartesian3();
         expect(function() {
             BoundingSphere.expand(undefined, plane);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws without a point', function() {
+    it('expand throws without a point', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.expand(sphere, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect throws without a sphere', function() {
+    it('intersect throws without a sphere', function() {
         var plane = new Cartesian4();
         expect(function() {
             BoundingSphere.intersect(undefined, plane);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect throws without a plane', function() {
+    it('intersect throws without a plane', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.intersect(sphere, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static transform throws without a sphere', function() {
+    it('transform throws without a sphere', function() {
         expect(function() {
             BoundingSphere.transform();
         }).toThrowDeveloperError();
     });
 
-    it('static transform throws without a transform', function() {
+    it('transform throws without a transform', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transform(sphere);
         }).toThrowDeveloperError();
     });
 
-    it('static transformWithoutScale throws without a sphere', function() {
+    it('transformWithoutScale throws without a sphere', function() {
         expect(function() {
             BoundingSphere.transformWithoutScale();
         }).toThrowDeveloperError();
     });
 
-    it('static transformWithoutScale throws without a transform', function() {
+    it('transformWithoutScale throws without a transform', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transformWithoutScale(sphere);
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a sphere', function() {
+    it('getPlaneDistances throws without a sphere', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances();
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a position', function() {
+    it('getPlaneDistances throws without a position', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances(new BoundingSphere());
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a direction', function() {
+    it('getPlaneDistances throws without a direction', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances(new BoundingSphere(), new Cartesian3());
         }).toThrowDeveloperError();

@@ -584,7 +584,7 @@ define([
                         continue;
                     }
 
-                    distances = boundingVolume.getPlaneDistances(position, direction, distances);
+                    distances = BoundingSphere.getPlaneDistances(boundingVolume, position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {

@@ -1063,7 +1063,7 @@ define([
 
     function intersectsIDL(polyline) {
         return Cartesian3.dot(Cartesian3.UNIT_X, polyline._boundingVolume.center) < 0 ||
-            polyline._boundingVolume.intersect(Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
+            BoundingSphere.intersect(polyline._boundingVolume, Cartesian4.UNIT_Y) === Intersect.INTERSECTING;
     }
 
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
