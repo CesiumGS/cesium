@@ -106,7 +106,7 @@ define([
     defineProperties(Polyline.prototype, {
 
         /**
-         * Determines if this polyline will be shown.  Call this to hide or show a polyline, instead
+         * Determines if this polyline will be shown.  Use this to hide or show a polyline, instead
          * of removing it and re-adding it to the collection.
          * @memberof Polyline.prototype
          * @type {Boolean}
