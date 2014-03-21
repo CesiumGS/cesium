@@ -390,8 +390,7 @@ define([
      *
      * @returns {Label} The label that was added to the collection.
      *
-     * @performance Calling <code>add</code> is expected constant time.  However, when
-     * {@link LabelCollection#update} is called, the collection's vertex buffer
+     * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten; this operations is <code>O(n)</code> and also incurs
      * CPU to GPU overhead.  For best performance, add as many billboards as possible before
      * calling <code>update</code>.
@@ -400,7 +399,6 @@ define([
      *
      * @see LabelCollection#remove
      * @see LabelCollection#removeAll
-     * @see LabelCollection#update
      *
      * @example
      * // Example 1:  Add a label, specifying all the default values.
@@ -445,8 +443,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
      *
-     * @performance Calling <code>remove</code> is expected constant time.  However, when
-     * {@link LabelCollection#update} is called, the collection's vertex buffer
+     * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
      * best performance, remove as many labels as possible before calling <code>update</code>.
      * If you intend to temporarily hide a label, it is usually more efficient to call
@@ -456,7 +453,6 @@ define([
      *
      * @see LabelCollection#add
      * @see LabelCollection#removeAll
-     * @see LabelCollection#update
      * @see Label#show
      *
      * @example
@@ -487,7 +483,6 @@ define([
      *
      * @see LabelCollection#add
      * @see LabelCollection#remove
-     * @see LabelCollection#update
      *
      * @example
      * labels.add(...);
@@ -533,7 +528,7 @@ define([
      * @returns {Label} The label at the specified index.
      *
      * @performance Expected constant time.  If labels were removed from the collection and
-     * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
+     * {@link Scene#render} was not called, an implicit <code>O(n)</code>
      * operation is performed.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
