@@ -337,7 +337,7 @@ define([
      * Returns the polyline in the collection at the specified index.  Indices are zero-based
      * and increase as polylines are added.  Removing a polyline shifts all polylines after
      * it to the left, changing their indices.  This function is commonly used with
-     * {@link PolylineCollection#getLength} to iterate over all the polylines
+     * {@link PolylineCollection#length} to iterate over all the polylines
      * in the collection.
      *
      * @memberof PolylineCollection
@@ -352,7 +352,7 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#getLength
+     * @see PolylineCollection#length
      *
      * @example
      * // Toggle the show property of every polyline in the collection
