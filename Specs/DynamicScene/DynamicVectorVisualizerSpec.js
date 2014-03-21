@@ -133,11 +133,11 @@ defineSuite([
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
-        expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
-        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
-        expect(primitive.getWidth()).toEqual(testObject.vector.width.getValue(time));
+        expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
-        var material = primitive.getMaterial();
+        var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.vector.color.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
@@ -145,17 +145,17 @@ defineSuite([
         vector.width = new ConstantProperty(2.5);
 
         visualizer.update(time);
-        expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
+        expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
 
-        expect(primitive.getPositions()).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
-        expect(primitive.getWidth()).toEqual(testObject.vector.width.getValue(time));
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
-        material = primitive.getMaterial();
+        material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.vector.color.getValue(time));
 
         vector.show = new ConstantProperty(false);
         visualizer.update(time);
-        expect(primitive.getShow()).toEqual(testObject.vector.show.getValue(time));
+        expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
     });
 
     it('clear hides primitives.', function() {
@@ -182,7 +182,7 @@ defineSuite([
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
         dynamicObjectCollection.removeAll();
-        expect(primitive.getShow()).toEqual(false);
+        expect(primitive.show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {

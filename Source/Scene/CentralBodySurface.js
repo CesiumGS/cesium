@@ -1067,8 +1067,8 @@ define([
         for ( var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                if (layer.getImageryProvider().ready) {
-                    credit = layer.getImageryProvider().credit;
+                if (layer.imageryProvider.ready) {
+                    credit = layer.imageryProvider.credit;
                     if (defined(credit)) {
                         creditDisplay.addCredit(credit);
                     }
