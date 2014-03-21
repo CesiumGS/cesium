@@ -98,7 +98,7 @@ define([
 
     defineProperties(Label.prototype, {
         /**
-         * Determines if this label will be shown.  Call this to hide or show a label, instead
+         * Determines if this label will be shown.  Use this to hide or show a label, instead
          * of removing it and re-adding it to the collection.
          * @memberof Label.prototype
          * @type {Boolean}
