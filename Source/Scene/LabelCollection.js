@@ -78,8 +78,8 @@ define([
 
         var billboard = glyph.billboard;
         if (defined(billboard)) {
-            billboard.setShow(false);
-            billboard.setImageIndex(-1);
+            billboard.show = false;
+            billboard.imageIndex = -1;
             // Destroy pickId to allow setting _pickIdThis and _id when the billboard is reused.
             billboard._pickId = billboard._pickId && billboard._pickId.destroy();
             labelCollection._spareBillboards.push(billboard);
@@ -177,21 +177,21 @@ define([
                         glyph.billboard = billboard = labelCollection._billboardCollection.add();
                     }
 
-                    billboard.setShow(label._show);
-                    billboard.setPosition(label._position);
-                    billboard.setEyeOffset(label._eyeOffset);
-                    billboard.setPixelOffset(label._pixelOffset);
-                    billboard.setHorizontalOrigin(HorizontalOrigin.LEFT);
-                    billboard.setVerticalOrigin(label._verticalOrigin);
-                    billboard.setScale(label._scale);
+                    billboard.show = label._show;
+                    billboard.position = label._position;
+                    billboard.eyeOffset = label._eyeOffset;
+                    billboard.pixelOffset = label._pixelOffset;
+                    billboard.horizontalOrigin = HorizontalOrigin.LEFT;
+                    billboard.verticalOrigin = label._verticalOrigin;
+                    billboard.scale = label._scale;
                     billboard._pickIdThis = label;
                     billboard._id = label._id;
                     billboard._collection = label._labelCollection;
                 }
 
-                glyph.billboard.setImageIndex(glyphTextureInfo.index);
-                glyph.billboard.setTranslucencyByDistance(label._translucencyByDistance);
-                glyph.billboard.setPixelOffsetScaleByDistance(label._pixelOffsetScaleByDistance);
+                glyph.billboard.imageIndex = glyphTextureInfo.index;
+                glyph.billboard.translucencyByDistance = label._translucencyByDistance;
+                glyph.billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             }
         }
 
@@ -450,14 +450,14 @@ define([
      * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.  For
      * best performance, remove as many labels as possible before calling <code>update</code>.
      * If you intend to temporarily hide a label, it is usually more efficient to call
-     * {@link Label#setShow} instead of removing and re-adding the label.
+     * {@link Label#show} instead of removing and re-adding the label.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see LabelCollection#add
      * @see LabelCollection#removeAll
      * @see LabelCollection#update
-     * @see Label#setShow
+     * @see Label#show
      *
      * @example
      * var l = labels.add(...);
@@ -545,7 +545,7 @@ define([
      * var len = labels.length;
      * for (var i = 0; i < len; ++i) {
      *   var l = billboards.get(i);
-     *   l.setShow(!l.getShow());
+     *   l.show = !l.show;
      * }
      */
     LabelCollection.prototype.get = function(index) {

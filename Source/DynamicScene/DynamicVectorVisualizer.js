@@ -186,7 +186,7 @@ define([
             //Remove the existing primitive if we have one
             if (defined(vectorVisualizerIndex)) {
                 polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
-                polyline.setShow(false);
+                polyline.show = false;
                 dynamicObject._vectorVisualizerIndex = undefined;
                 dynamicVectorVisualizer._unusedIndexes.push(vectorVisualizerIndex);
             }
@@ -205,23 +205,23 @@ define([
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
-            polyline.id = dynamicObject;
+            polyline._id = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setWidth(1);
-            var material = polyline.getMaterial();
+            polyline.width = 1;
+            var material = polyline.material;
             if (!defined(material) || (material.type !== Material.PolylineArrowType)) {
                 material = Material.fromType(Material.PolylineArrowType);
-                polyline.setMaterial(material);
+                polyline.material = material;
             }
             uniforms = material.uniforms;
             Color.clone(Color.WHITE, uniforms.color);
         } else {
             polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
-            uniforms = polyline.getMaterial().uniforms;
+            uniforms = polyline.material.uniforms;
         }
 
-        polyline.setShow(true);
+        polyline.show = true;
 
         var positions = polyline._visualizerPositions;
         var position = positionProperty.getValue(time, positions[0]);
@@ -229,7 +229,7 @@ define([
         var length = lengthProperty.getValue(time);
         if (defined(position) && defined(direction) && defined(length)) {
             Cartesian3.add(position, Cartesian3.multiplyByScalar(Cartesian3.normalize(direction, direction), length, direction), direction);
-            polyline.setPositions(positions);
+            polyline.positions = positions;
         }
 
         var property = dynamicVector._color;
@@ -241,7 +241,7 @@ define([
         if (defined(property)) {
             var width = property.getValue(time);
             if (defined(width)) {
-                polyline.setWidth(width);
+                polyline.width = width;
             }
         }
     }
@@ -254,7 +254,7 @@ define([
             var vectorVisualizerIndex = dynamicObject._vectorVisualizerIndex;
             if (defined(vectorVisualizerIndex)) {
                 var polyline = thisPolylineCollection.get(vectorVisualizerIndex);
-                polyline.setShow(false);
+                polyline.show = false;
                 thisUnusedIndexes.push(vectorVisualizerIndex);
                 dynamicObject._vectorVisualizerIndex = undefined;
             }

@@ -89,12 +89,12 @@ defineSuite([
 
         viewModel.selectedItem = testProviderViewModel;
         expect(imageryLayers.length).toEqual(1);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
 
         viewModel.selectedItem = testProviderViewModel2;
         expect(imageryLayers.length).toEqual(2);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
-        expect(imageryLayers.get(1).getImageryProvider()).toBe(testProvider2);
+        expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(imageryLayers.get(1).imageryProvider).toBe(testProvider2);
     });
 
     it('settings selectedItem only removes layers added by view model', function() {
@@ -106,8 +106,8 @@ defineSuite([
 
         viewModel.selectedItem = testProviderViewModel2;
         expect(imageryLayers.length).toEqual(2);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
-        expect(imageryLayers.get(1).getImageryProvider()).toBe(testProvider2);
+        expect(imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(imageryLayers.get(1).imageryProvider).toBe(testProvider2);
 
         imageryLayers.addImageryProvider(testProvider3, 1);
         imageryLayers.remove(imageryLayers.get(0));
@@ -115,7 +115,7 @@ defineSuite([
         viewModel.selectedItem = undefined;
 
         expect(imageryLayers.length).toEqual(1);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider3);
+        expect(imageryLayers.get(0).imageryProvider).toBe(testProvider3);
     });
 
 
