@@ -34,9 +34,7 @@ define([
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
      * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
-     * properties are set by calling {@link BillboardCollection#add}.  Any of the billboard's
-     * properties can be changed at any time by calling the billboard's corresponding
-     * <code>set</code> function, e.g., {@link Billboard#setShow}.
+     * properties are set by calling {@link BillboardCollection#add}.
      * <br /><br />
      * <div align='center'>
      * <img src='images/Billboard.png' width='400' height='300' /><br />
@@ -45,8 +43,8 @@ define([
      *
      * @alias Billboard
      *
-     * @performance Calling any <code>get</code> function, e.g., {@link Billboard#show}, is constant time.
-     * Calling a <code>set</code> function, e.g., {@link Billboard#setShow}, is constant time but results in
+     * @performance Reading a property, e.g., {@link Billboard#show}, is constant time.
+     * Assigning to a property is constant time but results in
      * CPU to GPU traffic when {@link BillboardCollection#update} is called.  The per-billboard traffic is
      * the same regardless of how many properties were updated.  If most billboards in a collection need to be
      * updated, it may be more efficient to clear the collection with {@link BillboardCollection#removeAll}
@@ -135,7 +133,7 @@ define([
 
     defineProperties(Billboard.prototype, {
         /**
-         * Determines if this billboard will be shown.  Call this to hide or show a billboard, instead
+         * Determines if this billboard will be shown.  Use this to hide or show a billboard, instead
          * of removing it and re-adding it to the collection.
          * @memberof Billboard.prototype
          * @type {Boolean}
@@ -524,12 +522,7 @@ define([
          * b.color = Cesium.Color.YELLOW;
          *
          * // Example 2. Make a billboard 50% translucent.
-         * b.color = new Cesium.Color({
-         *   red   : 1.0,
-         *   green : 1.0,
-         *   blue  : 1.0,
-         *   alpha : 0.5
-         * });
+         * b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
          */
         color: {
             get: function() {
