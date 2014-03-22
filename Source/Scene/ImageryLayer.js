@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
@@ -33,6 +34,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         BoundingRectangle,
         ComponentDatatype,
@@ -248,6 +250,35 @@ define([
         this._requestImageError = undefined;
     };
 
+    defineProperties(ImageryLayer.prototype, {
+
+        /**
+         * Gets the imagery provider for this layer.
+         * @memberof ImageryLayer.prototype
+         * @type {ImageryProvider}
+         * @readonly
+         */
+        imageryProvider : {
+            get: function() {
+                return this._imageryProvider;
+            }
+        },
+
+        /**
+         * Gets the extent of this layer.  If this extent is smaller than the extent of the
+         * {@link ImageryProvider}, only a portion of the imagery provider is shown.
+         * @memberof ImageryLayer.prototype
+         * @type {Extent}
+         * @readonly
+         */
+        extent: {
+            get: function() {
+                return this._extent;
+            }
+        }
+    });
+
+
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.
@@ -283,29 +314,6 @@ define([
      * @default 1.0
      */
     ImageryLayer.DEFAULT_GAMMA = 1.0;
-
-    /**
-     * Gets the imagery provider for this layer.
-     *
-     * @memberof ImageryLayer
-     *
-     * @returns {ImageryProvider} The imagery provider.
-     */
-    ImageryLayer.prototype.getImageryProvider = function() {
-        return this._imageryProvider;
-    };
-
-    /**
-     * Gets the extent of this layer.  If this extent is smaller than the extent of the
-     * {@link ImageryProvider}, only a portion of the imagery provider is shown.
-     *
-     * @memberof ImageryLayer
-     *
-     * @returns {Extent} The extent.
-     */
-    ImageryLayer.prototype.getExtent = function() {
-        return this._extent;
-    };
 
     /**
      * Gets a value indicating whether this layer is the base layer in the

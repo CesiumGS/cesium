@@ -101,7 +101,7 @@ defineSuite([
         widget = new CesiumWidget(container, options);
         var imageryLayers = widget.centralBody.imageryLayers;
         expect(imageryLayers.length).toEqual(1);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
+        expect(imageryLayers.get(0).imageryProvider).toBe(options.imageryProvider);
     });
 
     it('does not create an ImageryProvider if option is false', function() {
