@@ -426,13 +426,14 @@ define([
         passState.framebuffer = that._adjustAlphaFBO;
         that._adjustAlphaCommand.execute(context, passState);
 
+        var debugFramebuffer = that._opaqueFBO;
         passState.framebuffer = that._translucentFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
             renderState = getTranslucentColorRenderState(that, context, command.renderState);
             shaderProgram = getTranslucentColorShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
 
@@ -442,7 +443,7 @@ define([
             command = commands[j];
             renderState = getTranslucentAlphaRenderState(that, context, command.renderState);
             shaderProgram = getTranslucentAlphaShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
@@ -456,13 +457,14 @@ define([
         passState.framebuffer = that._adjustTranslucentFBO;
         that._adjustTranslucentCommand.execute(context, passState);
 
+        var debugFramebuffer = that._opaqueFBO;
         passState.framebuffer = that._translucentFBO;
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
             var renderState = getTranslucentMRTRenderState(that, context, command.renderState);
             var shaderProgram = getTranslucentMRTShaderProgram(that, context, command.shaderProgram);
-            executeFunction(command, scene, context, passState, renderState, shaderProgram, true);
+            executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
@@ -512,7 +514,7 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    OITResources.prototype.getColorFBO = function() {
+    OITResources.prototype.getColorFramebuffer = function() {
         if (!this.isSupported()) {
             return undefined;
         }

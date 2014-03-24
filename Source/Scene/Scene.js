@@ -660,7 +660,8 @@ define([
         return attributeLocations;
     }
 
-    function createDebugFragmentShaderProgram(command, scene, context, shaderProgram) {
+    function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
+        var context = scene._context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fragmentShaderSource = sp.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
@@ -694,11 +695,11 @@ define([
         return context.getShaderCache().getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
-    function executeDebugCommand(command, scene, context, passState, renderState, shaderProgram) {
+    function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
         if (defined(command.shaderProgram) || defined(shaderProgram)) {
             // Replace shader for frustum visualization
-            var sp = createDebugFragmentShaderProgram(command, scene, context, shaderProgram);
-            command.execute(context, passState, renderState, sp);
+            var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
+            command.execute(scene._context, passState, renderState, sp);
             sp.release();
         }
     }
@@ -709,13 +710,13 @@ define([
                                         0.0, 1.0, 0.0, 0.0, //
                                         0.0, 0.0, 0.0, 1.0));
 
-    function executeCommand(command, scene, context, passState, renderState, shaderProgram, useOIT) {
+    function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, context, passState, renderState, shaderProgram);
+            executeDebugCommand(command, scene, passState, renderState, shaderProgram);
         } else {
             command.execute(context, passState, renderState, shaderProgram);
         }
@@ -763,14 +764,14 @@ define([
             scene._debugSphere.update(context, frameState, commandList);
 
             var framebuffer;
-            if (useOIT) {
+            if (defined(debugFramebuffer)) {
                 framebuffer = passState.framebuffer;
-                passState.framebuffer = scene._oitResources.getColorFBO();
+                passState.framebuffer = debugFramebuffer;
             }
 
             commandList[0].execute(context, passState);
 
-            if (useOIT) {
+            if (defined(framebuffer)) {
                 passState.framebuffer = framebuffer;
             }
         }
@@ -870,22 +871,24 @@ define([
             }
         }
 
-        scene._oitResources.update(context);
+        if (renderTranslucentCommands) {
+            scene._oitResources.update(context);
+            scene._oitResources.clear(context, passState, clearColor);
+        }
+
+        var useOIT = !picking && renderTranslucentCommands && scene._oitResources.isSupported();
 
         scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
         scene._fxaa.update(context);
-
-        var useOIT = !picking && renderTranslucentCommands && scene._oitResources.isSupported();
-        var useFXAA = !picking && scene._fxaa.enabled;
-
-        scene._oitResources.clear(context, passState, clearColor);
         scene._fxaa.clear(context, passState, clearColor);
+
+        var useFXAA = !picking && scene._fxaa.enabled;
 
         var opaqueFramebuffer = passState.framebuffer;
         if (useOIT) {
-            opaqueFramebuffer = scene._oitResources.getColorFBO();
+            opaqueFramebuffer = scene._oitResources.getColorFramebuffer();
         } else if (useFXAA) {
-            opaqueFramebuffer = scene._fxaa.getColorFBO();
+            opaqueFramebuffer = scene._fxaa.getColorFramebuffer();
         }
 
         if (sunVisible && scene.sunBloom) {
@@ -956,7 +959,7 @@ define([
         }
 
         if (useOIT) {
-            passState.framebuffer = scene._fxaa.getColorFBO();
+            passState.framebuffer = scene._fxaa.getColorFramebuffer();
             scene._oitResources.execute(context, passState);
         }
 

@@ -157,7 +157,7 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    FXAA.prototype.getColorFBO = function() {
+    FXAA.prototype.getColorFramebuffer = function() {
         if (!this.enabled) {
             return undefined;
         }
