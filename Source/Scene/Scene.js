@@ -46,7 +46,7 @@ define([
         './SunPostProcess',
         './CreditDisplay',
         './OITResources',
-        './FXAAResources'
+        './FXAA'
     ], function(
         CesiumMath,
         Color,
@@ -94,7 +94,7 @@ define([
         SunPostProcess,
         CreditDisplay,
         OITResources,
-        FXAAResources) {
+        FXAA) {
     "use strict";
 
     /**
@@ -149,7 +149,7 @@ define([
         this._overlayCommandList = [];
 
         this._oitResources = new OITResources(context);
-        this._fxaaResources = new FXAAResources();
+        this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
@@ -872,20 +872,20 @@ define([
 
         scene._oitResources.update(context);
 
-        scene._fxaaResources.enabled = scene.fxaa || (renderTranslucentCommands && scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
-        scene._fxaaResources.update(context);
+        scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
+        scene._fxaa.update(context);
 
         var useOIT = !picking && renderTranslucentCommands && scene._oitResources.isSupported();
-        var useFXAA = !picking && scene._fxaaResources.enabled;
+        var useFXAA = !picking && scene._fxaa.enabled;
 
         scene._oitResources.clear(context, passState, clearColor);
-        scene._fxaaResources.clear(context, passState, clearColor);
+        scene._fxaa.clear(context, passState, clearColor);
 
         var opaqueFramebuffer = passState.framebuffer;
         if (useOIT) {
             opaqueFramebuffer = scene._oitResources.getColorFBO();
         } else if (useFXAA) {
-            opaqueFramebuffer = scene._fxaaResources.getColorFBO();
+            opaqueFramebuffer = scene._fxaa.getColorFBO();
         }
 
         if (sunVisible && scene.sunBloom) {
@@ -956,13 +956,13 @@ define([
         }
 
         if (useOIT) {
-            passState.framebuffer = scene._fxaaResources.getColorFBO();
+            passState.framebuffer = scene._fxaa.getColorFBO();
             scene._oitResources.execute(context, passState);
         }
 
         if (useFXAA) {
             passState.framebuffer = undefined;
-            scene._fxaaResources.execute(context, passState);
+            scene._fxaa.execute(context, passState);
         }
     }
 
@@ -1304,7 +1304,7 @@ define([
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
         this._oitResources.destroy();
-        this._fxaaResources.destroy();
+        this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
         this._frameState.creditDisplay.destroy();

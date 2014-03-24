@@ -27,7 +27,7 @@ define([
     /**
      * @private
      */
-    var FXAAResources = function(context) {
+    var FXAA = function(context) {
         this.enabled = false;
 
         this._fxaaTexture = undefined;
@@ -60,7 +60,7 @@ define([
         }
     }
 
-    FXAAResources.prototype.update = function(context) {
+    FXAA.prototype.update = function(context) {
         if (!this.enabled) {
             if (defined(this._fxaaTexture)) {
                 destroyResources(this);
@@ -135,7 +135,7 @@ define([
         }
     };
 
-    FXAAResources.prototype.execute = function(context, passState) {
+    FXAA.prototype.execute = function(context, passState) {
         if (!this.enabled) {
             return;
         }
@@ -143,7 +143,7 @@ define([
         this._fxaaCommand.execute(context, passState);
     };
 
-    FXAAResources.prototype.clear = function(context, passState, clearColor) {
+    FXAA.prototype.clear = function(context, passState, clearColor) {
         if(!this.enabled) {
             return;
         }
@@ -157,7 +157,7 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    FXAAResources.prototype.getColorFBO = function() {
+    FXAA.prototype.getColorFBO = function() {
         if (!this.enabled) {
             return undefined;
         }
@@ -165,14 +165,14 @@ define([
         return this._fxaaFBO;
     };
 
-    FXAAResources.prototype.isDestroyed = function() {
+    FXAA.prototype.isDestroyed = function() {
         return false;
     };
 
-    FXAAResources.prototype.destroy = function() {
+    FXAA.prototype.destroy = function() {
         destroyResources(this);
         return destroyObject(this);
     };
 
-    return FXAAResources;
+    return FXAA;
 });
