@@ -129,9 +129,9 @@ defineSuite([
         var bb = billboardCollection.get(0);
 
         visualizer.update(time);
-        expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
-        expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
-        expect(bb.getScaleByDistance()).toEqual(testObject.point.scaleByDistance.getValue(time));
+        expect(bb.show).toEqual(testObject.point.show.getValue(time));
+        expect(bb.position).toEqual(testObject.position.getValue(time));
+        expect(bb.scaleByDistance).toEqual(testObject.point.scaleByDistance.getValue(time));
         expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
@@ -147,9 +147,9 @@ defineSuite([
         point.outlineWidth.value = 12.5;
 
         visualizer.update(time);
-        expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
-        expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
-        expect(bb.getScaleByDistance()).toEqual(testObject.point.scaleByDistance.getValue(time));
+        expect(bb.show).toEqual(testObject.point.show.getValue(time));
+        expect(bb.position).toEqual(testObject.position.getValue(time));
+        expect(bb.scaleByDistance).toEqual(testObject.point.scaleByDistance.getValue(time));
         expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
@@ -157,7 +157,7 @@ defineSuite([
 
         point.show = new ConstantProperty(false);
         visualizer.update(time);
-        expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
+        expect(bb.show).toEqual(testObject.point.show.getValue(time));
     });
 
     it('clear hides billboards.', function() {
@@ -180,7 +180,7 @@ defineSuite([
         //Clearing won't actually remove the billboard because of the
         //internal cache used by the visualizer, instead it just hides it.
         dynamicObjectCollection.removeAll();
-        expect(bb.getShow()).toEqual(false);
+        expect(bb.show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {

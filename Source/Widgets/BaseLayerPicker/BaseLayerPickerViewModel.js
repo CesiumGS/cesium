@@ -101,7 +101,7 @@ define([
                     var layersLength = imageryLayers.length;
                     for ( var x = 0; x < layersLength; x++) {
                         var layer = imageryLayers.get(x);
-                        if (layer.getImageryProvider() === currentProviders[i]) {
+                        if (layer.imageryProvider === currentProviders[i]) {
                             imageryLayers.remove(layer);
                             break;
                         }
