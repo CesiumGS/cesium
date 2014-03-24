@@ -120,8 +120,11 @@ define([
             var rs;
             var uniformMap = {};
 
-            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, rs, uniformMap);
-            downSampleCommand.owner = this;
+            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
             uniformMap = {
                 u_avgLuminance : function() {
@@ -136,8 +139,11 @@ define([
                 }
             };
 
-            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, rs, uniformMap);
-            brightPassCommand.owner = this;
+            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
             var delta = 1.0;
             var sigma = 2.0;
@@ -154,8 +160,11 @@ define([
                 }
             };
 
-            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, rs, uniformMap);
-            blurXCommand.owner = this;
+            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
             uniformMap = {
                 delta : function() {
@@ -169,8 +178,11 @@ define([
                 }
             };
 
-            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, rs, uniformMap);
-            blurYCommand.owner = this;
+            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
             uniformMap = {
                 u_center : function() {
@@ -181,13 +193,19 @@ define([
                 }
             };
 
-            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, rs, uniformMap);
-            additiveBlendCommand.owner = this;
+            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
             uniformMap = {};
 
-            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, rs, uniformMap);
-            fullScreenCommand.owner = this;
+            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);

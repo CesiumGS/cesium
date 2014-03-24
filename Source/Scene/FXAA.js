@@ -118,7 +118,10 @@ define([
                 sources : [FXAAFS]
             });
 
-            this._fxaaCommand = context.createViewportQuadCommand(fs, context.createRenderState());
+            this._fxaaCommand = context.createViewportQuadCommand(fs, {
+                renderState : context.createRenderState(),
+                owner : this
+            });
         }
 
         if (textureChanged) {
@@ -158,10 +161,6 @@ define([
     };
 
     FXAA.prototype.getColorFramebuffer = function() {
-        if (!this.enabled) {
-            return undefined;
-        }
-
         return this._fxaaFBO;
     };
 

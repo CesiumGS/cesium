@@ -170,15 +170,11 @@ define([
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
-            var drawCommand = context.createViewportQuadCommand(SunTextureFS, rs);
-            drawCommand.owner = this;
-            drawCommand.framebuffer = fbo;
-
             this._glowLengthTS = this._glowFactor * 5.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
             var that = this;
-            drawCommand.uniformMap = {
+            var uniformMap = {
                 u_glowLengthTS : function() {
                     return that._glowLengthTS;
                 },
@@ -186,6 +182,13 @@ define([
                     return that._radiusTS;
                 }
             };
+
+            var drawCommand = context.createViewportQuadCommand(SunTextureFS, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                framebuffer : fbo,
+                owner : this
+            });
 
             clearCommand.execute(context);
             drawCommand.execute(context);

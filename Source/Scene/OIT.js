@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/Color',
@@ -11,6 +12,7 @@ define([
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
+        clone,
         defined,
         destroyObject,
         Color,
@@ -240,7 +242,11 @@ define([
                     return that._revealageTexture;
                 }
             };
-            this._compositeCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+            this._compositeCommand = context.createViewportQuadCommand(fs, {
+                renderState : context.createRenderState(),
+                uniformMap : uniformMap,
+                owner : this
+            });
         }
 
         if (!defined(this._adjustTranslucentCommand)) {
@@ -259,7 +265,11 @@ define([
                     }
                 };
 
-                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
+                    renderState : context.createRenderState(),
+                    uniformMap : uniformMap,
+                    owner : this
+                });
             } else if (this._translucentMultipassSupport) {
                 fs = createShaderSource({
                     sources : [AdjustTranslucentFS]
@@ -274,7 +284,11 @@ define([
                     }
                 };
 
-                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+                this._adjustTranslucentCommand = context.createViewportQuadCommand(fs, {
+                    renderState : context.createRenderState(),
+                    uniformMap : uniformMap,
+                    owner : this
+                });
 
                 uniformMap = {
                     u_bgColor : function() {
@@ -285,7 +299,11 @@ define([
                     }
                 };
 
-                this._adjustAlphaCommand = context.createViewportQuadCommand(fs, context.createRenderState(), uniformMap);
+                this._adjustAlphaCommand = context.createViewportQuadCommand(fs, {
+                    renderState : context.createRenderState(),
+                    uniformMap : uniformMap,
+                    owner : this
+                });
             }
         }
     };
@@ -317,17 +335,12 @@ define([
     function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
-            var depthMask = renderState.depthMask;
-            var blending = renderState.blending;
+            var rs = clone(renderState, false);
+            rs.depthMask = false;
+            rs.blending = translucentBlending;
 
-            renderState.depthMask = false;
-            renderState.blending = translucentBlending;
-
-            translucentState = context.createRenderState(renderState);
+            translucentState = context.createRenderState(rs);
             cache[renderState.id] = translucentState;
-
-            renderState.depthMask = depthMask;
-            renderState.blending = blending;
         }
 
         return translucentState;
@@ -436,7 +449,6 @@ define([
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
-
         passState.framebuffer = that._alphaFBO;
 
         for (j = 0; j < length; ++j) {
@@ -515,10 +527,6 @@ define([
     };
 
     OIT.prototype.getColorFramebuffer = function() {
-        if (!this.isSupported()) {
-            return undefined;
-        }
-
         return this._opaqueFBO;
     };
 
@@ -543,6 +551,7 @@ define([
                 cache[name].release();
             }
         }
+        this._translucentShaderCache = {};
 
         cache = this._alphaShaderCache;
         for (name in cache) {
@@ -550,6 +559,7 @@ define([
                 cache[name].release();
             }
         }
+        this._alphaShaderCache = {};
 
         return destroyObject(this);
     };

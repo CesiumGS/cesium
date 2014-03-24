@@ -2663,7 +2663,7 @@ define([
     /**
      * @private
      */
-    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, renderState, uniformMap) {
+    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
 
@@ -2707,12 +2707,16 @@ define([
             this.cache.viewportQuad_vertexArray = vertexArray;
         }
 
+        overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
+
         var command = new DrawCommand();
         command.vertexArray = vertexArray;
         command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        command.renderState = renderState;
+        command.renderState = overrides.renderState;
         command.shaderProgram = this.getShaderCache().getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
-        command.uniformMap = uniformMap;
+        command.uniformMap = overrides.uniformMap;
+        command.owner = overrides.owner;
+        command.framebuffer = overrides.framebuffer;
 
         return command;
     };

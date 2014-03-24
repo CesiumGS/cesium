@@ -131,8 +131,11 @@ define([
                 }
 
                 var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
-                this._overlayCommand = context.createViewportQuadCommand(fsSource, this._rs, this._material._uniforms);
-                this._overlayCommand.owner = this;
+                this._overlayCommand = context.createViewportQuadCommand(fsSource, {
+                    renderState : this._rs,
+                    uniformMap : this._material._uniforms,
+                    owner : this
+                });
                 this._overlayCommand.pass = Pass.OVERLAY;
             }
 
