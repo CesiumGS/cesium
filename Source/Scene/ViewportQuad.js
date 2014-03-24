@@ -126,8 +126,12 @@ define([
                 // Recompile shader when material changes
                 this._material = this.material;
 
+                if (defined(this._overlayCommand)) {
+                    this._overlayCommand.shaderProgram.release();
+                }
+
                 var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
-                this._overlayCommand = context.createViewportQuadCommand(fsSource, this._rs, this._material._uniforms, this._overlayCommand);
+                this._overlayCommand = context.createViewportQuadCommand(fsSource, this._rs, this._material._uniforms);
                 this._overlayCommand.owner = this;
                 this._overlayCommand.pass = Pass.OVERLAY;
             }

@@ -7,11 +7,15 @@ define([
         DeveloperError) {
     "use strict";
 
+    var leftScratchArray;
+    var rightScratchArray;
+
     function merge(array, compare, start, middle, end) {
         var leftLength = middle - start + 1;
         var rightLength = end - middle;
-        var left = new Array(leftLength);
-        var right = new Array(rightLength);
+
+        var left = leftScratchArray;
+        var right = rightScratchArray;
 
         var i;
         var j;
@@ -29,10 +33,10 @@ define([
         for (var k = start; k <= end; ++k) {
             var leftElement = left[i];
             var rightElement = right[j];
-            if (defined(leftElement) && (!defined(rightElement) || compare(leftElement, rightElement) <= 0)) {
+            if (i < leftLength && (j >= rightLength || compare(leftElement, rightElement) <= 0)) {
                 array[k] = leftElement;
                 ++i;
-            } else {
+            } else if (j < rightLength){
                 array[k] = rightElement;
                 ++j;
             }
@@ -51,7 +55,7 @@ define([
     }
 
     /**
-     * An in-place, stable merge sort.
+     * A stable merge sort.
      *
      * @exports mergeSort
      *
@@ -60,6 +64,13 @@ define([
      *        If the first parameter is less than the second parameter, the function should return a
      *        negative value.  If it is greater, the function should return a positive value.  If the
      *        items are equal, it should return 0.
+     *
+     * @example
+     * // Sort an array of numbers in increasing order
+     * var array = // Array of numbers
+     * mergeSort(array, function(a, b) {
+     *     return a - b;
+     * });
      */
     var mergeSort = function(array, comparator) {
         //>>includeStart('debug', pragmas.debug);
@@ -71,7 +82,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        sort(array, comparator, 0, array.length - 1);
+        var length = array.length;
+        var scratchLength = Math.ceil(length * 0.5);
+        if (!defined(leftScratchArray) || leftScratchArray.length < scratchLength) {
+            leftScratchArray = new Array(scratchLength);
+            rightScratchArray = new Array(scratchLength);
+        }
+
+        sort(array, comparator, 0, length - 1);
     };
 
     return mergeSort;

@@ -725,9 +725,6 @@ define([
      * @param {Cartesian3} cartesian The point
      * @returns {Number} The estimated distance squared from the bounding sphere to the point.
      *
-     * @exception {DeveloperError} sphere is required.
-     * @exception {DeveloperError} cartesian is required.
-     *
      * @example
      * // Sort bounding spheres from back to front
      * spheres.sort(function(a, b) {
@@ -735,12 +732,14 @@ define([
      * });
      */
     BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
 
         var diff = Cartesian3.subtract(sphere.center, cartesian, distanceSquaredToScratch);
         return Cartesian3.magnitudeSquared(diff) - sphere.radius * sphere.radius;
