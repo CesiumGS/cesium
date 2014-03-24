@@ -335,12 +335,17 @@ define([
     function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
-            var rs = clone(renderState, false);
-            rs.depthMask = false;
-            rs.blending = translucentBlending;
+            var depthMask = renderState.depthMask;
+            var blending = renderState.blending;
 
-            translucentState = context.createRenderState(rs);
+            renderState.depthMask = false;
+            renderState.blending = translucentBlending;
+
+            translucentState = context.createRenderState(renderState);
             cache[renderState.id] = translucentState;
+
+            renderState.depthMask = depthMask;
+            renderState.blending = blending;
         }
 
         return translucentState;

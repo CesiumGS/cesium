@@ -871,7 +871,7 @@ define([
             }
         }
 
-        if (renderTranslucentCommands) {
+        if (!picking && renderTranslucentCommands) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
         }
@@ -879,10 +879,11 @@ define([
         var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
 
         scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oit.isSupported() && scene.fxaaOrderIndependentTranslucency);
-        scene._fxaa.update(context);
-        scene._fxaa.clear(context, passState, clearColor);
-
         var useFXAA = !picking && scene._fxaa.enabled;
+        if (useFXAA) {
+            scene._fxaa.update(context);
+            scene._fxaa.clear(context, passState, clearColor);
+        }
 
         var opaqueFramebuffer = passState.framebuffer;
         if (useOIT) {
