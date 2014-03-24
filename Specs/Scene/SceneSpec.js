@@ -17,7 +17,7 @@ defineSuite([
          'Scene/CompositePrimitive',
          'Scene/ExtentPrimitive',
          'Scene/FrameState',
-         'Scene/OITResources',
+         'Scene/OIT',
          'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
          'Specs/destroyScene'
@@ -39,7 +39,7 @@ defineSuite([
          CompositePrimitive,
          ExtentPrimitive,
          FrameState,
-         OITResources,
+         OIT,
          ScreenSpaceCameraController,
          createScene,
          destroyScene) {
@@ -367,8 +367,8 @@ defineSuite([
     it('renders with multipass OIT if MRT is available', function() {
         if (scene.context.getDrawBuffers()) {
             var s = createScene();
-            s._oitResources._translucentMRTSupport = false;
-            s._oitResources._translucentMultipassSupport = true;
+            s._oit._translucentMRTSupport = false;
+            s._oit._translucentMultipassSupport = true;
 
             var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
@@ -398,8 +398,8 @@ defineSuite([
     it('renders with alpha blending if floating point textures are available', function() {
         if (scene.context.getFloatingPointTexture()) {
             var s = createScene();
-            s._oitResources._translucentMRTSupport = false;
-            s._oitResources._translucentMultipassSupport = false;
+            s._oit._translucentMRTSupport = false;
+            s._oit._translucentMultipassSupport = false;
 
             var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 

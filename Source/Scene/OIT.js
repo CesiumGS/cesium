@@ -27,7 +27,7 @@ define([
     /**
      * @private
      */
-    var OITResources = function(context) {
+    var OIT = function(context) {
         var extensionsSupported = context.getFloatingPointTexture() && context.getDepthTexture();
         this._translucentMRTSupport = context.getDrawBuffers() && extensionsSupported;
 
@@ -196,7 +196,7 @@ define([
         }
     }
 
-    OITResources.prototype.update = function(context) {
+    OIT.prototype.update = function(context) {
         if (!this.isSupported()) {
             return;
         }
@@ -470,7 +470,7 @@ define([
         passState.framebuffer = framebuffer;
     }
 
-    OITResources.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
+    OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
         if (!this.isSupported()) {
             return;
         }
@@ -483,7 +483,7 @@ define([
         executeTranslucentCommandsSortedMultipass(this, scene, executeFunction, passState, commands);
     };
 
-    OITResources.prototype.execute = function(context, passState) {
+    OIT.prototype.execute = function(context, passState) {
         if (!this.isSupported()) {
             return;
         }
@@ -491,7 +491,7 @@ define([
         this._compositeCommand.execute(context, passState);
     };
 
-    OITResources.prototype.clear = function(context, passState, clearColor) {
+    OIT.prototype.clear = function(context, passState, clearColor) {
         if(!this.isSupported()) {
             return;
         }
@@ -514,7 +514,7 @@ define([
         passState.framebuffer = framebuffer;
     };
 
-    OITResources.prototype.getColorFramebuffer = function() {
+    OIT.prototype.getColorFramebuffer = function() {
         if (!this.isSupported()) {
             return undefined;
         }
@@ -522,15 +522,15 @@ define([
         return this._opaqueFBO;
     };
 
-    OITResources.prototype.isSupported = function() {
+    OIT.prototype.isSupported = function() {
         return this._translucentMRTSupport || this._translucentMultipassSupport;
     };
 
-    OITResources.prototype.isDestroyed = function() {
+    OIT.prototype.isDestroyed = function() {
         return false;
     };
 
-    OITResources.prototype.destroy = function() {
+    OIT.prototype.destroy = function() {
         destroyResources(this);
         if (defined(this._compositeCommand)) {
             this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
@@ -554,5 +554,5 @@ define([
         return destroyObject(this);
     };
 
-    return OITResources;
+    return OIT;
 });

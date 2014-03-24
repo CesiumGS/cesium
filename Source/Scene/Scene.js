@@ -45,7 +45,7 @@ define([
         './PerInstanceColorAppearance',
         './SunPostProcess',
         './CreditDisplay',
-        './OITResources',
+        './OIT',
         './FXAA'
     ], function(
         CesiumMath,
@@ -93,7 +93,7 @@ define([
         PerInstanceColorAppearance,
         SunPostProcess,
         CreditDisplay,
-        OITResources,
+        OIT,
         FXAA) {
     "use strict";
 
@@ -148,7 +148,7 @@ define([
         this._frustumCommandsList = [];
         this._overlayCommandList = [];
 
-        this._oitResources = new OITResources(context);
+        this._oit = new OIT(context);
         this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand();
@@ -872,13 +872,13 @@ define([
         }
 
         if (renderTranslucentCommands) {
-            scene._oitResources.update(context);
-            scene._oitResources.clear(context, passState, clearColor);
+            scene._oit.update(context);
+            scene._oit.clear(context, passState, clearColor);
         }
 
-        var useOIT = !picking && renderTranslucentCommands && scene._oitResources.isSupported();
+        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
 
-        scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oitResources.isSupported() && scene.fxaaOrderIndependentTranslucency);
+        scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oit.isSupported() && scene.fxaaOrderIndependentTranslucency);
         scene._fxaa.update(context);
         scene._fxaa.clear(context, passState, clearColor);
 
@@ -886,7 +886,7 @@ define([
 
         var opaqueFramebuffer = passState.framebuffer;
         if (useOIT) {
-            opaqueFramebuffer = scene._oitResources.getColorFramebuffer();
+            opaqueFramebuffer = scene._oit.getColorFramebuffer();
         } else if (useFXAA) {
             opaqueFramebuffer = scene._fxaa.getColorFramebuffer();
         }
@@ -924,7 +924,7 @@ define([
         var executeTranslucentCommands;
         if (useOIT) {
             executeTranslucentCommands = function(scene, executeFunction, passState, commands) {
-                scene._oitResources.executeCommands(scene, executeFunction, passState, commands);
+                scene._oit.executeCommands(scene, executeFunction, passState, commands);
             };
         } else {
             executeTranslucentCommands = executeTranslucentCommandsSorted;
@@ -960,7 +960,7 @@ define([
 
         if (useOIT) {
             passState.framebuffer = scene._fxaa.getColorFramebuffer();
-            scene._oitResources.execute(context, passState);
+            scene._oit.execute(context, passState);
         }
 
         if (useFXAA) {
@@ -1306,7 +1306,7 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
-        this._oitResources.destroy();
+        this._oit.destroy();
         this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
