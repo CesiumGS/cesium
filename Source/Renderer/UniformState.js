@@ -627,7 +627,7 @@ define([
         if (uniformState._inverseProjectionOITDirty) {
             uniformState._inverseProjectionOITDirty = false;
 
-            if (uniformState._mode !== SceneMode.SCENE2D) {
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
                 Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
             } else {
                 Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
