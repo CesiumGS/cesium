@@ -6,12 +6,14 @@
     width: 240px;
     max-height: 500px;
     margin-top: 5px;
-    background-color: rgba(38, 38, 38, 0.75);
+    background-color: rgba(38, 38, 38, 0.9);
     color: #edffff;
-    padding: 6px;
     overflow: auto;
     border: 1px solid #444;
-    border-radius: 10px;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -25,4 +27,60 @@
     transition: opacity 0.25s linear;
     -webkit-transition: opacity 0.25s linear;
     -moz-transition: opacity 0.25s linear;
+}
+
+.cesium-cameraControl-viewRow,
+.cesium-cameraControl-addRow {
+    display: block;
+    position: relative;
+    padding: 4px 32px;
+    cursor: pointer;
+    fill: transparent;
+    stroke: #888;
+    stroke-width: 2px;
+}
+
+.cesium-cameraControl-viewRow {
+    border-bottom: 1px solid #444;
+}
+
+.cesium-cameraControl-viewRow:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
+.cesium-cameraControl-addRow {
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+}
+
+.cesium-cameraControl-viewRow:hover,
+.cesium-cameraControl-addRow:hover {
+    background: #48b;
+    color: #fff;
+    fill: #fff;
+    stroke: transparent;
+    stroke-width: 1px;
+}
+
+button.cesium-cameraControl-addButton,
+button.cesium-cameraControl-editButton,
+button.cesium-cameraControl-viewButton {
+    display: block;
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    background: transparent;
+    border-color: transparent;
+    border-radius: 3px;
+    padding: 0 5px;
+    margin: 0;
+    fill: inherit;
+}
+
+button.cesium-cameraControl-editButton {
+    left: auto;
+    right: 4px;
 }
