@@ -43,20 +43,20 @@ define([
         this._fxaaClearCommand = fxaaClearCommand;
     };
 
-    function destroyResources(that) {
-        that._fxaaFBO = that._fxaaFBO && that._fxaaFBO.destroy();
-        that._fxaaTexture = that._fxaaTexture && that._fxaaTexture.destroy();
-        that._fxaaDepthTexture = that._fxaaDepthTexture && that._fxaaDepthTexture.destroy();
-        that._fxaaDepthRenderbuffer = that._fxaaDepthRenderbuffer && that._fxaaDepthRenderbuffer.destroy();
+    function destroyResources(fxaa) {
+        fxaa._fxaaFBO = fxaa._fxaaFBO && fxaa._fxaaFBO.destroy();
+        fxaa._fxaaTexture = fxaa._fxaaTexture && fxaa._fxaaTexture.destroy();
+        fxaa._fxaaDepthTexture = fxaa._fxaaDepthTexture && fxaa._fxaaDepthTexture.destroy();
+        fxaa._fxaaDepthRenderbuffer = fxaa._fxaaDepthRenderbuffer && fxaa._fxaaDepthRenderbuffer.destroy();
 
-        that._fxaaFBO = undefined;
-        that._fxaaTexture = undefined;
-        that._fxaaDepthTexture = undefined;
-        that._fxaaDepthRenderbuffer = undefined;
+        fxaa._fxaaFBO = undefined;
+        fxaa._fxaaTexture = undefined;
+        fxaa._fxaaDepthTexture = undefined;
+        fxaa._fxaaDepthRenderbuffer = undefined;
 
-        if (defined(that._fxaaCommand)) {
-            that._fxaaCommand.shaderProgram = that._fxaaCommand.shaderProgram && that._fxaaCommand.shaderProgram.release();
-            that._fxaaCommand = undefined;
+        if (defined(fxaa._fxaaCommand)) {
+            fxaa._fxaaCommand.shaderProgram = fxaa._fxaaCommand.shaderProgram && fxaa._fxaaCommand.shaderProgram.release();
+            fxaa._fxaaCommand = undefined;
         }
     }
 

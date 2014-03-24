@@ -77,59 +77,59 @@ define([
         this._adjustAlphaCommand = undefined;
     };
 
-    function destroyTextures(that) {
-        that._opaqueTexture = that._opaqueTexture && that._opaqueTexture.destroy();
-        that._accumulationTexture = that._accumulationTexture && that._accumulationTexture.destroy();
-        that._revealageTexture = that._revealageTexture && that._revealageTexture.destroy();
-        that._depthTexture = that._depthTexture && that._depthTexture.destroy();
+    function destroyTextures(oit) {
+        oit._opaqueTexture = oit._opaqueTexture && oit._opaqueTexture.destroy();
+        oit._accumulationTexture = oit._accumulationTexture && oit._accumulationTexture.destroy();
+        oit._revealageTexture = oit._revealageTexture && oit._revealageTexture.destroy();
+        oit._depthTexture = oit._depthTexture && oit._depthTexture.destroy();
 
-        that._opaqueTexture = undefined;
-        that._accumulationTexture = undefined;
-        that._revealageTexture = undefined;
-        that._depthTexture = undefined;
+        oit._opaqueTexture = undefined;
+        oit._accumulationTexture = undefined;
+        oit._revealageTexture = undefined;
+        oit._depthTexture = undefined;
     }
 
-    function destroyFramebuffers(that) {
-        that._opaqueFBO = that._opaqueFBO && that._opaqueFBO.destroy();
-        that._translucentFBO = that._translucentFBO && that._translucentFBO.destroy();
-        that._alphaFBO = that._alphaFBO && that._alphaFBO.destroy();
-        that._adjustTranslucentFBO = that._adjustTranslucentFBO && that._adjustTranslucentFBO.destroy();
-        that._adjustAlphaFBO = that._adjustAlphaFBO && that._adjustAlphaFBO.destroy();
+    function destroyFramebuffers(oit) {
+        oit._opaqueFBO = oit._opaqueFBO && oit._opaqueFBO.destroy();
+        oit._translucentFBO = oit._translucentFBO && oit._translucentFBO.destroy();
+        oit._alphaFBO = oit._alphaFBO && oit._alphaFBO.destroy();
+        oit._adjustTranslucentFBO = oit._adjustTranslucentFBO && oit._adjustTranslucentFBO.destroy();
+        oit._adjustAlphaFBO = oit._adjustAlphaFBO && oit._adjustAlphaFBO.destroy();
 
-        that._opaqueFBO = undefined;
-        that._translucentFBO = undefined;
-        that._alphaFBO = undefined;
-        that._adjustTranslucentFBO = undefined;
-        that._adjustAlphaFBO = undefined;
+        oit._opaqueFBO = undefined;
+        oit._translucentFBO = undefined;
+        oit._alphaFBO = undefined;
+        oit._adjustTranslucentFBO = undefined;
+        oit._adjustAlphaFBO = undefined;
     }
 
-    function destroyResources(that) {
-        destroyTextures(that);
-        destroyFramebuffers(that);
+    function destroyResources(oit) {
+        destroyTextures(oit);
+        destroyFramebuffers(oit);
     }
 
-    function updateTextures(that, context, width, height) {
-        destroyTextures(that);
+    function updateTextures(oit, context, width, height) {
+        destroyTextures(oit);
 
-        that._opaqueTexture = context.createTexture2D({
+        oit._opaqueTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGB,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
-        that._accumulationTexture = context.createTexture2D({
+        oit._accumulationTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
         });
-        that._revealageTexture = context.createTexture2D({
+        oit._revealageTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.FLOAT
         });
-        that._depthTexture = context.createTexture2D({
+        oit._depthTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -137,63 +137,63 @@ define([
         });
     }
 
-    function updateFramebuffers(that, context) {
-        destroyFramebuffers(that);
+    function updateFramebuffers(oit, context) {
+        destroyFramebuffers(oit);
 
-        that._opaqueFBO = context.createFramebuffer({
-            colorTextures : [that._opaqueTexture],
-            depthTexture : that._depthTexture,
+        oit._opaqueFBO = context.createFramebuffer({
+            colorTextures : [oit._opaqueTexture],
+            depthTexture : oit._depthTexture,
             destroyAttachments : false
         });
 
         var completeFBO = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments
-        if (that._translucentMRTSupport) {
-            that._translucentFBO = context.createFramebuffer({
-                colorTextures : [that._accumulationTexture, that._revealageTexture],
-                depthTexture : that._depthTexture,
+        if (oit._translucentMRTSupport) {
+            oit._translucentFBO = context.createFramebuffer({
+                colorTextures : [oit._accumulationTexture, oit._revealageTexture],
+                depthTexture : oit._depthTexture,
                 destroyAttachments : false
             });
-            that._adjustTranslucentFBO = context.createFramebuffer({
-                colorTextures : [that._accumulationTexture, that._revealageTexture],
+            oit._adjustTranslucentFBO = context.createFramebuffer({
+                colorTextures : [oit._accumulationTexture, oit._revealageTexture],
                 destroyAttachments : false
             });
 
-            if (that._translucentFBO.getStatus() !== completeFBO || that._adjustTranslucentFBO.getStatus() !== completeFBO) {
-                destroyFramebuffers(that);
-                that._translucentMRTSupport = false;
+            if (oit._translucentFBO.getStatus() !== completeFBO || oit._adjustTranslucentFBO.getStatus() !== completeFBO) {
+                destroyFramebuffers(oit);
+                oit._translucentMRTSupport = false;
             }
         }
 
         // either MRT isn't supported or FBO creation failed, attempt multipass
-        if (!that._translucentMRTSupport) {
-            that._translucentFBO = context.createFramebuffer({
-                colorTextures : [that._accumulationTexture],
-                depthTexture : that._depthTexture,
+        if (!oit._translucentMRTSupport) {
+            oit._translucentFBO = context.createFramebuffer({
+                colorTextures : [oit._accumulationTexture],
+                depthTexture : oit._depthTexture,
                 destroyAttachments : false
             });
-            that._alphaFBO = context.createFramebuffer({
-                colorTextures : [that._revealageTexture],
-                depthTexture : that._depthTexture,
+            oit._alphaFBO = context.createFramebuffer({
+                colorTextures : [oit._revealageTexture],
+                depthTexture : oit._depthTexture,
                 destroyAttachments : false
             });
-            that._adjustTranslucentFBO = context.createFramebuffer({
-                colorTextures : [that._accumulationTexture],
+            oit._adjustTranslucentFBO = context.createFramebuffer({
+                colorTextures : [oit._accumulationTexture],
                 destroyAttachments : false
             });
-            that._adjustAlphaFBO = context.createFramebuffer({
-                colorTextures : [that._revealageTexture],
+            oit._adjustAlphaFBO = context.createFramebuffer({
+                colorTextures : [oit._revealageTexture],
                 destroyAttachments : false
             });
 
-            var translucentComplete = that._translucentFBO.getStatus() === completeFBO;
-            var alphaComplete = that._alphaFBO.getStatus() === completeFBO;
-            var adjustTranslucentComplete = that._adjustTranslucentFBO.getStatus() === completeFBO;
-            var adjustAlphaComplete = that._adjustAlphaFBO.getStatus() === completeFBO;
+            var translucentComplete = oit._translucentFBO.getStatus() === completeFBO;
+            var alphaComplete = oit._alphaFBO.getStatus() === completeFBO;
+            var adjustTranslucentComplete = oit._adjustTranslucentFBO.getStatus() === completeFBO;
+            var adjustAlphaComplete = oit._adjustAlphaFBO.getStatus() === completeFBO;
             if (!translucentComplete || !alphaComplete || !adjustTranslucentComplete || !adjustAlphaComplete) {
-                destroyResources(that);
-                that._translucentMultipassSupport = false;
+                destroyResources(oit);
+                oit._translucentMultipassSupport = false;
             }
         }
     }
@@ -346,16 +346,16 @@ define([
         return translucentState;
     }
 
-    function getTranslucentMRTRenderState(that, context, renderState) {
-        return getTranslucentRenderState(context, translucentMRTBlend, that._translucentRenderStateCache, renderState);
+    function getTranslucentMRTRenderState(oit, context, renderState) {
+        return getTranslucentRenderState(context, translucentMRTBlend, oit._translucentRenderStateCache, renderState);
     }
 
-    function getTranslucentColorRenderState(that, context, renderState) {
-        return getTranslucentRenderState(context, translucentColorBlend, that._translucentRenderStateCache, renderState);
+    function getTranslucentColorRenderState(oit, context, renderState) {
+        return getTranslucentRenderState(context, translucentColorBlend, oit._translucentRenderStateCache, renderState);
     }
 
-    function getTranslucentAlphaRenderState(that, context, renderState) {
-        return getTranslucentRenderState(context, translucentAlphaBlend, that._alphaRenderStateCache, renderState);
+    function getTranslucentAlphaRenderState(oit, context, renderState) {
+        return getTranslucentRenderState(context, translucentAlphaBlend, oit._alphaRenderStateCache, renderState);
     }
 
     var mrtShaderSource =
@@ -412,19 +412,19 @@ define([
         return shader;
     }
 
-    function getTranslucentMRTShaderProgram(that, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, that._translucentShaderCache, mrtShaderSource);
+    function getTranslucentMRTShaderProgram(oit, context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, mrtShaderSource);
     }
 
-    function getTranslucentColorShaderProgram(that, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, that._translucentShaderCache, colorShaderSource);
+    function getTranslucentColorShaderProgram(oit, context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, oit._translucentShaderCache, colorShaderSource);
     }
 
-    function getTranslucentAlphaShaderProgram(that, context, shaderProgram) {
-        return getTranslucentShaderProgram(context, shaderProgram, that._alphaShaderCache, alphaShaderSource);
+    function getTranslucentAlphaShaderProgram(oit, context, shaderProgram) {
+        return getTranslucentShaderProgram(context, shaderProgram, oit._alphaShaderCache, alphaShaderSource);
     }
 
-    function executeTranslucentCommandsSortedMultipass(that, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMultipass(oit, scene, executeFunction, passState, commands) {
         var command;
         var renderState;
         var shaderProgram;
@@ -434,48 +434,48 @@ define([
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        passState.framebuffer = that._adjustTranslucentFBO;
-        that._adjustTranslucentCommand.execute(context, passState);
-        passState.framebuffer = that._adjustAlphaFBO;
-        that._adjustAlphaCommand.execute(context, passState);
+        passState.framebuffer = oit._adjustTranslucentFBO;
+        oit._adjustTranslucentCommand.execute(context, passState);
+        passState.framebuffer = oit._adjustAlphaFBO;
+        oit._adjustAlphaCommand.execute(context, passState);
 
-        var debugFramebuffer = that._opaqueFBO;
-        passState.framebuffer = that._translucentFBO;
+        var debugFramebuffer = oit._opaqueFBO;
+        passState.framebuffer = oit._translucentFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = getTranslucentColorRenderState(that, context, command.renderState);
-            shaderProgram = getTranslucentColorShaderProgram(that, context, command.shaderProgram);
+            renderState = getTranslucentColorRenderState(oit, context, command.renderState);
+            shaderProgram = getTranslucentColorShaderProgram(oit, context, command.shaderProgram);
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
-        passState.framebuffer = that._alphaFBO;
+        passState.framebuffer = oit._alphaFBO;
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = getTranslucentAlphaRenderState(that, context, command.renderState);
-            shaderProgram = getTranslucentAlphaShaderProgram(that, context, command.shaderProgram);
+            renderState = getTranslucentAlphaRenderState(oit, context, command.renderState);
+            shaderProgram = getTranslucentAlphaShaderProgram(oit, context, command.shaderProgram);
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
     }
 
-    function executeTranslucentCommandsSortedMRT(that, scene, executeFunction, passState, commands) {
+    function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
         var context = scene._context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        passState.framebuffer = that._adjustTranslucentFBO;
-        that._adjustTranslucentCommand.execute(context, passState);
+        passState.framebuffer = oit._adjustTranslucentFBO;
+        oit._adjustTranslucentCommand.execute(context, passState);
 
-        var debugFramebuffer = that._opaqueFBO;
-        passState.framebuffer = that._translucentFBO;
+        var debugFramebuffer = oit._opaqueFBO;
+        passState.framebuffer = oit._translucentFBO;
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var renderState = getTranslucentMRTRenderState(that, context, command.renderState);
-            var shaderProgram = getTranslucentMRTShaderProgram(that, context, command.shaderProgram);
+            var renderState = getTranslucentMRTRenderState(oit, context, command.renderState);
+            var shaderProgram = getTranslucentMRTShaderProgram(oit, context, command.shaderProgram);
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
