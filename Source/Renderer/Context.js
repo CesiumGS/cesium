@@ -2179,7 +2179,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (framebuffer !== context._currentFamebuffer) {
+        if (framebuffer !== context._currentFramebuffer) {
             context._currentFramebuffer = framebuffer;
             var buffers = scratchBackBufferArray;
 
@@ -2189,6 +2189,9 @@ define([
 
                 // TODO: Need a way for a command to give what draw buffers are active.
                 buffers = framebuffer._getActiveColorAttachments();
+            } else {
+                var gl = context._gl;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
             if (context.getDrawBuffers()) {
@@ -2246,12 +2249,6 @@ define([
             va._bind();
             context._gl.drawArrays(primitiveType, offset, count);
             va._unBind();
-        }
-    }
-
-    function endDraw(context, framebuffer) {
-        if (defined(framebuffer)) {
-            framebuffer._unBind();
         }
     }
 
@@ -2315,7 +2312,6 @@ define([
 
         beginDraw(this, framebuffer, drawCommand, passState, renderState, shaderProgram);
         continueDraw(this, drawCommand, shaderProgram);
-        endDraw(this, framebuffer);
     };
 
     /**
@@ -2324,6 +2320,9 @@ define([
     Context.prototype.endFrame = function() {
         var gl = this._gl;
         gl.useProgram(null);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        this._currentFramebuffer = undefined;
 
         var length = this._maxFrameTextureUnitIndex;
         this._maxFrameTextureUnitIndex = 0;
