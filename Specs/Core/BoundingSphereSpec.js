@@ -431,7 +431,7 @@ defineSuite([
         var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
         var position = new Cartesian3(-2.0, 1.0, 0.0);
         var expected = Cartesian3.magnitudeSquared(position) - 1.0;
-        expect(bs.distanceSquaredTo(position)).toEqual(expected);
+        expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqual(expected);
     });
 
     it('projectTo2D', function() {
@@ -544,13 +544,13 @@ defineSuite([
     it('static distanceSquaredTo throws without a sphere', function() {
         expect(function() {
             BoundingSphere.distanceSquaredTo();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static distanceSquaredTo throws without a cartesian', function() {
         expect(function() {
             BoundingSphere.distanceSquaredTo(new BoundingSphere());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('static transformWithoutScale throws without a sphere', function() {

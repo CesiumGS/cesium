@@ -1005,19 +1005,6 @@ define([
     };
 
     /**
-     * Computes the estimated distance squared from the closest point on a bounding sphere to a point.
-     * @memberof BoundingSphere
-     *
-     * @param {Cartesian3} cartesian The point
-     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     */
-    BoundingSphere.prototype.distanceSquaredTo = function(cartesian) {
-        return BoundingSphere.distanceSquaredTo(this, cartesian);
-    };
-
-    /**
      * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
      * plus/minus the radius of the bounding sphere.
      * <br>

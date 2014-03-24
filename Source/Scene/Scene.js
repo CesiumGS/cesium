@@ -803,7 +803,7 @@ define([
 
     function createTranslucentCompareFunction(position) {
         return function(a, b) {
-            return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
+            return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
         };
     }
 
