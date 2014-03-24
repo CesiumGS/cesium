@@ -61,8 +61,8 @@ require(['Cesium'], function(Cesium) {
             text     : 'Philadelphia'
         });
 
-        l.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57, 300000.0)));
-        l.setScale(2.0);
+        l.position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.10, 39.57, 300000.0));
+        l.scale = 2.0;
         scene.primitives.add(labels);
     }
 

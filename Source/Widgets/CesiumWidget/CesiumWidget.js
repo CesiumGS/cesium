@@ -227,8 +227,8 @@ define([
             this._container = container;
             this._canvas = canvas;
             this._zoomDetector = zoomDetector;
-            this._canvasWidth = canvas.width;
-            this._canvasHeight = canvas.height;
+            this._canvasWidth = 0;
+            this._canvasHeight = 0;
             this._scene = scene;
             this._centralBody = centralBody;
             this._clock = defaultValue(options.clock, new Clock());
