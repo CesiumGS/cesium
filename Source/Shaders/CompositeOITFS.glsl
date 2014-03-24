@@ -1,6 +1,7 @@
 /**
  * Compositing for Weighted Blended Order-Independent Transparency. See:
- * http://jcgt.org/published/0002/02/09/
+ * - http://jcgt.org/published/0002/02/09/
+ * - http://casual-effects.blogspot.com/2014/03/weighted-blended-order-independent.html
  */
  
 uniform sampler2D u_opaque;
