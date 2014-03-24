@@ -78,29 +78,18 @@ define([
     };
 
     function destroyTextures(oit) {
-        oit._opaqueTexture = oit._opaqueTexture && oit._opaqueTexture.destroy();
-        oit._accumulationTexture = oit._accumulationTexture && oit._accumulationTexture.destroy();
-        oit._revealageTexture = oit._revealageTexture && oit._revealageTexture.destroy();
-        oit._depthTexture = oit._depthTexture && oit._depthTexture.destroy();
-
-        oit._opaqueTexture = undefined;
-        oit._accumulationTexture = undefined;
-        oit._revealageTexture = undefined;
-        oit._depthTexture = undefined;
+        oit._opaqueTexture = oit._opaqueTexture && !oit._opaqueTexture.isDestroyed() && oit._opaqueTexture.destroy();
+        oit._accumulationTexture = oit._accumulationTexture && !oit._accumulationTexture.isDestroyed() && oit._accumulationTexture.destroy();
+        oit._revealageTexture = oit._revealageTexture && !oit._revealageTexture.isDestroyed() && oit._revealageTexture.destroy();
+        oit._depthTexture = oit._depthTexture && !oit._depthTexture.isDestroyed() && oit._depthTexture.destroy();
     }
 
     function destroyFramebuffers(oit) {
-        oit._opaqueFBO = oit._opaqueFBO && oit._opaqueFBO.destroy();
-        oit._translucentFBO = oit._translucentFBO && oit._translucentFBO.destroy();
-        oit._alphaFBO = oit._alphaFBO && oit._alphaFBO.destroy();
-        oit._adjustTranslucentFBO = oit._adjustTranslucentFBO && oit._adjustTranslucentFBO.destroy();
-        oit._adjustAlphaFBO = oit._adjustAlphaFBO && oit._adjustAlphaFBO.destroy();
-
-        oit._opaqueFBO = undefined;
-        oit._translucentFBO = undefined;
-        oit._alphaFBO = undefined;
-        oit._adjustTranslucentFBO = undefined;
-        oit._adjustAlphaFBO = undefined;
+        oit._opaqueFBO = oit._opaqueFBO && !oit._opaqueFBO.isDestroyed() && oit._opaqueFBO.destroy();
+        oit._translucentFBO = oit._translucentFBO && !oit._translucentFBO.isDestroyed() && oit._translucentFBO.destroy();
+        oit._alphaFBO = oit._alphaFBO && !oit._alphaFBO.isDestroyed() && oit._alphaFBO.destroy();
+        oit._adjustTranslucentFBO = oit._adjustTranslucentFBO && !oit._adjustTranslucentFBO.isDestroyed() && oit._adjustTranslucentFBO.destroy();
+        oit._adjustAlphaFBO = oit._adjustAlphaFBO && !oit._adjustAlphaFBO.isDestroyed() && oit._adjustAlphaFBO.destroy();
     }
 
     function destroyResources(oit) {
@@ -140,13 +129,8 @@ define([
     function updateFramebuffers(oit, context) {
         destroyFramebuffers(oit);
 
-        oit._opaqueFBO = context.createFramebuffer({
-            colorTextures : [oit._opaqueTexture],
-            depthTexture : oit._depthTexture,
-            destroyAttachments : false
-        });
-
         var completeFBO = WebGLRenderingContext.FRAMEBUFFER_COMPLETE;
+        var supported = true;
 
         // if MRT is supported, attempt to make an FBO with multiple color attachments
         if (oit._translucentMRTSupport) {
@@ -194,8 +178,19 @@ define([
             if (!translucentComplete || !alphaComplete || !adjustTranslucentComplete || !adjustAlphaComplete) {
                 destroyResources(oit);
                 oit._translucentMultipassSupport = false;
+                supported = false;
             }
         }
+
+        if (supported) {
+            oit._opaqueFBO = context.createFramebuffer({
+                colorTextures : [oit._opaqueTexture],
+                depthTexture : oit._depthTexture,
+                destroyAttachments : false
+            });
+        }
+
+        return supported;
     }
 
     OIT.prototype.update = function(context) {
@@ -213,10 +208,8 @@ define([
         }
 
         if (!defined(this._opaqueFBO) || textureChanged) {
-            updateFramebuffers(this, context);
-
-            // framebuffer creation failed
-            if (!this.isSupported()) {
+            if (!updateFramebuffers(this, context)) {
+                // framebuffer creation failed
                 return;
             }
         }
@@ -549,8 +542,17 @@ define([
 
     OIT.prototype.destroy = function() {
         destroyResources(this);
+
         if (defined(this._compositeCommand)) {
             this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
+        }
+
+        if (defined(this._adjustTranslucentCommand)) {
+            this._adjustTranslucentCommand.shaderProgram = this._adjustTranslucentCommand.shaderProgram && this._adjustTranslucentCommand.shaderProgram.release();
+        }
+
+        if (defined(this._adjustAlphaCommand)) {
+            this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.release();
         }
 
         var name;
