@@ -532,6 +532,10 @@ define([
     };
 
     OIT.prototype.getColorFramebuffer = function() {
+        if (!this.isSupported()) {
+            return undefined;
+        }
+
         return this._opaqueFBO;
     };
 
