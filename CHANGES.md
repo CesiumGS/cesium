@@ -55,9 +55,9 @@ Beta Releases
       * `getLoop`, `setLoop` -> `loop`
       * `getId` -> `id`
   * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
-    * `BoundingRectangle.prototype`
+    * `BoundingRectangle`
       * `union`, `expand`
-    * `BoundingSphere.prototype`
+    * `BoundingSphere`
       * `union`, `expand`, `getPlaneDistances`, `projectTo2D`
     * `Plane`
       * `getPointDistance`
