@@ -274,7 +274,7 @@ define([
         newOrigin.z = projectedPosition.y;
         newOrigin.w = 1.0;
 
-        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0), origin, scratchCartesian3);
+        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0, scratchCartesian3), origin, scratchCartesian3);
         ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
         projection.project(cartographic, projectedPosition);
@@ -286,7 +286,7 @@ define([
 
         Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
 
-        var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1), origin, scratchCartesian3);
+        var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1, scratchCartesian3), origin, scratchCartesian3);
         ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
         projection.project(cartographic, projectedPosition);
@@ -328,7 +328,7 @@ define([
 
         var newZAxis = Cartesian4.clone(Cartesian4.UNIT_X, scratchCartesian4NewZAxis);
 
-        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0), origin, scratchCartesian3);
+        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0, scratchCartesian3), origin, scratchCartesian3);
         ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
         projection.project(cartographic, projectedPosition);
@@ -345,7 +345,7 @@ define([
         if (Cartesian3.magnitudeSquared(newXAxis) > CesiumMath.EPSILON10) {
             Cartesian3.cross(newZAxis, newXAxis, newYAxis);
         } else {
-            var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1), origin, scratchCartesian3);
+            var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1, scratchCartesian3), origin, scratchCartesian3);
             ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
             projection.project(cartographic, projectedPosition);
