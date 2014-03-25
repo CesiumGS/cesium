@@ -322,7 +322,7 @@ defineSuite([
             selectedImageryProviderViewModel : testProviderViewModel
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
     });
 
@@ -332,7 +332,7 @@ defineSuite([
             imageryProvider : testProvider
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -342,7 +342,7 @@ defineSuite([
             imageryProviderViewModels : models
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });

@@ -16,7 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -367,23 +367,23 @@ require(['Cesium'], function(Cesium) {
     function applyPolylineArrowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineArrowMaterial);  // For highlighting in Sandcastle.
         var material = Cesium.Material.fromType('PolylineArrow');
-        primitive.setMaterial(material);
+        primitive.material = material;
     }
 
     function applyPolylineGlowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineGlowMaterial);  // For highlighting in Sandcastle.
         var material = Cesium.Material.fromType('PolylineGlow', {
-            innerWidth : primitive.getWidth() / 2.0
+            innerWidth : primitive.width / 2.0
         });
-        primitive.setMaterial(material);
+        primitive.material = material;
     }
 
     function applyPolylineOutlineMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineOutlineMaterial);  // For highlighting in Sandcastle.
         var material = Cesium.Material.fromType('PolylineOutline', {
-            outlineWidth : primitive.getWidth() / 2.0
+            outlineWidth : primitive.width / 2.0
         });
-        primitive.setMaterial(material);
+        primitive.material = material;
     }
 
     function createButtons(widget) {
@@ -393,17 +393,17 @@ require(['Cesium'], function(Cesium) {
         function toggleExtentVisibility() {
             extent.show = true;
             worldExtent.show = false;
-            polyline.setShow(false);
+            polyline.show = false;
         }
 
         function toggleWorldExtentVisibility() {
             worldExtent.show = true;
             extent.show = false;
-            polyline.setShow(false);
+            polyline.show = false;
         }
 
         function togglePolylineVisibility() {
-            polyline.setShow(true);
+            polyline.show = true;
             worldExtent.show = false;
             extent.show = false;
         }

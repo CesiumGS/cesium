@@ -196,7 +196,7 @@ defineSuite([
         var layer = new ImageryLayer(provider, {
             extent : extent
         });
-        expect(layer.getExtent()).toEqual(extent);
+        expect(layer.extent).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);

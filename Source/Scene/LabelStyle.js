@@ -7,7 +7,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      *
      * @exports LabelStyle
      *
-     * @see Label#setStyle
+     * @see Label#style
      */
     var LabelStyle = {
         /**
