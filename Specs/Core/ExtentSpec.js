@@ -163,7 +163,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.west = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -171,7 +171,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.south = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -179,7 +179,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.east = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -187,7 +187,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.north = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -195,7 +195,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.west = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -203,7 +203,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.south = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -211,7 +211,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.east = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -219,7 +219,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.north = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 

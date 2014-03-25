@@ -5,6 +5,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
+        './Extent',
         './ComponentDatatype',
         './IndexDatatype',
         './DeveloperError',
@@ -22,6 +23,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Extent,
         ComponentDatatype,
         IndexDatatype,
         DeveloperError,
@@ -302,7 +304,7 @@ define([
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-        extent.validate();
+        Extent.validate(extent);
         if (extent.east < extent.west) {
             throw new DeveloperError('options.extent.east must be greater than options.extent.west');
         }
