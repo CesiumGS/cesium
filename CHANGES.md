@@ -64,7 +64,7 @@ Beta Releases
     * `Ray`
       * `getPoint`
     * `Spherical`
-      * `normalize`, `equalsEpsilon`, `toString`
+      * `normalize`
       
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)

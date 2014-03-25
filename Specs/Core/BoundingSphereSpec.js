@@ -83,7 +83,7 @@ defineSuite([
 
     it('clone without a result parameter', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
-        var result = BoundingSphere.clone(sphere);
+        var result = sphere.clone();
         expect(sphere).toNotBe(result);
         expect(sphere).toEqual(result);
     });
@@ -91,10 +91,20 @@ defineSuite([
     it('clone with a result parameter', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = new BoundingSphere();
-        var returnedResult = BoundingSphere.clone(sphere, result);
+        var returnedResult = sphere.clone(result);
         expect(result).toNotBe(sphere);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(sphere);
+    });
+
+    it('clone works with "this" result parameter', function() {
+        var expectedCenter = new Cartesian3(1.0, 2.0, 3.0);
+        var expectedRadius = 1.0;
+        var sphere = new BoundingSphere(expectedCenter, expectedRadius);
+        var returnedResult = sphere.clone(sphere);
+        expect(sphere).toBe(returnedResult);
+        expect(sphere.center).toEqual(expectedCenter);
+        expect(sphere.radius).toEqual(expectedRadius);
     });
 
     it('clone clones undefined', function() {
@@ -103,12 +113,12 @@ defineSuite([
 
     it('equals', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
-        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))).toEqual(true);
-        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0))).toEqual(false);
-        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0))).toEqual(false);
-        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0))).toEqual(false);
-        expect(BoundingSphere.equals(sphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0))).toEqual(false);
-        expect(BoundingSphere.equals(sphere, undefined)).toEqual(false);
+        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))).toEqual(true);
+        expect(sphere.equals(new BoundingSphere(new Cartesian3(5.0, 2.0, 3.0), 4.0))).toEqual(false);
+        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 6.0, 3.0), 4.0))).toEqual(false);
+        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 7.0), 4.0))).toEqual(false);
+        expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 8.0))).toEqual(false);
+        expect(sphere.equals(undefined)).toEqual(false);
     });
 
     it('fromPoints without positions returns an empty sphere', function() {
@@ -340,7 +350,7 @@ defineSuite([
         var normal = Cartesian3.negate(Cartesian3.UNIT_X);
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.INSIDE);
+        expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
     });
 
     it('sphere on the negative side of a plane', function() {
@@ -348,7 +358,7 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.OUTSIDE);
+        expect(sphere.intersect(plane)).toEqual(Intersect.OUTSIDE);
     });
 
     it('sphere intersecting a plane', function() {
@@ -356,7 +366,7 @@ defineSuite([
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
-        expect(BoundingSphere.intersect(sphere, plane)).toEqual(Intersect.INTERSECTING);
+        expect(sphere.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 
     it('expands to contain another sphere', function() {

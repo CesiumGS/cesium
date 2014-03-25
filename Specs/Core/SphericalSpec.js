@@ -52,7 +52,7 @@ defineSuite([
 
     it('Cloning with no result parameter returns a new instance.', function() {
         var v = new Spherical(1, 2, 3);
-        var w = Spherical.clone(v);
+        var w = v.clone();
         expect(v === w).toEqual(false);
         expect(v).toEqual(w);
     });
@@ -61,7 +61,7 @@ defineSuite([
         var v = new Spherical(1, 2, 3);
         var w = new NotSpherical();
         expect(NotSpherical.areEqual(v, w)).toEqual(false);
-        var q = Spherical.clone(v, w);
+        var q = v.clone(w);
         expect(v === w).toEqual(false);
         expect(q === w).toEqual(true);
         expect(NotSpherical.areEqual(v, w)).toEqual(true);
@@ -107,6 +107,6 @@ defineSuite([
 
     it('toString returns the expected format.', function() {
         var v = new Spherical(1, 2, 3);
-        expect(Spherical.toString(v)).toEqual('(1, 2, 3)');
+        expect(v.toString()).toEqual('(1, 2, 3)');
     });
 });

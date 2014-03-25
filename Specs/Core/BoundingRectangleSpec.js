@@ -34,7 +34,7 @@ defineSuite([
 
     it('clone without a result parameter', function() {
         var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-        var result = BoundingRectangle.clone(rectangle);
+        var result = rectangle.clone();
         expect(rectangle).toNotBe(result);
         expect(rectangle).toEqual(result);
     });
@@ -42,20 +42,30 @@ defineSuite([
     it('clone with a result parameter', function() {
         var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         var result = new BoundingRectangle(6.0, 7.0, 8.0, 9.0);
-        var returnedResult = BoundingRectangle.clone(rectangle, result);
+        var returnedResult = rectangle.clone(result);
         expect(result).toNotBe(rectangle);
         expect(result).toEqual(rectangle);
         expect(result).toBe(returnedResult);
     });
 
+    it('clone works with "this" result parameter', function() {
+        var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
+        var returnedResult = rectangle.clone(rectangle);
+        expect(rectangle.x).toEqual(1.0);
+        expect(rectangle.y).toEqual(2.0);
+        expect(rectangle.width).toEqual(3.0);
+        expect(rectangle.height).toEqual(4.0);
+        expect(rectangle).toBe(returnedResult);
+    });
+
     it('equals', function() {
         var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
-        expect(BoundingRectangle.equals(rectangle, new BoundingRectangle(1.0, 2.0, 3.0, 4.0))).toEqual(true);
-        expect(BoundingRectangle.equals(rectangle, new BoundingRectangle(5.0, 2.0, 3.0, 4.0))).toEqual(false);
-        expect(BoundingRectangle.equals(rectangle, new BoundingRectangle(1.0, 6.0, 3.0, 4.0))).toEqual(false);
-        expect(BoundingRectangle.equals(rectangle, new BoundingRectangle(1.0, 2.0, 7.0, 4.0))).toEqual(false);
-        expect(BoundingRectangle.equals(rectangle, new BoundingRectangle(1.0, 2.0, 3.0, 8.0))).toEqual(false);
-        expect(BoundingRectangle.equals(rectangle, undefined)).toEqual(false);
+        expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 3.0, 4.0))).toEqual(true);
+        expect(rectangle.equals(new BoundingRectangle(5.0, 2.0, 3.0, 4.0))).toEqual(false);
+        expect(rectangle.equals(new BoundingRectangle(1.0, 6.0, 3.0, 4.0))).toEqual(false);
+        expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 7.0, 4.0))).toEqual(false);
+        expect(rectangle.equals(new BoundingRectangle(1.0, 2.0, 3.0, 8.0))).toEqual(false);
+        expect(rectangle.equals(undefined)).toEqual(false);
     });
 
     var positions = [new Cartesian2(3, -1),
