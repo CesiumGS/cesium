@@ -450,6 +450,47 @@ defineSuite([
         expect(dynamicObject.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
+    it('can handle image intervals both of type uri and image', function() {
+        var source = 'http://some.url.invalid/';
+        var packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    uri : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    uri : 'image2.png'
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet, source);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var imageProperty = dynamicObject.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+
+        packet = {
+            billboard : {
+                image : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    image : 'image.png'
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    image : 'image2.png'
+                }]
+            }
+        };
+
+        dataSource = new CzmlDataSource();
+        dataSource.load(packet, source);
+        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        imageProperty = dynamicObject.billboard.image;
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
+        expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
+    });
+
     it('CZML adds data for constrained billboard.', function() {
         var billboardPacket = {
             billboard : {

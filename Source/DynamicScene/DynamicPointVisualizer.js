@@ -192,8 +192,8 @@ define([
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
                 billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 dynamicObject._pointVisualizerIndex = undefined;
                 dynamicPointVisualizer._unusedIndexes.push(pointVisualizerIndex);
             }
@@ -212,7 +212,7 @@ define([
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard.id = dynamicObject;
+            billboard._id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
@@ -224,11 +224,11 @@ define([
             billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
         }
 
-        billboard.setShow(true);
+        billboard.show = true;
 
         position = positionProperty.getValue(time, position);
         if (defined(position)) {
-            billboard.setPosition(position);
+            billboard.position = position;
         }
 
         var property = dynamicPoint._color;
@@ -271,7 +271,7 @@ define([
         if (defined(property)) {
             scaleByDistance = property.getValue(time, scaleByDistance);
             if (defined(scaleByDistance)) {
-                billboard.setScaleByDistance(scaleByDistance);
+                billboard.scaleByDistance = scaleByDistance;
             }
         }
 
@@ -320,7 +320,7 @@ define([
 
                 loadedCallback(canvas);
             }, function(imageIndex) {
-                billboard.setImageIndex(imageIndex);
+                billboard.imageIndex = imageIndex;
             });
         }
     }
@@ -333,8 +333,8 @@ define([
             var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
             if (defined(pointVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 dynamicObject._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }

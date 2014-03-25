@@ -159,7 +159,7 @@ defineSuite([
 
     it('renders primitive in middle frustum', function() {
         createBillboards();
-        billboard0.setColor(new Color(1.0, 1.0, 1.0, 0.0));
+        billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
         scene.initializeFrame();
         scene.render();
@@ -173,8 +173,8 @@ defineSuite([
     it('renders primitive in last frustum', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
 
         scene.initializeFrame();
         scene.render();
@@ -188,8 +188,8 @@ defineSuite([
     it('renders primitive in last frustum with debugShowFrustums', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
 
         scene.debugShowFrustums = true;
         scene.initializeFrame();
@@ -297,9 +297,9 @@ defineSuite([
     it('renders only in the closest frustum', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
-        billboard2.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
+        billboard2.color = color;
 
         var primitive = createPrimitive(true, true);
         primitive.color = new Color(1.0, 1.0, 0.0, 0.5);

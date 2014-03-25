@@ -83,8 +83,8 @@ define([
          * exact circle.
          * <br /><br />
          * An outlined circle is rendered by passing the result of this function call to
-         * {@link Polyline#setPositions}.  A filled circle is rendered by passing
-         * the result to {@link Polygon#setPositions}.
+         * {@link Polyline#positions}.  A filled circle is rendered by passing
+         * the result to {@link Polygon#positions}.
          *
          * @param {Ellipsoid} ellipsoid The ellipsoid the circle will be on.
          * @param {Cartesian3} center The circle's center point in the fixed frame.
@@ -94,15 +94,15 @@ define([
          * @exception {DeveloperError} radius must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *
-         * @see Polyline#setPositions
-         * @see Polygon#setPositions
+         * @see Polyline#positions
+         * @see Polygon#positions
          *
          * @example
          * // Create a polyline of a circle
          * var polyline = new Cesium.Polyline();
-         * polyline.setPositions(Cesium.Shapes.computeCircleBoundary(
+         * polyline.positions = Cesium.Shapes.computeCircleBoundary(
          *   ellipsoid, ellipsoid.cartographicToCartesian(
-         *     Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
+         *     Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0);
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
             granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -130,8 +130,8 @@ define([
          * exact circle.
          * <br /><br />
          * An outlined ellipse is rendered by passing the result of this function call to
-         * {@link Polyline#setPositions}.  A filled ellipse is rendered by passing
-         * the result to {@link Polygon#setPositions}.
+         * {@link Polyline#positions}.  A filled ellipse is rendered by passing
+         * the result to {@link Polygon#positions}.
          *
          * @param {Ellipsoid} ellipsoid The ellipsoid the ellipse will be on.
          * @param {Cartesian3} center The ellipse's center point in the fixed frame.
@@ -143,17 +143,17 @@ define([
          * @exception {DeveloperError} Semi-major and semi-minor axes must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *
-         * @see Polyline#setPositions
-         * @see Polygon#setPositions
+         * @see Polyline#positions
+         * @see Polygon#positions
          *
          * @returns The set of points that form the ellipse's boundary.
          *
          * @example
          * // Create a filled ellipse.
          * var polygon = new Cesium.Polygon();
-         * polygon.setPositions(Cesium.Shapes.computeEllipseBoundary(
+         * polygon.positions = Cesium.Shapes.computeEllipseBoundary(
          *   ellipsoid, ellipsoid.cartographicToCartesian(
-         *      Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60)));
+         *      Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, rotation, granularity) {
             rotation = defaultValue(rotation, 0.0);
