@@ -469,7 +469,53 @@ defineSuite([
         expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
     });
 
-    it('projectTo2D throws without sphere', function() {
+    it('can pack and unpack', function() {
+        var array = [];
+        var boundingSphere = new BoundingSphere();
+        boundingSphere.center = new Cartesian3(1, 2, 3);
+        boundingSphere.radius = 4;
+        BoundingSphere.pack(boundingSphere, array);
+        expect(array.length).toEqual(BoundingSphere.packedLength);
+        expect(BoundingSphere.unpack(array)).toEqual(boundingSphere);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var boundingSphere = new BoundingSphere();
+        boundingSphere.center = new Cartesian3(1, 2, 3);
+        boundingSphere.radius = 4;
+
+        BoundingSphere.pack(boundingSphere, packed, offset);
+        expect(packed.length).toEqual(offset + BoundingSphere.packedLength);
+
+        var result = new BoundingSphere();
+        var returnedResult = BoundingSphere.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(boundingSphere);
+    });
+
+    it('pack throws with undefined boundingSphere', function() {
+        var array = [];
+        expect(function() {
+            BoundingSphere.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var boundingSphere = new BoundingSphere();
+        expect(function() {
+            BoundingSphere.pack(boundingSphere, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            BoundingSphere.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('static projectTo2D throws without sphere', function() {
         expect(function() {
             BoundingSphere.projectTo2D();
         }).toThrowDeveloperError();
