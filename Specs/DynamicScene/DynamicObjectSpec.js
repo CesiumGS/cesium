@@ -65,13 +65,14 @@ defineSuite([
         var newValue;
         var oldValue;
         //We loop through twice to ensure that oldValue is properly passed in.
-        for ( var x = 0; x < 2; x++) {
+        for (var x = 0; x < 2; x++) {
             for (i = 0; i < propertyNamesLength; i++) {
                 name = propertyNames[i];
                 newValue = new ConstantProperty(1);
                 oldValue = dynamicObject[propertyNames[i]];
                 dynamicObject[name] = newValue;
                 expect(listener).toHaveBeenCalledWith(dynamicObject, name, newValue, oldValue);
+                listener.reset();
             }
         }
     });

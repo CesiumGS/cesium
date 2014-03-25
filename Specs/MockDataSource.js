@@ -1,58 +1,62 @@
 /*global define*/
 define(['Core/Event',
         'DynamicScene/DynamicObjectCollection'
-        ], function(
-                Event,
-                DynamicObjectCollection) {
+    ], function(
+        Event,
+        DynamicObjectCollection) {
     "use strict";
 
     var MockDataSource = function() {
         //Values to be fiddled with by the test
         this.changedEvent = new Event();
         this.errorEvent = new Event();
-        this.loadEvent = new Event();
-        this.clock = undefined;
         this.dynamicObjectCollection = new DynamicObjectCollection();
+        this.name = 'Mock Data';
+        this.clock = undefined;
         this.isTimeVarying = false;
+        this.isLoading = false;
+        this.loadEvent = new Event();
         this.destroyed = false;
+    };
 
-        var that = this;
-        //The actual DataSource interface.
-        this.getChangedEvent = function() {
-            return that.changedEvent;
-        };
+    MockDataSource.prototype.getChangedEvent = function() {
+        return this.changedEvent;
+    };
 
-        this.getErrorEvent = function() {
-            return that.errorEvent;
-        };
+    MockDataSource.prototype.getErrorEvent = function() {
+        return this.errorEvent;
+    };
 
-        this.getLoadingEvent = function() {
-            return that.loadEvent;
-        };
+    MockDataSource.prototype.getDynamicObjectCollection = function() {
+        return this.dynamicObjectCollection;
+    };
 
-        this.getName = function() {
-            return 'Mock Data';
-        };
+    MockDataSource.prototype.getName = function() {
+        return this.name;
+    };
 
-        this.getClock = function() {
-            return that.clock;
-        };
+    MockDataSource.prototype.getClock = function() {
+        return this.clock;
+    };
 
-        this.getDynamicObjectCollection = function() {
-            return that.dynamicObjectCollection;
-        };
+    MockDataSource.prototype.getIsTimeVarying = function() {
+        return this.isTimeVarying;
+    };
 
-        this.getIsTimeVarying = function() {
-            return that.isTimeVarying;
-        };
+    MockDataSource.prototype.getIsLoading = function() {
+        return this.isLoading;
+    };
 
-        this.update = function() {
-            return true;
-        };
+    MockDataSource.prototype.getLoadingEvent = function() {
+        return this.loadEvent;
+    };
 
-        this.destroy = function() {
-            that.destroyed = true;
-        };
+    MockDataSource.prototype.update = function() {
+        return true;
+    };
+
+    MockDataSource.prototype.destroy = function() {
+        this.destroyed = true;
     };
 
     return MockDataSource;

@@ -231,9 +231,9 @@ define([
         };
     }
 
-    function createDropErrorCallback(viewer, name) {
+    function createDropErrorCallback(viewer, file) {
         return function(evt) {
-            viewer.dropError.raiseEvent(viewer, name, evt.target.error);
+            viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
         };
     }
 

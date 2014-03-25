@@ -82,8 +82,8 @@ define(['../Core/createGuid',
 
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
-                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', //
-                               '_uiShow', 'description'];
+                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description', //
+                               'uiShow'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -136,14 +136,6 @@ define(['../Core/createGuid',
                 }
             }
         },
-        /**
-         * Gets or sets a boolean value indicating if the object should be displayed.
-         * This is a constant value to be used by the UI and when false, overrides
-         * any value specifed by the show property.
-         * @memberof DynamicObject.prototype
-         * @type {Boolean}
-         */
-        uiShow : createDynamicPropertyDescriptor('uiShow', '_uiShow'),
         /**
          * The availability, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
@@ -263,7 +255,15 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        description : createDynamicPropertyDescriptor('description')
+        description : createDynamicPropertyDescriptor('description'),
+        /**
+         * Gets or sets a boolean value indicating if the object should be displayed.
+         * This is a constant value to be used by the UI and when false, overrides
+         * any value specifed by the show property.
+         * @memberof DynamicObject.prototype
+         * @type {Boolean}
+         */
+        uiShow : createDynamicPropertyDescriptor('uiShow', '_uiShow')
     });
 
     /**
