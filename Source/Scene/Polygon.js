@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Color',
         '../Core/destroyObject',
         '../Core/Math',
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         defaultValue,
         defined,
+        defineProperties,
         Color,
         destroyObject,
         CesiumMath,
@@ -66,11 +68,9 @@ define([
      *   blue  : 0.0,
      *   alpha : 1.0
      * };
-     * polygon.setPositions([
+     * polygon.positions = [ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))
-     * ]);
+     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))];
      *
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html">Cesium Sandcastle Polygons Demo</a>
      */
@@ -199,58 +199,43 @@ define([
         //>>includeEnd('debug');
 
         if (defined(options.positions)) {
-            this.setPositions(options.positions);
+            this.positions = options.positions;
         } else if (defined(options.polygonHierarchy)) {
             this.configureFromPolygonHierarchy(options.polygonHierarchy);
         }
     };
 
-    /**
-     * Returns the positions that define the boundary of the polygon.  If {@link Polygon#configureFromPolygonHierarchy}
-     * was used, this returns <code>undefined</code>.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#setPositions
-     */
-    Polygon.prototype.getPositions = function() {
-        return this._positions;
-    };
+    defineProperties(Polygon.prototype, {
+        /**
+         * Gets and sets positions that define the boundary of the polygon.
+         * @memberof Polygon.prototype
+         * @type {Array}
+         * @example
+         * polygon.positions = [
+         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
+         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
+         *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))
+         * ];
+         */
+        positions: {
+            get : function() {
+                return this._positions;
+            },
+            set : function(positions) {
+                // positions can be undefined
 
-    /**
-     * Sets positions that define the boundary of the polygon.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see Polygon#getPositions
-     *
-     * @param {Array} positions The cartesian positions of the polygon.
-     *
-     * @example
-     * polygon.setPositions([
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
-     *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))
-     * ]);
-     */
-    Polygon.prototype.setPositions = function(positions) {
-        // positions can be undefined
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(positions) && (positions.length < 3)) {
+                    throw new DeveloperError('At least three positions are required.');
+                }
+                //>>includeEnd('debug');
 
-        //>>includeStart('debug', pragmas.debug);
-        if (defined(positions) && (positions.length < 3)) {
-            throw new DeveloperError('At least three positions are required.');
+                this._positions = positions;
+                this._polygonHierarchy = undefined;
+                this._createPrimitive = true;
+            }
         }
-        //>>includeEnd('debug');
-
-        this._positions = positions;
-        this._polygonHierarchy = undefined;
-        this._createPrimitive = true;
-    };
+    });
 
     /**
      * Create a set of polygons with holes from a nested hierarchy.

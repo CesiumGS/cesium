@@ -8,6 +8,9 @@
 define(function() {
     'use strict';
 
+    var OBSERVABLES_PROPERTY = '__knockoutObservables';
+    var SUBSCRIBABLE_PROPERTY = '__knockoutSubscribable';
+
     // Model tracking
     // --------------
     //
@@ -47,6 +50,10 @@ define(function() {
         propertyNames = propertyNames || Object.getOwnPropertyNames(obj);
 
         propertyNames.forEach(function(propertyName) {
+            // Skip storage properties
+            if (propertyName === OBSERVABLES_PROPERTY || propertyName === SUBSCRIBABLE_PROPERTY) {
+                return;
+            }
             // Skip properties that are already tracked
             if (propertyName in allObservablesForObject) {
                 return;
@@ -78,10 +85,10 @@ define(function() {
     // Gets or creates the hidden internal key-value collection of observables corresponding to
     // properties on the model object.
     function getAllObservablesForObject(obj, createIfNotDefined) {
-        var result = obj.__knockoutObservables;
+        var result = obj[OBSERVABLES_PROPERTY];
         if (!result && createIfNotDefined) {
             result = {};
-            Object.defineProperty(obj, '__knockoutObservables', {
+            Object.defineProperty(obj, OBSERVABLES_PROPERTY, {
                 value : result
             });
         }
@@ -175,10 +182,10 @@ define(function() {
 
     // Gets or creates a subscribable that fires after each array mutation
     function getSubscribableForArray(ko, arrayInstance) {
-        var subscribable = arrayInstance.__knockoutSubscribable;
+        var subscribable = arrayInstance[SUBSCRIBABLE_PROPERTY];
         if (!subscribable) {
             subscribable = new ko.subscribable();
-            Object.defineProperty(arrayInstance, '__knockoutSubscribable', {
+            Object.defineProperty(arrayInstance, SUBSCRIBABLE_PROPERTY, {
                 value : subscribable
             });
 

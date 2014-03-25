@@ -367,7 +367,7 @@ define([
 
             if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
                 var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.getImageryProvider().ready) {
+                if (imageryLayer.imageryProvider.ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
                     tileImagery.freeResources();
