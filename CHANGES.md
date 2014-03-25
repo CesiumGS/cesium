@@ -54,6 +54,19 @@ Beta Releases
       * `getWidth`, `setWidth` -> `width`
       * `getLoop`, `setLoop` -> `loop`
       * `getId` -> `id`
+  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
+    * `BoundingRectangle`
+      * `union`, `expand`
+    * `BoundingSphere`
+      * `union`, `expand`, `getPlaneDistances`, `projectTo2D`
+    * `Plane`
+      * `getPointDistance`
+    * `Ray`
+      * `getPoint`
+    * `Spherical`
+      * `normalize`
+    *Extent
+      `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)

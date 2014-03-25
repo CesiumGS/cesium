@@ -699,7 +699,7 @@ define([
         var position = billboard._getActualPosition();
 
         if (billboardCollection._mode === SceneMode.SCENE3D) {
-            billboardCollection._baseVolume.expand(position, billboardCollection._baseVolume);
+            BoundingSphere.expand(billboardCollection._baseVolume, position, billboardCollection._baseVolume);
             billboardCollection._boundingVolumeDirty = true;
         }
 
@@ -988,7 +988,7 @@ define([
                 if (recomputeBoundingVolume) {
                     positions.push(actualPosition);
                 } else {
-                    boundingVolume.expand(actualPosition, boundingVolume);
+                    BoundingSphere.expand(boundingVolume, actualPosition, boundingVolume);
                 }
             }
         }

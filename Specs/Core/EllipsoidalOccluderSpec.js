@@ -273,10 +273,10 @@ defineSuite([
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
-            var positions = [ellipsoid.cartographicToCartesian(extent.getSouthwest()),
-                             ellipsoid.cartographicToCartesian(extent.getSoutheast()),
-                             ellipsoid.cartographicToCartesian(extent.getNorthwest()),
-                             ellipsoid.cartographicToCartesian(extent.getNortheast())];
+            var positions = [ellipsoid.cartographicToCartesian(Extent.getSouthwest(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getSoutheast(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getNorthwest(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getNortheast(extent))];
 
             var foundOneNearZero = false;
             for (var i = 0; i < positions.length; ++i) {
