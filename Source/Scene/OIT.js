@@ -442,8 +442,19 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = getTranslucentColorRenderState(oit, context, command.renderState);
-            shaderProgram = getTranslucentColorShaderProgram(oit, context, command.shaderProgram);
+
+            if (!defined(command._oit) || command.shaderProgram.id !== command._oit.shaderProgramId) {
+                command._oit = {
+                    colorRenderState : getTranslucentColorRenderState(oit, context, command.renderState),
+                    alphaRenderState : getTranslucentAlphaRenderState(oit, context, command.renderState),
+                    colorShaderProgram : getTranslucentColorShaderProgram(oit, context, command.shaderProgram),
+                    alphaShaderProgram : getTranslucentAlphaShaderProgram(oit, context, command.shaderProgram),
+                    shaderProgramId : command.shaderProgram.id
+                };
+            }
+
+            renderState = command._oit.colorRenderState;
+            shaderProgram = command._oit.colorShaderProgram;
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
@@ -451,8 +462,8 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = getTranslucentAlphaRenderState(oit, context, command.renderState);
-            shaderProgram = getTranslucentAlphaShaderProgram(oit, context, command.shaderProgram);
+            renderState = command._oit.alphaRenderState;
+            shaderProgram = command._oit.alphaShaderProgram;
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 

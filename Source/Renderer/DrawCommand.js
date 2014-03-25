@@ -163,6 +163,8 @@ define(function() {
          * @private
          */
         this.debugOverlappingFrustums = 0;
+
+        this._oit = undefined;
     };
 
     /**
