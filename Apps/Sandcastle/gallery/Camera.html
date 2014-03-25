@@ -43,9 +43,8 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
         function fly(position) {
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
-            destination = ellipsoid.cartographicToCartesian(destination);
 
-            var flight = Cesium.CameraFlightPath.createAnimation(scene, {
+            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene, {
                 destination : destination
             });
             scene.animations.add(flight);
