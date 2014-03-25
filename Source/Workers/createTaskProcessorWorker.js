@@ -9,6 +9,23 @@ define([
         when) {
     "use strict";
 
+    function onComplete(postMessage, responseMessage, transferableObjects){
+        /*global self*/
+        if (!defined(postMessage)) {
+            postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
+        }
+
+        try {
+            postMessage(responseMessage, transferableObjects);
+        } catch (e) {
+            // something went wrong trying to post the message, post a simpler
+            // error that we can be sure will be cloneable
+            responseMessage.result = undefined;
+            responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
+            postMessage(responseMessage);
+        }
+    }
+
     /**
      * Creates an adapter function to allow a calculation function to operate as a Web Worker,
      * paired with TaskProcessor, to receive tasks and return results.
@@ -52,27 +69,18 @@ define([
             responseMessage.error = undefined;
             responseMessage.result = undefined;
 
-            when(workerFunction(data.parameters, transferableObjects)).then(function(result) {
-                try {
+            try {
+                when(workerFunction(data.parameters, transferableObjects)).then(function(result) {
                     responseMessage.result = result;
-                } catch (e) {
+                    onComplete(postMessage, responseMessage, transferableObjects);
+                }, function(e) {
                     responseMessage.error = e;
-                }
-
-                if (!defined(postMessage)) {
-                    postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
-                }
-
-                try {
-                    postMessage(responseMessage, transferableObjects);
-                } catch (e) {
-                    // something went wrong trying to post the message, post a simpler
-                    // error that we can be sure will be cloneable
-                    responseMessage.result = undefined;
-                    responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
-                    postMessage(responseMessage);
-                }
-            });
+                    onComplete(postMessage, responseMessage, transferableObjects);
+                });
+            } catch (e) {
+                responseMessage.error = e;
+                onComplete(postMessage, responseMessage, transferableObjects);
+            }
         };
     };
 
