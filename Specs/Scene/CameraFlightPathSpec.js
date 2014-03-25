@@ -191,36 +191,6 @@ defineSuite([
         expect(flight.easingFunction).toBeDefined();
     });
 
-    it('createAnimation throws if mode is morphing', function() {
-        expect( function() {
-            frameState.mode = SceneMode.MORPHING;
-            var destination = new Cartesian3(1e9, 1e9, 1e9);
-            CameraFlightPath.createAnimation(scene, {
-                destination : destination
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('createAnimationCartographic throws if mode is morphing', function() {
-        expect(function () {
-            frameState.mode = SceneMode.MORPHING;
-            var destination = new Cartesian3(1e9, 1e9, 1e9);
-            CameraFlightPath.createAnimationCartographic(scene, {
-                destination : destination
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('createAnimationExtent throws if mode is morphing', function() {
-        expect(function() {
-            frameState.mode = SceneMode.MORPHING;
-            var destination = new Extent(-1, -1, 1, 1);
-            CameraFlightPath.createAnimationExtent(scene, {
-                destination : destination
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('creates an animation in 3d', function() {
         var camera = frameState.camera;
 

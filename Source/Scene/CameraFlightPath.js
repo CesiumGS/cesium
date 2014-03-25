@@ -386,7 +386,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
      * @see Scene#animations
@@ -404,14 +403,22 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
+        if (scene.frameState.mode === SceneMode.MORPHING) {
+            return {
+                duration : 0,
+                onComplete : description.onComplete,
+                onCancel: description.onCancel
+            };
+        }
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
         if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
             throw new DeveloperError('If either direction or up is given, then both are required.');
-        }
-        if (scene.frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
         //>>includeEnd('debug');
 
@@ -544,8 +551,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
      * @see Scene#animations
      */
     CameraFlightPath.createAnimationCartographic = function(scene, description) {
@@ -568,8 +573,6 @@ define([
             ellipsoid.cartographicToCartesian(destination, c3destination);
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
             projection.project(destination, c3destination);
-        } else {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
         var createAnimationDescription = clone(description);
@@ -590,8 +593,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
      * @see Scene#animations
      */
     CameraFlightPath.createAnimationExtent = function(scene, description) {
@@ -605,9 +606,6 @@ define([
         }
         if (!defined(extent)) {
             throw new DeveloperError('description.destination is required.');
-        }
-        if (frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
         //>>includeEnd('debug');
 
