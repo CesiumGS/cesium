@@ -157,30 +157,6 @@ define([
     };
 
     /**
-     * Creates a duplicate of this Spherical.
-     * @memberof Spherical
-     *
-     * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
-     *
-     * @returns The modified result parameter or a new instance if result was undefined.
-     */
-    Spherical.prototype.clone = function(result) {
-        return Spherical.clone(this, result);
-    };
-
-    /**
-     * Computes the normalized version of this spherical.
-     * @memberof Spherical
-     *
-     * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
-     *
-     * @returns The modified result parameter or a new instance if result was undefined.
-     */
-    Spherical.prototype.normalize = function(result) {
-        return Spherical.normalize(this, result);
-    };
-
-    /**
      * Returns true if this spherical is equal to the provided spherical, false otherwise.
      * @memberof Spherical
      *
@@ -193,24 +169,36 @@ define([
     };
 
     /**
-     * Returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+     * Creates a duplicate of this Spherical.
      * @memberof Spherical
      *
-     * @param {Spherical} other The Spherical to be compared.
-     * @param {Number} epsilon The epsilon to compare against.
+     * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+     * @returns The modified result parameter or a new instance if result was undefined.
      */
+    Spherical.prototype.clone = function(result) {
+        return Spherical.clone(this, result);
+    };
+
+    /**
+    * Returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+    * @memberof Spherical
+    *
+    * @param {Spherical} other The Spherical to be compared.
+    * @param {Number} epsilon The epsilon to compare against.
+    *
+    * @returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+    */
     Spherical.prototype.equalsEpsilon = function(other, epsilon) {
         return Spherical.equalsEpsilon(this, other, epsilon);
     };
 
     /**
-     * Returns a string representing this instance in the format (clock, cone, magnitude).
-     * @memberof Spherical
-     *
-     * @returns A string representing this instance.
-     */
+    * Returns a string representing this instance in the format (clock, cone, magnitude).
+    * @memberof Spherical
+    *
+    * @returns A string representing this instance.
+    */
     Spherical.prototype.toString = function() {
         return Spherical.toString(this);
     };
