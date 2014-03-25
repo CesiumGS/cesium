@@ -1483,7 +1483,7 @@ define([
             return undefined;
         }
 
-        return ray.getPoint(intersection.start, result);
+        return Ray.getPoint(ray, intersection.start, result);
     }
 
     var pickEllipsoid2DRay = new Ray();
@@ -1505,7 +1505,7 @@ define([
     function pickMapColumbusView(camera, windowPosition, projection, result) {
         var ray = camera.getPickRay(windowPosition, pickEllipsoidCVRay);
         var scalar = -ray.origin.x / ray.direction.x;
-        ray.getPoint(scalar, result);
+        Ray.getPoint(ray, scalar, result);
 
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 

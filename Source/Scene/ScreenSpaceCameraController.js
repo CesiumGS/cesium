@@ -881,7 +881,7 @@ define([
         var center;
         var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
         if (defined(intersection)) {
-            center = ray.getPoint(intersection.start, tilt3DCenter);
+            center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
         } else {
             var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
             if (!defined(grazingAltitudeLocation)) {

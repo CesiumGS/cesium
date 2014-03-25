@@ -309,29 +309,6 @@ define([
     };
 
     /**
-     * Computes a bounding rectangle that contains both this bounding rectangle and the argument rectangle.
-     * @memberof BoundingRectangle
-     *
-     * @param {BoundingRectangle} right The rectangle to enclose in this bounding rectangle.
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.union = function(right, result) {
-        return BoundingRectangle.union(this, right, result);
-    };
-
-    /**
-     * Computes a bounding rectangle that is rectangle expanded to contain point.
-     * @memberof BoundingRectangle
-     *
-     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.expand = function(point, result) {
-        return BoundingRectangle.expand(this, point, result);
-    };
-
-    /**
      * Determines if this rectangle intersects with another.
      * @memberof BoundingRectangle
      *
