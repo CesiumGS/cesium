@@ -171,8 +171,8 @@ define([
             // Check the number of tiles at the minimum level.  If it's more than four,
             // try requesting the lower levels anyway, because starting at the higher minimum
             // level will cause too many tiles to be downloaded and rendered.
-            var swTile = tilingScheme.positionToTileXY(that._extent.getSouthwest(), that._minimumLevel);
-            var neTile = tilingScheme.positionToTileXY(that._extent.getNortheast(), that._minimumLevel);
+            var swTile = tilingScheme.positionToTileXY(Extent.getSouthwest(that._extent), that._minimumLevel);
+            var neTile = tilingScheme.positionToTileXY(Extent.getNortheast(that._extent), that._minimumLevel);
             var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
             if (tileCount > 4) {
                 that._minimumLevel = 0;

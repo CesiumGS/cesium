@@ -346,8 +346,8 @@ define([
 
         var radiiSquared = ellipsoid.radiiSquared;
 
-        extent.getNorthwest(nwCartographic);
-        extent.getCenter(centerCartographic);
+        Extent.getNorthwest(extent, nwCartographic);
+        Extent.getCenter(extent, centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;

@@ -241,6 +241,10 @@ define([
      */
     Extent.validate = function(extent) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+
         var north = extent.north;
         if (typeof north !== 'number') {
             throw new DeveloperError('north is required to be a number.');
@@ -288,6 +292,12 @@ define([
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.getSouthwest = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Cartographic(extent.west, extent.south);
         }
@@ -306,6 +316,12 @@ define([
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.getNorthwest = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Cartographic(extent.west, extent.north);
         }
@@ -324,6 +340,12 @@ define([
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.getNortheast = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Cartographic(extent.east, extent.north);
         }
@@ -342,6 +364,12 @@ define([
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.getSoutheast = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Cartographic(extent.east, extent.south);
         }
@@ -360,6 +388,12 @@ define([
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.getCenter = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             return new Cartographic((extent.west + extent.east) * 0.5, (extent.south + extent.north) * 0.5);
         }
@@ -380,6 +414,9 @@ define([
      */
     Extent.intersectWith = function(extent, otherExtent, result) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
         if (!defined(otherExtent)) {
             throw new DeveloperError('otherExtent is required.');
         }
@@ -409,6 +446,9 @@ define([
      */
     Extent.contains = function(extent, cartographic) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
@@ -430,6 +470,12 @@ define([
      * @returns {Boolean} True if the extent is empty; otherwise, false.
      */
     Extent.isEmpty = function(extent) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         return extent.west >= extent.east || extent.south >= extent.north;
     };
 
@@ -446,6 +492,12 @@ define([
      * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
     Extent.subsample = function(extent, ellipsoid, surfaceHeight, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 

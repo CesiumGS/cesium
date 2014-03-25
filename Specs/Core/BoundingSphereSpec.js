@@ -295,7 +295,7 @@ defineSuite([
         var extent = new Extent(0.1, -0.3, 0.2, -0.4);
         var height = 100000.0;
         var ellipsoid = Ellipsoid.WGS84;
-        var points = extent.subsample(ellipsoid, height);
+        var points = Extent.subsample(extent, ellipsoid, height);
         var expected = BoundingSphere.fromPoints(points);
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid, height)).toEqual(expected);
     });
@@ -632,70 +632,70 @@ defineSuite([
         var boundingSphere = BoundingSphere.fromExtentWithHeights2D(extent, projection, minHeight, maxHeight);
 
         // Test that the corners are inside the bounding sphere.
-        var point = extent.getSouthwest().clone();
+        var point = Extent.getSouthwest(extent).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSouthwest().clone();
+        point = Extent.getSouthwest(extent).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNortheast().clone();
+        point = Extent.getNortheast(extent).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNortheast().clone();
+        point = Extent.getNortheast(extent).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSoutheast().clone();
+        point = Extent.getSoutheast(extent).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSoutheast().clone();
+        point = Extent.getSoutheast(extent).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNorthwest().clone();
+        point = Extent.getNorthwest(extent).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNorthwest().clone();
+        point = Extent.getNorthwest(extent).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the center is inside the bounding sphere
-        point = extent.getCenter().clone();
+        point = Extent.getCenter(extent).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getCenter().clone();
+        point = Extent.getCenter(extent).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the edge midpoints are inside the bounding sphere.
-        point = new Cartographic(extent.getCenter().longitude, extent.south, minHeight);
+        point = new Cartographic(Extent.getCenter(extent).longitude, extent.south, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.south, maxHeight);
+        point = new Cartographic(Extent.getCenter(extent).longitude, extent.south, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.north, minHeight);
+        point = new Cartographic(Extent.getCenter(extent).longitude, extent.north, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.north, maxHeight);
+        point = new Cartographic(Extent.getCenter(extent).longitude, extent.north, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, extent.getCenter().latitude, minHeight);
+        point = new Cartographic(extent.west, Extent.getCenter(extent).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, extent.getCenter().latitude, maxHeight);
+        point = new Cartographic(extent.west, Extent.getCenter(extent).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, extent.getCenter().latitude, minHeight);
+        point = new Cartographic(extent.east, Extent.getCenter(extent).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, extent.getCenter().latitude, maxHeight);
+        point = new Cartographic(extent.east, Extent.getCenter(extent).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 });

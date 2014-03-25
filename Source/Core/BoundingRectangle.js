@@ -5,6 +5,7 @@ define([
         './DeveloperError',
         './Cartesian2',
         './Cartographic',
+        './Extent',
         './GeographicProjection',
         './Intersect'
     ], function(
@@ -13,6 +14,7 @@ define([
         DeveloperError,
         Cartesian2,
         Cartographic,
+        Extent,
         GeographicProjection,
         Intersect) {
     "use strict";
@@ -134,8 +136,8 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
-        var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));
+        var lowerLeft = projection.project(Extent.getSouthwest(extent, fromExtentLowerLeft));
+        var upperRight = projection.project(Extent.getNortheast(extent, fromExtentUpperRight));
 
         Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 
