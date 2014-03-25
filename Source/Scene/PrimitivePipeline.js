@@ -526,7 +526,6 @@ define([
 
             count += 4 + BoundingSphere.packedLength + geometry.indices.length;
 
-            var attributesToWrite = [];
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                     var attribute = attributes[property];
