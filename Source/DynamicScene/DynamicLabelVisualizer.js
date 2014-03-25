@@ -202,7 +202,7 @@ define([
             //don't bother creating or updating anything else
             if (defined(labelVisualizerIndex)) {
                 label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
-                label.setShow(false);
+                label.show = false;
                 dynamicLabelVisualizer._unusedIndexes.push(labelVisualizerIndex);
                 dynamicObject._labelVisualizerIndex = undefined;
             }
@@ -220,41 +220,41 @@ define([
                 label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
-            label.id = dynamicObject;
+            label._id = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            label.setText('');
-            label.setScale(1.0);
-            label.setFont('30px sans-serif');
-            label.setFillColor(Color.WHITE);
-            label.setOutlineColor(Color.BLACK);
-            label.setOutlineWidth(1);
-            label.setStyle(LabelStyle.FILL);
-            label.setPixelOffset(Cartesian2.ZERO);
-            label.setEyeOffset(Cartesian3.ZERO);
-            label.setHorizontalOrigin(HorizontalOrigin.CENTER);
-            label.setVerticalOrigin(VerticalOrigin.CENTER);
+            label.text = '';
+            label.scale = 1.0;
+            label.font = '30px sans-serif';
+            label.fillColor = Color.WHITE;
+            label.outlineColor = Color.BLACK;
+            label.outlineWidth = 1;
+            label.style = LabelStyle.FILL;
+            label.pixelOffset = Cartesian2.ZERO;
+            label.eyeOffset = Cartesian3.ZERO;
+            label.horizontalOrigin = HorizontalOrigin.CENTER;
+            label.verticalOrigin = VerticalOrigin.CENTER;
         } else {
             label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
         }
 
-        label.setShow(show);
+        label.show = show;
 
         var text = textProperty.getValue(time);
         if (defined(text)) {
-            label.setText(text);
+            label.text = text;
         }
 
         position = positionProperty.getValue(time, position);
         if (defined(position)) {
-            label.setPosition(position);
+            label.position = position;
         }
 
         var property = dynamicLabel._scale;
         if (defined(property)) {
             var scale = property.getValue(time);
             if (defined(scale)) {
-                label.setScale(scale);
+                label.scale = scale;
             }
         }
 
@@ -262,7 +262,7 @@ define([
         if (defined(property)) {
             var font = property.getValue(time);
             if (defined(font)) {
-                label.setFont(font);
+                label.font = font;
             }
         }
 
@@ -270,7 +270,7 @@ define([
         if (defined(property)) {
             fillColor = property.getValue(time, fillColor);
             if (defined(fillColor)) {
-                label.setFillColor(fillColor);
+                label.fillColor = fillColor;
             }
         }
 
@@ -278,7 +278,7 @@ define([
         if (defined(property)) {
             outlineColor = property.getValue(time, outlineColor);
             if (defined(outlineColor)) {
-                label.setOutlineColor(outlineColor);
+                label.outlineColor = outlineColor;
             }
         }
 
@@ -286,7 +286,7 @@ define([
         if (defined(property)) {
             var outlineWidth = property.getValue(time);
             if (defined(outlineWidth)) {
-                label.setOutlineWidth(outlineWidth);
+                label.outlineWidth = outlineWidth;
             }
         }
 
@@ -294,7 +294,7 @@ define([
         if (defined(property)) {
             var style = property.getValue(time);
             if (defined(style)) {
-                label.setStyle(style);
+                label.style = style;
             }
         }
 
@@ -302,7 +302,7 @@ define([
         if (defined(property)) {
             pixelOffset = property.getValue(time, pixelOffset);
             if (defined(pixelOffset)) {
-                label.setPixelOffset(pixelOffset);
+                label.pixelOffset = pixelOffset;
             }
         }
 
@@ -310,7 +310,7 @@ define([
         if (defined(property)) {
             eyeOffset = property.getValue(time, eyeOffset);
             if (defined(eyeOffset)) {
-                label.setEyeOffset(eyeOffset);
+                label.eyeOffset = eyeOffset;
             }
         }
 
@@ -318,7 +318,7 @@ define([
         if (defined(property)) {
             var horizontalOrigin = property.getValue(time);
             if (defined(horizontalOrigin)) {
-                label.setHorizontalOrigin(horizontalOrigin);
+                label.horizontalOrigin = horizontalOrigin;
             }
         }
 
@@ -326,18 +326,18 @@ define([
         if (defined(property)) {
             var verticalOrigin = property.getValue(time);
             if (defined(verticalOrigin)) {
-                label.setVerticalOrigin(verticalOrigin);
+                label.verticalOrigin = verticalOrigin;
             }
         }
 
         property = dynamicLabel._translucencyByDistance;
         if (defined(property)) {
-            label.setTranslucencyByDistance(property.getValue(time));
+            label.translucencyByDistance = property.getValue(time);
         }
 
         property = dynamicLabel._pixelOffsetScaleByDistance;
         if (defined(property)) {
-            label.setPixelOffsetScaleByDistance(property.getValue(time));
+            label.pixelOffsetScaleByDistance = property.getValue(time);
         }
     }
 
@@ -349,7 +349,7 @@ define([
             var labelVisualizerIndex = dynamicObject._labelVisualizerIndex;
             if (defined(labelVisualizerIndex)) {
                 var label = thisLabelCollection.get(labelVisualizerIndex);
-                label.setShow(false);
+                label.show = false;
                 thisUnusedIndexes.push(labelVisualizerIndex);
                 dynamicObject._labelVisualizerIndex = undefined;
             }

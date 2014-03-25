@@ -590,13 +590,13 @@ define(['../Core/Cartesian3',
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
                     geometry : new EllipsoidGeometry(options),
-                    modelMatrix : !in3D ? modelMatrix : undefined
+                    modelMatrix : !in3D ? modelMatrix : undefined,
+                    attributes : {
+                        show : new ShowGeometryInstanceAttribute(showFill)
+                    }
                 }),
                 appearance : appearance,
-                asynchronous : false,
-                attributes : {
-                    show : new ShowGeometryInstanceAttribute(showFill)
-                }
+                asynchronous : false
             });
             this._primitives.add(this._primitive);
 
