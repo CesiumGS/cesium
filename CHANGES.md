@@ -54,6 +54,18 @@ Beta Releases
       * `getWidth`, `setWidth` -> `width`
       * `getLoop`, `setLoop` -> `loop`
       * `getId` -> `id`
+  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
+    * `BoundingRectangle.prototype`
+      * `union`, `expand`
+    * `BoundingSphere.prototype`
+      * `union`, `expand`, `getPlaneDistances`, `projectTo2D`
+    * `Plane`
+      * `getPointDistance`
+    * `Ray`
+      * `getPoint`
+    * `Spherical`
+      * `normalize`, `equalsEpsilon`, `toString`
+      
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
@@ -63,19 +75,6 @@ Beta Releases
 ### b26 - 2014-03-03
 
 * Breaking changes:
-  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
-    * `AxisAlignedBoundingBox.prototype`
-      * `clone`, `equals`
-    * `BoundingRectangle.prototype`
-      * `clone`, `union`, `expand`, `equals`
-    * `BoundingSphere.prototype`
-      * `clone`, `union`, `expand`, `getPlaneDistances`, `projectTo2D`, `equals`
-    * `Plane`
-      * `getPointDistance`
-    * `Ray`
-      * `getPoint`
-    * `Spherical`
-      * `clone`, `normalize`, `equals`, `equalsEpsilon`, `toString`
   * Replaced getter/setter functions with properties:
     * `Scene`
       * `getCanvas` -> `canvas`

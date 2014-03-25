@@ -298,6 +298,17 @@ define([
     };
 
     /**
+     * Duplicates this BoundingRectangle instance.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+     */
+    BoundingRectangle.prototype.clone = function(result) {
+        return BoundingRectangle.clone(this, result);
+    };
+
+    /**
      * Determines if this rectangle intersects with another.
      * @memberof BoundingRectangle
      *
@@ -307,5 +318,18 @@ define([
     BoundingRectangle.prototype.intersect = function(right) {
         return BoundingRectangle.intersect(this, right);
     };
+
+    /**
+     * Compares this BoundingRectangle against the provided BoundingRectangle componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @memberof BoundingRectangle
+     *
+     * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    BoundingRectangle.prototype.equals = function(right) {
+        return BoundingRectangle.equals(this, right);
+    };
+
     return BoundingRectangle;
 });

@@ -156,5 +156,29 @@ define([
         return '(' + spherical.clock + ', ' + spherical.cone + ', ' + spherical.magnitude + ')';
     };
 
+    /**
+     * Returns true if this spherical is equal to the provided spherical, false otherwise.
+     * @memberof Spherical
+     *
+     * @param {Spherical} other The Spherical to be compared.
+     *
+     * @returns true if this spherical is equal to the provided spherical, false otherwise.
+     */
+    Spherical.prototype.equals = function(other) {
+        return Spherical.equals(this, other);
+    };
+
+    /**
+     * Creates a duplicate of this Spherical.
+     * @memberof Spherical
+     *
+     * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
+     *
+     * @returns The modified result parameter or a new instance if result was undefined.
+     */
+    Spherical.prototype.clone = function(result) {
+        return Spherical.clone(this, result);
+    };
+
     return Spherical;
 });
