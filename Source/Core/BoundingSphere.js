@@ -33,6 +33,7 @@ define([
      *
      * @see AxisAlignedBoundingBox
      * @see BoundingRectangle
+     * @see Packable
      */
     var BoundingSphere = function(center, radius) {
         /**
@@ -569,6 +570,69 @@ define([
 
         result.center = Cartesian3.clone(sphere.center, result.center);
         result.radius = sphere.radius;
+        return result;
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    BoundingSphere.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    BoundingSphere.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var center = value.center;
+        array[startingIndex++] = center.x;
+        array[startingIndex++] = center.y;
+        array[startingIndex++] = center.z;
+        array[startingIndex] = value.radius;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof BoundingSphere
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     */
+    BoundingSphere.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        var center = result.center;
+        center.x = array[startingIndex++];
+        center.y = array[startingIndex++];
+        center.z = array[startingIndex++];
+        result.radius = array[startingIndex];
         return result;
     };
 
