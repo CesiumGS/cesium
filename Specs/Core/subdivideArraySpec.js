@@ -31,12 +31,12 @@ defineSuite(['Core/subdivideArray'], function(subdivideArray) {
     it('Throws with undefined array', function() {
         expect(function() {
             subdivideArray(undefined, 8);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Throws with invalid number of arrays', function() {
         expect(function() {
             subdivideArray([], -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });
