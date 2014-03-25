@@ -149,6 +149,8 @@ define([
         this._overlayCommandList = [];
 
         this._oit = new OIT(context);
+        this._executeOITFunction = undefined;
+
         this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand();
@@ -921,9 +923,12 @@ define([
         var clearDepth = scene._depthClearCommand;
         var executeTranslucentCommands;
         if (useOIT) {
-            executeTranslucentCommands = function(scene, executeFunction, passState, commands) {
-                scene._oit.executeCommands(scene, executeFunction, passState, commands);
-            };
+            if (!defined(scene._executeOITFunction)) {
+                scene._executeOITFunction = function(scene, executeFunction, passState, commands) {
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands);
+                };
+            }
+            executeTranslucentCommands = scene._executeOITFunction;
         } else {
             executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
