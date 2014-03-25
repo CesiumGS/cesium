@@ -593,7 +593,7 @@ define([
 
         return {
             stringTable : stringTable,
-            packedData : packedData
+            packedData : stupefyTypedArray(packedData)
         };
     };
 
@@ -602,7 +602,7 @@ define([
      */
     PrimitivePipeline.unpackCreateGeometryResults = function(createGeometryResult) {
         var stringTable = createGeometryResult.stringTable;
-        var packedGeometry = createGeometryResult.packedData;
+        var packedGeometry = unStupefyTypedArray(createGeometryResult.packedData);
 
         var i;
         var result = new Array(packedGeometry[0]);
@@ -655,23 +655,27 @@ define([
         return result;
     };
 
-    function packPickIds(pickIds) {
+    function packPickIds(pickIds, transferableObjects) {
         var length = pickIds.length;
-        var result = new Uint16Array(pickIds.length);
+        var packedPickIds = new Uint16Array(pickIds.length);
         var q = 0;
         for (var i = 0; i < length; ++i) {
-            result[i] = pickIds[i].toRgba();
+            packedPickIds[i] = pickIds[i].toRgba();
         }
-        return result;
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(packedPickIds.buffer);
+        }
+        return stupefyTypedArray(packedPickIds);
     }
 
     function unpackPickIds(packedPickIds) {
+        packedPickIds = unStupefyTypedArray(packedPickIds);
         var length = packedPickIds.length;
-        var result = new Array(length);
+        var pickIds = new Array(length);
         for (var i = 0; i < length; i++) {
-            result[i] = Color.fromRgba(packedPickIds[i]);
+            pickIds[i] = Color.fromRgba(packedPickIds[i]);
         }
-        return result;
+        return pickIds;
     }
 
     // This function was created by simplifying packInstancesForCombine into a count-only operation.
@@ -691,19 +695,19 @@ define([
     }
 
     function packInstancesForCombine(instances, transferableObjects) {
-        var result = new Float64Array(countInstancesForCombine(instances));
+        var packedData = new Float64Array(countInstancesForCombine(instances));
         var stringHash = {};
         var stringTable = [];
 
         var length = instances.length;
         var count = 0;
-        result[count++] = length;
+        packedData[count++] = length;
         for (var i = 0; i < length; i++) {
             var instance = instances[i];
 
             var matrix = instance.modelMatrix;
             for (var x = 0; x < 16; x++) {
-                result[count++] = matrix[x];
+                packedData[count++] = matrix[x];
             }
 
             var attributes = instance.attributes;
@@ -718,29 +722,31 @@ define([
                 }
             }
 
-            result[count++] = attributesToWrite.length;
+            packedData[count++] = attributesToWrite.length;
             for (var q = 0; q < attributesToWrite.length; q++) {
                 var name = attributesToWrite[q];
                 var attribute = attributes[name];
-                result[count++] = stringHash[name];
-                result[count++] = attribute.componentDatatype.value;
-                result[count++] = attribute.componentsPerAttribute;
-                result[count++] = attribute.normalize;
-                result[count++] = attribute.value.length;
-                result.set(attribute.value, count);
+                packedData[count++] = stringHash[name];
+                packedData[count++] = attribute.componentDatatype.value;
+                packedData[count++] = attribute.componentsPerAttribute;
+                packedData[count++] = attribute.normalize;
+                packedData[count++] = attribute.value.length;
+                packedData.set(attribute.value, count);
                 count += attribute.value.length;
             }
         }
-        transferableObjects.push(result.buffer);
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(packedData.buffer);
+        }
 
         return {
             stringTable : stringTable,
-            packedData : result
+            packedData : stupefyTypedArray(packedData)
         };
     }
 
     function unpackInstancesForCombine(data) {
-        var packedInstances = data.packedData;
+        var packedInstances = unStupefyTypedArray(data.packedData);
         var stringTable = data.stringTable;
         var result = new Array(packedInstances[0]);
         var count = 0;
@@ -791,14 +797,14 @@ define([
             for ( var propertyName in instance) {
                 if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
                     var property = instance[propertyName];
-                    count += 4 + (property.indices.length * 3) + property.value.length;
+                    count += 3 + (property.indices.length * 3) + property.value.length;
                 }
             }
         }
         return count;
     }
 
-    function packAttributeLocations(attributeLocations) {
+    function packAttributeLocations(attributeLocations, transferableObjects) {
         var packedData = new Float64Array(countAttributeLocations(attributeLocations));
         var stringTable = [];
         var attributeTable = [];
@@ -826,7 +832,6 @@ define([
                 var name = propertiesToWrites[q];
                 var property = instance[name];
                 packedData[count++] = stringHash[name];
-                packedData[count++] = property.dirty;
 
                 var indices = property.indices;
                 var indicesLength = indices.length;
@@ -849,9 +854,13 @@ define([
             }
         }
 
+        if (FeatureDetection.supportsTransferringArrayBuffers()) {
+            transferableObjects.push(packedData.buffer);
+        }
+
         return {
             stringTable : stringTable,
-            packedData : packedData,
+            packedData : stupefyTypedArray(packedData),
             attributeTable : attributeTable
         };
     }
@@ -859,7 +868,7 @@ define([
     function unpackAttributeLocations(packedAttributeLocations, vaAttributes) {
         var stringTable = packedAttributeLocations.stringTable;
         var attributeTable = packedAttributeLocations.attributeTable;
-        var packedData = packedAttributeLocations.packedData;
+        var packedData = unStupefyTypedArray(packedAttributeLocations.packedData);
 
         var attributeLocations = new Array(packedData[0]);
         var attributeLocationsIndex = 0;
@@ -870,7 +879,6 @@ define([
             var numAttributes = packedData[i++];
             for (var x = 0; x < numAttributes; x++) {
                 var name = stringTable[packedData[i++]];
-                var dirty = packedData[i++] !== 0;
 
                 var indices = new Array(packedData[i++]);
                 for (var indicesIndex = 0; indicesIndex < indices.length; indicesIndex++) {
@@ -888,7 +896,7 @@ define([
                 }
 
                 instance[name] = {
-                    dirty : dirty,
+                    dirty : false,
                     indices : indices,
                     value : value
                 };
@@ -914,10 +922,7 @@ define([
 
         var packedPickIds;
         if (parameters.allowPicking) {
-            packedPickIds = packPickIds(parameters.pickIds);
-            if (FeatureDetection.supportsTransferringArrayBuffers()) {
-                transferableObjects.push(packedPickIds.buffer);
-            }
+            packedPickIds = packPickIds(parameters.pickIds, transferableObjects);
         }
 
         return {
@@ -939,7 +944,7 @@ define([
      */
     PrimitivePipeline.unpackCombineGeometryParameters = function(packedParameters) {
         var instances = unpackInstancesForCombine(packedParameters.packedInstances);
-        var pickIds = unpackPickIds(packedParameters.packedPickIds);
+        var pickIds = packedParameters.allowPicking ? unpackPickIds(packedParameters.packedPickIds) : undefined;
         var createGeometryResults = packedParameters.createGeometryResults;
         var length = createGeometryResults.length;
         var instanceIndex = 0;
@@ -975,11 +980,7 @@ define([
     PrimitivePipeline.packCombineGeometryResults = function(results, transferableObjects) {
         transferGeometries(results.geometries, transferableObjects);
         transferPerInstanceAttributes(results.vaAttributes, transferableObjects);
-
-        results.packedVaAttributeLocations = packAttributeLocations(results.vaAttributeLocations);
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(results.packedVaAttributeLocations.packedData.buffer);
-        }
+        results.packedVaAttributeLocations = packAttributeLocations(results.vaAttributeLocations, transferableObjects);
         delete results.vaAttributeLocations;
         return results;
     };
