@@ -410,8 +410,8 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the extent.  The imagery TilingScheme's extent
         // always fully contains the ImageryProvider's extent.
-        var extent = tile.extent.intersectWith(imageryProvider.extent);
-        extent = extent.intersectWith(this._extent);
+        var extent = Extent.intersectWith(tile.extent, imageryProvider.extent);
+        extent = Extent.intersectWith(extent, this._extent);
 
         if (extent.east <= extent.west || extent.north <= extent.south) {
             // There is no overlap between this terrain tile and this imagery
@@ -421,7 +421,7 @@ define([
                 return false;
             }
 
-            var baseImageryExtent = imageryProvider.extent.intersectWith(this._extent);
+            var baseImageryExtent = Extent.intersectWith(imageryProvider.extent, this._extent);
             var baseTerrainExtent = tile.extent;
 
             if (baseTerrainExtent.south >= baseImageryExtent.north) {
@@ -465,8 +465,8 @@ define([
         }
 
         var imageryTilingScheme = imageryProvider.tilingScheme;
-        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
-        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
+        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(Extent.getNorthwest(extent), imageryLevel);
+        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(Extent.getSoutheast(extent), imageryLevel);
 
         // If the southeast corner of the extent lies very close to the north or west side
         // of the southeast tile, we don't actually need the southernmost or easternmost

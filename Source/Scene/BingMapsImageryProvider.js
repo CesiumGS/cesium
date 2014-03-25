@@ -573,8 +573,8 @@ define([
             for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
                 var area = coverageAreas[areaIndex];
                 if (level >= area.zoomMin && level <= area.zoomMax) {
-                    var intersection = extent.intersectWith(area.bbox, intersectionScratch);
-                    if (!intersection.isEmpty()) {
+                    var intersection = Extent.intersectWith(extent, area.bbox, intersectionScratch);
+                    if (!Extent.isEmpty(intersection)) {
                         included = true;
                     }
                 }

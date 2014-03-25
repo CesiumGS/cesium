@@ -299,8 +299,8 @@ define([
 
             var testExtent = extent.extent;
 
-            var intersection = testExtent.intersectWith(parentExtent, extentScratch);
-            if (!intersection.isEmpty()) {
+            var intersection = Extent.intersectWith(testExtent, parentExtent, extentScratch);
+            if (!Extent.isEmpty(intersection)) {
                 // Parent tile is inside this extent, so at least one child is, too.
                 if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2, level + 1)) {
                     childMask |= 4; // northwest
@@ -322,7 +322,7 @@ define([
 
     function isTileInExtent(tilingScheme, extent, x, y, level) {
         var tileExtent = tilingScheme.tileXYToExtent(x, y, level);
-        return !tileExtent.intersectWith(extent, extentScratch).isEmpty();
+        return !Extent.isEmpty(Extent.intersectWith(tileExtent, extent, extentScratch));
     }
 
     return VRTheWorldTerrainProvider;

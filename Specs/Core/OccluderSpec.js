@@ -271,7 +271,7 @@ defineSuite([
         var edge = Math.PI / 32.0;
         var extent = new Extent(-edge, -edge, edge, edge);
         var ellipsoid = Ellipsoid.WGS84;
-        var positions = extent.subsample(ellipsoid);
+        var positions = Extent.subsample(extent, ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
         var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), bs.center, positions);
         var actual = Occluder.computeOccludeePointFromExtent(extent);

@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/Extent',
         '../Core/HeightmapTessellator',
         '../Core/Math',
         '../Core/TaskProcessor',
@@ -14,6 +15,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Extent,
         HeightmapTessellator,
         CesiumMath,
         TaskProcessor,
@@ -159,7 +161,7 @@ define([
         var extent = tilingScheme.tileXYToExtent(x, y, level);
 
         // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(extent.getCenter());
+        var center = ellipsoid.cartographicToCartesian(Extent.getCenter(extent));
 
         var structure = this._structure;
 
