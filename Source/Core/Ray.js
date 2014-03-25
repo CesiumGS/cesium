@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './DeveloperError',
+        './defined',
         './defaultValue',
         './Cartesian3'
        ], function(
          DeveloperError,
+         defined,
          defaultValue,
          Cartesian3) {
     "use strict";
@@ -53,6 +55,9 @@ define([
      */
     Ray.getPoint = function(ray, t, result) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(ray)){
+            throw new DeveloperError('ray is requred');
+        }
         if (typeof t !== 'number') {
             throw new DeveloperError('t is a required number');
         }
