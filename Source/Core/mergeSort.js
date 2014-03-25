@@ -10,7 +10,7 @@ define([
     var leftScratchArray;
     var rightScratchArray;
 
-    function merge(array, compare, start, middle, end) {
+    function merge(array, compare, userDefinedObject, start, middle, end) {
         var leftLength = middle - start + 1;
         var rightLength = end - middle;
 
@@ -33,7 +33,7 @@ define([
         for (var k = start; k <= end; ++k) {
             var leftElement = left[i];
             var rightElement = right[j];
-            if (i < leftLength && (j >= rightLength || compare(leftElement, rightElement) <= 0)) {
+            if (i < leftLength && (j >= rightLength || compare(leftElement, rightElement, userDefinedObject) <= 0)) {
                 array[k] = leftElement;
                 ++i;
             } else if (j < rightLength){
@@ -43,15 +43,15 @@ define([
         }
     }
 
-    function sort(array, compare, start, end) {
+    function sort(array, compare, userDefinedObject, start, end) {
         if (start >= end) {
             return;
         }
 
         var middle = Math.floor((start + end) * 0.5);
-        sort(array, compare, start, middle);
-        sort(array, compare, middle + 1, end);
-        merge(array, compare, start, middle, end);
+        sort(array, compare, userDefinedObject, start, middle);
+        sort(array, compare, userDefinedObject, middle + 1, end);
+        merge(array, compare, userDefinedObject, start, middle, end);
     }
 
     /**
@@ -64,15 +64,17 @@ define([
      *        If the first parameter is less than the second parameter, the function should return a
      *        negative value.  If it is greater, the function should return a positive value.  If the
      *        items are equal, it should return 0.
+     * @param {Object} [userDefinedObject] An object to pass as the third parameter to comparator.
      *
      * @example
      * // Sort an array of numbers in increasing order
-     * var array = // Array of numbers
-     * mergeSort(array, function(a, b) {
-     *     return a - b;
-     * });
+     * var array = // Array of bounding spheres in world coordinates
+     * var position = camera.positionWC;
+     * mergeSort(array, function(a, b, position) {
+     *     return BoundingSphere.distanceSquaredTo(b.sphere, position) - BounsingSphere.distanceSquaredTo(a.sphere, position);
+     * }, position);
      */
-    var mergeSort = function(array, comparator) {
+    var mergeSort = function(array, comparator, userDefinedObject) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required.');
@@ -89,7 +91,7 @@ define([
             rightScratchArray = new Array(scratchLength);
         }
 
-        sort(array, comparator, 0, length - 1);
+        sort(array, comparator, userDefinedObject, 0, length - 1);
     };
 
     return mergeSort;

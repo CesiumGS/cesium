@@ -801,17 +801,14 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(boundingVolume)))));
     }
 
-    function createTranslucentCompareFunction(position) {
-        return function(a, b) {
-            return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
-        };
+    function translucentCompare(a, b, position) {
+        return BoundingSphere.distanceSquaredTo(b.boundingVolume, position) - BoundingSphere.distanceSquaredTo(a.boundingVolume, position);
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
         var context = scene._context;
 
-        var translucentCompare = createTranslucentCompareFunction(scene._camera.positionWC);
-        mergeSort(commands, translucentCompare);
+        mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
