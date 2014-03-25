@@ -230,16 +230,22 @@ define([
     };
 
     /**
-     * Checks this Extent's properties and throws if they are not in valid ranges.
+     * Checks an Extent's properties and throws if they are not in valid ranges.
+     *
+     * @param {Extent} extent The extent to validate
      *
      * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      */
-    Extent.prototype.validate = function() {
+    Extent.validate = function(extent) {
         //>>includeStart('debug', pragmas.debug);
-        var north = this.north;
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+
+        var north = extent.north;
         if (typeof north !== 'number') {
             throw new DeveloperError('north is required to be a number.');
         }
@@ -248,7 +254,7 @@ define([
             throw new DeveloperError('north must be in the interval [-Pi/2, Pi/2].');
         }
 
-        var south = this.south;
+        var south = extent.south;
         if (typeof south !== 'number') {
             throw new DeveloperError('south is required to be a number.');
         }
@@ -257,7 +263,7 @@ define([
             throw new DeveloperError('south must be in the interval [-Pi/2, Pi/2].');
         }
 
-        var west = this.west;
+        var west = extent.west;
         if (typeof west !== 'number') {
             throw new DeveloperError('west is required to be a number.');
         }
@@ -266,7 +272,7 @@ define([
             throw new DeveloperError('west must be in the interval [-Pi, Pi].');
         }
 
-        var east = this.east;
+        var east = extent.east;
         if (typeof east !== 'number') {
             throw new DeveloperError('east is required to be a number.');
         }
@@ -278,109 +284,148 @@ define([
     };
 
     /**
-     * Computes the southwest corner of this extent.
+     * Computes the southwest corner of an extent.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.prototype.getSouthwest = function(result) {
-        if (!defined(result)) {
-            return new Cartographic(this.west, this.south);
+    Extent.getSouthwest = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
         }
-        result.longitude = this.west;
-        result.latitude = this.south;
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartographic(extent.west, extent.south);
+        }
+        result.longitude = extent.west;
+        result.latitude = extent.south;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the northwest corner of this extent.
+     * Computes the northwest corner of an extent.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.prototype.getNorthwest = function(result) {
-        if (!defined(result)) {
-            return new Cartographic(this.west, this.north);
+    Extent.getNorthwest = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
         }
-        result.longitude = this.west;
-        result.latitude = this.north;
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartographic(extent.west, extent.north);
+        }
+        result.longitude = extent.west;
+        result.latitude = extent.north;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the northeast corner of this extent.
+     * Computes the northeast corner of an extent.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.prototype.getNortheast = function(result) {
-        if (!defined(result)) {
-            return new Cartographic(this.east, this.north);
+    Extent.getNortheast = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
         }
-        result.longitude = this.east;
-        result.latitude = this.north;
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartographic(extent.east, extent.north);
+        }
+        result.longitude = extent.east;
+        result.latitude = extent.north;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the southeast corner of this extent.
+     * Computes the southeast corner of an extent.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.prototype.getSoutheast = function(result) {
-        if (!defined(result)) {
-            return new Cartographic(this.east, this.south);
+    Extent.getSoutheast = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
         }
-        result.longitude = this.east;
-        result.latitude = this.south;
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartographic(extent.east, extent.south);
+        }
+        result.longitude = extent.east;
+        result.latitude = extent.south;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the center of this extent.
+     * Computes the center of an extent.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.prototype.getCenter = function(result) {
-        if (!defined(result)) {
-            return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5);
+    Extent.getCenter = function(extent, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
         }
-        result.longitude = (this.west + this.east) * 0.5;
-        result.latitude = (this.south + this.north) * 0.5;
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartographic((extent.west + extent.east) * 0.5, (extent.south + extent.north) * 0.5);
+        }
+        result.longitude = (extent.west + extent.east) * 0.5;
+        result.latitude = (extent.south + extent.north) * 0.5;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the intersection of this extent with the provided extent.
+     * Computes the intersection of two extents
      * @memberof Extent
      *
-     * @param otherExtent The extent to intersect with this extent.
+     * @param {Extent} extent On extent to find an intersection
+     * @param otherExtent Another extent to find an intersection
      * @param {Extent} [result] The object onto which to store the result.
      * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
-    Extent.prototype.intersectWith = function(otherExtent, result) {
+    Extent.intersectWith = function(extent, otherExtent, result) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
         if (!defined(otherExtent)) {
             throw new DeveloperError('otherExtent is required.');
         }
         //>>includeEnd('debug');
 
-        var west = Math.max(this.west, otherExtent.west);
-        var south = Math.max(this.south, otherExtent.south);
-        var east = Math.min(this.east, otherExtent.east);
-        var north = Math.min(this.north, otherExtent.north);
+        var west = Math.max(extent.west, otherExtent.west);
+        var south = Math.max(extent.south, otherExtent.south);
+        var east = Math.min(extent.east, otherExtent.east);
+        var north = Math.min(extent.north, otherExtent.north);
         if (!defined(result)) {
             return new Extent(west, south, east, north);
         }
@@ -392,23 +437,27 @@ define([
     };
 
     /**
-     * Returns true if the provided cartographic is on or inside the extent, false otherwise.
+     * Returns true if the cartographic is on or inside the extent, false otherwise.
      * @memberof Extent
      *
+     * @param {Extent} extent The extent
      * @param {Cartographic} cartographic The cartographic to test.
      * @returns {Boolean} true if the provided cartographic is inside the extent, false otherwise.
      */
-    Extent.prototype.contains = function(cartographic) {
+    Extent.contains = function(extent, cartographic) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         //>>includeEnd('debug');
 
-        return cartographic.longitude >= this.west &&
-               cartographic.longitude <= this.east &&
-               cartographic.latitude >= this.south &&
-               cartographic.latitude <= this.north;
+        return cartographic.longitude >= extent.west &&
+               cartographic.longitude <= extent.east &&
+               cartographic.latitude >= extent.south &&
+               cartographic.latitude <= extent.north;
     };
 
     /**
@@ -417,24 +466,38 @@ define([
      *
      * @memberof Extent
      *
+     * @param {Extent} extent The extent
      * @returns {Boolean} True if the extent is empty; otherwise, false.
      */
-    Extent.prototype.isEmpty = function() {
-        return this.west >= this.east || this.south >= this.north;
+    Extent.isEmpty = function(extent) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
+        return extent.west >= extent.east || extent.south >= extent.north;
     };
 
     var subsampleLlaScratch = new Cartographic();
     /**
-     * Samples this extent so that it includes a list of Cartesian points suitable for passing to
+     * Samples an extent so that it includes a list of Cartesian points suitable for passing to
      * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
      * for extents that cover the poles or cross the equator.
      *
+     * @param {Extent} extent The extent to subsample.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      * @param {Number} [surfaceHeight=0.0] The height of the extent above the ellipsoid.
      * @param {Array} [result] The array of Cartesians onto which to store the result.
      * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
-    Extent.prototype.subsample = function(ellipsoid, surfaceHeight, result) {
+    Extent.subsample = function(extent, ellipsoid, surfaceHeight, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(extent)) {
+            throw new DeveloperError('extent is required');
+        }
+        //>>includeEnd('debug');
+
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
@@ -443,10 +506,10 @@ define([
         }
         var length = 0;
 
-        var north = this.north;
-        var south = this.south;
-        var east = this.east;
-        var west = this.west;
+        var north = extent.north;
+        var south = extent.south;
+        var east = extent.east;
+        var west = extent.west;
 
         var lla = subsampleLlaScratch;
         lla.height = surfaceHeight;

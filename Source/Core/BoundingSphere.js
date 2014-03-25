@@ -6,6 +6,7 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
+        './Extent',
         './GeographicProjection',
         './Intersect',
         './Interval',
@@ -17,6 +18,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        Extent,
         GeographicProjection,
         Intersect,
         Interval,
@@ -257,9 +259,9 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        extent.getSouthwest(fromExtent2DSouthwest);
+        Extent.getSouthwest(extent, fromExtent2DSouthwest);
         fromExtent2DSouthwest.height = minimumHeight;
-        extent.getNortheast(fromExtent2DNortheast);
+        Extent.getNortheast(extent, fromExtent2DNortheast);
         fromExtent2DNortheast.height = maximumHeight;
 
         var lowerLeft = projection.project(fromExtent2DSouthwest, fromExtent2DLowerLeft);
@@ -296,7 +298,7 @@ define([
 
         var positions;
         if (defined(extent)) {
-            positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
+            positions = Extent.subsample(extent, ellipsoid, surfaceHeight, fromExtent3DScratch);
         }
 
         return BoundingSphere.fromPoints(positions, result);
