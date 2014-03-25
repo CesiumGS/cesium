@@ -522,32 +522,9 @@ define([
         return pickColors;
     }
 
-    var totalNumberOfWorkers = 4;
-    var numberOfCreationWorkers = totalNumberOfWorkers - 1;
+    var numberOfCreationWorkers = 3;
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
-
-    defineProperties(Primitive, {
-        /**
-         * Gets or sets the maximum number of web workers to be used when processing geometry
-         * asynchronously.  This value must be 2 or greater.
-         * @memberof Primitive
-         * @type {Number}
-         * @default 4
-         */
-        numberOfWorkers : {
-            get : function() {
-                return totalNumberOfWorkers;
-            },
-            set : function(value) {
-                if (value < 2) {
-                    throw new DeveloperError('numberOfWorkers must be 2 or greater.');
-                }
-                totalNumberOfWorkers = value;
-                numberOfCreationWorkers = value - 1;
-            }
-        }
-    });
 
     /**
      * @private
