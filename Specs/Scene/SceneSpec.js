@@ -11,6 +11,8 @@ defineSuite([
          'Renderer/Context',
          'Renderer/Pass',
          'Renderer/PassState',
+         'Renderer/PixelDatatype',
+         'Renderer/PixelFormat',
          'Renderer/UniformState',
          'Scene/AnimationCollection',
          'Scene/Camera',
@@ -33,6 +35,8 @@ defineSuite([
          Context,
          Pass,
          PassState,
+         PixelDatatype,
+         PixelFormat,
          UniformState,
          AnimationCollection,
          Camera,
@@ -44,7 +48,7 @@ defineSuite([
          createScene,
          destroyScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var scene;
 
@@ -339,6 +343,38 @@ defineSuite([
     });
 
     it('renders with forced FXAA', function() {
+        var context = scene.context;
+
+        if (context.getDepthTexture()) {
+            var framebuffer = context.createFramebuffer({
+                colorTextures : [context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.RGBA,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                })],
+                depthTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                })
+            });
+
+            var status = framebuffer.getStatus();
+            framebuffer.destroy();
+
+            if (status !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                return;
+            }
+        }
+
+        var s = createScene();
+        s._oit._translucentMRTSupport = false;
+        s._oit._translucentMultipassSupport = false;
+
+        s.fxaa = true;
+
         var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
         var extentPrimitive = new ExtentPrimitive({
@@ -348,20 +384,19 @@ defineSuite([
         });
         extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var primitives = scene.primitives;
+        var primitives = s.primitives;
         primitives.add(extentPrimitive);
 
-        scene.camera.viewExtent(extent);
+        s.camera.viewExtent(extent);
 
-        scene.fxaaOrderIndependentTranslucency = false;
-        scene.fxaa = true;
-
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
+        s.initializeFrame();
+        s.render();
+        var pixels = s.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
+
+        destroyScene(s);
     });
 
     it('renders with multipass OIT if MRT is available', function() {

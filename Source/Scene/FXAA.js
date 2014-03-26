@@ -82,7 +82,7 @@ define([
             this._texture = context.createTexture2D({
                 width : width,
                 height : height,
-                pixelFormat : PixelFormat.RGB,
+                pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
 

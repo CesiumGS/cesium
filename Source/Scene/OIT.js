@@ -107,7 +107,7 @@ define([
         oit._opaqueTexture = context.createTexture2D({
             width : width,
             height : height,
-            pixelFormat : PixelFormat.RGB,
+            pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE
         });
         oit._accumulationTexture = context.createTexture2D({

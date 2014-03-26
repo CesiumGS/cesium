@@ -814,7 +814,7 @@ define([
 
         var length = commands.length;
         for (var j = 0; j < length; ++j) {
-            executeFunction(commands[j], scene, context, passState, undefined, undefined, false);
+            executeFunction(commands[j], scene, context, passState);
         }
     }
 
