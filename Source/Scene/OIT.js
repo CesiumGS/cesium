@@ -5,10 +5,12 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Renderer/createShaderSource',
+        '../Renderer/BlendEquation',
         '../Renderer/BlendFunction',
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
+        '../Renderer/RenderState',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
@@ -17,10 +19,12 @@ define([
         destroyObject,
         Color,
         createShaderSource,
+        BlendEquation,
         BlendFunction,
         ClearCommand,
         PixelDatatype,
         PixelFormat,
+        RenderState,
         AdjustTranslucentFS,
         CompositeOITFS) {
     "use strict";
@@ -303,6 +307,9 @@ define([
 
     var translucentMRTBlend = {
         enabled : true,
+        color : new Color(0.0, 0.0, 0.0, 0.0),
+        equationRgb : BlendEquation.ADD,
+        equationAlpha : BlendEquation.ADD,
         functionSourceRgb : BlendFunction.ONE,
         functionDestinationRgb : BlendFunction.ONE,
         functionSourceAlpha : BlendFunction.ZERO,
@@ -310,7 +317,9 @@ define([
     };
 
     var translucentColorBlend = {
-        enabled : true,
+        enabled : true,color : new Color(0.0, 0.0, 0.0, 0.0),
+        equationRgb : BlendEquation.ADD,
+        equationAlpha : BlendEquation.ADD,
         functionSourceRgb : BlendFunction.ONE,
         functionDestinationRgb : BlendFunction.ONE,
         functionSourceAlpha : BlendFunction.ONE,
@@ -318,7 +327,9 @@ define([
     };
 
     var translucentAlphaBlend = {
-        enabled : true,
+        enabled : true,color : new Color(0.0, 0.0, 0.0, 0.0),
+        equationRgb : BlendEquation.ADD,
+        equationAlpha : BlendEquation.ADD,
         functionSourceRgb : BlendFunction.ZERO,
         functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
         functionSourceAlpha : BlendFunction.ZERO,
@@ -328,17 +339,12 @@ define([
     function getTranslucentRenderState(context, translucentBlending, cache, renderState) {
         var translucentState = cache[renderState.id];
         if (!defined(translucentState)) {
-            var depthMask = renderState.depthMask;
-            var blending = renderState.blending;
+            var rs = RenderState.clone(renderState);
+            rs.depthMask = false;
+            rs.blending = translucentBlending;
 
-            renderState.depthMask = false;
-            renderState.blending = translucentBlending;
-
-            translucentState = context.createRenderState(renderState);
+            translucentState = context.createRenderState(rs);
             cache[renderState.id] = translucentState;
-
-            renderState.depthMask = depthMask;
-            renderState.blending = blending;
         }
 
         return translucentState;
