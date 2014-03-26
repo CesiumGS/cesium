@@ -520,7 +520,7 @@ define([
      * var len = billboards.length;
      * for (var i = 0; i < len; ++i) {
      *   var b = billboards.get(i);
-     *   b.setShow(!b.show);
+     *   b.show = !b.show;
      * }
      */
     BillboardCollection.prototype.get = function(index) {

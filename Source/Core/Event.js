@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './DeveloperError'
-       ], function(
-         DeveloperError) {
+        './DeveloperError',
+        './defineProperties'
+    ], function(
+         DeveloperError,
+         defineProperties) {
     "use strict";
 
     /**
@@ -30,16 +32,18 @@ define([
         this._scopes = [];
     };
 
-    /**
-     * Gets the number of listeners currently subscribed to the event.
-     *
-     * @memberof Event
-     *
-     * @returns {Number} The number of subscribed listeners.
-     */
-    Event.prototype.getNumberOfListeners = function() {
-        return this._listeners.length;
-    };
+    defineProperties(Event.prototype, {
+        /**
+         * The number of listeners currently subscribed to the event.
+         * @memberof Event.prototype
+         * @type {Number}
+         */
+        numberOfListeners: {
+            get : function() {
+                return this._listeners.length;
+            }
+        }
+    });
 
     /**
      * Registers a callback function to be executed whenever the event is raised.

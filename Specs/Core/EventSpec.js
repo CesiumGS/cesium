@@ -67,33 +67,33 @@ defineSuite([
         expect(scope2.timesCalled).toEqual(1);
 
         event.removeEventListener(Scope.prototype.myCallback, scope1);
-        expect(event.getNumberOfListeners()).toEqual(1);
+        expect(event.numberOfListeners).toEqual(1);
         event.raiseEvent();
 
         expect(scope1.timesCalled).toEqual(1);
         expect(scope2.timesCalled).toEqual(2);
 
         event.removeEventListener(Scope.prototype.myCallback, scope2);
-        expect(event.getNumberOfListeners()).toEqual(0);
+        expect(event.numberOfListeners).toEqual(0);
     });
 
-    it('getNumberOfListeners returns the correct number', function() {
+    it('numberOfListeners returns the correct number', function() {
         var callback1 = function() {
         };
 
         var callback2 = function() {
         };
 
-        expect(event.getNumberOfListeners()).toEqual(0);
+        expect(event.numberOfListeners).toEqual(0);
 
         event.addEventListener(callback1);
-        expect(event.getNumberOfListeners()).toEqual(1);
+        expect(event.numberOfListeners).toEqual(1);
 
         event.addEventListener(callback2);
-        expect(event.getNumberOfListeners()).toEqual(2);
+        expect(event.numberOfListeners).toEqual(2);
 
         event.removeEventListener(callback2);
-        expect(event.getNumberOfListeners()).toEqual(1);
+        expect(event.numberOfListeners).toEqual(1);
     });
 
     it('works with no listeners', function() {
