@@ -1,10 +1,14 @@
 /*global define*/
 define(['../../Core/BoundingSphere',
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/Matrix3',
+        '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
+        '../../Core/Transforms',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObject',
         '../../Scene/SceneMode',
@@ -13,11 +17,15 @@ define(['../../Core/BoundingSphere',
         '../../ThirdParty/knockout'
     ], function(
         BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
         EventHelper,
+        Matrix3,
+        Matrix4,
         ScreenSpaceEventType,
+        Transforms,
         wrapFunction,
         DynamicObject,
         SceneMode,
@@ -71,12 +79,14 @@ define(['../../Core/BoundingSphere',
 
         var eventHelper = new EventHelper();
         var dynamicObjectView;
+        var useIcrf = false;
 
         function trackSelectedObject() {
             viewer.trackedObject = viewer.selectedObject;
         }
 
         function clearTrackedObject() {
+            useIcrf = false;
             viewer.trackedObject = undefined;
         }
 
@@ -85,6 +95,7 @@ define(['../../Core/BoundingSphere',
         }
 
         function clearObjects() {
+            useIcrf = false;
             viewer.trackedObject = undefined;
             viewer.selectedObject = undefined;
         }
@@ -96,12 +107,35 @@ define(['../../Core/BoundingSphere',
 
         var scratchVertexPositions;
         var scratchBoundingSphere;
+        var scratchInertialToFixed3x3 = new Matrix3();
+        var scratchInertialToFixed4x4= new Matrix4();
+
+        function computeInertialToFixed() {
+            if (!defined(Transforms.computeIcrfToFixedMatrix(viewer.clock.currentTime, scratchInertialToFixed3x3))) {
+                Transforms.computeTemeToPseudoFixedMatrix(viewer.clock.currentTime, scratchInertialToFixed3x3);
+            }
+
+            return Matrix4.fromRotationTranslation(scratchInertialToFixed3x3, Cartesian3.ZERO, scratchInertialToFixed4x4);
+        }
+
+        function switchToIcrf() {
+            viewer.scene.camera.setTransform(computeInertialToFixed());
+            useIcrf = true;
+        }
+
+        function clearIcrf() {
+            useIcrf = false;
+        }
+        window.switchToIcrf = switchToIcrf;       // TODO: Remove temporary debugging
+        window.clearIcrf = clearIcrf;             // TODO: Remove temporary debugging
 
         // Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
             var time = clock.currentTime;
             if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(time);
+            } else if (useIcrf && viewer.scene.mode === SceneMode.SCENE3D) {
+                Matrix4.clone(computeInertialToFixed(), viewer.scene.camera.transform);
             }
 
             var selectedObject = viewer.selectedObject;
@@ -265,6 +299,8 @@ define(['../../Core/BoundingSphere',
             var scene = viewer.scene;
             var sceneMode = scene.frameState.mode;
             var isTracking = defined(value);
+
+            clearIcrf();
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                 scene.screenSpaceCameraController.enableTranslate = !isTracking;
