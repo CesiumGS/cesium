@@ -518,5 +518,87 @@ define([
         }
     };
 
+    /**
+     * Duplicates a RenderState instance. The object returned must still be created with {@link Context#createRenderState}.
+     *
+     * @param renderState The render state to be cloned.
+     * @returns {Object} The duplicated render state.
+     */
+    RenderState.clone = function(renderState) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(renderState)) {
+            throw new DeveloperError('renderState is required.');
+        }
+        //>>includeEnd('debug');
+
+        return {
+            frontFace : renderState.frontFace,
+            cull : {
+                enabled : renderState.cull.enabled,
+                face : renderState.cull.face
+            },
+            lineWidth : renderState.lineWidth,
+            polygonOffset : {
+                enabled : renderState.polygonOffset.enabled,
+                factor : renderState.polygonOffset.factor,
+                units : renderState.polygonOffset.units
+            },
+            scissorTest : {
+                enabled : renderState.scissorTest.enabled,
+                rectangle : BoundingRectangle.clone(renderState.scissorTest.rectangle)
+            },
+            depthRange : {
+                near : renderState.depthRange.near,
+                far : renderState.depthRange.far
+            },
+            depthTest : {
+                enabled : renderState.depthTest.enabled,
+                func : renderState.depthTest.func
+            },
+            colorMask : {
+                red : renderState.colorMask.red,
+                green : renderState.colorMask.green,
+                blue : renderState.colorMask.blue,
+                alpha : renderState.colorMask.alpha
+            },
+            depthMask : renderState.depthMask,
+            stencilMask : renderState.stencilMask,
+            blending : {
+                enabled : renderState.blending.enabled,
+                color : Color.clone(renderState.blending.color),
+                equationRgb : renderState.blending.equationRgb,
+                equationAlpha : renderState.blending.equationAlpha,
+                functionSourceRgb : renderState.blending.functionSourceRgb,
+                functionSourceAlpha : renderState.blending.functionSourceAlpha,
+                functionDestinationRgb : renderState.blending.functionDestinationRgb,
+                functionDestinationAlpha : renderState.blending.functionDestinationAlpha
+            },
+            stencilTest : {
+                enabled : renderState.stencilTest.enabled,
+                frontFunction : renderState.stencilTest.frontFunction,
+                backFunction : renderState.stencilTest.backFunction,
+                reference : renderState.stencilTest.reference,
+                mask : renderState.stencilTest.mask,
+                frontOperation : {
+                    fail : renderState.stencilTest.frontOperation.fail,
+                    zFail : renderState.stencilTest.frontOperation.zFail,
+                    zPass : renderState.stencilTest.frontOperation.zPass
+                },
+                backOperation : {
+                    fail : renderState.stencilTest.backOperation.fail,
+                    zFail : renderState.stencilTest.backOperation.zFail,
+                    zPass : renderState.stencilTest.backOperation.zPass
+                }
+            },
+            sampleCoverage : {
+                enabled : renderState.sampleCoverage.enabled,
+                value : renderState.sampleCoverage.value,
+                invert : renderState.sampleCoverage.invert
+            },
+            dither : renderState.dither,
+            viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
+        };
+    };
+
     return RenderState;
 });

@@ -89,6 +89,9 @@ define([
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
 
+        this._inverseProjectionOITDirty = true;
+        this._inverseProjectionOIT = new Matrix4();
+
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
 
@@ -183,6 +186,7 @@ define([
         Matrix4.clone(matrix, uniformState._projection);
 
         uniformState._inverseProjectionDirty = true;
+        uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
@@ -617,6 +621,26 @@ define([
     UniformState.prototype.getInverseProjection = function() {
         cleanInverseProjection(this);
         return this._inverseProjection;
+    };
+
+    function cleanInverseProjectionOIT(uniformState) {
+        if (uniformState._inverseProjectionOITDirty) {
+            uniformState._inverseProjectionOITDirty = false;
+
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
+                Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
+            } else {
+                Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
+            }
+        }
+    }
+
+    /**
+     * @private
+     */
+    UniformState.prototype.getInverseProjectionOIT = function() {
+        cleanInverseProjectionOIT(this);
+        return this._inverseProjectionOIT;
     };
 
     /**
