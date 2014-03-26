@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './Credit'
@@ -14,6 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        Extent,
         ImageryProvider,
         WebMercatorTilingScheme,
         Credit) {
@@ -81,8 +83,8 @@ define([
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = this._tilingScheme.positionToTileXY(this._extent.getSouthwest(), this._minimumLevel);
-        var neTile = this._tilingScheme.positionToTileXY(this._extent.getNortheast(), this._minimumLevel);
+        var swTile = this._tilingScheme.positionToTileXY(Extent.getSouthwest(this._extent), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(Extent.getNortheast(this._extent), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
             throw new DeveloperError('The imagery provider\'s extent and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');

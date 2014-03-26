@@ -584,7 +584,7 @@ define([
                         continue;
                     }
 
-                    distances = boundingVolume.getPlaneDistances(position, direction, distances);
+                    distances = BoundingSphere.getPlaneDistances(boundingVolume, position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
                 } else {
@@ -1162,8 +1162,6 @@ define([
             // hide the picked primitive and call picking again to get the next primitive
             if (defined(primitive.show)) {
                 primitive.show = false;
-            } else if (typeof primitive.setShow === 'function') {
-                primitive.setShow(false);
             } else if (typeof primitive.getGeometryInstanceAttributes === 'function') {
                 var attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                 if (defined(attributes) && defined(attributes.show)) {
@@ -1179,8 +1177,6 @@ define([
             var p = pickedObjects[i].primitive;
             if (defined(p.show)) {
                 p.show = true;
-            } else if (typeof p.setShow === 'function') {
-                p.setShow(true);
             } else if (typeof p.getGeometryInstanceAttributes === 'function') {
                 var attr = p.getGeometryInstanceAttributes(pickedObjects[i].id);
                 if (defined(attr) && defined(attr.show)) {

@@ -15,6 +15,58 @@ Beta Releases
 
            scene.camera.viewExtent(extent);
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
+  * Replaced getter/setter functions with properties:
+    * `ImageryLayer`
+      * `getImageryProvider` -> `imageryProvider`
+      * `getExtent` -> `extent`
+    * `Billboard`, `Label`
+      * `getShow`, `setShow` -> `show`
+      * `getPosition`, `setPosition` -> `position`
+      * `getPixelOffset`, `setPixelOffset` -> `pixelOffset`
+      * `getTranslucencyByDistance`, `setTranslucencyByDistance` -> `translucencyByDistance`
+      * `getPixelOffsetScaleByDistance`, `setPixelOffsetScaleByDistance` -> `pixelOffsetScaleByDistance`
+      * `getEyeOffset`, `setEyeOffset` -> `eyeOffset`
+      * `getHorizontalOrigin`, `setHorizontalOrigin` -> `horizontalOrigin`
+      * `getVerticalOrigin`, `setVerticalOrigin` -> `verticalOrigin`
+      * `getScale`, `setScale` -> `scale`
+      * `getId` -> `id`
+    * `Billboard`
+      * `getScaleByDistance`, `setScaleByDistance` -> `scaleByDistance`
+      * `getImageIndex`, `setImageIndex` -> `imageIndex`
+      * `getColor`, `setColor` -> `color`
+      * `getRotation`, `setRotation` -> `rotation`
+      * `getAlignedAxis`, `setAlignedAxis` -> `alignedAxis`
+      * `getWidth`, `setWidth` -> `width`
+      * `getHeight` `setHeight` -> `height`
+    * `Label`
+      * `getText`, `setText` -> `text`
+      * `getFont`, `setFont` -> `font`
+      * `getFillColor`, `setFillColor` -> `fillColor`
+      * `getOutlineColor`, `setOutlineColor` -> `outlineColor`
+      * `getOutlineWidth`, `setOutlineWidth` -> `outlineWidth`
+      * `getStyle`, `setStyle` -> `style`
+    * `Polygon`
+      * `getPositions`, `setPositions` -> `positions`
+    * `Polyline`
+      * `getShow`, `setShow` -> `show`
+      * `getPositions`, `setPositions` -> `positions`
+      * `getMaterial`, `setMeterial` -> `material`
+      * `getWidth`, `setWidth` -> `width`
+      * `getLoop`, `setLoop` -> `loop`
+      * `getId` -> `id`
+  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
+    * `BoundingRectangle`
+      * `union`, `expand`
+    * `BoundingSphere`
+      * `union`, `expand`, `getPlaneDistances`, `projectTo2D`
+    * `Plane`
+      * `getPointDistance`
+    * `Ray`
+      * `getPoint`
+    * `Spherical`
+      * `normalize`
+    *Extent
+      `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)

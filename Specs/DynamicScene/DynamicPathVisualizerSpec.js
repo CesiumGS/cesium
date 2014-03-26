@@ -126,20 +126,20 @@ defineSuite([
 
         var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
-        expect(primitive.getPositions()[0]).toEqual(testObject.position.getValue(updateTime.addSeconds(-path.trailTime.getValue())));
-        expect(primitive.getPositions()[1]).toEqual(testObject.position.getValue(updateTime));
-        expect(primitive.getPositions()[2]).toEqual(testObject.position.getValue(updateTime.addSeconds(path.leadTime.getValue())));
-        expect(primitive.getShow()).toEqual(testObject.path.show.getValue(updateTime));
-        expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.positions[0]).toEqual(testObject.position.getValue(updateTime.addSeconds(-path.trailTime.getValue())));
+        expect(primitive.positions[1]).toEqual(testObject.position.getValue(updateTime));
+        expect(primitive.positions[2]).toEqual(testObject.position.getValue(updateTime.addSeconds(path.leadTime.getValue())));
+        expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
+        expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
 
-        var material = primitive.getMaterial();
+        var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.color.getValue(updateTime));
         expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(updateTime));
         expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(updateTime));
 
         path.show = new ConstantProperty(false);
         visualizer.update(updateTime);
-        expect(primitive.getShow()).toEqual(testObject.path.show.getValue(updateTime));
+        expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
     });
 
     it('clear hides primitives.', function() {
@@ -177,7 +177,7 @@ defineSuite([
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
         dynamicObjectCollection.removeAll();
-        expect(primitive.getShow()).toEqual(false);
+        expect(primitive.show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
