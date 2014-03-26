@@ -186,6 +186,25 @@ define(['../../Core/BoundingSphere',
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
+        function visitStoredView(viewName) {
+            console.log('Visit ' + viewName);
+        }
+
+        function editStoredView(viewName) {
+            console.log('Edit ' + viewName);
+        }
+
+        function addStoredView() {
+            console.log('Bookmark this view');
+        }
+
+        var cameraControlViewModel = defined(viewer.cameraControl) ? viewer.cameraControl.viewModel : undefined;
+        if (defined(cameraControlViewModel)) {
+            eventHelper.add(cameraControlViewModel.visitStoredView, visitStoredView);
+            eventHelper.add(cameraControlViewModel.editStoredView, editStoredView);
+            eventHelper.add(cameraControlViewModel.addStoredView, addStoredView);
+        }
+
         function pickDynamicObject(e) {
             var picked = viewer.scene.pick(e.position);
             if (defined(picked)) {

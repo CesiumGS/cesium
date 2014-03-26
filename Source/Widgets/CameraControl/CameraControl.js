@@ -62,7 +62,7 @@ foreach: viewNames');
         var viewRow = document.createElement('div');
         viewRow.className = 'cesium-cameraControl-viewRow';
         viewRow.setAttribute('data-bind', '\
-click: function (d) { console.log("view " + d); }');
+click: function (viewName) { $parent.visitStoredView.raiseEvent(viewName); $parent.dropDownVisible = false; }');
         viewsContainer.appendChild(viewRow);
 
         var viewName = document.createElement('span');
@@ -83,7 +83,7 @@ cesiumSvgPath: { path: $parent._cameraIcon, width: 32, height: 32 }');
         editButton.className = 'cesium-button cesium-cameraControl-editButton';
         editButton.setAttribute('data-bind', '\
 attr: { title: "Edit this view" },\
-click: function (d) { console.log("edit " + d); },\
+click: function (viewName) { $parent.editStoredView.raiseEvent(viewName); $parent.dropDownVisible = false; },\
 cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }');
         viewRow.appendChild(editButton);
 
@@ -91,7 +91,7 @@ cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }');
         addRow.className = 'cesium-cameraControl-addRow';
         addRow.innerHTML = 'Bookmark this view...';
         addRow.setAttribute('data-bind', '\
-click: function () { console.log("Bookmark this view"); }');
+click: function () { addStoredView.raiseEvent(); dropDownVisible = false; }');
         dropDown.appendChild(addRow);
 
         var addButton = document.createElement('button');
