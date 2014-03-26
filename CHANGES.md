@@ -54,9 +54,6 @@ Beta Releases
       * `getWidth`, `setWidth` -> `width`
       * `getLoop`, `setLoop` -> `loop`
       * `getId` -> `id`
-    * `AutomaticUniform`
-      * `getSize` -> `size`
-      * `getDatatype` -> `datatype`
     * `Buffer`
       * `getSizeInBytes` -> `sizeInBytes`
       * `getUsage` -> `usage`
