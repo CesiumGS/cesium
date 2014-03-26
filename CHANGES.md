@@ -72,6 +72,7 @@ Beta Releases
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
 * The `debugShowBoundingVolume` property on primitives now works across all scene modes.
 * Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
+* Eliminated the use of a texture pool for Earth surface imagery textures.  The use of the pool was leading to mipmapping problems in current versions of Google Chrome where some tiles would show imagery from entirely unrelated parts of the globe. 
 
 ### b26 - 2014-03-03
 
