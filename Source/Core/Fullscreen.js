@@ -84,7 +84,7 @@ define([
          * @memberof Fullscreen
          * @type {Boolean}
          */
-        isEnabled : {
+        enabled : {
             get : function() {
                 if (!Fullscreen.supportsFullscreen()) {
                     return undefined;

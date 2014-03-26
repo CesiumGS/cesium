@@ -28,7 +28,7 @@ define([
         var that = this;
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.isFullscreen);
-        var tmpIsEnabled = knockout.observable(Fullscreen.isEnabled);
+        var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
 
         /**
          * Gets whether or not fullscreen mode is active.  This property is observable.
@@ -54,7 +54,7 @@ define([
                 return tmpIsEnabled();
             },
             set : function(value) {
-                tmpIsEnabled(value && Fullscreen.isEnabled);
+                tmpIsEnabled(value && Fullscreen.enabled);
             }
         });
 

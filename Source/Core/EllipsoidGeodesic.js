@@ -265,7 +265,7 @@ define([
 
         /**
          * The heading at the initial point.
-         * @memberof EllipsoidGeodesic
+         * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
          */
         startHeading : {
@@ -282,7 +282,7 @@ define([
 
         /**
          * The heading at the final point.
-         * @memberof EllipsoidGeodesic
+         * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
          */
         endHeading : {

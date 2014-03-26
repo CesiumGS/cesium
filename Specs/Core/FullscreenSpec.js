@@ -16,9 +16,9 @@ defineSuite([
     it('can tell if fullscreen is enabled', function() {
         if (Fullscreen.supportsFullscreen()) {
             // just make sure the function runs, the test can't expect a particular result.
-            expect(Fullscreen.isEnabled).toBeDefined();
+            expect(Fullscreen.enabled).toBeDefined();
         } else {
-            expect(Fullscreen.isEnabled).toBeUndefined();
+            expect(Fullscreen.enabled).toBeUndefined();
         }
     });
 
