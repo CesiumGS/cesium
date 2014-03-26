@@ -127,8 +127,7 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
     });
-
-    it('static intersect works', function() {
+    it('intersect works', function() {
         var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
         var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
         var rectangle3 = new BoundingRectangle(-6, 2, 4, 4);
@@ -142,25 +141,11 @@ defineSuite([
         expect(BoundingRectangle.intersect(rectangle1, rectangle6)).toEqual(Intersect.OUTSIDE);
       });
 
-    it('intersect works', function() {
-        var rectangle1 = new BoundingRectangle(0, 0, 4, 4);
-        var rectangle2 = new BoundingRectangle(2, 2, 4, 4);
-        var rectangle3 = new BoundingRectangle(-6, 2, 4, 4);
-        var rectangle4 = new BoundingRectangle(8, 2, 4, 4);
-        var rectangle5 = new BoundingRectangle(2, -6, 4, 4);
-        var rectangle6 = new BoundingRectangle(2, 8, 4, 4);
-        expect(rectangle1.intersect(rectangle2)).toEqual(Intersect.INTERSECTING);
-        expect(rectangle1.intersect(rectangle3)).toEqual(Intersect.OUTSIDE);
-        expect(rectangle1.intersect(rectangle4)).toEqual(Intersect.OUTSIDE);
-        expect(rectangle1.intersect(rectangle5)).toEqual(Intersect.OUTSIDE);
-        expect(rectangle1.intersect(rectangle6)).toEqual(Intersect.OUTSIDE);
-      });
-
     it('union works without a result parameter', function() {
         var rectangle1 = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var rectangle2 = new BoundingRectangle(-2.0, 0.0, 1.0, 2.0);
         var expected = new BoundingRectangle(-2.0, 0.0, 5.0, 2.0);
-        var returnedResult = rectangle1.union(rectangle2);
+        var returnedResult = BoundingRectangle.union(rectangle1, rectangle2);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -169,7 +154,7 @@ defineSuite([
         var rectangle2 = new BoundingRectangle(-2.0, 0.0, 1.0, 2.0);
         var expected = new BoundingRectangle(-2.0, 0.0, 5.0, 2.0);
         var result = new BoundingRectangle(-1.0, -1.0, 10.0, 10.0);
-        var returnedResult = rectangle1.union(rectangle2, result);
+        var returnedResult = BoundingRectangle.union(rectangle1, rectangle2, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
     });
@@ -178,7 +163,7 @@ defineSuite([
         var rectangle = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var point = new Cartesian2(4.0, 0.0);
         var expected = new BoundingRectangle(2.0, 0.0, 2.0, 1.0);
-        var result = rectangle.expand(point);
+        var result = BoundingRectangle.expand(rectangle, point);
         expect(result).toEqual(expected);
     });
 
@@ -186,7 +171,7 @@ defineSuite([
         var rectangle = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var point = new Cartesian2(0.0, 0.0);
         var expected = new BoundingRectangle(0.0, 0.0, 3.0, 1.0);
-        var result = rectangle.expand(point);
+        var result = BoundingRectangle.expand(rectangle, point);
         expect(result).toEqual(expected);
     });
 
@@ -194,7 +179,7 @@ defineSuite([
         var rectangle = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var point = new Cartesian2(2.0, 2.0);
         var expected = new BoundingRectangle(2.0, 0.0, 1.0, 2.0);
-        var result = rectangle.expand(point);
+        var result = BoundingRectangle.expand(rectangle, point);
         expect(result).toEqual(expected);
     });
 
@@ -202,7 +187,7 @@ defineSuite([
         var rectangle = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var point = new Cartesian2(2.0, -1.0);
         var expected = new BoundingRectangle(2.0, -1.0, 1.0, 2.0);
-        var result = rectangle.expand(point);
+        var result = BoundingRectangle.expand(rectangle, point);
         expect(result).toEqual(expected);
     });
 
@@ -210,7 +195,7 @@ defineSuite([
         var rectangle = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
         var point = new Cartesian2(2.5, 0.6);
         var expected = new BoundingRectangle(2.0, 0.0, 1.0, 1.0);
-        var result = rectangle.expand(point);
+        var result = BoundingRectangle.expand(rectangle, point);
         expect(result).toEqual(expected);
     });
 
@@ -219,51 +204,51 @@ defineSuite([
         var point = new Cartesian2(2.0, -1.0);
         var expected = new BoundingRectangle(2.0, -1.0, 1.0, 2.0);
         var result = new BoundingRectangle();
-        var returnedResult = rectangle.expand(point, result);
+        var returnedResult = BoundingRectangle.expand(rectangle, point, result);
         expect(returnedResult).toBe(returnedResult);
         expect(result).toEqual(expected);
     });
 
-    it('static clone returns undefined with no parameter', function() {
+    it('clone returns undefined with no parameter', function() {
         expect(BoundingRectangle.clone()).toBeUndefined();
     });
 
-    it('static union throws with no left parameter', function() {
+    it('union throws with no left parameter', function() {
         var right = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.union(undefined, right);
         }).toThrowDeveloperError();
     });
 
-    it('static union throws with no right parameter', function() {
+    it('union throws with no right parameter', function() {
         var left = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.union(left, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws with no rectangle parameter', function() {
+    it('expand throws with no rectangle parameter', function() {
         var point = new Cartesian2();
         expect(function() {
             BoundingRectangle.expand(undefined, point);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws with no point parameter', function() {
+    it('expand throws with no point parameter', function() {
         var rectangle = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.expand(rectangle, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect throws with no left parameter', function() {
+    it('intersect throws with no left parameter', function() {
         var right = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.intersect(undefined, right);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect  throws with no right parameter', function() {
+    it('intersect  throws with no right parameter', function() {
         var left = new BoundingRectangle(1.0, 2.0, 3.0, 4.0);
         expect(function() {
             BoundingRectangle.intersect(left, undefined);

@@ -110,19 +110,19 @@ defineSuite([
             var coordinates;
             var tilingSchemeExtent = tilingScheme.extent;
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSouthwest(), 0);
+            coordinates = tilingScheme.positionToTileXY(Extent.getSouthwest(tilingSchemeExtent), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getNorthwest(), 0);
+            coordinates = tilingScheme.positionToTileXY(Extent.getNorthwest(tilingSchemeExtent), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getNortheast(), 0);
+            coordinates = tilingScheme.positionToTileXY(Extent.getNortheast(tilingSchemeExtent), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSoutheast(), 0);
+            coordinates = tilingScheme.positionToTileXY(Extent.getSoutheast(tilingSchemeExtent), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
         });
@@ -131,19 +131,19 @@ defineSuite([
             var coordinates;
             var tilingSchemeExtent = tilingScheme.extent;
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSouthwest(), 1);
+            coordinates = tilingScheme.positionToTileXY(Extent.getSouthwest(tilingSchemeExtent), 1);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(1);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getNorthwest(), 1);
+            coordinates = tilingScheme.positionToTileXY(Extent.getNorthwest(tilingSchemeExtent), 1);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getNortheast(), 1);
+            coordinates = tilingScheme.positionToTileXY(Extent.getNortheast(tilingSchemeExtent), 1);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(tilingSchemeExtent.getSoutheast(), 1);
+            coordinates = tilingScheme.positionToTileXY(Extent.getSoutheast(tilingSchemeExtent), 1);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(1);
         });
@@ -197,8 +197,8 @@ defineSuite([
             var nativeExtent = tilingScheme.extentToNativeExtent(extentInRadians);
 
             var projection = new WebMercatorProjection();
-            var expectedSouthwest = projection.project(extentInRadians.getSouthwest());
-            var expectedNortheast = projection.project(extentInRadians.getNortheast());
+            var expectedSouthwest = projection.project(Extent.getSouthwest(extentInRadians));
+            var expectedNortheast = projection.project(Extent.getNortheast(extentInRadians));
 
             expect(nativeExtent.west).toEqualEpsilon(expectedSouthwest.x, CesiumMath.EPSILON13);
             expect(nativeExtent.south).toEqualEpsilon(expectedSouthwest.y, CesiumMath.EPSILON13);
@@ -211,8 +211,8 @@ defineSuite([
             var extentInRadians = new Extent(0.1, 0.2, 0.3, 0.4);
 
             var projection = new WebMercatorProjection();
-            var expectedSouthwest = projection.project(extentInRadians.getSouthwest());
-            var expectedNortheast = projection.project(extentInRadians.getNortheast());
+            var expectedSouthwest = projection.project(Extent.getSouthwest(extentInRadians));
+            var expectedNortheast = projection.project(Extent.getNortheast(extentInRadians));
 
             var resultExtent = new Extent(0.0, 0.0, 0.0, 0.0);
             var outputExtent = tilingScheme.extentToNativeExtent(extentInRadians, resultExtent);
@@ -230,8 +230,8 @@ defineSuite([
             var projection = new WebMercatorProjection();
             var extentInRadians = new Extent(0.1, 0.2, 0.3, 0.4);
             var tilingScheme = new WebMercatorTilingScheme({
-                extentSouthwestInMeters : projection.project(extentInRadians.getSouthwest()),
-                extentNortheastInMeters : projection.project(extentInRadians.getNortheast())
+                extentSouthwestInMeters : projection.project(Extent.getSouthwest(extentInRadians)),
+                extentNortheastInMeters : projection.project(Extent.getNortheast(extentInRadians))
             });
 
             var tooFarWest = new Cartographic(0.05, 0.3);
@@ -264,7 +264,7 @@ defineSuite([
         it('does not return tile outside valid range', function() {
             var tilingScheme = new WebMercatorTilingScheme();
 
-            var southeastCorner = tilingScheme.extent.getSoutheast();
+            var southeastCorner = Extent.getSoutheast(tilingScheme.extent);
             expect(tilingScheme.positionToTileXY(southeastCorner, 1)).toEqual(new Cartesian2(1, 1));
         });
 

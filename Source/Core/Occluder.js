@@ -6,6 +6,7 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
+        './Extent',
         './Math',
         './Visibility'
     ], function(
@@ -15,6 +16,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        Extent,
         CesiumMath,
         Visibility) {
     "use strict";
@@ -413,7 +415,7 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = extent.subsample(ellipsoid, 0.0, computeOccludeePointFromExtentScratch);
+        var positions = Extent.subsample(extent, ellipsoid, 0.0, computeOccludeePointFromExtentScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center

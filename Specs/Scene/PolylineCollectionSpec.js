@@ -1526,7 +1526,7 @@ defineSuite([
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.positions));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.positions));
         expect(three._boundingVolume).toEqual(BoundingSphere.fromPoints(three.positions));
-        expect(boundingVolume).toEqual(one._boundingVolume.union(two._boundingVolume).union(three._boundingVolume));
+        expect(boundingVolume).toEqual(BoundingSphere.union(BoundingSphere.union(one._boundingVolume, two._boundingVolume), three._boundingVolume));
     });
 
     function test2DBoundingSphere(testMode) {
@@ -1574,7 +1574,7 @@ defineSuite([
         expect(two._boundingVolume2D.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON8);
         expect(two._boundingVolume2D.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON12);
 
-        var expected = one._boundingVolume2D.union(two._boundingVolume2D);
+        var expected = BoundingSphere.union(one._boundingVolume2D, two._boundingVolume2D);
         expect(boundingVolume.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
         expect(boundingVolume.radius).toEqualEpsilon(expected.radius, CesiumMath.EPSILON8);
     }
