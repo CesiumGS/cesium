@@ -443,8 +443,8 @@ define([
         for (j = 0; j < length; ++j) {
             command = commands[j];
 
-            if (!defined(command._oit) || command.shaderProgram.id !== command._oit.shaderProgramId) {
-                command._oit = {
+            if (!defined(command.oit) || command.shaderProgram.id !== command.oit.shaderProgramId) {
+                command.oit = {
                     colorRenderState : getTranslucentColorRenderState(oit, context, command.renderState),
                     alphaRenderState : getTranslucentAlphaRenderState(oit, context, command.renderState),
                     colorShaderProgram : getTranslucentColorShaderProgram(oit, context, command.shaderProgram),
@@ -453,8 +453,8 @@ define([
                 };
             }
 
-            renderState = command._oit.colorRenderState;
-            shaderProgram = command._oit.colorShaderProgram;
+            renderState = command.oit.colorRenderState;
+            shaderProgram = command.oit.colorShaderProgram;
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
@@ -462,8 +462,8 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            renderState = command._oit.alphaRenderState;
-            shaderProgram = command._oit.alphaShaderProgram;
+            renderState = command.oit.alphaRenderState;
+            shaderProgram = command.oit.alphaShaderProgram;
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 
@@ -483,8 +483,17 @@ define([
 
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
-            var renderState = getTranslucentMRTRenderState(oit, context, command.renderState);
-            var shaderProgram = getTranslucentMRTShaderProgram(oit, context, command.shaderProgram);
+
+            if (!defined(command.oit) || command.shaderProgram.id !== command.oit.shaderProgramId) {
+                command.oit = {
+                    translucentRenderState : getTranslucentMRTRenderState(oit, context, command.renderState),
+                    translucentShaderProgram : getTranslucentMRTShaderProgram(oit, context, command.shaderProgram),
+                    shaderProgramId : command.shaderProgram.id
+                };
+            }
+
+            var renderState = command.oit.translucentRenderState;
+            var shaderProgram = command.oit.translucentShaderProgram;
             executeFunction(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer);
         }
 

@@ -164,7 +164,10 @@ define(function() {
          */
         this.debugOverlappingFrustums = 0;
 
-        this._oit = undefined;
+        /**
+         * @private
+         */
+        this.oit = undefined;
     };
 
     /**
