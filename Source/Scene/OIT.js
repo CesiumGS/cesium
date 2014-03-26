@@ -507,10 +507,6 @@ define([
     }
 
     OIT.prototype.executeCommands = function(scene, executeFunction, passState, commands) {
-        if (!this.isSupported()) {
-            return;
-        }
-
         if (this._translucentMRTSupport) {
             executeTranslucentCommandsSortedMRT(this, scene, executeFunction, passState, commands);
             return;
@@ -520,18 +516,10 @@ define([
     };
 
     OIT.prototype.execute = function(context, passState) {
-        if (!this.isSupported()) {
-            return;
-        }
-
         this._compositeCommand.execute(context, passState);
     };
 
     OIT.prototype.clear = function(context, passState, clearColor) {
-        if(!this.isSupported()) {
-            return;
-        }
-
         var framebuffer = passState.framebuffer;
 
         passState.framebuffer = this._opaqueFBO;
@@ -551,10 +539,6 @@ define([
     };
 
     OIT.prototype.getColorFramebuffer = function() {
-        if (!this.isSupported()) {
-            return undefined;
-        }
-
         return this._opaqueFBO;
     };
 

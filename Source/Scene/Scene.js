@@ -870,15 +870,14 @@ define([
             }
         }
 
-        if (!picking && renderTranslucentCommands) {
+        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
+        if (useOIT) {
             scene._oit.update(context);
             scene._oit.clear(context, passState, clearColor);
+            useOIT = useOIT && scene._oit.isSupported();
         }
 
-        var useOIT = !picking && renderTranslucentCommands && scene._oit.isSupported();
-
-        scene._fxaa.enabled = scene.fxaa || (renderTranslucentCommands && scene._oit.isSupported() && scene.fxaaOrderIndependentTranslucency);
-        var useFXAA = !picking && scene._fxaa.enabled;
+        var useFXAA = !picking && (scene.fxaa || (useOIT && scene.fxaaOrderIndependentTranslucency));
         if (useFXAA) {
             scene._fxaa.update(context);
             scene._fxaa.clear(context, passState, clearColor);
@@ -962,7 +961,7 @@ define([
         }
 
         if (useOIT) {
-            passState.framebuffer = scene._fxaa.getColorFramebuffer();
+            passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
             scene._oit.execute(context, passState);
         }
 

@@ -28,8 +28,6 @@ define([
      * @private
      */
     var FXAA = function(context) {
-        this.enabled = false;
-
         this._texture = undefined;
         this._depthTexture = undefined;
         this._depthRenderbuffer = undefined;
@@ -61,14 +59,6 @@ define([
     }
 
     FXAA.prototype.update = function(context) {
-        if (!this.enabled) {
-            if (defined(this._texture)) {
-                destroyResources(this);
-            }
-
-            return;
-        }
-
         var width = context.getDrawingBufferWidth();
         var height = context.getDrawingBufferHeight();
 
@@ -139,18 +129,10 @@ define([
     };
 
     FXAA.prototype.execute = function(context, passState) {
-        if (!this.enabled) {
-            return;
-        }
-
         this._command.execute(context, passState);
     };
 
     FXAA.prototype.clear = function(context, passState, clearColor) {
-        if(!this.enabled) {
-            return;
-        }
-
         var framebuffer = passState.framebuffer;
 
         passState.framebuffer = this._fbo;
@@ -161,10 +143,6 @@ define([
     };
 
     FXAA.prototype.getColorFramebuffer = function() {
-        if (!this.enabled) {
-            return undefined;
-        }
-
         return this._fbo;
     };
 
