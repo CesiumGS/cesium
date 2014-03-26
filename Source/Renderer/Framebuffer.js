@@ -119,7 +119,7 @@ define([
                 texture = textures[i];
 
                 //>>includeStart('debug', pragmas.debug);
-                if (!PixelFormat.isColorFormat(texture.getPixelFormat())) {
+                if (!PixelFormat.isColorFormat(texture.pixelFormat)) {
                     throw new DeveloperError('The color-texture pixel-format must be a color format.');
                 }
                 //>>includeEnd('debug');
@@ -154,7 +154,7 @@ define([
             texture = description.depthTexture;
 
             //>>includeStart('debug', pragmas.debug);
-            if (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT) {
+            if (texture.pixelFormat !== PixelFormat.DEPTH_COMPONENT) {
                 throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
             }
             //>>includeEnd('debug');
@@ -179,7 +179,7 @@ define([
             texture = description.depthStencilTexture;
 
             //>>includeStart('debug', pragmas.debug);
-            if (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL) {
+            if (texture.pixelFormat !== PixelFormat.DEPTH_STENCIL) {
                 throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
             }
             //>>includeEnd('debug');
@@ -197,7 +197,7 @@ define([
         this._unBind();
     };
 
-    defineProperties(Framebuffer.prorotype, {
+    defineProperties(Framebuffer.prototype, {
         /**
          * The number of color textures or renderbuffers attached to this framebuffer.
          * @memberof Framebuffer.prototype
@@ -273,7 +273,7 @@ define([
          */
         hasDepthAttachment : {
             get : function() {
-                return !!(this.getDepthTexture() || this.getDepthRenderbuffer() || this.getDepthStencilTexture() || this.getDepthStencilRenderbuffer());
+                return !!(this.depthTexture || this.depthRenderbuffer || this.depthStencilTexture || this.depthStencilRenderbuffer);
             }
         }
     });

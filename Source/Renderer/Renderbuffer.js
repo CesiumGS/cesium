@@ -56,19 +56,12 @@ define([
             get : function() {
                 return this._height;
             }
-        },
-
-        /**
-         * DOC_TBA
-         * @memberof Renderbuffer.prototype
-         */
-        renderBuffer : {
-            get : function() {
-                return this._renderbuffer;
-            }
         }
     });
 
+    Renderbuffer.prototype._getRenderbuffer = function() {
+        return this._renderbuffer;
+    };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.

@@ -165,11 +165,11 @@ define([
 
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
-        var numImages = textureAtlas.getNumberOfImages();
+        var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
         if (numImages > 0) {
-            var oldAtlasWidth = textureAtlas._texture.getWidth();
-            var oldAtlasHeight = textureAtlas._texture.getHeight();
+            var oldAtlasWidth = textureAtlas._texture.width;
+            var oldAtlasHeight = textureAtlas._texture.height;
             var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + textureAtlas._borderWidthInPixels);
             var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + textureAtlas._borderWidthInPixels);
             var widthRatio = oldAtlasWidth / atlasWidth;
@@ -296,8 +296,8 @@ define([
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture
-            var atlasWidth = textureAtlas._texture.getWidth();
-            var atlasHeight = textureAtlas._texture.getHeight();
+            var atlasWidth = textureAtlas._texture.width;
+            var atlasHeight = textureAtlas._texture.height;
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
             textureAtlas._textureCoordinates[index] = new BoundingRectangle(
@@ -328,7 +328,7 @@ define([
      * @see TextureAtlas#addImages
      */
     TextureAtlas.prototype.addImage = function(image) {
-        var index = this.getNumberOfImages();
+        var index = this.numberOfImages;
         addImage(this, image, index);
 
         this._guid = createGuid();
@@ -361,7 +361,7 @@ define([
         var i;
         var annotatedImages = [];
         var numberOfImages = images.length;
-        var oldNumberOfImages = this.getNumberOfImages();
+        var oldNumberOfImages = this.numberOfImages;
         for (i = 0; i < numberOfImages; ++i) {
             annotatedImages.push({
                 image : images[i],
@@ -400,9 +400,9 @@ define([
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
         var index = this.addImage(image);
 
-        var atlasWidth = this._texture.getWidth();
-        var atlasHeight = this._texture.getHeight();
-        var numImages = this.getNumberOfImages();
+        var atlasWidth = this._texture.width;
+        var atlasHeight = this._texture.height;
+        var numImages = this.numberOfImages;
         var numSubRegions = subRegions.length;
 
         var baseRegion = this._textureCoordinates[index];

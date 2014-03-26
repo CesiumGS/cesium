@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Renderer/PixelDatatype',
@@ -8,6 +9,7 @@ define([
         '../Renderer/Texture'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         PixelDatatype,
@@ -32,6 +34,60 @@ define([
                     var texture = this._texture;
                     return texture[methodName].apply(texture, arguments);
                 };
+            });
+
+            // pass through properties of the underlying texture
+            defineProperties(PooledTexture.prototype, {
+                sampler : {
+                    get : function() {
+                        return this._texture.sampler;
+                    },
+                    set : function(sampler) {
+                        this._texture.sampler = sampler;
+                    }
+                },
+
+                pixelFormat : {
+                    get : function() {
+                        return this._texture.pixelFormat;
+                    }
+                },
+
+                pixelDatatype : {
+                    get : function() {
+                        return this._texture.pixelDatatype;
+                    }
+                },
+
+                dimensions : {
+                    get : function() {
+                        return this._texture.dimensions;
+                    }
+                },
+
+                preMultiplyAlpha : {
+                    get : function() {
+                        return this._texture.preMultiplyAlpha;
+                    }
+                },
+
+                flipY : {
+                    get : function() {
+                        return this._texture.flipY;
+                    }
+                },
+
+                width : {
+                    get : function() {
+                        return this._texture.width;
+                    }
+                },
+
+                height : {
+                    get : function() {
+                        return this._texture.height;
+                    }
+                }
             });
 
             // except for destroy, which releases back into the pool

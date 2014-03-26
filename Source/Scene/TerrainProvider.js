@@ -178,7 +178,7 @@ define([
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
             indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            indexBuffer.setVertexArrayDestroyable(false);
+            indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.getId()] = indexBuffer;
             buffers.indices.indexBuffers = indexBuffers;

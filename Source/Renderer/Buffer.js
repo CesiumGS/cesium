@@ -33,16 +33,6 @@ define([
         /**
          * DOC_TBA
          * @memberof Buffer.prototype
-         */
-        buffer : {
-            get : function() {
-                return this._buffer;
-            }
-        },
-
-        /**
-         * DOC_TBA
-         * @memberof Buffer.prototype
          * @type {Number}
          */
         sizeInBytes : {
@@ -75,6 +65,10 @@ define([
             }
         }
     });
+
+    Buffer.prototype._getBuffer = function() {
+        return this._buffer;
+    };
 
     /**
      * DOC_TBA

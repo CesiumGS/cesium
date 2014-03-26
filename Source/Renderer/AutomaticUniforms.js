@@ -19,7 +19,7 @@ define([
         this.getValue = options.getValue;
     };
 
-    defineProperties(AutomaticUniform, {
+    defineProperties(AutomaticUniform.prototype, {
         size: {
             get : function() {
                 return this._size;

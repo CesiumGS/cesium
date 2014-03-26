@@ -102,10 +102,10 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;

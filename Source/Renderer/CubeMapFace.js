@@ -66,8 +66,8 @@ define([
      *
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
+     * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+     * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      *
      * @example
@@ -76,7 +76,7 @@ define([
      *   width : 1,
      *   height : 1
      * });
-     * cubeMap.getPositiveX().copyFrom({
+     * cubeMap.positiveX.copyFrom({
      *   width : 1,
      *   height : 1,
      *   arrayBufferView : new Uint8Array([255, 0, 0, 255])
@@ -97,10 +97,10 @@ define([
             throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
         if (xOffset + source.width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
+            throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
         }
         if (yOffset + source.height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
+            throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
         }
         //>>includeEnd('debug');
 
@@ -140,13 +140,13 @@ define([
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
+     * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+     * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      *
      * @example
      * // Copy the framebuffer contents to the +x cube map face.
-     * cubeMap.getPositiveX().copyFromFramebuffer();
+     * cubeMap.positiveX.copyFromFramebuffer();
      */
     CubeMapFace.prototype.copyFromFramebuffer = function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
         xOffset = defaultValue(xOffset, 0);
@@ -170,10 +170,10 @@ define([
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
         if (xOffset + width > this._size) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
+            throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
         }
         if (yOffset + height > this._size) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
+            throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
         }
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');

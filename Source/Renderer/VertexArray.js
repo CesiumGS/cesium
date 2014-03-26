@@ -146,7 +146,7 @@ define([
             if (defined(attribute.vertexBuffer)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
                 var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
-                numberOfVertices = attribute.vertexBuffer.getSizeInBytes() / bytes;
+                numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
                 break;
             }
         }
@@ -312,13 +312,13 @@ define([
         var attributes = this._attributes;
         for ( var i = 0; i < attributes.length; ++i) {
             var vertexBuffer = attributes[i].vertexBuffer;
-            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.getVertexArrayDestroyable()) {
+            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.vertexArrayDestroyable) {
                 vertexBuffer.destroy();
             }
         }
 
         var indexBuffer = this._indexBuffer;
-        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
+        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.vertexArrayDestroyable) {
             indexBuffer.destroy();
         }
 

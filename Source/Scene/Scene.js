@@ -624,7 +624,7 @@ define([
 
     function getAttributeLocations(shaderProgram) {
         var attributeLocations = {};
-        var attributes = shaderProgram.getVertexAttributes();
+        var attributes = shaderProgram.vertexAttributes;
         for (var a in attributes) {
             if (attributes.hasOwnProperty(a)) {
                 attributeLocations[a] = attributes[a].index;

@@ -15,12 +15,8 @@ defineSuite([
         fakeContext = jasmine.createSpyObj('Context', ['createTexture2D']);
         fakeContext.createTexture2D.andCallFake(function(description) {
             return {
-                getWidth : function() {
-                    return description.width;
-                },
-                getHeight : function() {
-                    return description.height;
-                },
+                width : description.width,
+                height : description.height,
                 isDestroyed : function() {
                     return false;
                 },
@@ -53,13 +49,13 @@ defineSuite([
             width : 1,
             height : 1
         });
-        expect(texture1.getWidth()).toEqual(1);
+        expect(texture1.width).toEqual(1);
 
         var texture2 = pool.createTexture2D(fakeContext, {
             width : 2,
             height : 2
         });
-        expect(texture2.getWidth()).toEqual(2);
+        expect(texture2.width).toEqual(2);
     });
 
     it('returns textures to the pool when they are destroyed', function() {

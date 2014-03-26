@@ -52,7 +52,7 @@ define([
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this.setSampler();
+        this.sampler = undefined;
     };
 
     defineProperties(Texture.prototype, {
@@ -215,8 +215,8 @@ define([
      * @exception {DeveloperError} Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + source.width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + source.height must be less than or equal to getHeight().
+     * @exception {DeveloperError} xOffset + source.width must be less than or equal to width.
+     * @exception {DeveloperError} yOffset + source.height must be less than or equal to height.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      *
      * @example
@@ -244,10 +244,10 @@ define([
             throw new DeveloperError('yOffset must be greater than or equal to zero.');
         }
         if (xOffset +  source.width > this._width) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to getWidth().');
+            throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
         }
         if (yOffset + source.height > this._height) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to getHeight().');
+            throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
         }
         //>>includeEnd('debug');
 
@@ -278,8 +278,8 @@ define([
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
      * @param {Number} [framebufferXOffset=0] optional
      * @param {Number} [framebufferYOffset=0] optional
-     * @param {Number} [width=getWidth()] optional
-     * @param {Number} [height=getHeight()] optional
+     * @param {Number} [width=width] optional
+     * @param {Number} [height=height] optional
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
@@ -288,8 +288,8 @@ define([
      * @exception {DeveloperError} yOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} xOffset + width must be less than or equal to getWidth().
-     * @exception {DeveloperError} yOffset + height must be less than or equal to getHeight().
+     * @exception {DeveloperError} xOffset + width must be less than or equal to width.
+     * @exception {DeveloperError} yOffset + height must be less than or equal to height.
      */
     Texture.prototype.copyFromFramebuffer = function(xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height) {
         xOffset = defaultValue(xOffset, 0);
@@ -319,10 +319,10 @@ define([
             throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
         }
         if (xOffset + width > this._width) {
-            throw new DeveloperError('xOffset + width must be less than or equal to getWidth().');
+            throw new DeveloperError('xOffset + width must be less than or equal to width.');
         }
         if (yOffset + height > this._height) {
-            throw new DeveloperError('yOffset + height must be less than or equal to getHeight().');
+            throw new DeveloperError('yOffset + height must be less than or equal to height.');
         }
         //>>includeEnd('debug');
 
