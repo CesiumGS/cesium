@@ -2095,6 +2095,34 @@ define([
          // else same render state as before so state is already applied.
     }
 
+    var scratchBackBufferArray;
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    }
+
+    function bindFramebuffer(context, framebuffer) {
+        if (framebuffer !== context._currentFramebuffer) {
+            context._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
+
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(context, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            } else {
+                var gl = context._gl;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+
+            if (context.getDrawBuffers()) {
+                context._drawBuffers.drawBuffersWEBGL(buffers);
+            }
+        }
+    }
+
     var defaultClearCommand = new ClearCommand();
 
     /**
@@ -2149,34 +2177,10 @@ define([
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
-
-        if (framebuffer !== this._currentFramebuffer) {
-            this._currentFramebuffer = framebuffer;
-            var buffers = scratchBackBufferArray;
-
-            if (defined(framebuffer)) {
-                framebuffer._bind();
-                validateFramebuffer(this, framebuffer);
-
-                // TODO: Need a way for a command to give what draw buffers are active.
-                buffers = framebuffer._getActiveColorAttachments();
-            } else {
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            }
-
-            if (this.getDrawBuffers()) {
-                this._drawBuffers.drawBuffersWEBGL(buffers);
-            }
-        }
+        bindFramebuffer(this, framebuffer);
 
         gl.clear(bitmask);
     };
-
-    var scratchBackBufferArray;
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext !== 'undefined') {
-        scratchBackBufferArray = [WebGLRenderingContext.BACK];
-    }
 
     function beginDraw(context, framebuffer, drawCommand, passState, renderState, shaderProgram) {
         var rs = defaultValue(defaultValue(renderState, drawCommand.renderState), context._defaultRenderState);
@@ -2189,25 +2193,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (framebuffer !== context._currentFramebuffer) {
-            context._currentFramebuffer = framebuffer;
-            var buffers = scratchBackBufferArray;
-
-            if (defined(framebuffer)) {
-                framebuffer._bind();
-                validateFramebuffer(context, framebuffer);
-
-                // TODO: Need a way for a command to give what draw buffers are active.
-                buffers = framebuffer._getActiveColorAttachments();
-            } else {
-                var gl = context._gl;
-                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            }
-
-            if (context.getDrawBuffers()) {
-                context._drawBuffers.drawBuffersWEBGL(buffers);
-            }
-        }
+        bindFramebuffer(context, framebuffer);
 
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
@@ -2365,7 +2351,7 @@ define([
         var y = Math.max(readState.y || 0, 0);
         var width = readState.width || gl.drawingBufferWidth;
         var height = readState.height || gl.drawingBufferHeight;
-        var framebuffer = readState.framebuffer || null;
+        var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
         if (width <= 0) {
@@ -2379,16 +2365,9 @@ define([
 
         var pixels = new Uint8Array(4 * width * height);
 
-        if (framebuffer) {
-            framebuffer._bind();
-            validateFramebuffer(this, framebuffer);
-        }
+        bindFramebuffer(this, framebuffer);
 
         gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-        if (framebuffer) {
-            framebuffer._unBind();
-        }
 
         return pixels;
     };
