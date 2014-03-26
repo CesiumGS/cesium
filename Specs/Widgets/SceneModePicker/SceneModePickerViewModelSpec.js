@@ -43,11 +43,11 @@ defineSuite([
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
         expect(viewModel.sceneTransitioner).toBe(mockTransitioner);
-        expect(mockTransitioner.transitionStart.getNumberOfListeners()).toEqual(1);
+        expect(mockTransitioner.transitionStart.numberOfListeners).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
         expect(viewModel.isDestroyed()).toEqual(true);
-        expect(mockTransitioner.transitionStart.getNumberOfListeners()).toEqual(0);
+        expect(mockTransitioner.transitionStart.numberOfListeners).toEqual(0);
     });
 
     it('dropDownVisible and toggleDropDown work', function() {

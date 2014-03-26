@@ -27,7 +27,6 @@ define([
         './ImageryState',
         './TileImagery',
         './TerrainProvider',
-        './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS'
@@ -59,7 +58,6 @@ define([
         ImageryState,
         TileImagery,
         TerrainProvider,
-        TexturePool,
         when,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS) {
@@ -234,7 +232,6 @@ define([
         this._maximumAnisotropy = description.maximumAnisotropy;
 
         this._imageryCache = {};
-        this._texturePool = new TexturePool();
 
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
@@ -366,8 +363,6 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        this._texturePool = this._texturePool && this._texturePool.destroy();
-
         return destroyObject(this);
     };
 
@@ -679,7 +674,7 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = this._texturePool.createTexture2D(context, {
+        var texture = context.createTexture2D({
             source : imagery.image
         });
 
@@ -902,7 +897,7 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
+        var outputTexture = context.createTexture2D({
             width : width,
             height : height,
             pixelFormat : texture.getPixelFormat(),

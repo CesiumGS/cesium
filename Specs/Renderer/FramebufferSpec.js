@@ -22,7 +22,7 @@ defineSuite([
          DepthFunction,
          RenderbufferFormat) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -499,6 +499,37 @@ defineSuite([
             sp2 = sp2.destroy();
         }
     });
+
+    it('gets the status of a complete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 1,
+                height : 1
+            })
+        });
+        expect(framebuffer.getStatus()).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
+    it('gets the status of a incomplete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 2,
+                height : 2
+            })
+        });
+        expect(framebuffer.getStatus()).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
 
     it('destroys', function() {
         var f = context.createFramebuffer();
