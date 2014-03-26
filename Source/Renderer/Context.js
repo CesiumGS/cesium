@@ -2150,16 +2150,26 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
 
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            validateFramebuffer(this, framebuffer);
+        if (framebuffer !== this._currentFramebuffer) {
+            this._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
+
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(this, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            } else {
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+
+            if (this.getDrawBuffers()) {
+                this._drawBuffers.drawBuffersWEBGL(buffers);
+            }
         }
 
         gl.clear(bitmask);
-
-        if (defined(framebuffer)) {
-            framebuffer._unBind();
-        }
     };
 
     var scratchBackBufferArray;
@@ -2179,7 +2189,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (framebuffer !== context._currentFamebuffer) {
+        if (framebuffer !== context._currentFramebuffer) {
             context._currentFramebuffer = framebuffer;
             var buffers = scratchBackBufferArray;
 
@@ -2189,6 +2199,9 @@ define([
 
                 // TODO: Need a way for a command to give what draw buffers are active.
                 buffers = framebuffer._getActiveColorAttachments();
+            } else {
+                var gl = context._gl;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
             if (context.getDrawBuffers()) {
@@ -2246,12 +2259,6 @@ define([
             va._bind();
             context._gl.drawArrays(primitiveType, offset, count);
             va._unBind();
-        }
-    }
-
-    function endDraw(context, framebuffer) {
-        if (defined(framebuffer)) {
-            framebuffer._unBind();
         }
     }
 
@@ -2315,7 +2322,6 @@ define([
 
         beginDraw(this, framebuffer, drawCommand, passState, renderState, shaderProgram);
         continueDraw(this, drawCommand, shaderProgram);
-        endDraw(this, framebuffer);
     };
 
     /**
@@ -2324,6 +2330,14 @@ define([
     Context.prototype.endFrame = function() {
         var gl = this._gl;
         gl.useProgram(null);
+
+        this._currentFramebuffer = undefined;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        var buffers = scratchBackBufferArray;
+        if (this.getDrawBuffers()) {
+            this._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
+        }
 
         var length = this._maxFrameTextureUnitIndex;
         this._maxFrameTextureUnitIndex = 0;
