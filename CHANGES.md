@@ -55,6 +55,26 @@ Beta Releases
       * `getWidth`, `setWidth` -> `width`
       * `getLoop`, `setLoop` -> `loop`
       * `getId` -> `id`
+    * `Occluder`
+      * `getPosition` -> `position`
+      * `getRadius` -> `radius`
+      * `setCameraPosition` -> `cameraPosition`
+    * `LeapSecond`
+      * `getLeapSeconds`, `setLeapSeconds` -> `leapSeconds`
+    * `Fullscreen`
+      * `getFullscreenElement` -> `element`
+      * `getFullscreenChangeEventName` -> `changeEventName`
+      * `getFullscreenErrorEventName` -> `errorEventName`
+      * `isFullscreenEnabled` -> `isEnabled`
+      * `isFullscreen` -> `isFullscreen`
+    * `Event`
+      * `getNumberOfListeners` -> `numberOfListeners`
+    * `EllipsoidGeodesic`
+      * `getSurfaceDistance` -> `surfaceDistance`
+      * `getStart` -> `start`
+      * `getEnd` -> `end`
+      * `getStartHeading` -> `startHeading`
+      * `getEndHeading` -> `endHeading`
   * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`

@@ -27,7 +27,7 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use as an occluder.
      * @param {Cartesian3} [cameraPosition] The coordinate of the viewer/camera.  If this parameter is not
-     *        specified, {@link EllipsoidalOccluder#setCameraPosition} must be called before
+     *        specified, {@link EllipsoidalOccluder#cameraPosition} must be called before
      *        testing visibility.
      *
      * @constructor
