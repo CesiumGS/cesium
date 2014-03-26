@@ -71,7 +71,7 @@ define([
         /**
          * The number of animations in the collection.
          *
-         * @memberof ModelAnimationCollection.prototype
+         * @memberof ModelAnimationCollection
          * @type {Number}
          *
          * @readonly

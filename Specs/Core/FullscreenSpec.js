@@ -32,9 +32,9 @@ defineSuite([
 
     it('can tell if the browser is in fullscreen', function() {
         if (Fullscreen.supportsFullscreen()) {
-            expect(Fullscreen.isFullscreen).toEqual(false);
+            expect(Fullscreen.fullscreen).toEqual(false);
         } else {
-            expect(Fullscreen.isFullscreen).toBeUndefined();
+            expect(Fullscreen.fullscreen).toBeUndefined();
         }
     });
 

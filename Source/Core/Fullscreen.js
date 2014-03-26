@@ -29,7 +29,7 @@ define([
     defineProperties(Fullscreen, {
         /**
          * The element that is currently fullscreen, if any.  To simply check if the
-         * browser is in fullscreen mode or not, use {@link Fullscreen#isFullscreen}.
+         * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.
          * @memberof Fullscreen
          * @type {Object}
          */
@@ -47,7 +47,7 @@ define([
          * The name of the event on the document that is fired when fullscreen is
          * entered or exited.  This event name is intended for use with addEventListener.
          * In your event handler, to determine if the browser is in fullscreen mode or not,
-         * use {@link Fullscreen#isFullscreen}.
+         * use {@link Fullscreen#fullscreen}.
          * @memberof Fullscreen
          * @type {String}
          */
@@ -99,7 +99,7 @@ define([
          * @memberof Fullsreen
          * @type {Boolean}
          */
-        isFullscreen : {
+        fullscreen : {
             get : function() {
                 if (!Fullscreen.supportsFullscreen()) {
                     return undefined;

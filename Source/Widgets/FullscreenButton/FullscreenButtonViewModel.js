@@ -27,7 +27,7 @@ define([
     var FullscreenButtonViewModel = function(fullscreenElement) {
         var that = this;
 
-        var tmpIsFullscreen = knockout.observable(Fullscreen.isFullscreen);
+        var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
         var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
 
         /**
@@ -82,7 +82,7 @@ define([
         this._fullscreenElement = defaultValue(fullscreenElement, document.body);
 
         this._callback = function() {
-            tmpIsFullscreen(Fullscreen.isFullscreen);
+            tmpIsFullscreen(Fullscreen.fullscreen);
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);
     };
