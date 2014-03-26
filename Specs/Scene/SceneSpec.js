@@ -345,6 +345,8 @@ defineSuite([
     it('renders with forced FXAA', function() {
         var context = scene.context;
 
+        // Workaround for Firefox on Mac, which does not support RGBA + depth texture
+        // attachments, which is allowed by the spec.
         if (context.getDepthTexture()) {
             var framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
