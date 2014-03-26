@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         './PixelDatatype'
     ], function(
         defaultValue,
+        defineProperties,
         DeveloperError,
         PixelDatatype) {
     "use strict";
@@ -28,6 +30,30 @@ define([
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
     };
+
+    defineProperties(CubeMapFace.prototype, {
+        /**
+         * The pixel format of this cube map face.  All faces in the same cube map have the same pixel format.
+         * @memberof CubeMapFace.prototype
+         * @type {PixelFormat}
+         */
+        pixelFormat : {
+            get : function() {
+                return this._pixelFormat;
+            }
+        },
+
+        /**
+         * The pixel data type of this cube map face.  All faces in the same cube map have the same pixel data type.
+         * @memberof CubeMapFace.prototype
+         * @type {PixelFormat}
+         */
+        pixelDatatype : {
+            get : function() {
+                return this._pixelDatatype;
+            }
+        }
+    });
 
     /**
      * Copies texels from the source to the cubemap's face.
@@ -161,32 +187,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.copyTexSubImage2D(this._targetFace, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
         gl.bindTexture(target, null);
-    };
-
-    /**
-     * Returns the pixel format of this cube map face.  All faces in the same cube map have the same pixel format.
-     *
-     * @memberof CubeMapFace
-     *
-     * @returns {PixelFormat} The pixel format of this cubemap face.
-     *
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     */
-    CubeMapFace.prototype.getPixelFormat = function() {
-        return this._pixelFormat;
-    };
-
-    /**
-     * Returns the pixel data type of this cube map face.  All faces in the same cube map have the same pixel data type.
-     *
-     * @memberof CubeMapFace
-     *
-     * @returns {PixelFormat} The pixel data type of this cubemap face.
-     *
-     * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
-     */
-    CubeMapFace.prototype.getPixelDatatype = function() {
-        return this._pixelDatatype;
     };
 
     CubeMapFace.prototype._getTexture = function() {

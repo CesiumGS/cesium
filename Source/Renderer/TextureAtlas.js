@@ -5,6 +5,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './PixelFormat'
@@ -14,6 +15,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         PixelFormat) {
@@ -95,6 +97,71 @@ define([
             this.addImage(image);
         }
     };
+
+    defineProperties(TextureAtlas.prototype, {
+        /**
+         * The amount of spacing between adjacent images in pixels.
+         * @memberof TextureAtlas.prototype
+         * @type {Number}
+         */
+        borderWidthInPixels : {
+            get : function() {
+                return this._borderWidthInPixels;
+            }
+        },
+
+        /**
+         * An array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
+         * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
+         * The coordinates are in the order that the corresponding images were added to the atlas.
+         * @memberof TextureAtlas.prototype
+         * @type {Array}
+         */
+        textureCoordinates : {
+            get : function() {
+                return this._textureCoordinates;
+            }
+        },
+
+        /**
+         * The texture that all of the images are being written to.
+         * @memberof TextureAtlas.prototype
+         * @type {Texture}
+         */
+        texture: {
+            get : function() {
+                return this._texture;
+            }
+        },
+
+        /**
+         * The number of images in the texture atlas. This value increases
+         * every time addImage or addImages is called.
+         * Texture coordinates are subject to change if the texture atlas resizes, so it is
+         * important to check {@link TextureAtlas#getGUID} before using old values.
+         * @memberof TextureAtlas.prototype
+         * @type {Number}
+         */
+        numberOfImages : {
+            get : function() {
+                return this._textureCoordinates.length;
+            }
+        },
+
+        /**
+         * The atlas' globally unique identifier (GUID).
+         * The GUID changes whenever the texture atlas is modified.
+         * Classes that use a texture atlas should check if the GUID
+         * has changed before processing the atlas data.
+         * @memberof TextureAtlas.prototype
+         * @type {String}
+         */
+        guid : {
+            get : function() {
+                return this._guid;
+            }
+        }
+    });
 
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
@@ -352,71 +419,6 @@ define([
         this._guid = createGuid();
 
         return numImages;
-    };
-
-    /**
-     * Returns the amount of spacing between adjacent images in pixels.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Number} The border width in pixels.
-     */
-    TextureAtlas.prototype.getBorderWidthInPixels = function() {
-        return this._borderWidthInPixels;
-    };
-
-    /**
-     * Returns an array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
-     * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
-     * The coordinates are in the order that the corresponding images were added to the atlas.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Array} The texture coordinates.
-     *
-     * @see BoundingRectangle
-     */
-    TextureAtlas.prototype.getTextureCoordinates = function() {
-        return this._textureCoordinates;
-    };
-
-    /**
-     * Returns the texture that all of the images are being written to.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {@link Texture} The texture used by the texture atlas.
-     */
-    TextureAtlas.prototype.getTexture = function() {
-        return this._texture;
-    };
-
-    /**
-     * Returns the number of images in the texture atlas. This value increases
-     * every time addImage or addImages is called.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Number} The number of images in the texture atlas.
-     */
-    TextureAtlas.prototype.getNumberOfImages = function() {
-        return this._textureCoordinates.length;
-    };
-
-    /**
-     * Returns the atlas' globally unique identifier (GUID).
-     * The GUID changes whenever the texture atlas is modified.
-     * Classes that use a texture atlas should check if the GUID
-     * has changed before processing the atlas data.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {String} The globally unique identifier (GUID).
-     */
-    TextureAtlas.prototype.getGUID = function() {
-        return this._guid;
     };
 
     /**

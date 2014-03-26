@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/RuntimeError',
@@ -13,6 +14,7 @@ define([
         '../Shaders/Builtin/CzmBuiltins'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         FeatureDetection,
         RuntimeError,
@@ -651,6 +653,52 @@ define([
         this.fragmentShaderSource = fragmentShaderSource;
     };
 
+    defineProperties(ShaderProgram.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        vertexAttributes: {
+            get : function() {
+                return this._vertexAttributes;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Number}
+         */
+        numberOfVertexAttributes : {
+            get : function() {
+                return this._numberOfVertexAttributes;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        allUniforms: {
+            get : function() {
+                return this._uniformsByName;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        manualUniforms: {
+            get : function() {
+                return this._manualUniforms;
+            }
+        }
+    });
+
     /**
      * For ShaderProgram testing
      * @private
@@ -1063,54 +1111,6 @@ define([
             manualUniforms : manualUniforms
         };
     }
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getVertexAttributes = function() {
-        return this._vertexAttributes;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Number} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
-        return this._numberOfVertexAttributes;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getManualUniforms
-     */
-    ShaderProgram.prototype.getAllUniforms = function() {
-        return this._uniformsByName;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getAllUniforms
-     */
-    ShaderProgram.prototype.getManualUniforms = function() {
-        return this._manualUniforms;
-    };
 
     ShaderProgram.prototype._bind = function() {
         this._gl.useProgram(this._program);

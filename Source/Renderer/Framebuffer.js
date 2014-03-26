@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         './PixelFormat'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         destroyObject,
         PixelFormat) {
@@ -195,6 +197,87 @@ define([
         this._unBind();
     };
 
+    defineProperties(Framebuffer.prorotype, {
+        /**
+         * The number of color textures or renderbuffers attached to this framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Number}
+         */
+        numberOfColorAttachments : {
+            get : function() {
+                return this._activeColorAttachments.length;
+            }
+        },
+
+        /**
+         * The depth texture attached to this framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Texture}
+         */
+        depthTexture: {
+            get : function() {
+                return this._depthTexture;
+            }
+        },
+
+        /**
+         * The depth renderbuffer attached to this framebuffer.
+         * @memberof Framebuffer.protyotype
+         * @type {Texture}
+         */
+        depthRenderbuffer: {
+            get : function() {
+                return this._depthRenderbuffer;
+            }
+        },
+
+        /**
+         * The stencil renderbuffer attached to this framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Texture}
+         */
+        stencilRenderbuffer : {
+            get : function() {
+                return this._stencilRenderbuffer;
+            }
+        },
+
+        /**
+         * The depth-stencil texture attached to this framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Texture}
+         */
+        depthStencilTexture : {
+            get : function() {
+                return this._depthStencilTexture;
+            }
+        },
+
+        /**
+         * The depth-stencil renderbuffer attached to this framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Texture}
+         */
+        depthStencilRenderbuffer : {
+            get : function() {
+                return this._depthStencilRenderbuffer;
+            }
+        },
+
+        /**
+         * True if the framebuffer has a depth attachment.  Depth attachments include
+         * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
+         * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
+         * @memberof Framebuffer.prototype
+         * @type {Boolean}
+         */
+        hasDepthAttachment : {
+            get : function() {
+                return !!(this.getDepthTexture() || this.getDepthRenderbuffer() || this.getDepthStencilTexture() || this.getDepthStencilRenderbuffer());
+            }
+        }
+    });
+
     Framebuffer.prototype._bind = function() {
         var gl = this._gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, this._framebuffer);
@@ -207,17 +290,6 @@ define([
 
     Framebuffer.prototype._getActiveColorAttachments = function() {
         return this._activeColorAttachments;
-    };
-
-    /**
-     * Returns the number of color textures or renderbuffers attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Number} The number of color attachments.
-     */
-    Framebuffer.prototype.getNumberOfColorAttachments = function() {
-        return this._activeColorAttachments.length;
     };
 
     /**
@@ -262,86 +334,6 @@ define([
         //>>includeEnd('debug');
 
         return this._colorRenderbuffers[index];
-    };
-
-    /**
-     * Returns the depth texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthTexture = function() {
-        return this._depthTexture;
-    };
-
-    /**
-     * Returns the depth renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthRenderbuffer = function() {
-        return this._depthRenderbuffer;
-    };
-
-    /**
-     * Returns the stencil renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The stencil renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getStencilRenderbuffer = function() {
-        return this._stencilRenderbuffer;
-    };
-
-    /**
-     * Returns the depth-stencil texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth-stencil texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthStencilTexture = function() {
-        return this._depthStencilTexture;
-    };
-
-    /**
-     * Returns the depth-stencil renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth-stencil renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthStencilRenderbuffer = function() {
-        return this._depthStencilRenderbuffer;
-    };
-
-    /**
-     * Returns true if the framebuffer has a depth attachment.  Depth attachments include
-     * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
-     * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.hasDepthAttachment = function() {
-        return !!(this.getDepthTexture() || this.getDepthRenderbuffer() || this.getDepthStencilTexture() || this.getDepthStencilRenderbuffer());
     };
 
     /**

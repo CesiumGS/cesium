@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         ComponentDatatype) {
@@ -183,6 +185,30 @@ define([
         this._indexBuffer = indexBuffer;
     };
 
+    defineProperties(VertexArray.prototype, {
+        /**
+        * DOC_TBA
+        * @memberof VertexArray.prototype
+        * @type {Number}
+        */
+        numberOfAttributes : {
+            get : function() {
+                return this._attributes.length;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof VertexArray.prototype
+         * @type {Buffer}
+         */
+        indexBuffer : {
+            get : function() {
+                return this._indexBuffer;
+            }
+        }
+    });
+
     /**
      * DOC_TBA
      *
@@ -200,29 +226,6 @@ define([
         //>>includeEnd('debug');
 
         return this._attributes[index];
-    };
-
-    /**
-    * DOC_TBA
-    *
-    * @memberof VertexArray
-    *
-    * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-    */
-    VertexArray.prototype.getNumberOfAttributes = function() {
-        return this._attributes.length;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @returns {Buffer} DOC_TBA.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.getIndexBuffer = function() {
-        return this._indexBuffer;
     };
 
     VertexArray.prototype._bind = function() {
