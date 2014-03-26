@@ -980,9 +980,14 @@ define([
     PrimitivePipeline.packCombineGeometryResults = function(results, transferableObjects) {
         transferGeometries(results.geometries, transferableObjects);
         transferPerInstanceAttributes(results.vaAttributes, transferableObjects);
-        results.packedVaAttributeLocations = packAttributeLocations(results.vaAttributeLocations, transferableObjects);
-        delete results.vaAttributeLocations;
-        return results;
+
+        return {
+            geometries : results.geometries,
+            attributeLocations : results.attributeLocations,
+            vaAttributes : results.vaAttributes,
+            packedVaAttributeLocations : packAttributeLocations(results.vaAttributeLocations, transferableObjects),
+            modelMatrix : results.modelMatrix
+        };
     };
 
     /**
