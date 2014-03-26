@@ -15,6 +15,7 @@ Beta Releases
 
            scene.camera.viewExtent(extent);
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
+  * Removed `TexturePool`.
   * Replaced getter/setter functions with properties:
     * `ImageryLayer`
       * `getImageryProvider` -> `imageryProvider`
