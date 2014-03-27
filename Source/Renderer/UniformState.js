@@ -275,7 +275,7 @@ define([
                 if (this._inverseTransposeModelDirty) {
                     this._inverseTransposeModelDirty = false;
 
-                    Matrix4.getRotation(this.getInverseModel(), m);
+                    Matrix4.getRotation(this.inverseModel, m);
                     Matrix3.transpose(m, m);
                 }
 
@@ -295,7 +295,7 @@ define([
         },
 
         /**
-         * The 3D view matrix.  In 3D mode, this is identical to {@link UniformState#getView},
+         * The 3D view matrix.  In 3D mode, this is identical to {@link UniformState#view},
          * but in 2D and Columbus View it is a synthetic matrix based on the equivalent position
          * of the camera in the 3D world.
          * @memberof UniformState.prototype
@@ -328,13 +328,13 @@ define([
         },
 
         /**
-         * The 3x3 rotation matrix of the current 3D view matrix ({@link UniformState#getView3D}).
+         * The 3x3 rotation matrix of the current 3D view matrix ({@link UniformState#view3D}).
          * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         viewRotation3D : {
             get : function() {
-                this.getView3D();
+                var view3D = this.view3D;
                 return this._viewRotation3D;
             }
         },
@@ -352,7 +352,7 @@ define([
 
         /**
          * the 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.  In 3D mode, this is
-         * identical to {@link UniformState#getInverseView}, but in 2D and Columbus View it is a synthetic matrix
+         * identical to {@link UniformState#inverseView}, but in 2D and Columbus View it is a synthetic matrix
          * based on the equivalent position of the camera in the 3D world.
          * @memberof UniformState.prototype
          * @type {Matrix4}
@@ -360,7 +360,7 @@ define([
         inverseView3D : {
             get : function() {
                 if (this._inverseView3DDirty) {
-                    Matrix4.inverseTransformation(this.getView3D(), this._inverseView3D);
+                    Matrix4.inverseTransformation(this.view3D, this._inverseView3D);
                     Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
                     this._inverseView3DDirty = false;
                 }
@@ -380,13 +380,13 @@ define([
         },
 
         /**
-         * The 3x3 rotation matrix of the current 3D inverse-view matrix ({@link UniformState#getInverseView3D}).
+         * The 3x3 rotation matrix of the current 3D inverse-view matrix ({@link UniformState#inverseView3D}).
          * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         inverseViewRotation3D : {
             get : function() {
-                this.getInverseView3D();
+                var inverseView = this.inverseView3D;
                 return this._inverseViewRotation3D;
             }
         },
@@ -429,7 +429,7 @@ define([
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
-        getInfiniteProjection : {
+        infiniteProjection : {
             get : function() {
                 return this._infiniteProjection;
             }
@@ -448,7 +448,7 @@ define([
         },
 
         /**
-         * The 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#getModelView}.  In 2D and
+         * The 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#modelView}.  In 2D and
          * Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
          * @memberof UniformState.prototype
          * @type {Matrix4}
@@ -485,7 +485,7 @@ define([
         },
 
         /**
-         * The inverse of the 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#getInverseModelView}.
+         * The inverse of the 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#inverseModelView}.
          * In 2D and Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
          * @memberof UniformState.prototype
          * @type {Matrix4}
@@ -588,7 +588,7 @@ define([
         /**
          * A 3x3 normal transformation matrix that transforms normal vectors in 3D model
          * coordinates to eye coordinates.  In 3D mode, this is identical to
-         * {@link UniformState#getNormal}, but in 2D and Columbus View it represents the normal transformation
+         * {@link UniformState#normal}, but in 2D and Columbus View it represents the normal transformation
          * matrix as if the camera were at an equivalent location in 3D mode.
          * @memberof UniformState.prototype
          * @type {Matrix3}
@@ -617,7 +617,7 @@ define([
         /**
          * An inverse 3x3 normal transformation matrix that transforms normal vectors in eye coordinates
          * to 3D model coordinates.  In 3D mode, this is identical to
-         * {@link UniformState#getInverseNormal}, but in 2D and Columbus View it represents the normal transformation
+         * {@link UniformState#inverseNormal}, but in 2D and Columbus View it represents the normal transformation
          * matrix as if the camera were at an equivalent location in 3D mode.
          * @memberof UniformState.prototype
          * @type {Matrix3}
@@ -846,12 +846,12 @@ define([
 
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
 
-        position = Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, uniformState._sunDirectionEC);
+        position = Matrix3.multiplyByVector(uniformState.viewRotation3D, position, uniformState._sunDirectionEC);
         Cartesian3.normalize(position, position);
 
         position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
+        Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
 
         var projection = frameState.scene2D.projection;
@@ -967,7 +967,7 @@ define([
         if (uniformState._modelView3DDirty) {
             uniformState._modelView3DDirty = false;
 
-            Matrix4.multiplyTransformation(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
+            Matrix4.multiplyTransformation(uniformState.view3D, uniformState._model, uniformState._modelView3D);
         }
     }
 
@@ -975,7 +975,7 @@ define([
         if (uniformState._inverseModelViewDirty) {
             uniformState._inverseModelViewDirty = false;
 
-            Matrix4.inverse(uniformState.getModelView(), uniformState._inverseModelView);
+            Matrix4.inverse(uniformState.modelView, uniformState._inverseModelView);
         }
     }
 
@@ -983,7 +983,7 @@ define([
         if (uniformState._inverseModelView3DDirty) {
             uniformState._inverseModelView3DDirty = false;
 
-            Matrix4.inverse(uniformState.getModelView3D(), uniformState._inverseModelView3D);
+            Matrix4.inverse(uniformState.modelView3D, uniformState._inverseModelView3D);
         }
     }
 
@@ -999,7 +999,7 @@ define([
         if (uniformState._inverseViewProjectionDirty) {
             uniformState._inverseViewProjectionDirty = false;
 
-            Matrix4.inverse(uniformState.getViewProjection(), uniformState._inverseViewProjection);
+            Matrix4.inverse(uniformState.viewProjection, uniformState._inverseViewProjection);
         }
     }
 
@@ -1007,7 +1007,7 @@ define([
         if (uniformState._modelViewProjectionDirty) {
             uniformState._modelViewProjectionDirty = false;
 
-            Matrix4.multiply(uniformState._projection, uniformState.getModelView(), uniformState._modelViewProjection);
+            Matrix4.multiply(uniformState._projection, uniformState.modelView, uniformState._modelViewProjection);
         }
     }
 
@@ -1015,7 +1015,7 @@ define([
         if (uniformState._modelViewRelativeToEyeDirty) {
             uniformState._modelViewRelativeToEyeDirty = false;
 
-            var mv = uniformState.getModelView();
+            var mv = uniformState.modelView;
             var mvRte = uniformState._modelViewRelativeToEye;
             mvRte[0] = mv[0];
             mvRte[1] = mv[1];
@@ -1040,7 +1040,7 @@ define([
         if (uniformState._inverseModelViewProjectionDirty) {
             uniformState._inverseModelViewProjectionDirty = false;
 
-            Matrix4.inverse(uniformState.getModelViewProjection(), uniformState._inverseModelViewProjection);
+            Matrix4.inverse(uniformState.modelViewProjection, uniformState._inverseModelViewProjection);
         }
     }
 
@@ -1048,7 +1048,7 @@ define([
         if (uniformState._modelViewProjectionRelativeToEyeDirty) {
             uniformState._modelViewProjectionRelativeToEyeDirty = false;
 
-            Matrix4.multiply(uniformState._projection, uniformState.getModelViewRelativeToEye(), uniformState._modelViewProjectionRelativeToEye);
+            Matrix4.multiply(uniformState._projection, uniformState.modelViewRelativeToEye, uniformState._modelViewProjectionRelativeToEye);
         }
     }
 
@@ -1056,7 +1056,7 @@ define([
         if (uniformState._modelViewInfiniteProjectionDirty) {
             uniformState._modelViewInfiniteProjectionDirty = false;
 
-            Matrix4.multiply(uniformState._infiniteProjection, uniformState.getModelView(), uniformState._modelViewInfiniteProjection);
+            Matrix4.multiply(uniformState._infiniteProjection, uniformState.modelView, uniformState._modelViewInfiniteProjection);
         }
     }
 
@@ -1065,7 +1065,7 @@ define([
             uniformState._normalDirty = false;
 
             var m = uniformState._normal;
-            Matrix4.getRotation(uniformState.getInverseModelView(), m);
+            Matrix4.getRotation(uniformState.inverseModelView, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1075,7 +1075,7 @@ define([
             uniformState._normal3DDirty = false;
 
             var m = uniformState._normal3D;
-            Matrix4.getRotation(uniformState.getInverseModelView3D(), m);
+            Matrix4.getRotation(uniformState.inverseModelView3D, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1084,7 +1084,7 @@ define([
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
 
-            Matrix4.getRotation(uniformState.getInverseModelView(), uniformState._inverseNormal);
+            Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
         }
     }
 
@@ -1092,7 +1092,7 @@ define([
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
 
-            Matrix4.getRotation(uniformState.getInverseModelView3D(), uniformState._inverseNormal3D);
+            Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
         }
     }
 
@@ -1102,7 +1102,7 @@ define([
         if (uniformState._encodedCameraPositionMCDirty) {
             uniformState._encodedCameraPositionMCDirty = false;
 
-            Matrix4.multiplyByPoint(uniformState.getInverseModel(), uniformState._cameraPosition, cameraPositionMC);
+            Matrix4.multiplyByPoint(uniformState.inverseModel, uniformState._cameraPosition, cameraPositionMC);
             EncodedCartesian3.fromCartesian(cameraPositionMC, uniformState._encodedCameraPositionMC);
         }
     }

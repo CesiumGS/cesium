@@ -2234,7 +2234,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
+        context._us.model = defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY);
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
