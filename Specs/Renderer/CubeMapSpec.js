@@ -100,21 +100,17 @@ defineSuite([
         expect(cubeMap.negativeZ.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
-    it('gets the default sampler', function() {
+    it('default sampler returns undefined', function() {
         cubeMap = context.createCubeMap({
             width : 16,
             height : 16
         });
 
         var sampler = cubeMap.sampler;
-        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
-        expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
-        expect(sampler.maximumAnisotropy).toEqual(1.0);
+        expect(sampler).toBeUndefined();
     });
 
-    it('gets the default valid sampler when data type is FLOAT ', function() {
+    it('default sampler returns undefined, data type is FLOAT ', function() {
         if (context.getFloatingPointTexture()) {
             cubeMap = context.createCubeMap({
                 width : 16,
@@ -123,11 +119,7 @@ defineSuite([
             });
 
             var sampler = cubeMap.sampler;
-            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
-            expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
-            expect(sampler.maximumAnisotropy).toEqual(1.0);
+            expect(sampler).toBeUndefined();
         }
     });
 

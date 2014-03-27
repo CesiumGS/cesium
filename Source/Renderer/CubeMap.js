@@ -135,7 +135,9 @@ define([
                 return this._sampler;
             },
             set : function(sampler) {
+                var samplerDefined = true;
                 if (!defined(sampler)) {
+                    samplerDefined = false;
                     var minFilter = TextureMinificationFilter.LINEAR;
                     var magFilter = TextureMagnificationFilter.LINEAR;
                     if (this._pixelDatatype === PixelDatatype.FLOAT) {
@@ -177,7 +179,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !defined(sampler) ? undefined : {
+                this._sampler = !samplerDefined ? undefined : {
                     wrapS : sampler.wrapS,
                     wrapT : sampler.wrapT,
                     minificationFilter : sampler.minificationFilter,
