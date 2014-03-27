@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Extent',
         './ImageryState',
@@ -22,6 +23,7 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         DeveloperError,
         Extent,
         ImageryState,
@@ -227,48 +229,50 @@ define([
         this.upsampledTerrain = undefined;
     };
 
-    /**
-     * Returns an array of tiles that would be at the next level of the tile tree.
-     *
-     * @memberof Tile
-     *
-     * @returns {Array} The list of child tiles.
-     */
-    Tile.prototype.getChildren = function() {
-        if (!defined(this.children)) {
-            var tilingScheme = this.tilingScheme;
-            var level = this.level + 1;
-            var x = this.x * 2;
-            var y = this.y * 2;
-            this.children = [new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y + 1,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y + 1,
-                level : level,
-                parent : this
-            })];
-        }
+    defineProperties(Tile.prototype, {
+        /**
+         * An array of tiles that would be at the next level of the tile tree.
+         * @memberof Tile.prototype
+         * @type {Array}
+         */
+        children : {
+            get : function() {
+                if (!defined(this.children)) {
+                    var tilingScheme = this.tilingScheme;
+                    var level = this.level + 1;
+                    var x = this.x * 2;
+                    var y = this.y * 2;
+                    this.children = [new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    })];
+                }
 
-        return this.children;
-    };
+                return this.children;
+            }
+        }
+    });
 
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {

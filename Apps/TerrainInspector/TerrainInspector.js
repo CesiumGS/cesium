@@ -191,7 +191,7 @@ require([
         showLabel: true,
         onClick: function() {
             if (Cesium.defined(selectedTile)) {
-                selectedTile = selectedTile.getChildren()[0];
+                selectedTile = selectedTile.children[0];
                 updateSelectedTile(selectedTile);
             }
         }
@@ -202,7 +202,7 @@ require([
         showLabel: true,
         onClick: function() {
             if (Cesium.defined(selectedTile)) {
-                selectedTile = selectedTile.getChildren()[1];
+                selectedTile = selectedTile.children[1];
                 updateSelectedTile(selectedTile);
             }
         }
@@ -213,7 +213,7 @@ require([
         showLabel: true,
         onClick: function() {
             if (Cesium.defined(selectedTile)) {
-                selectedTile = selectedTile.getChildren()[2];
+                selectedTile = selectedTile.children[2];
                 updateSelectedTile(selectedTile);
             }
         }
@@ -224,7 +224,7 @@ require([
         showLabel: true,
         onClick: function() {
             if (Cesium.defined(selectedTile)) {
-                selectedTile = selectedTile.getChildren()[3];
+                selectedTile = selectedTile.children[3];
                 updateSelectedTile(selectedTile);
             }
         }
