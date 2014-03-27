@@ -11,12 +11,14 @@ define([
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
         '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/createGuid',
         '../Core/Matrix4',
         '../Core/Math',
         './Buffer',
         './BufferUsage',
         './CubeMap',
+        './DrawCommand',
         './Framebuffer',
         './PixelDatatype',
         './PixelFormat',
@@ -35,7 +37,8 @@ define([
         './VertexArray',
         './VertexLayout',
         './ClearCommand',
-        './PassState'
+        './PassState',
+        '../Shaders/ViewportQuadVS'
     ], function(
         clone,
         defaultValue,
@@ -48,12 +51,14 @@ define([
         RuntimeError,
         PrimitiveType,
         Geometry,
+        GeometryAttribute,
         createGuid,
         Matrix4,
         CesiumMath,
         Buffer,
         BufferUsage,
         CubeMap,
+        DrawCommand,
         Framebuffer,
         PixelDatatype,
         PixelFormat,
@@ -72,7 +77,8 @@ define([
         VertexArray,
         VertexLayout,
         ClearCommand,
-        PassState) {
+        PassState,
+        ViewportQuadVS) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -2089,6 +2095,34 @@ define([
          // else same render state as before so state is already applied.
     }
 
+    var scratchBackBufferArray;
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext !== 'undefined') {
+        scratchBackBufferArray = [WebGLRenderingContext.BACK];
+    }
+
+    function bindFramebuffer(context, framebuffer) {
+        if (framebuffer !== context._currentFramebuffer) {
+            context._currentFramebuffer = framebuffer;
+            var buffers = scratchBackBufferArray;
+
+            if (defined(framebuffer)) {
+                framebuffer._bind();
+                validateFramebuffer(context, framebuffer);
+
+                // TODO: Need a way for a command to give what draw buffers are active.
+                buffers = framebuffer._getActiveColorAttachments();
+            } else {
+                var gl = context._gl;
+                gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            }
+
+            if (context.getDrawBuffers()) {
+                context._drawBuffers.drawBuffersWEBGL(buffers);
+            }
+        }
+    }
+
     var defaultClearCommand = new ClearCommand();
 
     /**
@@ -2143,27 +2177,13 @@ define([
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
-
-        if (defined(framebuffer)) {
-            framebuffer._bind();
-            validateFramebuffer(this, framebuffer);
-        }
+        bindFramebuffer(this, framebuffer);
 
         gl.clear(bitmask);
-
-        if (defined(framebuffer)) {
-            framebuffer._unBind();
-        }
     };
 
-    var scratchBackBufferArray;
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext !== 'undefined') {
-        scratchBackBufferArray = [WebGLRenderingContext.BACK];
-    }
-
-    function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defined(drawCommand.renderState) ? drawCommand.renderState : context._defaultRenderState;
+    function beginDraw(context, framebuffer, drawCommand, passState, renderState, shaderProgram) {
+        var rs = defaultValue(defaultValue(renderState, drawCommand.renderState), context._defaultRenderState);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
@@ -2173,31 +2193,16 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (framebuffer !== context._currentFamebuffer) {
-            context._currentFramebuffer = framebuffer;
-            var buffers = scratchBackBufferArray;
+        bindFramebuffer(context, framebuffer);
 
-            if (defined(framebuffer)) {
-                framebuffer._bind();
-                validateFramebuffer(context, framebuffer);
-
-                // TODO: Need a way for a command to give what draw buffers are active.
-                buffers = framebuffer._getActiveColorAttachments();
-            }
-
-            if (context.getDrawBuffers()) {
-                context._drawBuffers.drawBuffersWEBGL(buffers);
-            }
-        }
-
-        var sp = drawCommand.shaderProgram;
+        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
 
         applyRenderState(context, rs, passState);
     }
 
-    function continueDraw(context, drawCommand) {
+    function continueDraw(context, drawCommand, shaderProgram) {
         var primitiveType = drawCommand.primitiveType;
         var va = drawCommand.vertexArray;
         var offset = drawCommand.offset;
@@ -2222,7 +2227,8 @@ define([
         //>>includeEnd('debug');
 
         context._us.setModel(defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY));
-        drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
+        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
+        sp._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
         var indexBuffer = va.getIndexBuffer();
 
@@ -2242,19 +2248,15 @@ define([
         }
     }
 
-    function endDraw(context, framebuffer) {
-        if (defined(framebuffer)) {
-            framebuffer._unBind();
-        }
-    }
-
     /**
      * Executes the specified draw command.
      *
      * @memberof Context
      *
      * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {PassState} [passState] The state for the current rendering pass
+     * @param {PassState} [passState] The state for the current rendering pass.
+     * @param {RenderState} [renderState] The render state that will override the render state of the command.
+     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
      *
      * @memberof Context
      *
@@ -2289,7 +2291,7 @@ define([
      * @see Context#createFramebuffer
      * @see Context#createRenderState
      */
-    Context.prototype.draw = function(drawCommand, passState) {
+    Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
@@ -2304,9 +2306,8 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand.framebuffer, passState.framebuffer);
 
-        beginDraw(this, framebuffer, drawCommand, passState);
-        continueDraw(this, drawCommand);
-        endDraw(this, framebuffer);
+        beginDraw(this, framebuffer, drawCommand, passState, renderState, shaderProgram);
+        continueDraw(this, drawCommand, shaderProgram);
     };
 
     /**
@@ -2315,6 +2316,14 @@ define([
     Context.prototype.endFrame = function() {
         var gl = this._gl;
         gl.useProgram(null);
+
+        this._currentFramebuffer = undefined;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        var buffers = scratchBackBufferArray;
+        if (this.getDrawBuffers()) {
+            this._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
+        }
 
         var length = this._maxFrameTextureUnitIndex;
         this._maxFrameTextureUnitIndex = 0;
@@ -2342,7 +2351,7 @@ define([
         var y = Math.max(readState.y || 0, 0);
         var width = readState.width || gl.drawingBufferWidth;
         var height = readState.height || gl.drawingBufferHeight;
-        var framebuffer = readState.framebuffer || null;
+        var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
         if (width <= 0) {
@@ -2356,16 +2365,9 @@ define([
 
         var pixels = new Uint8Array(4 * width * height);
 
-        if (framebuffer) {
-            framebuffer._bind();
-            validateFramebuffer(this, framebuffer);
-        }
+        bindFramebuffer(this, framebuffer);
 
         gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-
-        if (framebuffer) {
-            framebuffer._unBind();
-        }
 
         return pixels;
     };
@@ -2644,6 +2646,72 @@ define([
         }
 
         return this.createVertexArray(vaAttributes, indexBuffer);
+    };
+
+    var viewportQuadAttributeLocations = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    /**
+     * @private
+     */
+    Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
+        // Per-context cache for viewport quads
+        var vertexArray = this.cache.viewportQuad_vertexArray;
+
+        if (!defined(vertexArray)) {
+            var geometry = new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [
+                           -1.0, -1.0,
+                            1.0, -1.0,
+                            1.0,  1.0,
+                           -1.0,  1.0
+                        ]
+                    }),
+
+                    textureCoordinates : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 2,
+                        values : [
+                            0.0, 0.0,
+                            1.0, 0.0,
+                            1.0, 1.0,
+                            0.0, 1.0
+                        ]
+                    })
+                },
+                primitiveType : PrimitiveType.TRIANGLES
+            });
+
+            vertexArray = this.createVertexArrayFromGeometry({
+                geometry : geometry,
+                attributeLocations : {
+                    position : 0,
+                    textureCoordinates : 1
+                },
+                bufferUsage : BufferUsage.STATIC_DRAW
+            });
+
+            this.cache.viewportQuad_vertexArray = vertexArray;
+        }
+
+        overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
+
+        var command = new DrawCommand();
+        command.vertexArray = vertexArray;
+        command.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        command.renderState = overrides.renderState;
+        command.shaderProgram = this.getShaderCache().getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
+        command.uniformMap = overrides.uniformMap;
+        command.owner = overrides.owner;
+        command.framebuffer = overrides.framebuffer;
+
+        return command;
     };
 
     /**

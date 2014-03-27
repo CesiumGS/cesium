@@ -392,7 +392,7 @@ define([
                 // STOPPED -> ANIMATING state transition?
                 if (scheduledAnimation._state === ModelAnimationState.STOPPED) {
                     scheduledAnimation._state = ModelAnimationState.ANIMATING;
-                    if (scheduledAnimation.start.getNumberOfListeners() > 0) {
+                    if (scheduledAnimation.start.numberOfListeners > 0) {
                         frameState.afterRender.push(scheduledAnimation._raiseStartEvent);
                     }
                 }
@@ -417,7 +417,7 @@ define([
 
                 animateChannels(runtimeAnimation, localAnimationTime);
 
-                if (scheduledAnimation.update.getNumberOfListeners() > 0) {
+                if (scheduledAnimation.update.numberOfListeners > 0) {
                     scheduledAnimation._updateEventTime = localAnimationTime;
                     frameState.afterRender.push(scheduledAnimation._raiseUpdateEvent);
                 }
@@ -426,7 +426,7 @@ define([
                 // ANIMATING -> STOPPED state transition?
                 if (pastStartTime && (scheduledAnimation._state === ModelAnimationState.ANIMATING)) {
                     scheduledAnimation._state = ModelAnimationState.STOPPED;
-                    if (scheduledAnimation.stop.getNumberOfListeners() > 0) {
+                    if (scheduledAnimation.stop.numberOfListeners > 0) {
                         frameState.afterRender.push(scheduledAnimation._raiseStopEvent);
                     }
 

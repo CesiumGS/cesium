@@ -163,6 +163,11 @@ define(function() {
          * @private
          */
         this.debugOverlappingFrustums = 0;
+
+        /**
+         * @private
+         */
+        this.oit = undefined;
     };
 
     /**
@@ -171,10 +176,12 @@ define(function() {
      * @memberof DrawCommand
      *
      * @param {Context} context The renderer context in which to draw.
-     * @param {PassState} [passState] TBA.
+     * @param {PassState} [passState] The state for the current render pass.
+     * @param {RenderState} [renderState] The render state that will override the render state of the command.
+     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
      */
-    DrawCommand.prototype.execute = function(context, passState) {
-        context.draw(this, passState);
+    DrawCommand.prototype.execute = function(context, passState, renderState, shaderProgram) {
+        context.draw(this, passState, renderState, shaderProgram);
     };
 
     return DrawCommand;

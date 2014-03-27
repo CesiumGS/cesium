@@ -6,6 +6,7 @@ define([
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/Extent',
         './ImageryState',
         './TerrainState',
         './TileState',
@@ -22,6 +23,7 @@ define([
         Cartographic,
         defined,
         DeveloperError,
+        Extent,
         ImageryState,
         TerrainState,
         TileState,
@@ -427,8 +429,8 @@ define([
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
 
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+        ellipsoid.cartographicToCartesian(Extent.getSouthwest(extent), tile.southwestCornerCartesian);
+        ellipsoid.cartographicToCartesian(Extent.getNortheast(extent), tile.northeastCornerCartesian);
 
         // The middle latitude on the western edge.
         cartographicScratch.longitude = extent.west;
@@ -449,13 +451,13 @@ define([
         Cartesian3.normalize(eastNormal, tile.eastNormal);
 
         // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getSoutheast(), cartesian3Scratch2);
+        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getSoutheast(extent), cartesian3Scratch2);
         var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
         var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
         Cartesian3.normalize(southNormal, tile.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getNorthwest(), cartesian3Scratch2);
+        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getNorthwest(extent), cartesian3Scratch2);
         var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
         Cartesian3.normalize(northNormal, tile.northNormal);
     }
