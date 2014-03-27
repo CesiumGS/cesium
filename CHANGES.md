@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b28 - 2014-05-01
+
+* Breaking changes:
+  * Removed `CameraColumbusViewMode` because it is no longer needed.
+* `Camera.transform` now works consistently across scene modes.
+
 ### b27 - 2014-04-01
 
 * Breaking changes:
@@ -15,7 +21,6 @@ Beta Releases
 
            scene.camera.viewExtent(extent);
 
-  * Removed `CameraColumbusViewMode` because it is no longer needed.
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
   * Replaced getter/setter functions with properties:
     * `ImageryLayer`
@@ -59,7 +64,6 @@ Beta Releases
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
-* `Camera.transform` now works consistently across scene modes.
 * The `debugShowBoundingVolume` property on primitives now works across all scene modes.
 * Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
 
