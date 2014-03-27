@@ -26,7 +26,7 @@ define([
         this._sizeInBytes = sizeInBytes;
         this._usage = usage;
         this._buffer = buffer;
-        this._vertexArrayDestroyable = true;
+        this.vertexArrayDestroyable = true;
     };
 
     defineProperties(Buffer.prototype, {
@@ -49,19 +49,6 @@ define([
         usage: {
             get : function() {
                 return this._usage;
-            }
-        },
-
-        /**
-         * DOC_TBA
-         * @memberof Buffer.prototype
-         */
-        vertexArrayDestroyable : {
-            get : function() {
-                return this._vertexArrayDestroyable;
-            },
-            set : function(value) {
-                this._vertexArrayDestroyable = value;
             }
         }
     });

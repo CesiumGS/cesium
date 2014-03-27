@@ -112,7 +112,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = {
+                this._sampler = !defined(sampler) ? undefined : {
                     wrapS : sampler.wrapS,
                     wrapT : sampler.wrapT,
                     minificationFilter : sampler.minificationFilter,
