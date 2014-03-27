@@ -482,7 +482,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    var waterMask = tile.terrainData.getWaterMask();
+                    var waterMask = tile.terrainData.watermask;
                     if (defined(waterMask)) {
                         if (defined(tile.waterMaskTexture)) {
                             --tile.waterMaskTexture.referenceCount;
