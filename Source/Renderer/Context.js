@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/defineProperties',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
@@ -45,6 +46,7 @@ define([
         defined,
         DeveloperError,
         destroyObject,
+        defineProperties,
         Color,
         ComponentDatatype,
         IndexDatatype,
@@ -1301,19 +1303,25 @@ define([
 
         var gl = this._gl;
         var buffer = createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
-        var numberOfIndices = buffer.getSizeInBytes() / bytesPerIndex;
+        var numberOfIndices = buffer.sizeInBytes / bytesPerIndex;
 
-        buffer.getIndexDatatype = function() {
-            return indexDatatype;
-        };
-
-        buffer.getBytesPerIndex = function() {
-            return bytesPerIndex;
-        };
-
-        buffer.getNumberOfIndices = function() {
-            return numberOfIndices;
-        };
+        defineProperties(buffer, {
+            indexDatatype: {
+                get : function() {
+                    return indexDatatype;
+                }
+            },
+            bytesPerIndex : {
+                get : function() {
+                    return bytesPerIndex;
+                }
+            },
+            numberOfIndices : {
+                get : function() {
+                    return numberOfIndices;
+                }
+            }
+        });
 
         return buffer;
     };
@@ -2187,7 +2195,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
-            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
+            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
@@ -2230,14 +2238,14 @@ define([
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
         sp._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
 
-        var indexBuffer = va.getIndexBuffer();
+        var indexBuffer = va.indexBuffer;
 
         if (defined(indexBuffer)) {
-            offset = offset * indexBuffer.getBytesPerIndex(); // offset in vertices to offset in bytes
-            count = defaultValue(count, indexBuffer.getNumberOfIndices());
+            offset = offset * indexBuffer.bytesPerIndex; // offset in vertices to offset in bytes
+            count = defaultValue(count, indexBuffer.numberOfIndices);
 
             va._bind();
-            context._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype(), offset);
+            context._gl.drawElements(primitiveType, count, indexBuffer.indexDatatype, offset);
             va._unBind();
         } else {
             count = defaultValue(count, va.numberOfVertices);

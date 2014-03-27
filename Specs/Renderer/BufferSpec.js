@@ -34,8 +34,8 @@ defineSuite([
     it('creates vertex buffer', function() {
         buffer = context.createVertexBuffer(16, BufferUsage.STATIC_DRAW);
 
-        expect(buffer.getSizeInBytes()).toEqual(16);
-        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(buffer.sizeInBytes).toEqual(16);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it('copies array to a vertex buffer', function() {
@@ -57,8 +57,8 @@ defineSuite([
         typedArray[2] = 3.0;
 
         buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        expect(buffer.getSizeInBytes()).toEqual(typedArray.byteLength);
-        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(buffer.sizeInBytes).toEqual(typedArray.byteLength);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it('only allows typed array or size when creating a vertex buffer', function() {
@@ -70,12 +70,12 @@ defineSuite([
     it('creates index buffer', function() {
         buffer = context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-        expect(buffer.getSizeInBytes()).toEqual(6);
-        expect(buffer.getUsage()).toEqual(BufferUsage.STREAM_DRAW);
+        expect(buffer.sizeInBytes).toEqual(6);
+        expect(buffer.usage).toEqual(BufferUsage.STREAM_DRAW);
 
-        expect(buffer.getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(buffer.getBytesPerIndex()).toEqual(2);
-        expect(buffer.getNumberOfIndices()).toEqual(3);
+        expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
+        expect(buffer.bytesPerIndex).toEqual(2);
+        expect(buffer.numberOfIndices).toEqual(3);
     });
 
     it('copies array to an index buffer', function() {
@@ -97,9 +97,9 @@ defineSuite([
         typedArray[2] = 3;
 
         buffer = context.createIndexBuffer(typedArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        expect(buffer.getSizeInBytes()).toEqual(typedArray.byteLength);
-        expect(buffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
-        expect(buffer.getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
+        expect(buffer.sizeInBytes).toEqual(typedArray.byteLength);
+        expect(buffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+        expect(buffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
     });
 
     it('only allows typed array or size when creating a vertex buffer', function() {

@@ -2,10 +2,12 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/destroyObject'
     ], function(
         DeveloperError,
         defaultValue,
+        defineProperties,
         destroyObject) {
     "use strict";
 
@@ -24,7 +26,35 @@ define([
         this._sizeInBytes = sizeInBytes;
         this._usage = usage;
         this._buffer = buffer;
-        this._vertexArrayDestroyable = true;
+        this.vertexArrayDestroyable = true;
+    };
+
+    defineProperties(Buffer.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof Buffer.prototype
+         * @type {Number}
+         */
+        sizeInBytes : {
+            get : function() {
+                return this._sizeInBytes;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Buffer.prototype
+         * @type {GLenum}
+         */
+        usage: {
+            get : function() {
+                return this._usage;
+            }
+        }
+    });
+
+    Buffer.prototype._getBuffer = function() {
+        return this._buffer;
     };
 
     /**
@@ -54,48 +84,6 @@ define([
         gl.bindBuffer(target, this._buffer);
         gl.bufferSubData(target, offsetInBytes, arrayView);
         gl.bindBuffer(target, null);
-    };
-
-    Buffer.prototype._getBuffer = function() {
-        return this._buffer;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Buffer
-     *
-     * @returns {Number} DOC_TBA
-     * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
-     */
-    Buffer.prototype.getSizeInBytes = function() {
-        return this._sizeInBytes;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Buffer
-     *
-     * @returns {GLenum} DOC_TBA
-     * @exception {DeveloperError} This buffer was destroyed, i.e., destroy() was called.
-     */
-    Buffer.prototype.getUsage = function() {
-        return this._usage;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Buffer
-     */
-    Buffer.prototype.getVertexArrayDestroyable = function() {
-        return this._vertexArrayDestroyable;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Buffer
-     */
-    Buffer.prototype.setVertexArrayDestroyable = function(value) {
-        this._vertexArrayDestroyable = value;
     };
 
     /**

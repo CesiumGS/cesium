@@ -18,7 +18,7 @@ define([
 
         depth = defaultValue(depth, 0.0);
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);

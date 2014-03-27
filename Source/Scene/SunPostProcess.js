@@ -222,7 +222,7 @@ define([
 
         var fbo = this._fbo;
         var colorTexture = (defined(fbo) && fbo.getColorTexture(0)) || undefined;
-        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+        if (!defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height) {
             fbo = fbo && fbo.destroy();
             this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
             this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
