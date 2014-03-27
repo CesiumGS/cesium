@@ -407,9 +407,7 @@ define([
 
         if (scene.frameState.mode === SceneMode.MORPHING) {
             return {
-                duration : 0,
-                onComplete : description.onComplete,
-                onCancel: description.onCancel
+                duration : 0
             };
         }
 

@@ -45,11 +45,7 @@ define([
         if (mode === SceneMode.SCENE2D) {
             description = {
                 destination : Extent.MAX_VALUE,
-                duration : flightDuration,
-                endReferenceFrame : new Matrix4(0, 0, 1, 0,
-                                                1, 0, 0, 0,
-                                                0, 1, 0, 0,
-                                                0, 0, 0, 1)
+                duration : flightDuration
             };
             flight = CameraFlightPath.createAnimationExtent(scene, description);
             scene.animations.add(flight);
@@ -75,11 +71,7 @@ define([
                 destination : position,
                 duration : flightDuration,
                 up : up,
-                direction : direction,
-                endReferenceFrame : new Matrix4(0, 0, 1, 0,
-                                                1, 0, 0, 0,
-                                                0, 1, 0, 0,
-                                                0, 0, 0, 1)
+                direction : direction
             };
 
             flight = CameraFlightPath.createAnimation(scene, description);
