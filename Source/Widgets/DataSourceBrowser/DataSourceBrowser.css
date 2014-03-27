@@ -353,6 +353,7 @@ li:nth-child(even) > div > .cesium-dataSourceBrowser-item:hover {
     left: 0;
     width: 200px;
     text-align: left;
+    z-index: 1;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer .cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions-visible {
