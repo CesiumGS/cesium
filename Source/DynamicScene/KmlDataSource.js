@@ -893,7 +893,6 @@ define(['../Core/createGuid',
             //Get the blob "magic number" to determine if it's a zip or KML
             var slice = blob.slice(0, 4);
             var reader = new FileReader();
-            reader.readAsArrayBuffer(slice);
             reader.onload = function(e) {
                 var buffer = reader.result;
                 var view = new DataView(buffer);
@@ -912,6 +911,7 @@ define(['../Core/createGuid',
                 });
                 reader.readAsText(blob);
             };
+            reader.readAsArrayBuffer(slice);
             return deferred;
         }, function(error) {
             that._error.raiseEvent(that, error);
