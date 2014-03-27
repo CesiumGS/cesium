@@ -35,15 +35,6 @@ defineSuite(['DynamicScene/KmlDataSource',
 
     var parser = new DOMParser();
 
-    function coordinatesArrayToCartesianArray(coordinates) {
-        var positions = new Array(coordinates.length);
-        for ( var i = 0; i < coordinates.length; i++) {
-            var cartographic = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1], coordinates[i][2]);
-            positions[i] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-        }
-        return positions;
-    }
-
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
         expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
@@ -326,38 +317,36 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles Polygon geometry', function() {
-        var coordinates = [[-122.365662, 37.826988, 0], [-122.365202, 37.826302, 0], [-122.364581, 37.82655, 0], [-122.365038, 37.827237, 0], [-122.365662, 37.826988, 0]];
-        coordinates = coordinatesArrayToCartesianArray(coordinates);
-        var polygon = new DynamicPolygon();
-        var material = new ColorMaterialProperty();
-        material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
-        polygon.material = material;
         var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
-        <kml xmlns="http://www.opengis.net/kml/2.2">\
-        <Placemark>\
-          <Polygon>\
-            <outerBoundaryIs>\
-              <LinearRing>\
-                <coordinates>\
-                  -122.365662,37.826988,0\
-                  -122.365202,37.826302,0\
-                  -122.364581,37.82655,0\
-                  -122.365038,37.827237,0\
-                  -122.365662,37.826988,0\
-                </coordinates>\
-              </LinearRing>\
-            </outerBoundaryIs>\
-          </Polygon>\
-        </Placemark>\
-        </kml>';
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Placemark>\
+              <Polygon>\
+                <outerBoundaryIs>\
+                  <LinearRing>\
+                    <coordinates>\
+                      -122,37,0\
+                      -123,38,0\
+                      -124,39,0\
+                      -125,40,0\
+                      -122,37,0\
+                    </coordinates>\
+                  </LinearRing>\
+                </outerBoundaryIs>\
+              </Polygon>\
+            </Placemark>\
+            </kml>';
+
+        var coordinates = [Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-123, 38, 0)),
+                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-124, 39, 0)),
+                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-125, 40, 0)),
+                           Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-122, 37, 0))];
+
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         var dynamicObject = objects[0];
-        for ( var i = 0; i < coordinates.length; i++) {
-            expect(dynamicObject.vertexPositions.getValue()[i]).toEqual(coordinates[i]);
-        }
+        expect(dynamicObject.vertexPositions.getValue()).toEqual(coordinates);
     });
 
     it('handles gx:Track', function() {
@@ -564,8 +553,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
         var billboard = objects[0].billboard;
-        expect(billboard.color).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
-        expect(billboard.scale.getValue()).toEqual(1.0);
+        expect(billboard).toBeDefined();
     });
 
     it('handles LabelStyle', function() {
@@ -622,8 +610,6 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles LineStyle', function() {
-        var width = new ConstantProperty(4);
-        var outerWidth = new ConstantProperty(0);
         var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -633,7 +619,7 @@ defineSuite(['DynamicScene/KmlDataSource',
                 <width>4</width>\
                 <gx:labelVisibility>1</gx:labelVisibility>\
                 <gx:outerColor>ffffffff</gx:outerColor>\
-                <gx:outerWidth>0.0</gx:outerWidth>\
+                <gx:outerWidth>1.0</gx:outerWidth>\
                 <gx:physicalWidth>0.0</gx:physicalWidth>\
                 <gx:labelVisibility>0</gx:labelVisibility>\
             </LineStyle>\
@@ -649,8 +635,8 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
-        expect(objects[0].polyline.width.getValue()).toEqual(width.getValue());
-        expect(objects[0].polyline.outlineWidth.getValue()).toEqual(outerWidth.getValue());
+        expect(objects[0].polyline.width.getValue()).toEqual(4);
+        expect(objects[0].polyline.material.outlineWidth.getValue()).toEqual(1);
     });
 
     it('handles empty LineStyle element', function() {
@@ -672,10 +658,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
         var polyline = objects[0].polyline;
-        expect(polyline.color).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
-        expect(polyline.width.getValue()).toEqual(1.0);
-        expect(polyline.outlineColor).toBe(undefined);
-        expect(polyline.outlineWidth).toBe(undefined);
+        expect(polyline).toBeDefined();
     });
 
     it('LineStyle throws with invalid input', function() {

@@ -206,7 +206,12 @@ define(['../Core/createGuid',
         }
 
         var billboard = dynamicObject.billboard;
-        if (defined(billboard)) {
+        var label = dynamicObject.label;
+        if (defined(billboard) || defined(label)) {
+            if (!defined(billboard)) {
+                billboard = new DynamicBillboard();
+                dynamicObject.billboard = billboard;
+            }
             if (!defined(billboard.image)) {
                 billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
             }
@@ -433,9 +438,9 @@ define(['../Core/createGuid',
                     throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
+                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
                 material = new PolylineOutlineMaterialProperty();
                 material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
-                material.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
                 material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
                 material.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : new ConstantProperty(0);
                 polyline.material = material;
