@@ -629,27 +629,30 @@ defineSuite([
     it('fails vertex shader compile', function() {
         var vs = 'does not compile.';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+        sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
-            sp = context.createShaderProgram(vs, fs);
+            sp._bind();
         }).toThrow();
     });
 
     it('fails fragment shader compile', function() {
         var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'does not compile.';
+        sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
-            sp = context.createShaderProgram(vs, fs);
+            sp._bind();
         }).toThrow();
     });
 
     it('fails to link', function() {
         var vs = 'void nomain() { }';
         var fs = 'void nomain() { }';
+        sp = context.createShaderProgram(vs, fs);
 
         expect(function() {
-            sp = context.createShaderProgram(vs, fs);
+            sp._bind();
         }).toThrow();
     });
 
@@ -667,8 +670,9 @@ defineSuite([
     it('fails with built-in function circular dependency', function() {
         var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }';
+        sp = context.createShaderProgram(vs, fs);
         expect(function() {
-            sp = context.createShaderProgram(vs, fs);
+            sp._bind();
         }).toThrow();
     });
 }, 'WebGL');

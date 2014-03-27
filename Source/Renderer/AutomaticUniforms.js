@@ -478,6 +478,17 @@ define([
         }),
 
         /**
+         * @private
+         */
+        czm_inverseProjectionOIT : new AutomaticUniform({
+            size : 1,
+            datatype : UniformDatatype.FLOAT_MAT4,
+            getValue : function(uniformState) {
+                return uniformState.getInverseProjectionOIT();
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix with the far plane at infinity,
          * that transforms eye coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used

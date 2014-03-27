@@ -61,7 +61,7 @@ define([
          * Create a sampler by calling {@link Context#createSampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
          * coordinates in both directions, uses linear filtering for both magnification and minifcation,
-         * and uses a maximum anisotropy of 1.0
+         * and uses a maximum anisotropy of 1.0.
          * @memberof Texture.prototype
          * @type {Object}
          */
@@ -105,6 +105,7 @@ define([
                 gl.bindTexture(target, this._texture);
                 gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
                 gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
+
                 gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
                 if (defined(this._textureFilterAnisotropic)) {

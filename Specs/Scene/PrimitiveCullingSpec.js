@@ -236,7 +236,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
         camera.up = Cartesian3.cross(camera.right, camera.direction);
 
-        occluder.setCameraPosition(camera.position);
+        occluder.cameraPosition = camera.position;
 
         numRendered = render(context, frameState, primitives);
         expect(numRendered).toEqual(0);

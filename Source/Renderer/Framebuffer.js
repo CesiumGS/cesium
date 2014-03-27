@@ -62,7 +62,7 @@ define([
          *
          * @see Framebuffer#destroy
          */
-        this.destroyAttachments = true;
+        this.destroyAttachments = defaultValue(description.destroyAttachments, true);
 
         // Throw if a texture and renderbuffer are attached to the same point.  This won't
         // cause a WebGL error (because only one will be attached), but is likely a developer error.
@@ -198,6 +198,21 @@ define([
     };
 
     defineProperties(Framebuffer.prototype, {
+        /**
+         * The status of the framebuffer. If the status is not WebGLRenderingContext.COMPLETE,
+         * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Number}
+         */
+        status : {
+            get : function() {
+                this._bind();
+                var status = this._gl.checkFramebufferStatus(this._gl.FRAMEBUFFER);
+                this._unBind();
+                return status;
+            }
+        },
+
         /**
          * The number of color textures or renderbuffers attached to this framebuffer.
          * @memberof Framebuffer.prototype
