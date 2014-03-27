@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/RuntimeError',
@@ -13,6 +14,7 @@ define([
         '../Shaders/Builtin/CzmBuiltins'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         FeatureDetection,
         RuntimeError,
@@ -131,71 +133,71 @@ define([
      * </tr>
      * <tr>
      * <td><code>uniform float u_float; </code></td>
-     * <td><code> sp.getAllUniforms().u_float.value = 1.0;</code></td>
+     * <td><code> sp.allUniforms.u_float.value = 1.0;</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform vec2 u_vec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec2.value = new Cartesian2(1.0, 2.0);</code></td>
+     * <td><code> sp.allUniforms.u_vec2.value = new Cartesian2(1.0, 2.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform vec3 u_vec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec3.value = new Cartesian3(1.0, 2.0, 3.0);</code></td>
+     * <td><code> sp.allUniforms.u_vec3.value = new Cartesian3(1.0, 2.0, 3.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform vec4 u_vec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec4.value = new Cartesian4(1.0, 2.0, 3.0, 4.0);</code></td>
+     * <td><code> sp.allUniforms.u_vec4.value = new Cartesian4(1.0, 2.0, 3.0, 4.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform int u_int; </code></td>
-     * <td><code> sp.getAllUniforms().u_int.value = 1;</code></td>
+     * <td><code> sp.allUniforms.u_int.value = 1;</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform ivec2 u_ivec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec2.value = new Cartesian2(1, 2);</code></td>
+     * <td><code> sp.allUniforms.u_ivec2.value = new Cartesian2(1, 2);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform ivec3 u_ivec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec3.value = new Cartesian3(1, 2, 3);</code></td>
+     * <td><code> sp.allUniforms.u_ivec3.value = new Cartesian3(1, 2, 3);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform ivec4 u_ivec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec4.value = new Cartesian4(1, 2, 3, 4);</code></td>
+     * <td><code> sp.allUniforms.u_ivec4.value = new Cartesian4(1, 2, 3, 4);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform bool u_bool; </code></td>
-     * <td><code> sp.getAllUniforms().u_bool.value = true;</code></td>
+     * <td><code> sp.allUniforms.u_bool.value = true;</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform bvec2 u_bvec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec2.value = new Cartesian2(true, true);</code></td>
+     * <td><code> sp.allUniforms.u_bvec2.value = new Cartesian2(true, true);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform bvec3 u_bvec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec3.value = new Cartesian3(true, true, true);</code></td>
+     * <td><code> sp.allUniforms.u_bvec3.value = new Cartesian3(true, true, true);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform bvec4 u_bvec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec4.value = new Cartesian4(true, true, true, true);</code></td>
+     * <td><code> sp.allUniforms.u_bvec4.value = new Cartesian4(true, true, true, true);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform mat2 u_mat2; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
+     * <td><code> sp.allUniforms.u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform mat3 u_mat3; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat3.value = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);</code></td>
+     * <td><code> sp.allUniforms.u_mat3.value = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform mat4 u_mat4; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat4.value = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0);</code></td>
+     * <td><code> sp.allUniforms.u_mat4.value = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform sampler2D u_texture; </code></td>
-     * <td><code> sp.getAllUniforms().u_texture.value = context.createTexture2D(...);</code></td>
+     * <td><code> sp.allUniforms.u_texture.value = context.createTexture2D(...);</code></td>
      * </tr>
      * <tr>
      * <td><code>uniform samplerCube u_cubeMap; </code></td>
-     * <td><code> sp.getAllUniforms().u_cubeMap.value = context.createCubeMap(...);</code></td>
+     * <td><code> sp.allUniforms.u_cubeMap.value = context.createCubeMap(...);</code></td>
      * </tr>
      * </table>
      * <br />
@@ -227,7 +229,7 @@ define([
      * var fs = // ...
      * var sp = context.createShaderProgram(vs, fs);
      *
-     * var mvp = sp.getAllUniforms().u_mvp;
+     * var mvp = sp.allUniforms.u_mvp;
      * console.log(mvp.getName());           // 'u_mvp'
      * console.log(mvp.getDatatype().name);  // 'FLOAT_MAT4'
      * mvp.value = Cesium.Matrix4.IDENTITY;
@@ -236,10 +238,10 @@ define([
      *
      * // Example 2. Setting values for a GLSL array uniform
      * // GLSL:  uniform float u_float[2];
-     * sp.getAllUniforms().u_float.value = new Cesium.Cartesian2(1.0, 2.0);
+     * sp.allUniforms.u_float.value = new Cesium.Cartesian2(1.0, 2.0);
      *
      * // GLSL:  uniform vec4 u_vec4[2];
-     * sp.getAllUniforms().u_vec4.value = [
+     * sp.allUniforms.u_vec4.value = [
      *   Cesium.Cartesian4.UNIT_X,
      *   Cesium.Cartesian4.UNIT_Y
      * ];
@@ -248,8 +250,8 @@ define([
      *
      * // Example 3. Setting values for members of a GLSL struct
      * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-     * sp.getAllUniforms()['u_struct.f'].value = 1.0;
-     * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+     * sp.allUniforms['u_struct.f'].value = 1.0;
+     * sp.allUniforms['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
      */
     var Uniform = function(_gl, activeUniform, _uniformName, _location, uniformValue) {
         /**
@@ -264,29 +266,29 @@ define([
          *
          * @example
          * // GLSL:  uniform float u_float;
-         * sp.getAllUniforms().u_float.value = 1.0;
+         * sp.allUniforms.u_float.value = 1.0;
          *
          * // GLSL:  uniform vec4 u_vec4;
-         * sp.getAllUniforms().u_vec4.value = Cesium.Cartesian4.ZERO;
+         * sp.allUniforms.u_vec4.value = Cesium.Cartesian4.ZERO;
          *
          * // GLSL:  uniform bvec4 u_bvec4;
-         * sp.getAllUniforms().u_bvec4.value = new Cesium.Cartesian4(true, true, true, true);
+         * sp.allUniforms.u_bvec4.value = new Cesium.Cartesian4(true, true, true, true);
          *
          * // GLSL:  uniform mat4 u_mat4;
-         * sp.getAllUniforms().u_mat4.value = Cesium.Matrix4.IDENTITY;
+         * sp.allUniforms.u_mat4.value = Cesium.Matrix4.IDENTITY;
          *
          * // GLSL:  uniform sampler2D u_texture;
-         * sp.getAllUniforms().u_texture.value = context.createTexture2D(...);
+         * sp.allUniforms.u_texture.value = context.createTexture2D(...);
          *
          * // GLSL:  uniform vec2 u_vec2[2];
-         * sp.getAllUniforms().u_vec2.value = [
+         * sp.allUniforms.u_vec2.value = [
          *   new Cesium.Cartesian2(1.0, 2.0),
          *   new Cesium.Cartesian2(3.0, 4.0)
          * ];
          *
          * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-         * sp.getAllUniforms()['u_struct.f'].value = 1.0;
-         * sp.getAllUniforms()['u_struct.v'].value = new Cesium.Cartesian4(1.0, 2.0, 3.0, 4.0);
+         * sp.allUniforms['u_struct.f'].value = 1.0;
+         * sp.allUniforms['u_struct.v'].value = new Cesium.Cartesian4(1.0, 2.0, 3.0, 4.0);
          */
         this.value = uniformValue;
 
@@ -299,7 +301,7 @@ define([
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getName());  // 'u_mvp'
+         * console.log(sp.allUniforms.u_mvp.getName());  // 'u_mvp'
          */
         this.getName = function() {
             return _uniformName;
@@ -317,7 +319,7 @@ define([
          *
          * @example
          * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MAT4'
+         * console.log(sp.allUniforms.u_mvp.getDatatype().name);  // 'FLOAT_MAT4'
          */
         this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
 
@@ -655,6 +657,56 @@ define([
          */
         this.id = nextShaderProgramId++;
     };
+
+    defineProperties(ShaderProgram.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        vertexAttributes: {
+            get : function() {
+                initialize(this);
+                return this._vertexAttributes;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Number}
+         */
+        numberOfVertexAttributes : {
+            get : function() {
+                initialize(this);
+                return this._numberOfVertexAttributes;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        allUniforms: {
+            get : function() {
+                initialize(this);
+                return this._uniformsByName;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof ShaderProgram.prototype
+         * @type {Object}
+         */
+        manualUniforms: {
+            get : function() {
+                initialize(this);
+                return this._manualUniforms;
+            }
+        }
+    });
 
     /**
      * For ShaderProgram testing
@@ -1090,58 +1142,6 @@ define([
 
         shader.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
     }
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getVertexAttributes = function() {
-        initialize(this);
-        return this._vertexAttributes;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Number} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
-        initialize(this);
-        return this._numberOfVertexAttributes;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getManualUniforms
-     */
-    ShaderProgram.prototype.getAllUniforms = function() {
-        initialize(this);
-        return this._uniformsByName;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getAllUniforms
-     */
-    ShaderProgram.prototype.getManualUniforms = function() {
-        initialize(this);
-        return this._manualUniforms;
-    };
 
     ShaderProgram.prototype._bind = function() {
         initialize(this);
