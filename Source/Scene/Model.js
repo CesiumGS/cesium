@@ -1185,67 +1185,67 @@ define([
     var gltfSemanticUniforms = {
         MODEL : function(uniformState) {
             return function() {
-                return uniformState.getModel();
+                return uniformState.model;
             };
         },
         VIEW : function(uniformState) {
             return function() {
-                return uniformState.getView();
+                return uniformState.view;
             };
         },
         PROJECTION : function(uniformState) {
             return function() {
-                return uniformState.getProjection();
+                return uniformState.projection;
             };
         },
         MODELVIEW : function(uniformState) {
             return function() {
-                return uniformState.getModelView();
+                return uniformState.modelView;
             };
         },
         MODELVIEWPROJECTION : function(uniformState) {
             return function() {
-                return uniformState.getModelViewProjection();
+                return uniformState.modelViewProjection;
             };
         },
         MODELINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModel();
+                return uniformState.inverseModel;
             };
         },
         VIEWINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseView();
+                return uniformState.inverseView;
             };
         },
         PROJECTIONINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseProjection();
+                return uniformState.inverseProjection;
             };
         },
         MODELVIEWINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModelView();
+                return uniformState.inverseModelView;
             };
         },
         MODELVIEWPROJECTIONINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModelViewProjection();
+                return uniformState.inverseModelViewProjection;
             };
         },
         MODELINVERSETRANSPOSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseTranposeModel();
+                return uniformState.inverseTranposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState) {
             return function() {
-                return uniformState.getNormal();
+                return uniformState.normal;
             };
         },
         VIEWPORT : function(uniformState) {
             return function() {
-                return uniformState.getViewportCartesian4();
+                return uniformState.viewportCartesian4;
             };
         }
         // JOINT_MATRIX created in createCommands()

@@ -100,7 +100,7 @@ defineSuite([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
+        context.getUniformState().viewport = vp;
         context.getUniformState().update(context, createFrameState(camera));
 
         var fs =
@@ -126,7 +126,7 @@ defineSuite([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
+        context.getUniformState().viewport = vp;
         context.getUniformState().update(context, createFrameState(camera));
 
         var fs =
