@@ -743,7 +743,7 @@ define([
 
         var cameraPosition = frameState.camera.positionWC;
 
-        this._occluder.setCameraPosition(cameraPosition);
+        this._occluder.cameraPosition = cameraPosition;
 
         fillPoles(this, context, frameState);
 

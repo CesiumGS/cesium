@@ -4,6 +4,7 @@ define([
         './Cartographic',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './Math'
@@ -12,6 +13,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         CesiumMath) {
@@ -221,22 +223,80 @@ define([
         }
     };
 
-    /**
-     * @memberof EllipsoidGeodesic
-     *
-     * @returns {Number} The surface distance between the start and end point
-     *
-     * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
-     */
-    EllipsoidGeodesic.prototype.getSurfaceDistance = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._distance)) {
-            throw new DeveloperError('start and end must be set before calling funciton getSurfaceDistance');
-        }
-        //>>includeEnd('debug');
+    defineProperties(EllipsoidGeodesic.prototype, {
+        /**
+         * The surface distance between the start and end point
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Number}
+         */
+        surfaceDistance : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(this._distance)) {
+                    throw new DeveloperError('set end positions before getting surfaceDistance');
+                }
+                //>>includeEnd('debug');
 
-        return this._distance;
-    };
+                return this._distance;
+            }
+        },
+
+        /**
+         * The initial planetodetic point on the path.
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Cartographic}
+         */
+        start : {
+            get : function() {
+                return this._start;
+            }
+        },
+
+        /**
+         * The final planetodetic point on the path.
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Cartographic}
+         */
+        end : {
+            get : function() {
+                return this._end;
+            }
+        },
+
+        /**
+         * The heading at the initial point.
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Number}
+         */
+        startHeading : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(this._distance)) {
+                    throw new DeveloperError('set end positions before getting startHeading');
+                }
+                //>>includeEnd('debug');
+
+                return this._startHeading;
+            }
+        },
+
+        /**
+         * The heading at the final point.
+         * @memberof EllipsoidGeodesic.prototype
+         * @type {Number}
+         */
+        endHeading : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(this._distance)) {
+                    throw new DeveloperError('set end positions before getting endHeading');
+                }
+                //>>includeEnd('debug');
+
+                return this._endHeading;
+            }
+        }
+    });
 
     /**
      * Sets the start and end points of the geodesic
@@ -256,56 +316,6 @@ define([
         //>>includeEnd('debug');
 
         computeProperties(this, start, end, this._ellipsoid);
-    };
-
-    /**
-     * @memberof EllipsoidGeodesic
-     * @returns {Cartographic} The initial planetodetic point on the path.
-     */
-    EllipsoidGeodesic.prototype.getStart = function() {
-        return this._start;
-    };
-
-    /**
-     * @memberof EllipsoidGeodesic
-     * @returns {Cartographic} The final planetodetic point on the path.
-     */
-    EllipsoidGeodesic.prototype.getEnd = function() {
-        return this._end;
-    };
-
-    /**
-     * @memberof EllipsoidGeodesic
-     *
-     * @returns {Number} The heading at the initial point.
-     *
-     * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
-     */
-    EllipsoidGeodesic.prototype.getStartHeading = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._distance)) {
-            throw new DeveloperError('start and end must be set before calling funciton getStartHeading');
-        }
-        //>>includeEnd('debug');
-
-        return this._startHeading;
-    };
-
-    /**
-     * @memberof EllipsoidGeodesic
-     *
-     * @returns {Number} The heading at the final point.
-     *
-     * @exception {DeveloperError} start and end must be set before calling funciton getEndHeading
-     */
-    EllipsoidGeodesic.prototype.getEndHeading = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._distance)) {
-            throw new DeveloperError('start and end must be set before calling funciton getEndHeading');
-        }
-        //>>includeEnd('debug');
-
-        return this._endHeading;
     };
 
     /**

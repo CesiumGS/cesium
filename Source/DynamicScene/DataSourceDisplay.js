@@ -38,22 +38,6 @@ define(['../Core/defaultValue',
         PolylineGeometryUpdater) {
     "use strict";
 
-    var createDefaultVisualizers = function(scene, dataSource) {
-        var dynamicObjects = dataSource.getDynamicObjectCollection();
-        return [new DynamicBillboardVisualizer(scene, dynamicObjects),
-                new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
-                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
-                new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
-                new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
-                new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
-                new DynamicLabelVisualizer(scene, dynamicObjects),
-                new DynamicModelVisualizer(scene, dynamicObjects),
-                new DynamicPointVisualizer(scene, dynamicObjects),
-                new DynamicVectorVisualizer(scene, dynamicObjects),
-                new DynamicPyramidVisualizer(scene, dynamicObjects),
-                new DynamicPathVisualizer(scene, dynamicObjects)];
-    };
-
     /**
      * Visualizes a collection of {@link DataSource} instances.
      * @alias DataSourceDisplay
@@ -61,7 +45,9 @@ define(['../Core/defaultValue',
      *
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {Visualizer[]} [visualizersCallback] A function which takes a scene and dataSource and returns the array of visualizers used for visualization.  If left undefined, all standard visualizers are used.
+     * @param {Function} [visualizersCallback=DataSourceDisplay.defaultVisualizersCallback] A function
+     *        which takes a scene and dataSource and returns the array of visualizers used for visualization.
+     *        If undefined, all standard visualizers are used.
      */
     var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -81,7 +67,7 @@ define(['../Core/defaultValue',
         this._scene = scene;
         this._timeVaryingSources = [];
         this._staticSourcesToUpdate = [];
-        this._visualizersCallback = defaultValue(visualizersCallback, createDefaultVisualizers);
+        this._visualizersCallback = defaultValue(visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -89,7 +75,34 @@ define(['../Core/defaultValue',
     };
 
     /**
+     * Gets or sets the default function which takes a scene and dataSource and returns the
+     * array of visualizers used for visualization.  By default, this function uses all standard visualizers.
+     *
+     * @memberof DataSourceDisplay
+     *
+     * @type {Function}
+     */
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        return [new DynamicBillboardVisualizer(scene, dynamicObjects),
+                new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
+                new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
+                new DynamicLabelVisualizer(scene, dynamicObjects),
+                new DynamicModelVisualizer(scene, dynamicObjects),
+                new DynamicPointVisualizer(scene, dynamicObjects),
+                new DynamicVectorVisualizer(scene, dynamicObjects),
+                new DynamicPyramidVisualizer(scene, dynamicObjects),
+                new DynamicPathVisualizer(scene, dynamicObjects)];
+    };
+
+    /**
      * Gets the scene being used for display.
+     *
+     * @memberof DataSourceDisplay
+     *
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
@@ -98,6 +111,9 @@ define(['../Core/defaultValue',
 
     /**
      * Gets the collection of data sources to be displayed.
+     *
+     * @memberof DataSourceDisplay
+     *
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
@@ -109,6 +125,8 @@ define(['../Core/defaultValue',
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DataSourceDisplay
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -125,6 +143,8 @@ define(['../Core/defaultValue',
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof DataSourceDisplay
      *
      * @returns {undefined}
      *
@@ -150,6 +170,8 @@ define(['../Core/defaultValue',
      * Updates time-varying data sources to the provided time and also
      * updates static data sources that have changed since the last
      * call to update.
+     *
+     * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
      */

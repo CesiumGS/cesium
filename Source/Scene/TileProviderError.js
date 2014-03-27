@@ -116,7 +116,7 @@ define([
             ++error.timesRetried;
         }
 
-        if (event.getNumberOfListeners() > 0) {
+        if (event.numberOfListeners > 0) {
             event.raiseEvent(error);
         } else {
             /*global console*/

@@ -132,6 +132,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [extentOutlineInstance, polygonOutlineInstance, ellipseOutlineInstance, circleOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
@@ -275,6 +276,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [extrudedOutlineExtent, extrudedOutlineEllipse, extrudedOutlinePolygon, cylinderOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
@@ -389,6 +391,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : outlineInstances,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
@@ -437,6 +440,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : wallOutlineInstance,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
@@ -893,6 +897,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : corridorOutline,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
@@ -981,6 +986,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : polylineVolumeOutline,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true

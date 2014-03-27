@@ -25,7 +25,7 @@ defineSuite([
 
     it('isFullscreenEnabled work as expected', function() {
         var viewModel = new FullscreenButtonViewModel();
-        expect(viewModel.isFullscreenEnabled).toEqual(Fullscreen.isFullscreenEnabled());
+        expect(viewModel.isFullscreenEnabled).toEqual(Fullscreen.enabled);
         viewModel.isFullscreenEnabled = false;
         expect(viewModel.isFullscreenEnabled).toEqual(false);
         viewModel.destroy();

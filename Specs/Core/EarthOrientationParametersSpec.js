@@ -44,11 +44,11 @@ defineSuite(['Core/EarthOrientationParameters',
     var officialLeapSeconds;
 
     beforeAll(function() {
-        officialLeapSeconds = LeapSecond.getLeapSeconds().slice(0);
+        officialLeapSeconds = LeapSecond.leapSeconds.slice(0);
     });
 
     afterEach(function() {
-        LeapSecond.setLeapSeconds(officialLeapSeconds.slice(0));
+        LeapSecond.leapSeconds = officialLeapSeconds.slice(0);
     });
 
     it('adds leap seconds found in the data by default', function() {
@@ -71,7 +71,7 @@ defineSuite(['Core/EarthOrientationParameters',
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length + 1);
 
         var newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
@@ -115,7 +115,7 @@ defineSuite(['Core/EarthOrientationParameters',
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length);
     });
 

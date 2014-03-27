@@ -68,7 +68,7 @@ define([
                 this.image.destroy();
             }
 
-            if (defined(this.texture) && defined(this.texture.destroy)) {
+            if (defined(this.texture)) {
                 this.texture.destroy();
             }
 
