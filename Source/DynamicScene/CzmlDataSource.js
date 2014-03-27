@@ -55,6 +55,7 @@ define(['../Core/Cartesian2',
         './DynamicPolygon',
         './DynamicPyramid',
         './DynamicVector',
+        './DynamicWall',
         './PositionPropertyArray',
         './ReferenceProperty',
         './SampledPositionProperty',
@@ -122,6 +123,7 @@ define(['../Core/Cartesian2',
         DynamicPolygon,
         DynamicPyramid,
         DynamicVector,
+        DynamicWall,
         PositionPropertyArray,
         ReferenceProperty,
         SampledPositionProperty,
@@ -431,7 +433,7 @@ define(['../Core/Cartesian2',
             } else {
                 object[propertyName] = new ConstantProperty(unwrappedInterval);
             }
-            return true;
+            return;
         }
 
         var propertyCreated = false;
@@ -1197,6 +1199,32 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri);
     }
 
+    function processWall(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var wallData = packet.wall;
+        if (!defined(wallData)) {
+            return;
+        }
+
+        var interval = wallData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var wall = dynamicObject.wall;
+        if (!defined(wall)) {
+            dynamicObject.wall = wall = new DynamicWall();
+        }
+
+        processPacketData(Boolean, wall, 'show', wallData.show, interval, sourceUri);
+        processMaterialPacketData(wall, 'material', wallData.material, interval, sourceUri);
+        processPacketData(Array, wall, 'minimumHeights', wallData.minimumHeights, interval, sourceUri);
+        processPacketData(Array, wall, 'maximumHeights', wallData.maximumHeights, interval, sourceUri);
+        processPacketData(Number, wall, 'granularity', wallData.granularity, interval, sourceUri);
+        processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri);
+        processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri);
+        processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri);
+    }
+
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
@@ -1456,6 +1484,7 @@ define(['../Core/Cartesian2',
     processVector, //
     processPosition, //
     processViewFrom, //
+    processWall, //
     processOrientation, //
     processVertexPositions, //
     processAvailability];
