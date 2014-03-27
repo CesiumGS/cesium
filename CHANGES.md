@@ -75,6 +75,18 @@ Beta Releases
       * `getEnd` -> `end`
       * `getStartHeading` -> `startHeading`
       * `getEndHeading` -> `endHeading`
+    * `AnimationCollection`
+      * `getAll` -> `all`
+    * `CentralBodySurface`
+      * `getTerrainProvider`, `setTerrainProvider` -> `terrainProvider`
+    * `Credit`
+      * `getText` -> `text`
+      * `getImageUrl` -> `imageUrl`
+      * `getLink` -> `link`
+    * `TerrainData`, `HightmapTerrainData`, `QuanitzedMeshTerrainData`
+      * `getWaterMask` -> `waterMask`
+    * `Tile`
+      * `getChildren` -> `children`
     * `Buffer`
       * `getSizeInBytes` -> `sizeInBytes`
       * `getUsage` -> `usage`
