@@ -728,7 +728,7 @@ define([
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                 var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
-                vertexBuffer.setVertexArrayDestroyable(false);
+                vertexBuffer.vertexArrayDestroyable = false;
                 rendererBuffers[bufferViewName] = vertexBuffer;
             }
 
@@ -748,7 +748,7 @@ define([
                 if ((bufferView.target === WebGLRenderingContext.ELEMENT_ARRAY_BUFFER) && !defined(rendererBuffers[instance.bufferView])) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, instance.type);
-                    indexBuffer.setVertexArrayDestroyable(false);
+                    indexBuffer.vertexArrayDestroyable = false;
                     rendererBuffers[instance.bufferView] = indexBuffer;
                     // In theory, several glTF accessors with different types could
                     // point to the same glTF bufferView, which would break this.
@@ -874,7 +874,7 @@ define([
             if (mipmap) {
                 tx.generateMipmap();
             }
-            tx.setSampler(sampler);
+            tx.sampler = sampler;
 
             model._rendererResources.textures[textureToCreate.name] = tx;
         }
@@ -894,7 +894,7 @@ define([
         var pass = technique.passes[technique.pass];
         var instanceProgram = pass.instanceProgram;
         var attributes = instanceProgram.attributes;
-        var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].getVertexAttributes();
+        var programAttributeLocations = model._rendererResources.programs[instanceProgram.program].vertexAttributes;
 
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
@@ -1185,67 +1185,67 @@ define([
     var gltfSemanticUniforms = {
         MODEL : function(uniformState) {
             return function() {
-                return uniformState.getModel();
+                return uniformState.model;
             };
         },
         VIEW : function(uniformState) {
             return function() {
-                return uniformState.getView();
+                return uniformState.view;
             };
         },
         PROJECTION : function(uniformState) {
             return function() {
-                return uniformState.getProjection();
+                return uniformState.projection;
             };
         },
         MODELVIEW : function(uniformState) {
             return function() {
-                return uniformState.getModelView();
+                return uniformState.modelView;
             };
         },
         MODELVIEWPROJECTION : function(uniformState) {
             return function() {
-                return uniformState.getModelViewProjection();
+                return uniformState.modelViewProjection;
             };
         },
         MODELINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModel();
+                return uniformState.inverseModel;
             };
         },
         VIEWINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseView();
+                return uniformState.inverseView;
             };
         },
         PROJECTIONINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseProjection();
+                return uniformState.inverseProjection;
             };
         },
         MODELVIEWINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModelView();
+                return uniformState.inverseModelView;
             };
         },
         MODELVIEWPROJECTIONINVERSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseModelViewProjection();
+                return uniformState.inverseModelViewProjection;
             };
         },
         MODELINVERSETRANSPOSE : function(uniformState) {
             return function() {
-                return uniformState.getInverseTranposeModel();
+                return uniformState.inverseTranposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState) {
             return function() {
-                return uniformState.getNormal();
+                return uniformState.normal;
             };
         },
         VIEWPORT : function(uniformState) {
             return function() {
-                return uniformState.getViewportCartesian4();
+                return uniformState.viewportCartesian4;
             };
         }
         // JOINT_MATRIX created in createCommands()
@@ -1373,7 +1373,7 @@ define([
                 var pass = technique.passes[technique.pass];
                 var instanceProgram = pass.instanceProgram;
                 var uniforms = instanceProgram.uniforms;
-                var activeUniforms = model._rendererResources.programs[instanceProgram.program].getAllUniforms();
+                var activeUniforms = model._rendererResources.programs[instanceProgram.program].allUniforms;
 
                 var parameterValues = {};
                 var jointMatrixUniformName;

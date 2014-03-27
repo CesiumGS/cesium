@@ -484,7 +484,7 @@ define([
         //
         // Here, we validate that the VAO has all attributes required
         // to match the shader program.
-        var shaderAttributes = shaderProgram.getVertexAttributes();
+        var shaderAttributes = shaderProgram.vertexAttributes;
 
         //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {

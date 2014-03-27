@@ -72,7 +72,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })
             });
-            expect(framebuffer.getDepthTexture()).toBeDefined();
+            expect(framebuffer.depthTexture).toBeDefined();
         }
     });
 
@@ -82,7 +82,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.getDepthRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthRenderbuffer).toBeDefined();
     });
 
     it('has a stencil renderbuffer attachment', function() {
@@ -91,7 +91,7 @@ defineSuite([
                 format : RenderbufferFormat.STENCIL_INDEX8
             })
         });
-        expect(framebuffer.getStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.stencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth-stencil texture attachment', function() {
@@ -104,7 +104,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
                 })
             });
-            expect(framebuffer.getDepthStencilTexture()).toBeDefined();
+            expect(framebuffer.depthStencilTexture).toBeDefined();
         }
     });
 
@@ -114,12 +114,12 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_STENCIL
             })
         });
-        expect(framebuffer.getDepthStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthStencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth attachment', function() {
         framebuffer = context.createFramebuffer();
-        expect(framebuffer.hasDepthAttachment()).toEqual(false);
+        expect(framebuffer.hasDepthAttachment).toEqual(false);
         framebuffer.destroy();
 
         framebuffer = context.createFramebuffer({
@@ -127,7 +127,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.hasDepthAttachment()).toEqual(true);
+        expect(framebuffer.hasDepthAttachment).toEqual(true);
     });
 
     it('clears a color attachment', function() {
@@ -158,10 +158,10 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = colorTexture;
+        sp.allUniforms.u_texture.value = colorTexture;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -186,7 +186,7 @@ defineSuite([
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = context.createFramebuffer({
-            colorTextures : [cubeMap.getPositiveX()]
+            colorTextures : [cubeMap.positiveX]
         });
         framebuffer.destroyAttachments = false;
 
@@ -204,10 +204,10 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_cubeMap.value = cubeMap;
+        sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -241,7 +241,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -262,7 +262,7 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = colorTexture;
+        sp2.allUniforms.u_texture.value = colorTexture;
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -283,7 +283,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -309,7 +309,7 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = texture;
+        sp2.allUniforms.u_texture.value = texture;
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -337,7 +337,7 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
@@ -356,7 +356,7 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
@@ -378,7 +378,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -452,7 +452,7 @@ defineSuite([
             sp = context.createShaderProgram(vs, fs);
 
             va = context.createVertexArray([{
-                index : sp.getVertexAttributes().position.index,
+                index : sp.vertexAttributes.position.index,
                 vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]);
@@ -473,8 +473,8 @@ defineSuite([
             var sp2 = context.createShaderProgram(vs2, fs2, {
                 position : 0
             });
-            sp2.getAllUniforms().u_texture0.value = colorTexture0;
-            sp2.getAllUniforms().u_texture1.value = colorTexture1;
+            sp2.allUniforms.u_texture0.value = colorTexture0;
+            sp2.allUniforms.u_texture1.value = colorTexture1;
 
             context.draw({
                 primitiveType : PrimitiveType.POINTS,
@@ -512,7 +512,7 @@ defineSuite([
                 height : 1
             })
         });
-        expect(framebuffer.getStatus()).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
     });
 
     it('gets the status of a incomplete framebuffer', function() {
@@ -527,7 +527,7 @@ defineSuite([
                 height : 2
             })
         });
-        expect(framebuffer.getStatus()).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+        expect(framebuffer.status).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
     });
 
 
@@ -642,7 +642,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);

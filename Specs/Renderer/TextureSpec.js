@@ -68,7 +68,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = texture;
+        sp.allUniforms.u_texture.value = texture;
 
         va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
@@ -111,8 +111,8 @@ defineSuite([
             source : blueImage
         });
 
-        expect(texture.getPixelFormat()).toEqual(PixelFormat.RGBA);
-        expect(texture.getPixelDatatype()).toEqual(PixelDatatype.UNSIGNED_BYTE);
+        expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
+        expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
 
     it('can create a texture from the framebuffer', function() {
@@ -121,8 +121,8 @@ defineSuite([
         command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
-        expect(texture.getWidth()).toEqual(context.getCanvas().clientWidth);
-        expect(texture.getHeight()).toEqual(context.getCanvas().clientHeight);
+        expect(texture.width).toEqual(context.getCanvas().clientWidth);
+        expect(texture.height).toEqual(context.getCanvas().clientHeight);
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -192,7 +192,7 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA,
             preMultiplyAlpha : true
         });
-        expect(texture.getPreMultiplyAlpha()).toEqual(true);
+        expect(texture.preMultiplyAlpha).toEqual(true);
 
         expect(renderFragment(context)).toEqual([0, 0, 127, 127]);
     });
@@ -215,7 +215,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = texture;
+        sp.allUniforms.u_texture.value = texture;
 
         va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
@@ -229,12 +229,12 @@ defineSuite([
         };
 
         // Blue on top
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
@@ -291,7 +291,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = texture;
+        sp.allUniforms.u_texture.value = texture;
 
         va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
@@ -305,12 +305,12 @@ defineSuite([
         };
 
         // Blue on top
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
@@ -318,12 +318,12 @@ defineSuite([
         texture.copyFrom(greenImage, 0, 1);
 
         // Now green on top
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.75);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.LIME.toBytes());
 
         // Still red on bottom
-        sp.getAllUniforms().u_txCoords.value = new Cartesian2(0.5, 0.25);
+        sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
         context.draw(da);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
@@ -335,28 +335,24 @@ defineSuite([
         });
 
         texture.generateMipmap();
-        texture.setSampler(context.createSampler({
+        texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-        }));
+        });
 
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('is created with a default sampler', function() {
+    it('default sampler returns undefined', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
 
-        var sampler = texture.getSampler();
-        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
-        expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
-        expect(sampler.maximumAnisotropy).toEqual(1.0);
+        var sampler = texture._sampler;
+        expect(sampler).toBeUndefined();
     });
 
-    it('is created with a default valid sampler when data type is FLOAT ', function() {
+    it('default sampler returns undefined, data type is FLOAT ', function() {
         if (context.getFloatingPointTexture()) {
             texture = context.createTexture2D({
                 source : blueImage,
@@ -364,12 +360,8 @@ defineSuite([
                 pixelDatatype : PixelDatatype.FLOAT
             });
 
-            var sampler = texture.getSampler();
-            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
-            expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
-            expect(sampler.maximumAnisotropy).toEqual(1.0);
+            var sampler = texture.sampler;
+            expect(sampler).toBeUndefined();
         }
     });
 
@@ -386,9 +378,9 @@ defineSuite([
             magnificationFilter : TextureMagnificationFilter.NEAREST,
             maximumAnisotropy : 2.0
         });
-        texture.setSampler(sampler);
+        texture.sampler = sampler;
 
-        var s = texture.getSampler();
+        var s = texture.sampler;
         expect(s.wrapS).toEqual(sampler.wrapS);
         expect(s.wrapT).toEqual(sampler.wrapT);
         expect(s.minificationFilter).toEqual(sampler.minificationFilter);
@@ -402,8 +394,8 @@ defineSuite([
             pixelFormat : PixelFormat.RGBA
         });
 
-        expect(texture.getWidth()).toEqual(1);
-        expect(texture.getHeight()).toEqual(2);
+        expect(texture.width).toEqual(1);
+        expect(texture.height).toEqual(2);
     });
 
     it('can get whether Y is flipped', function() {
@@ -413,7 +405,7 @@ defineSuite([
             flipY : true
         });
 
-        expect(texture.getFlipY()).toEqual(true);
+        expect(texture.flipY).toEqual(true);
     });
 
     it('can get the dimensions of a texture', function() {
@@ -422,7 +414,7 @@ defineSuite([
             height : 16
         });
 
-        expect(texture.getDimensions()).toEqual(new Cartesian2(64, 16));
+        expect(texture.dimensions).toEqual(new Cartesian2(64, 16));
     });
 
     it('can be destroyed', function() {
@@ -685,7 +677,7 @@ defineSuite([
         });
 
         expect(function() {
-            texture.copyFromFramebuffer(0, 0, 0, 0, texture.getWidth() + 1);
+            texture.copyFromFramebuffer(0, 0, 0, 0, texture.width + 1);
         }).toThrowDeveloperError();
     });
 
@@ -695,7 +687,7 @@ defineSuite([
         });
 
         expect(function() {
-            texture.copyFromFramebuffer(0, 0, 0, 0, 0, texture.getHeight() + 1);
+            texture.copyFromFramebuffer(0, 0, 0, 0, 0, texture.height + 1);
         }).toThrowDeveloperError();
     });
 
@@ -827,9 +819,9 @@ defineSuite([
             });
 
             expect(function() {
-                texture.setSampler(context.createSample({
+                texture.sampler = context.createSample({
                     minificationFilter : TextureMinificationFilter.LINEAR
-                }));
+                });
             }).toThrow();
         }
     });
@@ -842,9 +834,9 @@ defineSuite([
             });
 
             expect(function() {
-                texture.setSampler(context.createSample({
+                texture.sampler = context.createSample({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
-                }));
+                });
             }).toThrow();
         }
     });

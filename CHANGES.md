@@ -14,7 +14,7 @@ Beta Releases
     should now look like:
 
            scene.camera.viewExtent(extent);
-  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.  
+  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Removed `TexturePool`.
   * Replaced getter/setter functions with properties:
     * `ImageryLayer`
@@ -65,8 +65,8 @@ Beta Releases
       * `getFullscreenElement` -> `element`
       * `getFullscreenChangeEventName` -> `changeEventName`
       * `getFullscreenErrorEventName` -> `errorEventName`
-      * `isFullscreenEnabled` -> `isEnabled`
-      * `isFullscreen` -> `isFullscreen`
+      * `isFullscreenEnabled` -> `enabled`
+      * `isFullscreen` -> `fullscreen`
     * `Event`
       * `getNumberOfListeners` -> `numberOfListeners`
     * `EllipsoidGeodesic`
@@ -75,6 +75,56 @@ Beta Releases
       * `getEnd` -> `end`
       * `getStartHeading` -> `startHeading`
       * `getEndHeading` -> `endHeading`
+    * `Buffer`
+      * `getSizeInBytes` -> `sizeInBytes`
+      * `getUsage` -> `usage`
+      * `getVertexArrayDestroyable`, `setVertexArrayDestroyable` -> `vertexArrayDestroyable`
+    * `CubeMap`
+      * `getPositiveX` -> `positiveX`
+      * `getNegativeX` -> `negativeX`
+      * `getPositiveY` -> `positiveY`
+      * `getNegativeY` -> `negativeY`
+      * `getPositiveZ` -> `positiveZ`
+      * `getNegativeZ` -> `negativeZ`
+    * `CubeMap`, `Texture`
+      * `getSampler`, `setSampler` -> `sampler`
+      * `getPixelFormat` -> `pixelFormat`
+      * `getPixelDatatype` -> `pixelDatatype`
+      * `getPreMultiplyAlpha` -> `preMultiplyAlpha`
+      * `getFlipY` -> `flipY`
+      * `getWidth` -> `width`
+      * `getHeight` -> `height`
+    * `CubeMapFace`
+      * `getPixelFormat` -> `pixelFormat`
+      * `getPixelDatatype` -> `pixelDatatype`
+    * `Framebuffer`
+      * `getNumberOfColorAttachments` -> `numberOfColorAttachments`
+      * `getDepthTexture` -> `depthTexture`
+      * `getDepthRenderbuffer` -> `depthRenderbuffer`
+      * `getStencilRenderbuffer` -> `stencilRenderbuffer`
+      * `getDepthStencilTexture` -> `depthStencilTexture`
+      * `getDepthStencilRenderbuffer` -> `depthStencilRenderbuffer`
+      * `hasDepthAttachment` -> `hasdepthAttachment`
+    * `Renderbuffer`
+      * `getFormat` -> `format`
+      * `getWidth` -> `width`
+      * `getHeight` -> `height`
+    * `ShaderProgram`
+      * `getVertexAttributes` -> `vertexAttributes`
+      * `getNumberOfVertexAttributes` -> `numberOfVertexAttributes`
+      * `getAllUniforms` -> `allUniforms`
+      * `getManualUniforms` -> `manualUniforms`
+    * `Texture`
+      * `getDimensions` -> `dimensions`
+    * `TextureAtlas`
+      * `getBorderWidthInPixels` -> `borderWidthInPixels`
+      * `getTextureCoordinates` -> `textureCoordinates`
+      * `getTexture` -> `texture`
+      * `getNumberOfImages` -> `numberOfImages`
+      * `getGUID` -> `guid`
+    * `VertexArray`
+      * `getNumberOfAttributes` -> `numberOfAttributes`
+      * `getIndexBuffer` -> `indexBuffer`   
   * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`
@@ -86,15 +136,15 @@ Beta Releases
       * `getPoint`
     * `Spherical`
       * `normalize`
-    *Extent
-      `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
+    * `Extent`
+      * `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
 * `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
 * Improve visual quality for translucent objects with [Weighted Blended Order-Independent Transparency](http://jcgt.org/published/0002/02/09/)
 * The `debugShowBoundingVolume` property on primitives now works across all scene modes.
 * Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
-* Eliminated the use of a texture pool for Earth surface imagery textures.  The use of the pool was leading to mipmapping problems in current versions of Google Chrome where some tiles would show imagery from entirely unrelated parts of the globe. 
+* Eliminated the use of a texture pool for Earth surface imagery textures.  The use of the pool was leading to mipmapping problems in current versions of Google Chrome where some tiles would show imagery from entirely unrelated parts of the globe.
 
 ### b26 - 2014-03-03
 

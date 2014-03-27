@@ -236,8 +236,8 @@ define([
             command.boundingVolume = new BoundingSphere();
         }
 
-        var sunPosition = context.getUniformState().getSunPositionWC();
-        var sunPositionCV = context.getUniformState().getSunPositionColumbusView();
+        var sunPosition = context.getUniformState().sunPositionWC;
+        var sunPositionCV = context.getUniformState().sunPositionColumbusView;
 
         var boundingVolume = this._boundingVolume;
         var boundingVolume2D = this._boundingVolume2D;
@@ -259,7 +259,7 @@ define([
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
         var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
-        var projMatrix = context.getUniformState().getProjection();
+        var projMatrix = context.getUniformState().projection;
 
         var positionEC = scratchPositionEC;
         positionEC.x = 0;

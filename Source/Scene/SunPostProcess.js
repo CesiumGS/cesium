@@ -222,7 +222,7 @@ define([
 
         var fbo = this._fbo;
         var colorTexture = (defined(fbo) && fbo.getColorTexture(0)) || undefined;
-        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+        if (!defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height) {
             fbo = fbo && fbo.destroy();
             this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
             this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
@@ -319,10 +319,10 @@ define([
         }
 
         var us = context.getUniformState();
-        var sunPosition = us.getSunPositionWC();
-        var viewMatrix = us.getView();
-        var viewProjectionMatrix = us.getViewProjection();
-        var projectionMatrix = us.getProjection();
+        var sunPosition = us.sunPositionWC;
+        var viewMatrix = us.view;
+        var viewProjectionMatrix = us.viewProjection;
+        var projectionMatrix = us.projection;
 
         // create up sampled render state
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
