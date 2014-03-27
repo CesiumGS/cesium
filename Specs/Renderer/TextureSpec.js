@@ -342,21 +342,17 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('is created with a default sampler', function() {
+    it('default sampler returns undefined', function() {
         texture = context.createTexture2D({
             source : blueImage,
             pixelFormat : PixelFormat.RGBA
         });
 
-        var sampler = texture.sampler;
-        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-        expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
-        expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
-        expect(sampler.maximumAnisotropy).toEqual(1.0);
+        var sampler = texture._sampler;
+        expect(sampler).toBeUndefined();
     });
 
-    it('is created with a default valid sampler when data type is FLOAT ', function() {
+    it('default sampler returns undefined, data type is FLOAT ', function() {
         if (context.getFloatingPointTexture()) {
             texture = context.createTexture2D({
                 source : blueImage,
@@ -365,11 +361,7 @@ defineSuite([
             });
 
             var sampler = texture.sampler;
-            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
-            expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
-            expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
-            expect(sampler.maximumAnisotropy).toEqual(1.0);
+            expect(sampler).toBeUndefined();
         }
     });
 
