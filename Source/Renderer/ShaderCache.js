@@ -42,7 +42,7 @@ define([
      * @see ShaderCache#getShaderProgram
      *
      * @example
-     * this._shaderProgram = context.getShaderCache().replaceShaderProgram(
+     * this._shaderProgram = context.shaderCache.replaceShaderProgram(
      *     this._shaderProgram, vs, fs, attributeLocations);
      */
     ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {

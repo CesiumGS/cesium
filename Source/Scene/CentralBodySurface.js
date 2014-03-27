@@ -464,7 +464,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        var height = context.getDrawingBufferHeight();
+        var height = context.drawingBufferHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -477,8 +477,8 @@ define([
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
@@ -798,7 +798,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.getMaximumTextureImageUnits();
+        var maxTextures = context.maximumTextureImageUnits;
 
         var tileCommands = surface._tileCommands;
         var tileCommandUniformMaps = surface._tileCommandUniformMaps;

@@ -49,12 +49,8 @@ defineSuite([
         canvas = new MockCanvas();
         camera = new Camera({
             _canvas: canvas,
-            getDrawingBufferWidth: function() {
-                return canvas.clientWidth * 2;
-            },
-            getDrawingBufferHeight: function() {
-                return canvas.clientHeight * 2;
-            }
+            drawingBufferWidth : canvas.clientWidth * 2,
+            drawingBufferHeight: canvas.clientHeight * 2
         });
         controller = new ScreenSpaceCameraController(canvas, camera);
     });

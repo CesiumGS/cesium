@@ -1057,8 +1057,8 @@ define([
         var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsPick, attributeLocations);
+        this.shaderProgram = context.shaderCache.getShaderProgram(vsSource, fsSource, attributeLocations);
+        this.pickShaderProgram = context.shaderCache.getShaderProgram(vsSource, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {

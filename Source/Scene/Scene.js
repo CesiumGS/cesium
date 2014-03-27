@@ -694,7 +694,7 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.getShaderCache().getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -826,7 +826,7 @@ define([
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene._context;
-        var us = context.getUniformState();
+        var us = context.uniformState;
 
         var frustum;
         if (defined(camera.frustum.fovy)) {
@@ -1010,7 +1010,7 @@ define([
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+            this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
         this._animations.update();
@@ -1027,7 +1027,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.context.getUniformState();
+        var us = this.context.uniformState;
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1085,8 +1085,8 @@ define([
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
@@ -1125,8 +1125,8 @@ define([
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
@@ -1191,7 +1191,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.context.getUniformState();
+        var us = this.context.uniformState;
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
@@ -1212,7 +1212,7 @@ define([
         createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.y = (context.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);

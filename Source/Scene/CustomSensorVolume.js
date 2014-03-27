@@ -501,7 +501,7 @@ define([
                     sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
                 });
 
-                frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                frontFaceColorCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
                 frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
@@ -538,7 +538,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                pickCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;

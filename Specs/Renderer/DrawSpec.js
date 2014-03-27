@@ -577,7 +577,7 @@ defineSuite([
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
-                lineWidth : context.getMaximumAliasedLineWidth()
+                lineWidth : context.maximumAliasedLineWidth
             // May only be 1.
             })
         });
@@ -618,7 +618,7 @@ defineSuite([
     });
 
     it('draws with sample coverage', function() {
-        if (!context.getAntialias()) {
+        if (!context.antialias) {
             // Sample coverage requires antialiasing.
             return;
         }

@@ -758,7 +758,7 @@ define([
         /**
          * <code>true</code> if the WebGL context supports antialiasing.  By default
          * antialiasing is requested, but it is not supported by all systems.
-         * @memberof Context.prottoype
+         * @memberof Context.prototype
          * @type {Boolean}
          */
         antialias : {
@@ -1187,7 +1187,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
+        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.elementIndexUint) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
         }
 
@@ -1353,7 +1353,7 @@ define([
         }
 
         if (width > this._maximumTextureSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (height <= 0) {
@@ -1361,7 +1361,7 @@ define([
         }
 
         if (height > this._maximumTextureSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check getMaximumTextureSize().');
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {
@@ -1382,7 +1382,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
             throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
@@ -1393,8 +1393,8 @@ define([
             }
             //>>includeEnd('debug');
 
-            if (!this.getDepthTexture()) {
-                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check getDepthTexture().');
+            if (!this.depthTexture) {
+                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check depthTexture.');
             }
         }
 
@@ -1448,8 +1448,8 @@ define([
      * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
      * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
-     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to getCanvas().clientWidth.
-     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to getCanvas().clientHeight.
+     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
+     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
@@ -1599,7 +1599,7 @@ define([
         }
 
         if (size > this._maximumCubeMapSize) {
-            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check getMaximumCubeMapSize().');
+            throw new DeveloperError('Width and height must be less than or equal to the maximum cube map size (' + this._maximumCubeMapSize + ').  Check maximumCubeMapSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {
@@ -1615,7 +1615,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.getFloatingPointTexture()) {
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
             throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
@@ -1691,8 +1691,8 @@ define([
      *
      * @example
      * // Create a framebuffer with color and depth texture attachments.
-     * var width = context.getCanvas().clientWidth;
-     * var height = context.getCanvas().clientHeight;
+     * var width = context.canvas.clientWidth;
+     * var height = context.canvas.clientHeight;
      * var framebuffer = context.createFramebuffer({
      *   colorTextures : [context.createTexture2D({
      *     width : width,
@@ -1745,16 +1745,16 @@ define([
             throw new DeveloperError('Width must be greater than zero.');
         }
 
-        if (width > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
+        if (width > this.maximumRenderbufferSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
         }
 
         if (height <= 0) {
             throw new DeveloperError('Height must be greater than zero.');
         }
 
-        if (height > this.getMaximumRenderbufferSize()) {
-            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.getMaximumRenderbufferSize() + ').  Check getMaximumRenderbufferSize().');
+        if (height > this.maximumRenderbufferSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum renderbuffer size (' + this.maximumRenderbufferSize + ').  Check maximumRenderbufferSize.');
         }
         //>>includeEnd('debug');
 
@@ -2017,7 +2017,7 @@ define([
                 gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             }
 
-            if (context.getDrawBuffers()) {
+            if (context.drawBuffers) {
                 context._drawBuffers.drawBuffersWEBGL(buffers);
             }
         }
@@ -2221,7 +2221,7 @@ define([
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
         var buffers = scratchBackBufferArray;
-        if (this.getDrawBuffers()) {
+        if (this.drawBuffers) {
             this._drawBuffers.drawBuffersWEBGL(scratchBackBufferArray);
         }
 
@@ -2538,7 +2538,7 @@ define([
         var indexBuffer;
         var indices = geometry.indices;
         if (defined(indices)) {
-            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.getElementIndexUint()) {
+            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.elementIndexUint) {
                 indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
                 indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
@@ -2606,7 +2606,7 @@ define([
         command.vertexArray = vertexArray;
         command.primitiveType = PrimitiveType.TRIANGLE_FAN;
         command.renderState = overrides.renderState;
-        command.shaderProgram = this.getShaderCache().getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
+        command.shaderProgram = this.shaderCache.getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
         command.uniformMap = overrides.uniformMap;
         command.owner = overrides.owner;
         command.framebuffer = overrides.framebuffer;
