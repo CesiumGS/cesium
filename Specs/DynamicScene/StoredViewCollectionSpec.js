@@ -22,7 +22,7 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         var storedViewCollection = new StoredViewCollection();
-        expect(storedViewCollection.getObjects().length).toEqual(0);
+        expect(storedViewCollection.getStoredViews().length).toEqual(0);
     });
 
     it('add/remove works', function() {
@@ -31,16 +31,16 @@ defineSuite([
         var storedViewCollection = new StoredViewCollection();
 
         storedViewCollection.add(storedView);
-        expect(storedViewCollection.getObjects().length).toEqual(1);
+        expect(storedViewCollection.getStoredViews().length).toEqual(1);
 
         storedViewCollection.add(storedView2);
-        expect(storedViewCollection.getObjects().length).toEqual(2);
+        expect(storedViewCollection.getStoredViews().length).toEqual(2);
 
         storedViewCollection.remove(storedView2);
-        expect(storedViewCollection.getObjects().length).toEqual(1);
+        expect(storedViewCollection.getStoredViews().length).toEqual(1);
 
         storedViewCollection.remove(storedView);
-        expect(storedViewCollection.getObjects().length).toEqual(0);
+        expect(storedViewCollection.getStoredViews().length).toEqual(0);
     });
 
     it('add/remove raises expected events', function() {
@@ -127,7 +127,7 @@ defineSuite([
         storedViewCollection.add(storedView);
         storedViewCollection.add(storedView2);
         storedViewCollection.removeAll();
-        expect(storedViewCollection.getObjects().length).toEqual(0);
+        expect(storedViewCollection.getStoredViews().length).toEqual(0);
     });
 
     it('removeAll raises expected events', function() {
@@ -199,7 +199,7 @@ defineSuite([
         expect(storedViewCollection.getById(storedView2.id)).toBe(storedView2);
     });
 
-    it('getById returns undefined for non-existent object', function() {
+    it('getById returns undefined for non-existent storedView', function() {
         var storedViewCollection = new StoredViewCollection();
         expect(storedViewCollection.getById('123')).toBeUndefined();
     });

@@ -50,7 +50,7 @@ define([
          * An array of view names
          * @type {Array}
          */
-        this.viewNames = ['Home'];
+        this.viewNames = [];
 
         knockout.track(this, ['dropDownVisible', 'tooltip', 'viewNames']);
 

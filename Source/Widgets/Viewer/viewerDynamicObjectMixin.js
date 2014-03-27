@@ -11,9 +11,12 @@ define(['../../Core/BoundingSphere',
         '../../Core/Transforms',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObject',
+        '../../DynamicScene/DynamicObjectView',
+        '../../DynamicScene/StoredView',
+        '../../DynamicScene/StoredViewCollection',
+        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
-        '../../DynamicScene/DynamicObjectView',
         '../../ThirdParty/knockout'
     ], function(
         BoundingSphere,
@@ -28,9 +31,12 @@ define(['../../Core/BoundingSphere',
         Transforms,
         wrapFunction,
         DynamicObject,
+        DynamicObjectView,
+        StoredView,
+        StoredViewCollection,
+        CameraFlightPath,
         SceneMode,
         subscribeAndEvaluate,
-        DynamicObjectView,
         knockout) {
     "use strict";
 
@@ -46,6 +52,7 @@ define(['../../Core/BoundingSphere',
      *
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
      * @exception {DeveloperError} selectedObject is already defined by another mixin.
+     * @exception {DeveloperError} storedViewCollection is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -66,6 +73,9 @@ define(['../../Core/BoundingSphere',
         }
         if (viewer.hasOwnProperty('selectedObject')) {
             throw new DeveloperError('selectedObject is already defined by another mixin.');
+        }
+        if (viewer.hasOwnProperty('storedViewCollection')) {
+            throw new DeveloperError('storedViewCollection is already defined by another mixin.');
         }
         //>>includeEnd('debug');
 
@@ -186,25 +196,6 @@ define(['../../Core/BoundingSphere',
         }
         eventHelper.add(viewer.clock.onTick, onTick);
 
-        function visitStoredView(viewName) {
-            console.log('Visit ' + viewName);
-        }
-
-        function editStoredView(viewName) {
-            console.log('Edit ' + viewName);
-        }
-
-        function addStoredView() {
-            console.log('Bookmark this view');
-        }
-
-        var cameraControlViewModel = defined(viewer.cameraControl) ? viewer.cameraControl.viewModel : undefined;
-        if (defined(cameraControlViewModel)) {
-            eventHelper.add(cameraControlViewModel.visitStoredView, visitStoredView);
-            eventHelper.add(cameraControlViewModel.editStoredView, editStoredView);
-            eventHelper.add(cameraControlViewModel.addStoredView, addStoredView);
-        }
-
         function pickDynamicObject(e) {
             var picked = viewer.scene.pick(e.position);
             if (defined(picked)) {
@@ -311,6 +302,55 @@ define(['../../Core/BoundingSphere',
         viewer.selectedObject = undefined;
 
         knockout.track(viewer, ['trackedObject', 'selectedObject']);
+
+        /**
+         * A collection of stored views for the camera.
+         * @memberof viewerDynamicObjectMixin.prototype
+         * @type {StoredViewCollection}
+         */
+        viewer.storedViewCollection = new StoredViewCollection();
+
+        var cameraControlViewModel = defined(viewer.cameraControl) ? viewer.cameraControl.viewModel : undefined;
+
+        function visitStoredView(viewName) {
+            var storedView = viewer.storedViewCollection.getById(viewName);
+            if (defined(storedView)) {
+                var viewDescription = {
+                    destination : storedView.position,
+                    duration : 1500,
+                    up : storedView.up,
+                    direction : storedView.direction,
+                    endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
+                };
+                var flight = CameraFlightPath.createAnimation(viewer.scene, viewDescription);
+                viewer.scene.animations.add(flight);
+            }
+        }
+
+        function editStoredView(viewName) {
+            console.log('Edit ' + viewName);
+        }
+
+        function addStoredView() {
+            var newView = new StoredView(undefined, viewer.scene.camera);
+            viewer.storedViewCollection.add(newView);
+            // Should this fire the edit event instead?  The app probably wants to hook into some kind of "Save" and "Delete" events.
+            editStoredView(newView.id);
+        }
+
+        function onStoredViewsChanged() {
+            cameraControlViewModel.viewNames = viewer.storedViewCollection.getStoredViews().map(function (view) { return view.id; });
+        }
+
+        if (defined(cameraControlViewModel)) {
+            eventHelper.add(cameraControlViewModel.visitStoredView, visitStoredView);
+            eventHelper.add(cameraControlViewModel.editStoredView, editStoredView);
+            eventHelper.add(cameraControlViewModel.addStoredView, addStoredView);
+            eventHelper.add(viewer.storedViewCollection.collectionChanged, onStoredViewsChanged);
+        }
+
+        var homeView = new StoredView('Home');
+        viewer.storedViewCollection.add(homeView);
 
         var knockoutSubscriptions = [];
 

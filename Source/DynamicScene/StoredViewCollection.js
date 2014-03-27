@@ -24,8 +24,8 @@ define(['../Core/AssociativeArray',
 
     function fireChangedEvent(collection) {
         if (collection._suspendCount === 0) {
-            var added = collection._addedObjects;
-            var removed = collection._removedObjects;
+            var added = collection._addedViews;
+            var removed = collection._removedViews;
             if (added.length !== 0 || removed.length !== 0) {
                 collection._collectionChanged.raiseEvent(collection, added.values, removed.values);
                 added.removeAll();
@@ -40,9 +40,9 @@ define(['../Core/AssociativeArray',
      * @constructor
      */
     var StoredViewCollection = function() {
-        this._objects = new AssociativeArray();
-        this._addedObjects = new AssociativeArray();
-        this._removedObjects = new AssociativeArray();
+        this._storedViews = new AssociativeArray();
+        this._addedViews = new AssociativeArray();
+        this._removedViews = new AssociativeArray();
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
@@ -95,7 +95,7 @@ define(['../Core/AssociativeArray',
 
     defineProperties(StoredViewCollection.prototype, {
         /**
-         * Gets the event that is fired when objects are added or removed from the collection.
+         * Gets the event that is fired when stored views are added or removed from the collection.
          * The generated event is a {@link StoredViewCollection.collectionChangedEventCallback}.
          * @memberof StoredViewCollection.prototype
          *
@@ -120,11 +120,11 @@ define(['../Core/AssociativeArray',
     });
 
     /**
-     * Add an object to the collection.
+     * Add a stored view to the collection.
      * @memberof StoredViewCollection
      *
-     * @param {StoredView} storedView The object to be added.
-     * @exception {DeveloperError} An object with <storedView.id> already exists in this collection.
+     * @param {StoredView} storedView The stored view to be added.
+     * @exception {DeveloperError} A view with <storedView.id> already exists in this collection.
      */
     StoredViewCollection.prototype.add = function(storedView) {
         //>>includeStart('debug', pragmas.debug);
@@ -134,25 +134,25 @@ define(['../Core/AssociativeArray',
         //>>includeEnd('debug');
 
         var id = storedView.id;
-        var objects = this._objects;
-        if (defined(objects.get(id))) {
-            throw new RuntimeError('An object with id ' + id + ' already exists in this collection.');
+        var storedViews = this._storedViews;
+        if (defined(storedViews.get(id))) {
+            throw new RuntimeError('A stored view with id ' + id + ' already exists in this collection.');
         }
 
-        objects.set(id, storedView);
+        storedViews.set(id, storedView);
 
-        var removedObjects = this._removedObjects;
-        if (!this._removedObjects.remove(id)) {
-            this._addedObjects.set(id, storedView);
+        var removedViews = this._removedViews;
+        if (!this._removedViews.remove(id)) {
+            this._addedViews.set(id, storedView);
         }
         fireChangedEvent(this);
     };
 
     /**
-     * Removes an object from the collection.
+     * Removes a stored view from the collection.
      * @memberof StoredViewCollection
      *
-     * @param {StoredView} storedView The object to be added.
+     * @param {StoredView} storedView The stored view to be added.
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
      */
     StoredViewCollection.prototype.remove = function(storedView) {
@@ -166,10 +166,10 @@ define(['../Core/AssociativeArray',
     };
 
     /**
-     * Removes an object with the provided id from the collection.
+     * Removes a stored view with the provided id from the collection.
      * @memberof StoredViewCollection
      *
-     * @param {Object} id The id of the object to remove.
+     * @param {String} id The id of the stored view to remove.
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
      */
     StoredViewCollection.prototype.removeById = function(id) {
@@ -179,14 +179,14 @@ define(['../Core/AssociativeArray',
         }
         //>>includeEnd('debug');
 
-        var objects = this._objects;
-        var storedView = objects.get(id);
-        if (!this._objects.remove(id)) {
+        var storedViews = this._storedViews;
+        var storedView = storedViews.get(id);
+        if (!this._storedViews.remove(id)) {
             return false;
         }
 
-        if (!this._addedObjects.remove(id)) {
-            this._removedObjects.set(id, storedView);
+        if (!this._addedViews.remove(id)) {
+            this._removedViews.set(id, storedView);
         }
         fireChangedEvent(this);
 
@@ -200,33 +200,33 @@ define(['../Core/AssociativeArray',
     StoredViewCollection.prototype.removeAll = function() {
         //The event should only contain items added before events were suspended
         //and the contents of the collection.
-        var objects = this._objects;
-        var objectsLength = objects.length;
-        var array = objects.values;
+        var storedViews = this._storedViews;
+        var storedViewsLength = storedViews.length;
+        var array = storedViews.values;
 
-        var addedObjects = this._addedObjects;
-        var removed = this._removedObjects;
+        var addedViews = this._addedViews;
+        var removed = this._removedViews;
 
-        for (var i = 0; i < objectsLength; i++) {
+        for (var i = 0; i < storedViewsLength; i++) {
             var existingItem = array[i];
             var existingItemId = existingItem.id;
-            var addedItem = addedObjects.get(existingItemId);
+            var addedItem = addedViews.get(existingItemId);
             if (!defined(addedItem)) {
                 removed.set(existingItemId, existingItem);
             }
         }
 
-        objects.removeAll();
-        addedObjects.removeAll();
+        storedViews.removeAll();
+        addedViews.removeAll();
         fireChangedEvent(this);
     };
 
     /**
-     * Gets an object with the specified id.
+     * Gets a stored view with the specified id.
      * @memberof StoredViewCollection
      *
-     * @param {Object} id The id of the object to retrieve.
-     * @returns {StoredView} The object with the provided id or undefined if the id did not exist in the collection.
+     * @param {String} id The id of the stored view to retrieve.
+     * @returns {StoredView} The stored view with the provided id or undefined if the id did not exist in the collection.
      */
     StoredViewCollection.prototype.getById = function(id) {
         //>>includeStart('debug', pragmas.debug);
@@ -235,7 +235,7 @@ define(['../Core/AssociativeArray',
         }
         //>>includeEnd('debug');
 
-        return this._objects.get(id);
+        return this._storedViews.get(id);
     };
 
     /**
@@ -245,8 +245,8 @@ define(['../Core/AssociativeArray',
      *
      * @returns {Array} the array of StoredView instances in the collection.
      */
-    StoredViewCollection.prototype.getObjects = function() {
-        return this._objects.values;
+    StoredViewCollection.prototype.getStoredViews = function() {
+        return this._storedViews.values;
     };
 
     return StoredViewCollection;

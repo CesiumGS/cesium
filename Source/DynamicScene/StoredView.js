@@ -1,24 +1,26 @@
 /*global define*/
-define(['../Core/createGuid',
-        '../Core/Cartesian3',
+define(['../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Event',
         '../Scene/SceneMode',
         './StoredViewCameraRotationMode'
     ], function(
-        createGuid,
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        Ellipsoid,
         Event,
         SceneMode,
         StoredViewCameraRotationMode) {
     "use strict";
+
+    var viewIndex = 0;
 
     /**
      * StoredView instances are the primary data store for processed data.
@@ -27,17 +29,36 @@ define(['../Core/createGuid',
      * @alias StoredView
      * @constructor
      *
-     * @param {String} [id] A unique identifier for this stored view.  If no id is provided, a GUID is generated.
+     * @param {String} [id] A unique identifier for this stored view.  If no id is provided, one is generated.
+     * @param {Camera} [camera] The camera to clone for this stored view.  If none is provided, a default home view is used.
      *
      * @see Property
      * @see StoredViewCollection
      */
-    var StoredView = function(id) {
+    var StoredView = function(id, camera) {
         if (!defined(id)) {
-            id = createGuid();
+            ++viewIndex;
+            id = 'View ' + viewIndex;
         }
 
         this._id = id;
+
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
+        var position;
+        var direction;
+        var up;
+
+        if (defined(camera)) {
+            position = Cartesian3.clone(camera.position);
+            direction = Cartesian3.clone(camera.direction);
+            up = Cartesian3.clone(camera.up);
+            // TODO: FOV, constrainedAxis
+        } else {
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
+            direction = Cartesian3.normalize(Cartesian3.negate(position));
+            var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
+            up = Cartesian3.cross(right, direction);
+        }
 
         /**
          * Gets or sets the scene mode for this view.
@@ -67,6 +88,27 @@ define(['../Core/createGuid',
          * @type {StoredViewCameraRotationMode}
          */
         this.cameraRotationMode = StoredViewCameraRotationMode.EARTH_FIXED;
+
+        /**
+         * The position of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.position = position;
+
+        /**
+         * The view direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.direction = direction;
+
+        /**
+         * The up direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.up = up;
 
         /**
          * Gets or sets the constrained axis of rotation for user input on the camera.
