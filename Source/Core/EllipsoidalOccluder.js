@@ -5,14 +5,16 @@ define([
         './defineProperties',
         './DeveloperError',
         './Cartesian3',
-        './BoundingSphere'
+        './BoundingSphere',
+        './Extent'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Cartesian3,
-        BoundingSphere) {
+        BoundingSphere,
+        Extent) {
     "use strict";
 
     /**
@@ -25,7 +27,7 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use as an occluder.
      * @param {Cartesian3} [cameraPosition] The coordinate of the viewer/camera.  If this parameter is not
-     *        specified, {@link EllipsoidalOccluder#setCameraPosition} must be called before
+     *        specified, {@link EllipsoidalOccluder#cameraPosition} must be called before
      *        testing visibility.
      *
      * @constructor
@@ -251,7 +253,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var positions = extent.subsample(ellipsoid, 0.0, subsampleScratch);
+        var positions = Extent.subsample(extent, ellipsoid, 0.0, subsampleScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make

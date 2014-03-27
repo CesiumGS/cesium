@@ -33,8 +33,8 @@ defineSuite([
         expect(positions.length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
-        var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent));
+        var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
         expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
     });
@@ -68,7 +68,7 @@ defineSuite([
         expect(length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var unrotatedSECorner = extent.getSoutheast();
+        var unrotatedSECorner = Extent.getSoutheast(extent);
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);
@@ -91,8 +91,8 @@ defineSuite([
         expect(length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
-        var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
+        var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent));
+        var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent));
 
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);
         expect(actual).toEqualEpsilon(unrotatedSECorner, CesiumMath.EPSILON8);
@@ -198,7 +198,7 @@ defineSuite([
         expect(length).toEqual((9 + 8 + 4) * 3 * 2);
         expect(m.indices.length).toEqual((8 * 2 + 4 * 4) * 3);
 
-        var unrotatedSECorner = extent.getSoutheast();
+        var unrotatedSECorner = Extent.getSoutheast(extent);
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);

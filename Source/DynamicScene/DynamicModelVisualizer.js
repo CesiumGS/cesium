@@ -165,7 +165,7 @@ define([
 
     DynamicModelVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var context = this._scene.context;
-        var dynamicModel = dynamicObject.model;
+        var dynamicModel = dynamicObject._model;
         if (!defined(dynamicModel)) {
             return;
         }
@@ -175,7 +175,7 @@ define([
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
@@ -213,7 +213,7 @@ define([
         model.show = true;
 
         var position = defaultValue(positionProperty.getValue(time, position), model._visualizerPosition);
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         var orientation;
         if (defined(orientationProperty)) {
             orientation = defaultValue(orientationProperty.getValue(time, orientation), model._visualizerOrientation);

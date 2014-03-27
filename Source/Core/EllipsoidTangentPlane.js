@@ -59,7 +59,7 @@ define([
 
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
-        this._origin = Cartesian3.clone(origin);
+        this._origin = origin;
         this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0));
         this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1));
 

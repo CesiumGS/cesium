@@ -4,6 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Extent',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -14,6 +15,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Extent,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -429,7 +431,7 @@ define([
 
                     for (var tileIndex = 0; !selectedTile && tileIndex < tilesRenderedByTextureCount.length; ++tileIndex) {
                         var tile = tilesRenderedByTextureCount[tileIndex];
-                        if (tile.extent.contains(cartographic)) {
+                        if (Extent.contains(tile.extent, cartographic)) {
                             selectedTile = tile;
                         }
                     }

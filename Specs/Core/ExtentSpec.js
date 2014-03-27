@@ -159,11 +159,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('validate throws with no extent', function() {
+        expect(function() {
+            Extent.validate();
+        }).toThrowDeveloperError();
+    });
+
     it('validate throws with no west', function() {
         var extent = new Extent(west, south, east, north);
         extent.west = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -171,7 +177,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.south = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -179,7 +185,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.east = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -187,7 +193,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.north = undefined;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -195,7 +201,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.west = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -203,7 +209,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.south = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -211,7 +217,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.east = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
@@ -219,13 +225,13 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         extent.north = Math.PI * 2;
         expect(function() {
-            extent.validate();
+            Extent.validate(extent);
         }).toThrowDeveloperError();
     });
 
     it('getSouthwest works without a result parameter', function() {
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.getSouthwest();
+        var returnedResult = Extent.getSouthwest(extent);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(south);
     });
@@ -233,15 +239,21 @@ defineSuite([
     it('getSouthwest works with a result parameter', function() {
         var extent = new Extent(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = extent.getSouthwest(result);
+        var returnedResult = Extent.getSouthwest(extent, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(south);
     });
 
+    it('getSouthwest throws with no extent', function() {
+        expect(function() {
+            Extent.getSouthwest();
+        }).toThrowDeveloperError();
+    });
+
     it('getNorthwest works without a result parameter', function() {
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.getNorthwest();
+        var returnedResult = Extent.getNorthwest(extent);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(north);
     });
@@ -249,15 +261,21 @@ defineSuite([
     it('getNorthwest works with a result parameter', function() {
         var extent = new Extent(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = extent.getNorthwest(result);
+        var returnedResult = Extent.getNorthwest(extent, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(west);
         expect(returnedResult.latitude).toEqual(north);
     });
 
+    it('getNothwest throws with no extent', function() {
+        expect(function() {
+            Extent.getNorthwest();
+        }).toThrowDeveloperError();
+    });
+
     it('getNortheast works without a result parameter', function() {
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.getNortheast();
+        var returnedResult = Extent.getNortheast(extent);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(north);
     });
@@ -265,15 +283,21 @@ defineSuite([
     it('getNortheast works with a result parameter', function() {
         var extent = new Extent(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = extent.getNortheast(result);
+        var returnedResult = Extent.getNortheast(extent, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(north);
     });
 
+    it('getNotheast throws with no extent', function() {
+        expect(function() {
+            Extent.getNortheast();
+        }).toThrowDeveloperError();
+    });
+
     it('getSoutheast works without a result parameter', function() {
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.getSoutheast();
+        var returnedResult = Extent.getSoutheast(extent);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(south);
     });
@@ -281,31 +305,43 @@ defineSuite([
     it('getSoutheast works with a result parameter', function() {
         var extent = new Extent(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = extent.getSoutheast(result);
+        var returnedResult = Extent.getSoutheast(extent, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult.longitude).toEqual(east);
         expect(returnedResult.latitude).toEqual(south);
     });
 
+    it('getSoutheast throws with no extent', function() {
+        expect(function() {
+            Extent.getSoutheast();
+        }).toThrowDeveloperError();
+    });
+
     it('getCenter works without a result parameter', function() {
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.getCenter();
+        var returnedResult = Extent.getCenter(extent);
         expect(returnedResult).toEqual(center);
     });
 
     it('getCenter works with a result parameter', function() {
         var extent = new Extent(west, south, east, north);
         var result = new Cartographic();
-        var returnedResult = extent.getCenter(result);
+        var returnedResult = Extent.getCenter(extent, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(center);
+    });
+
+    it('getCenter throws with no extent', function() {
+        expect(function() {
+            Extent.getCenter();
+        }).toThrowDeveloperError();
     });
 
     it('intersectWith works without a result parameter', function() {
         var extent = new Extent(0.5, 0.1, 0.75, 0.9);
         var extent2 = new Extent(0.0, 0.25, 1.0, 0.8);
         var expected = new Extent(0.5, 0.25, 0.75, 0.8);
-        var returnedResult = extent.intersectWith(extent2);
+        var returnedResult = Extent.intersectWith(extent, extent2);
         expect(returnedResult).toEqual(expected);
     });
 
@@ -314,52 +350,58 @@ defineSuite([
         var extent2 = new Extent(0.0, 0.25, 1.0, 0.8);
         var expected = new Extent(0.5, 0.25, 0.75, 0.8);
         var result = new Extent();
-        var returnedResult = extent.intersectWith(extent2, result);
+        var returnedResult = Extent.intersectWith(extent, extent2, result);
         expect(returnedResult).toEqual(expected);
         expect(result).toBe(returnedResult);
     });
 
     it('contains works', function() {
         var extent = new Extent(west, south, east, north);
-        expect(extent.contains(new Cartographic(west, south))).toEqual(true);
-        expect(extent.contains(new Cartographic(west, north))).toEqual(true);
-        expect(extent.contains(new Cartographic(east, south))).toEqual(true);
-        expect(extent.contains(new Cartographic(east, north))).toEqual(true);
-        expect(extent.contains(extent.getCenter())).toEqual(true);
-        expect(extent.contains(new Cartographic(west - 0.1, south))).toEqual(false);
-        expect(extent.contains(new Cartographic(west, north + 0.1))).toEqual(false);
-        expect(extent.contains(new Cartographic(east, south - 0.1))).toEqual(false);
-        expect(extent.contains(new Cartographic(east + 0.1, north))).toEqual(false);
+        expect(Extent.contains(extent, new Cartographic(west, south))).toEqual(true);
+        expect(Extent.contains(extent, new Cartographic(west, north))).toEqual(true);
+        expect(Extent.contains(extent, new Cartographic(east, south))).toEqual(true);
+        expect(Extent.contains(extent, new Cartographic(east, north))).toEqual(true);
+        expect(Extent.contains(extent, Extent.getCenter(extent))).toEqual(true);
+        expect(Extent.contains(extent, new Cartographic(west - 0.1, south))).toEqual(false);
+        expect(Extent.contains(extent, new Cartographic(west, north + 0.1))).toEqual(false);
+        expect(Extent.contains(extent, new Cartographic(east, south - 0.1))).toEqual(false);
+        expect(Extent.contains(extent, new Cartographic(east + 0.1, north))).toEqual(false);
     });
 
     it('isEmpty reports a non-empty extent', function() {
         var extent = new Extent(1.0, 1.0, 2.0, 2.0);
-        expect(extent.isEmpty()).toEqual(false);
+        expect(Extent.isEmpty(extent)).toEqual(false);
     });
 
     it('isEmpty reports true for a point', function() {
         var extent = new Extent(2.0, 2.0, 2.0, 2.0);
-        expect(extent.isEmpty()).toEqual(true);
+        expect(Extent.isEmpty(extent)).toEqual(true);
     });
 
     it('isEmpty reports true for a north-south line', function() {
         var extent = new Extent(2.0, 2.0, 2.0, 2.1);
-        expect(extent.isEmpty()).toEqual(true);
+        expect(Extent.isEmpty(extent)).toEqual(true);
     });
 
     it('isEmpty reports true for an east-west line', function() {
         var extent = new Extent(2.0, 2.0, 2.1, 2.0);
-        expect(extent.isEmpty()).toEqual(true);
+        expect(Extent.isEmpty(extent)).toEqual(true);
     });
 
     it('isEmpty reports true if north-south direction is degenerate', function() {
         var extent = new Extent(1.0, 1.1, 2.0, 1.0);
-        expect(extent.isEmpty()).toEqual(true);
+        expect(Extent.isEmpty(extent)).toEqual(true);
     });
 
     it('isEmpty reports true if east-west direction is degenerate', function() {
         var extent = new Extent(1.1, 1.0, 1.0, 2.0);
-        expect(extent.isEmpty()).toEqual(true);
+        expect(Extent.isEmpty(extent)).toEqual(true);
+    });
+
+    it('isEmpty throws with no extent', function() {
+        expect(function() {
+            Extent.isEmpty();
+        }).toThrowDeveloperError();
     });
 
     it('subsample works south of the equator', function() {
@@ -368,11 +410,11 @@ defineSuite([
         var east = 0.2;
         var north = -0.4;
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.subsample();
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getNortheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSouthwest())]);
+        var returnedResult = Extent.subsample(extent);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getNortheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSouthwest(extent))]);
     });
 
     it('subsample works with a result parameter', function() {
@@ -383,13 +425,13 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         var cartesian0 = new Cartesian3();
         var results = [cartesian0];
-        var returnedResult = extent.subsample(Ellipsoid.WGS84, 0.0, results);
+        var returnedResult = Extent.subsample(extent, Ellipsoid.WGS84, 0.0, results);
         expect(results).toBe(returnedResult);
         expect(results[0]).toBe(cartesian0);
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getNortheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSouthwest())]);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getNortheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSouthwest(extent))]);
     });
 
     it('subsample works north of the equator', function() {
@@ -398,11 +440,11 @@ defineSuite([
         var east = 0.2;
         var north = 0.4;
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.subsample();
-        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getNortheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast()),
-                                        Ellipsoid.WGS84.cartographicToCartesian(extent.getSouthwest())]);
+        var returnedResult = Extent.subsample(extent);
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getNortheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent)),
+                                        Ellipsoid.WGS84.cartographicToCartesian(Extent.getSouthwest(extent))]);
     });
 
     it('subsample works on the equator', function() {
@@ -411,12 +453,12 @@ defineSuite([
         var east = 0.2;
         var north = 0.0;
         var extent = new Extent(west, south, east, north);
-        var returnedResult = extent.subsample();
+        var returnedResult = Extent.subsample(extent);
         expect(returnedResult.length).toEqual(6);
-        expect(returnedResult[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest()));
-        expect(returnedResult[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(extent.getNortheast()));
-        expect(returnedResult[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast()));
-        expect(returnedResult[3]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(extent.getSouthwest()));
+        expect(returnedResult[0]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent)));
+        expect(returnedResult[1]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Extent.getNortheast(extent)));
+        expect(returnedResult[2]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent)));
+        expect(returnedResult[3]).toEqual(Ellipsoid.WGS84.cartographicToCartesian(Extent.getSouthwest(extent)));
 
         var cartographic4 = Ellipsoid.WGS84.cartesianToCartographic(returnedResult[4]);
         expect(cartographic4.latitude).toEqual(0.0);
@@ -434,21 +476,27 @@ defineSuite([
         var north = -0.4;
         var extent = new Extent(west, south, east, north);
         var height = 100000.0;
-        var returnedResult = extent.subsample(Ellipsoid.WGS84, height);
+        var returnedResult = Extent.subsample(extent, Ellipsoid.WGS84, height);
 
-        var nw = extent.getNorthwest();
+        var nw = Extent.getNorthwest(extent);
         nw.height = height;
-        var ne = extent.getNortheast();
+        var ne = Extent.getNortheast(extent);
         ne.height = height;
-        var se = extent.getSoutheast();
+        var se = Extent.getSoutheast(extent);
         se.height = height;
-        var sw = extent.getSouthwest();
+        var sw = Extent.getSouthwest(extent);
         sw.height = height;
 
         expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(nw),
                                         Ellipsoid.WGS84.cartographicToCartesian(ne),
                                         Ellipsoid.WGS84.cartographicToCartesian(se),
                                         Ellipsoid.WGS84.cartographicToCartesian(sw)]);
+    });
+
+    it('subsample throws with no extent', function() {
+        expect(function() {
+            Extent.subsample();
+        }).toThrowDeveloperError();
     });
 
     it('equalsEpsilon throws with no epsilon', function() {
@@ -462,14 +510,14 @@ defineSuite([
     it('intersectWith throws with no extent', function() {
         var extent = new Extent(west, south, east, north);
         expect(function() {
-            extent.intersectWith(undefined);
+            Extent.intersectWith(undefined);
         }).toThrowDeveloperError();
     });
 
     it('contains throws with no cartographic', function() {
         var extent = new Extent(west, south, east, north);
         expect(function() {
-            extent.contains(undefined);
+            Extent.contains(extent, undefined);
         }).toThrowDeveloperError();
     });
 });
