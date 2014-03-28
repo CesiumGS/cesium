@@ -30,7 +30,6 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     var extent = Cesium.Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
     
