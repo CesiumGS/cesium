@@ -159,7 +159,6 @@ defineSuite([
     });
 
     it('pick in 2D', function() {
-        var context = scene.context;
         var ellipsoid = scene.scene2D.projection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
@@ -170,7 +169,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -190,7 +189,6 @@ defineSuite([
     });
 
     it('pick in 2D when rotated', function() {
-        var context = scene.context;
         var ellipsoid = scene.scene2D.projection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
@@ -201,7 +199,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;

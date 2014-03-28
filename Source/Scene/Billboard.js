@@ -746,7 +746,7 @@ define([
      * @see Billboard#pixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.context, scene.frameState).toString());
+     * console.log(b.computeScreenSpacePosition(scene._context, scene.frameState).toString());
      */
     var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {

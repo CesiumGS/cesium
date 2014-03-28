@@ -57,7 +57,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene.context;
+        context = scene._context;
         primitives = scene.primitives;
 
         var camera = scene.camera;

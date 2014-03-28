@@ -982,7 +982,7 @@ defineSuite([
         var b = scene.primitives.add(new BillboardCollection({
             debugShowBoundingVolume : true
         }));
-        b.textureAtlas = createTextureAtlas(scene.context, [greenImage]);
+        b.textureAtlas = createTextureAtlas(context, [greenImage]);
         b.add({
             position : Cartesian3.ZERO,
             imageIndex : 0
@@ -995,7 +995,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

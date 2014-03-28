@@ -38,7 +38,7 @@ define([
         controller.ellipsoid = ellipsoid;
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
-        var context = scene.context;
+        var context = scene._context;
         if (defined(transitioner) && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
