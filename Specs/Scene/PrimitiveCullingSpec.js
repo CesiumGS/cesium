@@ -369,10 +369,10 @@ defineSuite([
         var atlas = context.createTextureAtlas({images : [greenImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;
