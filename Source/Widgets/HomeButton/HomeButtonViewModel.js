@@ -31,7 +31,7 @@ define([
         knockout) {
     "use strict";
 
-    function viewHome(scene, ellipsoid, flightDuration) {
+    function viewHome(scene, ellipsoid, duration) {
         var mode = scene.mode;
         var controller = scene.screenSpaceCameraController;
 
@@ -48,7 +48,7 @@ define([
         if (mode === SceneMode.SCENE2D) {
             description = {
                 destination : Extent.MAX_VALUE,
-                duration : flightDuration,
+                duration : duration,
                 endReferenceFrame : new Matrix4(0, 0, 1, 0,
                                                 1, 0, 0, 0,
                                                 0, 1, 0, 0,
@@ -60,7 +60,7 @@ define([
             var defaultCamera = new Camera(context);
             description = {
                 destination : defaultCamera.position,
-                duration : flightDuration,
+                duration : duration,
                 up : defaultCamera.up,
                 direction : defaultCamera.direction,
                 endReferenceFrame : Matrix4.IDENTITY
@@ -76,7 +76,7 @@ define([
 
             description = {
                 destination : position,
-                duration : flightDuration,
+                duration : duration,
                 up : up,
                 direction : direction,
                 endReferenceFrame : new Matrix4(0, 0, 1, 0,
@@ -97,9 +97,9 @@ define([
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
-     * @param {Number} [flightDuration=1500] The duration of the camera flight in milliseconds
+     * @param {Number} [duration=1500] The duration of the camera flight in milliseconds
      */
-    var HomeButtonViewModel = function(scene, ellipsoid, flightDuration) {
+    var HomeButtonViewModel = function(scene, ellipsoid, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -107,15 +107,15 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        flightDuration = defaultValue(flightDuration, 1500);
+        duration = defaultValue(duration, 1500);
 
         this._scene = scene;
         this._ellipsoid = ellipsoid;
-        this._flightDuration = flightDuration;
+        this._duration = duration;
 
         var that = this;
         this._command = createCommand(function() {
-            viewHome(that._scene, that._ellipsoid, that._flightDuration);
+            viewHome(that._scene, that._ellipsoid, that._duration);
         });
 
         /**
@@ -172,9 +172,9 @@ define([
          *
          * @type {Number}
          */
-        flightDuration : {
+        duration : {
             get : function() {
-                return this._flightDuration;
+                return this._duration;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -183,7 +183,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._flightDuration = value;
+                this._duration = value;
             }
         }
     });

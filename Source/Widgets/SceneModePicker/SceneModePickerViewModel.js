@@ -27,9 +27,9 @@ define([
      * @constructor
      *
      * @param {Scene} scene The Scene to morph
-     * @param {Number} [transitionDuration=2000] The duration of scene transitions, in milliseconds
+     * @param {Number} [duration=2000] The duration of scene morph animations, in milliseconds
      */
-    var SceneModePickerViewModel = function(scene, transitionDuration) {
+    var SceneModePickerViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -48,7 +48,7 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(scene.morphStart, morphStart);
 
-        this._transitionDuration = defaultValue(transitionDuration, 2000);
+        this._duration = defaultValue(duration, 2000);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
@@ -107,15 +107,15 @@ define([
         });
 
         this._morphTo2D = createCommand(function() {
-            scene.morphTo2D(that._transitionDuration);
+            scene.morphTo2D(that._duration);
         });
 
         this._morphTo3D = createCommand(function() {
-            scene.morphTo3D(that._transitionDuration);
+            scene.morphTo3D(that._duration);
         });
 
         this._morphToColumbusView = createCommand(function() {
-            scene.morphToColumbusView(that._transitionDuration);
+            scene.morphToColumbusView(that._duration);
         });
 
         //Used by knockout
@@ -140,18 +140,18 @@ define([
          * @memberof SceneModePickerViewModel.prototype
          * @type {Number}
          */
-        transitionDuration : {
+        duration : {
             get : function() {
-                return this._transitionDuration;
+                return this._duration;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (value < 0) {
-                    throw new DeveloperError('transitionDuration value must be positive.');
+                    throw new DeveloperError('duration value must be positive.');
                 }
                 //>>includeEnd('debug');
 
-                this._transitionDuration = value;
+                this._duration = value;
             }
         },
 
