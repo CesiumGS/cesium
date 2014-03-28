@@ -239,14 +239,14 @@ define([
          * @performance DOC_TBA: slow.
          * @type {Boolean}
          */
-        this.validateFB = false;
+        this.validateFramebuffer = false;
 
         /**
          * DOC_TBA
          * @performance DOC_TBA: slow.
          * @type {Boolean}
          */
-        this.validateSP = false;
+        this.validateShaderProgram = false;
 
         /**
          * DOC_TBA
@@ -1959,7 +1959,7 @@ define([
     };
 
     function validateFramebuffer(context, framebuffer) {
-        if (context._validateFB) {
+        if (context.validateFramebuffer) {
             var gl = context._gl;
             var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
 
@@ -2128,7 +2128,7 @@ define([
 
         context._us.model = defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY);
         var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
-        sp._setUniforms(drawCommand.uniformMap, context._us, context._validateSP);
+        sp._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
 
         var indexBuffer = va.indexBuffer;
 
