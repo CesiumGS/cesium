@@ -94,10 +94,10 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         return atlas;
     }

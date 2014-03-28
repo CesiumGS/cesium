@@ -36,7 +36,7 @@ defineSuite([
         var us = scene.context.getUniformState();
         var camera = scene.camera;
 
-        var sunPosition = us.getSunPositionWC();
+        var sunPosition = us.sunPositionWC;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
@@ -55,7 +55,7 @@ defineSuite([
         var us = scene.context.getUniformState();
         var camera = scene.camera;
 
-        var sunPosition = us.getSunPositionColumbusView();
+        var sunPosition = us.sunPositionColumbusView;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
@@ -74,7 +74,7 @@ defineSuite([
         var us = context.getUniformState();
         us.update(context, frameState);
 
-        var sunPosition = us.getSunPositionWC();
+        var sunPosition = us.sunPositionWC;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
@@ -96,7 +96,7 @@ defineSuite([
         var us = context.getUniformState();
         us.update(context, frameState);
 
-        var sunPosition = us.getSunPositionWC();
+        var sunPosition = us.sunPositionWC;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
@@ -118,7 +118,7 @@ defineSuite([
         var us = context.getUniformState();
         us.update(context, frameState);
 
-        var sunPosition = us.getSunPositionWC();
+        var sunPosition = us.sunPositionWC;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
@@ -147,7 +147,7 @@ defineSuite([
         var us = scene.context.getUniformState();
         var camera = scene.camera;
 
-        var sunPosition = us.getSunPositionWC();
+        var sunPosition = us.sunPositionWC;
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition), 1e8);
         camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 

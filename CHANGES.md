@@ -75,6 +75,56 @@ Beta Releases
       * `getEnd` -> `end`
       * `getStartHeading` -> `startHeading`
       * `getEndHeading` -> `endHeading`
+    * `Buffer`
+      * `getSizeInBytes` -> `sizeInBytes`
+      * `getUsage` -> `usage`
+      * `getVertexArrayDestroyable`, `setVertexArrayDestroyable` -> `vertexArrayDestroyable`
+    * `CubeMap`
+      * `getPositiveX` -> `positiveX`
+      * `getNegativeX` -> `negativeX`
+      * `getPositiveY` -> `positiveY`
+      * `getNegativeY` -> `negativeY`
+      * `getPositiveZ` -> `positiveZ`
+      * `getNegativeZ` -> `negativeZ`
+    * `CubeMap`, `Texture`
+      * `getSampler`, `setSampler` -> `sampler`
+      * `getPixelFormat` -> `pixelFormat`
+      * `getPixelDatatype` -> `pixelDatatype`
+      * `getPreMultiplyAlpha` -> `preMultiplyAlpha`
+      * `getFlipY` -> `flipY`
+      * `getWidth` -> `width`
+      * `getHeight` -> `height`
+    * `CubeMapFace`
+      * `getPixelFormat` -> `pixelFormat`
+      * `getPixelDatatype` -> `pixelDatatype`
+    * `Framebuffer`
+      * `getNumberOfColorAttachments` -> `numberOfColorAttachments`
+      * `getDepthTexture` -> `depthTexture`
+      * `getDepthRenderbuffer` -> `depthRenderbuffer`
+      * `getStencilRenderbuffer` -> `stencilRenderbuffer`
+      * `getDepthStencilTexture` -> `depthStencilTexture`
+      * `getDepthStencilRenderbuffer` -> `depthStencilRenderbuffer`
+      * `hasDepthAttachment` -> `hasdepthAttachment`
+    * `Renderbuffer`
+      * `getFormat` -> `format`
+      * `getWidth` -> `width`
+      * `getHeight` -> `height`
+    * `ShaderProgram`
+      * `getVertexAttributes` -> `vertexAttributes`
+      * `getNumberOfVertexAttributes` -> `numberOfVertexAttributes`
+      * `getAllUniforms` -> `allUniforms`
+      * `getManualUniforms` -> `manualUniforms`
+    * `Texture`
+      * `getDimensions` -> `dimensions`
+    * `TextureAtlas`
+      * `getBorderWidthInPixels` -> `borderWidthInPixels`
+      * `getTextureCoordinates` -> `textureCoordinates`
+      * `getTexture` -> `texture`
+      * `getNumberOfImages` -> `numberOfImages`
+      * `getGUID` -> `guid`
+    * `VertexArray`
+      * `getNumberOfAttributes` -> `numberOfAttributes`
+      * `getIndexBuffer` -> `indexBuffer`   
   * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`
