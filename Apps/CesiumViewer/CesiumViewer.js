@@ -90,10 +90,10 @@ define([
         var scene = viewer.scene;
         var context = scene.context;
         if (endUserOptions.debug) {
-            context.setValidateShaderProgram(true);
-            context.setValidateFramebuffer(true);
-            context.setLogShaderCompilation(true);
-            context.setThrowOnWebGLError(true);
+            context.validateShaderProgram = true;
+            context.validateFramebuffer = true;
+            context.logShaderCompilation = true;
+            context.throwOnWebGLError = true;
         }
 
         if (defined(endUserOptions.source)) {
