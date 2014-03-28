@@ -141,7 +141,7 @@ define([
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var index = startingIndex;
-        var intervals = property.getIntervals();
+        var intervals = property.intervals;
         for ( var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(0);
             if (interval.start.lessThanOrEquals(stop)) {
@@ -157,7 +157,7 @@ define([
 
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var index = startingIndex;
-        var intervals = property.getIntervals();
+        var intervals = property.intervals;
         for ( var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(0);
             if (interval.start.lessThanOrEquals(stop)) {
