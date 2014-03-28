@@ -400,7 +400,7 @@ define([
      * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
      */
     GeoJsonDataSource.prototype.getIsTimeVarying = function() {
-        return false;
+        return true;
     };
 
     /**
