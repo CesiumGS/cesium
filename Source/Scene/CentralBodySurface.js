@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
@@ -33,6 +34,7 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
@@ -127,45 +129,48 @@ define([
         };
     };
 
+    defineProperties(CentralBodySurface.prototype, {
+        terrainProvider : {
+            get : function() {
+                return this._terrainProvider;
+            },
+            set : function(terrainProvider) {
+                if (this._terrainProvider === terrainProvider) {
+                    return;
+                }
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(terrainProvider)) {
+                    throw new DeveloperError('terrainProvider is required.');
+                }
+                //>>includeEnd('debug');
+
+                this._terrainProvider = terrainProvider;
+
+                // Clear the replacement queue
+                var replacementQueue = this._tileReplacementQueue;
+                replacementQueue.head = undefined;
+                replacementQueue.tail = undefined;
+                replacementQueue.count = 0;
+
+                // Free and recreate the level zero tiles.
+                var levelZeroTiles = this._levelZeroTiles;
+                if (defined(levelZeroTiles)) {
+                    for (var i = 0; i < levelZeroTiles.length; ++i) {
+                        levelZeroTiles[i].freeResources();
+                    }
+                }
+
+                this._levelZeroTiles = undefined;
+            }
+        }
+    });
+
     CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
-    };
-
-    CentralBodySurface.prototype.getTerrainProvider = function() {
-        return this._terrainProvider;
-    };
-
-    CentralBodySurface.prototype.setTerrainProvider = function(terrainProvider) {
-        if (this._terrainProvider === terrainProvider) {
-            return;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._terrainProvider = terrainProvider;
-
-        // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
-        replacementQueue.head = undefined;
-        replacementQueue.tail = undefined;
-        replacementQueue.count = 0;
-
-        // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
-        if (defined(levelZeroTiles)) {
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].freeResources();
-            }
-        }
-
-        this._levelZeroTiles = undefined;
     };
 
     CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
@@ -612,7 +617,7 @@ define([
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
         var allRenderable = true;
 
-        var children = tile.getChildren();
+        var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
             surface._tileReplacementQueue.markTileRendered(child);

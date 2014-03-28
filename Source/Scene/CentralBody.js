@@ -775,7 +775,7 @@ define([
 
             this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
             this._surface._tileCacheSize = this.tileCacheSize;
-            this._surface.setTerrainProvider(this.terrainProvider);
+            this._surface.terrainProvider = this.terrainProvider;
             this._surface.update(context,
                     frameState,
                     commandList,
