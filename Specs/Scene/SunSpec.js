@@ -33,7 +33,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.getUniformState();
+        var us = scene.context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
@@ -52,7 +52,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.getUniformState();
+        var us = scene.context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionColumbusView;
@@ -71,7 +71,7 @@ defineSuite([
         var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
@@ -93,7 +93,7 @@ defineSuite([
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.mode = SceneMode.SCENE2D;
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
@@ -115,7 +115,7 @@ defineSuite([
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.passes.render = false;
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
         var sunPosition = us.sunPositionWC;
@@ -144,7 +144,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.getUniformState();
+        var us = scene.context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;

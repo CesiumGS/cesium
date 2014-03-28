@@ -299,7 +299,7 @@ define([
                 // Do not write depth since the depth for the bounding box is
                 // wrong; it is not the true depth of the ray casted ellipsoid.
                 // Only write depth when EXT_frag_depth is supported.
-                depthMask : !translucent && context.getFragmentDepth(),
+                depthMask : !translucent && context.fragmentDepth,
                 blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });
         }
@@ -351,12 +351,12 @@ define([
             var colorFS = createShaderSource({
                 defines : [
                     this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
-                    (!translucent && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    (!translucent && context.fragmentDepth) ? 'WRITE_DEPTH' : ''
                 ],
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
+            this._sp = context.shaderCache.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
             colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
@@ -395,13 +395,13 @@ define([
                 var pickFS = createShaderSource({
                     defines : [
                         this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
-                        (!translucent && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                        (!translucent && context.fragmentDepth) ? 'WRITE_DEPTH' : ''
                     ],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
+                this._pickSP = context.shaderCache.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;

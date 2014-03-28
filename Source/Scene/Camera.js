@@ -147,7 +147,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
-        this.frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        this.frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
 
         /**
          * The default amount to move the camera when an argument is not
