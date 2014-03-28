@@ -73,6 +73,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._children = undefined;
+
         /**
          * The tiling scheme used to tile the surface.
          * @type {TilingScheme}
@@ -102,13 +104,6 @@ define([
          * @type {Tile}
          */
         this.parent = description.parent;
-
-        /**
-         * The children of this tile in a tiling scheme.
-         * @type {Array}
-         * @default undefined
-         */
-        this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -237,12 +232,12 @@ define([
          */
         children : {
             get : function() {
-                if (!defined(this.children)) {
+                if (!defined(this._children)) {
                     var tilingScheme = this.tilingScheme;
                     var level = this.level + 1;
                     var x = this.x * 2;
                     var y = this.y * 2;
-                    this.children = [new Tile({
+                    this._children = [new Tile({
                         tilingScheme : tilingScheme,
                         x : x,
                         y : y,
@@ -269,7 +264,7 @@ define([
                     })];
                 }
 
-                return this.children;
+                return this._children;
             }
         }
     });
@@ -305,11 +300,11 @@ define([
         }
         this.imagery.length = 0;
 
-        if (defined(this.children)) {
-            for (i = 0, len = this.children.length; i < len; ++i) {
-                this.children[i].freeResources();
+        if (defined(this._children)) {
+            for (i = 0, len = this._children.length; i < len; ++i) {
+                this._children[i].freeResources();
             }
-            this.children = undefined;
+            this._children = undefined;
         }
 
         this.freeVertexArray();

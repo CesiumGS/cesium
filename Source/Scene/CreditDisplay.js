@@ -45,7 +45,7 @@ define([
             var link = credit.link;
             var span = document.createElement('span');
             var content = document.createElement('img');
-            content.src = credit.imageurl;
+            content.src = credit.imageUrl;
             content.style['vertical-align'] = 'bottom';
             if (defined(text)) {
                 content.alt = text;
