@@ -39,16 +39,6 @@ define([
 
     /**
      * @private
-     *
-     * Transitions the scene among available modes. The transitions can
-     * either be instantaneous or animated.
-     * @alias SceneTransitioner
-     * @constructor
-     *
-     * @param {Scene} scene The scene to be transitioned.
-     *
-     * @see Scene
-     * @see SceneMode
      */
     var SceneTransitioner = function(scene, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
