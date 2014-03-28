@@ -35,6 +35,7 @@ define([
         './AnimationCollection',
         './SceneMode',
         './SceneTransforms',
+        './SceneTransitioner',
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveFrustum',
@@ -83,6 +84,7 @@ define([
         AnimationCollection,
         SceneMode,
         SceneTransforms,
+        SceneTransitioner,
         FrameState,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -161,6 +163,17 @@ define([
         depthClearCommand.depth = 1.0;
         depthClearCommand.owner = this;
         this._depthClearCommand = depthClearCommand;
+
+        this._transitioner = new SceneTransitioner(this);
+
+        /**
+         * Gets or sets the amount of time, in milliseconds, for
+         * transition animations to complete.
+         *
+         * @type {Number}
+         * @default 2000
+         */
+        this.morphDuration = 2000;
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -1286,6 +1299,38 @@ define([
     };
 
     /**
+     * Instantly completes an active transition.
+     * @memberof Scene
+     */
+    Scene.prototype.completeMorph = function(){
+        this._transitioner.completeMorph();
+    };
+
+    /**
+     * Asynchronously transitions the scene to 2D.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo2D = function(duration) {
+        this._transitioner.morphTo2D(duration);
+    };
+
+    /**
+     * Asynchronously transitions the scene to Columbus View.
+     * @memberof Scene
+     */
+    Scene.prototype.morphToColumbusView = function(duration) {
+        this._transitioner.morphToColumbusView(duration);
+    };
+
+    /**
+     * Asynchronously transitions the scene to 3D.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo3D = function(duration) {
+        this._transitioner.morphTo3D(duration);
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1307,6 +1352,8 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+
+        this._transitioner.destory();
 
         this._oit.destroy();
         this._fxaa.destroy();
