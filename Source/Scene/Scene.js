@@ -167,15 +167,6 @@ define([
         this._transitioner = new SceneTransitioner(this);
 
         /**
-         * Gets or sets the amount of time, in milliseconds, for
-         * transition animations to complete.
-         *
-         * @type {Number}
-         * @default 2000
-         */
-        this.morphDuration = 2000;
-
-        /**
          * The {@link SkyBox} used to draw the stars.
          *
          * @type {SkyBox}
@@ -1308,26 +1299,41 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
+     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete
      * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
-        this._transitioner.morphTo2D(duration);
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 0);
+            this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
+        }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
+     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete
      * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
-        this._transitioner.morphToColumbusView(duration);
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 0);
+            this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
+        }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
+     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete
      * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {
-        this._transitioner.morphTo3D(duration);
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 0);
+            this._transitioner.morphTo3D(duration, this.primitives.centralBody.ellipsoid);
+        }
     };
 
     /**
@@ -1353,7 +1359,7 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
 
-        this._transitioner.destory();
+        this._transitioner.destroy();
 
         this._oit.destroy();
         this._fxaa.destroy();

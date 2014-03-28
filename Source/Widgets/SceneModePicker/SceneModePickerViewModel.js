@@ -24,32 +24,39 @@ define([
      * @alias SceneModePickerViewModel
      * @constructor
      *
-     * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
+     * @param {Scene} scene The Scene to morph
      */
-    var SceneModePickerViewModel = function(transitioner) {
+    var SceneModePickerViewModel = function(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(transitioner)) {
-            throw new DeveloperError('transitioner is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._transitioner = transitioner;
+        this._scene = scene;
+        var transitioner = scene._transitioner;
 
         var that = this;
 
-        var transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
+        var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
             that.dropDownVisible = false;
         };
 
         this._eventHelper = new EventHelper();
-        this._eventHelper.add(transitioner.transitionStart, transitionStart);
+        this._eventHelper.add(transitioner.morphStart, morphStart);
+
+        /**
+         * The length of time in milliseconds between scene transitions
+         * @type {Number}
+         */
+        this.duration = 0;
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
          * @type {SceneMode}
         */
-        this.sceneMode = transitioner.scene.mode;
+        this.sceneMode = scene.mode;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.
@@ -102,15 +109,15 @@ define([
         });
 
         this._morphTo2D = createCommand(function() {
-            transitioner.morphTo2D();
+            scene.morphTo2D(that.duration);
         });
 
         this._morphTo3D = createCommand(function() {
-            transitioner.morphTo3D();
+            scene.morphTo3D(that.duration);
         });
 
         this._morphToColumbusView = createCommand(function() {
-            transitioner.morphToColumbusView();
+            scene.morphToColumbusView(that.duration);
         });
 
         //Used by knockout
@@ -119,14 +126,13 @@ define([
 
     defineProperties(SceneModePickerViewModel.prototype, {
         /**
-         * Gets the scene transitioner.
+         * Gets the scene
          * @memberof SceneModePickerViewModel.prototype
-         *
-         * @type {SceneTransitioner}
+         * @type {Scene}
          */
-        sceneTransitioner : {
+        scene : {
             get : function() {
-                return this._transitioner;
+                return this._scene;
             }
         },
 
