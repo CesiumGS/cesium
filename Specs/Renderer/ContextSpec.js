@@ -263,38 +263,6 @@ defineSuite([
         }
     });
 
-    it('sets shader program validation', function() {
-        context.validateShaderProgram = false;
-        expect(context.validateShaderProgram).toEqual(false);
-
-        context.validateShaderProgram = true;
-        expect(context.validateShaderProgram).toEqual(true);
-    });
-
-    it('sets framebuffer validation', function() {
-        context.validateFramebuffer = false;
-        expect(context.validateFramebuffer).toEqual(false);
-
-        context.validateFramebuffer = true;
-        expect(context.validateFramebuffer).toEqual(true);
-    });
-
-    it('sets logging shader compilation', function() {
-        context.logShaderCompilation = false;
-        expect(context.logShaderCompilation).toEqual(false);
-
-        context.logShaderCompilation = true;
-        expect(context.logShaderCompilation).toEqual(true);
-    });
-
-    it('sets throws on WebGL errors', function() {
-        context.throwOnWebGLError = false;
-        expect(context.throwOnWebGLError).toEqual(false);
-
-        context.throwOnWebGLError = true;
-        expect(context.throwOnWebGLError).toEqual(true);
-    });
-
     it('can create a pick ID and retrieve an object by pick color', function() {
         var o = {};
         var pickId = context.createPickId(o);
