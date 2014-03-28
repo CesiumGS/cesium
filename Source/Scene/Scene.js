@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/Occluder',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -58,6 +59,7 @@ define([
         DeveloperError,
         GeographicProjection,
         Ellipsoid,
+        Event,
         Occluder,
         BoundingRectangle,
         BoundingSphere,
@@ -165,6 +167,29 @@ define([
         this._depthClearCommand = depthClearCommand;
 
         this._transitioner = new SceneTransitioner(this);
+
+        /**
+         * Determines whether or not to instantly complete the
+         * scene transition animation on user input.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.completeMorphOnUserInput = true;
+
+        /**
+         * The event fired at the beginning of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphStart = new Event();
+
+        /**
+         * The event fired at the completion of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphComplete = new Event();
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -1299,39 +1324,39 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
         var centralBody = this.primitives.centralBody;
         if (defined(centralBody)) {
-            duration = defaultValue(duration, 0);
+            duration = defaultValue(duration, 2000);
             this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var centralBody = this.primitives.centralBody;
         if (defined(centralBody)) {
-            duration = defaultValue(duration, 0);
+            duration = defaultValue(duration, 2000);
             this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration = 0] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {
         var centralBody = this.primitives.centralBody;
         if (defined(centralBody)) {
-            duration = defaultValue(duration, 0);
+            duration = defaultValue(duration, 2000);
             this._transitioner.morphTo3D(duration, centralBody.ellipsoid);
         }
     };

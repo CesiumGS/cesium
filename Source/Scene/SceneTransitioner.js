@@ -47,29 +47,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * Gets or sets whether or not to instantly complete the
-         * transition animation on user input.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.completeMorphOnUserInput = true;
-
-        /**
-         * Gets the event fired at the beginning of a transition.
-         * @type {Event}
-         * @default Event()
-         */
-        this.morphStart = new Event();
-
-        /**
-         * Gets the event fired at the completion of a transition.
-         * @type {Event}
-         * @default Event()
-         */
-        this.morphComplete = new Event();
-
         this._scene = scene;
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var context = scene.context;
@@ -151,7 +128,7 @@ define([
         if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -175,7 +152,7 @@ define([
         if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -199,7 +176,7 @@ define([
         if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
@@ -259,7 +236,7 @@ define([
     }
 
     function createMorphHandler(transitioner, completeMorphFunction) {
-        if (transitioner.completeMorphOnUserInput) {
+        if (transitioner._scene.completeMorphOnUserInput) {
             transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas);
 
             var completeMorph = function() {
@@ -666,7 +643,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
     function complete2DCallback(transitioner) {
@@ -689,7 +666,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
     function completeColumbusViewCallback(transitioner) {
@@ -715,7 +692,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 
     return SceneTransitioner;

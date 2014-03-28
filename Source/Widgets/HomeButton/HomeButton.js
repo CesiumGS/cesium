@@ -26,6 +26,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
+     * @param {Number} [flightDuration] The time, in milliseconds, it takes to complete the camera flight home.
      */
     var HomeButton = function(container, scene, ellipsoid, flightDuration) {
         //>>includeStart('debug', pragmas.debug);

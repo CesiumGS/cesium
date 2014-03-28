@@ -39,6 +39,7 @@ define([
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
+     * @param {Number} [duration] The time, in milliseconds, it takes for the scene to transition.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -50,7 +51,7 @@ define([
      * var scene = viewer.scene;
      * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
-    var SceneModePicker = function(container, scene) {
+    var SceneModePicker = function(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');

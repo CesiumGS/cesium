@@ -2,6 +2,7 @@
 define([
         '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defaultValue',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
@@ -11,6 +12,7 @@ define([
     ], function(
         defineProperties,
         defined,
+        defaultValue,
         destroyObject,
         DeveloperError,
         EventHelper,
@@ -25,8 +27,9 @@ define([
      * @constructor
      *
      * @param {Scene} scene The Scene to morph
+     * @param {Number} [transitionDuration=2000] The duration of scene transitions, in milliseconds
      */
-    var SceneModePickerViewModel = function(scene) {
+    var SceneModePickerViewModel = function(scene, transitionDuration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -34,7 +37,6 @@ define([
         //>>includeEnd('debug');
 
         this._scene = scene;
-        var transitioner = scene._transitioner;
 
         var that = this;
 
@@ -44,13 +46,9 @@ define([
         };
 
         this._eventHelper = new EventHelper();
-        this._eventHelper.add(transitioner.morphStart, morphStart);
+        this._eventHelper.add(scene.morphStart, morphStart);
 
-        /**
-         * The length of time in milliseconds between scene transitions
-         * @type {Number}
-         */
-        this.duration = 0;
+        this._transitionDuration = defaultValue(transitionDuration, 2000);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
@@ -109,15 +107,15 @@ define([
         });
 
         this._morphTo2D = createCommand(function() {
-            scene.morphTo2D(that.duration);
+            scene.morphTo2D(that._transitionDuration);
         });
 
         this._morphTo3D = createCommand(function() {
-            scene.morphTo3D(that.duration);
+            scene.morphTo3D(that._transitionDuration);
         });
 
         this._morphToColumbusView = createCommand(function() {
-            scene.morphToColumbusView(that.duration);
+            scene.morphToColumbusView(that._transitionDuration);
         });
 
         //Used by knockout
@@ -133,6 +131,27 @@ define([
         scene : {
             get : function() {
                 return this._scene;
+            }
+        },
+
+        /**
+         * Gets or sets the the duration of scene mode transition animations in milliseconds.
+         * A value of zero causes the scene to instantly change modes.
+         * @memberof SceneModePickerViewModel.prototype
+         * @type {Number}
+         */
+        transitionDuration : {
+            get : function() {
+                return this._transitionDuration;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (value < 0) {
+                    throw new DeveloperError('transitionDuration value must be positive.');
+                }
+                //>>includeEnd('debug');
+
+                this._transitionDuration = value;
             }
         },
 
