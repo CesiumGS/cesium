@@ -16,7 +16,7 @@ Beta Releases
            scene.camera.viewExtent(extent);
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Removed `TexturePool`.
-  * Replaced `SceneTransitioner` with functions on the `Scene`.  Use `Scene.morphTo2D`, `Scene.morphToColumbusView` and `Scene.morphTo3D`, which all take a `duration` (in milliseconds) parameter.
+  * Replaced `SceneTransitioner` with new functions on the `Scene`.  Use `Scene.morphTo2D`, `Scene.morphToColumbusView` and `Scene.morphTo3D`, which all take a `duration` (in milliseconds) parameter.
   * Replaced getter/setter functions with properties:
     * `ImageryLayer`
       * `getImageryProvider` -> `imageryProvider`
