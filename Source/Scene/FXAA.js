@@ -63,7 +63,7 @@ define([
         var height = context.getDrawingBufferHeight();
 
         var fxaaTexture = this._texture;
-        var textureChanged = !defined(fxaaTexture) || fxaaTexture.getWidth() !== width || fxaaTexture.getHeight() !== height;
+        var textureChanged = !defined(fxaaTexture) || fxaaTexture.width !== width || fxaaTexture.height !== height;
         if (textureChanged) {
             this._texture = this._texture && this._texture.destroy();
             this._depthTexture = this._depthTexture && this._depthTexture.destroy();
@@ -116,7 +116,7 @@ define([
 
         if (textureChanged) {
             var that = this;
-            var step = new Cartesian2(1.0 / this._texture.getWidth(), 1.0 / this._texture.getHeight());
+            var step = new Cartesian2(1.0 / this._texture.width, 1.0 / this._texture.height);
             this._command.uniformMap = {
                 u_texture : function() {
                     return that._texture;

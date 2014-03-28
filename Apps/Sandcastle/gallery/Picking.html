@@ -434,7 +434,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
                 Cesium.Math.toDegrees(e.north).toFixed(2) + ')';
             label.scale = 0.7;
-            label.position = widget.centralBody.ellipsoid.cartographicToCartesian(e.getCenter());
+            label.position = widget.centralBody.ellipsoid.cartographicToCartesian(Cesium.Extent.getCenter(e));
             label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
         };
         var drawExtentHelper = new DrawExtentHelper(scene, myHandler);

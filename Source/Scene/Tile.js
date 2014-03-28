@@ -315,7 +315,7 @@ define([
         var indexBuffer;
 
         if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.getIndexBuffer();
+            indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
@@ -329,7 +329,7 @@ define([
         }
 
         if (typeof this.wireframeVertexArray !== 'undefined') {
-            indexBuffer = this.wireframeVertexArray.getIndexBuffer();
+            indexBuffer = this.wireframeVertexArray.indexBuffer;
 
             this.wireframeVertexArray.destroy();
             this.wireframeVertexArray = undefined;
@@ -729,7 +729,7 @@ define([
                 });
             }
 
-            result.setSampler(waterMaskData.sampler);
+            result.sampler = waterMaskData.sampler;
         }
 
         ++result.referenceCount;

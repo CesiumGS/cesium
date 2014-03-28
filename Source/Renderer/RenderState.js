@@ -392,7 +392,7 @@ define([
             viewport.height = passState.context.getDrawingBufferHeight();
         }
 
-        passState.context.getUniformState().setViewport(viewport);
+        passState.context.getUniformState().viewport = viewport;
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
 

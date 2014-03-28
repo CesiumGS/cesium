@@ -363,7 +363,7 @@ defineSuite([
                 })
             });
 
-            var status = framebuffer.getStatus();
+            var status = framebuffer.status;
             framebuffer.destroy();
 
             if (status !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {

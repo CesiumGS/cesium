@@ -148,7 +148,7 @@ define([
                 destroyAttachments : false
             });
 
-            if (oit._translucentFBO.getStatus() !== completeFBO || oit._adjustTranslucentFBO.getStatus() !== completeFBO) {
+            if (oit._translucentFBO.status !== completeFBO || oit._adjustTranslucentFBO.status !== completeFBO) {
                 destroyFramebuffers(oit);
                 oit._translucentMRTSupport = false;
             }
@@ -175,10 +175,10 @@ define([
                 destroyAttachments : false
             });
 
-            var translucentComplete = oit._translucentFBO.getStatus() === completeFBO;
-            var alphaComplete = oit._alphaFBO.getStatus() === completeFBO;
-            var adjustTranslucentComplete = oit._adjustTranslucentFBO.getStatus() === completeFBO;
-            var adjustAlphaComplete = oit._adjustAlphaFBO.getStatus() === completeFBO;
+            var translucentComplete = oit._translucentFBO.status === completeFBO;
+            var alphaComplete = oit._alphaFBO.status === completeFBO;
+            var adjustTranslucentComplete = oit._adjustTranslucentFBO.status === completeFBO;
+            var adjustAlphaComplete = oit._adjustAlphaFBO.status === completeFBO;
             if (!translucentComplete || !alphaComplete || !adjustTranslucentComplete || !adjustAlphaComplete) {
                 destroyResources(oit);
                 oit._translucentMultipassSupport = false;
@@ -206,7 +206,7 @@ define([
         var height = context.getDrawingBufferHeight();
 
         var opaqueTexture = this._opaqueTexture;
-        var textureChanged = !defined(opaqueTexture) || opaqueTexture.getWidth() !== width || opaqueTexture.getHeight() !== height;
+        var textureChanged = !defined(opaqueTexture) || opaqueTexture.width !== width || opaqueTexture.height !== height;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }

@@ -32,17 +32,17 @@ defineSuite([
             height : 32
         });
 
-        expect(renderbuffer.getFormat()).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
-        expect(renderbuffer.getWidth()).toEqual(64);
-        expect(renderbuffer.getHeight()).toEqual(32);
+        expect(renderbuffer.format).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
+        expect(renderbuffer.width).toEqual(64);
+        expect(renderbuffer.height).toEqual(32);
     });
 
     it('creates with defaults', function() {
         renderbuffer = context.createRenderbuffer();
 
-        expect(renderbuffer.getFormat()).toEqual(RenderbufferFormat.RGBA4);
-        expect(renderbuffer.getWidth()).toEqual(context.getCanvas().clientWidth);
-        expect(renderbuffer.getHeight()).toEqual(context.getCanvas().clientHeight);
+        expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
+        expect(renderbuffer.width).toEqual(context.getCanvas().clientWidth);
+        expect(renderbuffer.height).toEqual(context.getCanvas().clientHeight);
     });
 
     it('destroys', function() {

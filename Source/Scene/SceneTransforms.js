@@ -123,7 +123,7 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.getUniformState().getViewProjection();
+        var viewProjection = scene.context.getUniformState().viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene.context, positionCC, result);
