@@ -32,11 +32,11 @@ defineSuite([
     it('Can construct and destroy', function() {
         var viewModel = new SceneModePickerViewModel(scene);
         expect(viewModel.scene).toBe(scene);
-        expect(scene._transitioner.morphStart.numberOfListeners).toEqual(1);
+        expect(scene.morphStart.numberOfListeners).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
         expect(viewModel.isDestroyed()).toEqual(true);
-        expect(scene._transitioner.morphStart.numberOfListeners).toEqual(0);
+        expect(scene.morphStart.numberOfListeners).toEqual(0);
     });
 
     it('dropDownVisible and toggleDropDown work', function() {
