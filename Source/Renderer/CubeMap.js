@@ -254,6 +254,12 @@ define([
             get : function() {
                 return this._flipY;
             }
+        },
+
+        _target : {
+            get : function() {
+                return this._textureTarget;
+            }
         }
     });
 
@@ -296,14 +302,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
-    };
-
-    CubeMap.prototype._getTexture = function() {
-        return this._texture;
-    };
-
-    CubeMap.prototype._getTarget = function() {
-        return this._textureTarget;
     };
 
     /**

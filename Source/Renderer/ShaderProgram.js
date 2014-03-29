@@ -111,7 +111,7 @@ define([
         case gl.SAMPLER_CUBE:
             return function() {
                 gl.activeTexture(gl.TEXTURE0 + uniform.textureUnitIndex);
-                gl.bindTexture(uniform.value._getTarget(), uniform.value._getTexture());
+                gl.bindTexture(uniform.value._target, uniform.value._texture);
             };
         case gl.INT:
         case gl.BOOL:
@@ -434,7 +434,7 @@ define([
                     var v = value[i];
                     var index = uniformArray.textureUnitIndex + i;
                     gl.activeTexture(gl.TEXTURE0 + index);
-                    gl.bindTexture(v._getTarget(), v._getTexture());
+                    gl.bindTexture(v._target, v._texture);
                 }
             };
         case gl.INT:
