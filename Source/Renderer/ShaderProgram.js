@@ -1040,7 +1040,7 @@ define([
                             continue;
                         }
 
-                        locations = uniformArray._getLocations();
+                        locations = uniformArray._locations;
 
                         // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
                         // but the size is not 1 like it is in Firefox.  So if we push locations here,
