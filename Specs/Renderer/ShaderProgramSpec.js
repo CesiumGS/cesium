@@ -140,7 +140,7 @@ defineSuite([
 
         var uniform = sp.allUniforms.u_vec4;
 
-        expect(uniform.getName()).toEqual('u_vec4');
+        expect(uniform.name).toEqual('u_vec4');
     });
 
     it('has an automatic uniform', function() {
@@ -148,10 +148,10 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4((czm_viewport.x == 0.0) && (czm_viewport.y == 0.0) && (czm_viewport.z == 1.0) && (czm_viewport.w == 1.0)); }';
         sp = context.createShaderProgram(vs, fs);
 
-        expect(sp.allUniforms.u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.allUniforms.czm_viewport.getName()).toEqual('czm_viewport');
+        expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
+        expect(sp.allUniforms.czm_viewport.name).toEqual('czm_viewport');
 
-        expect(sp.manualUniforms.u_vec4.getName()).toEqual('u_vec4');
+        expect(sp.manualUniforms.u_vec4.name).toEqual('u_vec4');
         expect(sp.manualUniforms.czm_viewport).not.toBeDefined();
     });
 
@@ -160,9 +160,9 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        expect(sp.allUniforms.u_float.getName()).toEqual('u_float');
-        expect(sp.allUniforms.u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.allUniforms.u_mat4.getName()).toEqual('u_mat4');
+        expect(sp.allUniforms.u_float.name).toEqual('u_float');
+        expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
+        expect(sp.allUniforms.u_mat4.name).toEqual('u_mat4');
     });
 
     it('has uniforms of every datatype', function() {
@@ -190,23 +190,23 @@ defineSuite([
             'void main() { gl_FragColor = texture2D(u_sampler2D, vec2(0.0)) + textureCube(u_samplerCube, vec3(1.0)); }';
         sp = d.createShaderProgram(vs, fs);
 
-        expect(sp.allUniforms.u_float.getName()).toEqual('u_float');
-        expect(sp.allUniforms.u_vec2.getName()).toEqual('u_vec2');
-        expect(sp.allUniforms.u_vec3.getName()).toEqual('u_vec3');
-        expect(sp.allUniforms.u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.allUniforms.u_int.getName()).toEqual('u_int');
-        expect(sp.allUniforms.u_ivec2.getName()).toEqual('u_ivec2');
-        expect(sp.allUniforms.u_ivec3.getName()).toEqual('u_ivec3');
-        expect(sp.allUniforms.u_ivec4.getName()).toEqual('u_ivec4');
-        expect(sp.allUniforms.u_bool.getName()).toEqual('u_bool');
-        expect(sp.allUniforms.u_bvec2.getName()).toEqual('u_bvec2');
-        expect(sp.allUniforms.u_bvec3.getName()).toEqual('u_bvec3');
-        expect(sp.allUniforms.u_bvec4.getName()).toEqual('u_bvec4');
-        expect(sp.allUniforms.u_mat2.getName()).toEqual('u_mat2');
-        expect(sp.allUniforms.u_mat3.getName()).toEqual('u_mat3');
-        expect(sp.allUniforms.u_mat4.getName()).toEqual('u_mat4');
-        expect(sp.allUniforms.u_sampler2D.getName()).toEqual('u_sampler2D');
-        expect(sp.allUniforms.u_samplerCube.getName()).toEqual('u_samplerCube');
+        expect(sp.allUniforms.u_float.name).toEqual('u_float');
+        expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
+        expect(sp.allUniforms.u_vec3.name).toEqual('u_vec3');
+        expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
+        expect(sp.allUniforms.u_int.name).toEqual('u_int');
+        expect(sp.allUniforms.u_ivec2.name).toEqual('u_ivec2');
+        expect(sp.allUniforms.u_ivec3.name).toEqual('u_ivec3');
+        expect(sp.allUniforms.u_ivec4.name).toEqual('u_ivec4');
+        expect(sp.allUniforms.u_bool.name).toEqual('u_bool');
+        expect(sp.allUniforms.u_bvec2.name).toEqual('u_bvec2');
+        expect(sp.allUniforms.u_bvec3.name).toEqual('u_bvec3');
+        expect(sp.allUniforms.u_bvec4.name).toEqual('u_bvec4');
+        expect(sp.allUniforms.u_mat2.name).toEqual('u_mat2');
+        expect(sp.allUniforms.u_mat3.name).toEqual('u_mat3');
+        expect(sp.allUniforms.u_mat4.name).toEqual('u_mat4');
+        expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
+        expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
         expect(sp.allUniforms.u_float.getDatatype()).toEqual(UniformDatatype.FLOAT);
         expect(sp.allUniforms.u_vec2.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC2);
@@ -232,8 +232,8 @@ defineSuite([
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
-        expect(sp.allUniforms['u_struct.f'].getName()).toEqual('u_struct.f');
-        expect(sp.allUniforms['u_struct.v'].getName()).toEqual('u_struct.v');
+        expect(sp.allUniforms['u_struct.f'].name).toEqual('u_struct.f');
+        expect(sp.allUniforms['u_struct.v'].name).toEqual('u_struct.v');
     });
 
     it('has a uniform array', function() {
@@ -243,7 +243,7 @@ defineSuite([
 
         var uniform = sp.allUniforms.u_vec4;
 
-        expect(uniform.getName()).toEqual('u_vec4');
+        expect(uniform.name).toEqual('u_vec4');
         expect(uniform.value.length).toEqual(2);
     });
 
@@ -272,23 +272,23 @@ defineSuite([
             'void main() { gl_FragColor = texture2D(u_sampler2D[0], vec2(0.0)) + texture2D(u_sampler2D[1], vec2(0.0)) + textureCube(u_samplerCube[0], vec3(1.0)) + textureCube(u_samplerCube[1], vec3(1.0)); }';
         sp = d.createShaderProgram(vs, fs);
 
-        expect(sp.allUniforms.u_float.getName()).toEqual('u_float');
-        expect(sp.allUniforms.u_vec2.getName()).toEqual('u_vec2');
-        expect(sp.allUniforms.u_vec3.getName()).toEqual('u_vec3');
-        expect(sp.allUniforms.u_vec4.getName()).toEqual('u_vec4');
-        expect(sp.allUniforms.u_int.getName()).toEqual('u_int');
-        expect(sp.allUniforms.u_ivec2.getName()).toEqual('u_ivec2');
-        expect(sp.allUniforms.u_ivec3.getName()).toEqual('u_ivec3');
-        expect(sp.allUniforms.u_ivec4.getName()).toEqual('u_ivec4');
-        expect(sp.allUniforms.u_bool.getName()).toEqual('u_bool');
-        expect(sp.allUniforms.u_bvec2.getName()).toEqual('u_bvec2');
-        expect(sp.allUniforms.u_bvec3.getName()).toEqual('u_bvec3');
-        expect(sp.allUniforms.u_bvec4.getName()).toEqual('u_bvec4');
-        expect(sp.allUniforms.u_mat2.getName()).toEqual('u_mat2');
-        expect(sp.allUniforms.u_mat3.getName()).toEqual('u_mat3');
-        expect(sp.allUniforms.u_mat4.getName()).toEqual('u_mat4');
-        expect(sp.allUniforms.u_sampler2D.getName()).toEqual('u_sampler2D');
-        expect(sp.allUniforms.u_samplerCube.getName()).toEqual('u_samplerCube');
+        expect(sp.allUniforms.u_float.name).toEqual('u_float');
+        expect(sp.allUniforms.u_vec2.name).toEqual('u_vec2');
+        expect(sp.allUniforms.u_vec3.name).toEqual('u_vec3');
+        expect(sp.allUniforms.u_vec4.name).toEqual('u_vec4');
+        expect(sp.allUniforms.u_int.name).toEqual('u_int');
+        expect(sp.allUniforms.u_ivec2.name).toEqual('u_ivec2');
+        expect(sp.allUniforms.u_ivec3.name).toEqual('u_ivec3');
+        expect(sp.allUniforms.u_ivec4.name).toEqual('u_ivec4');
+        expect(sp.allUniforms.u_bool.name).toEqual('u_bool');
+        expect(sp.allUniforms.u_bvec2.name).toEqual('u_bvec2');
+        expect(sp.allUniforms.u_bvec3.name).toEqual('u_bvec3');
+        expect(sp.allUniforms.u_bvec4.name).toEqual('u_bvec4');
+        expect(sp.allUniforms.u_mat2.name).toEqual('u_mat2');
+        expect(sp.allUniforms.u_mat3.name).toEqual('u_mat3');
+        expect(sp.allUniforms.u_mat4.name).toEqual('u_mat4');
+        expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
+        expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
         expect(sp.allUniforms.u_float.getDatatype()).toEqual(UniformDatatype.FLOAT);
         expect(sp.allUniforms.u_vec2.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC2);
