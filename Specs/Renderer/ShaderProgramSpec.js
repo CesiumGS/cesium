@@ -208,23 +208,23 @@ defineSuite([
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
-        expect(sp.allUniforms.u_float.getDatatype()).toEqual(UniformDatatype.FLOAT);
-        expect(sp.allUniforms.u_vec2.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.getDatatype()).toEqual(UniformDatatype.INT);
-        expect(sp.allUniforms.u_ivec2.getDatatype()).toEqual(UniformDatatype.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.getDatatype()).toEqual(UniformDatatype.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.getDatatype()).toEqual(UniformDatatype.INT_VEC4);
-        expect(sp.allUniforms.u_bool.getDatatype()).toEqual(UniformDatatype.BOOL);
-        expect(sp.allUniforms.u_bvec2.getDatatype()).toEqual(UniformDatatype.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.getDatatype()).toEqual(UniformDatatype.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.getDatatype()).toEqual(UniformDatatype.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.getDatatype()).toEqual(UniformDatatype.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.getDatatype()).toEqual(UniformDatatype.SAMPLER_CUBE);
+        expect(sp.allUniforms.u_float.datatype).toEqual(UniformDatatype.FLOAT);
+        expect(sp.allUniforms.u_vec2.datatype).toEqual(UniformDatatype.FLOAT_VEC2);
+        expect(sp.allUniforms.u_vec3.datatype).toEqual(UniformDatatype.FLOAT_VEC3);
+        expect(sp.allUniforms.u_vec4.datatype).toEqual(UniformDatatype.FLOAT_VEC4);
+        expect(sp.allUniforms.u_int.datatype).toEqual(UniformDatatype.INT);
+        expect(sp.allUniforms.u_ivec2.datatype).toEqual(UniformDatatype.INT_VEC2);
+        expect(sp.allUniforms.u_ivec3.datatype).toEqual(UniformDatatype.INT_VEC3);
+        expect(sp.allUniforms.u_ivec4.datatype).toEqual(UniformDatatype.INT_VEC4);
+        expect(sp.allUniforms.u_bool.datatype).toEqual(UniformDatatype.BOOL);
+        expect(sp.allUniforms.u_bvec2.datatype).toEqual(UniformDatatype.BOOL_VEC2);
+        expect(sp.allUniforms.u_bvec3.datatype).toEqual(UniformDatatype.BOOL_VEC3);
+        expect(sp.allUniforms.u_bvec4.datatype).toEqual(UniformDatatype.BOOL_VEC4);
+        expect(sp.allUniforms.u_mat2.datatype).toEqual(UniformDatatype.FLOAT_MAT2);
+        expect(sp.allUniforms.u_mat3.datatype).toEqual(UniformDatatype.FLOAT_MAT3);
+        expect(sp.allUniforms.u_mat4.datatype).toEqual(UniformDatatype.FLOAT_MAT4);
+        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(UniformDatatype.SAMPLER_2D);
+        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(UniformDatatype.SAMPLER_CUBE);
     });
 
     it('has a struct uniform', function() {
@@ -290,23 +290,23 @@ defineSuite([
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
-        expect(sp.allUniforms.u_float.getDatatype()).toEqual(UniformDatatype.FLOAT);
-        expect(sp.allUniforms.u_vec2.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.getDatatype()).toEqual(UniformDatatype.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.getDatatype()).toEqual(UniformDatatype.INT);
-        expect(sp.allUniforms.u_ivec2.getDatatype()).toEqual(UniformDatatype.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.getDatatype()).toEqual(UniformDatatype.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.getDatatype()).toEqual(UniformDatatype.INT_VEC4);
-        expect(sp.allUniforms.u_bool.getDatatype()).toEqual(UniformDatatype.BOOL);
-        expect(sp.allUniforms.u_bvec2.getDatatype()).toEqual(UniformDatatype.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.getDatatype()).toEqual(UniformDatatype.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.getDatatype()).toEqual(UniformDatatype.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.getDatatype()).toEqual(UniformDatatype.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.getDatatype()).toEqual(UniformDatatype.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.getDatatype()).toEqual(UniformDatatype.SAMPLER_CUBE);
+        expect(sp.allUniforms.u_float.datatype).toEqual(UniformDatatype.FLOAT);
+        expect(sp.allUniforms.u_vec2.datatype).toEqual(UniformDatatype.FLOAT_VEC2);
+        expect(sp.allUniforms.u_vec3.datatype).toEqual(UniformDatatype.FLOAT_VEC3);
+        expect(sp.allUniforms.u_vec4.datatype).toEqual(UniformDatatype.FLOAT_VEC4);
+        expect(sp.allUniforms.u_int.datatype).toEqual(UniformDatatype.INT);
+        expect(sp.allUniforms.u_ivec2.datatype).toEqual(UniformDatatype.INT_VEC2);
+        expect(sp.allUniforms.u_ivec3.datatype).toEqual(UniformDatatype.INT_VEC3);
+        expect(sp.allUniforms.u_ivec4.datatype).toEqual(UniformDatatype.INT_VEC4);
+        expect(sp.allUniforms.u_bool.datatype).toEqual(UniformDatatype.BOOL);
+        expect(sp.allUniforms.u_bvec2.datatype).toEqual(UniformDatatype.BOOL_VEC2);
+        expect(sp.allUniforms.u_bvec3.datatype).toEqual(UniformDatatype.BOOL_VEC3);
+        expect(sp.allUniforms.u_bvec4.datatype).toEqual(UniformDatatype.BOOL_VEC4);
+        expect(sp.allUniforms.u_mat2.datatype).toEqual(UniformDatatype.FLOAT_MAT2);
+        expect(sp.allUniforms.u_mat3.datatype).toEqual(UniformDatatype.FLOAT_MAT3);
+        expect(sp.allUniforms.u_mat4.datatype).toEqual(UniformDatatype.FLOAT_MAT4);
+        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(UniformDatatype.SAMPLER_2D);
+        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(UniformDatatype.SAMPLER_CUBE);
     });
 
     it('sets uniforms', function() {
@@ -349,21 +349,21 @@ defineSuite([
         sp._bind();
         sp._setUniforms();
 
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._getLocation())).toEqual(1.0);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._getLocation())).toEqual(new Float32Array([1.0, 2.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._getLocation())).toEqual(new Float32Array([1.0, 2.0, 3.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._getLocation())).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._getLocation())).toEqual(1);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._getLocation())).toEqual(new Int32Array([1, 2]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._getLocation())).toEqual(new Int32Array([1, 2, 3]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._getLocation())).toEqual(new Int32Array([1, 2, 3, 4]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._getLocation())).toEqual(true);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._getLocation())).toEqual([true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._getLocation())).toEqual([true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._getLocation())).toEqual([true, true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._getLocation())).toEqual([1.0, 3.0, 2.0, 4.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._getLocation())).toEqual([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._getLocation())).toEqual([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._location)).toEqual(1.0);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._location)).toEqual(new Float32Array([1.0, 2.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._location)).toEqual(new Float32Array([1.0, 2.0, 3.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._location)).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._location)).toEqual(1);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._location)).toEqual(new Int32Array([1, 2]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._location)).toEqual(new Int32Array([1, 2, 3]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._location)).toEqual(new Int32Array([1, 2, 3, 4]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._location)).toEqual(true);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._location)).toEqual([true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._location)).toEqual([true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._location)).toEqual([true, true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._location)).toEqual([1.0, 3.0, 2.0, 4.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._location)).toEqual([1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._location)).toEqual([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
     });
 
     it('sets a struct uniform', function() {
@@ -378,8 +378,8 @@ defineSuite([
         sp._bind();
         sp._setUniforms();
 
-        expect(d._gl.getUniform(sp._program, sp.allUniforms['u_struct.f']._getLocation())).toEqual(1);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms['u_struct.v']._getLocation())).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms['u_struct.f']._location)).toEqual(1);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms['u_struct.v']._location)).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
     });
 
     it('sets a uniform array', function() {
@@ -392,8 +392,8 @@ defineSuite([
         sp._bind();
         sp._setUniforms();
 
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._getLocations()[0])).toEqual(1);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._getLocations()[1])).toEqual(2);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._locations[0])).toEqual(1);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._locations[1])).toEqual(2);
     });
 
     it('sets uniform arrays', function() {
@@ -437,36 +437,36 @@ defineSuite([
         sp._bind();
         sp._setUniforms();
 
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._getLocations()[0])).toEqual(1.0);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._getLocations()[1])).toEqual(2.0);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._getLocations()[0])).toEqual(new Float32Array([1.0, 2.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._getLocations()[1])).toEqual(new Float32Array([3.0, 4.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._getLocations()[0])).toEqual(new Float32Array([1.0, 2.0, 3.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._getLocations()[1])).toEqual(new Float32Array([4.0, 5.0, 6.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._getLocations()[0])).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._getLocations()[1])).toEqual(new Float32Array([5.0, 6.0, 7.0, 8.0]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._getLocations()[0])).toEqual(1);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._getLocations()[1])).toEqual(2);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._getLocations()[0])).toEqual(new Int32Array([1, 2]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._getLocations()[1])).toEqual(new Int32Array([3, 4]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._getLocations()[0])).toEqual(new Int32Array([1, 2, 3]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._getLocations()[1])).toEqual(new Int32Array([4, 5, 6]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._getLocations()[0])).toEqual(new Int32Array([1, 2, 3, 4]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._getLocations()[1])).toEqual(new Int32Array([5, 6, 7, 8]));
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._getLocations()[0])).toEqual(true);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._getLocations()[1])).toEqual(true);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._getLocations()[0])).toEqual([true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._getLocations()[1])).toEqual([true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._getLocations()[0])).toEqual([true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._getLocations()[1])).toEqual([true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._getLocations()[0])).toEqual([true, true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._getLocations()[1])).toEqual([true, true, true, true]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._getLocations()[0])).toEqual([1.0, 3.0, 2.0, 4.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._getLocations()[1])).toEqual([5.0, 7.0, 6.0, 8.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._getLocations()[0])).toEqual([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._getLocations()[1])).toEqual([9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._getLocations()[0])).toEqual([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
-        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._getLocations()[1])).toEqual([16.0, 12.0, 8.0, 4.0, 15.0, 11.0, 7.0, 3.0, 14.0, 10.0, 6.0, 2.0, 13.0, 9.0, 5.0, 1.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._locations[0])).toEqual(1.0);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_float._locations[1])).toEqual(2.0);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._locations[0])).toEqual(new Float32Array([1.0, 2.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec2._locations[1])).toEqual(new Float32Array([3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec3._locations[1])).toEqual(new Float32Array([4.0, 5.0, 6.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._locations[0])).toEqual(new Float32Array([1.0, 2.0, 3.0, 4.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_vec4._locations[1])).toEqual(new Float32Array([5.0, 6.0, 7.0, 8.0]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._locations[0])).toEqual(1);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_int._locations[1])).toEqual(2);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._locations[0])).toEqual(new Int32Array([1, 2]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec2._locations[1])).toEqual(new Int32Array([3, 4]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._locations[0])).toEqual(new Int32Array([1, 2, 3]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec3._locations[1])).toEqual(new Int32Array([4, 5, 6]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._locations[0])).toEqual(new Int32Array([1, 2, 3, 4]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_ivec4._locations[1])).toEqual(new Int32Array([5, 6, 7, 8]));
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._locations[0])).toEqual(true);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bool._locations[1])).toEqual(true);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._locations[0])).toEqual([true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec2._locations[1])).toEqual([true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._locations[0])).toEqual([true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec3._locations[1])).toEqual([true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._locations[0])).toEqual([true, true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_bvec4._locations[1])).toEqual([true, true, true, true]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._locations[0])).toEqual([1.0, 3.0, 2.0, 4.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat2._locations[1])).toEqual([5.0, 7.0, 6.0, 8.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._locations[0])).toEqual([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat3._locations[1])).toEqual([9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._locations[0])).toEqual([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
+        expect(d._gl.getUniform(sp._program, sp.allUniforms.u_mat4._locations[1])).toEqual([16.0, 12.0, 8.0, 4.0, 15.0, 11.0, 7.0, 3.0, 14.0, 10.0, 6.0, 2.0, 13.0, 9.0, 5.0, 1.0]);
     });
 
     it('has predefined constants', function() {

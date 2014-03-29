@@ -31,73 +31,39 @@ define([
     function getUniformDatatype(gl, activeUniformType) {
         switch (activeUniformType) {
         case gl.FLOAT:
-            return function() {
-                return UniformDatatype.FLOAT;
-            };
+            return UniformDatatype.FLOAT;
         case gl.FLOAT_VEC2:
-            return function() {
-                return UniformDatatype.FLOAT_VEC2;
-            };
+            return UniformDatatype.FLOAT_VEC2;
         case gl.FLOAT_VEC3:
-            return function() {
-                return UniformDatatype.FLOAT_VEC3;
-            };
+            return UniformDatatype.FLOAT_VEC3;
         case gl.FLOAT_VEC4:
-            return function() {
-                return UniformDatatype.FLOAT_VEC4;
-            };
+            return UniformDatatype.FLOAT_VEC4;
         case gl.INT:
-            return function() {
-                return UniformDatatype.INT;
-            };
+            return UniformDatatype.INT;
         case gl.INT_VEC2:
-            return function() {
-                return UniformDatatype.INT_VEC2;
-            };
+            return UniformDatatype.INT_VEC2;
         case gl.INT_VEC3:
-            return function() {
-                return UniformDatatype.INT_VEC3;
-            };
+            return UniformDatatype.INT_VEC3;
         case gl.INT_VEC4:
-            return function() {
-                return UniformDatatype.INT_VEC4;
-            };
+            return UniformDatatype.INT_VEC4;
         case gl.BOOL:
-            return function() {
-                return UniformDatatype.BOOL;
-            };
+            return UniformDatatype.BOOL;
         case gl.BOOL_VEC2:
-            return function() {
-                return UniformDatatype.BOOL_VEC2;
-            };
+            return UniformDatatype.BOOL_VEC2;
         case gl.BOOL_VEC3:
-            return function() {
-                return UniformDatatype.BOOL_VEC3;
-            };
+            return UniformDatatype.BOOL_VEC3;
         case gl.BOOL_VEC4:
-            return function() {
-                return UniformDatatype.BOOL_VEC4;
-            };
+            return UniformDatatype.BOOL_VEC4;
         case gl.FLOAT_MAT2:
-            return function() {
-                return UniformDatatype.FLOAT_MAT2;
-            };
+            return UniformDatatype.FLOAT_MAT2;
         case gl.FLOAT_MAT3:
-            return function() {
-                return UniformDatatype.FLOAT_MAT3;
-            };
+            return UniformDatatype.FLOAT_MAT3;
         case gl.FLOAT_MAT4:
-            return function() {
-                return UniformDatatype.FLOAT_MAT4;
-            };
+            return UniformDatatype.FLOAT_MAT4;
         case gl.SAMPLER_2D:
-            return function() {
-                return UniformDatatype.SAMPLER_2D;
-            };
+            return UniformDatatype.SAMPLER_2D;
         case gl.SAMPLER_CUBE:
-            return function() {
-                return UniformDatatype.SAMPLER_CUBE;
-            };
+            return UniformDatatype.SAMPLER_CUBE;
         default:
             throw new RuntimeError('Unrecognized uniform type: ' + activeUniformType);
         }
@@ -298,26 +264,6 @@ define([
         this._location = location;
 
         /**
-         * Returns the datatype of the uniform.  This is useful when dynamically
-         * creating a user interface to tweak shader uniform values.
-         *
-         * @returns {UniformDatatype} The datatype of the uniform.
-         * @function
-         * @alias Uniform#getDatatype
-         *
-         * @see UniformDatatype
-         *
-         * @example
-         * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.allUniforms.u_mvp.datatype.name);  // 'FLOAT_MAT4'
-         */
-        this.getDatatype = getUniformDatatype(this._gl, this._activeUniform.type);
-
-        this._getLocation = function() {
-            return this._location;
-        };
-
-        /**
          * @private
          */
         this.textureUnitIndex = undefined;
@@ -415,6 +361,18 @@ define([
             get : function() {
                 return this._uniformName;
             }
+        },
+
+        /**
+         * The datatype of the uniform.  This is useful when dynamically
+         * creating a user interface to tweak shader uniform values.
+         * @memberof Uniform.prototype
+         * @type {UniformDatatype}
+         */
+        datatype : {
+            get : function() {
+                return getUniformDatatype(this._gl, this._activeUniform.type);
+            }
         }
     });
 
@@ -433,12 +391,6 @@ define([
         this._uniformName = uniformName;
         this.value = value;
         this._locations = locations;
-
-        this.getDatatype = getUniformDatatype(this._gl, this._activeUniform.type);
-
-        this._getLocations = function() {
-            return this._locations;
-        };
 
         /**
          * @private
@@ -593,6 +545,18 @@ define([
         name : {
             get : function() {
                 return this._uniformName;
+            }
+        },
+
+        /**
+         * The datatype of the uniform.  This is useful when dynamically
+         * creating a user interface to tweak shader uniform values.
+         * @memberof Uniform.prototype
+         * @type {UniformDatatype}
+         */
+        datatype : {
+            get : function() {
+                return getUniformDatatype(this._gl, this._activeUniform.type);
             }
         }
     });
