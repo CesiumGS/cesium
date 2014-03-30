@@ -17,6 +17,7 @@ define([
         '../Core/GeometryAttribute',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
+        '../Renderer/PixelFormat',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -48,6 +49,7 @@ define([
         GeometryAttribute,
         BufferUsage,
         MipmapHint,
+        PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -675,7 +677,8 @@ define([
 
         // Imagery does not need to be discarded, so upload it to WebGL.
         var texture = context.createTexture2D({
-            source : imagery.image
+            source : imagery.image,
+            pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
 
         imagery.texture = texture;

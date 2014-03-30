@@ -379,6 +379,20 @@ define([
             get : function() {
                 return this._useTiles;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
+            }
         }
     });
 

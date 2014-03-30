@@ -49,6 +49,7 @@ defineSuite([
 
         expect(provider.url).toEqual(url);
         expect(provider.extent).toEqual(extent);
+        expect(provider.hasAlphaChannel).toEqual(true);
 
         waitsFor(function() {
             return provider.ready;
