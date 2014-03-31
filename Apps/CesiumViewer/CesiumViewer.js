@@ -5,6 +5,7 @@ define([
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
+        'Scene/TileMapServiceImageryProvider',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -17,6 +18,7 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
+        TileMapServiceImageryProvider,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -69,7 +71,18 @@ define([
     }
 
     function startup() {
-        var viewer = new Viewer('cesiumContainer');
+        var imageryProvider;
+
+        if (endUserOptions.tmsImageryUrl) {
+            imageryProvider = new TileMapServiceImageryProvider({
+                url : endUserOptions.tmsImageryUrl
+            });
+        }
+
+        var viewer = new Viewer('cesiumContainer', {
+            imageryProvider : imageryProvider,
+            baseLayerPicker : !defined(imageryProvider)
+        });
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
         if (endUserOptions.inspector) {
