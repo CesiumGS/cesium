@@ -138,7 +138,7 @@ require([
     }
 
     function updateSliders() {
-        if (imageryLayers.getLength() > 0) {
+        if (imageryLayers.length > 0) {
             var layer = imageryLayers.get(0);
             brightnessSlider.set('value', layer.brightness);
             contrastSlider.set('value', layer.contrast);

@@ -685,7 +685,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[0];
+                    that.tile = that.tile.children[0];
                 });
             }
         },
@@ -700,7 +700,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[1];
+                    that.tile = that.tile.children[1];
                 });
             }
         },
@@ -715,7 +715,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[2];
+                    that.tile = that.tile.children[2];
                 });
             }
         },
@@ -730,7 +730,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[3];
+                    that.tile = that.tile.children[3];
                 });
             }
         },

@@ -57,7 +57,7 @@ defineSuite([
     beforeEach(function() {
         extent = new ExtentPrimitive();
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 

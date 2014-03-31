@@ -6,6 +6,7 @@ define([
         'DynamicScene/GeoJsonDataSource',
         'DynamicScene/KmlDataSource',
         'Scene/PerformanceDisplay',
+        'Scene/TileMapServiceImageryProvider',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -19,6 +20,7 @@ define([
         GeoJsonDataSource,
         KmlDataSource,
         PerformanceDisplay,
+        TileMapServiceImageryProvider,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -71,7 +73,18 @@ define([
     }
 
     function startup() {
-        var viewer = new Viewer('cesiumContainer');
+        var imageryProvider;
+
+        if (endUserOptions.tmsImageryUrl) {
+            imageryProvider = new TileMapServiceImageryProvider({
+                url : endUserOptions.tmsImageryUrl
+            });
+        }
+
+        var viewer = new Viewer('cesiumContainer', {
+            imageryProvider : imageryProvider,
+            baseLayerPicker : !defined(imageryProvider)
+        });
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
         if (endUserOptions.inspector) {
@@ -92,10 +105,10 @@ define([
         var scene = viewer.scene;
         var context = scene.context;
         if (endUserOptions.debug) {
-            context.setValidateShaderProgram(true);
-            context.setValidateFramebuffer(true);
-            context.setLogShaderCompilation(true);
-            context.setThrowOnWebGLError(true);
+            context.validateShaderProgram = true;
+            context.validateFramebuffer = true;
+            context.logShaderCompilation = true;
+            context.throwOnWebGLError = true;
         }
 
         if (defined(endUserOptions.source)) {

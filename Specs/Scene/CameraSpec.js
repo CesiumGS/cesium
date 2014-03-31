@@ -56,12 +56,8 @@ defineSuite([
             clientWidth: 512,
             clientHeight: 384
         };
-        this.getDrawingBufferWidth = function() {
-            return 1024;
-        };
-        this.getDrawingBufferHeight = function() {
-            return 768;
-        };
+        this.drawingBufferWidth = 1024;
+        this.drawingBufferHeight = 768;
     };
 
     beforeEach(function() {
@@ -1028,7 +1024,7 @@ defineSuite([
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
@@ -1054,7 +1050,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1084,7 +1080,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1120,7 +1116,7 @@ defineSuite([
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
@@ -1159,7 +1155,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1254,7 +1250,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1371,7 +1367,7 @@ defineSuite([
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
@@ -1421,7 +1417,7 @@ defineSuite([
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;

@@ -52,13 +52,13 @@ define([
 
         var parameters = getQueryParameters();
         if (!defined(parameters.skipWebGLValidation)) {
-            context.setValidateShaderProgram(true);
-            context.setValidateFramebuffer(true);
-            context.setLogShaderCompilation(true);
-            context.setThrowOnWebGLError(true);
+            context.validateShaderProgram = true;
+            context.validateFramebuffer = true;
+            context.logShaderCompilation = true;
+            context.throwOnWebGLError = true;
         }
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, createFrameState());
 
         return context;

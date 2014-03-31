@@ -171,7 +171,7 @@ defineSuite([
                 enabled : true,
                 face : CullFace.FRONT
             },
-            lineWidth : context.getMaximumAliasedLineWidth(),
+            lineWidth : context.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,
@@ -399,7 +399,7 @@ defineSuite([
     it('fails to create (small lineWidth)', function() {
         expect(function() {
             context.createRenderState({
-                lineWidth : context.getMinimumAliasedLineWidth() - 1
+                lineWidth : context.minimumAliasedLineWidth - 1
             });
         }).toThrow();
     });
@@ -407,7 +407,7 @@ defineSuite([
     it('fails to create (large lineWidth)', function() {
         expect(function() {
             context.createRenderState({
-                lineWidth : context.getMaximumAliasedLineWidth() + 1
+                lineWidth : context.maximumAliasedLineWidth + 1
             });
         }).toThrow();
     });
@@ -678,7 +678,7 @@ defineSuite([
                 enabled : true,
                 face : CullFace.FRONT
             },
-            lineWidth : context.getMaximumAliasedLineWidth(),
+            lineWidth : context.maximumAliasedLineWidth,
             polygonOffset : {
                 enabled : false,
                 factor : 1,
