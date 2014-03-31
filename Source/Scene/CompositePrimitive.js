@@ -352,7 +352,7 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#getLength
+     * @see CompositePrimitive#length
      *
      * @example
      * // Toggle the show property of every primitive in the composite -

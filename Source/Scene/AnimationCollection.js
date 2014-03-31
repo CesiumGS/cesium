@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/clone',
         '../Core/getTimestamp',
@@ -8,6 +9,7 @@ define([
         '../Core/defaultValue'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         clone,
         getTimestamp,
@@ -25,14 +27,6 @@ define([
      */
     var AnimationCollection = function() {
         this._tweens = [];
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof AnimationCollection
-     */
-    AnimationCollection.prototype.getAll = function() {
-        return this._tweens;
     };
 
     /**
@@ -79,6 +73,17 @@ define([
         }
     };
 
+    defineProperties(AnimationCollection.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof AnimationCollection.prototype
+         */
+        all : {
+            get : function() {
+                return this._tweens;
+            }
+        }
+    });
     /**
      * DOC_TBA
      * @memberof AnimationCollection
