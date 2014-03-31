@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function (
         defined,
+        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -48,6 +50,41 @@ define([
         this._hasImage = hasImage;
     };
 
+    defineProperties(Credit.prototype, {
+        /**
+         * The credit text
+         * @memberof Credit.prototype
+         * @type {String}
+         */
+        text : {
+            get : function() {
+                return this._text;
+            }
+        },
+
+        /**
+         * The source location for the image.
+         * @memberof Credit.prototype
+         * @type {String}
+         */
+        imageUrl : {
+            get : function() {
+                return this._imageUrl;
+            }
+        },
+
+        /**
+         * A URL location for the credit hyperlink
+         * @memberof Credit.prototype
+         * @type {String}
+         */
+        link : {
+            get : function() {
+                return this._link;
+            }
+        }
+    });
+
     /**
      * Returns true if the credit has an imageUrl
      *
@@ -64,33 +101,6 @@ define([
      */
     Credit.prototype.hasLink = function() {
         return this._hasLink;
-    };
-
-    /**
-     * Returns the credit text
-     *
-     * @returns {String}
-     */
-    Credit.prototype.getText = function() {
-        return this._text;
-    };
-
-    /**
-     * Returns the source location for the image.
-     *
-     * @returns {String}
-     */
-    Credit.prototype.getImageUrl = function() {
-        return this._imageUrl;
-    };
-
-    /**
-     * Returns a URL location for the credit hyperlink
-     *
-     * @returns {String}
-     */
-    Credit.prototype.getLink = function() {
-        return this._link;
     };
 
     /**

@@ -612,7 +612,7 @@ define([
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.ellipsoid,
                         isGeographic : projection instanceof GeographicProjection,
-                        elementIndexUintSupported : context.getElementIndexUint(),
+                        elementIndexUintSupported : context.elementIndexUint,
                         allow3DOnly : this.allow3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
@@ -671,7 +671,7 @@ define([
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
-                    elementIndexUintSupported : context.getElementIndexUint(),
+                    elementIndexUintSupported : context.elementIndexUint,
                     allow3DOnly : this.allow3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
@@ -812,7 +812,7 @@ define([
         }
 
         if (createSP) {
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();

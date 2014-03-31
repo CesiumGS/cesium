@@ -309,11 +309,11 @@ defineSuite([
 
         runs(function() {
             var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
-            var level1 = level0[0].getChildren();
-            var level2 = level1[0].getChildren();
-            var level3 = level2[0].getChildren();
-            var level4 = level3[0].getChildren();
-            var level5 = level4[0].getChildren();
+            var level1 = level0[0].children;
+            var level2 = level1[0].children;
+            var level3 = level2[0].children;
+            var level4 = level3[0].children;
+            var level5 = level4[0].children;
 
             layer._createTileImagerySkeletons(level0[0], terrainProvider);
             expect(level0[0].imagery.length).toBe(0);

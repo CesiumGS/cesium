@@ -63,7 +63,7 @@ defineSuite([
     });
 
     it('has a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthTexture : context.createTexture2D({
                     width : 1,
@@ -95,7 +95,7 @@ defineSuite([
     });
 
     it('has a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthStencilTexture : context.createTexture2D({
                     width : 1,
@@ -323,7 +323,7 @@ defineSuite([
     }
 
     it('draws to a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -342,7 +342,7 @@ defineSuite([
     });
 
     it('draws to a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -429,7 +429,7 @@ defineSuite([
     });
 
     it('draws with multiple render targets', function() {
-        if (context.getDrawBuffers()) {
+        if (context.drawBuffers) {
             var colorTexture0 = context.createTexture2D({
                 width : 1,
                 height : 1
@@ -593,7 +593,7 @@ defineSuite([
     });
 
     it('throws when created with a color texture with a non-color pixel format', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             expect(function() {
                 framebuffer = context.createFramebuffer({
                     colorTextures : [context.createTexture2D({
@@ -665,7 +665,7 @@ defineSuite([
     it('throws when the number of color texture exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorTextures : new Array(context.getMaximumColorAttachments() + 1)
+                colorTextures : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrow();
     });
@@ -673,38 +673,38 @@ defineSuite([
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorRenderbuffers : new Array(context.getMaximumColorAttachments() + 1)
+                colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrow();
     });
 
-    it('throws when the index to setColorTexture is out of bounds', function(){
+    it('throws when the index to getColorTexture is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorTexture();
+            framebuffer.getColorTexture();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(-1);
+            framebuffer.getColorTexture(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(context.getMaximumColorAttachments() + 1);
+            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 
-    it('throws when the index to setColorRenderbuffer is out of bounds', function(){
+    it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorRenderbuffer();
+            framebuffer.getColorRenderbuffer();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(-1);
+            framebuffer.getColorRenderbuffer(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(context.getMaximumColorAttachments() + 1);
+            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 

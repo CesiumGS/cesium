@@ -146,7 +146,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(context, frameState);
+        context.uniformState.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -203,7 +203,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(context, frameState);
+        context.uniformState.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -267,7 +267,7 @@ defineSuite([
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-        context.getUniformState().update(context, frameState);
+        context.uniformState.update(context, frameState);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -300,7 +300,7 @@ defineSuite([
             afterView(frameState, primitive);
         }
 
-        context.getUniformState().update(context, frameState);
+        context.uniformState.update(context, frameState);
 
         var pickObject = pick(context, frameState, primitive);
         expect(pickObject.primitive).toEqual(primitive);
@@ -334,7 +334,7 @@ defineSuite([
                 afterView(frameState, primitive);
             }
 
-            context.getUniformState().update(context, frameState);
+            context.uniformState.update(context, frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -1074,7 +1074,7 @@ defineSuite([
             frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             frameState.camera.moveForward(primitive._boundingSphere.radius * 0.75);
 
-            context.getUniformState().update(context, frameState);
+            context.uniformState.update(context, frameState);
 
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);

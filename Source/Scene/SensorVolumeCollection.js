@@ -125,7 +125,7 @@ define([
      *
      * @memberof SensorVolumeCollection
      *
-     * @see SensorVolumeCollection#getLength
+     * @see SensorVolumeCollection#length
      */
     SensorVolumeCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);

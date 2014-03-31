@@ -74,7 +74,7 @@ defineSuite([
         context = createContext();
         frameState = createFrameState();
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, frameState);
 
         ellipsoid = Ellipsoid.WGS84;

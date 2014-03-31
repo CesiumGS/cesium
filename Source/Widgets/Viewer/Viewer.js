@@ -290,7 +290,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.ellipsoid);
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.centralBody.ellipsoid);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;
@@ -305,7 +305,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //SceneModePicker
         var sceneModePicker;
         if (!defined(options.sceneModePicker) || options.sceneModePicker !== false) {
-            sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.sceneTransitioner);
+            sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
         //BaseLayerPicker
@@ -660,17 +660,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         clock : {
             get : function() {
                 return this._cesiumWidget.clock;
-            }
-        },
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof Viewer.prototype
-         * @returns {SceneTransitioner} The scene transitioner.
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._cesiumWidget.sceneTransitioner;
             }
         },
 
