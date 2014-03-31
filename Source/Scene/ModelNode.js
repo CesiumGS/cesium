@@ -59,7 +59,7 @@ define([
          * setting individual elements of the matrix will not work.
          * </p>
          *
-         * @memberof ModelAnimationCollection
+         * @memberof ModelNode.prototype
          * @type {Matrix4}
          */
         matrix : {

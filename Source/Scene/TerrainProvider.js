@@ -174,13 +174,13 @@ define([
         }];
 
         var indexBuffers = buffers.indices.indexBuffers || {};
-        var indexBuffer = indexBuffers[context.getId()];
+        var indexBuffer = indexBuffers[context.id];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
             indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            indexBuffer.setVertexArrayDestroyable(false);
+            indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
-            indexBuffers[context.getId()] = indexBuffer;
+            indexBuffers[context.id] = indexBuffer;
             buffers.indices.indexBuffers = indexBuffers;
         } else {
             ++indexBuffer.referenceCount;

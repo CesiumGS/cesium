@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defined',
+        './defineProperties',
         './DeveloperError',
         './isArray'
     ], function(
         defined,
+        defineProperties,
         DeveloperError,
         isArray) {
     "use strict";
@@ -60,47 +62,28 @@ define([
         this.offset = offset;
     };
 
-    /**
-     * Sets the list of leap seconds used throughout Cesium.
-     *
-     * @memberof LeapSecond
-     *
-     * @param {Array} leapSeconds An array of {@link LeapSecond} objects.
-     * @exception {DeveloperErrpr} leapSeconds is required and must be an array.
-     *
-     * @see LeapSecond.setLeapSeconds
-     *
-     * @example
-     * Cesium.LeapSecond.setLeapSeconds([
-     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2453736, 43233.0, Cesium.TimeStandard.TAI), 33), // January 1, 2006 00:00:00 UTC
-     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2454832, 43234.0, Cesium.TimeStandard.TAI), 34), // January 1, 2009 00:00:00 UTC
-     *                            new Cesium.LeapSecond(new Cesium.JulianDate(2456109, 43235.0, Cesium.TimeStandard.TAI), 35)  // July 1, 2012 00:00:00 UTC
-     *                           ]);
-     */
-    LeapSecond.setLeapSeconds = function(leapSeconds) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!isArray(leapSeconds)) {
-            throw new DeveloperError("leapSeconds is required and must be an array.");
+    defineProperties(LeapSecond, {
+        /**
+         * The list of leap seconds used throughout Cesium.
+         * @memberof LeapSecond
+         * @type {Array}
+         */
+        leapSeconds: {
+            get: function() {
+                return LeapSecond._leapSeconds;
+            },
+            set: function(leapSeconds) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!isArray(leapSeconds)) {
+                    throw new DeveloperError("leapSeconds is required and must be an array.");
+                }
+                //>>includeEnd('debug');
+
+                LeapSecond._leapSeconds = leapSeconds;
+                LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
+            }
         }
-        //>>includeEnd('debug');
-
-        LeapSecond._leapSeconds = leapSeconds;
-        LeapSecond._leapSeconds.sort(LeapSecond.compareLeapSecondDate);
-    };
-
-    /**
-     * Returns a copy of the array of leap seconds used throughout Cesium. By default, this is the
-     * official list of leap seconds that was available when Cesium was released.
-     *
-     * @memberof LeapSecond
-     *
-     * @returns {Array} A list of {@link LeapSecond} objects.
-     *
-     * @see LeapSecond.setLeapSeconds
-     */
-    LeapSecond.getLeapSeconds = function() {
-        return LeapSecond._leapSeconds;
-    };
+    });
 
     /**
      * Checks whether two leap seconds are equivalent to each other.

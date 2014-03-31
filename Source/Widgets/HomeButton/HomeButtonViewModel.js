@@ -29,15 +29,15 @@ define([
         knockout) {
     "use strict";
 
-    function viewHome(scene, ellipsoid, transitioner, flightDuration) {
+    function viewHome(scene, ellipsoid, duration) {
         var mode = scene.mode;
         var controller = scene.screenSpaceCameraController;
 
         controller.ellipsoid = ellipsoid;
 
         var context = scene.context;
-        if (defined(transitioner) && mode === SceneMode.MORPHING) {
-            transitioner.completeMorph();
+        if (defined(scene) && mode === SceneMode.MORPHING) {
+            scene.completeMorph();
         }
         var flight;
         var description;
@@ -45,7 +45,7 @@ define([
         if (mode === SceneMode.SCENE2D) {
             description = {
                 destination : Extent.MAX_VALUE,
-                duration : flightDuration
+                duration : duration
             };
             flight = CameraFlightPath.createAnimationExtent(scene, description);
             scene.animations.add(flight);
@@ -53,7 +53,7 @@ define([
             var defaultCamera = new Camera(context);
             description = {
                 destination : defaultCamera.position,
-                duration : flightDuration,
+                duration : duration,
                 up : defaultCamera.up,
                 direction : defaultCamera.direction,
                 endReferenceFrame : Matrix4.IDENTITY
@@ -69,7 +69,7 @@ define([
 
             description = {
                 destination : position,
-                duration : flightDuration,
+                duration : duration,
                 up : up,
                 direction : direction
             };
@@ -85,11 +85,10 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {SceneTransitioner} [transitioner] The scene transitioner instance to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
-     * @param {Number} [flightDuration=1500] The duration of the camera flight in milliseconds
+     * @param {Number} [duration=1500] The duration of the camera flight in milliseconds
      */
-    var HomeButtonViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
+    var HomeButtonViewModel = function(scene, ellipsoid, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -97,16 +96,15 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        flightDuration = defaultValue(flightDuration, 1500);
+        duration = defaultValue(duration, 1500);
 
         this._scene = scene;
         this._ellipsoid = ellipsoid;
-        this._transitioner = transitioner;
-        this._flightDuration = flightDuration;
+        this._duration = duration;
 
         var that = this;
         this._command = createCommand(function() {
-            viewHome(that._scene, that._ellipsoid, that._transitioner, that._flightDuration);
+            viewHome(that._scene, that._ellipsoid, that._duration);
         });
 
         /**
@@ -120,21 +118,6 @@ define([
     };
 
     defineProperties(HomeButtonViewModel.prototype, {
-        /**
-         * Gets the scene transitioner being used by the scene.
-         * If a transitioner is assigned, any running morphs will be completed
-         * when the home button is pressed.  The transitioner must be using
-         * the same Scene instance as the scene property.
-         * @memberof HomeButtonViewModel.prototype
-         *
-         * @type {SceneTransitioner}
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._transitioner;
-            }
-        },
-
         /**
          * Gets the scene to control.
          * @memberof HomeButtonViewModel.prototype
@@ -178,9 +161,9 @@ define([
          *
          * @type {Number}
          */
-        flightDuration : {
+        duration : {
             get : function() {
-                return this._flightDuration;
+                return this._duration;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
@@ -189,7 +172,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                this._flightDuration = value;
+                this._duration = value;
             }
         }
     });

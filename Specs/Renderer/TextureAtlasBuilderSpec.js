@@ -79,10 +79,10 @@ defineSuite([
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = texture;
+        sp.allUniforms.u_texture.value = texture;
 
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -130,7 +130,7 @@ defineSuite([
                 });
                 expect(callbackCalled).toEqual(true);
 
-                var coordinates = atlas.getTextureCoordinates();
+                var coordinates = atlas.textureCoordinates;
                 expect(coordinates.length).toEqual(2);
                 return true;
             }

@@ -151,7 +151,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
-        this.frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        this.frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
 
         /**
          * The default amount to move the camera when an argument is not
@@ -532,7 +532,7 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#getView
+         * @see UniformState#view
          * @see czm_view
          * @see Camera#inverseViewMatrix
          */
@@ -549,7 +549,7 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#getInverseView
+         * @see UniformState#inverseView
          * @see czm_inverseView
          * @see Camera#viewMatrix
          */
@@ -1738,7 +1738,7 @@ define([
             return undefined;
         }
 
-        return ray.getPoint(intersection.start, result);
+        return Ray.getPoint(ray, intersection.start, result);
     }
 
     var pickEllipsoid2DRay = new Ray();
@@ -1760,7 +1760,7 @@ define([
     function pickMapColumbusView(camera, windowPosition, projection, result) {
         var ray = camera.getPickRay(windowPosition, pickEllipsoidCVRay);
         var scalar = -ray.origin.x / ray.direction.x;
-        ray.getPoint(scalar, result);
+        Ray.getPoint(ray, scalar, result);
 
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 

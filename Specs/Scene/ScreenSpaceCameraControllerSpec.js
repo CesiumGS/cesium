@@ -51,12 +51,8 @@ defineSuite([
         canvas = new MockCanvas();
         camera = new Camera({
             _canvas: canvas,
-            getDrawingBufferWidth: function() {
-                return canvas.clientWidth * 2;
-            },
-            getDrawingBufferHeight: function() {
-                return canvas.clientHeight * 2;
-            }
+            drawingBufferWidth : canvas.clientWidth * 2,
+            drawingBufferHeight: canvas.clientHeight * 2
         });
         controller = new ScreenSpaceCameraController(canvas, camera);
     });
@@ -392,7 +388,7 @@ defineSuite([
         expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
 
-        expect(controller._animationCollection.getAll().length).toEqual(1);
+        expect(controller._animationCollection.all.length).toEqual(1);
     });
 
     function setUpCV() {
@@ -611,7 +607,7 @@ defineSuite([
         expect(position.y).toEqual(camera.position.y);
         expect(position.z).toEqual(camera.position.z);
 
-        expect(controller._animationCollection.getAll().length).toEqual(1);
+        expect(controller._animationCollection.all.length).toEqual(1);
     });
 
     function setUp3D() {

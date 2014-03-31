@@ -151,8 +151,8 @@ define([
      */
     WebMercatorTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
         var projection = this._projection;
-        var southwest = projection.project(extent.getSouthwest());
-        var northeast = projection.project(extent.getNortheast());
+        var southwest = projection.project(Extent.getSouthwest(extent));
+        var northeast = projection.project(Extent.getNortheast(extent));
 
         if (!defined(result)) {
             return new Extent(southwest.x, southwest.y, northeast.x, northeast.y);

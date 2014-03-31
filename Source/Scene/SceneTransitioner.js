@@ -40,16 +40,7 @@ define([
     "use strict";
 
     /**
-     * Transitions the scene among available modes. The transitions can
-     * either be instantaneous or animated.
-     * @alias SceneTransitioner
-     * @constructor
-     *
-     * @param {Scene} scene The scene to be transitioned.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be transitioned.
-     *
-     * @see Scene
-     * @see SceneMode
+     * @private
      */
     var SceneTransitioner = function(scene, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -58,44 +49,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * Gets or sets the amount of time, in milliseconds, for
-         * transition animations to complete.
-         *
-         * @type {Number}
-         * @default 2000
-         */
-        this.morphDuration = 2000;
-
-        /**
-         * Gets or sets whether or not to instantly complete the
-         * transition animation on user input.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.completeMorphOnUserInput = true;
-
-        /**
-         * Gets the event fired at the beginning of a transition.
-         * @type {Event}
-         * @default Event()
-         */
-        this.transitionStart = new Event();
-
-        /**
-         * Gets the event fired at the completion of a transition.
-         * @type {Event}
-         * @default Event()
-         */
-        this.transitionComplete = new Event();
-
         this._scene = scene;
-        this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var context = scene.context;
 
         // Position camera and size frustum so the entire 2D map is visible
-        var maxRadii = this._ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.maximumRadius;
         var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
         var direction = Cartesian3.normalize(Cartesian3.negate(position));
         var up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -107,7 +66,7 @@ define([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
 
         this._camera2D = {
@@ -132,7 +91,7 @@ define([
 
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.getDrawingBufferWidth() / context.getDrawingBufferHeight();
+        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
 
         this._cameraCV = {
             position : position,
@@ -162,104 +121,13 @@ define([
         this._completeMorph = undefined;
     };
 
-
-    defineProperties(SceneTransitioner.prototype, {
-        /**
-         * Gets the ellipsoid to be transitioned.
-         * @memberof SceneTransitioner.prototype
-         * @type {Ellipsoid}
-         */
-        ellipsoid : {
-            get : function() {
-                return this._ellipsoid;
-            }
-        },
-
-        /**
-         * Gets the scene to be transitioned.
-         * @memberof SceneTransitioner.prototype
-         * @type {Scene}
-         */
-        scene : {
-            get : function() {
-                return this._scene;
-            }
-        }
-    });
-
-    /**
-     * Instantly transitions the scene to 2D.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.to2D = function() {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-
-        this._previousMode = this._scene.mode;
-        if (this._previousMode !== SceneMode.SCENE2D) {
-            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, false);
-            complete2DCallback(this);
-        }
-    };
-
-    /**
-     * Instantly transitions the scene to Columbus View.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.toColumbusView = function() {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-
-        var scene = this._scene;
-        this._previousMode = scene.mode;
-
-        if (this._previousMode !== SceneMode.COLUMBUS_VIEW) {
-            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, false);
-            completeColumbusViewCallback(this);
-        }
-    };
-
-    /**
-     * Instantly transitions the scene to 3D.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.to3D = function() {
-        if (defined(this._completeMorph)) {
-            this._completeMorph();
-        }
-
-        var scene = this._scene;
-        this._previousMode = scene.mode;
-
-        if (scene.mode !== SceneMode.SCENE3D) {
-            this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, false);
-            complete3DCallback(this);
-        }
-    };
-
-    /**
-     * Instantly completes an active transition.
-     * @memberof SceneTransitioner
-     *
-     * @exception {DeveloperError} completeMorph can only be called during a transition.
-     */
     SceneTransitioner.prototype.completeMorph = function() {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(this._completeMorph)) {
-            throw new DeveloperError('completeMorph can only be called while morphing');
+        if (defined(this._completeMorph)) {
+            this._completeMorph();
         }
-        //>>includeEnd('debug');
-
-        this._completeMorph();
     };
 
-    /**
-     * Asynchronously transitions the scene to 2D.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.morphTo2D = function() {
+    SceneTransitioner.prototype.morphTo2D = function(duration, ellipsoid) {
         if (defined(this._completeMorph)) {
             this._completeMorph();
         }
@@ -270,24 +138,20 @@ define([
         if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, complete2DCallback);
 
         if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
-            morphFromColumbusViewTo2D(this, this.morphDuration, complete2DCallback);
+            morphFromColumbusViewTo2D(this, duration, ellipsoid, complete2DCallback);
         } else {
-            morphFrom3DTo2D(this, this.morphDuration, complete2DCallback);
+            morphFrom3DTo2D(this, duration, ellipsoid, complete2DCallback);
         }
     };
 
-    /**
-     * Asynchronously transitions the scene to Columbus View.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.morphToColumbusView = function() {
+    SceneTransitioner.prototype.morphToColumbusView = function(duration, ellipsoid) {
         if (defined(this._completeMorph)) {
             this._completeMorph();
         }
@@ -298,24 +162,20 @@ define([
         if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, completeColumbusViewCallback);
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DToColumbusView(this, this.morphDuration, completeColumbusViewCallback);
+            morphFrom2DToColumbusView(this, duration, ellipsoid, completeColumbusViewCallback);
         } else {
-            morphFrom3DToColumbusView(this, this.morphDuration, this._cameraCV, completeColumbusViewCallback);
+            morphFrom3DToColumbusView(this, duration, this._cameraCV, completeColumbusViewCallback);
         }
     };
 
-    /**
-     * Asynchronously transitions the scene to 3D.
-     * @memberof SceneTransitioner
-     */
-    SceneTransitioner.prototype.morphTo3D = function() {
+    SceneTransitioner.prototype.morphTo3D = function(duration, ellipsoid) {
         if (defined(this._completeMorph)) {
             this._completeMorph();
         }
@@ -326,16 +186,16 @@ define([
         if (this._previousMode === SceneMode.SCENE3D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.transitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
+        this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, complete3DCallback);
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DTo3D(this, this.morphDuration, complete3DCallback);
+            morphFrom2DTo3D(this, duration, ellipsoid, complete3DCallback);
         } else {
-            morphFromColumbusViewTo3D(this, this.morphDuration, complete3DCallback);
+            morphFromColumbusViewTo3D(this, duration, ellipsoid, complete3DCallback);
         }
     };
 
@@ -369,7 +229,7 @@ define([
     };
 
     function createMorphHandler(transitioner, completeMorphFunction) {
-        if (transitioner.completeMorphOnUserInput) {
+        if (transitioner._scene.completeMorphOnUserInput) {
             transitioner._morphHandler = new ScreenSpaceEventHandler(transitioner._scene.canvas);
 
             var completeMorph = function() {
@@ -394,7 +254,7 @@ define([
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
-    function morphFromColumbusViewTo3D(transitioner, duration, onComplete) {
+    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, onComplete) {
         var scene = transitioner._scene;
 
         var camera = scene.camera;
@@ -431,15 +291,15 @@ define([
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, onComplete);
     }
 
-    function morphFrom2DTo3D(transitioner, duration, onComplete) {
+    function morphFrom2DTo3D(transitioner, duration, ellipsoid, onComplete) {
         duration = duration * 0.5;
 
         var camera = transitioner._scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
 
-        morphOrthographicToPerspective(transitioner, duration, function() {
+        morphOrthographicToPerspective(transitioner, duration, ellipsoid, function() {
             camera.frustum = transitioner._cameraCV.frustum.clone();
-            morphFromColumbusViewTo3D(transitioner, duration, onComplete);
+            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, onComplete);
         });
     }
 
@@ -483,12 +343,11 @@ define([
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFromColumbusViewTo2D(transitioner, duration, onComplete) {
+    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
-
-        var maxRadii = transitioner._ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.maximumRadius;
 
         var startPos = Cartesian3.clone(camera.position);
         var startDir = Cartesian3.clone(camera.direction);
@@ -527,10 +386,10 @@ define([
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFrom3DTo2D(transitioner, duration, onComplete) {
+    function morphFrom3DTo2D(transitioner, duration, ellipsoid, onComplete) {
         duration = duration * 0.5;
 
-        var maxRadii = transitioner._ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(transitioner._camera3D.frustum.fovy * 0.5);
         var tanTheta = transitioner._camera3D.frustum.aspectRatio * tanPhi;
@@ -547,10 +406,10 @@ define([
         morphFrom3DToColumbusView(transitioner, duration, camera3DTo2D, complete);
     }
 
-    function morphOrthographicToPerspective(transitioner, duration, onComplete) {
+    function morphOrthographicToPerspective(transitioner, duration, ellipsoid, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        var maxRadii = transitioner._ellipsoid.maximumRadius;
+        var maxRadii = ellipsoid.maximumRadius;
 
         var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
@@ -615,7 +474,7 @@ define([
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFrom2DToColumbusView(transitioner, duration, onComplete) {
+    function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, onComplete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
@@ -656,7 +515,7 @@ define([
             transitioner._currentAnimations.push(animation);
         };
 
-        morphOrthographicToPerspective(transitioner, duration, completeFrustumChange);
+        morphOrthographicToPerspective(transitioner, duration, ellipsoid, completeFrustumChange);
     }
 
     function morphFrom3DToColumbusView(transitioner, duration, endCamera, onComplete) {
@@ -722,7 +581,7 @@ define([
         var scene = transitioner._scene;
 
         var context = scene.context;
-        var ratio = context.getDrawingBufferHeight() / context.getDrawingBufferWidth();
+        var ratio = context.drawingBufferHeight / context.drawingBufferWidth;
 
         var frustum = transitioner._camera2D.frustum;
         frustum.top = frustum.right * ratio;
@@ -771,7 +630,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
 
     function complete2DCallback(transitioner) {
@@ -792,7 +651,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
 
     function completeColumbusViewCallback(transitioner) {
@@ -816,7 +675,7 @@ define([
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
-        transitioner.transitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
+        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }
 
     return SceneTransitioner;
