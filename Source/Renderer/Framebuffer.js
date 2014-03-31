@@ -17,7 +17,7 @@ define([
 
     function attachTexture(framebuffer, attachment, texture) {
         var gl = framebuffer._gl;
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._getTarget(), texture._getTexture(), 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._target, texture._texture, 0);
     }
 
     function attachRenderbuffer(framebuffer, attachment, renderbuffer) {

@@ -678,33 +678,33 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws when the index to setColorTexture is out of bounds', function(){
+    it('throws when the index to getColorTexture is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorTexture();
+            framebuffer.getColorTexture();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(-1);
+            framebuffer.getColorTexture(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(context.maximumColorAttachments + 1);
+            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 
-    it('throws when the index to setColorRenderbuffer is out of bounds', function(){
+    it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorRenderbuffer();
+            framebuffer.getColorRenderbuffer();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(-1);
+            framebuffer.getColorRenderbuffer(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(context.maximumColorAttachments + 1);
+            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 

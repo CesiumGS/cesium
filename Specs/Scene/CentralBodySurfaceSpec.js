@@ -512,7 +512,7 @@ defineSuite([
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
-                surface.setTerrainProvider(new EllipsoidTerrainProvider());
+                surface.terrainProvider = new EllipsoidTerrainProvider();
                 expect(replacementQueue.count).toBe(0);
             });
         });
@@ -533,7 +533,7 @@ defineSuite([
                 levelZero0 = levelZeroTiles[0];
                 levelZero1 = levelZeroTiles[1];
 
-                surface.setTerrainProvider(new EllipsoidTerrainProvider());
+                surface.terrainProvider = new EllipsoidTerrainProvider();
             });
 
             updateUntilDone(cb);
@@ -547,7 +547,7 @@ defineSuite([
 
         it('does nothing if the new provider is the same as the old', function() {
             var surface = cb._surface;
-            var provider = surface.getTerrainProvider();
+            var provider = surface.terrainProvider;
 
             updateUntilDone(cb);
 
@@ -562,7 +562,7 @@ defineSuite([
                 levelZero0 = levelZeroTiles[0];
                 levelZero1 = levelZeroTiles[1];
 
-                surface.setTerrainProvider(provider);
+                surface.terrainProvider = provider;
             });
 
             updateUntilDone(cb);
