@@ -144,7 +144,7 @@ defineSuite([
         expect(intervals.empty).toEqual(true);
     });
 
-    it('getLength returns the correct interval length when adding intervals with different data', function() {
+    it('length returns the correct interval length when adding intervals with different data', function() {
         var intervals = new TimeIntervalCollection();
         expect(intervals.length).toEqual(0);
 
@@ -158,7 +158,7 @@ defineSuite([
         expect(intervals.length).toEqual(0);
     });
 
-    it('getLength returns the correct length after two intervals with the same data are merged.', function() {
+    it('length returns the correct length after two intervals with the same data are merged.', function() {
         var intervals = new TimeIntervalCollection();
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, 1));

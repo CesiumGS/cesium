@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Intersections2D',
         '../Core/Math',
@@ -15,6 +16,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Intersections2D,
         CesiumMath,
@@ -177,6 +179,21 @@ define([
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
     };
+
+    defineProperties(QuantizedMeshTerrainData.prototype, {
+        /**
+         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+         * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Uint8Array|Image|Canvas}
+         */
+        waterMask : {
+            get : function() {
+                return this._waterMask;
+            }
+        }
+    });
 
     var arrayScratch = [];
 
@@ -460,19 +477,6 @@ define([
         }
 
         return (this._childTileMask & (1 << bitNumber)) !== 0;
-    };
-
-    /**
-     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
-     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
-     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     *
-     *  @memberof QuantizedMeshTerrainData
-     *
-     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
-     */
-    QuantizedMeshTerrainData.prototype.getWaterMask = function() {
-        return this._waterMask;
     };
 
     /**
