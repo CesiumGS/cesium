@@ -105,8 +105,8 @@ define([
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
     SunPostProcess.prototype.update = function(context) {
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var that = this;
 
@@ -234,7 +234,7 @@ define([
                 height : height
             })];
 
-            if (context.getDepthTexture()) {
+            if (context.depthTexture) {
                 fbo = this._fbo = context.createFramebuffer({
                     colorTextures :colorTextures,
                     depthTexture : context.createTexture2D({
@@ -318,11 +318,11 @@ define([
             this._fullScreenCommand.renderState = upSampleRenderState;
         }
 
-        var us = context.getUniformState();
-        var sunPosition = us.getSunPositionWC();
-        var viewMatrix = us.getView();
-        var viewProjectionMatrix = us.getViewProjection();
-        var projectionMatrix = us.getProjection();
+        var us = context.uniformState;
+        var sunPosition = us.sunPositionWC;
+        var viewMatrix = us.view;
+        var viewProjectionMatrix = us.viewProjection;
+        var projectionMatrix = us.projection;
 
         // create up sampled render state
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);

@@ -57,7 +57,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -82,7 +82,7 @@ defineSuite([
             show : false
         });
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
         us.update(context, frameState);
@@ -103,7 +103,7 @@ defineSuite([
             }
         });
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
         frameState.mode = SceneMode.SCENE2D;
@@ -125,7 +125,7 @@ defineSuite([
             }
         });
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
         frameState.passes.render = false;

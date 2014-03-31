@@ -16,6 +16,7 @@ Beta Releases
            scene.camera.viewExtent(extent);
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Removed `TexturePool`.
+  * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
   * Replaced getter/setter functions with properties:
     * `ImageryLayer`
       * `getImageryProvider` -> `imageryProvider`
@@ -75,6 +76,18 @@ Beta Releases
       * `getEnd` -> `end`
       * `getStartHeading` -> `startHeading`
       * `getEndHeading` -> `endHeading`
+    * `AnimationCollection`
+      * `getAll` -> `all`
+    * `CentralBodySurface`
+      * `getTerrainProvider`, `setTerrainProvider` -> `terrainProvider`
+    * `Credit`
+      * `getText` -> `text`
+      * `getImageUrl` -> `imageUrl`
+      * `getLink` -> `link`
+    * `TerrainData`, `HightmapTerrainData`, `QuanitzedMeshTerrainData`
+      * `getWaterMask` -> `waterMask`
+    * `Tile`
+      * `getChildren` -> `children`
     * `Buffer`
       * `getSizeInBytes` -> `sizeInBytes`
       * `getUsage` -> `usage`

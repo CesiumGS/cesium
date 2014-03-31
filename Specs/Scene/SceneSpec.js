@@ -195,7 +195,7 @@ defineSuite([
         var c = new DrawCommand();
         c.execute = function() {};
         c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene.context.getShaderCache().getShaderProgram(
+        c.shaderProgram = scene.context.shaderCache.getShaderProgram(
             'void main() { gl_Position = vec4(1.0); }',
             'void main() { gl_FragColor = vec4(1.0); }');
 
@@ -347,7 +347,7 @@ defineSuite([
 
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             var framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -402,7 +402,7 @@ defineSuite([
     });
 
     it('renders with multipass OIT if MRT is available', function() {
-        if (scene.context.getDrawBuffers()) {
+        if (scene.context.drawBuffers) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = true;
@@ -433,7 +433,7 @@ defineSuite([
     });
 
     it('renders with alpha blending if floating point textures are available', function() {
-        if (scene.context.getFloatingPointTexture()) {
+        if (scene.context.floatingPointTexture) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = false;

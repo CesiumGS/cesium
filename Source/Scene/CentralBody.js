@@ -392,10 +392,10 @@ define([
         }
         var terrainMaxExtent = terrainProvider.tilingScheme.extent;
 
-        var viewProjMatrix = context.getUniformState().getViewProjection();
+        var viewProjMatrix = context.uniformState.viewProjection;
         var viewport = viewportScratch;
-        viewport.width = context.getDrawingBufferWidth();
-        viewport.height = context.getDrawingBufferHeight();
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, vpTransformScratch);
         var latitudeExtension = 0.05;
 
@@ -546,8 +546,8 @@ define([
             return;
         }
 
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         if (width === 0 || height === 0) {
             return;
@@ -637,7 +637,7 @@ define([
             this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(depthQuad);
         }
 
-        var shaderCache = context.getShaderCache();
+        var shaderCache = context.shaderCache;
 
         if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
@@ -775,7 +775,7 @@ define([
 
             this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
             this._surface._tileCacheSize = this.tileCacheSize;
-            this._surface.setTerrainProvider(this.terrainProvider);
+            this._surface.terrainProvider = this.terrainProvider;
             this._surface.update(context,
                     frameState,
                     commandList,
