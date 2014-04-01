@@ -484,7 +484,7 @@ define([
         //
         // Here, we validate that the VAO has all attributes required
         // to match the shader program.
-        var shaderAttributes = shaderProgram.getVertexAttributes();
+        var shaderAttributes = shaderProgram.vertexAttributes;
 
         //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {
@@ -612,7 +612,7 @@ define([
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.ellipsoid,
                         isGeographic : projection instanceof GeographicProjection,
-                        elementIndexUintSupported : context.getElementIndexUint(),
+                        elementIndexUintSupported : context.elementIndexUint,
                         allow3DOnly : this.allow3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
@@ -671,7 +671,7 @@ define([
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
-                    elementIndexUintSupported : context.getElementIndexUint(),
+                    elementIndexUintSupported : context.elementIndexUint,
                     allow3DOnly : this.allow3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
@@ -764,9 +764,10 @@ define([
 
         if (createRS) {
             var renderState = appearance.getRenderState();
+            var rs;
 
             if (twoPasses) {
-                var rs = clone(renderState, false);
+                rs = clone(renderState, false);
                 rs.cull = {
                     enabled : true,
                     face : CullFace.BACK
@@ -781,23 +782,37 @@ define([
             }
 
             if (allowPicking) {
-                // Only need backface pass for picking when two-pass rendering is used.
-                this._pickRS = this._backFaceRS;
+                if (twoPasses) {
+                    rs = clone(renderState, false);
+                    rs.cull = {
+                        enabled : false
+                    };
+                    this._pickRS = context.createRenderState(rs);
+                } else {
+                    this._pickRS = this._frontFaceRS;
+                }
             } else {
-                // Still occlude if not pickable.
-                var pickRS = clone(renderState, false);
-                pickRS.colorMask = {
+                rs = clone(renderState, false);
+                rs.colorMask = {
                     red : false,
                     green : false,
                     blue : false,
                     alpha : false
                 };
-                this._pickRS = context.createRenderState(pickRS);
+
+                if (twoPasses) {
+                    rs.cull = {
+                        enabled : false
+                    };
+                    this._pickRS = context.createRenderState(rs);
+                } else {
+                    this._pickRS = context.createRenderState(rs);
+                }
             }
         }
 
         if (createSP) {
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
@@ -826,8 +841,8 @@ define([
             pickCommands.length = this._va.length;
 
             length = colorCommands.length;
-            var vaIndex = 0;
             var m = 0;
+            var vaIndex = 0;
             for (i = 0; i < length; ++i) {
                 if (twoPasses) {
                     colorCommand = colorCommands[i];

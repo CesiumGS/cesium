@@ -82,7 +82,7 @@ define([
         //Even though julianDate is in UTC, we'll treat it as TAI and
         //search the leap second table for it.
         binarySearchScratchLeapSecond.julianDate = julianDate;
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
 
         if (index < 0) {
@@ -111,7 +111,7 @@ define([
 
     function convertTaiToUtc(julianDate, result) {
         binarySearchScratchLeapSecond.julianDate = julianDate;
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;
@@ -969,7 +969,7 @@ define([
      */
     JulianDate.prototype.getTaiMinusUtc = function() {
         binarySearchScratchLeapSecond.julianDate = this;
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
             index = ~index;

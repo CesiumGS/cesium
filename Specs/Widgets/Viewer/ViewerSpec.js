@@ -94,7 +94,6 @@ defineSuite([
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
         expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
-        expect(viewer.sceneTransitioner).toBe(viewer.cesiumWidget.sceneTransitioner);
         expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
@@ -314,6 +313,7 @@ defineSuite([
         viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
+        viewer.scene.completeMorph();
         expect(viewer.scene.mode).toBe(SceneMode.SCENE2D);
     });
 
@@ -322,7 +322,7 @@ defineSuite([
             selectedImageryProviderViewModel : testProviderViewModel
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
     });
 
@@ -332,7 +332,7 @@ defineSuite([
             imageryProvider : testProvider
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -342,7 +342,7 @@ defineSuite([
             imageryProviderViewModels : models
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });

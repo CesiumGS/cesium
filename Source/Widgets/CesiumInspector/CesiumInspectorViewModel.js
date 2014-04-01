@@ -4,6 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Extent',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -14,6 +15,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        Extent,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -413,7 +415,7 @@ define([
         var selectTile = function(e) {
             var selectedTile;
             var ellipsoid = centralBody.ellipsoid;
-            var cartesian = that._scene.camera.controller.pickEllipsoid({
+            var cartesian = that._scene.camera.pickEllipsoid({
                 x : e.clientX,
                 y : e.clientY
             }, ellipsoid);
@@ -429,7 +431,7 @@ define([
 
                     for (var tileIndex = 0; !selectedTile && tileIndex < tilesRenderedByTextureCount.length; ++tileIndex) {
                         var tile = tilesRenderedByTextureCount[tileIndex];
-                        if (tile.extent.contains(cartographic)) {
+                        if (Extent.contains(tile.extent, cartographic)) {
                             selectedTile = tile;
                         }
                     }
@@ -683,7 +685,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[0];
+                    that.tile = that.tile.children[0];
                 });
             }
         },
@@ -698,7 +700,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[1];
+                    that.tile = that.tile.children[1];
                 });
             }
         },
@@ -713,7 +715,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[2];
+                    that.tile = that.tile.children[2];
                 });
             }
         },
@@ -728,7 +730,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[3];
+                    that.tile = that.tile.children[3];
                 });
             }
         },

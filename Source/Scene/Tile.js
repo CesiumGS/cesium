@@ -5,7 +5,9 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Extent',
         './ImageryState',
         './TerrainState',
         './TileState',
@@ -21,7 +23,9 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         DeveloperError,
+        Extent,
         ImageryState,
         TerrainState,
         TileState,
@@ -69,6 +73,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._children = undefined;
+
         /**
          * The tiling scheme used to tile the surface.
          * @type {TilingScheme}
@@ -98,13 +104,6 @@ define([
          * @type {Tile}
          */
         this.parent = description.parent;
-
-        /**
-         * The children of this tile in a tiling scheme.
-         * @type {Array}
-         * @default undefined
-         */
-        this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -225,48 +224,50 @@ define([
         this.upsampledTerrain = undefined;
     };
 
-    /**
-     * Returns an array of tiles that would be at the next level of the tile tree.
-     *
-     * @memberof Tile
-     *
-     * @returns {Array} The list of child tiles.
-     */
-    Tile.prototype.getChildren = function() {
-        if (!defined(this.children)) {
-            var tilingScheme = this.tilingScheme;
-            var level = this.level + 1;
-            var x = this.x * 2;
-            var y = this.y * 2;
-            this.children = [new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y + 1,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y + 1,
-                level : level,
-                parent : this
-            })];
-        }
+    defineProperties(Tile.prototype, {
+        /**
+         * An array of tiles that would be at the next level of the tile tree.
+         * @memberof Tile.prototype
+         * @type {Array}
+         */
+        children : {
+            get : function() {
+                if (!defined(this._children)) {
+                    var tilingScheme = this.tilingScheme;
+                    var level = this.level + 1;
+                    var x = this.x * 2;
+                    var y = this.y * 2;
+                    this._children = [new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    })];
+                }
 
-        return this.children;
-    };
+                return this._children;
+            }
+        }
+    });
 
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
@@ -299,11 +300,11 @@ define([
         }
         this.imagery.length = 0;
 
-        if (defined(this.children)) {
-            for (i = 0, len = this.children.length; i < len; ++i) {
-                this.children[i].freeResources();
+        if (defined(this._children)) {
+            for (i = 0, len = this._children.length; i < len; ++i) {
+                this._children[i].freeResources();
             }
-            this.children = undefined;
+            this._children = undefined;
         }
 
         this.freeVertexArray();
@@ -313,7 +314,7 @@ define([
         var indexBuffer;
 
         if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.getIndexBuffer();
+            indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
@@ -327,7 +328,7 @@ define([
         }
 
         if (typeof this.wireframeVertexArray !== 'undefined') {
-            indexBuffer = this.wireframeVertexArray.getIndexBuffer();
+            indexBuffer = this.wireframeVertexArray.indexBuffer;
 
             this.wireframeVertexArray.destroy();
             this.wireframeVertexArray = undefined;
@@ -367,7 +368,7 @@ define([
 
             if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
                 var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.getImageryProvider().ready) {
+                if (imageryLayer.imageryProvider.ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
                     tileImagery.freeResources();
@@ -427,8 +428,8 @@ define([
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
 
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
+        ellipsoid.cartographicToCartesian(Extent.getSouthwest(extent), tile.southwestCornerCartesian);
+        ellipsoid.cartographicToCartesian(Extent.getNortheast(extent), tile.northeastCornerCartesian);
 
         // The middle latitude on the western edge.
         cartographicScratch.longitude = extent.west;
@@ -449,13 +450,13 @@ define([
         Cartesian3.normalize(eastNormal, tile.eastNormal);
 
         // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getSoutheast(), cartesian3Scratch2);
+        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getSoutheast(extent), cartesian3Scratch2);
         var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
         var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
         Cartesian3.normalize(southNormal, tile.southNormal);
 
         // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(extent.getNorthwest(), cartesian3Scratch2);
+        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getNorthwest(extent), cartesian3Scratch2);
         var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
         Cartesian3.normalize(northNormal, tile.northNormal);
     }
@@ -476,7 +477,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    var waterMask = tile.terrainData.getWaterMask();
+                    var waterMask = tile.terrainData.waterMask;
                     if (defined(waterMask)) {
                         if (defined(tile.waterMaskTexture)) {
                             --tile.waterMaskTexture.referenceCount;
@@ -727,7 +728,7 @@ define([
                 });
             }
 
-            result.setSampler(waterMaskData.sampler);
+            result.sampler = waterMaskData.sampler;
         }
 
         ++result.referenceCount;

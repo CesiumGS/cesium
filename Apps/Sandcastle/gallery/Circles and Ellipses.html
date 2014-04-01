@@ -43,11 +43,10 @@ require(['Cesium'], function(Cesium) {
         var polylines = primitives.add(new Cesium.PolylineCollection());
         var outline = polylines.add();
         Sandcastle.declare(outline); // For highlighting on mouseover in Sandcastle.
-        outline.setPositions(
-            Cesium.Shapes.computeCircleBoundary(
+        outline.positions = Cesium.Shapes.computeCircleBoundary(
                 ellipsoid,
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-82.0, 37.0)),
-                300000.0));
+                300000.0);
 
         // Apply a material to a filled circle
         var circle2 = primitives.add(new Cesium.Polygon({

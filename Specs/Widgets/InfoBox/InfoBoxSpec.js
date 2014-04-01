@@ -2,13 +2,11 @@
 defineSuite([
          'Widgets/InfoBox/InfoBox',
          'Core/Ellipsoid',
-         'Scene/SceneTransitioner',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          InfoBox,
          Ellipsoid,
-         SceneTransitioner,
          createScene,
          destroyScene) {
     "use strict";

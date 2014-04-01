@@ -6,9 +6,11 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
+        '../Core/Extent',
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
@@ -32,9 +34,11 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
+        Extent,
         FeatureDetection,
         getTimestamp,
         Intersect,
@@ -125,45 +129,48 @@ define([
         };
     };
 
+    defineProperties(CentralBodySurface.prototype, {
+        terrainProvider : {
+            get : function() {
+                return this._terrainProvider;
+            },
+            set : function(terrainProvider) {
+                if (this._terrainProvider === terrainProvider) {
+                    return;
+                }
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(terrainProvider)) {
+                    throw new DeveloperError('terrainProvider is required.');
+                }
+                //>>includeEnd('debug');
+
+                this._terrainProvider = terrainProvider;
+
+                // Clear the replacement queue
+                var replacementQueue = this._tileReplacementQueue;
+                replacementQueue.head = undefined;
+                replacementQueue.tail = undefined;
+                replacementQueue.count = 0;
+
+                // Free and recreate the level zero tiles.
+                var levelZeroTiles = this._levelZeroTiles;
+                if (defined(levelZeroTiles)) {
+                    for (var i = 0; i < levelZeroTiles.length; ++i) {
+                        levelZeroTiles[i].freeResources();
+                    }
+                }
+
+                this._levelZeroTiles = undefined;
+            }
+        }
+    });
+
     CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
-    };
-
-    CentralBodySurface.prototype.getTerrainProvider = function() {
-        return this._terrainProvider;
-    };
-
-    CentralBodySurface.prototype.setTerrainProvider = function(terrainProvider) {
-        if (this._terrainProvider === terrainProvider) {
-            return;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._terrainProvider = terrainProvider;
-
-        // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
-        replacementQueue.head = undefined;
-        replacementQueue.tail = undefined;
-        replacementQueue.count = 0;
-
-        // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
-        if (defined(levelZeroTiles)) {
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].freeResources();
-            }
-        }
-
-        this._levelZeroTiles = undefined;
     };
 
     CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
@@ -462,7 +469,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        var height = context.getDrawingBufferHeight();
+        var height = context.drawingBufferHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -475,8 +482,8 @@ define([
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
@@ -555,11 +562,11 @@ define([
         var maximumHeight = tile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.scene2D.projection.project(tile.extent.getSouthwest(), southwestCornerScratch);
+            southwestCornerCartesian = frameState.scene2D.projection.project(Extent.getSouthwest(tile.extent), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.scene2D.projection.project(tile.extent.getNortheast(), northeastCornerScratch);
+            northeastCornerCartesian = frameState.scene2D.projection.project(Extent.getNortheast(tile.extent), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
@@ -610,7 +617,7 @@ define([
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
         var allRenderable = true;
 
-        var children = tile.getChildren();
+        var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
             surface._tileReplacementQueue.markTileRendered(child);
@@ -672,7 +679,7 @@ define([
             }
             for (var j = 0; j < tileSet.length; ++j) {
                 tile = tileSet[j];
-                if (tile.extent.contains(cartographicPick)) {
+                if (Extent.contains(tile.extent, cartographicPick)) {
                     result = tile;
                     break;
                 }
@@ -796,7 +803,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.getMaximumTextureImageUnits();
+        var maxTextures = context.maximumTextureImageUnits;
 
         var tileCommands = surface._tileCommands;
         var tileCommandUniformMaps = surface._tileCommandUniformMaps;
@@ -827,8 +834,8 @@ define([
                 var oneOverMercatorHeight = 0.0;
 
                 if (frameState.mode !== SceneMode.SCENE3D) {
-                    var southwest = projection.project(tile.extent.getSouthwest(), southwestScratch);
-                    var northeast = projection.project(tile.extent.getNortheast(), northeastScratch);
+                    var southwest = projection.project(Extent.getSouthwest(tile.extent), southwestScratch);
+                    var northeast = projection.project(Extent.getNortheast(tile.extent), northeastScratch);
 
                     tileExtent.x = southwest.x;
                     tileExtent.y = southwest.y;
@@ -1067,8 +1074,8 @@ define([
         for ( var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                if (layer.getImageryProvider().ready) {
-                    credit = layer.getImageryProvider().credit;
+                if (layer.imageryProvider.ready) {
+                    credit = layer.imageryProvider.credit;
                     if (defined(credit)) {
                         creditDisplay.addCredit(credit);
                     }

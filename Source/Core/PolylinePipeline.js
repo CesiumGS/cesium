@@ -62,7 +62,7 @@ define([
         var end = ellipsoid.cartesianToCartographic(last, carto2);
 
         ellipsoidGeodesic.setEndPoints(start, end);
-        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.getSurfaceDistance() / (numPoints);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / (numPoints);
 
         var index = 0;
         start.height = 0;
@@ -114,7 +114,7 @@ define([
      * @example
      * var polylines = new Cesium.PolylineCollection();
      * var polyline = polylines.add(...);
-     * var positions = polyline.getPositions();
+     * var positions = polyline.positions;
      * var modelMatrix = polylines.modelMatrix;
      * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */

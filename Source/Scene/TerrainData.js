@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
+        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -18,6 +20,19 @@ define([
     var TerrainData = function TerrainData() {
         DeveloperError.throwInstantiationError();
     };
+
+    defineProperties(TerrainData.prototype, {
+        /**
+         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+         * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+         * @memberof TerrainData.prototype
+         * @type {Uint8Array|Image|Canvas}
+         */
+        waterMask : {
+            get : DeveloperError.throwInstantiationError
+        }
+    });
 
     /**
      * Computes the terrain height at a specified longitude and latitude.
@@ -48,17 +63,6 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     TerrainData.prototype.isChildAvailable = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
-     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
-     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     * @memberof TerrainData
-     * @function
-     *
-     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
-     */
-    TerrainData.prototype.getWaterMask = DeveloperError.throwInstantiationError;
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.

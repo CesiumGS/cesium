@@ -21,7 +21,6 @@ define([
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
-        '../../Scene/SceneTransitioner',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
         '../../Scene/Sun',
@@ -48,7 +47,6 @@ define([
         Moon,
         Scene,
         SceneMode,
-        SceneTransitioner,
         SkyAtmosphere,
         SkyBox,
         Sun,
@@ -179,7 +177,7 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;
@@ -232,12 +230,11 @@ define([
             this._container = container;
             this._canvas = canvas;
             this._zoomDetector = zoomDetector;
-            this._canvasWidth = canvas.width;
-            this._canvasHeight = canvas.height;
+            this._canvasWidth = 0;
+            this._canvasHeight = 0;
             this._scene = scene;
             this._centralBody = centralBody;
             this._clock = defaultValue(options.clock, new Clock());
-            this._transitioner = new SceneTransitioner(scene, ellipsoid);
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
             this._renderLoopRunning = false;
@@ -248,10 +245,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._transitioner.to2D();
+                    this._scene.morphTo2D();
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._transitioner.toColumbusView();
+                    this._scene.morphToColumbusView();
                 }
             }
 
@@ -274,18 +271,6 @@ define([
         container : {
             get : function() {
                 return this._container;
-            }
-        },
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {SceneTransitioner}
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._transitioner;
             }
         },
 

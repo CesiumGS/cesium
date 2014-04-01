@@ -10,8 +10,6 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/PrimitiveType',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/Color',
         '../Core/BoundingRectangle',
         '../Core/Matrix4',
@@ -24,7 +22,6 @@ define([
         './SceneMode',
         '../Shaders/SunVS',
         '../Shaders/SunFS',
-        '../Shaders/ViewportQuadVS',
         '../Shaders/SunTextureFS'
     ], function(
         BoundingSphere,
@@ -37,8 +34,6 @@ define([
         destroyObject,
         CesiumMath,
         PrimitiveType,
-        Geometry,
-        GeometryAttribute,
         Color,
         BoundingRectangle,
         Matrix4,
@@ -51,7 +46,6 @@ define([
         SceneMode,
         SunVS,
         SunFS,
-        ViewportQuadVS,
         SunTextureFS) {
     "use strict";
 
@@ -120,56 +114,6 @@ define([
         }
     });
 
-    var viewportAttributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
-    function getVertexArray(context) {
-        // Per-context cache for viewport quads
-        var vertexArray = context.cache.viewportQuad_vertexArray;
-
-        if (defined(vertexArray)) {
-            return vertexArray;
-        }
-
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                       -1.0, -1.0,
-                        1.0, -1.0,
-                        1.0,  1.0,
-                       -1.0,  1.0
-                    ]
-                }),
-
-                textureCoordinates : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        vertexArray = context.createVertexArrayFromGeometry({
-            geometry : geometry,
-            attributeLocations : viewportAttributeLocations,
-            bufferUsage : BufferUsage.STATIC_DRAW
-        });
-
-        context.cache.viewportQuad_vertexArray = vertexArray;
-        return vertexArray;
-    }
-
     var scratchPositionWC = new Cartesian2();
     var scratchLimbWC = new Cartesian2();
     var scratchPositionEC = new Cartesian4();
@@ -192,8 +136,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -222,13 +166,7 @@ define([
             clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
             clearCommand.framebuffer = fbo;
 
-            var drawCommand = new DrawCommand();
-            drawCommand.owner = this;
-            drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-            drawCommand.vertexArray = getVertexArray(context);
-            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeLocations);
-            drawCommand.framebuffer = fbo;
-            drawCommand.renderState = context.createRenderState({
+            var rs = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
@@ -236,7 +174,7 @@ define([
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
             var that = this;
-            drawCommand.uniformMap = {
+            var uniformMap = {
                 u_glowLengthTS : function() {
                     return that._glowLengthTS;
                 },
@@ -244,6 +182,13 @@ define([
                     return that._radiusTS;
                 }
             };
+
+            var drawCommand = context.createViewportQuadCommand(SunTextureFS, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                framebuffer : fbo,
+                owner : this
+            });
 
             clearCommand.execute(context);
             drawCommand.execute(context);
@@ -283,7 +228,7 @@ define([
             command.vertexArray = context.createVertexArray(attributes);
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeLocations);
+            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -291,8 +236,8 @@ define([
             command.boundingVolume = new BoundingSphere();
         }
 
-        var sunPosition = context.getUniformState().getSunPositionWC();
-        var sunPositionCV = context.getUniformState().getSunPositionColumbusView();
+        var sunPosition = context.uniformState.sunPositionWC;
+        var sunPositionCV = context.uniformState.sunPositionColumbusView;
 
         var boundingVolume = this._boundingVolume;
         var boundingVolume2D = this._boundingVolume2D;
@@ -314,7 +259,7 @@ define([
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
         var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
-        var projMatrix = context.getUniformState().getProjection();
+        var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;
         positionEC.x = 0;

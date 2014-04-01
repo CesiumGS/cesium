@@ -38,8 +38,7 @@
     "use strict";
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
-    var transitioner = widget.sceneTransitioner;
-
+    var scene = widget.scene;
     // Create toolbar template
     $('#toolbar').html(
         '<span id="mode3D" class="aButton">3D globe</span> ' +
@@ -60,15 +59,15 @@
     // 3D is the default view
     $('#mode3D').button("option", { icons: { primary: "ui-icon-check" }}
         ).click(function () {
-            transitioner.morphTo3D();
+            scene.morphTo3D();
         });
 
     $('#modeColumbus').click(function () {
-        transitioner.morphToColumbusView();
+        scene.morphToColumbusView();
     });
 
     $('#mode2D').click(function () {
-        transitioner.morphTo2D();
+        scene.morphTo2D();
     });
 
     // Just for fun

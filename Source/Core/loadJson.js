@@ -34,8 +34,8 @@ define([
      *
      * @example
      * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
-     *     //Do something with the JSON object
-     * }, function() {
+     *     // Do something with the JSON object
+     * }, function(error) {
      *     // an error occurred
      * });
      *

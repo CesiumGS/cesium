@@ -83,7 +83,7 @@ defineSuite([
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(camera));
     });
 
@@ -236,7 +236,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
         camera.up = Cartesian3.cross(camera.right, camera.direction);
 
-        occluder.setCameraPosition(camera.position);
+        occluder.cameraPosition = camera.position;
 
         numRendered = render(context, frameState, primitives);
         expect(numRendered).toEqual(0);
@@ -282,12 +282,10 @@ defineSuite([
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
+        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree, -degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
-                             ]);
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))];
         polygon.asynchronous = false;
         polygon.material.translucent = false;
         return polygon;
@@ -371,10 +369,10 @@ defineSuite([
         var atlas = context.createTextureAtlas({images : [greenImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;

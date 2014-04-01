@@ -93,9 +93,9 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 0
             });
 
-            b.setPosition(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 300000.0)));
-            b.setScale(3.0);
-            b.setColor(new Cesium.Color(1.0, 1.0, 1.0, 0.25));
+            b.position = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 300000.0));
+            b.scale = 3.0;
+            b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.25);
 
             scene.primitives.add(billboards);
         };
