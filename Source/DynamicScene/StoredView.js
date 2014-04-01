@@ -23,9 +23,7 @@ define(['../Core/Cartesian3',
     var viewIndex = 0;
 
     /**
-     * StoredView instances are the primary data store for processed data.
-     * They are used primarily by the visualizers to create and maintain graphic
-     * primitives that represent the StoredView's properties at a specific time.
+     * StoredView instances store the camera settings for a view of interest.
      * @alias StoredView
      * @constructor
      *

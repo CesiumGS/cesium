@@ -1,4 +1,5 @@
-.cesium-cameraControl-dropDown {
+.cesium-cameraControl-dropDown,
+.cesium-cameraControl-editor {
     display: block;
     position: absolute;
     top: auto;
@@ -11,9 +12,6 @@
     overflow: auto;
     border: 1px solid #444;
     border-radius: 4px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s 0.25s, opacity 0.25s linear;
@@ -21,12 +19,38 @@
     -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
 }
 
-.cesium-cameraControl-dropDown-visible {
+.cesium-cameraControl-dropDown-visible,
+.cesium-cameraControl-editor-visible {
     visibility: visible;
     opacity: 1;
     transition: opacity 0.25s linear;
     -webkit-transition: opacity 0.25s linear;
     -moz-transition: opacity 0.25s linear;
+}
+
+.cesium-cameraControl-dropDown {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+}
+
+.cesium-cameraControl-editor {
+    font-size: 13px;
+    padding: 4px 8px 4px 28px;
+}
+
+.cesium-cameraControl-editor p {
+    margin: 0 0 0.8em;
+    padding: 0;
+}
+
+.cesium-cameraControl-editor label,
+.cesium-cameraControl-editor label input {
+    cursor: pointer;
+}
+
+.cesium-cameraControl-editor label:hover span {
+    text-decoration: underline;
 }
 
 .cesium-cameraControl-viewRow,
@@ -83,4 +107,19 @@ button.cesium-cameraControl-viewButton {
 button.cesium-cameraControl-editButton {
     left: auto;
     right: 4px;
+}
+
+.cesium-cameraControl-indicator {
+    display: block;
+    position: absolute;
+    top: auto;
+    left: 5px;
+    width: 20px;
+    height: 20px;
+    fill: #edffff;
+    vertical-align: middle;
+}
+
+.cesium-cameraControl-fov {
+    vertical-align: middle;
 }

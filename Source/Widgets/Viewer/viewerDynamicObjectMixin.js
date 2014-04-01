@@ -84,9 +84,11 @@ define(['../../Core/BoundingSphere',
 
         var selectionIndicator = viewer.selectionIndicator;
         var selectionIndicatorViewModel = defined(selectionIndicator) ? selectionIndicator.viewModel : undefined;
+        var cameraControlViewModel = defined(viewer.cameraControl) ? viewer.cameraControl.viewModel : undefined;
 
         var enableInfoOrSelection = defined(infoBox) || defined(selectionIndicator);
 
+        var knockoutSubscriptions = [];
         var eventHelper = new EventHelper();
         var dynamicObjectView;
         var useIcrf = false;
@@ -191,7 +193,7 @@ define(['../../Core/BoundingSphere',
             }
 
             if (defined(infoBoxViewModel)) {
-                infoBoxViewModel.showInfo = showSelection;
+                infoBoxViewModel.showInfo = showSelection && (defined(cameraControlViewModel) ? !cameraControlViewModel.anyDropdown : true);
             }
         }
         eventHelper.add(viewer.clock.onTick, onTick);
@@ -310,8 +312,6 @@ define(['../../Core/BoundingSphere',
          */
         viewer.storedViewCollection = new StoredViewCollection();
 
-        var cameraControlViewModel = defined(viewer.cameraControl) ? viewer.cameraControl.viewModel : undefined;
-
         function visitStoredView(viewName) {
             var storedView = viewer.storedViewCollection.getById(viewName);
             if (defined(storedView)) {
@@ -347,12 +347,18 @@ define(['../../Core/BoundingSphere',
             eventHelper.add(cameraControlViewModel.editStoredView, editStoredView);
             eventHelper.add(cameraControlViewModel.addStoredView, addStoredView);
             eventHelper.add(viewer.storedViewCollection.collectionChanged, onStoredViewsChanged);
+
+            knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'useIcrf', function(value) {
+                if (value) {
+                    switchToIcrf();
+                } else {
+                    clearIcrf();
+                }
+            }));
         }
 
         var homeView = new StoredView('Home');
         viewer.storedViewCollection.add(homeView);
-
-        var knockoutSubscriptions = [];
 
         knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
             var scene = viewer.scene;
@@ -367,6 +373,14 @@ define(['../../Core/BoundingSphere',
 
             if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
                 scene.screenSpaceCameraController.enableTilt = !isTracking;
+            }
+
+            if (defined(cameraControlViewModel)) {
+                if (defined(value)) {
+                    cameraControlViewModel.cameraFollows = defined(value.name) ? value.name : value.id;
+                } else {
+                    cameraControlViewModel.cameraFollows = 'Earth';
+                }
             }
 
             if (isTracking && defined(value.position)) {

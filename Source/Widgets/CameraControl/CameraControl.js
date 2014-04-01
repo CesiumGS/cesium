@@ -28,16 +28,19 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
-    var CameraControl = function(container) {
+    var CameraControl = function(container, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
+        }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
         container = getElement(container);
 
-        var viewModel = new CameraControlViewModel();
+        var viewModel = new CameraControlViewModel(scene);
 
         var element = document.createElement('button');
         element.type = 'button';
@@ -89,21 +92,45 @@ cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }');
 
         var addRow = document.createElement('div');
         addRow.className = 'cesium-cameraControl-addRow';
-        addRow.innerHTML = 'Bookmark this view...';
+        addRow.innerHTML = 'Edit this view...';
         addRow.setAttribute('data-bind', '\
-click: function () { addStoredView.raiseEvent(); dropDownVisible = false; }');
+click: function () { addStoredView.raiseEvent(); editorVisible = true; }');
         dropDown.appendChild(addRow);
 
         var addButton = document.createElement('button');
         addButton.type = 'button';
         addButton.className = 'cesium-button cesium-cameraControl-addButton';
         addButton.setAttribute('data-bind', '\
-attr: { title: "Bookmark this view..." },\
-cesiumSvgPath: { path: _bookmarkIcon, width: 32, height: 32 }');
+attr: { title: "Edit this view..." },\
+cesiumSvgPath: { path: _editIcon, width: 32, height: 32 }');
         addRow.appendChild(addButton);
+
+        var editor = document.createElement('div');
+        editor.className = 'cesium-cameraControl-editor';
+        editor.setAttribute('data-bind', '\
+css: { "cesium-cameraControl-editor-visible" : editorVisible }');
+        container.appendChild(editor);
+
+        editor.innerHTML = '\
+<p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _followIcon, width: 32, height: 32 }"></span> \
+Camera follows: <span data-bind="text: cameraFollows"></span></p>\
+<p>Background object: <span data-bind="text: cameraBackground"></span></p>\
+<p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _timeRotateIcon, width: 32, height: 32 }"></span> \
+Rotation with time<br/>\
+<label><input type="radio" name="cesium-cameraControl-timeRotate" value="ECF" data-bind="checked: _timeRotateMode" /><span>Earth fixed (stars appear to rotate)</span></label><br/>\
+<label><input type="radio" name="cesium-cameraControl-timeRotate" value="ICRF" data-bind="checked: _timeRotateMode" /><span>Stars fixed (ICRF, Earth rotates)</span></label></p>\
+<p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _userRotateIcon, width: 32, height: 32 }"></span> \
+Rotation with user input<br/>\
+<label><input type="radio" name="cesium-cameraControl-userRotate" value="Z" data-bind="checked: _userRotateMode" /><span>Stay right-side up</span></label><br/>\
+<label><input type="radio" name="cesium-cameraControl-userRotate" value="U" data-bind="checked: _userRotateMode" /><span>Unconstrained</span></label></p>\
+<p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _fovIcon, width: 32, height: 32 }"></span> \
+Field of View (degrees)<br/>\
+<input class="cesium-cameraControl-fov" type="range" min="0" max="1" step="0.001" data-bind="value: _fovSlider" /> \
+<input class="cesium-cameraControl-fov" type="text" size="5" data-bind="value: fieldOfView" /></p>';
 
         knockout.applyBindings(viewModel, element);
         knockout.applyBindings(viewModel, dropDown);
+        knockout.applyBindings(viewModel, editor);
 
         element.firstChild.firstChild.setAttribute('transform', 'scale(-0.9,0.9) translate(-34,1.5)');
 
@@ -111,6 +138,7 @@ cesiumSvgPath: { path: _bookmarkIcon, width: 32, height: 32 }');
         this._container = container;
         this._element = element;
         this._dropDown = dropDown;
+        this._editor = editor;
 
         this._closeDropDown = function(e) {
             if (!(element.contains(e.target) || dropDown.contains(e.target))) {
@@ -164,10 +192,13 @@ cesiumSvgPath: { path: _bookmarkIcon, width: 32, height: 32 }');
     CameraControl.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown, true);
         document.removeEventListener('touchstart', this._closeDropDown, true);
+        this._viewModel.destroy();
         knockout.cleanNode(this._element);
         knockout.cleanNode(this._dropDown);
+        knockout.cleanNode(this._editor);
         this._container.removeChild(this._element);
         this._container.removeChild(this._dropDown);
+        this._container.removeChild(this._editor);
         return destroyObject(this);
     };
 

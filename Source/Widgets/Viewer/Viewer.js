@@ -281,7 +281,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //CameraControl
         var cameraControl;
         if (!defined(options.cameraControl) || options.cameraControl !== false) {
-            cameraControl = new CameraControl(toolbar);
+            cameraControl = new CameraControl(toolbar, cesiumWidget.scene);
 
             //Grab the dropdown for resize code.
             this._cameraControlDropDown = toolbar.getElementsByClassName('cesium-cameraControl-dropDown')[0];
