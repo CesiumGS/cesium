@@ -487,7 +487,7 @@ define([
         //
         // Here, we validate that the VAO has all attributes required
         // to match the shader program.
-        var shaderAttributes = shaderProgram.getVertexAttributes();
+        var shaderAttributes = shaderProgram.vertexAttributes;
 
         //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {
@@ -609,7 +609,7 @@ define([
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.ellipsoid,
                         projection : projection,
-                        elementIndexUintSupported : context.getElementIndexUint(),
+                        elementIndexUintSupported : context.elementIndexUint,
                         allow3DOnly : this.allow3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
@@ -658,7 +658,7 @@ define([
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
-                    elementIndexUintSupported : context.getElementIndexUint(),
+                    elementIndexUintSupported : context.elementIndexUint,
                     allow3DOnly : this.allow3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
@@ -797,7 +797,7 @@ define([
         }
 
         if (createSP) {
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();

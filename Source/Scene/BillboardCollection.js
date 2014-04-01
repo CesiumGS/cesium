@@ -252,7 +252,7 @@ define([
         var that = this;
         this._uniforms = {
             u_atlas : function() {
-                return that._textureAtlas.getTexture();
+                return that._textureAtlas.texture;
             }
         };
     };
@@ -561,7 +561,7 @@ define([
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
         directionsVertexBuffer = context.createVertexBuffer(directions, BufferUsage.STATIC_DRAW);
-        directionsVertexBuffer.setVertexArrayDestroyable(false);
+        directionsVertexBuffer.vertexArrayDestroyable = false;
         context.cache.billboardCollection_directionsVertexBuffer = directionsVertexBuffer;
         return directionsVertexBuffer;
     }
@@ -589,7 +589,7 @@ define([
         // PERFORMANCE_IDEA:  Should we reference count billboard collections, and eventually delete this?
         // Is this too much memory to allocate up front?  Should we dynamically grow it?
         indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        indexBuffer.setVertexArrayDestroyable(false);
+        indexBuffer.vertexArrayDestroyable = false;
         context.cache.billboardCollection_indexBuffer = indexBuffer;
         return indexBuffer;
     }
@@ -832,7 +832,7 @@ define([
         var topRightX = bottomLeftX + width;
         var topRightY = bottomLeftY + height;
 
-        var dimensions = billboardCollection._textureAtlas.getTexture().getDimensions();
+        var dimensions = billboardCollection._textureAtlas.texture.dimensions;
         var imageWidth = defaultValue(billboard.width, dimensions.x * width) * 0.5;
         var imageHeight = defaultValue(billboard.height, dimensions.y * height) * 0.5;
 
@@ -1041,8 +1041,8 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
-        scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
-        scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
         var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
@@ -1066,7 +1066,7 @@ define([
             return;
         }
 
-        var textureAtlasCoordinates = textureAtlas.getTextureCoordinates();
+        var textureAtlasCoordinates = textureAtlas.textureCoordinates;
         if (textureAtlasCoordinates.length === 0) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
@@ -1083,7 +1083,7 @@ define([
 
         var properties = this._propertiesChanged;
 
-        var textureAtlasGUID = textureAtlas.getGUID();
+        var textureAtlasGUID = textureAtlas.guid;
         var createVertexArray = this._createVertexArray || this._textureAtlasGUID !== textureAtlasGUID;
         this._textureAtlasGUID = textureAtlasGUID;
 
@@ -1244,7 +1244,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
-                this._sp = context.getShaderCache().replaceShaderProgram(
+                this._sp = context.shaderCache.replaceShaderProgram(
                     this._sp,
                     createShaderSource({
                         defines : [this._shaderRotation ? 'ROTATION' : '',
@@ -1296,7 +1296,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
-                this._spPick = context.getShaderCache().replaceShaderProgram(
+                this._spPick = context.shaderCache.replaceShaderProgram(
                     this._spPick,
                     createShaderSource({
                         defines : ['RENDER_FOR_PICK',

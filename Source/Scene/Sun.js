@@ -136,8 +136,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -228,7 +228,7 @@ define([
             command.vertexArray = context.createVertexArray(attributes);
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeLocations);
+            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -236,8 +236,8 @@ define([
             command.boundingVolume = new BoundingSphere();
         }
 
-        var sunPosition = context.getUniformState().getSunPositionWC();
-        var sunPositionCV = context.getUniformState().getSunPositionColumbusView();
+        var sunPosition = context.uniformState.sunPositionWC;
+        var sunPositionCV = context.uniformState.sunPositionColumbusView;
 
         var boundingVolume = this._boundingVolume;
         var boundingVolume2D = this._boundingVolume2D;
@@ -259,7 +259,7 @@ define([
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
         var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
-        var projMatrix = context.getUniformState().getProjection();
+        var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;
         positionEC.x = 0;

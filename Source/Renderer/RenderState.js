@@ -124,12 +124,12 @@ define([
         };
         this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
-            (!defined(viewport.width)) ? context.getDrawingBufferWidth() : viewport.width,
-            (!defined(viewport.height)) ? context.getDrawingBufferHeight() : viewport.height) : undefined;
+            (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
+            (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
 
-        if ((this.lineWidth < context.getMinimumAliasedLineWidth()) ||
-                (this.lineWidth > context.getMaximumAliasedLineWidth())) {
-                throw new RuntimeError('renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().');
+        if ((this.lineWidth < context.minimumAliasedLineWidth) ||
+                (this.lineWidth > context.maximumAliasedLineWidth)) {
+                throw new RuntimeError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -219,11 +219,11 @@ define([
             }
             //>>includeEnd('debug');
 
-            if (this.viewport.width > context.getMaximumViewportWidth()) {
-                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
+            if (this.viewport.width > context.maximumViewportWidth) {
+                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
             }
-            if (this.viewport.height > context.getMaximumViewportHeight()) {
-                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            if (this.viewport.height > context.maximumViewportHeight) {
+                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
             }
         }
 
@@ -388,11 +388,11 @@ define([
 
         if (!defined(viewport)) {
             viewport = scratchViewport;
-            viewport.width = passState.context.getDrawingBufferWidth();
-            viewport.height = passState.context.getDrawingBufferHeight();
+            viewport.width = passState.context.drawingBufferWidth;
+            viewport.height = passState.context.drawingBufferHeight;
         }
 
-        passState.context.getUniformState().setViewport(viewport);
+        passState.context.uniformState.viewport = viewport;
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
 

@@ -54,7 +54,7 @@ defineSuite([
         }];
         var va = context.createVertexArray(attributes);
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
@@ -87,7 +87,7 @@ defineSuite([
         }];
 
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(2);
+        expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
         va = va.destroy();
@@ -113,7 +113,7 @@ defineSuite([
         }];
 
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(2);
+        expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
         va = va.destroy();
@@ -127,7 +127,7 @@ defineSuite([
             componentsPerAttribute : 3
         }]);
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
@@ -148,7 +148,7 @@ defineSuite([
             componentsPerAttribute : 3
         }];
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).enabled).toEqual(true);
 
         va.getAttribute(0).enabled = false;

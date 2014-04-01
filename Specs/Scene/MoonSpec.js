@@ -80,7 +80,7 @@ defineSuite([
         var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
         lookAtMoon(scene.camera, frameState.time);

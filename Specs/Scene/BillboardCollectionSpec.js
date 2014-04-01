@@ -70,7 +70,7 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, createFrameState(createCamera(context)));
     });
 
@@ -94,10 +94,10 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         return atlas;
     }
@@ -258,7 +258,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
@@ -286,7 +286,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
@@ -314,7 +314,7 @@ defineSuite([
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;

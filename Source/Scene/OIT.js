@@ -34,8 +34,8 @@ define([
      * @private
      */
     var OIT = function(context) {
-        var extensionsSupported = context.getFloatingPointTexture() && context.getDepthTexture();
-        this._translucentMRTSupport = context.getDrawBuffers() && extensionsSupported;
+        var extensionsSupported = context.floatingPointTexture && context.depthTexture;
+        this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
 
         // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
@@ -148,7 +148,7 @@ define([
                 destroyAttachments : false
             });
 
-            if (oit._translucentFBO.getStatus() !== completeFBO || oit._adjustTranslucentFBO.getStatus() !== completeFBO) {
+            if (oit._translucentFBO.status !== completeFBO || oit._adjustTranslucentFBO.status !== completeFBO) {
                 destroyFramebuffers(oit);
                 oit._translucentMRTSupport = false;
             }
@@ -175,10 +175,10 @@ define([
                 destroyAttachments : false
             });
 
-            var translucentComplete = oit._translucentFBO.getStatus() === completeFBO;
-            var alphaComplete = oit._alphaFBO.getStatus() === completeFBO;
-            var adjustTranslucentComplete = oit._adjustTranslucentFBO.getStatus() === completeFBO;
-            var adjustAlphaComplete = oit._adjustAlphaFBO.getStatus() === completeFBO;
+            var translucentComplete = oit._translucentFBO.status === completeFBO;
+            var alphaComplete = oit._alphaFBO.status === completeFBO;
+            var adjustTranslucentComplete = oit._adjustTranslucentFBO.status === completeFBO;
+            var adjustAlphaComplete = oit._adjustAlphaFBO.status === completeFBO;
             if (!translucentComplete || !alphaComplete || !adjustTranslucentComplete || !adjustAlphaComplete) {
                 destroyResources(oit);
                 oit._translucentMultipassSupport = false;
@@ -202,11 +202,11 @@ define([
             return;
         }
 
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var opaqueTexture = this._opaqueTexture;
-        var textureChanged = !defined(opaqueTexture) || opaqueTexture.getWidth() !== width || opaqueTexture.getHeight() !== height;
+        var textureChanged = !defined(opaqueTexture) || opaqueTexture.width !== width || opaqueTexture.height !== height;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
@@ -409,7 +409,7 @@ define([
                 source +
                 '}\n';
 
-            shader = context.getShaderCache().getShaderProgram(vs, newSourceFS, attributeLocations);
+            shader = context.shaderCache.getShaderProgram(vs, newSourceFS, attributeLocations);
             cache[id] = shader;
         }
 

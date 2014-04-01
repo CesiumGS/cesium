@@ -102,10 +102,10 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         var billboards = new BillboardCollection();
         billboards.textureAtlas = atlas;
@@ -252,7 +252,7 @@ defineSuite([
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
+                this._sp = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });

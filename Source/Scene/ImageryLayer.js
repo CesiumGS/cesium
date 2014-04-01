@@ -702,17 +702,17 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
-            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+            (extent.east - extent.west) / texture.width > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();
                 imagery.texture = texture = reprojectedTexture;
         }
 
         // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
+        if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+                var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -722,7 +722,7 @@ define([
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler(mipmapSampler);
+            texture.sampler = mipmapSampler;
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
             if (!defined(nonMipmapSampler)) {
@@ -733,7 +733,7 @@ define([
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
             }
-            texture.setSampler(nonMipmapSampler);
+            texture.sampler = nonMipmapSampler;
         }
 
         imagery.state = ImageryState.READY;
@@ -859,12 +859,12 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.getShaderCache().getShaderProgram(
+            reproject.shaderProgram = context.shaderCache.getShaderProgram(
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -874,10 +874,10 @@ define([
             });
         }
 
-        texture.setSampler(reproject.sampler);
+        texture.sampler = reproject.sampler;
 
-        var width = texture.getWidth();
-        var height = texture.getHeight();
+        var width = texture.width;
+        var height = texture.height;
 
         uniformMap.textureDimensions.x = width;
         uniformMap.textureDimensions.y = height;
@@ -900,9 +900,9 @@ define([
         var outputTexture = context.createTexture2D({
             width : width,
             height : height,
-            pixelFormat : texture.getPixelFormat(),
-            pixelDatatype : texture.getPixelDatatype(),
-            preMultiplyAlpha : texture.getPreMultiplyAlpha()
+            pixelFormat : texture.pixelFormat,
+            pixelDatatype : texture.pixelDatatype,
+            preMultiplyAlpha : texture.preMultiplyAlpha
         });
 
         // Allocate memory for the mipmaps.  Failure to do this before rendering

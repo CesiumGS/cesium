@@ -170,7 +170,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -201,7 +201,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.getDrawingBufferHeight() / context.getDrawingBufferWidth());
+        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
