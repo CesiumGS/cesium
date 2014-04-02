@@ -1789,7 +1789,7 @@ define([
             var pickIds = model._pickIds;
             var length = pickIds.length;
             for (var i = 0; i < length; ++i) {
-                context.getObjectByPickColor(pickIds[i].color).id = id;
+                pickIds[i].object.id = id;
             }
         }
     }

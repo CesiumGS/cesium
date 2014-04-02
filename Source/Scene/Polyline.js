@@ -81,7 +81,6 @@ define([
         this._polylineCollection = polylineCollection;
         this._dirty = false;
         this._pickId = undefined;
-        this._pickIdThis = options._pickIdThis;
         this._boundingVolume = BoundingSphere.fromPoints(this._positions);
         this._boundingVolumeWC = BoundingSphere.transform(this._boundingVolume, this._modelMatrix);
         this._boundingVolume2D = new BoundingSphere(); // modified in PolylineCollection
@@ -252,16 +251,30 @@ define([
         },
 
         /**
-         * Gets the user-defined object returned when the polyline is picked.
+         * Gets or sets the user-defined object returned when the polyline is picked.
          * @memberof Polyline.prototype
          * @type {Object}
          */
-        id: {
-            get: function() {
+        id : {
+            get : function() {
                 return this._id;
+            },
+            set : function(value) {
+                this._id = value;
+                if (defined(this._pickId)) {
+                    this._pickId.object = createPickIdObject(this);
+                }
             }
         }
     });
+
+    function createPickIdObject(polyline) {
+        return {
+            primitive : polyline,
+            collection : polyline._polylineCollection,
+            id : polyline._id
+        };
+    }
 
     /**
      * @private
@@ -303,11 +316,7 @@ define([
      */
     Polyline.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
-            this._pickId = context.createPickId({
-                primitive : defaultValue(this._pickIdThis, this),
-                collection: this._polylineCollection,
-                id : this._id
-            });
+            this._pickId = context.createPickId(createPickIdObject(this));
         }
         return this._pickId;
     };
