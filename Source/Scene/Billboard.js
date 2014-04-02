@@ -650,7 +650,7 @@ define([
             set : function(value) {
                 this._id = value;
                 if (defined(this._pickId)) {
-                    this._pickId.object = createPickIdObject(this);
+                    this._pickId.object.id = value;
                 }
             }
         },
@@ -666,23 +666,19 @@ define([
             set : function(value) {
                 this._pickPrimitive = value;
                 if (defined(this._pickId)) {
-                    this._pickId.object = createPickIdObject(this);
+                    this._pickId.object.primitive = value;
                 }
             }
         }
     });
 
-    function createPickIdObject(billboard) {
-        return {
-            primitive : billboard._pickPrimitive,
-            collection : billboard._collection,
-            id : billboard._id
-        };
-    }
-
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
-            this._pickId = context.createPickId(createPickIdObject(this));
+            this._pickId = context.createPickId({
+                primitive : this._pickPrimitive,
+                collection : this._collection,
+                id : this._id
+            });
         }
 
         return this._pickId;

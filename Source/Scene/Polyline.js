@@ -262,19 +262,11 @@ define([
             set : function(value) {
                 this._id = value;
                 if (defined(this._pickId)) {
-                    this._pickId.object = createPickIdObject(this);
+                    this._pickId.object.id = value;
                 }
             }
         }
     });
-
-    function createPickIdObject(polyline) {
-        return {
-            primitive : polyline,
-            collection : polyline._polylineCollection,
-            id : polyline._id
-        };
-    }
 
     /**
      * @private
@@ -316,7 +308,11 @@ define([
      */
     Polyline.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
-            this._pickId = context.createPickId(createPickIdObject(this));
+            this._pickId = context.createPickId({
+                primitive : this,
+                collection : this._polylineCollection,
+                id : this._id
+            });
         }
         return this._pickId;
     };
