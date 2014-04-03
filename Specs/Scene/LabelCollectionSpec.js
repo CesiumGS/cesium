@@ -643,6 +643,26 @@ defineSuite([
         expect(pickedObject.id).toEqual('id');
     });
 
+    it('can change pick id', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
+        });
+
+        var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
+
+        label.id = 'id2';
+
+        pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id2');
+    });
+
     it('does not pick a label with show set to false', function() {
         labels.add({
             show : false,
