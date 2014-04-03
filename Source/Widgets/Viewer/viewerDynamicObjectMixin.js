@@ -12,8 +12,6 @@ define(['../../Core/BoundingSphere',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectView',
-        '../../DynamicScene/StoredView',
-        '../../DynamicScene/StoredViewCollection',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
@@ -32,8 +30,6 @@ define(['../../Core/BoundingSphere',
         wrapFunction,
         DynamicObject,
         DynamicObjectView,
-        StoredView,
-        StoredViewCollection,
         CameraFlightPath,
         SceneMode,
         subscribeAndEvaluate,
@@ -52,7 +48,6 @@ define(['../../Core/BoundingSphere',
      *
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
      * @exception {DeveloperError} selectedObject is already defined by another mixin.
-     * @exception {DeveloperError} storedViewCollection is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -73,9 +68,6 @@ define(['../../Core/BoundingSphere',
         }
         if (viewer.hasOwnProperty('selectedObject')) {
             throw new DeveloperError('selectedObject is already defined by another mixin.');
-        }
-        if (viewer.hasOwnProperty('storedViewCollection')) {
-            throw new DeveloperError('storedViewCollection is already defined by another mixin.');
         }
         //>>includeEnd('debug');
 
@@ -138,8 +130,6 @@ define(['../../Core/BoundingSphere',
         function clearIcrf() {
             useIcrf = false;
         }
-        window.switchToIcrf = switchToIcrf;       // TODO: Remove temporary debugging
-        window.clearIcrf = clearIcrf;             // TODO: Remove temporary debugging
 
         // Subscribe to onTick so that we can update the view each update.
         function onTick(clock) {
@@ -305,49 +295,7 @@ define(['../../Core/BoundingSphere',
 
         knockout.track(viewer, ['trackedObject', 'selectedObject']);
 
-        /**
-         * A collection of stored views for the camera.
-         * @memberof viewerDynamicObjectMixin.prototype
-         * @type {StoredViewCollection}
-         */
-        viewer.storedViewCollection = new StoredViewCollection();
-
-        function visitStoredView(viewName) {
-            var storedView = viewer.storedViewCollection.getById(viewName);
-            if (defined(storedView)) {
-                var viewDescription = {
-                    destination : storedView.position,
-                    duration : 1500,
-                    up : storedView.up,
-                    direction : storedView.direction,
-                    endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
-                };
-                var flight = CameraFlightPath.createAnimation(viewer.scene, viewDescription);
-                viewer.scene.animations.add(flight);
-            }
-        }
-
-        function editStoredView(viewName) {
-            console.log('Edit ' + viewName);
-        }
-
-        function addStoredView() {
-            var newView = new StoredView(undefined, viewer.scene.camera);
-            viewer.storedViewCollection.add(newView);
-            // Should this fire the edit event instead?  The app probably wants to hook into some kind of "Save" and "Delete" events.
-            editStoredView(newView.id);
-        }
-
-        function onStoredViewsChanged() {
-            cameraControlViewModel.viewNames = viewer.storedViewCollection.getStoredViews().map(function (view) { return view.id; });
-        }
-
         if (defined(cameraControlViewModel)) {
-            eventHelper.add(cameraControlViewModel.visitStoredView, visitStoredView);
-            eventHelper.add(cameraControlViewModel.editStoredView, editStoredView);
-            eventHelper.add(cameraControlViewModel.addStoredView, addStoredView);
-            eventHelper.add(viewer.storedViewCollection.collectionChanged, onStoredViewsChanged);
-
             knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'useIcrf', function(value) {
                 if (value) {
                     switchToIcrf();
@@ -356,9 +304,6 @@ define(['../../Core/BoundingSphere',
                 }
             }));
         }
-
-        var homeView = new StoredView('Home');
-        viewer.storedViewCollection.add(homeView);
 
         knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
             var scene = viewer.scene;

@@ -6,8 +6,13 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/EventHelper',
         '../../Core/isArray',
         '../../Core/Math',
+        '../../Core/Matrix4',
+        '../../DynamicScene/StoredView',
+        '../../DynamicScene/StoredViewCollection',
+        '../../Scene/CameraFlightPath',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
@@ -17,8 +22,13 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        EventHelper,
         isArray,
         CesiumMath,
+        Matrix4,
+        StoredView,
+        StoredViewCollection,
+        CameraFlightPath,
         createCommand,
         knockout) {
     "use strict";
@@ -46,10 +56,9 @@ define([
         this._fovIcon = 'M 26.355526,3.0853289 4.9492757,16.210329 l 21.4062503,12.96875 0,-4 -15.21875,-9.21875 15.21875,-9.3437501 z m -3.064934,6.9940131 -2.466316,1.568487 c 0.832593,1.424238 1.3125,2.994509 1.3125,4.65625 0,1.491653 -0.383959,2.910037 -1.0625,4.21875 L 23.555,21.966316 c 1.040521,-1.714153 1.369013,-3.782536 1.369013,-5.795658 0,-2.064563 -0.54229,-4.343667 -1.633421,-6.091316 z';
 
         this._scene = scene;
-        this._visitStoredView = new Event();
-        this._editStoredView = new Event();
-        this._addStoredView = new Event();
         this._knockoutSubscriptions = [];
+        this._eventHelper = new EventHelper();
+        this._storedViewCollection = new StoredViewCollection();
 
         /**
          * Gets or sets whether the camera control drop-down is currently visible.
@@ -87,11 +96,13 @@ define([
         this.cameraBackground = '(none)';
 
         /**
-         * An array of view names
-         * @type {Array}
+         * Gets or sets the name of the most recently used view.  This property is observable.
+         *
+         * @type {String}
          */
-        this.viewNames = [];
+        this.currentViewName = 'View 1';
 
+        this._viewNames = [];
         this._timeRotateMode = 'ECF';
         this._userRotateMode = 'Z';
         this._fieldOfView = 60.0;
@@ -100,10 +111,53 @@ define([
         this._fovRange = this._maxFov - this._minFov;
 
         knockout.track(this, ['dropDownVisible', 'editorVisible', 'tooltip', 'cameraFollows', 'cameraBackground',
-                              'viewNames', '_timeRotateMode', '_userRotateMode', '_fieldOfView']);
+                              'currentViewName', '_viewNames', '_timeRotateMode', '_userRotateMode', '_fieldOfView']);
+
+        this._eventHelper.add(this._storedViewCollection.collectionChanged, function() {
+            that._viewNames = that._storedViewCollection.getStoredViews().map(function (view) { return view.id; });
+        });
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
+        });
+
+        this._saveStoredView = createCommand(function() {
+            that.editorVisible = false;
+            var storedView = that._storedViewCollection.getById(that.currentViewName);
+            if (defined(storedView)) {
+                throw "Not implemented yet"; // TODO
+            } else {
+                var newView = new StoredView(that.currentViewName, scene.camera);
+                that._storedViewCollection.add(newView);
+            }
+        });
+
+        this._visitStoredView = createCommand(function(viewName) {
+            that.dropDownVisible = false;
+            that.currentViewName = viewName;
+            var storedView = that._storedViewCollection.getById(viewName);
+            if (defined(storedView)) {
+                var viewDescription = {
+                    destination : storedView.position,
+                    duration : 1500,
+                    up : storedView.up,
+                    direction : storedView.direction,
+                    endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
+                };
+                var flight = CameraFlightPath.createAnimation(scene, viewDescription);
+                scene.animations.add(flight);
+            }
+        });
+
+        this._createName = createCommand(function() {
+            var prefix = 'View ';
+            var newName = '';
+            var i = 1;
+            while (that._viewNames.indexOf(newName = prefix + i.toFixed(0)) >= 0) {
+                ++i;
+            }
+            that.currentViewName = newName;
+            that.editorVisible = true;
         });
 
         this._knockoutSubscriptions.push(knockout.getObservable(this, 'dropDownVisible').subscribe(function(value) {
@@ -181,9 +235,20 @@ define([
             }
         });
 
+        this._saveLabel = undefined;
+        knockout.defineProperty(this, '_saveLabel', {
+            get : function() {
+                return this._viewNames.indexOf(this.currentViewName) < 0 ? "Save new view" : "Overwrite view";
+            }
+        });
+
         this._knockoutSubscriptions.push(knockout.getObservable(this, 'fieldOfView').subscribe(function(value) {
             scene.camera.frustum.fovy = CesiumMath.toRadians(value);
         }));
+
+        // Add the default home view.
+        var homeView = new StoredView('Home');
+        this._storedViewCollection.add(homeView);
     };
 
     /**
@@ -198,30 +263,12 @@ define([
 
     defineProperties(CameraControlViewModel.prototype, {
         /**
-         * Gets an {@link Event} that is fired when the user activates a stored view.
-         * The generated event is a {@link CameraControlViewModel.cameraControlEventCallback}.
+         * Gets the collection of stored views for the camera.
+         * @type {StoredViewCollection}
          */
-        visitStoredView : {
+        storedViewCollection : {
             get : function() {
-                return this._visitStoredView;
-            }
-        },
-        /**
-         * Gets an {@link Event} that is fired when the user requests edits to a stored view.
-         * The generated event is a {@link CameraControlViewModel.cameraControlEventCallback}.
-         */
-        editStoredView : {
-            get : function() {
-                return this._editStoredView;
-            }
-        },
-        /**
-         * Gets an {@link Event} that is fired when the user creates a new stored view.
-         * The generated event has no parameters, it is up to the listener to create a suitable name for the new view.
-         */
-        addStoredView : {
-            get : function() {
-                return this._addStoredView;
+                return this._storedViewCollection;
             }
         },
         /**
@@ -233,6 +280,39 @@ define([
         toggleDropDown : {
             get : function() {
                 return this._toggleDropDown;
+            }
+        },
+        /**
+         * Gets the command that is executed when the save/overwrite button is clicked.
+         * @memberof CameraControlViewModel.prototype
+         *
+         * @type {Command}
+         */
+        saveStoredView : {
+            get : function() {
+                return this._saveStoredView;
+            }
+        },
+        /**
+         * Gets the command that is executed when the user activates a stored view.
+         * @memberof CameraControlViewModel.prototype
+         *
+         * @type {Command}
+         */
+        visitStoredView : {
+            get : function() {
+                return this._visitStoredView;
+            }
+        },
+        /**
+         * Gets the command that is executed when the user requests to edit a newly-named view.
+         * @memberof CameraControlViewModel.prototype
+         *
+         * @type {Command}
+         */
+        createName : {
+            get : function() {
+                return this._createName;
             }
         }
     });
@@ -256,6 +336,7 @@ define([
             this._knockoutSubscriptions[i].dispose();
         }
 
+        this._eventHelper.removeAll();
         destroyObject(this);
     };
 

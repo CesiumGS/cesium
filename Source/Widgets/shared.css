@@ -14,7 +14,7 @@
     border: 1px solid #444;
     color: #edffff;  /* For text buttons */
     fill: #edffff;   /* For SVG buttons */
-    border-radius: 14%;
+    border-radius: 4px;
     padding: 4px 12px;
     margin: 0 3px;
     cursor: pointer;
@@ -65,6 +65,7 @@
     box-sizing: border-box;
     width: 32px;
     height: 32px;
+    border-radius: 14%;
     padding: 0;
     vertical-align: middle;
     z-index: 0;  /* Workaround for rounded raster image corners in Chrome */

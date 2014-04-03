@@ -59,13 +59,13 @@ css: { "cesium-cameraControl-dropDown-visible" : dropDownVisible }');
 
         var viewsContainer = document.createElement('div');
         viewsContainer.setAttribute('data-bind', '\
-foreach: viewNames');
+foreach: _viewNames');
         dropDown.appendChild(viewsContainer);
 
         var viewRow = document.createElement('div');
         viewRow.className = 'cesium-cameraControl-viewRow';
         viewRow.setAttribute('data-bind', '\
-click: function (viewName) { $parent.visitStoredView.raiseEvent(viewName); $parent.dropDownVisible = false; }');
+click: function (viewName) { $parent.visitStoredView(viewName); }');
         viewsContainer.appendChild(viewRow);
 
         var viewName = document.createElement('span');
@@ -77,7 +77,7 @@ text: $data');
         viewButton.type = 'button';
         viewButton.className = 'cesium-button cesium-cameraControl-viewButton';
         viewButton.setAttribute('data-bind', '\
-attr: { title: "Activate this view" },\
+attr: { title: "Visit this view" },\
 cesiumSvgPath: { path: $parent._cameraIcon, width: 32, height: 32 }');
         viewRow.appendChild(viewButton);
 
@@ -86,22 +86,22 @@ cesiumSvgPath: { path: $parent._cameraIcon, width: 32, height: 32 }');
         editButton.className = 'cesium-button cesium-cameraControl-editButton';
         editButton.setAttribute('data-bind', '\
 attr: { title: "Edit this view" },\
-click: function (viewName) { $parent.editStoredView.raiseEvent(viewName); $parent.dropDownVisible = false; },\
+click: function (viewName) { $parent.editorVisible = true; },\
 cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }');
         viewRow.appendChild(editButton);
 
         var addRow = document.createElement('div');
         addRow.className = 'cesium-cameraControl-addRow';
-        addRow.innerHTML = 'Edit this view...';
+        addRow.innerHTML = 'Add or edit view...';
         addRow.setAttribute('data-bind', '\
-click: function () { addStoredView.raiseEvent(); editorVisible = true; }');
+click: createName');
         dropDown.appendChild(addRow);
 
         var addButton = document.createElement('button');
         addButton.type = 'button';
         addButton.className = 'cesium-button cesium-cameraControl-addButton';
         addButton.setAttribute('data-bind', '\
-attr: { title: "Edit this view..." },\
+attr: { title: "Add or edit view..." },\
 cesiumSvgPath: { path: _editIcon, width: 32, height: 32 }');
         addRow.appendChild(addButton);
 
@@ -126,7 +126,12 @@ Rotation with user input<br/>\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _fovIcon, width: 32, height: 32 }"></span> \
 Field of View (degrees)<br/>\
 <input class="cesium-cameraControl-fov" type="range" min="0" max="1" step="0.001" data-bind="value: _fovSlider" /> \
-<input class="cesium-cameraControl-fov" type="text" size="5" data-bind="value: fieldOfView" /></p>';
+<input class="cesium-cameraControl-fov" type="text" size="5" data-bind="value: fieldOfView" /></p>\
+<p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _bookmarkIcon, width: 32, height: 32 }"></span> \
+Bookmarked view name:<br/>\
+<input type="text" data-bind="value: currentViewName, valueUpdate: \'input\'" /><br/>\
+<button class="cesium-button" type="button" data-bind="text: _saveLabel, click: saveStoredView" />\
+<button class="cesium-button" type="button" data-bind="click: function() { editorVisible = false; }">Cancel</button></p>';
 
         knockout.applyBindings(viewModel, element);
         knockout.applyBindings(viewModel, dropDown);
