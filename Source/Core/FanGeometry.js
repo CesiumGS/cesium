@@ -3,6 +3,7 @@ define([
         './defined',
         './DeveloperError',
         './Cartesian3',
+        './Math',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
@@ -16,6 +17,7 @@ define([
         defined,
         DeveloperError,
         Cartesian3,
+        CesiumMath,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
@@ -104,11 +106,13 @@ define([
         if (vertexFormat.st) {
             length = (1 + directionsLength) * 2;
             var textureCoordinates = new Float64Array(length);
-            textureCoordinates[0] = 0.0;
-            textureCoordinates[1] = 0.0;
-            for (i = 2; i < length - 1; i += 2) {
-                textureCoordinates[i] = 1.0;
-                textureCoordinates[i + 1] = 1.0;
+            x = 0;
+            textureCoordinates[x++] = 0.0;
+            textureCoordinates[x++] = 0.0;
+            for (i = 0; i < directionsLength; i++) {
+                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
+                textureCoordinates[x++] = scratchCartesian.x;
+                textureCoordinates[x++] = scratchCartesian.y;
             }
 
             attributes.st = new GeometryAttribute({
