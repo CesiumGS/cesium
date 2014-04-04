@@ -25,26 +25,20 @@ define([
         Geometry) {
     "use strict";
 
+    var scratchCartesian;
+
     /**
      * Describes a cube centered at the origin.
      *
      * @alias FanOutlineGeometry
      * @constructor
      *
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the fan.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the fan.
+     * @param {Spherical[]} options.directions The directions from the origin that defined the fan.
+     * @param {Number} options.radius The radius at which to draw the fan.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see FanOutlineGeometry#fromDimensions
      * @see FanOutlineGeometry#createGeometry
-     *
-     * @example
-     * var fan = new Cesium.FanOutlineGeometry({
-     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
-     * });
-     * var geometry = Cesium.FanOutlineGeometry.createGeometry(fan);
      */
     var FanOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -91,10 +85,10 @@ define([
             positions = new Float64Array(length);
             x = 0;
             for (i = 0; i < directionsLength; i++) {
-                var direction = Cartesian3.fromSpherical(directions[i]);
-                positions[x++] = direction.x * radius;
-                positions[x++] = direction.y * radius;
-                positions[x++] = direction.z * radius;
+                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
+                positions[x++] = scratchCartesian.x * radius;
+                positions[x++] = scratchCartesian.y * radius;
+                positions[x++] = scratchCartesian.z * radius;
             }
 
             attributes.position = new GeometryAttribute({
