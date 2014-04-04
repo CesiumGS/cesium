@@ -35,6 +35,8 @@ define(['../Core/defaultValue',
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
         this._outlineColorSubscription = undefined;
+        this._numberOfRings = undefined;
+        this._numberOfRingsSubscription = undefined;
         this._definitionChanged = new Event();
     };
 
@@ -51,13 +53,24 @@ define(['../Core/defaultValue',
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the fan's visibility.
+         * Gets or sets the boolean Property specifying the fan's visibility.
          * @memberof DynamicFan.prototype
          * @type {Property}
          */
         show : createDynamicPropertyDescriptor('show'),
 
+        /**
+         * Gets or sets numeric Property specifying the radius of the fan.
+         * @memberof DynamicFan.prototype
+         * @type {Property}
+         */
         radius : createDynamicPropertyDescriptor('radius'),
+
+        /**
+         * Gets or sets the {@link Spherical} Property specifying the directions that define the fan.
+         * @memberof DynamicFan.prototype
+         * @type {Property}
+         */
         directions : createDynamicPropertyDescriptor('directions'),
 
         /**
@@ -68,25 +81,32 @@ define(['../Core/defaultValue',
         material : createDynamicPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the fan should be filled.
+         * Gets or sets the Boolean Property specifying whether the fan should be filled.
          * @memberof DynamicFan.prototype
          * @type {Property}
          */
         fill : createDynamicPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the fan should be outlined.
+         * Gets or sets the Boolean Property specifying whether the fan should be outlined.
          * @memberof DynamicFan.prototype
          * @type {Property}
          */
         outline : createDynamicPropertyDescriptor('outline'),
 
         /**
-         * Gets or sets the Color {@link Property} specifying whether the color of the outline.
+         * Gets or sets the Color Property specifying whether the color of the outline.
          * @memberof DynamicFan.prototype
          * @type {Property}
          */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor')
+        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
+
+        /**
+         * Gets or sets the numberic Property specifying the number of outline rings to draw for the outline, starting from the outer edge and equidistantly spaced towards the center.
+         * @memberof DynamicFan.prototype
+         * @type {Property}
+         */
+        numberOfRings : createDynamicPropertyDescriptor('numberOfRings')
     });
 
     /**
@@ -107,6 +127,7 @@ define(['../Core/defaultValue',
         result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
+        result.numberOfRings = this.numberOfRings;
         return result;
     };
 
@@ -131,6 +152,7 @@ define(['../Core/defaultValue',
         this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.numberOfRings = defaultValue(this.numberOfRings, source.numberOfRings);
     };
 
     return DynamicFan;

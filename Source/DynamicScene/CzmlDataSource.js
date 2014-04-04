@@ -1332,6 +1332,7 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, fan, 'fill', fanData.fill, interval, sourceUri);
         processPacketData(Boolean, fan, 'outline', fanData.outline, interval, sourceUri);
         processPacketData(Color, fan, 'outlineColor', fanData.outlineColor, interval, sourceUri);
+        processPacketData(Number, fan, 'numberOfRings', fanData.numberOfRings, interval, sourceUri);
 
         //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
         //We pre-process this into Spherical instances and then process it like any other array.

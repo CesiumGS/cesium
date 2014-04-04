@@ -55,12 +55,14 @@ define(['../Core/Color',
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultNumberOfRings = new ConstantProperty(6);
 
     var GeometryOptions = function(dynamicObject) {
         this.id = dynamicObject;
         this.vertexFormat = undefined;
         this.directions = undefined;
         this.radius = undefined;
+        this.numberOfRings = undefined;
     };
 
     /**
@@ -411,7 +413,7 @@ define(['../Core/Color',
 
         var show = fan.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(orientation)|| !defined(radius))) {
+            (!defined(position) || !defined(orientation) || !defined(radius))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -431,7 +433,8 @@ define(['../Core/Color',
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        if (!position.isConstant) {
+        var numberOfRings = defaultValue(fan.numberOfRings, defaultNumberOfRings);
+        if (!position.isConstant || !orientation.isConstant || !radius.isConstant || !directions.isConstant || !numberOfRings.isConstant) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -441,6 +444,8 @@ define(['../Core/Color',
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.directions = directions.getValue(Iso8601.MINIMUM_VALUE, options.directions);
             options.radius = defined(radius) ? radius.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.numberOfRings = defined(numberOfRings) ? numberOfRings.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
