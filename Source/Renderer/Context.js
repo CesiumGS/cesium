@@ -2655,6 +2655,17 @@ define([
         this.color = color;
     }
 
+    defineProperties(PickId.prototype, {
+        object : {
+            get : function() {
+                return this._pickObjects[this.key];
+            },
+            set : function(value) {
+                this._pickObjects[this.key] = value;
+            }
+        }
+    });
+
     PickId.prototype.destroy = function() {
         delete this._pickObjects[this.key];
         return undefined;
