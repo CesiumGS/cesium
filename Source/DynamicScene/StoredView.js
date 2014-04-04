@@ -20,43 +20,30 @@ define(['../Core/Cartesian3',
         StoredViewCameraRotationMode) {
     "use strict";
 
-    var viewIndex = 0;
-
     /**
      * StoredView instances store the camera settings for a view of interest.
      * @alias StoredView
      * @constructor
      *
-     * @param {String} [id] A unique identifier for this stored view.  If no id is provided, one is generated.
-     * @param {Camera} [camera] The camera to clone for this stored view.  If none is provided, a default home view is used.
+     * @param {String} name A unique name for this stored view.
      *
      * @see Property
      * @see StoredViewCollection
      */
-    var StoredView = function(id, camera) {
-        if (!defined(id)) {
-            ++viewIndex;
-            id = 'View ' + viewIndex;
+    var StoredView = function(name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
         }
+        //>>includeEnd('debug');
 
-        this._id = id;
+        this._name = name;
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position;
-        var direction;
-        var up;
-
-        if (defined(camera)) {
-            position = Cartesian3.clone(camera.position);
-            direction = Cartesian3.clone(camera.direction);
-            up = Cartesian3.clone(camera.up);
-            // TODO: FOV, constrainedAxis
-        } else {
-            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
-            direction = Cartesian3.normalize(Cartesian3.negate(position));
-            var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-            up = Cartesian3.cross(right, direction);
-        }
+        var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
+        var direction = Cartesian3.normalize(Cartesian3.negate(position));
+        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
+        var up = Cartesian3.cross(right, direction);
 
         /**
          * Gets or sets the scene mode for this view.
@@ -125,13 +112,13 @@ define(['../Core/Cartesian3',
 
     defineProperties(StoredView.prototype, {
         /**
-         * Gets the unique ID associated with this object.
+         * Gets the unique name of this view.
          * @memberof StoredView.prototype
          * @type {String}
          */
-        id : {
+        name : {
             get : function() {
-                return this._id;
+                return this._name;
             }
         }
     });

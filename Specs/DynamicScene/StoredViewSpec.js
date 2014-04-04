@@ -14,35 +14,34 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('constructor sets id.', function() {
-        var storedView = new StoredView('someId');
-        expect(storedView.id).toEqual('someId');
+    it('constructor requires a name.', function() {
+        expect(function() {
+            var storedView = new StoredView();
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor sets name.', function() {
+        var storedView = new StoredView('someName');
+        expect(storedView.name).toEqual('someName');
     });
 
     it('isAvailable is always true if not tracking an object.', function() {
-        var storedView = new StoredView('someId');
+        var storedView = new StoredView('someName');
         expect(storedView.isAvailable(new JulianDate())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {
-        var storedView = new StoredView('someId');
+        var storedView = new StoredView('someName');
         expect(function() {
             storedView.isAvailable();
         }).toThrowDeveloperError();
-    });
-
-    it('constructor creates a unique id if one is not provided.', function() {
-        var object = new StoredView();
-        var object2 = new StoredView();
-        expect(object.id).toBeDefined();
-        expect(object.id).toNotEqual(object2.id);
     });
 
     it('isAvailable works with a foreground object.', function() {
         var dynamicObject = new DynamicObject();
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         dynamicObject.availability = interval;
-        var storedView = new StoredView();
+        var storedView = new StoredView('View 1');
         storedView.foregroundObject = dynamicObject;
         expect(storedView.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
         expect(storedView.isAvailable(interval.start)).toEqual(true);
@@ -57,7 +56,7 @@ defineSuite([
         var interval2 = TimeInterval.fromIso8601('2001-01-01/2003-01-01');
         dynamicObject1.availability = interval1;
         dynamicObject2.availability = interval2;
-        var storedView = new StoredView();
+        var storedView = new StoredView('View 1');
         storedView.foregroundObject = dynamicObject1;
         storedView.backgroundObject = dynamicObject2;
         expect(storedView.isAvailable(interval2.start.addSeconds(-1))).toEqual(false);

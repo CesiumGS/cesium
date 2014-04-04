@@ -35,7 +35,7 @@ define(['../Core/AssociativeArray',
     }
 
     /**
-     * An observable collection of {@link StoredView} instances where each instance has a unique id.
+     * An observable collection of {@link StoredView} instances where each instance has a unique name.
      * @alias StoredViewCollection
      * @constructor
      */
@@ -124,7 +124,7 @@ define(['../Core/AssociativeArray',
      * @memberof StoredViewCollection
      *
      * @param {StoredView} storedView The stored view to be added.
-     * @exception {DeveloperError} A view with <storedView.id> already exists in this collection.
+     * @exception {DeveloperError} A view with <storedView.name> already exists in this collection.
      */
     StoredViewCollection.prototype.add = function(storedView) {
         //>>includeStart('debug', pragmas.debug);
@@ -133,17 +133,17 @@ define(['../Core/AssociativeArray',
         }
         //>>includeEnd('debug');
 
-        var id = storedView.id;
+        var name = storedView.name;
         var storedViews = this._storedViews;
-        if (defined(storedViews.get(id))) {
-            throw new RuntimeError('A stored view with id ' + id + ' already exists in this collection.');
+        if (defined(storedViews.get(name))) {
+            throw new RuntimeError('A stored view with name ' + name + ' already exists in this collection.');
         }
 
-        storedViews.set(id, storedView);
+        storedViews.set(name, storedView);
 
         var removedViews = this._removedViews;
-        if (!this._removedViews.remove(id)) {
-            this._addedViews.set(id, storedView);
+        if (!this._removedViews.remove(name)) {
+            this._addedViews.set(name, storedView);
         }
         fireChangedEvent(this);
     };
@@ -162,31 +162,31 @@ define(['../Core/AssociativeArray',
         }
         //>>includeEnd('debug');
 
-        return this.removeById(storedView.id);
+        return this.removeByName(storedView.name);
     };
 
     /**
-     * Removes a stored view with the provided id from the collection.
+     * Removes a stored view with the provided name from the collection.
      * @memberof StoredViewCollection
      *
-     * @param {String} id The id of the stored view to remove.
-     * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
+     * @param {String} name The name of the stored view to remove.
+     * @returns {Boolean} true if the item was removed, false if no item with the provided name existed in the collection.
      */
-    StoredViewCollection.prototype.removeById = function(id) {
+    StoredViewCollection.prototype.removeByName = function(name) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
         }
         //>>includeEnd('debug');
 
         var storedViews = this._storedViews;
-        var storedView = storedViews.get(id);
-        if (!this._storedViews.remove(id)) {
+        var storedView = storedViews.get(name);
+        if (!this._storedViews.remove(name)) {
             return false;
         }
 
-        if (!this._addedViews.remove(id)) {
-            this._removedViews.set(id, storedView);
+        if (!this._addedViews.remove(name)) {
+            this._removedViews.set(name, storedView);
         }
         fireChangedEvent(this);
 
@@ -209,10 +209,10 @@ define(['../Core/AssociativeArray',
 
         for (var i = 0; i < storedViewsLength; i++) {
             var existingItem = array[i];
-            var existingItemId = existingItem.id;
-            var addedItem = addedViews.get(existingItemId);
+            var existingItemName = existingItem.name;
+            var addedItem = addedViews.get(existingItemName);
             if (!defined(addedItem)) {
-                removed.set(existingItemId, existingItem);
+                removed.set(existingItemName, existingItem);
             }
         }
 
@@ -222,20 +222,20 @@ define(['../Core/AssociativeArray',
     };
 
     /**
-     * Gets a stored view with the specified id.
+     * Gets a stored view with the specified name.
      * @memberof StoredViewCollection
      *
-     * @param {String} id The id of the stored view to retrieve.
-     * @returns {StoredView} The stored view with the provided id or undefined if the id did not exist in the collection.
+     * @param {String} name The name of the stored view to retrieve.
+     * @returns {StoredView} The stored view with the provided name or undefined if the name did not exist in the collection.
      */
-    StoredViewCollection.prototype.getById = function(id) {
+    StoredViewCollection.prototype.getByName = function(name) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
         }
         //>>includeEnd('debug');
 
-        return this._storedViews.get(id);
+        return this._storedViews.get(name);
     };
 
     /**

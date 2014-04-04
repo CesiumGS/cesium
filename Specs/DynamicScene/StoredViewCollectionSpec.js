@@ -26,8 +26,8 @@ defineSuite([
     });
 
     it('add/remove works', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         storedViewCollection.add(storedView);
@@ -44,8 +44,8 @@ defineSuite([
     });
 
     it('add/remove raises expected events', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         var listener = new CollectionListener();
@@ -79,9 +79,9 @@ defineSuite([
     });
 
     it('suspended add/remove raises expected events', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
-        var storedView3 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
+        var storedView3 = new StoredView('View 3');
 
         var storedViewCollection = new StoredViewCollection();
 
@@ -120,8 +120,8 @@ defineSuite([
     });
 
     it('removeAll works', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         storedViewCollection.add(storedView);
@@ -131,8 +131,8 @@ defineSuite([
     });
 
     it('removeAll raises expected events', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         var listener = new CollectionListener();
@@ -156,8 +156,8 @@ defineSuite([
     });
 
     it('suspended removeAll raises expected events', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         var listener = new CollectionListener();
@@ -187,21 +187,21 @@ defineSuite([
         storedViewCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
-    it('getById works', function() {
-        var storedView = new StoredView();
-        var storedView2 = new StoredView();
+    it('getByName works', function() {
+        var storedView = new StoredView('View 1');
+        var storedView2 = new StoredView('View 2');
         var storedViewCollection = new StoredViewCollection();
 
         storedViewCollection.add(storedView);
         storedViewCollection.add(storedView2);
 
-        expect(storedViewCollection.getById(storedView.id)).toBe(storedView);
-        expect(storedViewCollection.getById(storedView2.id)).toBe(storedView2);
+        expect(storedViewCollection.getByName(storedView.name)).toBe(storedView);
+        expect(storedViewCollection.getByName(storedView2.name)).toBe(storedView2);
     });
 
-    it('getById returns undefined for non-existent storedView', function() {
+    it('getByName returns undefined for non-existent storedView', function() {
         var storedViewCollection = new StoredViewCollection();
-        expect(storedViewCollection.getById('123')).toBeUndefined();
+        expect(storedViewCollection.getByName('123')).toBeUndefined();
     });
 
     it('resumeEvents throws if no matching suspendEvents ', function() {
@@ -218,7 +218,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('add throws for StoredView with same id', function() {
+    it('add throws for StoredView with same name', function() {
         var storedViewCollection = new StoredViewCollection();
         var storedView = new StoredView('1');
         var storedView2 = new StoredView('1');
@@ -236,17 +236,17 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('removeById throws for undefined id', function() {
+    it('removeByName throws for undefined name', function() {
         var storedViewCollection = new StoredViewCollection();
         expect(function() {
-            storedViewCollection.removeById(undefined);
+            storedViewCollection.removeByName(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('getById throws if no id specified', function() {
+    it('getByName throws if no name specified', function() {
         var storedViewCollection = new StoredViewCollection();
         expect(function() {
-            storedViewCollection.getById(undefined);
+            storedViewCollection.getByName(undefined);
         }).toThrowDeveloperError();
     });
 });

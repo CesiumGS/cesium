@@ -114,38 +114,73 @@ define([
                               'currentViewName', '_viewNames', '_timeRotateMode', '_userRotateMode', '_fieldOfView']);
 
         this._eventHelper.add(this._storedViewCollection.collectionChanged, function() {
-            that._viewNames = that._storedViewCollection.getStoredViews().map(function (view) { return view.id; });
+            that._viewNames = that._storedViewCollection.getStoredViews().map(function (view) { return view.name; });
         });
 
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
 
+        function modifyStoredView(storedView) {
+            var camera = scene.camera;
+
+            storedView.position = Cartesian3.clone(camera.position);
+            storedView.direction = Cartesian3.clone(camera.direction);
+            storedView.up = Cartesian3.clone(camera.up);
+
+            storedView.fieldOfView = CesiumMath.toDegrees(camera.frustum.fovy);
+            storedView.constrainedAxis = camera.constrainedAxis;
+
+            // TODO: more things: sceneMode, foregroundObject, backgroundObject, and cameraRotationMode
+        }
+
         this._saveStoredView = createCommand(function() {
             that.editorVisible = false;
-            var storedView = that._storedViewCollection.getById(that.currentViewName);
+            var storedView = that._storedViewCollection.getByName(that.currentViewName);
             if (defined(storedView)) {
-                throw "Not implemented yet"; // TODO
+                modifyStoredView(storedView);
             } else {
-                var newView = new StoredView(that.currentViewName, scene.camera);
-                that._storedViewCollection.add(newView);
+                storedView = new StoredView(that.currentViewName);
+                modifyStoredView(storedView);
+                that._storedViewCollection.add(storedView);
             }
         });
 
+        function applyStoredView(storedView) {
+            that.currentViewName = storedView.name;
+            var camera = scene.camera;
+
+            // FOV
+            that._fieldOfView = storedView.fieldOfView;
+            camera.frustum.fovy = CesiumMath.toRadians(storedView.fieldOfView);
+
+            // constrainedAxis
+            if (!defined(storedView.constrainedAxis)) {
+                that._userRotateMode = 'U';
+            } else if (Cartesian3.equalsEpsilon(storedView.constrainedAxis, Cartesian3.UNIT_Z, 1e-10)) {
+                that._userRotateMode = 'Z';
+            } else {
+                that._userRotateMode = 'custom';  // Neither radio button selected.
+            }
+            camera.constrainedAxis = storedView.constrainedAxis;
+
+            // Camera flight
+            var viewDescription = {
+                destination : storedView.position,
+                duration : 1500,
+                up : storedView.up,
+                direction : storedView.direction,
+                endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
+            };
+            var flight = CameraFlightPath.createAnimation(scene, viewDescription);
+            scene.animations.add(flight);
+        }
+
         this._visitStoredView = createCommand(function(viewName) {
             that.dropDownVisible = false;
-            that.currentViewName = viewName;
-            var storedView = that._storedViewCollection.getById(viewName);
+            var storedView = that._storedViewCollection.getByName(viewName);
             if (defined(storedView)) {
-                var viewDescription = {
-                    destination : storedView.position,
-                    duration : 1500,
-                    up : storedView.up,
-                    direction : storedView.direction,
-                    endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
-                };
-                var flight = CameraFlightPath.createAnimation(scene, viewDescription);
-                scene.animations.add(flight);
+                applyStoredView(storedView);
             }
         });
 
