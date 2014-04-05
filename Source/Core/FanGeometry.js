@@ -90,11 +90,24 @@ define([
         var length;
         var attributes = new GeometryAttributes();
 
+        //Convert all directions to Cartesian space and remove adjacent duplicates.
+        var directions = [];
         var directionsLength = sphericalDiretions.length;
-        var directions = new Array(directionsLength);
         for (i = 0; i < directionsLength; i++) {
-            directions[i] = Cartesian3.fromSpherical(sphericalDiretions[i]);
+            direction = Cartesian3.fromSpherical(sphericalDiretions[i]);
+            if (i === 0) {
+                directions.push(direction);
+            } else if (!Cartesian3.equals(directions[i - 1], direction)) {
+                if (i === directionsLength - 1) {
+                    if (!Cartesian3.equals(directions[0], direction)) {
+                        directions.push(direction);
+                    }
+                } else {
+                    directions.push(direction);
+                }
+            }
         }
+        directionsLength = directions.length;
 
         if (vertexFormat.position) {
             length = ((directionsLength + 1) * 2) * 3;
