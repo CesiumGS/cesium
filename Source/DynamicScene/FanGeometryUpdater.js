@@ -511,24 +511,20 @@ define(['../Core/Color',
             return;
         }
 
+        var directions = fan.directions;
+        var radius = fan.radius;
+        var numberOfRings = fan.numberOfRings;
+
         var options = this._options;
+        options.directions = directions.getValue(time, options.directions);
+        options.radius = defined(radius) ? radius.getValue(time) : undefined;
+        options.numberOfRings = defined(numberOfRings) ? numberOfRings.getValue(time) : undefined;
 
-        var vertexPositions = dynamicObject.vertexPositions;
-        var perPositionHeight = fan.perPositionHeight;
-        var height = fan.height;
-        var extrudedHeight = fan.extrudedHeight;
-        var granularity = fan.granularity;
-        var stRotation = fan.stRotation;
-
-        options.fanHierarchy.positions = vertexPositions.getValue(time, options.fanHierarchy.positions);
-        options.height = defined(height) ? height.getValue(time, options) : undefined;
-        options.extrudedHeight = defined(extrudedHeight) ? extrudedHeight.getValue(time, options) : undefined;
-        options.granularity = defined(granularity) ? granularity.getValue(time) : undefined;
-        options.stRotation = defined(stRotation) ? stRotation.getValue(time) : undefined;
+        positionScratch = dynamicObject.position.getValue(time, positionScratch);
+        orientationScratch = dynamicObject.orientation.getValue(time, orientationScratch);
+        matrix3Scratch = Matrix3.fromQuaternion(orientationScratch, matrix3Scratch);
 
         if (!defined(fan.fill) || fan.fill.getValue(time)) {
-            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(time) : undefined;
-
             this._material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             var material = this._material;
             var appearance = new MaterialAppearance({
@@ -541,7 +537,8 @@ define(['../Core/Color',
             this._primitive = new Primitive({
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
-                    geometry : new FanGeometry(options)
+                    geometry : new FanGeometry(options),
+                    modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch)
                 }),
                 appearance : appearance,
                 asynchronous : false
@@ -557,6 +554,7 @@ define(['../Core/Color',
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
                     geometry : new FanOutlineGeometry(options),
+                    modelMatrix : Matrix4.fromRotationTranslation(matrix3Scratch, positionScratch),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(outlineColor)
                     }
