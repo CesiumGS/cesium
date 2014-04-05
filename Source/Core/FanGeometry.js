@@ -73,28 +73,47 @@ define([
     FanGeometry.createGeometry = function(fanGeometry) {
         var radius = fanGeometry._radius;
         var directions = fanGeometry._directions;
+
+        if (directions[0].clock < directions[1].clock) {
+            directions.reverse();
+        }
+
         var vertexFormat = fanGeometry._vertexFormat;
+        var binormals;
+        var normals;
 
         var i;
         var x;
+        var s;
+        var q;
         var length;
         var directionsLength = directions.length;
         var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
-            length = (1 + directionsLength) * 3;
+            length = ((directionsLength + 1) * 2) * 3;
             var positions = new Float64Array(length);
 
             x = 0;
-            positions[x++] = 0;
-            positions[x++] = 0;
-            positions[x++] = 0;
             for (i = 0; i < directionsLength; i++) {
+                positions[x++] = 0;
+                positions[x++] = 0;
+                positions[x++] = 0;
+
                 scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
                 positions[x++] = scratchCartesian.x * radius;
                 positions[x++] = scratchCartesian.y * radius;
                 positions[x++] = scratchCartesian.z * radius;
             }
+
+            positions[x++] = 0;
+            positions[x++] = 0;
+            positions[x++] = 0;
+
+            scratchCartesian = Cartesian3.fromSpherical(directions[0], scratchCartesian);
+            positions[x++] = scratchCartesian.x * radius;
+            positions[x++] = scratchCartesian.y * radius;
+            positions[x++] = scratchCartesian.z * radius;
 
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
@@ -103,17 +122,111 @@ define([
             });
         }
 
-        if (vertexFormat.st) {
-            length = (1 + directionsLength) * 2;
-            var textureCoordinates = new Float64Array(length);
+        if (vertexFormat.normal) {
+            length = ((directionsLength + 1) * 2) * 3;
+            normals = new Float64Array(length);
+
             x = 0;
-            textureCoordinates[x++] = 0.0;
-            textureCoordinates[x++] = 0.0;
-            for (i = 0; i < directionsLength; i++) {
+            for (i = 0; i < directionsLength - 1; i++) {
                 scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
-                textureCoordinates[x++] = scratchCartesian.x;
-                textureCoordinates[x++] = scratchCartesian.y;
+                var v2 = Cartesian3.fromSpherical(directions[i + 1]);
+                scratchCartesian = Cartesian3.cross(scratchCartesian, v2);
+                normals[x++] = scratchCartesian.x;
+                normals[x++] = scratchCartesian.y;
+                normals[x++] = scratchCartesian.z;
+
+                normals[x++] = scratchCartesian.x;
+                normals[x++] = scratchCartesian.y;
+                normals[x++] = scratchCartesian.z;
             }
+            normals[x++] = normals[0];
+            normals[x++] = normals[1];
+            normals[x++] = normals[2];
+
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            length = ((directionsLength + 1) * 2) * 3;
+            binormals = new Float64Array(length);
+
+            x = 0;
+            for (i = 0; i < directionsLength - 1; i++) {
+                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
+                binormals[x++] = scratchCartesian.x;
+                binormals[x++] = scratchCartesian.y;
+                binormals[x++] = scratchCartesian.z;
+
+                binormals[x++] = scratchCartesian.x;
+                binormals[x++] = scratchCartesian.y;
+                binormals[x++] = scratchCartesian.z;
+            }
+            binormals[x++] = binormals[0];
+            binormals[x++] = binormals[1];
+            binormals[x++] = binormals[2];
+
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            length = ((directionsLength + 1) * 2) * 3;
+            var tangents = new Float64Array(length);
+
+            x = 0;
+            for (i = 0; i < length; i += 3) {
+                var normal = Cartesian3.unpack(normals, i);
+                var binormal = Cartesian3.unpack(binormals, i);
+                var tangent = Cartesian3.cross(binormal, normal);
+                tangents[x++] = tangent.x;
+                tangents[x++] = tangent.y;
+                tangents[x++] = tangent.z;
+
+                tangents[x++] = tangent.x;
+                tangents[x++] = tangent.y;
+                tangents[x++] = tangent.z;
+            }
+            tangents[x++] = tangents[0];
+            tangents[x++] = tangents[1];
+            tangents[x++] = tangents[2];
+
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangents
+            });
+        }
+
+        if (vertexFormat.st) {
+            length = ((directionsLength + 1) * 2) * 2;
+            var textureCoordinates = new Float64Array(length);
+
+            q = 0;
+            x = 0;
+            for (i = 0; i < directionsLength; i++) {
+                s = q / (directionsLength + 1);
+                textureCoordinates[x++] = s;
+                textureCoordinates[x++] = 0;
+
+                textureCoordinates[x++] = s;
+                textureCoordinates[x++] = 1;
+                q++;
+            }
+
+            s = q / (directionsLength + 1);
+            textureCoordinates[x++] = s;
+            textureCoordinates[x++] = 0;
+
+            textureCoordinates[x++] = s;
+            textureCoordinates[x++] = 1;
+            q++;
 
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -122,43 +235,28 @@ define([
             });
         }
 
-        length = directionsLength * 3;
+        length = (directionsLength * 3) * 2;
         var indices = new Uint16Array(length);
         x = 0;
-        for (i = 0; i < directionsLength - 1; i++) {
-            indices[x++] = 0;
+        i = 0;
+        while (x < length) {
             indices[x++] = i;
+            indices[x++] = i + 3;
             indices[x++] = i + 1;
-        }
-        indices[x++] = 0;
-        indices[x++] = directionsLength - 1;
-        indices[x++] = 1;
 
-        var geometry = new Geometry({
+            indices[x++] = i;
+            indices[x++] = i + 2;
+            indices[x++] = i + 3;
+
+            i += 2;
+        }
+
+        return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
         });
-
-        if (vertexFormat.normal) {
-            geometry = GeometryPipeline.computeNormal(geometry);
-        }
-
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
-            if (!vertexFormat.tangent) {
-                geometry.attributes.tangent = undefined;
-            }
-            if (!vertexFormat.binormal) {
-                geometry.attributes.binormal = undefined;
-            }
-            if (!vertexFormat.st) {
-                geometry.attributes.st = undefined;
-            }
-        }
-
-        return geometry;
     };
 
     return FanGeometry;
