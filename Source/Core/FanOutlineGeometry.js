@@ -28,28 +28,25 @@ define([
     var scratchCartesian;
 
     /**
-     * Describes the outline of fan, centered around the origin.
+     * Describes the outline of a {@link FanGeometry}.
      *
      * @alias FanOutlineGeometry
      * @constructor
      *
-     * @param {Spherical[]} options.directions The directions from the origin that defined the fan.
+     * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
-     * @param {Number} options.numberOfRings The number of outline rings to draw, starting from the outer edge and equidistantly spaced towards the center.
+     * @param {Number} [options.numberOfRings=6] The number of outline rings to draw, starting from the outer edge and equidistantly spaced towards the center.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     *
-     * @see FanOutlineGeometry#fromDimensions
-     * @see FanOutlineGeometry#createGeometry
      */
     var FanOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.radius)) {
-            throw new DeveloperError('options.radius is required.');
-        }
         if (!defined(options.directions)) {
             throw new DeveloperError('options.directions is required');
+        }
+        if (!defined(options.radius)) {
+            throw new DeveloperError('options.radius is required.');
         }
         //>>includeEnd('debug');
 
@@ -63,13 +60,19 @@ define([
     };
 
     /**
-     * Computes the geometric representation of a fan, including its vertices, indices, and a bounding sphere.
+     * Computes the geometric representation of a fan outline, including its vertices, indices, and a bounding sphere.
      * @memberof FanOutlineGeometry
      *
      * @param {FanOutlineGeometry} fanGeometry A description of the fan.
      * @returns {Geometry} The computed vertices and indices.
      */
     FanOutlineGeometry.createGeometry = function(fanGeometry) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(fanGeometry)) {
+            throw new DeveloperError('fanGeometry is required');
+        }
+        //>>includeEnd('debug');
+
         var radius = fanGeometry._radius;
         var directions = fanGeometry._directions;
         var vertexFormat = fanGeometry._vertexFormat;
@@ -77,17 +80,18 @@ define([
 
         var i;
         var x;
+        var ring;
         var length;
-        var directionsLength = directions.length;
-        var attributes = new GeometryAttributes();
         var indices;
         var positions;
-        var ring;
+        var directionsLength = directions.length;
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
+            x = 0;
             length = directionsLength * 3 * numberOfRings;
             positions = new Float64Array(length);
-            x = 0;
+
             for (ring = 0; ring < numberOfRings; ring++) {
                 var ringRadius = (radius / numberOfRings) * (ring + 1);
                 for (i = 0; i < directionsLength; i++) {
@@ -105,9 +109,10 @@ define([
             });
         }
 
+        x = 0;
         length = directionsLength * 2 * numberOfRings;
         indices = new Uint16Array(length);
-        x = 0;
+
         for (ring = 0; ring < numberOfRings; ring++) {
             var offset = ring * directionsLength;
             for (i = 0; i < directionsLength - 1; i++) {

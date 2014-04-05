@@ -3,28 +3,24 @@ define([
         './defined',
         './DeveloperError',
         './Cartesian3',
-        './Math',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
         './GeometryAttribute',
         './GeometryAttributes',
-        './GeometryPipeline',
         './VertexFormat',
         './Geometry'
     ], function(
         defined,
         DeveloperError,
         Cartesian3,
-        CesiumMath,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryPipeline,
         VertexFormat,
         Geometry) {
     "use strict";
@@ -37,7 +33,7 @@ define([
      * @alias FanGeometry
      * @constructor
      *
-     * @param {Spherical[]} options.directions The directions from the origin that defined the fan.
+     * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
@@ -71,11 +67,16 @@ define([
      * @returns {Geometry} The computed vertices and indices.
      */
     FanGeometry.createGeometry = function(fanGeometry) {
-        var radius = fanGeometry._radius;
-        var directions = fanGeometry._directions;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(fanGeometry)) {
+            throw new DeveloperError('fanGeometry is required');
+        }
+        //>>includeEnd('debug');
 
-        if (directions[0].clock < directions[1].clock) {
-            directions.reverse();
+        var radius = fanGeometry._radius;
+        var sphericalDiretions = fanGeometry._directions;
+        if (sphericalDiretions[0].clock < sphericalDiretions[1].clock) {
+            sphericalDiretions.reverse();
         }
 
         var vertexFormat = fanGeometry._vertexFormat;
@@ -85,10 +86,15 @@ define([
         var i;
         var x;
         var s;
-        var q;
+        var direction;
         var length;
-        var directionsLength = directions.length;
         var attributes = new GeometryAttributes();
+
+        var directionsLength = sphericalDiretions.length;
+        var directions = new Array(directionsLength);
+        for (i = 0; i < directionsLength; i++) {
+            directions[i] = Cartesian3.fromSpherical(sphericalDiretions[i]);
+        }
 
         if (vertexFormat.position) {
             length = ((directionsLength + 1) * 2) * 3;
@@ -100,20 +106,18 @@ define([
                 positions[x++] = 0;
                 positions[x++] = 0;
 
-                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
-                positions[x++] = scratchCartesian.x * radius;
-                positions[x++] = scratchCartesian.y * radius;
-                positions[x++] = scratchCartesian.z * radius;
+                direction = directions[i];
+                positions[x++] = direction.x * radius;
+                positions[x++] = direction.y * radius;
+                positions[x++] = direction.z * radius;
             }
 
-            positions[x++] = 0;
-            positions[x++] = 0;
-            positions[x++] = 0;
-
-            scratchCartesian = Cartesian3.fromSpherical(directions[0], scratchCartesian);
-            positions[x++] = scratchCartesian.x * radius;
-            positions[x++] = scratchCartesian.y * radius;
-            positions[x++] = scratchCartesian.z * radius;
+            positions[x++] = positions[0];
+            positions[x++] = positions[1];
+            positions[x++] = positions[2];
+            positions[x++] = positions[3];
+            positions[x++] = positions[4];
+            positions[x++] = positions[5];
 
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
@@ -126,11 +130,12 @@ define([
             length = ((directionsLength + 1) * 2) * 3;
             normals = new Float64Array(length);
 
+            var direction2;
             x = 0;
             for (i = 0; i < directionsLength - 1; i++) {
-                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
-                var v2 = Cartesian3.fromSpherical(directions[i + 1]);
-                scratchCartesian = Cartesian3.cross(scratchCartesian, v2);
+                direction = directions[i];
+                direction2 = directions[i + 1];
+                scratchCartesian = Cartesian3.cross(direction, direction2, scratchCartesian);
                 normals[x++] = scratchCartesian.x;
                 normals[x++] = scratchCartesian.y;
                 normals[x++] = scratchCartesian.z;
@@ -139,9 +144,24 @@ define([
                 normals[x++] = scratchCartesian.y;
                 normals[x++] = scratchCartesian.z;
             }
+
+            direction = directions[i];
+            direction2 = directions[0];
+            scratchCartesian = Cartesian3.cross(direction, direction2, scratchCartesian);
+            normals[x++] = scratchCartesian.x;
+            normals[x++] = scratchCartesian.y;
+            normals[x++] = scratchCartesian.z;
+
+            normals[x++] = scratchCartesian.x;
+            normals[x++] = scratchCartesian.y;
+            normals[x++] = scratchCartesian.z;
+
             normals[x++] = normals[0];
             normals[x++] = normals[1];
             normals[x++] = normals[2];
+            normals[x++] = normals[3];
+            normals[x++] = normals[4];
+            normals[x++] = normals[5];
 
             attributes.normal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -155,19 +175,23 @@ define([
             binormals = new Float64Array(length);
 
             x = 0;
-            for (i = 0; i < directionsLength - 1; i++) {
-                scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
-                binormals[x++] = scratchCartesian.x;
-                binormals[x++] = scratchCartesian.y;
-                binormals[x++] = scratchCartesian.z;
+            for (i = 0; i < directionsLength; i++) {
+                direction = directions[i];
+                binormals[x++] = direction.x;
+                binormals[x++] = direction.y;
+                binormals[x++] = direction.z;
 
-                binormals[x++] = scratchCartesian.x;
-                binormals[x++] = scratchCartesian.y;
-                binormals[x++] = scratchCartesian.z;
+                binormals[x++] = direction.x;
+                binormals[x++] = direction.y;
+                binormals[x++] = direction.z;
             }
             binormals[x++] = binormals[0];
             binormals[x++] = binormals[1];
             binormals[x++] = binormals[2];
+
+            binormals[x++] = binormals[3];
+            binormals[x++] = binormals[4];
+            binormals[x++] = binormals[5];
 
             attributes.binormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -181,7 +205,7 @@ define([
             var tangents = new Float64Array(length);
 
             x = 0;
-            for (i = 0; i < length; i += 3) {
+            for (i = 0; i < length; i += 6) {
                 var normal = Cartesian3.unpack(normals, i);
                 var binormal = Cartesian3.unpack(binormals, i);
                 var tangent = Cartesian3.cross(binormal, normal);
@@ -193,9 +217,6 @@ define([
                 tangents[x++] = tangent.y;
                 tangents[x++] = tangent.z;
             }
-            tangents[x++] = tangents[0];
-            tangents[x++] = tangents[1];
-            tangents[x++] = tangents[2];
 
             attributes.tangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -208,25 +229,22 @@ define([
             length = ((directionsLength + 1) * 2) * 2;
             var textureCoordinates = new Float64Array(length);
 
-            q = 0;
             x = 0;
             for (i = 0; i < directionsLength; i++) {
-                s = q / (directionsLength + 1);
+                s = 1.0 - (i / (directionsLength + 1));
                 textureCoordinates[x++] = s;
-                textureCoordinates[x++] = 0;
+                textureCoordinates[x++] = 0.0;
 
                 textureCoordinates[x++] = s;
-                textureCoordinates[x++] = 1;
-                q++;
+                textureCoordinates[x++] = 1.0;
             }
 
-            s = q / (directionsLength + 1);
+            s = 1 - (i / (directionsLength + 1));
             textureCoordinates[x++] = s;
-            textureCoordinates[x++] = 0;
+            textureCoordinates[x++] = 0.0;
 
             textureCoordinates[x++] = s;
-            textureCoordinates[x++] = 1;
-            q++;
+            textureCoordinates[x++] = 1.0;
 
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -235,11 +253,11 @@ define([
             });
         }
 
-        length = (directionsLength * 3) * 2;
-        var indices = new Uint16Array(length);
         x = 0;
         i = 0;
-        while (x < length) {
+        length = ((directionsLength +1)* 2) * 3;
+        var indices = new Uint16Array(length);
+        while (x < length - 6) {
             indices[x++] = i;
             indices[x++] = i + 3;
             indices[x++] = i + 1;
@@ -250,6 +268,14 @@ define([
 
             i += 2;
         }
+
+        indices[x++] = i;
+        indices[x++] = 1;
+        indices[x++] = i + 1;
+
+        indices[x++] = i;
+        indices[x++] = 0;
+        indices[x++] = 1;
 
         return new Geometry({
             attributes : attributes,
