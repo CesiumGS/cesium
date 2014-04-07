@@ -1,31 +1,33 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType',
         './defaultValue',
-        './BoundingSphere',
+        './defined',
+        './DeveloperError',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './VertexFormat',
-        './Geometry'
+        './IndexDatatype',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType,
         defaultValue,
-        BoundingSphere,
+        defined,
+        DeveloperError,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        VertexFormat,
-        Geometry) {
+        IndexDatatype,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
-    var scratchCartesian;
+    var scratchCartesian = new Cartesian3();
 
     /**
      * Describes a triangle fan around the origin.
@@ -35,7 +37,7 @@ define([
      *
      * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
-     * @param {Boolean} options.perDirectionRadius If true,
+     * @param {Boolean} options.perDirectionRadius When set to true, the magnitude of each direction is used in place of a constant radius.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see FanGeometry#createGeometry
@@ -95,18 +97,22 @@ define([
 
         //Convert all directions to Cartesian space and remove adjacent duplicates.
         var directions = [];
+        var normalizedDirections = [];
         var directionsLength = sphericalDiretions.length;
         for (i = 0; i < directionsLength; i++) {
             direction = Cartesian3.fromSpherical(sphericalDiretions[i]);
             if (i === 0) {
                 directions.push(direction);
+                normalizedDirections.push(Cartesian3.normalize(direction));
             } else if (!Cartesian3.equals(directions[i - 1], direction)) {
                 if (i === directionsLength - 1) {
                     if (!Cartesian3.equals(directions[0], direction)) {
                         directions.push(direction);
+                        normalizedDirections.push(Cartesian3.normalize(direction));
                     }
                 } else {
                     directions.push(direction);
+                    normalizedDirections.push(Cartesian3.normalize(direction));
                 }
             }
         }
@@ -122,8 +128,8 @@ define([
                 positions[x++] = 0;
                 positions[x++] = 0;
 
-                direction = directions[i];
-                var currentRadius = perDirectionRadius ? Cartesian3.magnitude(direction) : radius;
+                direction = normalizedDirections[i];
+                var currentRadius = perDirectionRadius ? Cartesian3.magnitude(directions[i]) : radius;
                 positions[x++] = direction.x * currentRadius;
                 positions[x++] = direction.y * currentRadius;
                 positions[x++] = direction.z * currentRadius;
@@ -146,14 +152,18 @@ define([
 
         if (vertexFormat.normal) {
             length = ((directionsLength + 1) * 2) * 3;
-            normals = new Float64Array(length);
+            normals = new Float32Array(length);
 
             var direction2;
             x = 0;
-            for (i = 0; i < directionsLength - 1; i++) {
+            for (i = 0; i < directionsLength; i++) {
                 direction = directions[i];
-                direction2 = directions[i + 1];
-                scratchCartesian = Cartesian3.cross(direction, direction2, scratchCartesian);
+                if (i + 1 === directionsLength) {
+                    direction2 = directions[0];
+                } else {
+                    direction2 = directions[i + 1];
+                }
+                scratchCartesian = Cartesian3.normalize(Cartesian3.cross(direction, direction2, scratchCartesian), scratchCartesian);
                 normals[x++] = scratchCartesian.x;
                 normals[x++] = scratchCartesian.y;
                 normals[x++] = scratchCartesian.z;
@@ -162,17 +172,6 @@ define([
                 normals[x++] = scratchCartesian.y;
                 normals[x++] = scratchCartesian.z;
             }
-
-            direction = directions[i];
-            direction2 = directions[0];
-            scratchCartesian = Cartesian3.cross(direction, direction2, scratchCartesian);
-            normals[x++] = scratchCartesian.x;
-            normals[x++] = scratchCartesian.y;
-            normals[x++] = scratchCartesian.z;
-
-            normals[x++] = scratchCartesian.x;
-            normals[x++] = scratchCartesian.y;
-            normals[x++] = scratchCartesian.z;
 
             normals[x++] = normals[0];
             normals[x++] = normals[1];
@@ -190,11 +189,11 @@ define([
 
         if (vertexFormat.binormal) {
             length = ((directionsLength + 1) * 2) * 3;
-            binormals = new Float64Array(length);
+            binormals = new Float32Array(length);
 
             x = 0;
             for (i = 0; i < directionsLength; i++) {
-                direction = directions[i];
+                direction = normalizedDirections[i];
                 binormals[x++] = direction.x;
                 binormals[x++] = direction.y;
                 binormals[x++] = direction.z;
@@ -206,7 +205,6 @@ define([
             binormals[x++] = binormals[0];
             binormals[x++] = binormals[1];
             binormals[x++] = binormals[2];
-
             binormals[x++] = binormals[3];
             binormals[x++] = binormals[4];
             binormals[x++] = binormals[5];
@@ -220,13 +218,13 @@ define([
 
         if (vertexFormat.tangent) {
             length = ((directionsLength + 1) * 2) * 3;
-            var tangents = new Float64Array(length);
+            var tangents = new Float32Array(length);
 
             x = 0;
             for (i = 0; i < length; i += 6) {
                 var normal = Cartesian3.unpack(normals, i);
                 var binormal = Cartesian3.unpack(binormals, i);
-                var tangent = Cartesian3.cross(binormal, normal);
+                var tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, scratchCartesian), scratchCartesian);
                 tangents[x++] = tangent.x;
                 tangents[x++] = tangent.y;
                 tangents[x++] = tangent.z;
@@ -245,7 +243,7 @@ define([
 
         if (vertexFormat.st) {
             length = ((directionsLength + 1) * 2) * 2;
-            var textureCoordinates = new Float64Array(length);
+            var textureCoordinates = new Float32Array(length);
 
             x = 0;
             for (i = 0; i < directionsLength; i++) {
@@ -274,7 +272,7 @@ define([
         x = 0;
         i = 0;
         length = ((directionsLength + 1) * 2) * 3;
-        var indices = new Uint16Array(length);
+        var indices = IndexDatatype.createTypedArray(length / 3, length);
         while (x < length - 6) {
             indices[x++] = i;
             indices[x++] = i + 3;

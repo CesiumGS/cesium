@@ -1,31 +1,33 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType',
         './defaultValue',
-        './BoundingSphere',
+        './defined',
+        './DeveloperError',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './VertexFormat',
-        './Geometry'
+        './IndexDatatype',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType,
         defaultValue,
-        BoundingSphere,
+        defined,
+        DeveloperError,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        VertexFormat,
-        Geometry) {
+        IndexDatatype,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
-    var scratchCartesian;
+    var scratchCartesian = new Cartesian3();
 
     /**
      * Describes the outline of a {@link FanGeometry}.
@@ -35,6 +37,7 @@ define([
      *
      * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
+     * @param {Boolean} options.perDirectionRadius When set to true, the magnitude of each direction is used in place of a constant radius.
      * @param {Number} [options.numberOfRings=6] The number of outline rings to draw, starting from the outer edge and equidistantly spaced towards the center.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      */
@@ -97,9 +100,9 @@ define([
             for (ring = 0; ring < numberOfRings; ring++) {
                 for (i = 0; i < directionsLength; i++) {
                     scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
-
                     var currentRadius = perDirectionRadius ? Cartesian3.magnitude(scratchCartesian) : radius;
                     var ringRadius = (currentRadius / numberOfRings) * (ring + 1);
+                    scratchCartesian = Cartesian3.normalize(scratchCartesian, scratchCartesian);
 
                     positions[x++] = scratchCartesian.x * ringRadius;
                     positions[x++] = scratchCartesian.y * ringRadius;
@@ -117,7 +120,7 @@ define([
 
         x = 0;
         length = directionsLength * 2 * numberOfRings;
-        indices = new Uint16Array(length);
+        indices = IndexDatatype.createTypedArray(length / 3, length);
 
         for (ring = 0; ring < numberOfRings; ring++) {
             var offset = ring * directionsLength;
