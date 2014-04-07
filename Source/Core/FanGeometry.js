@@ -35,6 +35,7 @@ define([
      *
      * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
+     * @param {Boolean} options.perDirectionRadius If true,
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see FanGeometry#createGeometry
@@ -43,19 +44,19 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.radius)) {
-            throw new DeveloperError('options.radius is required.');
+        if (!options.perDirectionRadius && !defined(options.radius)) {
+            throw new DeveloperError('options.radius is required when options.perDirectionRadius is undefined or false.');
         }
+
         if (!defined(options.directions)) {
             throw new DeveloperError('options.directions is required');
         }
         //>>includeEnd('debug');
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
         this._radius = options.radius;
         this._directions = options.directions;
-        this._vertexFormat = vertexFormat;
+        this._perDirectionRadius = options.perDirectionRadius;
+        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._workerName = 'createFanGeometry';
     };
 
@@ -73,15 +74,17 @@ define([
         }
         //>>includeEnd('debug');
 
+        var vertexFormat = fanGeometry._vertexFormat;
         var radius = fanGeometry._radius;
+        var perDirectionRadius = defined(fanGeometry._perDirectionRadius) && fanGeometry._perDirectionRadius;
         var sphericalDiretions = fanGeometry._directions;
         if (sphericalDiretions[0].clock < sphericalDiretions[1].clock) {
             sphericalDiretions.reverse();
         }
 
-        var vertexFormat = fanGeometry._vertexFormat;
-        var binormals;
         var normals;
+        var binormals;
+        var maxRadius = 0;
 
         var i;
         var x;
@@ -120,9 +123,11 @@ define([
                 positions[x++] = 0;
 
                 direction = directions[i];
-                positions[x++] = direction.x * radius;
-                positions[x++] = direction.y * radius;
-                positions[x++] = direction.z * radius;
+                var currentRadius = perDirectionRadius ? Cartesian3.magnitude(direction) : radius;
+                positions[x++] = direction.x * currentRadius;
+                positions[x++] = direction.y * currentRadius;
+                positions[x++] = direction.z * currentRadius;
+                maxRadius = Math.max(maxRadius, currentRadius);
             }
 
             positions[x++] = positions[0];
@@ -268,7 +273,7 @@ define([
 
         x = 0;
         i = 0;
-        length = ((directionsLength +1)* 2) * 3;
+        length = ((directionsLength + 1) * 2) * 3;
         var indices = new Uint16Array(length);
         while (x < length - 6) {
             indices[x++] = i;
@@ -294,7 +299,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, maxRadius)
         });
     };
 

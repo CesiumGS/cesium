@@ -42,20 +42,20 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
+        if (!options.perDirectionRadius && !defined(options.radius)) {
+            throw new DeveloperError('options.radius is required when options.perDirectionRadius is undefined or false.');
+        }
+
         if (!defined(options.directions)) {
             throw new DeveloperError('options.directions is required');
         }
-        if (!defined(options.radius)) {
-            throw new DeveloperError('options.radius is required.');
-        }
         //>>includeEnd('debug');
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
-        this._numberOfRings = defaultValue(options.numberOfRings, 6);
         this._radius = options.radius;
         this._directions = options.directions;
-        this._vertexFormat = vertexFormat;
+        this._perDirectionRadius = options.perDirectionRadius;
+        this._numberOfRings = defaultValue(options.numberOfRings, 6);
+        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._workerName = 'createFanOutlineGeometry';
     };
 
@@ -74,6 +74,7 @@ define([
         //>>includeEnd('debug');
 
         var radius = fanGeometry._radius;
+        var perDirectionRadius = defined(fanGeometry._perDirectionRadius) && fanGeometry._perDirectionRadius;
         var directions = fanGeometry._directions;
         var vertexFormat = fanGeometry._vertexFormat;
         var numberOfRings = fanGeometry._numberOfRings;
@@ -82,6 +83,7 @@ define([
         var x;
         var ring;
         var length;
+        var maxRadius = 0;
         var indices;
         var positions;
         var directionsLength = directions.length;
@@ -93,12 +95,16 @@ define([
             positions = new Float64Array(length);
 
             for (ring = 0; ring < numberOfRings; ring++) {
-                var ringRadius = (radius / numberOfRings) * (ring + 1);
                 for (i = 0; i < directionsLength; i++) {
                     scratchCartesian = Cartesian3.fromSpherical(directions[i], scratchCartesian);
+
+                    var currentRadius = perDirectionRadius ? Cartesian3.magnitude(scratchCartesian) : radius;
+                    var ringRadius = (currentRadius / numberOfRings) * (ring + 1);
+
                     positions[x++] = scratchCartesian.x * ringRadius;
                     positions[x++] = scratchCartesian.y * ringRadius;
                     positions[x++] = scratchCartesian.z * ringRadius;
+                    maxRadius = Math.max(maxRadius, currentRadius);
                 }
             }
 
@@ -127,7 +133,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, maxRadius)
         });
     };
 
