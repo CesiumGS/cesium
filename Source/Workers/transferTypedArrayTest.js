@@ -1,6 +1,8 @@
 /*global self:true*/
 // make sure self is defined so that the Dojo build can evaluate this file without crashing.
-self = self || {};
+if (typeof self === 'undefined') {
+    self = {};
+}
 
 self.onmessage = function(event) {
     "use strict";
