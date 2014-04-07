@@ -120,6 +120,12 @@ button.cesium-cameraControl-editButton {
     vertical-align: middle;
 }
 
-.cesium-cameraControl-fov {
+.cesium-cameraControl-fov-slider {
     vertical-align: middle;
+    width: 60%;
+}
+
+.cesium-cameraControl-fov-number {
+    vertical-align: middle;
+    width: 25%;
 }

@@ -70,3 +70,27 @@
     vertical-align: middle;
     z-index: 0;  /* Workaround for rounded raster image corners in Chrome */
 }
+
+.cesium-input {
+    border: solid 1px #444;
+    background-color: rgba(40, 40, 40, 0.7);
+    color: white;
+    display: inline-block;
+    margin: 3px;
+    padding: 1px 2px;
+    border-radius: 0;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.cesium-input:hover {
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
+}
+
+.cesium-input:focus {
+    border-color: #ea4;
+    background-color: rgba(15, 15, 15, 0.9);
+    box-shadow: none;
+    outline: none;
+}
