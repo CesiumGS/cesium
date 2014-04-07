@@ -201,6 +201,12 @@ define([
             get : function() {
                 return this._height;
             }
+        },
+
+        _target : {
+            get : function() {
+                return this._textureTarget;
+            }
         }
     });
 
@@ -377,14 +383,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
-    };
-
-    Texture.prototype._getTexture = function() {
-        return this._texture;
-    };
-
-    Texture.prototype._getTarget = function() {
-        return this._textureTarget;
     };
 
     /**

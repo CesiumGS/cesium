@@ -94,7 +94,6 @@ defineSuite([
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
         expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
-        expect(viewer.sceneTransitioner).toBe(viewer.cesiumWidget.sceneTransitioner);
         expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
@@ -314,6 +313,7 @@ defineSuite([
         viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
+        viewer.scene.completeMorph();
         expect(viewer.scene.mode).toBe(SceneMode.SCENE2D);
     });
 

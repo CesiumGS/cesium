@@ -244,7 +244,7 @@ defineSuite([
         });
 
         runs(function() {
-            expect(provider.credit.getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider.credit.text).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 

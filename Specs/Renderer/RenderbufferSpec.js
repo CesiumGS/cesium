@@ -41,8 +41,8 @@ defineSuite([
         renderbuffer = context.createRenderbuffer();
 
         expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
-        expect(renderbuffer.width).toEqual(context.getCanvas().clientWidth);
-        expect(renderbuffer.height).toEqual(context.getCanvas().clientHeight);
+        expect(renderbuffer.width).toEqual(context.canvas.clientWidth);
+        expect(renderbuffer.height).toEqual(context.canvas.clientHeight);
     });
 
     it('destroys', function() {
@@ -71,7 +71,7 @@ defineSuite([
     it('fails to create (large width)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
-                width : context.getMaximumRenderbufferSize() + 1
+                width : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -87,7 +87,7 @@ defineSuite([
     it('fails to create (large height)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
-                height : context.getMaximumRenderbufferSize() + 1
+                height : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });

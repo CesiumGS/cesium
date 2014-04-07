@@ -310,7 +310,7 @@ define([
                 polyline = this._polylineCollection.add();
             }
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline._id = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.width = 1;

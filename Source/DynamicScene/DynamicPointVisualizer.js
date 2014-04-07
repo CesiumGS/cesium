@@ -212,7 +212,7 @@ define([
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard._id = dynamicObject;
+            billboard.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);

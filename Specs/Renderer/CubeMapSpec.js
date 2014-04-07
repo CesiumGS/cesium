@@ -111,7 +111,7 @@ defineSuite([
     });
 
     it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             cubeMap = context.createCubeMap({
                 width : 16,
                 height : 16,
@@ -303,7 +303,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.allUniforms.u_texture.value = context.getDefaultCubeMap();
+        sp.allUniforms.u_texture.value = context.defaultCubeMap;
 
         va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
@@ -424,7 +424,7 @@ defineSuite([
     });
 
     it('creates a cube map with floating-point textures', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             var positiveXColor = new Color(0.0, 0.0, 0.0, 1.0);
             var negativeXColor = new Color(0.0, 0.0, 1.0, 0.0);
             var positiveYColor = new Color(0.0, 1.0, 0.0, 0.0);
@@ -915,8 +915,8 @@ defineSuite([
     it('fails to create (large width)', function() {
         expect(function() {
             cubeMap = context.createCubeMap({
-                width : context.getMaximumCubeMapSize() + 1,
-                height : context.getMaximumCubeMapSize() + 1
+                width : context.maximumCubeMapSize + 1,
+                height : context.maximumCubeMapSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -942,7 +942,7 @@ defineSuite([
     });
 
     it('throws during creation if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
-        if (!context.getFloatingPointTexture()) {
+        if (!context.floatingPointTexture) {
             expect(function() {
                 cubeMap = context.createCubeMap({
                     width : 16,
@@ -1049,7 +1049,7 @@ defineSuite([
     });
 
     it('fails to copy from the frame buffer (invalid data type)', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             cubeMap = context.createCubeMap({
                 width : 1,
                 height : 1,
@@ -1151,7 +1151,7 @@ defineSuite([
     });
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             cubeMap = context.createCubeMap({
                 width : 16,
                 height : 16,
@@ -1167,7 +1167,7 @@ defineSuite([
     });
 
     it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             cubeMap = context.createCubeMap({
                 width : 16,
                 height : 16,

@@ -52,7 +52,7 @@ defineSuite([
         });
 
         frameState.camera.viewExtent(extent);
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
     });
 

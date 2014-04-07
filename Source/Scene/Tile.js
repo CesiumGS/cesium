@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Extent',
         './ImageryState',
@@ -22,6 +23,7 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         DeveloperError,
         Extent,
         ImageryState,
@@ -71,6 +73,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._children = undefined;
+
         /**
          * The tiling scheme used to tile the surface.
          * @type {TilingScheme}
@@ -100,13 +104,6 @@ define([
          * @type {Tile}
          */
         this.parent = description.parent;
-
-        /**
-         * The children of this tile in a tiling scheme.
-         * @type {Array}
-         * @default undefined
-         */
-        this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -227,48 +224,50 @@ define([
         this.upsampledTerrain = undefined;
     };
 
-    /**
-     * Returns an array of tiles that would be at the next level of the tile tree.
-     *
-     * @memberof Tile
-     *
-     * @returns {Array} The list of child tiles.
-     */
-    Tile.prototype.getChildren = function() {
-        if (!defined(this.children)) {
-            var tilingScheme = this.tilingScheme;
-            var level = this.level + 1;
-            var x = this.x * 2;
-            var y = this.y * 2;
-            this.children = [new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y + 1,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y + 1,
-                level : level,
-                parent : this
-            })];
-        }
+    defineProperties(Tile.prototype, {
+        /**
+         * An array of tiles that would be at the next level of the tile tree.
+         * @memberof Tile.prototype
+         * @type {Array}
+         */
+        children : {
+            get : function() {
+                if (!defined(this._children)) {
+                    var tilingScheme = this.tilingScheme;
+                    var level = this.level + 1;
+                    var x = this.x * 2;
+                    var y = this.y * 2;
+                    this._children = [new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    })];
+                }
 
-        return this.children;
-    };
+                return this._children;
+            }
+        }
+    });
 
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
@@ -301,11 +300,11 @@ define([
         }
         this.imagery.length = 0;
 
-        if (defined(this.children)) {
-            for (i = 0, len = this.children.length; i < len; ++i) {
-                this.children[i].freeResources();
+        if (defined(this._children)) {
+            for (i = 0, len = this._children.length; i < len; ++i) {
+                this._children[i].freeResources();
             }
-            this.children = undefined;
+            this._children = undefined;
         }
 
         this.freeVertexArray();
@@ -478,7 +477,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    var waterMask = tile.terrainData.getWaterMask();
+                    var waterMask = tile.terrainData.waterMask;
                     if (defined(waterMask)) {
                         if (defined(tile.waterMaskTexture)) {
                             --tile.waterMaskTexture.referenceCount;
