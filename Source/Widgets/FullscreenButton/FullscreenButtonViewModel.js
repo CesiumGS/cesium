@@ -72,7 +72,7 @@ define([
         });
 
         this._command = createCommand(function() {
-            if (Fullscreen.isFullscreen) {
+            if (Fullscreen.fullscreen) {
                 Fullscreen.exitFullscreen();
             } else {
                 Fullscreen.requestFullscreen(that._fullscreenElement);

@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/Occluder',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -35,6 +36,7 @@ define([
         './AnimationCollection',
         './SceneMode',
         './SceneTransforms',
+        './SceneTransitioner',
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveFrustum',
@@ -57,6 +59,7 @@ define([
         DeveloperError,
         GeographicProjection,
         Ellipsoid,
+        Event,
         Occluder,
         BoundingRectangle,
         BoundingSphere,
@@ -83,6 +86,7 @@ define([
         AnimationCollection,
         SceneMode,
         SceneTransforms,
+        SceneTransitioner,
         FrameState,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -161,6 +165,31 @@ define([
         depthClearCommand.depth = 1.0;
         depthClearCommand.owner = this;
         this._depthClearCommand = depthClearCommand;
+
+        this._transitioner = new SceneTransitioner(this);
+
+        /**
+         * Determines whether or not to instantly complete the
+         * scene transition animation on user input.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.completeMorphOnUserInput = true;
+
+        /**
+         * The event fired at the beginning of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphStart = new Event();
+
+        /**
+         * The event fired at the completion of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphComplete = new Event();
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -694,7 +723,7 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.getShaderCache().getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -826,7 +855,7 @@ define([
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene._context;
-        var us = context.getUniformState();
+        var us = context.uniformState;
 
         var frustum;
         if (defined(camera.frustum.fovy)) {
@@ -1010,7 +1039,7 @@ define([
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+            this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
         this._animations.update();
@@ -1027,7 +1056,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.context.getUniformState();
+        var us = this.context.uniformState;
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1085,8 +1114,8 @@ define([
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
@@ -1125,8 +1154,8 @@ define([
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
@@ -1191,7 +1220,7 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.context.getUniformState();
+        var us = this.context.uniformState;
         var frameState = this._frameState;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
@@ -1212,7 +1241,7 @@ define([
         createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.y = (context.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);
@@ -1286,6 +1315,53 @@ define([
     };
 
     /**
+     * Instantly completes an active transition.
+     * @memberof Scene
+     */
+    Scene.prototype.completeMorph = function(){
+        this._transitioner.completeMorph();
+    };
+
+    /**
+     * Asynchronously transitions the scene to 2D.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo2D = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
+     * Asynchronously transitions the scene to Columbus View.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphToColumbusView = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
+     * Asynchronously transitions the scene to 3D.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo3D = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphTo3D(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1307,6 +1383,8 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+
+        this._transitioner.destroy();
 
         this._oit.destroy();
         this._fxaa.destroy();

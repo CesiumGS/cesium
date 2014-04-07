@@ -66,7 +66,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._pickId = undefined;
-        this._pickIdThis = defaultValue(options._pickIdThis, this);
+        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
 
         this._frontFaceColorCommand = new DrawCommand();
         this._backFaceColorCommand = new DrawCommand();
@@ -501,7 +501,7 @@ define([
                     sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
                 });
 
-                frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                frontFaceColorCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
                 frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
@@ -526,7 +526,7 @@ define([
                 this._id = this.id;
                 this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this._pickIdThis,
+                    primitive : this._pickPrimitive,
                     id : this.id
                 });
             }
@@ -538,7 +538,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
+                pickCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;

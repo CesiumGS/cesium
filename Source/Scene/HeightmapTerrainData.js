@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Extent',
         '../Core/HeightmapTessellator',
@@ -14,6 +15,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Extent,
         HeightmapTessellator,
@@ -124,6 +126,22 @@ define([
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
     };
+
+    defineProperties(HeightmapTerrainData.prototype, {
+        /**
+         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+         * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+         * @memberof HeightmapTerrainData.prototype
+         * @type {Uint8Array|Image|Canvas}
+         */
+        waterMask : {
+            get : function() {
+                return this._waterMask;
+            }
+        }
+    });
+
 
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
@@ -332,19 +350,6 @@ define([
         }
 
         return (this._childTileMask & (1 << bitNumber)) !== 0;
-    };
-
-    /**
-     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
-     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
-     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     *
-     *  @memberof HeightmapTerrainData
-     *
-     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
-     */
-    HeightmapTerrainData.prototype.getWaterMask = function() {
-        return this._waterMask;
     };
 
     /**

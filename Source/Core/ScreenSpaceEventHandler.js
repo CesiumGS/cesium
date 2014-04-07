@@ -396,8 +396,8 @@ define([
         if (screenSpaceEventHandler._leftMouseButtonDown && (event.touches.length === 1)) {
             pos = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.endPosition);
 
-            var xDiff = screenSpaceEventHandler._lastMouseX - pos.x;
-            var yDiff = screenSpaceEventHandler._lastMouseY - pos.y;
+            var xDiff = screenSpaceEventHandler._lastMousePosition.x - pos.x;
+            var yDiff = screenSpaceEventHandler._lastMousePosition.y - pos.y;
             screenSpaceEventHandler._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
             Cartesian2.clone(screenSpaceEventHandler._lastMousePosition, touchMovementEvent.startPosition);

@@ -83,7 +83,7 @@ defineSuite([
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(camera));
     });
 

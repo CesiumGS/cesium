@@ -4,7 +4,6 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Scene/SceneTransitioner',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
@@ -12,7 +11,6 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         SceneTransitioner,
          createScene,
          destroyScene) {
     "use strict";

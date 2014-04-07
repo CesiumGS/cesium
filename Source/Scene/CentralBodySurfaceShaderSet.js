@@ -100,7 +100,7 @@ define([
                 '    return color;\n' +
                 '}';
 
-            shader = context.getShaderCache().getShaderProgram(vs, fs, this._attributeLocations);
+            shader = context.shaderCache.getShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;

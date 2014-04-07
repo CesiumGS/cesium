@@ -178,7 +178,7 @@ require(['Cesium'], function(Cesium) {
     });
 
     var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesiumjs.org/stk-terrain/tilesets/GTOPO30/tiles',
+        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
@@ -190,13 +190,13 @@ require(['Cesium'], function(Cesium) {
     });
     
     var terrainProviders = [
-        { name : 'CesiumTerrainProvider - GTOPO30+SRTM heightmaps', provider : cesiumTerrainProviderHeightmaps },
-        { name : 'CesiumTerrainProvider - GTOPO30 meshes', provider : cesiumTerrainProviderMeshes },
+        { name : 'CesiumTerrainProvider - STK World Terrain meshes', provider : cesiumTerrainProviderMeshes },
+        { name : 'CesiumTerrainProvider - Small Terrain heightmaps and water mask', provider : cesiumTerrainProviderHeightmaps },
         { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
         { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
-    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
+    centralBody.terrainProvider = cesiumTerrainProviderMeshes;
 
     createTerrainMenu(terrainProviders);
 

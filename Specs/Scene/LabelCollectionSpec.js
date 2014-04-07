@@ -54,7 +54,7 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
 
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, createFrameState(createCamera(context)));
     });
 
@@ -583,7 +583,7 @@ defineSuite([
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
@@ -612,7 +612,7 @@ defineSuite([
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        var us = context.getUniformState();
+        var us = context.uniformState;
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
@@ -641,6 +641,26 @@ defineSuite([
         var pickedObject = pick(context, frameState, labels, 0, 0);
         expect(pickedObject.primitive).toEqual(label);
         expect(pickedObject.id).toEqual('id');
+    });
+
+    it('can change pick id', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
+        });
+
+        var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
+
+        label.id = 'id2';
+
+        pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id2');
     });
 
     it('does not pick a label with show set to false', function() {

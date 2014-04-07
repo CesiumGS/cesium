@@ -59,8 +59,8 @@ define([
     }
 
     FXAA.prototype.update = function(context) {
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var fxaaTexture = this._texture;
         var textureChanged = !defined(fxaaTexture) || fxaaTexture.width !== width || fxaaTexture.height !== height;
@@ -76,7 +76,7 @@ define([
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE
             });
 
-            if (context.getDepthTexture()) {
+            if (context.depthTexture) {
                 this._depthTexture = context.createTexture2D({
                     width : width,
                     height : height,

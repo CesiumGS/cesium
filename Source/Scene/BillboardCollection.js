@@ -1041,8 +1041,8 @@ define([
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
-        scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
-        scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
         var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
@@ -1244,7 +1244,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
-                this._sp = context.getShaderCache().replaceShaderProgram(
+                this._sp = context.shaderCache.replaceShaderProgram(
                     this._sp,
                     createShaderSource({
                         defines : [this._shaderRotation ? 'ROTATION' : '',
@@ -1296,7 +1296,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
-                this._spPick = context.getShaderCache().replaceShaderProgram(
+                this._spPick = context.shaderCache.replaceShaderProgram(
                     this._spPick,
                     createShaderSource({
                         defines : ['RENDER_FOR_PICK',

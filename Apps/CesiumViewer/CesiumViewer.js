@@ -6,6 +6,7 @@ define([
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
+        'Scene/TileMapServiceImageryProvider',
         'Widgets/checkForChromeFrame',
         'Widgets/DataSourceBrowser/DataSourcePanelViewModel',
         'Widgets/DataSourceBrowser/ListDataSourcePanel',
@@ -21,6 +22,7 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
+        TileMapServiceImageryProvider,
         checkForChromeFrame,
         DataSourcePanelViewModel,
         ListDataSourcePanel,
@@ -71,7 +73,18 @@ define([
     function startup() {
         DataSourcePanelViewModel.defaultDataSourcePanels.unshift(new ListDataSourcePanel('Local Gallery', 'Gallery/'));
 
-        var viewer = new Viewer('cesiumContainer');
+        var imageryProvider;
+
+        if (endUserOptions.tmsImageryUrl) {
+            imageryProvider = new TileMapServiceImageryProvider({
+                url : endUserOptions.tmsImageryUrl
+            });
+        }
+
+        var viewer = new Viewer('cesiumContainer', {
+            imageryProvider : imageryProvider,
+            baseLayerPicker : !defined(imageryProvider)
+        });
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
         if (endUserOptions.inspector) {
@@ -92,10 +105,10 @@ define([
         var scene = viewer.scene;
         var context = scene.context;
         if (endUserOptions.debug) {
-            context.setValidateShaderProgram(true);
-            context.setValidateFramebuffer(true);
-            context.setLogShaderCompilation(true);
-            context.setThrowOnWebGLError(true);
+            context.validateShaderProgram = true;
+            context.validateFramebuffer = true;
+            context.logShaderCompilation = true;
+            context.throwOnWebGLError = true;
         }
 
         var source = endUserOptions.source;
