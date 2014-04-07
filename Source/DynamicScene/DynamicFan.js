@@ -25,6 +25,8 @@ define(['../Core/defaultValue',
         this._showSubscription = undefined;
         this._radius = undefined;
         this._radiusSubscription = undefined;
+        this._perDirectionRadius = undefined;
+        this._perDirectionRadiusSubscription = undefined;
         this._directions = undefined;
         this._directionsSubscription = undefined;
         this._material = undefined;
@@ -60,11 +62,18 @@ define(['../Core/defaultValue',
         show : createDynamicPropertyDescriptor('show'),
 
         /**
-         * Gets or sets numeric Property specifying the radius of the fan.
+         * Gets or sets the numeric Property specifying the radius of the fan.
          * @memberof DynamicFan.prototype
          * @type {Property}
          */
         radius : createDynamicPropertyDescriptor('radius'),
+
+        /**
+         * Gets or sets the boolean Property specifying whether or not to use the magnitude of each direction instead of a constant radius.
+         * @memberof DynamicFan.prototype
+         * @type {Property}
+         */
+        perDirectionRadius : createDynamicPropertyDescriptor('perDirectionRadius'),
 
         /**
          * Gets or sets the {@link Spherical} Property specifying the directions that define the fan.
@@ -122,6 +131,7 @@ define(['../Core/defaultValue',
         }
         result.show = this.show;
         result.radius = this.radius;
+        result.perDirectionRadius = this.perDirectionRadius;
         result.directions = this.directions;
         result.material = this.material;
         result.fill = this.fill;
@@ -147,6 +157,7 @@ define(['../Core/defaultValue',
 
         this.show = defaultValue(this.show, source.show);
         this.radius = defaultValue(this.radius, source.radius);
+        this.perDirectionRadius = defaultValue(this.perDirectionRadius, source.perDirectionRadius);
         this.directions = defaultValue(this.directions, source.directions);
         this.material = defaultValue(this.material, source.material);
         this.fill = defaultValue(this.fill, source.fill);

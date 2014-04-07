@@ -1254,18 +1254,23 @@ define(['../Core/Cartesian2',
         var i;
         var len;
         var values = [];
-        var tmp = directions.unitSpherical;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 2) {
-                values.push(new Spherical(tmp[i], tmp[i + 1]));
+        var unitSphericals = directions.unitSpherical;
+        var sphericals = directions.spherical;
+        var unitCartesians = directions.unitCartesian;
+
+        if (defined(unitSphericals)) {
+            for (i = 0, len = unitSphericals.length; i < len; i += 2) {
+                values.push(new Spherical(unitSphericals[i], unitSphericals[i + 1]));
             }
             directions.array = values;
-        }
-
-        tmp = directions.unitCartesian;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+        } else if (defined(sphericals)) {
+            for (i = 0, len = sphericals.length; i < len; i += 3) {
+                values.push(new Spherical(sphericals[i], sphericals[i + 1], sphericals[i + 2]));
+            }
+            directions.array = values;
+        } else if (defined(unitCartesians)) {
+            for (i = 0, len = unitCartesians.length; i < len; i += 3) {
+                values.push(Spherical.fromCartesian3(new Cartesian3(unitCartesians[i], unitCartesians[i + 1], unitCartesians[i + 2])));
             }
             directions.array = values;
         }
@@ -1329,6 +1334,7 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, fan, 'show', fanData.show, interval, sourceUri);
         processPacketData(Number, fan, 'radius', fanData.radius, interval, sourceUri);
         processMaterialPacketData(fan, 'material', fanData.material, interval, sourceUri);
+        processPacketData(Boolean, fan, 'perDirectionRadius', fanData.perDirectionRadius, interval, sourceUri);
         processPacketData(Boolean, fan, 'fill', fanData.fill, interval, sourceUri);
         processPacketData(Boolean, fan, 'outline', fanData.outline, interval, sourceUri);
         processPacketData(Color, fan, 'outlineColor', fanData.outlineColor, interval, sourceUri);

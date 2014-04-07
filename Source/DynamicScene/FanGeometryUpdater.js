@@ -62,6 +62,7 @@ define(['../Core/Color',
         this.vertexFormat = undefined;
         this.directions = undefined;
         this.radius = undefined;
+        this.perDirectionRadius = undefined;
         this.numberOfRings = undefined;
     };
 
@@ -409,11 +410,12 @@ define(['../Core/Color',
         var position = this._dynamicObject.position;
         var orientation = this._dynamicObject.orientation;
         var radius = fan.radius;
+        var perDirectionRadius = fan.perDirectionRadius;
         var directions = fan.directions;
 
         var show = fan.show;
         if ((defined(show) && show.isConstant && !show.getValue(Iso8601.MINIMUM_VALUE)) || //
-            (!defined(position) || !defined(orientation) || !defined(radius))) {
+            (!defined(position) || !defined(orientation) || (!defined(perDirectionRadius) && !defined(radius)))) {
             if (this._fillEnabled || this._outlineEnabled) {
                 this._fillEnabled = false;
                 this._outlineEnabled = false;
@@ -434,7 +436,12 @@ define(['../Core/Color',
         this._outlineEnabled = outlineEnabled;
 
         var numberOfRings = defaultValue(fan.numberOfRings, defaultNumberOfRings);
-        if (!position.isConstant || !orientation.isConstant || !radius.isConstant || !directions.isConstant || !numberOfRings.isConstant) {
+        if (!position.isConstant ||
+            !orientation.isConstant ||
+            (defined(perDirectionRadius) && !perDirectionRadius.isConstant) ||
+            (defined(radius) && !radius.isConstant) ||
+            !directions.isConstant ||
+            !numberOfRings.isConstant) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -444,6 +451,7 @@ define(['../Core/Color',
             options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.VERTEX_FORMAT;
             options.directions = directions.getValue(Iso8601.MINIMUM_VALUE, options.directions);
             options.radius = defined(radius) ? radius.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.perDirectionRadius = defined(perDirectionRadius) ? perDirectionRadius.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.numberOfRings = defined(numberOfRings) ? numberOfRings.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             this._dynamic = false;
@@ -513,11 +521,13 @@ define(['../Core/Color',
 
         var directions = fan.directions;
         var radius = fan.radius;
+        var perDirectionRadius = fan.perDirectionRadius;
         var numberOfRings = fan.numberOfRings;
 
         var options = this._options;
         options.directions = directions.getValue(time, options.directions);
         options.radius = defined(radius) ? radius.getValue(time) : undefined;
+        options.perDirectionRadius = defined(perDirectionRadius) ? perDirectionRadius.getValue(time) : undefined;
         options.numberOfRings = defined(numberOfRings) ? numberOfRings.getValue(time) : undefined;
 
         positionScratch = dynamicObject.position.getValue(time, positionScratch);
