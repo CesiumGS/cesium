@@ -111,14 +111,22 @@ cesiumSvgPath: { path: _editIcon, width: 32, height: 32 }');
 css: { "cesium-cameraControl-editor-visible" : editorVisible }');
         container.appendChild(editor);
 
+        //<select size="2">\
+        //<option value="EARTH_FIXED">Earth fixed (stars appear to rotate)</option>\
+        //<option value="ICRF">Stars fixed (ICRF, Earth rotates)</option>\
+        //</select><br/>\
+
         editor.innerHTML = '\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _followIcon, width: 32, height: 32 }"></span> \
 Camera follows: <span data-bind="text: cameraFollows"></span></p>\
 <p>Background object: <span data-bind="text: cameraBackground"></span></p>\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _timeRotateIcon, width: 32, height: 32 }"></span> \
-Rotation with time<br/>\
-<label><input type="radio" name="cesium-cameraControl-timeRotate" value="ECF" data-bind="checked: _timeRotateMode" /><span>Earth fixed (stars appear to rotate)</span></label><br/>\
-<label><input type="radio" name="cesium-cameraControl-timeRotate" value="ICRF" data-bind="checked: _timeRotateMode" /><span>Stars fixed (ICRF, Earth rotates)</span></label></p>\
+Rotation with time\
+<span class="cesium-cameraControl-rotateOption" data-bind="visible: !isTrackingObject"><label><input type="radio" name="cesium-cameraControl-timeRotate" value="EARTH_FIXED" data-bind="checked: _timeRotateMode" /><span>Earth fixed (stars appear to rotate)</span></label></span>\
+<span class="cesium-cameraControl-rotateOption" data-bind="visible: !isTrackingObject"><label><input type="radio" name="cesium-cameraControl-timeRotate" value="ICRF" data-bind="checked: _timeRotateMode" /><span>Stars fixed (ICRF, Earth rotates)</span></label></span>\
+<span class="cesium-cameraControl-rotateOption" data-bind="visible: isTrackingObject"><label><input type="radio" name="cesium-cameraControl-timeRotate" value="LVLH" data-bind="checked: _timeRotateMode" /><span>Local up (LVLH)</span></label></span>\
+<span class="cesium-cameraControl-rotateOption" data-bind="visible: isTrackingObject"><label><input type="radio" name="cesium-cameraControl-timeRotate" value="NORTH_UP" data-bind="checked: _timeRotateMode" /><span>North up (for high orbit views)</span></label></span>\
+<span class="cesium-cameraControl-rotateOption" data-bind="visible: isTrackingObject"><label><input type="radio" name="cesium-cameraControl-timeRotate" value="FROM_OBJECT" data-bind="checked: _timeRotateMode" /><span>Body fixed</span></label></span></p>\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _userRotateIcon, width: 32, height: 32 }"></span> \
 Rotation with user input<br/>\
 <label><input type="radio" name="cesium-cameraControl-userRotate" value="Z" data-bind="checked: _userRotateMode" /><span>Stay right-side up</span></label><br/>\

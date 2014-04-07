@@ -322,8 +322,10 @@ define(['../../Core/BoundingSphere',
 
             if (defined(cameraControlViewModel)) {
                 if (defined(value)) {
+                    cameraControlViewModel.isTrackingObject = true;
                     cameraControlViewModel.cameraFollows = defined(value.name) ? value.name : value.id;
                 } else {
+                    cameraControlViewModel.isTrackingObject = false;
                     cameraControlViewModel.cameraFollows = 'Earth';
                 }
             }

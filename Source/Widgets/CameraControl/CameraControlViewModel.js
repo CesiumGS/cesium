@@ -11,6 +11,7 @@ define([
         '../../Core/Math',
         '../../Core/Matrix4',
         '../../DynamicScene/StoredView',
+        '../../DynamicScene/StoredViewCameraRotationMode',
         '../../DynamicScene/StoredViewCollection',
         '../../Scene/CameraFlightPath',
         '../createCommand',
@@ -27,6 +28,7 @@ define([
         CesiumMath,
         Matrix4,
         StoredView,
+        StoredViewCameraRotationMode,
         StoredViewCollection,
         CameraFlightPath,
         createCommand,
@@ -82,6 +84,13 @@ define([
         this.tooltip = 'Camera options...';
 
         /**
+         * True if the camera is following an object other than a celestial body.  This property is observable.
+         *
+         * @type {Boolean}
+         */
+        this.isTrackingObject = false;
+
+        /**
          * Gets or sets the "Camera follows" indicator text.  This property is observable.
          *
          * @type {String}
@@ -103,14 +112,14 @@ define([
         this.currentViewName = 'View 1';
 
         this._viewNames = [];
-        this._timeRotateMode = 'ECF';
+        this._timeRotateMode = StoredViewCameraRotationMode.EARTH_FIXED.name;
         this._userRotateMode = 'Z';
         this._fieldOfView = 60.0;
         this._minFov = 0.001;
         this._maxFov = 160.0;
         this._fovRange = this._maxFov - this._minFov;
 
-        knockout.track(this, ['dropDownVisible', 'editorVisible', 'tooltip', 'cameraFollows', 'cameraBackground',
+        knockout.track(this, ['dropDownVisible', 'editorVisible', 'tooltip', 'isTrackingObject', 'cameraFollows', 'cameraBackground',
                               'currentViewName', '_viewNames', '_timeRotateMode', '_userRotateMode', '_fieldOfView']);
 
         this._eventHelper.add(this._storedViewCollection.collectionChanged, function() {
@@ -207,14 +216,6 @@ define([
             }
         }));
 
-        this._knockoutSubscriptions.push(knockout.getObservable(this, '_timeRotateMode').subscribe(function(value) {
-            if (value === 'Z') {
-                scene.camera.constrainedAxis = Cartesian3.UNIT_Z.clone();
-            } else if (value === 'U') {
-                scene.camera.constrainedAxis = undefined;
-            }
-        }));
-
         this._knockoutSubscriptions.push(knockout.getObservable(this, '_userRotateMode').subscribe(function(value) {
             if (value === 'Z') {
                 scene.camera.constrainedAxis = Cartesian3.UNIT_Z.clone();
@@ -239,7 +240,7 @@ define([
          */
         this.useIcrf = undefined;
         knockout.defineProperty(this, 'useIcrf', function() {
-            return that._timeRotateMode === 'ICRF';
+            return that._timeRotateMode === StoredViewCameraRotationMode.ICRF.name;
         });
 
         /**
