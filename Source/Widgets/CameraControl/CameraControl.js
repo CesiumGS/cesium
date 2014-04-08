@@ -57,53 +57,22 @@ cesiumSvgPath: { path: _cameraIcon, width: 32, height: 32 }');
 css: { "cesium-cameraControl-dropDown-visible" : dropDownVisible }');
         container.appendChild(dropDown);
 
-        var viewsContainer = document.createElement('div');
-        viewsContainer.setAttribute('data-bind', '\
-foreach: _viewNames');
-        dropDown.appendChild(viewsContainer);
-
-        var viewRow = document.createElement('div');
-        viewRow.className = 'cesium-cameraControl-viewRow';
-        viewRow.setAttribute('data-bind', '\
-click: function (viewName) { $parent.visitStoredView(viewName); }');
-        viewsContainer.appendChild(viewRow);
-
-        var viewName = document.createElement('span');
-        viewName.setAttribute('data-bind', '\
-text: $data');
-        viewRow.appendChild(viewName);
-
-        var viewButton = document.createElement('button');
-        viewButton.type = 'button';
-        viewButton.className = 'cesium-button cesium-cameraControl-viewButton';
-        viewButton.setAttribute('data-bind', '\
-attr: { title: "Visit this view" },\
-cesiumSvgPath: { path: $parent._cameraIcon, width: 32, height: 32 }');
-        viewRow.appendChild(viewButton);
-
-        var editButton = document.createElement('button');
-        editButton.type = 'button';
-        editButton.className = 'cesium-button cesium-cameraControl-editButton';
-        editButton.setAttribute('data-bind', '\
-attr: { title: "Edit this view" },\
-click: function (viewName) { $parent.editorVisible = true; },\
-cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }');
-        viewRow.appendChild(editButton);
-
-        var addRow = document.createElement('div');
-        addRow.className = 'cesium-cameraControl-addRow';
-        addRow.innerHTML = 'Add or edit view...';
-        addRow.setAttribute('data-bind', '\
-click: createName');
-        dropDown.appendChild(addRow);
-
-        var addButton = document.createElement('button');
-        addButton.type = 'button';
-        addButton.className = 'cesium-button cesium-cameraControl-addButton';
-        addButton.setAttribute('data-bind', '\
-attr: { title: "Add or edit view..." },\
-cesiumSvgPath: { path: _editIcon, width: 32, height: 32 }');
-        addRow.appendChild(addButton);
+        dropDown.innerHTML = '\
+<div data-bind="foreach: _viewNames">\
+<div class="cesium-cameraControl-viewRow" data-bind="click: function (viewName) { $parent.visitStoredView(viewName); }">\
+<span data-bind="text: $data"></span>\
+<button type="button" class="cesium-button cesium-cameraControl-viewButton" data-bind="\
+attr: { title: \'Visit this view\' },\
+cesiumSvgPath: { path: $parent._cameraIcon, width: 32, height: 32 }"></button>\
+<button type="button" class="cesium-button cesium-cameraControl-editButton" data-bind="\
+attr: { title: \'Edit this view\' },\
+click: function () { $parent.editorVisible = true; },\
+cesiumSvgPath: { path: $parent._editIcon, width: 32, height: 32 }"></button>\
+</div></div>\
+<div class="cesium-cameraControl-addRow" data-bind="click: createName">Add or edit view...\
+<button type="button" class="cesium-button cesium-cameraControl-addButton" data-bind="\
+attr: { title: \'Add or edit view...\' },\
+cesiumSvgPath: { path: _editIcon, width: 32, height: 32 }"></button></div>';
 
         var editor = document.createElement('div');
         editor.className = 'cesium-cameraControl-editor';
