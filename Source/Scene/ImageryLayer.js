@@ -494,6 +494,7 @@ define([
 
         var terrainExtent = tile.extent;
         var imageryExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
+        imageryExtent = imageryExtent.intersectWith(extent);
 
         var minU;
         var maxU = 0.0;
@@ -518,6 +519,7 @@ define([
             minU = maxU;
 
             imageryExtent = imageryTilingScheme.tileXYToExtent(i, northwestTileCoordinates.y, imageryLevel);
+            imageryExtent = imageryExtent.intersectWith(extent);
             maxU = Math.min(1.0, (imageryExtent.east - terrainExtent.west) / (terrainExtent.east - terrainExtent.west));
 
             // If this is the eastern-most imagery tile mapped to this terrain tile,
@@ -534,6 +536,8 @@ define([
                 maxV = minV;
 
                 imageryExtent = imageryTilingScheme.tileXYToExtent(i, j, imageryLevel);
+                var imageryTileExtent = imageryExtent.clone();
+                imageryExtent = imageryExtent.intersectWith(extent);
                 minV = Math.max(0.0, (imageryExtent.south - terrainExtent.south) / (terrainExtent.north - terrainExtent.south));
 
                 // If this is the southern-most imagery tile mapped to this terrain tile,
@@ -545,7 +549,7 @@ define([
                 }
 
                 var texCoordsExtent = new Cartesian4(minU, minV, maxU, maxV);
-                var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryExtent);
+                var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryTileExtent);
                 tile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsExtent));
                 ++insertionPoint;
             }
