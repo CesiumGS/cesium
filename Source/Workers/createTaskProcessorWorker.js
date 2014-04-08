@@ -9,10 +9,14 @@ define([
         when) {
     "use strict";
 
-    function onComplete(postMessage, responseMessage, transferableObjects){
+    function onComplete(postMessage, responseMessage, data, transferableObjects){
         /*global self*/
         if (!defined(postMessage)) {
             postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
+        }
+
+        if (!data.canTransferArrayBuffer) {
+            transferableObjects.length = 0;
         }
 
         try {
@@ -72,14 +76,14 @@ define([
             try {
                 when(workerFunction(data.parameters, transferableObjects)).then(function(result) {
                     responseMessage.result = result;
-                    onComplete(postMessage, responseMessage, transferableObjects);
+                    onComplete(postMessage, responseMessage, data, transferableObjects);
                 }, function(e) {
                     responseMessage.error = e;
-                    onComplete(postMessage, responseMessage, transferableObjects);
+                    onComplete(postMessage, responseMessage, data, transferableObjects);
                 });
             } catch (e) {
                 responseMessage.error = e;
-                onComplete(postMessage, responseMessage, transferableObjects);
+                onComplete(postMessage, responseMessage, data, transferableObjects);
             }
         };
     };

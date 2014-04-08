@@ -394,72 +394,20 @@ define([
         };
     };
 
-    /*
-     * The below functions are needed when transferring typed arrays to/from web
-     * workers. This is a workaround for:
-     *
-     * https://bugzilla.mozilla.org/show_bug.cgi?id=841904
-     */
-
-    function stupefyTypedArray(typedArray) {
-        if (defined(typedArray.constructor.name)) {
-            return {
-                type : typedArray.constructor.name,
-                buffer : typedArray.buffer
-            };
-        } else {
-            return typedArray;
-        }
-    }
-
-    var typedArrayMap = {
-        Int8Array : Int8Array,
-        Uint8Array : Uint8Array,
-        Int16Array : Int16Array,
-        Uint16Array : Uint16Array,
-        Int32Array : Int32Array,
-        Uint32Array : Uint32Array,
-        Float32Array : Float32Array,
-        Float64Array : Float64Array
-    };
-
-    function unStupefyTypedArray(typedArray) {
-        if (defined(typedArray.type)) {
-            return new typedArrayMap[typedArray.type](typedArray.buffer);
-        } else {
-            return typedArray;
-        }
-    }
-
     function transferGeometry(geometry, transferableObjects) {
         var typedArray;
         var attributes = geometry.attributes;
-        for (var name in attributes) {
+        for ( var name in attributes) {
             if (attributes.hasOwnProperty(name) &&
-                    defined(attributes[name]) &&
-                    defined(attributes[name].values)) {
+                defined(attributes[name]) &&
+                defined(attributes[name].values)) {
                 typedArray = attributes[name].values;
-
-                if (FeatureDetection.supportsTransferringArrayBuffers()) {
-                    transferableObjects.push(typedArray.buffer);
-                }
-
-                if (!defined(typedArray.type)) {
-                    attributes[name].values = stupefyTypedArray(typedArray);
-                }
+                transferableObjects.push(typedArray.buffer);
             }
         }
 
         if (defined(geometry.indices)) {
-            typedArray = geometry.indices;
-
-            if (FeatureDetection.supportsTransferringArrayBuffers()) {
-                transferableObjects.push(typedArray.buffer);
-            }
-
-            if (!defined(typedArray.type)) {
-                geometry.indices = stupefyTypedArray(geometry.indices);
-            }
+            transferableObjects.push(geometry.indices.buffer);
         }
     }
 
@@ -479,39 +427,7 @@ define([
             var vaAttributes = perInstanceAttributes[i];
             var vaLength = vaAttributes.length;
             for (var j = 0; j < vaLength; ++j) {
-                var typedArray = vaAttributes[j].values;
-                if (FeatureDetection.supportsTransferringArrayBuffers()) {
-                    transferableObjects.push(typedArray.buffer);
-                }
-                vaAttributes[j].values = stupefyTypedArray(typedArray);
-            }
-        }
-    }
-
-    function receiveGeometries(geometries) {
-        var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
-            var attributes = geometry.attributes;
-            for ( var name in attributes) {
-                if (attributes.hasOwnProperty(name) && defined(attributes[name]) && defined(attributes[name].values)) {
-                    attributes[name].values = unStupefyTypedArray(attributes[name].values);
-                }
-            }
-
-            if (defined(geometry.indices)) {
-                geometry.indices = unStupefyTypedArray(geometry.indices);
-            }
-        }
-    }
-
-    function receivePerInstanceAttributes(perInstanceAttributes) {
-        var length = perInstanceAttributes.length;
-        for (var i = 0; i < length; ++i) {
-            var vaAttributes = perInstanceAttributes[i];
-            var vaLength = vaAttributes.length;
-            for (var j = 0; j < vaLength; ++j) {
-                vaAttributes[j].values = unStupefyTypedArray(vaAttributes[j].values);
+                transferableObjects.push(vaAttributes[j].values.buffer);
             }
         }
     }
@@ -587,13 +503,11 @@ define([
             }
         }
 
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(packedData.buffer);
-        }
+        transferableObjects.push(packedData.buffer);
 
         return {
             stringTable : stringTable,
-            packedData : stupefyTypedArray(packedData)
+            packedData : packedData
         };
     };
 
@@ -602,7 +516,7 @@ define([
      */
     PrimitivePipeline.unpackCreateGeometryResults = function(createGeometryResult) {
         var stringTable = createGeometryResult.stringTable;
-        var packedGeometry = unStupefyTypedArray(createGeometryResult.packedData);
+        var packedGeometry = createGeometryResult.packedData;
 
         var i;
         var result = new Array(packedGeometry[0]);
@@ -662,14 +576,12 @@ define([
         for (var i = 0; i < length; ++i) {
             packedPickIds[i] = pickIds[i].toRgba();
         }
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(packedPickIds.buffer);
-        }
-        return stupefyTypedArray(packedPickIds);
+        transferableObjects.push(packedPickIds.buffer);
+        return packedPickIds;
     }
 
     function unpackPickIds(packedPickIds) {
-        packedPickIds = unStupefyTypedArray(packedPickIds);
+        packedPickIds = packedPickIds;
         var length = packedPickIds.length;
         var pickIds = new Array(length);
         for (var i = 0; i < length; i++) {
@@ -735,18 +647,16 @@ define([
                 count += attribute.value.length;
             }
         }
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(packedData.buffer);
-        }
+        transferableObjects.push(packedData.buffer);
 
         return {
             stringTable : stringTable,
-            packedData : stupefyTypedArray(packedData)
+            packedData : packedData
         };
     }
 
     function unpackInstancesForCombine(data) {
-        var packedInstances = unStupefyTypedArray(data.packedData);
+        var packedInstances = data.packedData;
         var stringTable = data.stringTable;
         var result = new Array(packedInstances[0]);
         var count = 0;
@@ -854,13 +764,11 @@ define([
             }
         }
 
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(packedData.buffer);
-        }
+        transferableObjects.push(packedData.buffer);
 
         return {
             stringTable : stringTable,
-            packedData : stupefyTypedArray(packedData),
+            packedData : packedData,
             attributeTable : attributeTable
         };
     }
@@ -868,7 +776,7 @@ define([
     function unpackAttributeLocations(packedAttributeLocations, vaAttributes) {
         var stringTable = packedAttributeLocations.stringTable;
         var attributeTable = packedAttributeLocations.attributeTable;
-        var packedData = unStupefyTypedArray(packedAttributeLocations.packedData);
+        var packedData = packedAttributeLocations.packedData;
 
         var attributeLocations = new Array(packedData[0]);
         var attributeLocationsIndex = 0;
@@ -914,10 +822,8 @@ define([
         var createGeometryResults = parameters.createGeometryResults;
         var length = createGeometryResults.length;
 
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            for (var i = 0; i < length; i++) {
-                transferableObjects.push(createGeometryResults[i].packedData.buffer);
-            }
+        for (var i = 0; i < length; i++) {
+            transferableObjects.push(createGeometryResults[i].packedData.buffer);
         }
 
         var packedPickIds;
@@ -994,9 +900,6 @@ define([
      * @private
      */
     PrimitivePipeline.unpackCombineGeometryResults = function(packedResult) {
-        receiveGeometries(packedResult.geometries);
-        receivePerInstanceAttributes(packedResult.vaAttributes);
-
         return {
             geometries : packedResult.geometries,
             attributeLocations : packedResult.attributeLocations,
