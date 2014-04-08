@@ -67,5 +67,16 @@ define(['../Core/Enumeration'], function(Enumeration) {
         FROM_OBJECT : new Enumeration(4, 'FROM_OBJECT')
     };
 
+    /**
+     * Test if this rotation mode requires a {@link DynamicObject} to track.
+     * @memberof StoredViewCameraRotationMode
+     *
+     * @param {StoredViewCameraRotationMode} storedViewCameraRotationMode The mode to test.
+     * @returns {Bool} True if a DynamicObject is required.
+     */
+    StoredViewCameraRotationMode.requiresDynamicObject = function(storedViewCameraRotationMode) {
+        return storedViewCameraRotationMode.value >= 2;
+    };
+
     return StoredViewCameraRotationMode;
 });

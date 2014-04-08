@@ -216,6 +216,15 @@ define([
             }
         }));
 
+        this._knockoutSubscriptions.push(knockout.getObservable(this, 'isTrackingObject').subscribe(function(value) {
+            var required = StoredViewCameraRotationMode.requiresDynamicObject(that.timeRotateMode);
+            if (value && !required) {
+                that._timeRotateMode = StoredViewCameraRotationMode.LVLH.name;
+            } else if (required && !value) {
+                that._timeRotateMode = StoredViewCameraRotationMode.EARTH_FIXED.name;
+            }
+        }));
+
         this._knockoutSubscriptions.push(knockout.getObservable(this, '_userRotateMode').subscribe(function(value) {
             if (value === 'Z') {
                 scene.camera.constrainedAxis = Cartesian3.UNIT_Z.clone();
@@ -234,13 +243,17 @@ define([
         });
 
         /**
-         * True if the camera is centered on the Earth in ICRF rotation mode (meaning the Earth rotates
-         * with time, and the stars appear fixed).  This property is observable.
-         * @type {Boolean}
+         * The way the camera rotates with time.
+         * @type {StoredViewCameraRotationMode}
          */
-        this.useIcrf = undefined;
-        knockout.defineProperty(this, 'useIcrf', function() {
-            return that._timeRotateMode === StoredViewCameraRotationMode.ICRF.name;
+        this.timeRotateMode = undefined;
+        knockout.defineProperty(this, 'timeRotateMode', {
+            get: function() {
+                return StoredViewCameraRotationMode[that._timeRotateMode];
+            },
+            set: function(value) {
+                that._timeRotateMode = value.name;
+            }
         });
 
         /**

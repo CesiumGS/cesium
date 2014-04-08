@@ -12,6 +12,7 @@ define(['../../Core/BoundingSphere',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObject',
         '../../DynamicScene/DynamicObjectView',
+        '../../DynamicScene/StoredViewCameraRotationMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../subscribeAndEvaluate',
@@ -30,6 +31,7 @@ define(['../../Core/BoundingSphere',
         wrapFunction,
         DynamicObject,
         DynamicObjectView,
+        StoredViewCameraRotationMode,
         CameraFlightPath,
         SceneMode,
         subscribeAndEvaluate,
@@ -296,11 +298,15 @@ define(['../../Core/BoundingSphere',
         knockout.track(viewer, ['trackedObject', 'selectedObject']);
 
         if (defined(cameraControlViewModel)) {
-            knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'useIcrf', function(value) {
-                if (value) {
+            knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'timeRotateMode', function(value) {
+                if (value === StoredViewCameraRotationMode.ICRF) {
                     switchToIcrf();
                 } else {
                     clearIcrf();
+                }
+
+                if (defined(dynamicObjectView)) {
+                    dynamicObjectView.rotationMode = value;
                 }
             }));
         }
@@ -309,6 +315,7 @@ define(['../../Core/BoundingSphere',
             var scene = viewer.scene;
             var sceneMode = scene.frameState.mode;
             var isTracking = defined(value);
+            var rotationMode = StoredViewCameraRotationMode.LVLH;
 
             clearIcrf();
 
@@ -328,10 +335,12 @@ define(['../../Core/BoundingSphere',
                     cameraControlViewModel.isTrackingObject = false;
                     cameraControlViewModel.cameraFollows = 'Earth';
                 }
+                // Note that timeRotationMode can be reset if isTrackingObject changed value above.
+                rotationMode = cameraControlViewModel.timeRotateMode;
             }
 
             if (isTracking && defined(value.position)) {
-                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.ellipsoid);
+                dynamicObjectView = new DynamicObjectView(value, rotationMode, scene, viewer.centralBody.ellipsoid);
             } else {
                 dynamicObjectView = undefined;
             }

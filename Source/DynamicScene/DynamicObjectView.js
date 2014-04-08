@@ -13,6 +13,7 @@ define([
         '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/Transforms',
+        '../DynamicScene/StoredViewCameraRotationMode',
         '../Scene/CameraColumbusViewMode',
         '../Scene/SceneMode'
        ], function(
@@ -29,6 +30,7 @@ define([
          Matrix4,
          Ellipsoid,
          Transforms,
+         StoredViewCameraRotationMode,
          CameraColumbusViewMode,
          SceneMode) {
     "use strict";
@@ -83,7 +85,7 @@ define([
     var update3DCartesian3Scratch2 = new Cartesian3();
     var update3DCartesian3Scratch3 = new Cartesian3();
 
-    function update3D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
+    function update3D_LVLH(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
         update3DController(that, camera, objectChanged, offset);
 
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
@@ -156,6 +158,56 @@ define([
             if (!successful) {
                 camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
             }
+
+            that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+            var position = camera.position;
+            Cartesian3.clone(position, that._lastOffset);
+            that._lastDistance = Cartesian3.magnitude(position);
+        }
+    }
+
+    function update3D_NORTH_UP(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
+        update3DController(that, camera, objectChanged, offset);
+
+        var cartesian = positionProperty.getValue(time, that._lastCartesian);
+        if (defined(cartesian)) {
+            // X along the nadir
+            var xBasis = update3DCartesian3Scratch2;
+            Cartesian3.normalize(cartesian, xBasis);
+            Cartesian3.negate(xBasis, xBasis);
+
+            // Z is North
+            var zBasis = Cartesian3.clone(Cartesian3.UNIT_Z, update3DCartesian3Scratch3);
+
+            // Y is along the cross of z and x (right handed basis / in the direction of motion)
+            var yBasis = Cartesian3.cross(zBasis, xBasis, update3DCartesian3Scratch1);
+
+            Cartesian3.normalize(xBasis, xBasis);
+            Cartesian3.normalize(yBasis, yBasis);
+
+            zBasis = Cartesian3.cross(xBasis, yBasis, update3DCartesian3Scratch3);
+            Cartesian3.normalize(zBasis, zBasis);
+
+            var transform = update3DTransform;
+            transform[0]  = xBasis.x;
+            transform[1]  = xBasis.y;
+            transform[2]  = xBasis.z;
+            transform[3]  = 0.0;
+            transform[4]  = yBasis.x;
+            transform[5]  = yBasis.y;
+            transform[6]  = yBasis.z;
+            transform[7]  = 0.0;
+            transform[8]  = zBasis.x;
+            transform[9]  = zBasis.y;
+            transform[10] = zBasis.z;
+            transform[11] = 0.0;
+            transform[12]  = cartesian.x;
+            transform[13]  = cartesian.y;
+            transform[14] = cartesian.z;
+            transform[15] = 0.0;
+
+            camera.transform = transform;
 
             that._screenSpaceCameraController.ellipsoid = Ellipsoid.UNIT_SPHERE;
 
@@ -240,15 +292,22 @@ define([
      * @constructor
      *
      * @param {DynamicObject} dynamicObject The object to track with the camera.
+     * @param {StoredViewCameraRotationMode} rotationMode The way the camera moves with time.
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
-    var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
+    var DynamicObjectView = function(dynamicObject, rotationMode, scene, ellipsoid) {
         /**
          * The object to track with the camera.
          * @type {DynamicObject}
          */
         this.dynamicObject = dynamicObject;
+
+        /**
+         * The way the camera moves with time.
+         * @type {StoredViewCameraRotationMode}
+         */
+        this.rotationMode = rotationMode;
 
         /**
          * The scene in which to track the object.
@@ -356,7 +415,11 @@ define([
         if (mode === SceneMode.SCENE2D) {
             update2D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         } else if (mode === SceneMode.SCENE3D) {
-            update3D(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
+            if (this.rotationMode === StoredViewCameraRotationMode.NORTH_UP) {
+                update3D_NORTH_UP(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
+            } else {
+                update3D_LVLH(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid);
+            }
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             updateColumbus(this, scene.camera, objectChanged, offset, positionProperty, time, ellipsoid, scene.scene2D.projection);
         }
