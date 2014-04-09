@@ -21,16 +21,16 @@ define([
      * @constructor
      *
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
-     * @param {Array} [imageryProviderViewModels=[]] The array of ImageryProviderViewModel instances to use.
+     * @param {Array} [imageryProviderViewModels=[]] The array of ProviderViewModel instances to use.
      *
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
      *
-     * @see ImageryProviderViewModel
+     * @see ProviderViewModel
      */
-    var BaseLayerPickerViewModel = function(imageryLayers, imageryProviderViewModels) {
+    var BaseLayerPickerViewModel = function(centralBody, imageryProviderViewModels, terrainProviderViewModels) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(imageryLayers)) {
-            throw new DeveloperError('imageryLayers is required');
+        if (!defined(centralBody)) {
+            throw new DeveloperError('centralBody is required');
         }
         //>>includeEnd('debug');
 
@@ -40,16 +40,22 @@ define([
             throw new DeveloperError('imageryProviderViewModels must be an array');
         }
 
-        var that = this;
+        if (!defined(terrainProviderViewModels)) {
+            terrainProviderViewModels = [];
+        } else if (!isArray(imageryProviderViewModels)) {
+            throw new DeveloperError('terrainProviderViewModels must be an array');
+        }
 
-        this._imageryLayers = imageryLayers;
+        this._centralBody = centralBody;
 
         /**
-         * Gets or sets an array of ImageryProviderViewModel instances available for selection.
+         * Gets or sets an array of ProviderViewModel instances available for selection.
          * This property is observable.
          * @type {Array}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
+
+        this.terrainProviderViewModels = terrainProviderViewModels.slice(0);
 
         /**
          * Gets or sets whether the imagery selection drop-down is currently visible.
@@ -58,15 +64,15 @@ define([
          */
         this.dropDownVisible = false;
 
-        knockout.track(this, ['imageryProviderViewModels', 'dropDownVisible']);
+        knockout.track(this, ['imageryProviderViewModels', 'terrainProviderViewModels', 'dropDownVisible']);
 
         /**
          * Gets the currently selected item name.  This property is observable.
          * @type {String}
          */
-        this.selectedName = undefined;
-        knockout.defineProperty(this, 'selectedName', function() {
-            var selected = that.selectedItem;
+        this.selectedImageryName = undefined;
+        knockout.defineProperty(this, 'selectedImageryName', function() {
+            var selected = this.selectedImagery;
             return defined(selected) ? selected.name : undefined;
         });
 
@@ -74,34 +80,35 @@ define([
          * Gets the image url of the currently selected item.  This property is observable.
          * @type {String}
          */
-        this.selectedIconUrl = undefined;
-        knockout.defineProperty(this, 'selectedIconUrl', function() {
-            var viewModel = that.selectedItem;
+        this.selectedImageryIconUrl = undefined;
+        knockout.defineProperty(this, 'selectedImageryIconUrl', function() {
+            var viewModel = this.selectedImagery;
             return defined(viewModel) ? viewModel.iconUrl : undefined;
         });
 
         /**
          * Gets or sets the currently selected item.  This property is observable.
-         * @type {ImageryProviderViewModel}
+         * @type {ProviderViewModel}
          * @default undefined
          */
-        this.selectedItem = undefined;
-        var selectedViewModel = knockout.observable();
+        this.selectedImagery = undefined;
+        var selectedImageryViewModel = knockout.observable();
 
-        this._currentProviders = [];
-        knockout.defineProperty(this, 'selectedItem', {
+        this._currentImageryProviders = [];
+        knockout.defineProperty(this, 'selectedImagery', {
             get : function() {
-                return selectedViewModel();
+                return selectedImageryViewModel();
             },
             set : function(value) {
                 var i;
-                var currentProviders = that._currentProviders;
-                var currentProvidersLength = currentProviders.length;
-                for (i = 0; i < currentProvidersLength; i++) {
+                var currentImageryProviders = this._currentImageryProviders;
+                var currentImageryProvidersLength = currentImageryProviders.length;
+                var imageryLayers = this._centralBody.imageryLayers;
+                for (i = 0; i < currentImageryProvidersLength; i++) {
                     var layersLength = imageryLayers.length;
                     for ( var x = 0; x < layersLength; x++) {
                         var layer = imageryLayers.get(x);
-                        if (layer.imageryProvider === currentProviders[i]) {
+                        if (layer.imageryProvider === currentImageryProviders[i]) {
                             imageryLayers.remove(layer);
                             break;
                         }
@@ -115,18 +122,42 @@ define([
                         for (i = newProvidersLength - 1; i >= 0; i--) {
                             imageryLayers.addImageryProvider(newProviders[i], 0);
                         }
-                        that._currentProviders = newProviders.slice(0);
+                        this._currentImageryProviders = newProviders.slice(0);
                     } else {
-                        that._currentProviders = [newProviders];
+                        this._currentImageryProviders = [newProviders];
                         imageryLayers.addImageryProvider(newProviders, 0);
                     }
 
-                    selectedViewModel(value);
+                    selectedImageryViewModel(value);
                 }
-                that.dropDownVisible = false;
+                this.dropDownVisible = false;
             }
         });
 
+        /**
+         * Gets or sets the currently selected item.  This property is observable.
+         * @type {ProviderViewModel}
+         * @default undefined
+         */
+        this.selectedTerrain = undefined;
+        var selectedTerrainViewModel = knockout.observable();
+
+        knockout.defineProperty(this, 'selectedTerrain', {
+            get : function() {
+                return selectedTerrainViewModel();
+            },
+            set : function(value) {
+                if (defined(value)) {
+                    var newProvider = value.creationCommand();
+                    this._centralBody.terrainProvider = newProvider;
+                    selectedTerrainViewModel(value);
+                }
+
+                this.dropDownVisible = false;
+            }
+        });
+
+        var that = this;
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
@@ -153,7 +184,7 @@ define([
          */
         imageryLayers : {
             get : function() {
-                return this._imageryLayers;
+                return this._centralBody.imageryLayers;
             }
         }
     });

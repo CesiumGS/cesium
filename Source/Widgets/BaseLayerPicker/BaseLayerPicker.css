@@ -40,6 +40,21 @@
     user-select: none;
 }
 
+.cesium-baseLayerPicker-sectionTitle {
+    display: block;
+    font-family: sans-serif;
+    font-size: 16pt;
+    text-align: center;
+    color: #edffff;
+}
+
+.cesium-baseLayerPicker-choices {
+    display: block;
+    position: relative;
+    top: auto;
+    right: 0;
+}
+
 .cesium-baseLayerPicker-item {
     display: inline-block;
     vertical-align: top;

@@ -2,22 +2,30 @@
 defineSuite([
          'Widgets/BaseLayerPicker/BaseLayerPicker',
          'Scene/ImageryLayerCollection',
+         'Scene/EllipsoidTerrainProvider',
          'Specs/EventHelper'
      ], function(
          BaseLayerPicker,
          ImageryLayerCollection,
+         EllipsoidTerrainProvider,
          EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var MockCentralBody = function(){
+        this.imageryLayers = new ImageryLayerCollection();
+        this.terrainProvider = new EllipsoidTerrainProvider();
+    };
 
     it('can create and destroy', function() {
         var container = document.createElement('div');
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var layers = new ImageryLayerCollection();
+        var centralBody = new MockCentralBody();
+        var layers = centralBody.imageryLayers;
 
-        var widget = new BaseLayerPicker('testContainer', layers);
+        var widget = new BaseLayerPicker('testContainer', centralBody);
         expect(widget.container).toBe(container);
         expect(widget.viewModel.imageryLayers).toBe(layers);
         expect(widget.isDestroyed()).toEqual(false);
@@ -32,7 +40,7 @@ defineSuite([
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
+        var widget = new BaseLayerPicker('testContainer', new MockCentralBody());
 
         widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(document.body);
@@ -51,7 +59,7 @@ defineSuite([
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
+        var widget = new BaseLayerPicker('testContainer', new MockCentralBody());
 
         widget.viewModel.dropDownVisible = true;
 
@@ -75,13 +83,13 @@ defineSuite([
 
     it('constructor throws with no element', function() {
         expect(function() {
-            return new BaseLayerPicker(undefined, new ImageryLayerCollection());
+            return new BaseLayerPicker(undefined, new MockCentralBody());
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
-            return new BaseLayerPicker('does not exist', new ImageryLayerCollection());
+            return new BaseLayerPicker('does not exist', new MockCentralBody());
         }).toThrowDeveloperError();
     });
 });

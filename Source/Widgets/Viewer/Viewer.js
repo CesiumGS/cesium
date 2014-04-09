@@ -14,7 +14,8 @@ define([
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
-        '../BaseLayerPicker/createDefaultBaseLayers',
+        '../BaseLayerPicker/createDefaultImageryProviderViewModels',
+        '../BaseLayerPicker/createDefaultTerrainProviderViewModels',
         '../CesiumWidget/CesiumWidget',
         '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
@@ -42,7 +43,8 @@ define([
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
-        createDefaultBaseLayers,
+        createDefaultImageryProviderViewModels,
+        createDefaultTerrainProviderViewModels,
         CesiumWidget,
         ClockViewModel,
         FullscreenButton,
@@ -114,8 +116,8 @@ define([
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
-     * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {Array} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
@@ -296,9 +298,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //BaseLayerPicker
         var baseLayerPicker;
         if (createBaseLayerPicker) {
-            var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody.imageryLayers, providerViewModels);
-            baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
+            var imageryProviderViewModels = defaultValue(options.imageryProviderViewModels, createDefaultImageryProviderViewModels());
+            var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
+            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody, imageryProviderViewModels, terrainProviderViewModels);
+            baseLayerPicker.viewModel.selectedImagery = defaultValue(options.selectedImageryProviderViewModel, imageryProviderViewModels[0]);
 
             //Grab the dropdown for resize code.
             var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');

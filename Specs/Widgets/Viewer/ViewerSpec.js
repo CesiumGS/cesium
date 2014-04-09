@@ -3,7 +3,7 @@ defineSuite([
          'Widgets/Viewer/Viewer',
          'Widgets/Animation/Animation',
          'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
+         'Widgets/BaseLayerPicker/ProviderViewModel',
          'Widgets/CesiumWidget/CesiumWidget',
          'Widgets/FullscreenButton/FullscreenButton',
          'Widgets/HomeButton/HomeButton',
@@ -24,7 +24,7 @@ defineSuite([
          Viewer,
          Animation,
          BaseLayerPicker,
-         ImageryProviderViewModel,
+         ProviderViewModel,
          CesiumWidget,
          FullscreenButton,
          HomeButton,
@@ -50,7 +50,7 @@ defineSuite([
         }
     };
 
-    var testProviderViewModel = new ImageryProviderViewModel({
+    var testProviderViewModel = new ProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -323,7 +323,7 @@ defineSuite([
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
         expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
     });
 
     it('can set imageryProvider when BaseLayerPicker is disabled', function() {
@@ -343,7 +343,7 @@ defineSuite([
         });
         expect(viewer.centralBody.imageryLayers.length).toEqual(1);
         expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });
 
