@@ -102,7 +102,7 @@ Rotation with user input<br/>\
 <label><input type="radio" name="cesium-cameraControl-userRotate" value="U" data-bind="checked: _userRotateMode" /><span>Unconstrained</span></label></p>\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _fovIcon, width: 32, height: 32 }"></span> \
 Field of View (degrees)<br/>\
-<input class="cesium-cameraControl-fov-slider" type="range" min="0" max="1" step="0.001" data-bind="value: _fovSlider" /> \
+<input class="cesium-cameraControl-fov-slider" type="range" min="0" max="1" step="0.001" data-bind="value: _fovSlider, valueUpdate: \'input\'" /> \
 <input class="cesium-cameraControl-fov-number cesium-input" type="text" size="5" data-bind="value: fieldOfView" /></p>\
 <p><span class="cesium-cameraControl-indicator" data-bind="cesiumSvgPath: { path: _bookmarkIcon, width: 32, height: 32 }"></span> \
 Bookmarked view name:<br/>\
