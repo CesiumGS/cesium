@@ -720,10 +720,10 @@ define([
         for (var i = 0; i < length; i++) {
             var instance = attributeLocations[i];
 
-            var propertiesToWrites = [];
+            var propertiesToWrite = [];
             for ( var propertyName in instance) {
                 if (instance.hasOwnProperty(propertyName) && defined(instance[propertyName])) {
-                    propertiesToWrites.push(propertyName);
+                    propertiesToWrite.push(propertyName);
                     if (!defined(stringHash[propertyName])) {
                         stringHash[propertyName] = stringTable.length;
                         stringTable.push(propertyName);
@@ -731,9 +731,9 @@ define([
                 }
             }
 
-            packedData[count++] = propertiesToWrites.length;
-            for (var q = 0; q < propertiesToWrites.length; q++) {
-                var name = propertiesToWrites[q];
+            packedData[count++] = propertiesToWrite.length;
+            for (var q = 0; q < propertiesToWrite.length; q++) {
+                var name = propertiesToWrite[q];
                 var property = instance[name];
                 packedData[count++] = stringHash[name];
 
