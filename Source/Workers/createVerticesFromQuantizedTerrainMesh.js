@@ -86,10 +86,7 @@ define([
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, extent, parameters.northSkirtHeight, true);
         vertexBufferIndex += parameters.northIndices.length * vertexStride;
 
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(vertexBuffer.buffer);
-            transferableObjects.push(indexBuffer.buffer);
-        }
+        transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
         return {
             vertices : vertexBuffer.buffer,

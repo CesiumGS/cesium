@@ -132,11 +132,12 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [extentOutlineInstance, polygonOutlineInstance, ellipseOutlineInstance, circleOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -275,11 +276,12 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [extrudedOutlineExtent, extrudedOutlineEllipse, extrudedOutlinePolygon, cylinderOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -389,11 +391,12 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : outlineInstances,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -437,11 +440,12 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : wallOutlineInstance,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -738,7 +742,7 @@ require(['Cesium'], function(Cesium) {
                 },
                 // Override the appearance render state to change the
                 // line width on system's that support it (Linx/Mac).
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -893,11 +897,12 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : corridorOutline,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.context.maximumAliasedLineWidth)
             }
         })
     }));
@@ -981,6 +986,7 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : polylineVolumeOutline,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
+            translucent : false,
             renderState : {
                 depthTest : {
                     enabled : true

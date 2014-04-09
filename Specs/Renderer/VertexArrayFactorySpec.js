@@ -45,16 +45,16 @@ defineSuite([
 
     it('creates with no arguments', function() {
         va = context.createVertexArrayFromGeometry();
-        expect(va.getNumberOfAttributes()).toEqual(0);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(0);
+        expect(va.indexBuffer).not.toBeDefined();
     });
 
     it('creates with no geometry', function() {
         va = context.createVertexArrayFromGeometry({
             vertexLayout : VertexLayout.INTERLEAVED
         });
-        expect(va.getNumberOfAttributes()).toEqual(0);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(0);
+        expect(va.indexBuffer).not.toBeDefined();
     });
 
     it('creates a single-attribute vertex (non-interleaved)', function() {
@@ -74,8 +74,8 @@ defineSuite([
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(1);
+        expect(va.indexBuffer).not.toBeDefined();
 
         var position = geometry.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
@@ -84,7 +84,7 @@ defineSuite([
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
-        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
+        expect(va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
     });
 
     it('creates a single-attribute vertex (interleaved)', function() {
@@ -106,8 +106,8 @@ defineSuite([
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(1);
+        expect(va.indexBuffer).not.toBeDefined();
 
         var position = geometry.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
@@ -116,7 +116,7 @@ defineSuite([
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
 
-        expect(va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it('creates a homogeneous multiple-attribute vertex (non-interleaved)', function() {
@@ -141,8 +141,8 @@ defineSuite([
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry)
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(2);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(2);
+        expect(va.indexBuffer).not.toBeDefined();
 
         var position = geometry.attributes.customPosition;
         expect(va.getAttribute(0).index).toEqual(0);
@@ -184,8 +184,8 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(2);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(2);
+        expect(va.indexBuffer).not.toBeDefined();
 
         var position = geometry.attributes.customPosition;
         var normal = geometry.attributes.customNormal;
@@ -229,8 +229,8 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(2);
-        expect(va.getIndexBuffer()).not.toBeDefined();
+        expect(va.numberOfAttributes).toEqual(2);
+        expect(va.indexBuffer).not.toBeDefined();
 
         var position = geometry.attributes.position;
         var colors = geometry.attributes.colors;
@@ -280,12 +280,12 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(3);
+        expect(va.numberOfAttributes).toEqual(3);
 
         var vertexBuffer = va.getAttribute(0).vertexBuffer;
         expect(vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
         expect(vertexBuffer).toBe(va.getAttribute(2).vertexBuffer);
-        expect(vertexBuffer.getSizeInBytes()).toEqual(8); // Includes 1 byte per-vertex padding
+        expect(vertexBuffer.sizeInBytes).toEqual(8); // Includes 1 byte per-vertex padding
 
         // Validate via rendering
         var vs =
@@ -341,7 +341,7 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(32); // No per-vertex padding needed
+        expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(32); // No per-vertex padding needed
 
         // Validate via rendering
         var vs =
@@ -416,8 +416,8 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(4);
-        expect(va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(8); // Includes 1 byte per-vertex padding
+        expect(va.numberOfAttributes).toEqual(4);
+        expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(8); // Includes 1 byte per-vertex padding
 
         // Validate via rendering
         var vs =
@@ -484,7 +484,7 @@ defineSuite([
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
-        expect(va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(2 * 32); // Includes 3 byte per-vertex padding
+        expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 32); // Includes 3 byte per-vertex padding
 
         // Validate via rendering
         var vs =
@@ -562,11 +562,11 @@ defineSuite([
             geometry : geometry
         });
 
-        expect(va.getNumberOfAttributes()).toEqual(0);
-        expect(va.getIndexBuffer()).toBeDefined();
-        expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
-        expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indices.length);
+        expect(va.numberOfAttributes).toEqual(0);
+        expect(va.indexBuffer).toBeDefined();
+        expect(va.indexBuffer.usage).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
+        expect(va.indexBuffer.indexDatatype).toEqual(IndexDatatype.UNSIGNED_SHORT);
+        expect(va.indexBuffer.numberOfIndices).toEqual(geometry.indices.length);
     });
 
     it('throws with different number of interleaved attributes', function() {

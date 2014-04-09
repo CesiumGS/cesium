@@ -172,7 +172,7 @@ define([
                 attributeLocations: attributeLocations,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
+            command.shaderProgram = context.shaderCache.getShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });

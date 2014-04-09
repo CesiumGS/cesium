@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         ComponentDatatype) {
@@ -144,7 +146,7 @@ define([
             if (defined(attribute.vertexBuffer)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
                 var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
-                numberOfVertices = attribute.vertexBuffer.getSizeInBytes() / bytes;
+                numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
                 break;
             }
         }
@@ -183,6 +185,30 @@ define([
         this._indexBuffer = indexBuffer;
     };
 
+    defineProperties(VertexArray.prototype, {
+        /**
+        * DOC_TBA
+        * @memberof VertexArray.prototype
+        * @type {Number}
+        */
+        numberOfAttributes : {
+            get : function() {
+                return this._attributes.length;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof VertexArray.prototype
+         * @type {Buffer}
+         */
+        indexBuffer : {
+            get : function() {
+                return this._indexBuffer;
+            }
+        }
+    });
+
     /**
      * DOC_TBA
      *
@@ -200,29 +226,6 @@ define([
         //>>includeEnd('debug');
 
         return this._attributes[index];
-    };
-
-    /**
-    * DOC_TBA
-    *
-    * @memberof VertexArray
-    *
-    * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-    */
-    VertexArray.prototype.getNumberOfAttributes = function() {
-        return this._attributes.length;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @returns {Buffer} DOC_TBA.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.getIndexBuffer = function() {
-        return this._indexBuffer;
     };
 
     VertexArray.prototype._bind = function() {
@@ -309,13 +312,13 @@ define([
         var attributes = this._attributes;
         for ( var i = 0; i < attributes.length; ++i) {
             var vertexBuffer = attributes[i].vertexBuffer;
-            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.getVertexArrayDestroyable()) {
+            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.vertexArrayDestroyable) {
                 vertexBuffer.destroy();
             }
         }
 
         var indexBuffer = this._indexBuffer;
-        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
+        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.vertexArrayDestroyable) {
             indexBuffer.destroy();
         }
 

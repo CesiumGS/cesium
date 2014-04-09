@@ -484,7 +484,7 @@ define([
         //
         // Here, we validate that the VAO has all attributes required
         // to match the shader program.
-        var shaderAttributes = shaderProgram.getVertexAttributes();
+        var shaderAttributes = shaderProgram.vertexAttributes;
 
         //>>includeStart('debug', pragmas.debug);
         for (var name in shaderAttributes) {
@@ -612,7 +612,7 @@ define([
                         pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                         ellipsoid : projection.ellipsoid,
                         isGeographic : projection instanceof GeographicProjection,
-                        elementIndexUintSupported : context.getElementIndexUint(),
+                        elementIndexUintSupported : context.elementIndexUint,
                         allow3DOnly : this.allow3DOnly,
                         allowPicking : allowPicking,
                         vertexCacheOptimize : this.vertexCacheOptimize,
@@ -622,9 +622,6 @@ define([
                     this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
-                        PrimitivePipeline.receiveGeometries(result.geometries);
-                        PrimitivePipeline.receivePerInstanceAttributes(result.vaAttributes);
-
                         that._geometries = result.geometries;
                         that._attributeLocations = result.attributeLocations;
                         that._vaAttributes = result.vaAttributes;
@@ -671,7 +668,7 @@ define([
                     pickIds : allowPicking ? createPickIds(context, this, instances) : undefined,
                     ellipsoid : projection.ellipsoid,
                     projection : projection,
-                    elementIndexUintSupported : context.getElementIndexUint(),
+                    elementIndexUintSupported : context.elementIndexUint,
                     allow3DOnly : this.allow3DOnly,
                     allowPicking : allowPicking,
                     vertexCacheOptimize : this.vertexCacheOptimize,
@@ -812,7 +809,7 @@ define([
         }
 
         if (createSP) {
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();

@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/Math',
         '../Core/Matrix3',
@@ -20,6 +21,7 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         EncodedCartesian3,
         CesiumMath,
         Matrix3,
@@ -89,6 +91,9 @@ define([
         this._inverseProjectionDirty = true;
         this._inverseProjection = new Matrix4();
 
+        this._inverseProjectionOITDirty = true;
+        this._inverseProjectionOIT = new Matrix4();
+
         this._modelViewDirty = true;
         this._modelView = new Matrix4();
 
@@ -153,6 +158,632 @@ define([
         this._eyeHeight2D = new Cartesian2();
     };
 
+    defineProperties(UniformState.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {BoundingRectangle}
+         */
+        viewport : {
+            get : function() {
+                return this._viewport;
+            },
+            set : function(viewport) {
+                if (!BoundingRectangle.equals(viewport, this._viewport)) {
+                    BoundingRectangle.clone(viewport, this._viewport);
+
+                    var v = this._viewport;
+                    var vc = this._viewportCartesian4;
+                    vc.x = v.x;
+                    vc.y = v.y;
+                    vc.z = v.width;
+                    vc.w = v.height;
+
+                    this._viewportDirty = true;
+                }
+            }
+        },
+
+        /**
+         * @private
+         */
+        viewportCartesian4 : {
+            get : function() {
+                return this._viewportCartesian4;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         */
+        viewportOrthographic : {
+            get : function() {
+                cleanViewport(this);
+                return this._viewportOrthographicMatrix;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         */
+        viewportTransformation : {
+            get : function() {
+                cleanViewport(this);
+                return this._viewportTransformation;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        model : {
+            get : function() {
+                return this._model;
+            },
+            set : function(matrix) {
+                Matrix4.clone(matrix, this._model);
+
+                this._modelView3DDirty = true;
+                this._inverseModelView3DDirty = true;
+                this._inverseModelDirty = true;
+                this._inverseTransposeModelDirty = true;
+                this._modelViewDirty = true;
+                this._inverseModelViewDirty = true;
+                this._viewProjectionDirty = true;
+                this._inverseViewProjectionDirty = true;
+                this._modelViewRelativeToEyeDirty = true;
+                this._inverseModelViewDirty = true;
+                this._modelViewProjectionDirty = true;
+                this._inverseModelViewProjectionDirty = true;
+                this._modelViewProjectionRelativeToEyeDirty = true;
+                this._modelViewInfiniteProjectionDirty = true;
+                this._normalDirty = true;
+                this._inverseNormalDirty = true;
+                this._normal3DDirty = true;
+                this._inverseNormal3DDirty = true;
+                this._encodedCameraPositionMCDirty = true;
+            }
+        },
+
+        /**
+         * The inverse model matrix used to define the {@link czm_inverseModel} GLSL uniform.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseModel : {
+            get : function() {
+                if (this._inverseModelDirty) {
+                    this._inverseModelDirty = false;
+
+                    Matrix4.inverse(this._model, this._inverseModel);
+                }
+
+                return this._inverseModel;
+            }
+        },
+
+        /**
+         * @private
+         */
+        inverseTranposeModel : {
+            get : function() {
+                var m = this._inverseTransposeModel;
+                if (this._inverseTransposeModelDirty) {
+                    this._inverseTransposeModelDirty = false;
+
+                    Matrix4.getRotation(this.inverseModel, m);
+                    Matrix3.transpose(m, m);
+                }
+
+                return m;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        view : {
+            get : function() {
+                return this._view;
+            }
+        },
+
+        /**
+         * The 3D view matrix.  In 3D mode, this is identical to {@link UniformState#view},
+         * but in 2D and Columbus View it is a synthetic matrix based on the equivalent position
+         * of the camera in the 3D world.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        view3D : {
+            get : function() {
+                if (this._view3DDirty) {
+                    if (this._mode === SceneMode.SCENE3D) {
+                        Matrix4.clone(this._view, this._view3D);
+                    } else {
+                        view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
+                    }
+                    Matrix4.getRotation(this._view3D, this._viewRotation3D);
+                    this._view3DDirty = false;
+                }
+                return this._view3D;
+            }
+        },
+
+        /**
+         * The 3x3 rotation matrix of the current view matrix ({@link UniformState#view}).
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        viewRotation : {
+            get : function() {
+                return this._viewRotation;
+            }
+        },
+
+        /**
+         * The 3x3 rotation matrix of the current 3D view matrix ({@link UniformState#view3D}).
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        viewRotation3D : {
+            get : function() {
+                var view3D = this.view3D;
+                return this._viewRotation3D;
+            }
+        },
+
+        /**
+         * The 4x4 inverse-view matrix that transforms from eye to world coordinates.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseView : {
+            get : function() {
+                return this._inverseView;
+            }
+        },
+
+        /**
+         * the 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.  In 3D mode, this is
+         * identical to {@link UniformState#inverseView}, but in 2D and Columbus View it is a synthetic matrix
+         * based on the equivalent position of the camera in the 3D world.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseView3D : {
+            get : function() {
+                if (this._inverseView3DDirty) {
+                    Matrix4.inverseTransformation(this.view3D, this._inverseView3D);
+                    Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
+                    this._inverseView3DDirty = false;
+                }
+                return this._inverseView3D;
+            }
+        },
+
+        /**
+         * The 3x3 rotation matrix of the current inverse-view matrix ({@link UniformState#inverseView}).
+         * @memberof UniformState,prototype
+         * @type {Matrix3}
+         */
+        inverseViewRotation : {
+            get : function() {
+                return this._inverseViewRotation;
+            }
+        },
+
+        /**
+         * The 3x3 rotation matrix of the current 3D inverse-view matrix ({@link UniformState#inverseView3D}).
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        inverseViewRotation3D : {
+            get : function() {
+                var inverseView = this.inverseView3D;
+                return this._inverseViewRotation3D;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState,prototype
+         * @teyp {Matrix4}
+         */
+        projection : {
+            get : function() {
+                return this._projection;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseProjection : {
+            get : function() {
+                cleanInverseProjection(this);
+                return this._inverseProjection;
+            }
+        },
+
+        /**
+         * @private
+         */
+        inverseProjectionOIT : {
+            get : function() {
+                cleanInverseProjectionOIT(this);
+                return this._inverseProjectionOIT;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        infiniteProjection : {
+            get : function() {
+                return this._infiniteProjection;
+            }
+        },
+
+        /**
+         * The model-view matrix.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelView : {
+            get : function() {
+                cleanModelView(this);
+                return this._modelView;
+            }
+        },
+
+        /**
+         * The 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#modelView}.  In 2D and
+         * Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelView3D : {
+            get : function() {
+                cleanModelView3D(this);
+                return this._modelView3D;
+            }
+        },
+
+        /**
+         * The model-view relative to eye matrix used to define the {@link czm_modelViewRelativeToEye} GLSL uniform.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelViewRelativeToEye : {
+            get : function() {
+                cleanModelViewRelativeToEye(this);
+                return this._modelViewRelativeToEye;
+            }
+        },
+
+        /**
+         * The inverse of the model-view matrix.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseModelView : {
+            get : function() {
+                cleanInverseModelView(this);
+                return this._inverseModelView;
+            }
+        },
+
+        /**
+         * The inverse of the 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#inverseModelView}.
+         * In 2D and Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseModelView3D : {
+            get : function() {
+                cleanInverseModelView3D(this);
+                return this._inverseModelView3D;
+
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        viewProjection : {
+            get : function() {
+                cleanViewProjection(this);
+                return this._viewProjection;
+            }
+        },
+
+        /**
+         * The inverse view-projection matrix
+         * @memberof UniformState.protoype
+         * @type {Matrix4}
+         */
+        inverseViewProjection : {
+            get : function() {
+                cleanInverseViewProjection(this);
+                return this._inverseViewProjection;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelViewProjection : {
+            get : function() {
+                cleanModelViewProjection(this);
+                return this._modelViewProjection;
+
+            }
+        },
+
+        /**
+         * The inverse model-view-projection matrix.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        inverseModelViewProjection : {
+            get : function() {
+                cleanInverseModelViewProjection(this);
+                return this._inverseModelViewProjection;
+
+            }
+        },
+
+        /**
+         * The model-view-projection relative to eye matrix used to define the {@link czm_modelViewProjectionRelativeToEye} GLSL uniform.
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelViewProjectionRelativeToEye : {
+            get : function() {
+                cleanModelViewProjectionRelativeToEye(this);
+                return this._modelViewProjectionRelativeToEye;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
+         */
+        modelViewInfiniteProjection : {
+            get : function() {
+                cleanModelViewInfiniteProjection(this);
+                return this._modelViewInfiniteProjection;
+            }
+        },
+
+        /**
+         * A 3x3 normal transformation matrix that transforms normal vectors in model coordinates to
+         * eye coordinates.
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        normal : {
+            get : function() {
+                cleanNormal(this);
+                return this._normal;
+            }
+        },
+
+        /**
+         * A 3x3 normal transformation matrix that transforms normal vectors in 3D model
+         * coordinates to eye coordinates.  In 3D mode, this is identical to
+         * {@link UniformState#normal}, but in 2D and Columbus View it represents the normal transformation
+         * matrix as if the camera were at an equivalent location in 3D mode.
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        normal3D : {
+            get : function() {
+                cleanNormal3D(this);
+                return this._normal3D;
+
+            }
+        },
+
+        /**
+         * An inverse 3x3 normal transformation matrix that transforms normal vectors in model coordinates
+         * to eye coordinates.
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        inverseNormal : {
+            get : function() {
+                cleanInverseNormal(this);
+                return this._inverseNormal;
+            }
+        },
+
+        /**
+         * An inverse 3x3 normal transformation matrix that transforms normal vectors in eye coordinates
+         * to 3D model coordinates.  In 3D mode, this is identical to
+         * {@link UniformState#inverseNormal}, but in 2D and Columbus View it represents the normal transformation
+         * matrix as if the camera were at an equivalent location in 3D mode.
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        inverseNormal3D : {
+            get : function() {
+                cleanInverseNormal3D(this);
+                return this._inverseNormal3D;
+            }
+        },
+
+        /**
+         * The near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
+         * This is the largest possible frustum, not an individual frustum used for multi-frustum rendering.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        entireFrustum : {
+            get : function() {
+                return this._entireFrustum;
+            }
+        },
+
+        /**
+         * The near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
+         * This is the individual frustum used for multi-frustum rendering.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        currentFrustum : {
+            get : function() {
+                return this._currentFrustum;
+            }
+        },
+
+        /**
+         * The the height (<code>x</code>) and the height squared (<code>y</code>)
+         * in meters of the camera above the 2D world plane. This uniform is only valid
+         * when the {@link SceneMode} equal to <code>SCENE2D</code>.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        eyeHeight2D : {
+            get : function() {
+                return this._eyeHeight2D;
+            }
+        },
+
+        /**
+         * The size of a pixel in meters at a distance of one meter from the camera.
+         * @memberof UniformState.prototype
+         * @returns {Number}
+         */
+        pixelSize : {
+            get : function() {
+                return this._pixelSize;
+            }
+        },
+
+        /**
+         * The sun position in 3D world coordinates at the current scene time.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        sunPositionWC : {
+            get : function() {
+                return this._sunPositionWC;
+            }
+        },
+
+        /**
+         * The sun position in 2D world coordinates at the current scene time.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        sunPositionColumbusView : {
+            get : function(){
+                return this._sunPositionColumbusView;
+            }
+        },
+
+        /**
+         * A normalized vector to the sun in 3D world coordinates at the current scene time.  Even in 2D or
+         * Columbus View mode, this returns the position of the sun in the 3D scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        sunDirectionWC : {
+            get : function() {
+                return this._sunDirectionWC;
+            }
+        },
+
+        /**
+         * A normalized vector to the sun in eye coordinates at the current scene time.  In 3D mode, this
+         * returns the actual vector from the camera position to the sun position.  In 2D and Columbus View, it returns
+         * the vector from the equivalent 3D camera position to the position of the sun in the 3D scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        sunDirectionEC : {
+            get : function() {
+                return this._sunDirectionEC;
+            }
+        },
+
+        /**
+         * A normalized vector to the moon in eye coordinates at the current scene time.  In 3D mode, this
+         * returns the actual vector from the camera position to the moon position.  In 2D and Columbus View, it returns
+         * the vector from the equivalent 3D camera position to the position of the moon in the 3D scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        moonDirectionEC : {
+            get : function() {
+                return this._moonDirectionEC;
+            }
+        },
+
+        /**
+         * The high bits of the camera position used to define the {@link czm_encodedCameraPositionMCHigh} GLSL uniform.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        encodedCameraPositionMCHigh : {
+            get : function() {
+                cleanEncodedCameraPositionMC(this);
+                return this._encodedCameraPositionMC.high;
+            }
+        },
+
+        /**
+         * The low bits of the camera position used to define the {@link czm_encodedCameraPositionMCLow} GLSL uniform.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3}
+         */
+        encodedCameraPositionMCLow : {
+            get : function() {
+                cleanEncodedCameraPositionMC(this);
+                return this._encodedCameraPositionMC.low;
+            }
+        },
+
+        /**
+         * A 3x3 matrix that transforms from True Equator Mean Equinox (TEME) axes to the
+         * pseudo-fixed axes at the Scene's current time.
+         * @memberof UniformState.prototype
+         * @type {Matrix3}
+         */
+        temeToPseudoFixedMatrix : {
+            get : function() {
+                return this._temeToPseudoFixed;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof UniformState.prototype
+         */
+        highResolutionSnapScale : {
+            get : function() {
+                return 1.0;
+            }
+        }
+    });
+
     function setView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._view);
         Matrix4.getRotation(matrix, uniformState._viewRotation);
@@ -183,6 +814,7 @@ define([
         Matrix4.clone(matrix, uniformState._projection);
 
         uniformState._inverseProjectionDirty = true;
+        uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
@@ -214,12 +846,12 @@ define([
 
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
 
-        position = Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, uniformState._sunDirectionEC);
+        position = Matrix3.multiplyByVector(uniformState.viewRotation3D, position, uniformState._sunDirectionEC);
         Cartesian3.normalize(position, position);
 
         position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
-        Matrix3.multiplyByVector(uniformState.getViewRotation3D(), position, position);
+        Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
 
         var projection = frameState.scene2D.projection;
@@ -280,8 +912,8 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        scratchDrawingBufferDimensions.x = context.getDrawingBufferWidth();
-        scratchDrawingBufferDimensions.y = context.getDrawingBufferHeight();
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
         var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, undefined, scratchPixelSize);
         this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
@@ -293,52 +925,6 @@ define([
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @param {BoundingRectangle} viewport DOC_TBA.
-     *
-     * @see UniformState#getViewport
-     * @see czm_viewport
-     */
-    UniformState.prototype.setViewport = function(viewport) {
-        if (!BoundingRectangle.equals(viewport, this._viewport)) {
-            BoundingRectangle.clone(viewport, this._viewport);
-
-            var v = this._viewport;
-            var vc = this._viewportCartesian4;
-            vc.x = v.x;
-            vc.y = v.y;
-            vc.z = v.width;
-            vc.w = v.height;
-
-            this._viewportDirty = true;
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * return {BoundingRectangle} DOC_TBA.
-     *
-     * @see UniformState#setViewport
-     * @see czm_viewport
-     */
-    UniformState.prototype.getViewport = function() {
-        return this._viewport;
-    };
-
-    /**
-     * @private
-     */
-    UniformState.prototype.getViewportCartesian4 = function() {
-        return this._viewportCartesian4;
-    };
-
     function cleanViewport(uniformState) {
         if (uniformState._viewportDirty) {
             var v = uniformState._viewport;
@@ -348,255 +934,6 @@ define([
         }
     }
 
-    /**
-     * DOC_TBA
-     * @memberof UniformState
-     *
-     * @see czm_viewportOrthographic
-     */
-    UniformState.prototype.getViewportOrthographic = function() {
-        cleanViewport(this);
-        return this._viewportOrthographicMatrix;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @see czm_viewportTransformation
-     */
-    UniformState.prototype.getViewportTransformation = function() {
-        cleanViewport(this);
-        return this._viewportTransformation;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @param {Matrix4} [matrix] DOC_TBA.
-     *
-     * @see UniformState#getModel
-     * @see czm_model
-     */
-    UniformState.prototype.setModel = function(matrix) {
-        Matrix4.clone(matrix, this._model);
-
-        this._modelView3DDirty = true;
-        this._inverseModelView3DDirty = true;
-        this._inverseModelDirty = true;
-        this._inverseTransposeModelDirty = true;
-        this._modelViewDirty = true;
-        this._inverseModelViewDirty = true;
-        this._viewProjectionDirty = true;
-        this._inverseViewProjectionDirty = true;
-        this._modelViewRelativeToEyeDirty = true;
-        this._inverseModelViewDirty = true;
-        this._modelViewProjectionDirty = true;
-        this._inverseModelViewProjectionDirty = true;
-        this._modelViewProjectionRelativeToEyeDirty = true;
-        this._modelViewInfiniteProjectionDirty = true;
-        this._normalDirty = true;
-        this._inverseNormalDirty = true;
-        this._normal3DDirty = true;
-        this._inverseNormal3DDirty = true;
-        this._encodedCameraPositionMCDirty = true;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see UniformState#setModel
-     * @see czm_model
-     */
-    UniformState.prototype.getModel = function() {
-        return this._model;
-    };
-
-    /**
-     * Returns the inverse model matrix used to define the {@link czm_inverseModel} GLSL uniform.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The inverse model matrix.
-     *
-     * @see UniformState#setModel
-     * @see UniformState#getModel
-     * @see czm_inverseModel
-     */
-    UniformState.prototype.getInverseModel = function() {
-        if (this._inverseModelDirty) {
-            this._inverseModelDirty = false;
-
-            Matrix4.inverse(this._model, this._inverseModel);
-        }
-
-        return this._inverseModel;
-    };
-
-    /**
-     * @private
-     */
-    UniformState.prototype.getInverseTranposeModel = function() {
-        var m = this._inverseTransposeModel;
-        if (this._inverseTransposeModelDirty) {
-            this._inverseTransposeModelDirty = false;
-
-            Matrix4.getRotation(this.getInverseModel(), m);
-            Matrix3.transpose(m, m);
-        }
-
-        return m;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see czm_view
-     */
-    UniformState.prototype.getView = function() {
-        return this._view;
-    };
-
-    /**
-     * Gets the 3D view matrix.  In 3D mode, this is identical to {@link UniformState#getView},
-     * but in 2D and Columbus View it is a synthetic matrix based on the equivalent position
-     * of the camera in the 3D world.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The 3D view matrix.
-     *
-     * @see czm_view3D
-     */
-    UniformState.prototype.getView3D = function() {
-        if (this._view3DDirty) {
-            if (this._mode === SceneMode.SCENE3D) {
-                Matrix4.clone(this._view, this._view3D);
-            } else {
-                view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
-            }
-            Matrix4.getRotation(this._view3D, this._viewRotation3D);
-            this._view3DDirty = false;
-        }
-        return this._view3D;
-    };
-
-    /**
-     * Returns the 3x3 rotation matrix of the current view matrix ({@link UniformState#getView}).
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The 3x3 rotation matrix of the current view matrix.
-     *
-     * @see UniformState#getView
-     * @see czm_viewRotation
-     */
-    UniformState.prototype.getViewRotation = function() {
-        return this._viewRotation;
-    };
-
-    /**
-     * Returns the 3x3 rotation matrix of the current 3D view matrix ({@link UniformState#getView3D}).
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The 3x3 rotation matrix of the current 3D view matrix.
-     *
-     * @see UniformState#getView3D
-     * @see czm_viewRotation3D
-     */
-    UniformState.prototype.getViewRotation3D = function() {
-        this.getView3D();
-        return this._viewRotation3D;
-    };
-
-    /**
-     * Returns the 4x4 inverse-view matrix that transforms from eye to world coordinates.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The 4x4 inverse-view matrix that transforms from eye to world coordinates.
-     *
-     * @see czm_inverseView
-     */
-    UniformState.prototype.getInverseView = function() {
-        return this._inverseView;
-    };
-
-    /**
-     * Returns the 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.  In 3D mode, this is
-     * identical to {@link UniformState#getInverseView}, but in 2D and Columbus View it is a synthetic matrix
-     * based on the equivalent position of the camera in the 3D world.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The 4x4 inverse-view matrix that transforms from eye to 3D world coordinates.
-     *
-     * @see czm_inverseView3D
-     */
-    UniformState.prototype.getInverseView3D = function() {
-        if (this._inverseView3DDirty) {
-            Matrix4.inverseTransformation(this.getView3D(), this._inverseView3D);
-            Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
-            this._inverseView3DDirty = false;
-        }
-        return this._inverseView3D;
-    };
-
-    /**
-     * Returns the 3x3 rotation matrix of the current inverse-view matrix ({@link UniformState#getInverseView}).
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The 3x3 rotation matrix of the current inverse-view matrix.
-     *
-     * @see UniformState#getInverseView
-     * @see czm_inverseViewRotation
-     */
-    UniformState.prototype.getInverseViewRotation = function() {
-        return this._inverseViewRotation;
-    };
-
-    /**
-     * Returns the 3x3 rotation matrix of the current 3D inverse-view matrix ({@link UniformState#getInverseView3D}).
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The 3x3 rotation matrix of the current 3D inverse-view matrix.
-     *
-     * @see UniformState#getInverseView3D
-     * @see czm_inverseViewRotation3D
-     */
-    UniformState.prototype.getInverseViewRotation3D = function() {
-        this.getInverseView3D();
-        return this._inverseViewRotation3D;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see UniformState#setProjection
-     * @see czm_projection
-     */
-    UniformState.prototype.getProjection = function() {
-        return this._projection;
-    };
-
     function cleanInverseProjection(uniformState) {
         if (uniformState._inverseProjectionDirty) {
             uniformState._inverseProjectionDirty = false;
@@ -605,33 +942,17 @@ define([
         }
     }
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see czm_inverseProjection
-     */
-    UniformState.prototype.getInverseProjection = function() {
-        cleanInverseProjection(this);
-        return this._inverseProjection;
-    };
+    function cleanInverseProjectionOIT(uniformState) {
+        if (uniformState._inverseProjectionOITDirty) {
+            uniformState._inverseProjectionOITDirty = false;
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see UniformState#setInfiniteProjection
-     * @see czm_infiniteProjection
-     */
-    UniformState.prototype.getInfiniteProjection = function() {
-        return this._infiniteProjection;
-    };
+            if (uniformState._mode !== SceneMode.SCENE2D && uniformState._mode !== SceneMode.MORPHING) {
+                Matrix4.inverse(uniformState._projection, uniformState._inverseProjectionOIT);
+            } else {
+                Matrix4.clone(Matrix4.IDENTITY, uniformState._inverseProjectionOIT);
+            }
+        }
+    }
 
     // Derived
     function cleanModelView(uniformState) {
@@ -642,48 +963,59 @@ define([
         }
     }
 
-    /**
-     * Gets the model-view matrix.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The model-view matrix.
-     *
-     * @see czm_modelView
-     */
-    UniformState.prototype.getModelView = function() {
-        cleanModelView(this);
-        return this._modelView;
-    };
-
     function cleanModelView3D(uniformState) {
         if (uniformState._modelView3DDirty) {
             uniformState._modelView3DDirty = false;
 
-            Matrix4.multiplyTransformation(uniformState.getView3D(), uniformState._model, uniformState._modelView3D);
+            Matrix4.multiplyTransformation(uniformState.view3D, uniformState._model, uniformState._modelView3D);
         }
     }
 
-    /**
-     * Gets the 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#getModelView}.  In 2D and
-     * Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The 3D model-view matrix.
-     *
-     * @see czm_modelView3D
-     */
-    UniformState.prototype.getModelView3D = function() {
-        cleanModelView3D(this);
-        return this._modelView3D;
-    };
+    function cleanInverseModelView(uniformState) {
+        if (uniformState._inverseModelViewDirty) {
+            uniformState._inverseModelViewDirty = false;
+
+            Matrix4.inverse(uniformState.modelView, uniformState._inverseModelView);
+        }
+    }
+
+    function cleanInverseModelView3D(uniformState) {
+        if (uniformState._inverseModelView3DDirty) {
+            uniformState._inverseModelView3DDirty = false;
+
+            Matrix4.inverse(uniformState.modelView3D, uniformState._inverseModelView3D);
+        }
+    }
+
+    function cleanViewProjection(uniformState) {
+        if (uniformState._viewProjectionDirty) {
+            uniformState._viewProjectionDirty = false;
+
+            Matrix4.multiply(uniformState._projection, uniformState._view, uniformState._viewProjection);
+        }
+    }
+
+    function cleanInverseViewProjection(uniformState) {
+        if (uniformState._inverseViewProjectionDirty) {
+            uniformState._inverseViewProjectionDirty = false;
+
+            Matrix4.inverse(uniformState.viewProjection, uniformState._inverseViewProjection);
+        }
+    }
+
+    function cleanModelViewProjection(uniformState) {
+        if (uniformState._modelViewProjectionDirty) {
+            uniformState._modelViewProjectionDirty = false;
+
+            Matrix4.multiply(uniformState._projection, uniformState.modelView, uniformState._modelViewProjection);
+        }
+    }
 
     function cleanModelViewRelativeToEye(uniformState) {
         if (uniformState._modelViewRelativeToEyeDirty) {
             uniformState._modelViewRelativeToEyeDirty = false;
 
-            var mv = uniformState.getModelView();
+            var mv = uniformState.modelView;
             var mvRte = uniformState._modelViewRelativeToEye;
             mvRte[0] = mv[0];
             mvRte[1] = mv[1];
@@ -704,424 +1036,65 @@ define([
         }
     }
 
-    /**
-     * Returns the model-view relative to eye matrix used to define the {@link czm_modelViewRelativeToEye} GLSL uniform.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The model-view relative to eye matrix.
-     *
-     * @see czm_modelViewRelativeToEye
-     */
-    UniformState.prototype.getModelViewRelativeToEye = function() {
-        cleanModelViewRelativeToEye(this);
-        return this._modelViewRelativeToEye;
-    };
-
-    function cleanInverseModelView(uniformState) {
-        if (uniformState._inverseModelViewDirty) {
-            uniformState._inverseModelViewDirty = false;
-
-            Matrix4.inverse(uniformState.getModelView(), uniformState._inverseModelView);
-        }
-    }
-
-    /**
-     * Gets the inverse of the model-view matrix.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The inverse of the model-view matrix.
-     *
-     * @see czm_inverseModelView
-     */
-    UniformState.prototype.getInverseModelView = function() {
-        cleanInverseModelView(this);
-        return this._inverseModelView;
-    };
-
-    function cleanInverseModelView3D(uniformState) {
-        if (uniformState._inverseModelView3DDirty) {
-            uniformState._inverseModelView3DDirty = false;
-
-            Matrix4.inverse(uniformState.getModelView3D(), uniformState._inverseModelView3D);
-        }
-    }
-
-    /**
-     * Gets the inverse of the 3D model-view matrix.  In 3D mode, this is equivalent to {@link UniformState#getInverseModelView}.
-     * In 2D and Columbus View, however, it is a synthetic matrix based on the equivalent position of the camera in the 3D world.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The inverse of the 3D model-view matrix.
-     *
-     * @see czm_inverseModelView3D
-     */
-    UniformState.prototype.getInverseModelView3D = function() {
-        cleanInverseModelView3D(this);
-        return this._inverseModelView3D;
-    };
-
-    function cleanViewProjection(uniformState) {
-        if (uniformState._viewProjectionDirty) {
-            uniformState._viewProjectionDirty = false;
-
-            Matrix4.multiply(uniformState._projection, uniformState._view, uniformState._viewProjection);
-        }
-    }
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see czm_viewProjection
-     */
-    UniformState.prototype.getViewProjection = function() {
-        cleanViewProjection(this);
-        return this._viewProjection;
-    };
-
-    function cleanInverseViewProjection(uniformState) {
-        if (uniformState._inverseViewProjectionDirty) {
-            uniformState._inverseViewProjectionDirty = false;
-
-            Matrix4.inverse(uniformState.getViewProjection(), uniformState._inverseViewProjection);
-        }
-    }
-
-    /**
-     * Returns the inverse view-projection matrix
-     *
-     * @memberof UniformState
-     *
-     * @return {Matrix4} The inverse view-projection matrix.
-     *
-     * @see czm_inverseViewProjection
-     */
-    UniformState.prototype.getInverseViewProjection = function() {
-        cleanInverseViewProjection(this);
-        return this._inverseViewProjection;
-    };
-
-    function cleanModelViewProjection(uniformState) {
-        if (uniformState._modelViewProjectionDirty) {
-            uniformState._modelViewProjectionDirty = false;
-
-            Matrix4.multiply(uniformState._projection, uniformState.getModelView(), uniformState._modelViewProjection);
-        }
-    }
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see czm_modelViewProjection
-     */
-    UniformState.prototype.getModelViewProjection = function() {
-        cleanModelViewProjection(this);
-        return this._modelViewProjection;
-    };
-
     function cleanInverseModelViewProjection(uniformState) {
         if (uniformState._inverseModelViewProjectionDirty) {
             uniformState._inverseModelViewProjectionDirty = false;
 
-            Matrix4.inverse(uniformState.getModelViewProjection(), uniformState._inverseModelViewProjection);
+            Matrix4.inverse(uniformState.modelViewProjection, uniformState._inverseModelViewProjection);
         }
     }
-
-    /**
-     * Returns the inverse model-view-projection matrix.
-     *
-     * @memberof UniformState
-     *
-     * @return {Matrix4} The inverse model-view-projection matrix.
-     *
-     * @see czm_inverseModelViewProjection
-     */
-    UniformState.prototype.getInverseModelViewProjection = function() {
-        cleanInverseModelViewProjection(this);
-        return this._inverseModelViewProjection;
-    };
 
     function cleanModelViewProjectionRelativeToEye(uniformState) {
         if (uniformState._modelViewProjectionRelativeToEyeDirty) {
             uniformState._modelViewProjectionRelativeToEyeDirty = false;
 
-            Matrix4.multiply(uniformState._projection, uniformState.getModelViewRelativeToEye(), uniformState._modelViewProjectionRelativeToEye);
+            Matrix4.multiply(uniformState._projection, uniformState.modelViewRelativeToEye, uniformState._modelViewProjectionRelativeToEye);
         }
     }
-
-    /**
-     * Returns the model-view-projection relative to eye matrix used to define the {@link czm_modelViewProjectionRelativeToEye} GLSL uniform.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} The model-view-projection relative to eye matrix.
-     *
-     * @see czm_modelViewProjectionRelativeToEye
-     */
-    UniformState.prototype.getModelViewProjectionRelativeToEye = function() {
-        cleanModelViewProjectionRelativeToEye(this);
-        return this._modelViewProjectionRelativeToEye;
-    };
 
     function cleanModelViewInfiniteProjection(uniformState) {
         if (uniformState._modelViewInfiniteProjectionDirty) {
             uniformState._modelViewInfiniteProjectionDirty = false;
 
-            Matrix4.multiply(uniformState._infiniteProjection, uniformState.getModelView(), uniformState._modelViewInfiniteProjection);
+            Matrix4.multiply(uniformState._infiniteProjection, uniformState.modelView, uniformState._modelViewInfiniteProjection);
         }
     }
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix4} DOC_TBA.
-     *
-     * @see czm_modelViewProjection
-     */
-    UniformState.prototype.getModelViewInfiniteProjection = function() {
-        cleanModelViewInfiniteProjection(this);
-        return this._modelViewInfiniteProjection;
-    };
 
     function cleanNormal(uniformState) {
         if (uniformState._normalDirty) {
             uniformState._normalDirty = false;
 
             var m = uniformState._normal;
-            Matrix4.getRotation(uniformState.getInverseModelView(), m);
+            Matrix4.getRotation(uniformState.inverseModelView, m);
             Matrix3.transpose(m, m);
         }
     }
-
-    /**
-     * Gets a 3x3 normal transformation matrix that transforms normal vectors in model coordinates to
-     * eye coordinates.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The normal transformation matrix.
-     *
-     * @see czm_normal
-     */
-    UniformState.prototype.getNormal = function() {
-        cleanNormal(this);
-        return this._normal;
-    };
 
     function cleanNormal3D(uniformState) {
         if (uniformState._normal3DDirty) {
             uniformState._normal3DDirty = false;
 
             var m = uniformState._normal3D;
-            Matrix4.getRotation(uniformState.getInverseModelView3D(), m);
+            Matrix4.getRotation(uniformState.inverseModelView3D, m);
             Matrix3.transpose(m, m);
         }
     }
-
-    /**
-     * Gets a 3x3 normal transformation matrix that transforms normal vectors in 3D model
-     * coordinates to eye coordinates.  In 3D mode, this is identical to
-     * {@link UniformState#getNormal}, but in 2D and Columbus View it represents the normal transformation
-     * matrix as if the camera were at an equivalent location in 3D mode.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The normal transformation matrix.
-     *
-     * @see czm_normal3D
-     */
-    UniformState.prototype.getNormal3D = function() {
-        cleanNormal3D(this);
-        return this._normal3D;
-    };
 
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
 
-            Matrix4.getRotation(uniformState.getInverseModelView(), uniformState._inverseNormal);
+            Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
         }
     }
-
-    /**
-     * Gets an inverse 3x3 normal transformation matrix that transforms normal vectors in model coordinates
-     * to eye coordinates.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The inverse normal transformation matrix.
-     *
-     * @see czm_inverseNormal
-     */
-    UniformState.prototype.getInverseNormal = function() {
-        cleanInverseNormal(this);
-        return this._inverseNormal;
-    };
 
     function cleanInverseNormal3D(uniformState) {
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
 
-            Matrix4.getRotation(uniformState.getInverseModelView3D(), uniformState._inverseNormal3D);
+            Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
         }
     }
-
-    /**
-     * Gets an inverse 3x3 normal transformation matrix that transforms normal vectors in eye coordinates
-     * to 3D model coordinates.  In 3D mode, this is identical to
-     * {@link UniformState#getInverseNormal}, but in 2D and Columbus View it represents the normal transformation
-     * matrix as if the camera were at an equivalent location in 3D mode.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The inverse normal transformation matrix.
-     *
-     * @see czm_inverseNormal3D
-     */
-    UniformState.prototype.getInverseNormal3D = function() {
-        cleanInverseNormal3D(this);
-        return this._inverseNormal3D;
-    };
-
-    /**
-     * Returns the near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
-     * This is the largest possible frustum, not an individual frustum used for multi-frustum rendering.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
-     *
-     * @see czm_entireFrustum
-     * @see UniformState#getCurrentFrustum
-     */
-    UniformState.prototype.getEntireFrustum = function() {
-        return this._entireFrustum;
-    };
-
-    /**
-     * Returns the near distance (<code>x</code>) and the far distance (<code>y</code>) of the frustum defined by the camera.
-     * This is the individual frustum used for multi-frustum rendering.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian2} Returns the near distance and the far distance of the frustum defined by the camera.
-     *
-     * @see czm_currentFrustum
-     * @see UniformState#getEntireFrustum
-     */
-    UniformState.prototype.getCurrentFrustum = function() {
-        return this._currentFrustum;
-    };
-
-    /**
-     * Returns the the height (<code>x</code>) and the height squared (<code>y</code>)
-     * in meters of the camera above the 2D world plane. This uniform is only valid
-     * when the {@link SceneMode} equal to <code>SCENE2D</code>.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian2} Height and height squared above the 2D world plane for SCENE2D {@link SceneMode}.
-     *
-     * @see czm_eyeHeight2D
-     */
-    UniformState.prototype.getEyeHeight2D = function() {
-        return this._eyeHeight2D;
-    };
-
-    /**
-     * Returns the size of a pixel in meters at a distance of one meter from the camera.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Number} Returns the size of a pixel in meters at a distance of one meter from the camera.
-     *
-     * @see czm_pixelSizeInMeters
-     */
-    UniformState.prototype.getPixelSize = function() {
-        return this._pixelSize;
-    };
-
-    /**
-     * Returns the sun position in 3D world coordinates at the current scene time.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} The sun position in 3D world coordinates at the current scene time.
-     *
-     * @see czm_sunPositionWC
-     */
-    UniformState.prototype.getSunPositionWC = function() {
-        return this._sunPositionWC;
-    };
-
-    /**
-     * Returns the sun position in 2D world coordinates at the current scene time.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} The sun position in 2D world coordinates at the current scene time.
-     *
-     * @see czm_sunPositionColumbusView
-     */
-    UniformState.prototype.getSunPositionColumbusView = function() {
-        return this._sunPositionColumbusView;
-    };
-
-    /**
-     * Returns a normalized vector to the sun in 3D world coordinates at the current scene time.  Even in 2D or
-     * Columbus View mode, this returns the position of the sun in the 3D scene.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} A normalized vector to the sun in 3D world coordinates at the current scene time.
-     *
-     * @see czm_sunDirectionWC
-     */
-    UniformState.prototype.getSunDirectionWC = function() {
-        return this._sunDirectionWC;
-    };
-
-    /**
-     * Returns a normalized vector to the sun in eye coordinates at the current scene time.  In 3D mode, this
-     * returns the actual vector from the camera position to the sun position.  In 2D and Columbus View, it returns
-     * the vector from the equivalent 3D camera position to the position of the sun in the 3D scene.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} A normalized vector to the sun in eye coordinates at the current scene time.
-     *
-     * @see czm_sunDirectionEC
-     */
-    UniformState.prototype.getSunDirectionEC = function() {
-        return this._sunDirectionEC;
-    };
-
-    /**
-     * Returns a normalized vector to the moon in eye coordinates at the current scene time.  In 3D mode, this
-     * returns the actual vector from the camera position to the moon position.  In 2D and Columbus View, it returns
-     * the vector from the equivalent 3D camera position to the position of the moon in the 3D scene.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} A normalized vector to the moon in eye coordinates at the current scene time.
-     *
-     * @see czm_moonDirectionEC
-     */
-    UniformState.prototype.getMoonDirectionEC = function() {
-        return this._moonDirectionEC;
-    };
 
     var cameraPositionMC = new Cartesian3();
 
@@ -1129,56 +1102,10 @@ define([
         if (uniformState._encodedCameraPositionMCDirty) {
             uniformState._encodedCameraPositionMCDirty = false;
 
-            Matrix4.multiplyByPoint(uniformState.getInverseModel(), uniformState._cameraPosition, cameraPositionMC);
+            Matrix4.multiplyByPoint(uniformState.inverseModel, uniformState._cameraPosition, cameraPositionMC);
             EncodedCartesian3.fromCartesian(cameraPositionMC, uniformState._encodedCameraPositionMC);
         }
     }
-
-    /**
-     * Returns the high bits of the camera position used to define the {@link czm_encodedCameraPositionMCHigh} GLSL uniform.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} The high bits of the camera position.
-     *
-     * @see UniformState#getEncodedCameraPositionMCLow
-     */
-    UniformState.prototype.getEncodedCameraPositionMCHigh = function() {
-        cleanEncodedCameraPositionMC(this);
-        return this._encodedCameraPositionMC.high;
-    };
-
-    /**
-     * Returns the low bits of the camera position used to define the {@link czm_encodedCameraPositionMCLow} GLSL uniform.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Cartesian3} The low bits of the camera position.
-     *
-     * @see UniformState#getEncodedCameraPositionMCHigh
-     */
-    UniformState.prototype.getEncodedCameraPositionMCLow = function() {
-        cleanEncodedCameraPositionMC(this);
-        return this._encodedCameraPositionMC.low;
-    };
-
-    /**
-     * Returns a 3x3 matrix that transforms from True Equator Mean Equinox (TEME) axes to the
-     * pseudo-fixed axes at the Scene's current time.
-     *
-     * @memberof UniformState
-     *
-     * @returns {Matrix3} The transform from TEME to pseudo-fixed.
-     *
-     * @see czm_temeToPseudoFixed
-     */
-    UniformState.prototype.getTemeToPseudoFixedMatrix = function() {
-        return this._temeToPseudoFixed;
-    };
-
-    UniformState.prototype.getHighResolutionSnapScale = function() {
-        return 1.0;
-    };
 
     var view2Dto3DPScratch = new Cartesian3();
     var view2Dto3DRScratch = new Cartesian3();

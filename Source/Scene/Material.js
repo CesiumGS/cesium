@@ -704,7 +704,7 @@ define([
 
             if (!defined(texture)) {
                 material._texturePaths[uniformId] = undefined;
-                texture = material._textures[uniformId] = context.getDefaultTexture();
+                texture = material._textures[uniformId] = context.defaultTexture;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
                 if (uniforms.hasOwnProperty(uniformDimensionsName)) {
@@ -750,7 +750,7 @@ define([
 
             if (!defined(material._textures[uniformId])) {
                 material._texturePaths[uniformId] = undefined;
-                material._textures[uniformId] = context.getDefaultCubeMap();
+                material._textures[uniformId] = context.defaultCubeMap;
             }
 
             if (uniformValue === Material.DefaultCubeMapId) {

@@ -65,7 +65,7 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(camera));
     });
 

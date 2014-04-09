@@ -183,7 +183,7 @@ define([
         this.id = options.id;
 
         var customSensorOptions = clone(options);
-        customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
+        customSensorOptions._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._customSensor = new CustomSensorVolume(customSensorOptions);
     };
 

@@ -161,7 +161,7 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
