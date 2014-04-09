@@ -4,6 +4,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/isArray',
+        '../../Scene/EllipsoidTerrainProvider',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
@@ -11,6 +12,7 @@ define([
         defineProperties,
         DeveloperError,
         isArray,
+        EllipsoidTerrainProvider,
         createCommand,
         knockout) {
     "use strict";
@@ -149,6 +151,7 @@ define([
             set : function(value) {
                 if (defined(value)) {
                     var newProvider = value.creationCommand();
+                    this._centralBody.depthTestAgainstTerrain = !(newProvider instanceof EllipsoidTerrainProvider);
                     this._centralBody.terrainProvider = newProvider;
                     selectedTerrainViewModel(value);
                 }

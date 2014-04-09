@@ -118,6 +118,8 @@ define([
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {Array} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {Array} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
@@ -130,7 +132,9 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
+     * @exception {DeveloperError} options.terrainProvider is not available when using the BaseLayerPicker widget, specify options.selectedTerrainProviderViewModel instead.
      * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
+     * @exception {DeveloperError} options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.terrainProvider instead.
      *
      * @see Animation
      * @see BaseLayerPicker
@@ -196,7 +200,6 @@ define([
         var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
 
         //>>includeStart('debug', pragmas.debug);
-
         //If using BaseLayerPicker, imageryProvider is an invalid option
         if (createBaseLayerPicker && defined(options.imageryProvider)) {
             throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
@@ -207,6 +210,18 @@ Either specify options.selectedImageryProviderViewModel instead or set options.b
         if (!createBaseLayerPicker && defined(options.selectedImageryProviderViewModel)) {
             throw new DeveloperError('options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
 Either specify options.imageryProvider instead or set options.baseLayerPicker to true.');
+        }
+
+        //If using BaseLayerPicker, terrainProvider is an invalid option
+        if (createBaseLayerPicker && defined(options.terrainProvider)) {
+            throw new DeveloperError('options.terrainProvider is not available when using the BaseLayerPicker widget. \
+Either specify options.selectedTerrainProviderViewModel instead or set options.baseLayerPicker to false.');
+        }
+
+        //If not using BaseLayerPicker, selectedTerrainProviderViewModel is an invalid option
+        if (!createBaseLayerPicker && defined(options.selectedTerrainProviderViewModel)) {
+            throw new DeveloperError('options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget. \
+Either specify options.terrainProvider instead or set options.baseLayerPicker to true.');
         }
         //>>includeEnd('debug')
 
@@ -302,6 +317,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
             baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody, imageryProviderViewModels, terrainProviderViewModels);
             baseLayerPicker.viewModel.selectedImagery = defaultValue(options.selectedImageryProviderViewModel, imageryProviderViewModels[0]);
+            baseLayerPicker.viewModel.selectedTerrain = defaultValue(options.selectedTerrainProviderViewModel, terrainProviderViewModels[0]);
 
             //Grab the dropdown for resize code.
             var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');

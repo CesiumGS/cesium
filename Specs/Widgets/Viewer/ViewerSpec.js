@@ -265,6 +265,7 @@ defineSuite([
         var provider = new EllipsoidTerrainProvider();
 
         viewer = new Viewer(container, {
+            baseLayerPicker : false,
             terrainProvider : provider
         });
         expect(viewer.centralBody.terrainProvider).toBe(provider);

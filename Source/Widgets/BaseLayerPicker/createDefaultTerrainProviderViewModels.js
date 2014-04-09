@@ -41,7 +41,7 @@ define([
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'STK World Terrain heightmaps and water',
+            name : 'Small Terrain heightmaps and water mask',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/STK.png'),
             tooltip : 'CesiumTerrainProvider',
             creationFunction : function() {
