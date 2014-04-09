@@ -241,7 +241,7 @@ define([
                 billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
-            billboard._id = dynamicObject;
+            billboard.id = dynamicObject;
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
 

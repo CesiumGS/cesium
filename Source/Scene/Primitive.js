@@ -622,9 +622,6 @@ define([
                     this._state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
-                        PrimitivePipeline.receiveGeometries(result.geometries);
-                        PrimitivePipeline.receivePerInstanceAttributes(result.vaAttributes);
-
                         that._geometries = result.geometries;
                         that._attributeLocations = result.attributeLocations;
                         that._vaAttributes = result.vaAttributes;

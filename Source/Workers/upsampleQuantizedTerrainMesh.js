@@ -240,11 +240,7 @@ define([
         }
 
         var indicesTypedArray = new Uint16Array(indices);
-
-        if (FeatureDetection.supportsTransferringArrayBuffers()) {
-            transferableObjects.push(vertices.buffer);
-            transferableObjects.push(indicesTypedArray.buffer);
-        }
+        transferableObjects.push(vertices.buffer, indicesTypedArray.buffer);
 
         return {
             vertices : vertices.buffer,
