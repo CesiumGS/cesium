@@ -395,14 +395,14 @@ define([
     };
 
     function transferGeometry(geometry, transferableObjects) {
-        var typedArray;
         var attributes = geometry.attributes;
         for ( var name in attributes) {
-            if (attributes.hasOwnProperty(name) &&
-                defined(attributes[name]) &&
-                defined(attributes[name].values)) {
-                typedArray = attributes[name].values;
-                transferableObjects.push(typedArray.buffer);
+            if (attributes.hasOwnProperty(name)) {
+                var attribute = attributes[name];
+
+                if (defined(attribute) && defined(attribute.values)) {
+                    transferableObjects.push(attribute.values.buffer);
+                }
             }
         }
 
@@ -571,8 +571,7 @@ define([
 
     function packPickIds(pickIds, transferableObjects) {
         var length = pickIds.length;
-        var packedPickIds = new Uint16Array(pickIds.length);
-        var q = 0;
+        var packedPickIds = new Uint32Array(pickIds.length);
         for (var i = 0; i < length; ++i) {
             packedPickIds[i] = pickIds[i].toRgba();
         }
@@ -581,7 +580,6 @@ define([
     }
 
     function unpackPickIds(packedPickIds) {
-        packedPickIds = packedPickIds;
         var length = packedPickIds.length;
         var pickIds = new Array(length);
         for (var i = 0; i < length; i++) {
@@ -617,10 +615,8 @@ define([
         for (var i = 0; i < length; i++) {
             var instance = instances[i];
 
-            var matrix = instance.modelMatrix;
-            for (var x = 0; x < 16; x++) {
-                packedData[count++] = matrix[x];
-            }
+            Matrix4.pack(instance.modelMatrix, packedData, count);
+            count += Matrix4.packedLength;
 
             var attributes = instance.attributes;
             var attributesToWrite = [];
@@ -663,10 +659,8 @@ define([
 
         var i = 1;
         while (i < packedInstances.length) {
-            var modelMatrix = new Matrix4();
-            for (var m = 0; m < 16; m++) {
-                modelMatrix[m] = packedInstances[i++];
-            }
+            var modelMatrix = Matrix4.unpack(packedInstances, i);
+            i += Matrix4.packedLength;
 
             var attributes = {};
             var numAttributes = packedInstances[i++];
