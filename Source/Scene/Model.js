@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/combine',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -43,6 +44,7 @@ define([
         Cartesian4,
         combine,
         defined,
+        defineProperties,
         defaultValue,
         destroyObject,
         DeveloperError,
@@ -155,6 +157,7 @@ define([
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -245,6 +248,13 @@ define([
         this._id = options.id;
 
         /**
+         * Used for picking primitives that wrap a model.
+         *
+         * @private
+         */
+        this.pickPrimitive = options.pickPrimitive;
+
+        /**
          * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
          *
          * @type {Boolean}
@@ -281,6 +291,8 @@ define([
          * @type {ModelAnimationCollection}
          */
         this.activeAnimations = new ModelAnimationCollection(this);
+
+        this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -341,6 +353,25 @@ define([
         this._pickIds = [];
     };
 
+    defineProperties(Model.prototype, {
+        /**
+         * Determines if model WebGL resource creation will be spread out over several frames or
+         * block until completion once all glTF files are loaded.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        asynchronous : {
+            get : function() {
+                return this._asynchronous;
+            }
+        }
+    });
+
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
@@ -348,11 +379,12 @@ define([
      * @memberof Model
      *
      * @param {String} options.url The url to the glTF .json file.
+     * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -769,34 +801,46 @@ define([
         return attributeLocations;
     }
 
+    function createProgram(name, model, context) {
+        var programs = model.gltf.programs;
+        var shaders = model._loadResources.shaders;
+        var program = programs[name];
+
+        var attributeLocations = createAttributeLocations(program.attributes);
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
+
+        model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+
+        if (model.allowPicking) {
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            var pickFS = createShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'uniform'
+            });
+            model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+        }
+    }
+
     function createPrograms(model, context) {
         var loadResources = model._loadResources;
+        var name;
 
         if (loadResources.pendingShaderLoads !== 0) {
             return;
         }
 
-        var programs = model.gltf.programs;
-        var shaders = loadResources.shaders;
-
-        // Create one program per frame
-        if (loadResources.programsToCreate.length > 0) {
-            var name = loadResources.programsToCreate.dequeue();
-            var program = programs[name];
-
-            var attributeLocations = createAttributeLocations(program.attributes);
-            var vs = shaders[program.vertexShader];
-            var fs = shaders[program.fragmentShader];
-
-            model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
-
-            if (model.allowPicking) {
-                // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-                var pickFS = createShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'uniform'
-                });
-                model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+        if (model.asynchronous) {
+            // Create one program per frame
+            if (loadResources.programsToCreate.length > 0) {
+                name = loadResources.programsToCreate.dequeue();
+                createProgram(name, model, context);
+            }
+        } else {
+            // Create all loaded programs this frame
+            while (loadResources.programsToCreate.length > 0) {
+                name = loadResources.programsToCreate.dequeue();
+                createProgram(name, model, context);
             }
         }
     }
@@ -824,59 +868,73 @@ define([
         }
     }
 
+    function createTexture(gltfTexture, model, context) {
+        var textures = model.gltf.textures;
+        var texture = textures[gltfTexture.name];
+
+        var rendererSamplers = model._rendererResources.samplers;
+        var sampler = rendererSamplers[texture.sampler];
+
+        var mipmap =
+            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+        var requiresNpot = mipmap ||
+            (sampler.wrapS === TextureWrap.REPEAT) ||
+            (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
+            (sampler.wrapT === TextureWrap.REPEAT) ||
+            (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+
+        var source = gltfTexture.image;
+        var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
+
+        if (requiresNpot && npot) {
+            // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
+            var canvas = document.createElement('canvas');
+            canvas.width = CesiumMath.nextPowerOfTwo(source.width);
+            canvas.height = CesiumMath.nextPowerOfTwo(source.height);
+            var canvasContext = canvas.getContext('2d');
+            canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
+            source = canvas;
+        }
+
+        var tx;
+
+        if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
+            tx = context.createTexture2D({
+                source : source,
+                pixelFormat : texture.internalFormat,
+                pixelDatatype : texture.type,
+                flipY : false
+            });
+        }
+        // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+
+        if (mipmap) {
+            tx.generateMipmap();
+        }
+        tx.sampler = sampler;
+
+        model._rendererResources.textures[gltfTexture.name] = tx;
+    }
+
     function createTextures(model, context) {
         var loadResources = model._loadResources;
-        var textures = model.gltf.textures;
-        var rendererSamplers = model._rendererResources.samplers;
+        var gltfTexture;
 
-        // Create one texture per frame
-        if (loadResources.texturesToCreate.length > 0) {
-            var textureToCreate = loadResources.texturesToCreate.dequeue();
-            var texture = textures[textureToCreate.name];
-            var sampler = rendererSamplers[texture.sampler];
-
-            var mipmap =
-                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
-            var requiresNpot = mipmap ||
-                (sampler.wrapS === TextureWrap.REPEAT) ||
-                (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-                (sampler.wrapT === TextureWrap.REPEAT) ||
-                (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
-
-            var source = textureToCreate.image;
-            var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
-
-            if (requiresNpot && npot) {
-                // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
-                var canvas = document.createElement('canvas');
-                canvas.width = CesiumMath.nextPowerOfTwo(source.width);
-                canvas.height = CesiumMath.nextPowerOfTwo(source.height);
-                var canvasContext = canvas.getContext('2d');
-                canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
-                source = canvas;
+        if (model.asynchronous) {
+            // Create one texture per frame
+            if (loadResources.texturesToCreate.length > 0) {
+                gltfTexture = loadResources.texturesToCreate.dequeue();
+                createTexture(gltfTexture, model, context);
             }
-
-            var tx;
-
-            if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
-                tx = context.createTexture2D({
-                    source : source,
-                    pixelFormat : texture.internalFormat,
-                    pixelDatatype : texture.type,
-                    flipY : false
-                });
+        } else {
+            // Create all loaded textures this frame
+            while (loadResources.texturesToCreate.length > 0) {
+                gltfTexture = loadResources.texturesToCreate.dequeue();
+                createTexture(gltfTexture, model, context);
             }
-            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-
-            if (mipmap) {
-                tx.generateMipmap();
-            }
-            tx.sampler = sampler;
-
-            model._rendererResources.textures[textureToCreate.name] = tx;
         }
     }
 
@@ -1512,7 +1570,7 @@ define([
                 var isTranslucent = pass.states.blendEnable;
                 var rs = rendererRenderStates[instanceTechnique.technique];
                 var owner = {
-                    primitive : model,
+                    primitive : defaultValue(model.pickPrimitive, model),
                     id : model.id,
                     node : runtimeNode.publicNode,
                     mesh : runtimeMeshes[mesh.name]

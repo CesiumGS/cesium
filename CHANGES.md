@@ -45,6 +45,12 @@ Beta Releases
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 
+### b28 - 2014-05-01
+
+* Breaking changes:
+   *
+* Added `asynchronous` option to `Model` constructor.
+
 ### b27 - 2014-04-01
 
 * Breaking changes:

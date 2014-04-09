@@ -71,7 +71,8 @@ defineSuite([
             modelMatrix : modelMatrix,
             show : false,
             scale : options.scale,
-            id : url        // for picking tests
+            id : url,        // for picking tests
+            asynchronous : options.asynchronous
         }));
 
         var readyToRender = false;
@@ -140,6 +141,7 @@ defineSuite([
        expect(duckModel.id).toEqual(duckUrl);
        expect(duckModel.allowPicking).toEqual(true);
        expect(duckModel.activeAnimations).toBeDefined();
+       expect(duckModel.asynchronous).toEqual(true);
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
        expect(duckModel.debugWireframe).toEqual(false);
     });
@@ -320,7 +322,10 @@ defineSuite([
     ///////////////////////////////////////////////////////////////////////////
 
     it('loads cesiumAir', function() {
-        cesiumAirModel = loadModel(cesiumAirUrl);
+        cesiumAirModel = loadModel(cesiumAirUrl, {
+            asynchronous : false
+        });
+        expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
     it('renders cesiumAir (has translucency)', function() {
