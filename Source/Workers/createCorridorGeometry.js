@@ -1,11 +1,9 @@
 /*global define*/
 define(['../Core/CorridorGeometry',
-        '../Core/Ellipsoid',
-        '../Scene/PrimitivePipeline'
+        '../Core/Ellipsoid'
     ], function(
         CorridorGeometry,
-        Ellipsoid,
-        PrimitivePipeline) {
+        Ellipsoid) {
     "use strict";
 
     function createCorridorGeometry(corridorGeometry) {
