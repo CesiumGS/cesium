@@ -149,7 +149,7 @@ define([
             result = new Matrix4();
         }
 
-        result[0] = array[startingIndex];
+        result[0] = array[startingIndex++];
         result[1] = array[startingIndex++];
         result[2] = array[startingIndex++];
         result[3] = array[startingIndex++];

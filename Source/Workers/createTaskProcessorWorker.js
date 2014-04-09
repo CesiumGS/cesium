@@ -1,34 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined',
-        '../ThirdParty/when'
+        '../Core/defined'
     ], function(
         defaultValue,
-        defined,
-        when) {
+        defined) {
     "use strict";
-
-    function onComplete(postMessage, responseMessage, data, transferableObjects){
-        /*global self*/
-        if (!defined(postMessage)) {
-            postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
-        }
-
-        if (!data.canTransferArrayBuffer) {
-            transferableObjects.length = 0;
-        }
-
-        try {
-            postMessage(responseMessage, transferableObjects);
-        } catch (e) {
-            // something went wrong trying to post the message, post a simpler
-            // error that we can be sure will be cloneable
-            responseMessage.result = undefined;
-            responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
-            postMessage(responseMessage);
-        }
-    }
 
     /**
      * Creates an adapter function to allow a calculation function to operate as a Web Worker,
@@ -74,16 +51,27 @@ define([
             responseMessage.result = undefined;
 
             try {
-                when(workerFunction(data.parameters, transferableObjects)).then(function(result) {
-                    responseMessage.result = result;
-                    onComplete(postMessage, responseMessage, data, transferableObjects);
-                }, function(e) {
-                    responseMessage.error = e;
-                    onComplete(postMessage, responseMessage, data, transferableObjects);
-                });
+                responseMessage.result = workerFunction(data.parameters, transferableObjects);
             } catch (e) {
                 responseMessage.error = e;
-                onComplete(postMessage, responseMessage, data, transferableObjects);
+            }
+
+            if (!defined(postMessage)) {
+                postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
+            }
+
+            if (!data.canTransferArrayBuffer) {
+                transferableObjects.length = 0;
+            }
+
+            try {
+                postMessage(responseMessage, transferableObjects);
+            } catch (e) {
+                // something went wrong trying to post the message, post a simpler
+                // error that we can be sure will be cloneable
+                responseMessage.result = undefined;
+                responseMessage.error = 'postMessage failed with error: ' + e + '\n  with responseMessage: ' + JSON.stringify(responseMessage);
+                postMessage(responseMessage);
             }
         };
     };

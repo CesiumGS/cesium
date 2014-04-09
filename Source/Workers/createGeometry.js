@@ -15,43 +15,37 @@ define([
 
     var moduleCache = {};
 
-    function createTask(moduleName, deferred, geometry, createFunction) {
-        return function(createFunction) {
-            moduleCache[moduleName] = createFunction;
-            deferred.resolve(createFunction(geometry));
-        };
+    function getModule(moduleName) {
+        var module = moduleCache[moduleName];
+        if (!defined(module)) {
+            // in web workers, require is synchronous
+            require(['./' + moduleName], function(f) {
+                module = f;
+                moduleCache[module] = f;
+            });
+        }
+        return module;
     }
 
     function createGeometry(parameters, transferableObjects) {
+        var results = [];
         var subTasks = parameters.subTasks;
-        var promises = [];
-        var deferred = when.defer();
 
         for (var i = 0; i < subTasks.length; i++) {
             var task = subTasks[i];
+            var geometry = task.geometry;
             var moduleName = task.moduleName;
-            var innedDeferred = when.defer();
+
             if (defined(moduleName)) {
-                var createFunction = moduleCache[moduleName];
-                if (defined(createFunction)) {
-                    promises.push(innedDeferred.promise);
-                    innedDeferred.resolve(createFunction(task.geometry));
-                } else {
-                    require(['./' + moduleName], createTask(moduleName, innedDeferred, task.geometry, createFunction));
-                    promises.push(innedDeferred.promise);
-                }
+                var createFunction = getModule(moduleName);
+                results.push(createFunction(geometry));
             } else {
                 //Already created geometry
-                promises.push(innedDeferred.promise);
-                innedDeferred.resolve(task.geometry);
+                results.push(geometry);
             }
         }
 
-        when.all(promises, function(results) {
-            deferred.resolve(PrimitivePipeline.packCreateGeometryResults(results, transferableObjects));
-        });
-
-        return deferred.promise;
+        return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
     }
 
     return createTaskProcessorWorker(createGeometry);
