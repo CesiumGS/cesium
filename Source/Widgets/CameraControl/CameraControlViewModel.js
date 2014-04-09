@@ -138,6 +138,7 @@ define([
             storedView.up = Cartesian3.clone(camera.up);
 
             storedView.fieldOfView = CesiumMath.toDegrees(camera.frustum.fovy);
+            storedView.cameraRotationMode = that.timeRotateMode;
             storedView.constrainedAxis = camera.constrainedAxis;
 
             // TODO: more things: sceneMode, foregroundObject, backgroundObject, and cameraRotationMode
@@ -171,8 +172,10 @@ define([
             } else {
                 that._userRotateMode = 'custom';  // Neither radio button selected.
             }
+            that.timeRotateMode = storedView.cameraRotationMode;
             camera.constrainedAxis = storedView.constrainedAxis;
 
+            /*
             // Camera flight
             var viewDescription = {
                 destination : storedView.position,
@@ -183,6 +186,10 @@ define([
             };
             var flight = CameraFlightPath.createAnimation(scene, viewDescription);
             scene.animations.add(flight);
+            */
+            camera.position = storedView.position;
+            camera.up = storedView.up;
+            camera.direction = storedView.direction;
         }
 
         this._visitStoredView = createCommand(function(viewName) {
