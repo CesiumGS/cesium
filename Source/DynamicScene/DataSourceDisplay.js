@@ -1,21 +1,22 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
         './DynamicBillboardVisualizer',
-        './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor',
         './DynamicLabelVisualizer',
+        './DynamicModelVisualizer',
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
-        './DynamicPolygonVisualizer',
-        './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer',
         './DynamicVectorVisualizer',
-        './VisualizerCollection'
+        './EllipseGeometryUpdater',
+        './EllipsoidGeometryUpdater',
+        './GeometryVisualizer',
+        './PolygonGeometryUpdater',
+        './PolylineGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -23,28 +24,19 @@ define([
         DeveloperError,
         EventHelper,
         DynamicBillboardVisualizer,
-        DynamicEllipsoidVisualizer,
         DynamicConeVisualizerUsingCustomSensor,
         DynamicLabelVisualizer,
+        DynamicModelVisualizer,
         DynamicPathVisualizer,
         DynamicPointVisualizer,
-        DynamicPolygonVisualizer,
-        DynamicPolylineVisualizer,
         DynamicPyramidVisualizer,
         DynamicVectorVisualizer,
-        VisualizerCollection) {
+        EllipseGeometryUpdater,
+        EllipsoidGeometryUpdater,
+        GeometryVisualizer,
+        PolygonGeometryUpdater,
+        PolylineGeometryUpdater) {
     "use strict";
-
-    var defaultVisualizerTypes = [DynamicBillboardVisualizer,
-                                  DynamicEllipsoidVisualizer,
-                                  DynamicConeVisualizerUsingCustomSensor,
-                                  DynamicLabelVisualizer,
-                                  DynamicPointVisualizer,
-                                  DynamicPolygonVisualizer,
-                                  DynamicPolylineVisualizer,
-                                  DynamicPyramidVisualizer,
-                                  DynamicPathVisualizer,
-                                  DynamicVectorVisualizer];
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -53,18 +45,19 @@ define([
      *
      * @param {Scene} scene The scene in which to display the data.
      * @param {DataSourceCollection} dataSourceCollection The data sources to display.
-     * @param {Array} [visualizerTypes] The array of visualizer constructor functions that will be created for each data source.  If undefined, All standard visualizers will be used.
-     *
-     * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} dataSourceCollection is required.
+     * @param {Function} [visualizersCallback=DataSourceDisplay.defaultVisualizersCallback] A function
+     *        which takes a scene and dataSource and returns the array of visualizers used for visualization.
+     *        If undefined, all standard visualizers are used.
      */
-    var DataSourceDisplay = function(scene, dataSourceCollection, visualizerTypes) {
+    var DataSourceDisplay = function(scene, dataSourceCollection, visualizersCallback) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+        //>>includeEnd('debug');
 
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
@@ -74,15 +67,42 @@ define([
         this._scene = scene;
         this._timeVaryingSources = [];
         this._staticSourcesToUpdate = [];
-        this._visualizersTypes = defaultValue(visualizerTypes, defaultVisualizerTypes).slice(0);
+        this._visualizersCallback = defaultValue(visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
 
-        for ( var i = 0, len = dataSourceCollection.getLength(); i < len; i++) {
+        for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
         }
     };
 
     /**
+     * Gets or sets the default function which takes a scene and dataSource and returns the
+     * array of visualizers used for visualization.  By default, this function uses all standard visualizers.
+     *
+     * @memberof DataSourceDisplay
+     *
+     * @type {Function}
+     */
+    DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
+        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        return [new DynamicBillboardVisualizer(scene, dynamicObjects),
+                new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
+                new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
+                new DynamicLabelVisualizer(scene, dynamicObjects),
+                new DynamicModelVisualizer(scene, dynamicObjects),
+                new DynamicPointVisualizer(scene, dynamicObjects),
+                new DynamicVectorVisualizer(scene, dynamicObjects),
+                new DynamicPyramidVisualizer(scene, dynamicObjects),
+                new DynamicPathVisualizer(scene, dynamicObjects)];
+    };
+
+    /**
      * Gets the scene being used for display.
+     *
+     * @memberof DataSourceDisplay
+     *
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
@@ -90,15 +110,10 @@ define([
     };
 
     /**
-     * Gets the types of visualizers being used for display.
-     * @returns {Array} A copy of the visualizer types being used for display.
-     */
-    DataSourceDisplay.prototype.getVisualizerTypes = function() {
-        return this._visualizersTypes.slice(0);
-    };
-
-    /**
      * Gets the collection of data sources to be displayed.
+     *
+     * @memberof DataSourceDisplay
+     *
      * @returns {DataSourceCollection} The collection of data sources.
      */
     DataSourceDisplay.prototype.getDataSources = function() {
@@ -110,6 +125,8 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof DataSourceDisplay
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -127,6 +144,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
+     * @memberof DataSourceDisplay
+     *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -140,7 +159,7 @@ define([
         this._eventHelper.removeAll();
 
         var dataSourceCollection = this._dataSourceCollection;
-        for ( var i = 0, length = dataSourceCollection.getLength(); i < length; ++i) {
+        for (var i = 0, length = dataSourceCollection.length; i < length; ++i) {
             this._onDataSourceRemoved(this._dataSourceCollection, dataSourceCollection.get(i));
         }
 
@@ -152,43 +171,47 @@ define([
      * updates static data sources that have changed since the last
      * call to update.
      *
-     * @param {JulianDate} time The simulation time.
+     * @memberof DataSourceDisplay
      *
-     * @exception {DeveloperError} time is required.
+     * @param {JulianDate} time The simulation time.
      */
     DataSourceDisplay.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
+
+        var i;
+        var x;
+        var visualizers;
+        var vLength;
 
         var timeVaryingSources = this._timeVaryingSources;
-        var i;
         var length = timeVaryingSources.length;
         for (i = 0; i < length; i++) {
-            timeVaryingSources[i]._visualizerCollection.update(time);
+            visualizers = timeVaryingSources[i]._visualizers;
+            vLength = visualizers.length;
+            for (x = 0; x < vLength; x++) {
+                visualizers[x].update(time);
+            }
         }
 
         var staticSourcesToUpdate = this._staticSourcesToUpdate;
         length = staticSourcesToUpdate.length;
-        if (length > 0) {
-            for (i = 0; i < length; i++) {
-                staticSourcesToUpdate[i]._visualizerCollection.update(time);
+        for (i = 0; i < length; i++) {
+            visualizers = staticSourcesToUpdate[i]._visualizers;
+            vLength = visualizers.length;
+            for (x = 0; x < vLength; x++) {
+                visualizers[x].update(time);
             }
-            staticSourcesToUpdate.length = 0;
         }
+        staticSourcesToUpdate.length = 0;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var visualizerTypes = this._visualizersTypes;
-        var length = visualizerTypes.length;
-        var visualizers = new Array(length);
-        var scene = this._scene;
-        for ( var i = 0; i < length; i++) {
-            visualizers[i] = new visualizerTypes[i](scene);
-        }
-
-        var vCollection = new VisualizerCollection(visualizers, dataSource.getDynamicObjectCollection());
-        dataSource._visualizerCollection = vCollection;
+        var visualizers = this._visualizersCallback(this._scene, dataSource);
+        dataSource._visualizers = visualizers;
         dataSource.getChangedEvent().addEventListener(this._onDataSourceChanged, this);
         this._onDataSourceChanged(dataSource);
     };
@@ -206,8 +229,12 @@ define([
             this._staticSourcesToUpdate.splice(staticIndex, 1);
         }
 
-        dataSource._visualizerCollection.destroy();
-        dataSource._visualizerCollection = undefined;
+        var visualizers = dataSource._visualizers;
+        var length = visualizers.length;
+        for (var i = 0; i < length; i++) {
+            visualizers[i].destroy();
+            dataSource._visualizers = undefined;
+        }
     };
 
     DataSourceDisplay.prototype._onDataSourceChanged = function(dataSource) {

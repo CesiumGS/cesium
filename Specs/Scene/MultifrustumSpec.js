@@ -57,10 +57,10 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene.getContext();
-        primitives = scene.getPrimitives();
+        context = scene.context;
+        primitives = scene.primitives;
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.position = new Cartesian3();
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -102,14 +102,14 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.getTexture().setSampler(context.createSampler({
+        atlas.texture.sampler = context.createSampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
-        }));
+        });
 
         var billboards = new BillboardCollection();
-        billboards.setTextureAtlas(atlas);
-        billboards.setDestroyTextureAtlas(false);
+        billboards.textureAtlas = atlas;
+        billboards.destroyTextureAtlas = false;
         billboard0 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50.0),
             imageIndex : 0
@@ -117,8 +117,8 @@ defineSuite([
         primitives.add(billboards);
 
         billboards = new BillboardCollection();
-        billboards.setTextureAtlas(atlas);
-        billboards.setDestroyTextureAtlas(false);
+        billboards.textureAtlas = atlas;
+        billboards.destroyTextureAtlas = false;
         billboard1 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000.0),
             imageIndex : 1
@@ -126,8 +126,8 @@ defineSuite([
         primitives.add(billboards);
 
         billboards = new BillboardCollection();
-        billboards.setTextureAtlas(atlas);
-        billboards.setDestroyTextureAtlas(false);
+        billboards.textureAtlas = atlas;
+        billboards.destroyTextureAtlas = false;
         billboard2 = billboards.add({
             position : new Cartesian3(0.0, 0.0, -50000000.0),
             imageIndex : 2
@@ -159,7 +159,7 @@ defineSuite([
 
     it('renders primitive in middle frustum', function() {
         createBillboards();
-        billboard0.setColor(new Color(1.0, 1.0, 1.0, 0.0));
+        billboard0.color = new Color(1.0, 1.0, 1.0, 0.0);
 
         scene.initializeFrame();
         scene.render();
@@ -173,8 +173,8 @@ defineSuite([
     it('renders primitive in last frustum', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
 
         scene.initializeFrame();
         scene.render();
@@ -188,8 +188,8 @@ defineSuite([
     it('renders primitive in last frustum with debugShowFrustums', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
 
         scene.debugShowFrustums = true;
         scene.initializeFrame();
@@ -245,14 +245,14 @@ defineSuite([
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 }));
-                var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+                var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = context.createVertexArrayFromGeometry({
                     geometry: geometry,
-                    attributeIndices: attributeIndices,
+                    attributeLocations: attributeLocations,
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeIndices);
+                this._sp = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });
@@ -297,9 +297,9 @@ defineSuite([
     it('renders only in the closest frustum', function() {
         createBillboards();
         var color = new Color(1.0, 1.0, 1.0, 0.0);
-        billboard0.setColor(color);
-        billboard1.setColor(color);
-        billboard2.setColor(color);
+        billboard0.color = color;
+        billboard1.color = color;
+        billboard2.color = color;
 
         var primitive = createPrimitive(true, true);
         primitive.color = new Color(1.0, 1.0, 0.0, 0.5);
@@ -330,7 +330,7 @@ defineSuite([
     });
 
     it('does not crash when near plane is greater than or equal to the far plane', function() {
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.frustum.far = 1000.0;
         camera.position = new Cartesian3(0.0, 0.0, 1e12);
 

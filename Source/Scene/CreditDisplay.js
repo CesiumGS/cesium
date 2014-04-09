@@ -15,8 +15,8 @@ define([
 
     function displayTextCredit(credit, container, delimiter) {
         if (!defined(credit.element)) {
-            var text = credit.getText();
-            var link = credit.getLink();
+            var text = credit.text;
+            var link = credit.link;
             var span = document.createElement('span');
             if (credit.hasLink()) {
                 var a = document.createElement('a');
@@ -41,11 +41,11 @@ define([
 
     function displayImageCredit(credit, container) {
         if (!defined(credit.element)) {
-            var text = credit.getText();
-            var link = credit.getLink();
+            var text = credit.text;
+            var link = credit.link;
             var span = document.createElement('span');
             var content = document.createElement('img');
-            content.src = credit.getImageUrl();
+            content.src = credit.imageUrl;
             content.style['vertical-align'] = 'bottom';
             if (defined(text)) {
                 content.alt = text;
@@ -146,13 +146,16 @@ define([
      * @constructor
      *
      * @example
-     * var CreditDisplay = new CreditDisplay(creditContainer);
+     * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
 
     var CreditDisplay = function(container, delimiter) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
         }
+        //>>includeEnd('debug');
+
         var imageContainer = document.createElement('span');
         imageContainer.className = 'cesium-credit-imageContainer';
         var textContainer = document.createElement('span');
@@ -185,9 +188,11 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.addCredit = function(credit) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
+        //>>includeEnd('debug');
 
         if (credit.hasImage()) {
             var imageCredits = this._currentFrameCredits.imageCredits;
@@ -210,9 +215,11 @@ define([
      * @param {Credit} credit The credit to added to defaults
      */
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
+        //>>includeEnd('debug');
 
         if (credit.hasImage()) {
             var imageCredits = this._defaultImageCredits;
@@ -235,9 +242,11 @@ define([
      * @param {Credit} credit The credit to be removed from defaults
      */
     CreditDisplay.prototype.removeDefaultCredit = function(credit) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
+        //>>includeEnd('debug');
 
         var index;
         if (credit.hasImage()) {

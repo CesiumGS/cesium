@@ -393,6 +393,8 @@ define([
         });
     }
 
+    var createGeometryFromPositionsExtrudedPositions = [];
+
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight) {
         var topGeo = createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight).geometry;
         var edgePoints = topGeo.attributes.position.values;
@@ -433,10 +435,14 @@ define([
 
         geos.walls = [];
         var outerRing = hierarchy.outerRing;
-        var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(outerRing, createGeometryFromPositionsExtrudedPositions);
+
+        var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing = outerRing.reverse();
+            outerRing.reverse();
         }
+
         var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
@@ -445,10 +451,15 @@ define([
         var holes = hierarchy.holes;
         for (i = 0; i < holes.length; i++) {
             var hole = holes[i];
-            windingOrder = PolygonPipeline.computeWindingOrder2D(hole);
-            if (windingOrder !== WindingOrder.CLOCKWISE) {
-                hole = hole.reverse();
+
+            tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
+            positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
+
+            windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (windingOrder === WindingOrder.CLOCKWISE) {
+                hole.reverse();
             }
+
             wallGeo = computeWallIndices(hole, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
@@ -473,55 +484,53 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instaed of using options.height to determine the height.
      *
-     * @exception {DeveloperError} polygonHierarchy is required.
-     *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
      *
      * @example
      * // 1. create a polygon from points
-     * var polygon = new PolygonGeometry({
+     * var polygon = new Cesium.PolygonGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cartographic.fromDegrees(-72.0, 40.0),
-     *             Cartographic.fromDegrees(-70.0, 35.0),
-     *             Cartographic.fromDegrees(-75.0, 30.0),
-     *             Cartographic.fromDegrees(-70.0, 30.0),
-     *             Cartographic.fromDegrees(-68.0, 40.0)
+     *             Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *             Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+     *             Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
      *         ])
      *     }
      * });
-     * var geometry = PolygonGeometry.createGeometry(polygon);
+     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      *
      * // 2. create a nested polygon with holes
-     * var polygonWithHole = new PolygonGeometry({
+     * var polygonWithHole = new Cesium.PolygonGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cartographic.fromDegrees(-109.0, 30.0),
-     *             Cartographic.fromDegrees(-95.0, 30.0),
-     *             Cartographic.fromDegrees(-95.0, 40.0),
-     *             Cartographic.fromDegrees(-109.0, 40.0)
+     *             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+     *             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
      *         ]),
      *         holes : [{
      *             positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                 Cartographic.fromDegrees(-107.0, 31.0),
-     *                 Cartographic.fromDegrees(-107.0, 39.0),
-     *                 Cartographic.fromDegrees(-97.0, 39.0),
-     *                 Cartographic.fromDegrees(-97.0, 31.0)
+     *                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
+     *                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+     *                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
+     *                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
      *             ]),
      *             holes : [{
      *                 positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                     Cartographic.fromDegrees(-105.0, 33.0),
-     *                     Cartographic.fromDegrees(-99.0, 33.0),
-     *                     Cartographic.fromDegrees(-99.0, 37.0),
-     *                     Cartographic.fromDegrees(-105.0, 37.0)
+     *                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
+     *                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
+     *                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
+     *                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
      *                     ]),
      *                 holes : [{
      *                     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                         Cartographic.fromDegrees(-103.0, 34.0),
-     *                         Cartographic.fromDegrees(-101.0, 34.0),
-     *                         Cartographic.fromDegrees(-101.0, 36.0),
-     *                         Cartographic.fromDegrees(-103.0, 36.0)
+     *                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
+     *                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
+     *                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
+     *                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
      *                     ])
      *                 }]
      *              }]
@@ -560,11 +569,13 @@ define([
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
         }
-
         var polygonHierarchy = options.polygonHierarchy;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+        //>>includeEnd('debug');
 
         this._vertexFormat = vertexFormat;
         this._ellipsoid = ellipsoid;
@@ -592,29 +603,29 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      *
-     * @exception {DeveloperError} options.positions is required.
-     *
      * @see PolygonGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
-     * var polygon = PolygonGeometry.fromPositions({
+     * var polygon = Cesium.PolygonGeometry.fromPositions({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
      *     ])
      * });
-     * var geometry = PolygonGeometry.createGeometry(polygon);
+     * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(options.positions)) {
             throw new DeveloperError('options.positions is required.');
         }
+        //>>includeEnd('debug');
 
         var newOptions = {
             polygonHierarchy : {

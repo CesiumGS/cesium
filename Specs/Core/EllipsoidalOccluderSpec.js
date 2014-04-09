@@ -27,14 +27,14 @@ defineSuite([
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        expect(occluder.getEllipsoid()).toEqual(ellipsoid);
+        expect(occluder.ellipsoid).toEqual(ellipsoid);
     });
 
     it('throws if ellipsoid is not provided to constructor', function() {
         function createOccluderWithoutEllipsoid() {
             return new EllipsoidalOccluder(undefined, new Cartesian3(1.0, 2.0, 3.0));
         }
-        expect(createOccluderWithoutEllipsoid).toThrow();
+        expect(createOccluderWithoutEllipsoid).toThrowDeveloperError();
     });
 
     it('isPointVisible example works as claimed', function() {
@@ -57,7 +57,7 @@ defineSuite([
     it('reports not visible when point is directly behind ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(-7000000, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
@@ -66,7 +66,7 @@ defineSuite([
     it('reports visible when point is in front of ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(6900000.0, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(true);
@@ -75,7 +75,7 @@ defineSuite([
     it('reports visible when point is in opposite direction from ellipsoid', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(7100000.0, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(true);
@@ -84,7 +84,7 @@ defineSuite([
     it('reports not visible when point is over horizon', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        occluder.setCameraPosition(new Cartesian3(7000000.0, 0.0, 0.0));
+        occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
 
         var point = new Cartesian3(4510635.0, 4510635.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
@@ -99,11 +99,11 @@ defineSuite([
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPoint(undefined, positions);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPoint(directionToPoint, undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('returns point on ellipsoid when single position is on center line', function() {
@@ -148,7 +148,7 @@ defineSuite([
 
             var firstPositionArray = [positions[0]];
             var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, firstPositionArray);
-            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.radii);
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
@@ -166,7 +166,7 @@ defineSuite([
             var boundingSphere = BoundingSphere.fromPoints(positions);
 
             var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
-            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.radii);
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
@@ -212,15 +212,15 @@ defineSuite([
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(undefined, vertices, 7);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, undefined, 7);
-            }).toThrow();
+            }).toThrowDeveloperError();
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('produces same answers as computeHorizonCullingPoint', function() {
@@ -269,14 +269,14 @@ defineSuite([
             var extent = new Extent(0.1, 0.2, 0.3, 0.4);
             var result = ellipsoidalOccluder.computeHorizonCullingPointFromExtent(extent, ellipsoid);
             expect(result).toBeDefined();
-            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.radii);
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
-            var positions = [ellipsoid.cartographicToCartesian(extent.getSouthwest()),
-                             ellipsoid.cartographicToCartesian(extent.getSoutheast()),
-                             ellipsoid.cartographicToCartesian(extent.getNorthwest()),
-                             ellipsoid.cartographicToCartesian(extent.getNortheast())];
+            var positions = [ellipsoid.cartographicToCartesian(Extent.getSouthwest(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getSoutheast(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getNorthwest(extent)),
+                             ellipsoid.cartographicToCartesian(Extent.getNortheast(extent))];
 
             var foundOneNearZero = false;
             for (var i = 0; i < positions.length; ++i) {

@@ -12,6 +12,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Event',
         '../../Core/FeatureDetection',
+        '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
@@ -20,7 +21,6 @@ define([
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
-        '../../Scene/SceneTransitioner',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
         '../../Scene/Sun',
@@ -38,6 +38,7 @@ define([
         Ellipsoid,
         Event,
         FeatureDetection,
+        formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
@@ -46,7 +47,6 @@ define([
         Moon,
         Scene,
         SceneMode,
-        SceneTransitioner,
         SkyAtmosphere,
         SkyBox,
         Sun,
@@ -73,13 +73,15 @@ define([
                 } else {
                     widget._renderLoopRunning = false;
                 }
-            } catch (e) {
+            } catch (error) {
                 widget._useDefaultRenderLoop = false;
                 widget._renderLoopRunning = false;
-                widget._renderLoopError.raiseEvent(widget, e);
+                widget._renderLoopError.raiseEvent(widget, error);
                 if (widget._showRenderLoopErrors) {
-                    widget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
-                    console.error(e);
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    widget.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
                 }
             }
         }
@@ -106,7 +108,6 @@ define([
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @example
@@ -137,9 +138,11 @@ define([
      * });
      */
     var CesiumWidget = function(container, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
 
@@ -172,16 +175,16 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
-            var creditDisplay = scene.getFrameState().creditDisplay;
+            var creditDisplay = scene.frameState.creditDisplay;
 
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
             var centralBody = new CentralBody(ellipsoid);
-            scene.getPrimitives().setCentralBody(centralBody);
+            scene.primitives.centralBody = centralBody;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -206,15 +209,12 @@ define([
             var imageryProvider = options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
-                    url : 'http://dev.virtualearth.net',
-                    // Some versions of Safari support WebGL, but don't correctly implement
-                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                    proxy: FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesiumjs.org/proxy/')
+                    url : '//dev.virtualearth.net'
                 });
             }
 
             if (imageryProvider !== false) {
-                centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+                centralBody.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
@@ -225,12 +225,11 @@ define([
             this._container = container;
             this._canvas = canvas;
             this._zoomDetector = zoomDetector;
-            this._canvasWidth = canvas.width;
-            this._canvasHeight = canvas.height;
+            this._canvasWidth = 0;
+            this._canvasHeight = 0;
             this._scene = scene;
             this._centralBody = centralBody;
             this._clock = defaultValue(options.clock, new Clock());
-            this._transitioner = new SceneTransitioner(scene, ellipsoid);
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
             this._renderLoopRunning = false;
@@ -241,10 +240,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._transitioner.to2D();
+                    this._scene.morphTo2D();
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._transitioner.toColumbusView();
+                    this._scene.morphToColumbusView();
                 }
             }
 
@@ -267,18 +266,6 @@ define([
         container : {
             get : function() {
                 return this._container;
-            }
-        },
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {SceneTransitioner}
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._transitioner;
             }
         },
 
@@ -515,7 +502,7 @@ define([
         this._canRender = canRender;
 
         if (canRender) {
-            var frustum = this._scene.getCamera().frustum;
+            var frustum = this._scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {

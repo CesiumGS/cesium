@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/loadImage',
         '../Core/loadXML',
         '../Core/getImagePixels',
@@ -20,6 +21,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         loadImage,
         loadXML,
         getImagePixels,
@@ -58,7 +60,7 @@ define([
      * @see TerrainProvider
      *
      * @example
-     * var terrainProvider = new VRTheWorldTerrainProvider({
+     * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
      *   url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * centralBody.terrainProvider = terrainProvider;
@@ -144,9 +146,63 @@ define([
         requestMetadata();
     };
 
+    defineProperties(VRTheWorldTerrainProvider.prototype, {
+        /**
+         * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain.  This function should not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link VRTheWorldTerrainProvider#ready} returns true.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {GeographicTilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                if (!this.ready) {
+                    throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
+                }
+
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        }
+    });
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result includes terrain
+     * {@link ArcGisImageServerTerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
      *
      * @memberof VRTheWorldTerrainProvider
@@ -162,8 +218,8 @@ define([
      *          pending and the request will be retried later.
      */
     VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
-        if (!this.isReady()) {
-            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
+        if (!this.ready) {
+            throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
@@ -199,19 +255,6 @@ define([
     };
 
     /**
-     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof VRTheWorldTerrainProvider
-     *
-     * @returns {Event} The event.
-     */
-    VRTheWorldTerrainProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
      * @memberof VRTheWorldTerrainProvider
@@ -220,41 +263,10 @@ define([
      * @returns {Number} The maximum geometric error.
      */
     VRTheWorldTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
-        if (!this.isReady()) {
-            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
+        if (!this.ready) {
+            throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
         return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof VRTheWorldTerrainProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    VRTheWorldTerrainProvider.prototype.getCredit = function() {
-        return this._credit;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof VRTheWorldTerrainProvider
-     *
-     * @returns {TilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
-     */
-    VRTheWorldTerrainProvider.prototype.getTilingScheme = function() {
-        if (!this.isReady()) {
-            throw new DeveloperError('requestTileGeometry must not be called before isReady returns true.');
-        }
-        return this._tilingScheme;
     };
 
     /**
@@ -268,17 +280,6 @@ define([
      */
     VRTheWorldTerrainProvider.prototype.hasWaterMask = function() {
         return false;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof VRTheWorldTerrainProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    VRTheWorldTerrainProvider.prototype.isReady = function() {
-        return this._ready;
     };
 
     var extentScratch = new Extent();
@@ -298,8 +299,8 @@ define([
 
             var testExtent = extent.extent;
 
-            var intersection = testExtent.intersectWith(parentExtent, extentScratch);
-            if (!intersection.isEmpty()) {
+            var intersection = Extent.intersectWith(testExtent, parentExtent, extentScratch);
+            if (!Extent.isEmpty(intersection)) {
                 // Parent tile is inside this extent, so at least one child is, too.
                 if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2, level + 1)) {
                     childMask |= 4; // northwest
@@ -321,7 +322,7 @@ define([
 
     function isTileInExtent(tilingScheme, extent, x, y, level) {
         var tileExtent = tilingScheme.tileXYToExtent(x, y, level);
-        return !tileExtent.intersectWith(extent, extentScratch).isEmpty();
+        return !Extent.isEmpty(Extent.intersectWith(tileExtent, extent, extentScratch));
     }
 
     return VRTheWorldTerrainProvider;

@@ -1,23 +1,29 @@
 /*global define*/
 define([
         'Core/defined',
+        'Core/formatError',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
+        'Scene/TileMapServiceImageryProvider',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Widgets/Viewer/viewerCesiumInspectorMixin',
         'domReady!'
     ], function(
         defined,
+        formatError,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
+        TileMapServiceImageryProvider,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin) {
+        viewerDynamicObjectMixin,
+        viewerCesiumInspectorMixin) {
     "use strict";
     /*global console*/
 
@@ -49,11 +55,12 @@ define([
         } else {
             loadingIndicator.style.display = 'none';
         }
-    }).otherwise(function(e) {
+    }).otherwise(function(error) {
         loadingIndicator.style.display = 'none';
-        console.error(e);
+        var message = formatError(error);
+        console.error(message);
         if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
-            window.alert(e);
+            window.alert(message);
         }
     });
 
@@ -64,14 +71,29 @@ define([
     }
 
     function startup() {
-        var viewer = new Viewer('cesiumContainer');
+        var imageryProvider;
+
+        if (endUserOptions.tmsImageryUrl) {
+            imageryProvider = new TileMapServiceImageryProvider({
+                url : endUserOptions.tmsImageryUrl
+            });
+        }
+
+        var viewer = new Viewer('cesiumContainer', {
+            imageryProvider : imageryProvider,
+            baseLayerPicker : !defined(imageryProvider)
+        });
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
+        if (endUserOptions.inspector) {
+            viewer.extend(viewerCesiumInspectorMixin);
+        }
 
         var showLoadError = function(name, error) {
             var title = 'An error occurred while loading the file: ' + name;
+            error = formatError(error);
             viewer.cesiumWidget.showErrorPanel(title, error);
-            console.error(error);
+            console.error(title + ': ' + error);
         };
 
         viewer.dropError.addEventListener(function(viewerArg, name, error) {
@@ -79,12 +101,12 @@ define([
         });
 
         var scene = viewer.scene;
-        var context = scene.getContext();
+        var context = scene.context;
         if (endUserOptions.debug) {
-            context.setValidateShaderProgram(true);
-            context.setValidateFramebuffer(true);
-            context.setLogShaderCompilation(true);
-            context.setThrowOnWebGLError(true);
+            context.validateShaderProgram = true;
+            context.validateFramebuffer = true;
+            context.logShaderCompilation = true;
+            context.throwOnWebGLError = true;
         }
 
         if (defined(endUserOptions.source)) {
@@ -126,7 +148,7 @@ define([
         }
 
         if (endUserOptions.stats) {
-            scene.getPrimitives().add(new PerformanceDisplay());
+            scene.debugShowFramesPerSecond = true;
         }
 
         var theme = endUserOptions.theme;

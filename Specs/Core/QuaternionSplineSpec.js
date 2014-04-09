@@ -25,10 +25,10 @@ defineSuite([
         times = [0.0, 1.0, 2.0, 3.0];
     });
 
-    it('constructor throws without points', function() {
+    it('constructor throws without points or times', function() {
         expect(function() {
             return new QuaternionSpline();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when control points length is less than 2', function() {
@@ -36,15 +36,7 @@ defineSuite([
             return new QuaternionSpline({
                 points : [Quaternion.ZERO]
             });
-        }).toThrow();
-    });
-
-    it('constructor throws without times', function() {
-        expect(function() {
-            return new QuaternionSpline({
-                points : points
-            });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when times.length is not equal to points.length', function() {
@@ -53,7 +45,7 @@ defineSuite([
                 points : points,
                 times : [0.0, 1.0]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws without time', function() {
@@ -64,7 +56,7 @@ defineSuite([
 
         expect(function() {
             qs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws when time is out of range', function() {
@@ -75,7 +67,7 @@ defineSuite([
 
         expect(function() {
             qs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate without result parameter', function() {

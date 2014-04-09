@@ -22,7 +22,7 @@ defineSuite([
          DepthFunction,
          RenderbufferFormat) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -63,7 +63,7 @@ defineSuite([
     });
 
     it('has a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthTexture : context.createTexture2D({
                     width : 1,
@@ -72,7 +72,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })
             });
-            expect(framebuffer.getDepthTexture()).toBeDefined();
+            expect(framebuffer.depthTexture).toBeDefined();
         }
     });
 
@@ -82,7 +82,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.getDepthRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthRenderbuffer).toBeDefined();
     });
 
     it('has a stencil renderbuffer attachment', function() {
@@ -91,11 +91,11 @@ defineSuite([
                 format : RenderbufferFormat.STENCIL_INDEX8
             })
         });
-        expect(framebuffer.getStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.stencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthStencilTexture : context.createTexture2D({
                     width : 1,
@@ -104,7 +104,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
                 })
             });
-            expect(framebuffer.getDepthStencilTexture()).toBeDefined();
+            expect(framebuffer.depthStencilTexture).toBeDefined();
         }
     });
 
@@ -114,12 +114,12 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_STENCIL
             })
         });
-        expect(framebuffer.getDepthStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthStencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth attachment', function() {
         framebuffer = context.createFramebuffer();
-        expect(framebuffer.hasDepthAttachment()).toEqual(false);
+        expect(framebuffer.hasDepthAttachment).toEqual(false);
         framebuffer.destroy();
 
         framebuffer = context.createFramebuffer({
@@ -127,7 +127,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.hasDepthAttachment()).toEqual(true);
+        expect(framebuffer.hasDepthAttachment).toEqual(true);
     });
 
     it('clears a color attachment', function() {
@@ -158,10 +158,10 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = colorTexture;
+        sp.allUniforms.u_texture.value = colorTexture;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -186,7 +186,7 @@ defineSuite([
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = context.createFramebuffer({
-            colorTextures : [cubeMap.getPositiveX()]
+            colorTextures : [cubeMap.positiveX]
         });
         framebuffer.destroyAttachments = false;
 
@@ -204,10 +204,10 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_cubeMap.value = cubeMap;
+        sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -241,7 +241,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -262,7 +262,7 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = colorTexture;
+        sp2.allUniforms.u_texture.value = colorTexture;
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -283,7 +283,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -309,7 +309,7 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = texture;
+        sp2.allUniforms.u_texture.value = texture;
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -323,7 +323,7 @@ defineSuite([
     }
 
     it('draws to a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -337,12 +337,12 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
     it('draws to a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -356,7 +356,7 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
         }
     });
 
@@ -378,7 +378,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -429,7 +429,7 @@ defineSuite([
     });
 
     it('draws with multiple render targets', function() {
-        if (context.getDrawBuffers()) {
+        if (context.drawBuffers) {
             var colorTexture0 = context.createTexture2D({
                 width : 1,
                 height : 1
@@ -452,7 +452,7 @@ defineSuite([
             sp = context.createShaderProgram(vs, fs);
 
             va = context.createVertexArray([{
-                index : sp.getVertexAttributes().position.index,
+                index : sp.vertexAttributes.position.index,
                 vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]);
@@ -473,8 +473,8 @@ defineSuite([
             var sp2 = context.createShaderProgram(vs2, fs2, {
                 position : 0
             });
-            sp2.getAllUniforms().u_texture0.value = colorTexture0;
-            sp2.getAllUniforms().u_texture1.value = colorTexture1;
+            sp2.allUniforms.u_texture0.value = colorTexture0;
+            sp2.allUniforms.u_texture1.value = colorTexture1;
 
             context.draw({
                 primitiveType : PrimitiveType.POINTS,
@@ -500,6 +500,37 @@ defineSuite([
         }
     });
 
+    it('gets the status of a complete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 1,
+                height : 1
+            })
+        });
+        expect(framebuffer.status).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
+    it('gets the status of a incomplete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 2,
+                height : 2
+            })
+        });
+        expect(framebuffer.status).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
+
     it('destroys', function() {
         var f = context.createFramebuffer();
         expect(f.isDestroyed()).toEqual(false);
@@ -513,7 +544,7 @@ defineSuite([
                 colorTextures : 'not undefined',
                 colorRenderbuffers : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with depth texture and depth renderbuffer attachments', function() {
@@ -522,7 +553,7 @@ defineSuite([
                 depthTexture : 'not undefined',
                 depthRenderbuffer : 'not undefined'
             });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with depth-stencil texture and depth-stencil renderbuffer attachments', function() {
@@ -531,7 +562,7 @@ defineSuite([
                 depthStencilTexture : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with depth and depth-stencil attachments', function() {
@@ -540,7 +571,7 @@ defineSuite([
                 depthRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with stencil and depth-stencil attachments', function() {
@@ -549,7 +580,7 @@ defineSuite([
                 stencilRenderbuffer : 'not undefined',
                 depthStencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with depth and stencil attachments', function() {
@@ -558,20 +589,22 @@ defineSuite([
                 depthRenderbuffer : 'not undefined',
                 stencilRenderbuffer : 'not undefined'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when created with a color texture with a non-color pixel format', function() {
-        expect(function() {
-            framebuffer = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
-                    width : 1,
-                    height : 1,
-                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
-                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
-                })]
-            });
-        }).toThrow();
+        if (context.depthTexture) {
+            expect(function() {
+                framebuffer = context.createFramebuffer({
+                    colorTextures : [context.createTexture2D({
+                        width : 1,
+                        height : 1,
+                        pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                        pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                    })]
+                });
+            }).toThrowDeveloperError();
+        }
     });
 
     it('throws when created with a depth texture without a DEPTH_COMPONENT pixel format', function() {
@@ -582,7 +615,7 @@ defineSuite([
                   height : 1
               })
           });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when created with a depth-stencil texture without a DEPTH_STENCIL pixel format', function() {
@@ -593,7 +626,7 @@ defineSuite([
                   height : 1
               })
           });
-      }).toThrow();
+      }).toThrowDeveloperError();
     });
 
     it('throws when the depth test is enabled without an appropriate attachment', function() {
@@ -609,7 +642,7 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -632,7 +665,7 @@ defineSuite([
     it('throws when the number of color texture exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorTextures : new Array(context.getMaximumColorAttachments() + 1)
+                colorTextures : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrow();
     });
@@ -640,38 +673,38 @@ defineSuite([
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorRenderbuffers : new Array(context.getMaximumColorAttachments() + 1)
+                colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
         }).toThrow();
     });
 
-    it('throws when the index to setColorTexture is out of bounds', function(){
+    it('throws when the index to getColorTexture is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorTexture();
+            framebuffer.getColorTexture();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(-1);
+            framebuffer.getColorTexture(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorTexture(context.getMaximumColorAttachments() + 1);
+            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 
-    it('throws when the index to setColorRenderbuffer is out of bounds', function(){
+    it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorRenderbuffer();
+            framebuffer.getColorRenderbuffer();
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(-1);
+            framebuffer.getColorRenderbuffer(-1);
         }).toThrow();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(context.getMaximumColorAttachments() + 1);
+            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
         }).toThrow();
     });
 
@@ -681,6 +714,6 @@ defineSuite([
 
         expect(function() {
             f.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

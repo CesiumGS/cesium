@@ -2,7 +2,6 @@
 define([
         './Cartesian3',
         './defined',
-        './DeveloperError',
         './Iau2000Orientation',
         './JulianDate',
         './Math',
@@ -11,7 +10,6 @@ define([
     ], function(
         Cartesian3,
         defined,
-        DeveloperError,
         Iau2000Orientation,
         JulianDate,
         CesiumMath,
@@ -26,8 +24,6 @@ define([
      * @constructor
      *
      * @param {Function} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
-     *
-     * @exception {DeveloperError} computeFunction is required.
      *
      * @see Iau2000Orientation
      */

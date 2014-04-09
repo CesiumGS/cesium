@@ -69,7 +69,7 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
@@ -84,7 +84,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -137,7 +137,7 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
@@ -149,7 +149,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;
@@ -196,7 +196,7 @@ defineSuite([
         var layer = new ImageryLayer(provider, {
             extent : extent
         });
-        expect(layer.getExtent()).toEqual(extent);
+        expect(layer.extent).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
@@ -212,11 +212,11 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -256,11 +256,11 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -304,16 +304,16 @@ defineSuite([
         var terrainProvider = new EllipsoidTerrainProvider();
 
         waitsFor(function() {
-            return provider.isReady() && terrainProvider.isReady();
+            return provider.ready && terrainProvider.ready;
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var level0 = terrainProvider.getTilingScheme().createLevelZeroTiles();
-            var level1 = level0[0].getChildren();
-            var level2 = level1[0].getChildren();
-            var level3 = level2[0].getChildren();
-            var level4 = level3[0].getChildren();
-            var level5 = level4[0].getChildren();
+            var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var level1 = level0[0].children;
+            var level2 = level1[0].children;
+            var level3 = level2[0].children;
+            var level4 = level3[0].children;
+            var level5 = level4[0].children;
 
             layer._createTileImagerySkeletons(level0[0], terrainProvider);
             expect(level0[0].imagery.length).toBe(0);

@@ -5,6 +5,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
+        './Extent',
         './ComponentDatatype',
         './IndexDatatype',
         './DeveloperError',
@@ -22,6 +23,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Extent,
         ComponentDatatype,
         IndexDatatype,
         DeveloperError,
@@ -272,7 +274,6 @@ define([
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
      *
-     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
@@ -283,12 +284,12 @@ define([
      * @see ExtentOutlineGeometry#createGeometry
      *
      * @example
-     * var extent = new ExtentOutlineGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentOutlineGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = ExtentOutlineGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentOutlineGeometry.createGeometry(extent);
      */
     var ExtentOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -299,11 +300,18 @@ define([
         var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = options.rotation;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-
-        extent.validate();
+        Extent.validate(extent);
+        if (extent.east < extent.west) {
+            throw new DeveloperError('options.extent.east must be greater than options.extent.west');
+        }
+        if (extent.north < extent.south) {
+            throw new DeveloperError('options.extent.north must be greater than options.extent.south');
+        }
+        //>>includeEnd('debug');
 
         this._extent = extent;
         this._granularity = granularity;
@@ -336,10 +344,10 @@ define([
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquared = ellipsoid.radiiSquared;
 
-        extent.getNorthwest(nwCartographic);
-        extent.getCenter(centerCartographic);
+        Extent.getNorthwest(extent, nwCartographic);
+        Extent.getCenter(extent, centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;

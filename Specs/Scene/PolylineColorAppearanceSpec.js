@@ -46,7 +46,7 @@ defineSuite([
 
     beforeEach(function() {
         frameState = createFrameState(createCamera(context));
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, frameState);
     });
 

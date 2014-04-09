@@ -48,7 +48,7 @@ defineSuite([
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition), 1e7);
 
-        camera.controller.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
+        camera.lookAt(moonPosition, cameraPosition, Cartesian3.UNIT_Z);
     }
 
     it('default constructs the moon', function() {
@@ -64,26 +64,26 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var date = scene.getFrameState().time;
-        var camera = scene.getCamera();
+        var date = scene.frameState.time;
+        var camera = scene.camera;
         lookAtMoon(camera, date);
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
         var moon = new Moon();
         moon.show = false;
 
-        var context = scene.getContext();
+        var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
-        lookAtMoon(scene.getCamera(), frameState.time);
+        lookAtMoon(scene.camera, frameState.time);
 
         us.update(context, frameState);
 

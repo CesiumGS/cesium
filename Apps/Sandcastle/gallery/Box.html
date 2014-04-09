@@ -28,8 +28,8 @@ require(['Cesium'], function(Cesium) {
     "use strict";
     
     var viewer = new Cesium.Viewer('cesiumContainer');
-    var primitives = viewer.scene.getPrimitives();
-    var ellipsoid = viewer.centralBody.getEllipsoid();
+    var primitives = viewer.scene.primitives;
+    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Create box and position with a model matrix
     var dimensions = new Cesium.Cartesian3(400000.0, 300000.0, 500000.0);

@@ -36,9 +36,7 @@ define([
      * @param {Element} container The parent HTML container node for this widget.
      * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     * @exception {DeveloperError} imageryLayers is required.
      *
      * @see ImageryProvider
      * @see ImageryProviderViewModel
@@ -93,20 +91,21 @@ define([
      * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
      *
      * //Finally, create the baseLayerPicker widget using our view models.
-     * var layers = cesiumWidget.centralBody.getImageryLayers();
+     * var layers = cesiumWidget.centralBody.imageryLayers;
      * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
      * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-
         if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
 

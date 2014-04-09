@@ -26,7 +26,7 @@ define([
      * @constructor
      *
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
-     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
      * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
@@ -35,42 +35,42 @@ define([
      *
      * @example
      * // A solid white line segment
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new SimplePolylineGeometry({
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.SimplePolylineGeometry({
      *       positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(0.0, 0.0),
-     *         Cartographic.fromDegrees(5.0, 0.0)
+     *         Cesium.Cartographic.fromDegrees(0.0, 0.0),
+     *         Cesium.Cartographic.fromDegrees(5.0, 0.0)
      *       ])
      *     }),
      *     attributes : {
-     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 1.0, 1.0))
+     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
      *     }
      *   }),
-     *   appearance : new PerInstanceColorAppearance({
+     *   appearance : new Cesium.PerInstanceColorAppearance({
      *     flat : true,
      *     translucent : false
      *   })
      * }));
      *
      * // Two extents in a primitive, each with a different color
-     * var instance = new GeometryInstance({
-     *   geometry : new ExtentGeometry({
-     *     extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var instance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.ExtentGeometry({
+     *     extent : Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
-     *   color : new Color(1.0, 0.0, 0.0, 0.5)
+     *   color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
      * });
      *
-     * var anotherInstance = new GeometryInstance({
-     *   geometry : new ExtentGeometry({
-     *     extent : Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
+     * var anotherInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.ExtentGeometry({
+     *     extent : Cesium.Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
-     *   color : new Color(0.0, 0.0, 1.0, 0.5)
+     *   color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
      * });
      *
-     * var extentPrimitive = new Primitive({
+     * var extentPrimitive = new Cesium.Primitive({
      *   geometryInstances : [instance, anotherInstance],
-     *   appearance : new PerInstanceColorAppearance()
+     *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      */
     var PerInstanceColorAppearance = function(options) {
@@ -163,7 +163,7 @@ define([
          *
          * @default false
          */
-        this.faceForward = defaultValue(options.faceForward, false);
+        this.faceForward = defaultValue(options.faceForward, !closed);
 
         /**
          * When <code>true</code>, the geometry is expected to appear translucent so

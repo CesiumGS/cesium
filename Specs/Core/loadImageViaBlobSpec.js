@@ -47,7 +47,7 @@ defineSuite([
     it('throws with if url is missing', function() {
         expect(function() {
             loadImageViaBlob();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('resolves the promise when the image loads', function() {

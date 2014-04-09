@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        './DeveloperError',
+        './Cartesian2',
+        './defaultValue',
         './defined',
         './destroyObject',
-        './Cartesian2',
+        './DeveloperError',
         './ScreenSpaceEventType',
-        './KeyboardEventModifier',
-        './defaultValue'
+        './KeyboardEventModifier'
     ], function(
-        DeveloperError,
+        Cartesian2,
+        defaultValue,
         defined,
         destroyObject,
-        Cartesian2,
+        DeveloperError,
         ScreenSpaceEventType,
-        KeyboardEventModifier,
-        defaultValue) {
+        KeyboardEventModifier) {
     "use strict";
 
     /**
@@ -48,8 +48,6 @@ define([
         register(this);
     };
 
-    var scratchPosition = new Cartesian2();
-
     function getPosition(screenSpaceEventHandler, event, result) {
         if (screenSpaceEventHandler._element === document) {
             result.x = event.clientX;
@@ -81,19 +79,18 @@ define([
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
-     * @exception {DeveloperError} action is required.
-     * @exception {DeveloperError} type is required.
-     *
      * @see ScreenSpaceEventHandler#getInputAction
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.setInputAction = function(action, type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(action)) {
             throw new DeveloperError('action is required.');
         }
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         this._mouseEvents[key] = action;
@@ -108,15 +105,15 @@ define([
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
-     * @exception {DeveloperError} type is required.
-     *
      * @see ScreenSpaceEventHandler#setInputAction
      * @see ScreenSpaceEventHandler#removeInputAction
      */
     ScreenSpaceEventHandler.prototype.getInputAction = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         return this._mouseEvents[key];
@@ -131,15 +128,15 @@ define([
      * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
-     * @exception {DeveloperError} type is required.
-     *
      * @see ScreenSpaceEventHandler#getInputAction
      * @see ScreenSpaceEventHandler#setInputAction
      */
     ScreenSpaceEventHandler.prototype.removeInputAction = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getMouseEventsKey(type, modifier);
         delete this._mouseEvents[key];
@@ -399,8 +396,8 @@ define([
         if (screenSpaceEventHandler._leftMouseButtonDown && (event.touches.length === 1)) {
             pos = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.endPosition);
 
-            var xDiff = screenSpaceEventHandler._lastMouseX - pos.x;
-            var yDiff = screenSpaceEventHandler._lastMouseY - pos.y;
+            var xDiff = screenSpaceEventHandler._lastMousePosition.x - pos.x;
+            var yDiff = screenSpaceEventHandler._lastMousePosition.y - pos.y;
             screenSpaceEventHandler._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
             Cartesian2.clone(screenSpaceEventHandler._lastMousePosition, touchMovementEvent.startPosition);
@@ -423,7 +420,7 @@ define([
                 pos = getPosition(screenSpaceEventHandler, event.touches[1], touchMovementEvent.startPosition);
                 pos2 = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.endPosition);
             } else {
-                pos = getPosition(screenSpaceEventHandler, event.touches[0],touchMovementEvent.startPosition);
+                pos = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.startPosition);
                 pos2 = getPosition(screenSpaceEventHandler, event.touches[1], touchMovementEvent.endPosition);
             }
 
@@ -570,7 +567,7 @@ define([
             }
         });
 
-        for ( var i = 0; i < screenSpaceEventHandler._callbacks.length; i++) {
+        for (var i = 0; i < screenSpaceEventHandler._callbacks.length; i++) {
             var cback = screenSpaceEventHandler._callbacks[i];
             if (cback.onDoc) {
                 document.addEventListener(cback.name, cback.action, false);
@@ -581,7 +578,7 @@ define([
     }
 
     ScreenSpaceEventHandler.prototype._unregister = function() {
-        for ( var i = 0; i < this._callbacks.length; i++) {
+        for (var i = 0; i < this._callbacks.length; i++) {
             var cback = this._callbacks[i];
             if (cback.onDoc) {
                 document.removeEventListener(cback.name, cback.action, false);

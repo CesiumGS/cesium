@@ -50,7 +50,7 @@ define([
         this.mesh = undefined;
 
         if (defined(this.vertexArray)) {
-            var indexBuffer = this.vertexArray.getIndexBuffer();
+            var indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
@@ -110,7 +110,7 @@ define([
             terrainProvider._requestError = TileProviderError.handleError(
                     terrainProvider._requestError,
                     terrainProvider,
-                    terrainProvider.getErrorEvent(),
+                    terrainProvider.errorEvent,
                     message,
                     x, y, level,
                     doRequest);
@@ -138,16 +138,19 @@ define([
     TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             var upsampleDetails = this.upsampleDetails;
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(upsampleDetails)) {
                 throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
             }
+            //>>includeEnd('debug');
 
             var sourceData = upsampleDetails.data;
             var sourceX = upsampleDetails.x;
             var sourceY = upsampleDetails.y;
             var sourceLevel = upsampleDetails.level;
 
-            this.data = sourceData.upsample(terrainProvider.getTilingScheme(), sourceX, sourceY, sourceLevel, x, y, level);
+            this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
             if (!defined(this.data)) {
                 // The upsample request has been deferred - try again later.
                 return;
@@ -174,7 +177,7 @@ define([
     };
 
     function transform(tileTerrain, context, terrainProvider, x, y, level) {
-        var tilingScheme = terrainProvider.getTilingScheme();
+        var tilingScheme = terrainProvider.tilingScheme;
 
         var terrainData = tileTerrain.data;
         var meshPromise = terrainData.createMesh(tilingScheme, x, y, level);
