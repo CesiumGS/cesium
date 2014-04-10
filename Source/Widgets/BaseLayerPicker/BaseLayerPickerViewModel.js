@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
@@ -8,6 +9,7 @@ define([
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
@@ -22,31 +24,27 @@ define([
      * @alias BaseLayerPickerViewModel
      * @constructor
      *
-     * @param {CentralBody} centralBody The CentralBody to use.
-     * @param {ProviderViewModel[]} [imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
-     * @param {ProviderViewModel[]} [terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
+     * @param {CentralBody} options.centralBody The CentralBody to use.
+     * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
+     * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel[]} [options.terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
+     * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      *
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
      * @exception {DeveloperError} terrainProviderViewModels must be an array.
      */
-    var BaseLayerPickerViewModel = function(centralBody, imageryProviderViewModels, terrainProviderViewModels) {
+    var BaseLayerPickerViewModel = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var centralBody = options.centralBody;
+        var imageryProviderViewModels = defaultValue(options.imageryProviderViewModels, []);
+        var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, []);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(centralBody)) {
             throw new DeveloperError('centralBody is required');
         }
         //>>includeEnd('debug');
-
-        if (!defined(imageryProviderViewModels)) {
-            imageryProviderViewModels = [];
-        } else if (!isArray(imageryProviderViewModels)) {
-            throw new DeveloperError('imageryProviderViewModels must be an array');
-        }
-
-        if (!defined(terrainProviderViewModels)) {
-            terrainProviderViewModels = [];
-        } else if (!isArray(terrainProviderViewModels)) {
-            throw new DeveloperError('terrainProviderViewModels must be an array');
-        }
 
         this._centralBody = centralBody;
 
@@ -117,6 +115,11 @@ define([
                 return selectedImageryViewModel();
             },
             set : function(value) {
+                if (selectedImageryViewModel() === value) {
+                    this.dropDownVisible = false;
+                    return;
+                }
+
                 var i;
                 var currentImageryProviders = this._currentImageryProviders;
                 var currentImageryProvidersLength = currentImageryProviders.length;
@@ -163,6 +166,11 @@ define([
                 return selectedTerrainViewModel();
             },
             set : function(value) {
+                if (selectedTerrainViewModel() === value) {
+                    this.dropDownVisible = false;
+                    return;
+                }
+
                 var newProvider;
                 if (defined(value)) {
                     newProvider = value.creationCommand();
@@ -179,6 +187,9 @@ define([
         this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
+
+        this.selectedImagery = defaultValue(options.selectedImageryProviderViewModel, imageryProviderViewModels[0]);
+        this.selectedTerrain = defaultValue(options.selectedTerrainProviderViewModel, terrainProviderViewModels[0]);
     };
 
     defineProperties(BaseLayerPickerViewModel.prototype, {

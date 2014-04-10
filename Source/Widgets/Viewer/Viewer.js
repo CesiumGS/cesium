@@ -315,9 +315,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         if (createBaseLayerPicker) {
             var imageryProviderViewModels = defaultValue(options.imageryProviderViewModels, createDefaultImageryProviderViewModels());
             var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
-            baseLayerPicker = new BaseLayerPicker(toolbar, cesiumWidget.centralBody, imageryProviderViewModels, terrainProviderViewModels);
-            baseLayerPicker.viewModel.selectedImagery = defaultValue(options.selectedImageryProviderViewModel, imageryProviderViewModels[0]);
-            baseLayerPicker.viewModel.selectedTerrain = defaultValue(options.selectedTerrainProviderViewModel, terrainProviderViewModels[0]);
+
+            baseLayerPicker = new BaseLayerPicker(toolbar, {
+                centralBody : cesiumWidget.centralBody,
+                imageryProviderViewModels : imageryProviderViewModels,
+                selectedImageryProviderViewModel : options.selectedImageryProviderViewModel,
+                terrainProviderViewModels : terrainProviderViewModels,
+                selectedTerrainProviderViewModel : options.selectedTerrainProviderViewModel
+            });
 
             //Grab the dropdown for resize code.
             var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');

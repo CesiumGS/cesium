@@ -23,7 +23,9 @@ defineSuite([
         document.body.appendChild(container);
 
         var centralBody = new MockCentralBody();
-        var widget = new BaseLayerPicker('testContainer', centralBody);
+        var widget = new BaseLayerPicker('testContainer', {
+            centralBody : centralBody
+        });
         expect(widget.container).toBe(container);
         expect(widget.viewModel.centralBody).toBe(centralBody);
         expect(widget.isDestroyed()).toEqual(false);
@@ -38,7 +40,9 @@ defineSuite([
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker('testContainer', new MockCentralBody());
+        var widget = new BaseLayerPicker('testContainer', {
+            centralBody : new MockCentralBody()
+        });
 
         widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(document.body);
@@ -57,7 +61,9 @@ defineSuite([
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var widget = new BaseLayerPicker('testContainer', new MockCentralBody());
+        var widget = new BaseLayerPicker('testContainer', {
+            centralBody : new MockCentralBody()
+        });
 
         widget.viewModel.dropDownVisible = true;
 
@@ -81,13 +87,17 @@ defineSuite([
 
     it('constructor throws with no element', function() {
         expect(function() {
-            return new BaseLayerPicker(undefined, new MockCentralBody());
+            return new BaseLayerPicker(undefined, {
+                centralBody : new MockCentralBody()
+            });
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
-            return new BaseLayerPicker('does not exist', new MockCentralBody());
+            return new BaseLayerPicker('does not exist', {
+                centralBody : new MockCentralBody()
+            });
         }).toThrowDeveloperError();
     });
 });
