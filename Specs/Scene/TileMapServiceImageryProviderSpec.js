@@ -51,6 +51,20 @@ defineSuite([
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('supports a slash at the end of the URL', function() {
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'

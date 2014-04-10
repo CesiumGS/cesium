@@ -23,6 +23,8 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+* Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 
 ### b27 - 2014-04-01
 

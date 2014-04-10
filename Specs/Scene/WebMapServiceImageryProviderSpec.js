@@ -57,6 +57,21 @@ defineSuite([
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('includes specified parameters in URL', function() {
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
