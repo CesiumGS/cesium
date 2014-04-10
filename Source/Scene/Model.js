@@ -155,6 +155,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number} [options.sizeInMeters=true] Determines if the units for the model are in meters or pixels.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -231,9 +232,25 @@ define([
          * @type {Number}
          *
          * @default 1.0
+         *
+         * @see ModelAnimationCollection#sizeInMeters
          */
         this.scale = defaultValue(options.scale, 1.0);
         this._scale = this.scale;
+
+        /**
+         * Determines if the units for the model are in meters (<code>true</code>) or
+         * pixels (<code>false</code>).  When in pixels, the model will be the same
+         * size on the screen regardless of the viewer's distance to it.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         *
+         * @see ModelAnimationCollection#scale
+         */
+        this.sizeInMeters = defaultValue(options.sizeInMeters, true);
+        this._sizeInMeters = this.sizeInMeters;
 
         /**
          * User-defined object returned when the model is picked.
@@ -383,6 +400,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number} [options.sizeInMeters=true] Determines if the units for the model are in meters or pixels.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -406,6 +424,7 @@ define([
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
+     *   sizeInMeters : false,            // constant pixel size
      *   allowPicking : false,            // not pickable
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
@@ -1868,6 +1887,28 @@ define([
         }
     }
 
+    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    function scaleInPixels(positionWC, context, frameState) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+
+        var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+        var distance = Cartesian3.magnitude(proj);
+
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
+        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
+
+        return pixelScale;
+    }
+
+    var scratchPosition = new Cartesian3();
+
     /**
      * @exception {RuntimeError} Failed to load external reference.
      *
@@ -1909,11 +1950,22 @@ define([
             this._cesiumAnimationsDirty = false;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale);
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || (this._sizeInMeters !== this.sizeInMeters) || !this.sizeInMeters;
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
-                Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
+                this._sizeInMeters = this.sizeInMeters;
+
+                var scale = this.scale;
+                if (!this.sizeInMeters) {
+                    // In pixels
+                    var m = this.modelMatrix;
+                    scratchPosition.x = m[12];
+                    scratchPosition.y = m[13];
+                    scratchPosition.z = m[14];
+                    scale *= scaleInPixels(scratchPosition, context, frameState);
+                }
+                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, this._computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed

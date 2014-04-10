@@ -49,7 +49,7 @@ Beta Releases
 
 * Breaking changes:
    *
-* Added `asynchronous` option to `Model` constructor.
+* Added `sizeInMeters` and `asynchronous` options to `Model`.
 
 ### b27 - 2014-04-01
 

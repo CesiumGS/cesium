@@ -71,6 +71,7 @@ defineSuite([
             modelMatrix : modelMatrix,
             show : false,
             scale : options.scale,
+            sizeInMeters : options.sizeInMeters,
             id : url,        // for picking tests
             asynchronous : options.asynchronous
         }));
@@ -138,6 +139,7 @@ defineSuite([
        expect(duckModel.show).toEqual(false);
        expect(duckModel.modelMatrix).toEqual(modelMatrix);
        expect(duckModel.scale).toEqual(1.0);
+       expect(duckModel.sizeInMeters).toEqual(true);
        expect(duckModel.id).toEqual(duckUrl);
        expect(duckModel.allowPicking).toEqual(true);
        expect(duckModel.activeAnimations).toBeDefined();
@@ -323,8 +325,10 @@ defineSuite([
 
     it('loads cesiumAir', function() {
         cesiumAirModel = loadModel(cesiumAirUrl, {
+            sizeInMeters : true,
             asynchronous : false
         });
+        expect(cesiumAirModel.sizeInMeters).toEqual(true);
         expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
