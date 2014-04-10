@@ -117,7 +117,7 @@ define([
             that._heightmapHeight = parseInt(tileFormat.getAttribute('height'), 10);
             that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, Math.min(that._heightmapWidth, that._heightmapHeight), that._tilingScheme.getNumberOfXTilesAtLevel(0));
 
-            var dataRectangles = xml.getElementsByTagName('DataRectangle');
+            var dataRectangles = xml.getElementsByTagName('DataExtent');
 
             for (var i = 0; i < dataRectangles.length; ++i) {
                 var dataRectangle = dataRectangles[i];
