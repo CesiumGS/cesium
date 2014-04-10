@@ -58,7 +58,7 @@ define([
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
-     * var camera = new Cesium.Camera(context);
+     * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
      * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
@@ -69,13 +69,13 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Cesium Sandcastle Camera Demo</a>
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
-    var Camera = function(context) {
+    var Camera = function(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
-
+        this._scene = scene;
         /**
          * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          *
@@ -147,7 +147,7 @@ define([
          */
         this.frustum = new PerspectiveFrustum();
         this.frustum.fovy = CesiumMath.toRadians(60.0);
-        this.frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
 
         /**
          * The default amount to move the camera when an argument is not
@@ -201,8 +201,6 @@ define([
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
-
-        this._context = context;
 
         this._mode = SceneMode.SCENE3D;
         this._projection = new GeographicProjection();
@@ -1557,8 +1555,8 @@ define([
     var pickPerspXDir = new Cartesian3();
     var pickPerspYDir = new Cartesian3();
     function getPickRayPerspective(camera, windowPosition, result) {
-        var width = camera._context._canvas.clientWidth;
-        var height = camera._context._canvas.clientHeight;
+        var width = camera._scene.canvas.clientWidth;
+        var height = camera._scene.canvas.clientHeight;
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1585,8 +1583,8 @@ define([
     var scratchDirection = new Cartesian3();
 
     function getPickRayOrthographic(camera, windowPosition, result) {
-        var width = camera._context._canvas.clientWidth;
-        var height = camera._context._canvas.clientHeight;
+        var width = camera._scene.canvas.clientWidth;
+        var height = camera._scene.canvas.clientHeight;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         x *= (camera.frustum.right - camera.frustum.left) * 0.5;
@@ -1799,7 +1797,7 @@ define([
      * @returns {Camera} A new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
-        var camera = new Camera(this._context);
+        var camera = new Camera(this._scene);
         camera.position = Cartesian3.clone(this.position);
         camera.direction = Cartesian3.clone(this.direction);
         camera.up = Cartesian3.clone(this.up);
