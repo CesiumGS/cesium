@@ -56,6 +56,50 @@ defineSuite([
         expect(matrix[Matrix4.COLUMN3ROW3]).toEqual(16.0);
     });
 
+    it('can pack and unpack', function() {
+        var array = [];
+        var matrix4 = new Matrix4(
+                1.0, 2.0, 3.0, 4.0,
+                5.0, 6.0, 7.0, 8.0,
+                9.0, 10.0, 11.0, 12.0,
+                13.0, 14.0, 15.0, 16.0);
+        Matrix4.pack(matrix4, array);
+        expect(array.length).toEqual(Matrix4.packedLength);
+        expect(Matrix4.unpack(array)).toEqual(matrix4);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var matrix4 = new Matrix4(
+                1.0, 2.0, 3.0, 4.0,
+                5.0, 6.0, 7.0, 8.0,
+                9.0, 10.0, 11.0, 12.0,
+                13.0, 14.0, 15.0, 16.0);
+
+        Matrix4.pack(matrix4, packed, offset);
+        expect(packed.length).toEqual(offset + Matrix4.packedLength);
+
+        var result = new Matrix4();
+        var returnedResult = Matrix4.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(matrix4);
+    });
+
+    it('pack throws with undefined matrix4', function() {
+        var array = [];
+        expect(function() {
+            Matrix4.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var matrix4 = new Matrix4();
+        expect(function() {
+            Matrix4.pack(matrix4, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
