@@ -164,8 +164,8 @@ define([
         if (imageryProvider._useTiles) {
             url = imageryProvider._url + '/tile/' + level + '/' + y + '/' + x;
         } else {
-            var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
-            var bbox = nativeExtent.west + '%2C' + nativeExtent.south + '%2C' + nativeExtent.east + '%2C' + nativeExtent.north;
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + '%2C' + nativeRectangle.south + '%2C' + nativeRectangle.east + '%2C' + nativeRectangle.north;
 
             url = imageryProvider._url + '/export?';
             url += 'bbox=' + bbox;
@@ -294,20 +294,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 

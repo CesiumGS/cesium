@@ -6,10 +6,10 @@ define([
         '../Core/Color',
         '../Core/destroyObject',
         '../Core/Math',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
-        '../Core/ExtentGeometry',
+        '../Core/RectangleGeometry',
         './EllipsoidSurfaceAppearance',
         './Primitive',
         './Material'
@@ -20,44 +20,44 @@ define([
         Color,
         destroyObject,
         CesiumMath,
-        Extent,
+        Rectangle,
         Ellipsoid,
         GeometryInstance,
-        ExtentGeometry,
+        RectangleGeometry,
         EllipsoidSurfaceAppearance,
         Primitive,
         Material) {
     "use strict";
 
     /**
-     * A renderable rectangular extent.
+     * A renderable rectangular rectangle.
      *
-     * @alias ExtentPrimitive
+     * @alias RectanglePrimitive
      * @constructor
      *
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
-     * @param {Extent} [options.extent=undefined] The extent, which defines the rectangular region to draw.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the rectangle is drawn on.
+     * @param {Rectangle} [options.rectangle=undefined] The rectangle, which defines the rectangular region to draw.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
-     * @param {Number} [options.height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
-     * @param {Number} [options.rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
+     * @param {Number} [options.height=0.0] The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
+     * @param {Number} [options.rotation=0.0] The angle, in radians, relative to north that the rectangle is rotated.  Positive angles rotate counter-clockwise.
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=undefined] The surface appearance of the primitive.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
-     * @param {Boolean} [options.asynchronous=true] Determines if the extent will be created asynchronously or block until ready.
+     * @param {Boolean} [options.asynchronous=true] Determines if the rectangle will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
      * @example
-     * var extentPrimitive = new Cesium.ExtentPrimitive({
-     *   extent : Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * var rectanglePrimitive = new Cesium.RectanglePrimitive({
+     *   rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      * });
-     * primitives.add(extentPrimitive);
+     * primitives.add(rectanglePrimitive);
      */
-    var ExtentPrimitive = function(options) {
+    var RectanglePrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The ellipsoid that the extent is drawn on.
+         * The ellipsoid that the rectangle is drawn on.
          *
          * @type Ellipsoid
          *
@@ -67,18 +67,18 @@ define([
         this._ellipsoid = undefined;
 
         /**
-         * The extent, which defines the rectangular region to draw.
+         * The rectangle, which defines the rectangular region to draw.
          *
-         * @type Extent
+         * @type Rectangle
          *
          * @default undefined
          */
-        this.extent = Extent.clone(options.extent);
-        this._extent = undefined;
+        this.rectangle = Rectangle.clone(options.rectangle);
+        this._rectangle = undefined;
 
         /**
          * The distance, in radians, between each latitude and longitude in the underlying geometry.
-         * A lower granularity fits the curvature of the {@link ExtentPrimitive#ellipsoid} better,
+         * A lower granularity fits the curvature of the {@link RectanglePrimitive#ellipsoid} better,
          * but uses more triangles.
          *
          * @type Number
@@ -89,7 +89,7 @@ define([
         this._granularity = undefined;
 
         /**
-         * The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
+         * The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
          *
          * @type Number
          *
@@ -99,7 +99,7 @@ define([
         this._height = undefined;
 
         /**
-         * The angle, in radians, relative to north that the extent is rotated.
+         * The angle, in radians, relative to north that the rectangle is rotated.
          * Positive angles rotate counter-clockwise.
          *
          * @type Number
@@ -144,17 +144,17 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * extent.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
+         * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * extent.material = Cesium.Material.fromType(Material.StripeType);
+         * rectangle.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = defaultValue(options.material, material);
 
         /**
-         * User-defined object returned when the extent is picked.
+         * User-defined object returned when the rectangle is picked.
          *
          * @type Object
          *
@@ -193,7 +193,7 @@ define([
     /**
      * @private
      */
-    ExtentPrimitive.prototype.update = function(context, frameState, commandList) {
+    RectanglePrimitive.prototype.update = function(context, frameState, commandList) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
@@ -206,11 +206,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this.show || (!defined(this.extent))) {
+        if (!this.show || (!defined(this.rectangle))) {
             return;
         }
 
-        if (!Extent.equals(this._extent, this.extent) ||
+        if (!Rectangle.equals(this._rectangle, this.rectangle) ||
             (this._ellipsoid !== this.ellipsoid) ||
             (this._granularity !== this.granularity) ||
             (this._height !== this.height) ||
@@ -218,7 +218,7 @@ define([
             (this._textureRotationAngle !== this.textureRotationAngle) ||
             (this._id !== this.id)) {
 
-            this._extent = Extent.clone(this.extent, this._extent);
+            this._rectangle = Rectangle.clone(this.rectangle, this._rectangle);
             this._ellipsoid = this.ellipsoid;
             this._granularity = this.granularity;
             this._height = this.height;
@@ -227,8 +227,8 @@ define([
             this._id = this.id;
 
             var instance = new GeometryInstance({
-                geometry : new ExtentGeometry({
-                    extent : this.extent,
+                geometry : new RectangleGeometry({
+                    rectangle : this.rectangle,
                     vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                     ellipsoid : this.ellipsoid,
                     granularity : this.granularity,
@@ -265,13 +265,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see Extent#destroy
+     * @see Rectangle#destroy
      */
-    ExtentPrimitive.prototype.isDestroyed = function() {
+    RectanglePrimitive.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -283,21 +283,21 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Extent#isDestroyed
+     * @see Rectangle#isDestroyed
      *
      * @example
-     * extent = extent && extent.destroy();
+     * rectangle = rectangle && rectangle.destroy();
      */
-    ExtentPrimitive.prototype.destroy = function() {
+    RectanglePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 
-    return ExtentPrimitive;
+    return RectanglePrimitive;
 });

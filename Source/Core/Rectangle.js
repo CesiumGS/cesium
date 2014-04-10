@@ -20,7 +20,7 @@ define([
     /**
      * A two dimensional region specified as longitude and latitude coordinates.
      *
-     * @alias Extent
+     * @alias Rectangle
      * @constructor
      *
      * @param {Number} [west=0.0] The westernmost longitude, in radians, in the range [-Pi, Pi].
@@ -28,7 +28,7 @@ define([
      * @param {Number} [east=0.0] The easternmost longitude, in radians, in the range [-Pi, Pi].
      * @param {Number} [north=0.0] The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
      */
-    var Extent = function(west, south, east, north) {
+    var Rectangle = function(west, south, east, north) {
         /**
          * The westernmost longitude in radians in the range [-Pi, Pi].
          *
@@ -63,29 +63,29 @@ define([
     };
 
     /**
-     * Creates an extent given the boundary longitude and latitude in degrees.
+     * Creates an rectangle given the boundary longitude and latitude in degrees.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
      * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Number} [east=0.0] The easternmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [north=0.0] The northernmost latitude in degrees in the range [-90.0, 90.0].
-     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      *
-     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      *
      * @example
-     * var extent = Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0);
+     * var rectangle = Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0);
      */
-    Extent.fromDegrees = function(west, south, east, north, result) {
+    Rectangle.fromDegrees = function(west, south, east, north, result) {
         west = CesiumMath.toRadians(defaultValue(west, 0.0));
         south = CesiumMath.toRadians(defaultValue(south, 0.0));
         east = CesiumMath.toRadians(defaultValue(east, 0.0));
         north = CesiumMath.toRadians(defaultValue(north, 0.0));
 
         if (!defined(result)) {
-            return new Extent(west, south, east, north);
+            return new Rectangle(west, south, east, north);
         }
 
         result.west = west;
@@ -97,14 +97,14 @@ define([
     };
 
     /**
-     * Creates the smallest possible Extent that encloses all positions in the provided array.
-     * @memberof Extent
+     * Creates the smallest possible Rectangle that encloses all positions in the provided array.
+     * @memberof Rectangle
      *
      * @param {Array} cartographics The list of Cartographic instances.
-     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
-    Extent.fromCartographicArray = function(cartographics, result) {
+    Rectangle.fromCartographicArray = function(cartographics, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartographics)) {
             throw new DeveloperError('cartographics is required.');
@@ -125,7 +125,7 @@ define([
         }
 
         if (!defined(result)) {
-            return new Extent(minLon, minLat, maxLon, maxLat);
+            return new Rectangle(minLon, minLat, maxLon, maxLat);
         }
 
         result.west = minLon;
@@ -136,66 +136,66 @@ define([
     };
 
     /**
-     * Duplicates an Extent.
+     * Duplicates an Rectangle.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent to clone.
-     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
+     * @param {Rectangle} rectangle The rectangle to clone.
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided. (Returns undefined if rectangle is undefined)
      */
-    Extent.clone = function(extent, result) {
-        if (!defined(extent)) {
+    Rectangle.clone = function(rectangle, result) {
+        if (!defined(rectangle)) {
             return undefined;
         }
 
         if (!defined(result)) {
-            return new Extent(extent.west, extent.south, extent.east, extent.north);
+            return new Rectangle(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
         }
 
-        result.west = extent.west;
-        result.south = extent.south;
-        result.east = extent.east;
-        result.north = extent.north;
+        result.west = rectangle.west;
+        result.south = rectangle.south;
+        result.east = rectangle.east;
+        result.north = rectangle.north;
         return result;
     };
 
     /**
-     * Duplicates this Extent.
+     * Duplicates this Rectangle.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} [result] The object onto which to store the result.
-     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @param {Rectangle} [result] The object onto which to store the result.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
-    Extent.prototype.clone = function(result) {
-        return Extent.clone(this, result);
+    Rectangle.prototype.clone = function(result) {
+        return Rectangle.clone(this, result);
     };
 
     /**
-     * Compares the provided Extent with this Extent componentwise and returns
+     * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} [other] The Extent to compare.
-     * @returns {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
+     * @param {Rectangle} [other] The Rectangle to compare.
+     * @returns {Boolean} <code>true</code> if the Rectangles are equal, <code>false</code> otherwise.
      */
-    Extent.prototype.equals = function(other) {
-        return Extent.equals(this, other);
+    Rectangle.prototype.equals = function(other) {
+        return Rectangle.equals(this, other);
     };
 
     /**
-     * Compares the provided extents and returns <code>true</code> if they are equal,
+     * Compares the provided rectangles and returns <code>true</code> if they are equal,
      * <code>false</code> otherwise.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} [left] The first Extent.
-     * @param {Extent} [right] The second Extent.
+     * @param {Rectangle} [left] The first Rectangle.
+     * @param {Rectangle} [right] The second Rectangle.
      *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
-    Extent.equals = function(left, right) {
+    Rectangle.equals = function(left, right) {
         return (left === right) ||
                ((defined(left)) &&
                 (defined(right)) &&
@@ -206,16 +206,16 @@ define([
     };
 
     /**
-     * Compares the provided Extent with this Extent componentwise and returns
+     * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} [other] The Extent to compare.
+     * @param {Rectangle} [other] The Rectangle to compare.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @returns {Boolean} <code>true</code> if the Extents are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if the Rectangles are within the provided epsilon, <code>false</code> otherwise.
      */
-    Extent.prototype.equalsEpsilon = function(other, epsilon) {
+    Rectangle.prototype.equalsEpsilon = function(other, epsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
             throw new DeveloperError('epsilon is required and must be a number.');
@@ -230,22 +230,22 @@ define([
     };
 
     /**
-     * Checks an Extent's properties and throws if they are not in valid ranges.
+     * Checks an Rectangle's properties and throws if they are not in valid ranges.
      *
-     * @param {Extent} extent The extent to validate
+     * @param {Rectangle} rectangle The rectangle to validate
      *
      * @exception {DeveloperError} <code>north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      */
-    Extent.validate = function(extent) {
+    Rectangle.validate = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
 
-        var north = extent.north;
+        var north = rectangle.north;
         if (typeof north !== 'number') {
             throw new DeveloperError('north is required to be a number.');
         }
@@ -254,7 +254,7 @@ define([
             throw new DeveloperError('north must be in the interval [-Pi/2, Pi/2].');
         }
 
-        var south = extent.south;
+        var south = rectangle.south;
         if (typeof south !== 'number') {
             throw new DeveloperError('south is required to be a number.');
         }
@@ -263,7 +263,7 @@ define([
             throw new DeveloperError('south must be in the interval [-Pi/2, Pi/2].');
         }
 
-        var west = extent.west;
+        var west = rectangle.west;
         if (typeof west !== 'number') {
             throw new DeveloperError('west is required to be a number.');
         }
@@ -272,7 +272,7 @@ define([
             throw new DeveloperError('west must be in the interval [-Pi, Pi].');
         }
 
-        var east = extent.east;
+        var east = rectangle.east;
         if (typeof east !== 'number') {
             throw new DeveloperError('east is required to be a number.');
         }
@@ -284,150 +284,150 @@ define([
     };
 
     /**
-     * Computes the southwest corner of an extent.
-     * @memberof Extent
+     * Computes the southwest corner of an rectangle.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent for which to find the corner
+     * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.getSouthwest = function(extent, result) {
+    Rectangle.getSouthwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Cartographic(extent.west, extent.south);
+            return new Cartographic(rectangle.west, rectangle.south);
         }
-        result.longitude = extent.west;
-        result.latitude = extent.south;
+        result.longitude = rectangle.west;
+        result.latitude = rectangle.south;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the northwest corner of an extent.
-     * @memberof Extent
+     * Computes the northwest corner of an rectangle.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent for which to find the corner
+     * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.getNorthwest = function(extent, result) {
+    Rectangle.getNorthwest = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Cartographic(extent.west, extent.north);
+            return new Cartographic(rectangle.west, rectangle.north);
         }
-        result.longitude = extent.west;
-        result.latitude = extent.north;
+        result.longitude = rectangle.west;
+        result.latitude = rectangle.north;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the northeast corner of an extent.
-     * @memberof Extent
+     * Computes the northeast corner of an rectangle.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent for which to find the corner
+     * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.getNortheast = function(extent, result) {
+    Rectangle.getNortheast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Cartographic(extent.east, extent.north);
+            return new Cartographic(rectangle.east, rectangle.north);
         }
-        result.longitude = extent.east;
-        result.latitude = extent.north;
+        result.longitude = rectangle.east;
+        result.latitude = rectangle.north;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the southeast corner of an extent.
-     * @memberof Extent
+     * Computes the southeast corner of an rectangle.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent for which to find the corner
+     * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.getSoutheast = function(extent, result) {
+    Rectangle.getSoutheast = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Cartographic(extent.east, extent.south);
+            return new Cartographic(rectangle.east, rectangle.south);
         }
-        result.longitude = extent.east;
-        result.latitude = extent.south;
+        result.longitude = rectangle.east;
+        result.latitude = rectangle.south;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the center of an extent.
-     * @memberof Extent
+     * Computes the center of an rectangle.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent for which to find the center
+     * @param {Rectangle} rectangle The rectangle for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
-    Extent.getCenter = function(extent, result) {
+    Rectangle.getCenter = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (!defined(result)) {
-            return new Cartographic((extent.west + extent.east) * 0.5, (extent.south + extent.north) * 0.5);
+            return new Cartographic((rectangle.west + rectangle.east) * 0.5, (rectangle.south + rectangle.north) * 0.5);
         }
-        result.longitude = (extent.west + extent.east) * 0.5;
-        result.latitude = (extent.south + extent.north) * 0.5;
+        result.longitude = (rectangle.west + rectangle.east) * 0.5;
+        result.latitude = (rectangle.south + rectangle.north) * 0.5;
         result.height = 0.0;
         return result;
     };
 
     /**
-     * Computes the intersection of two extents
-     * @memberof Extent
+     * Computes the intersection of two rectangles
+     * @memberof Rectangle
      *
-     * @param {Extent} extent On extent to find an intersection
-     * @param otherExtent Another extent to find an intersection
-     * @param {Extent} [result] The object onto which to store the result.
-     * @returns {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @param {Rectangle} rectangle On rectangle to find an intersection
+     * @param otherRectangle Another rectangle to find an intersection
+     * @param {Rectangle} [result] The object onto which to store the result.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
-    Extent.intersectWith = function(extent, otherExtent, result) {
+    Rectangle.intersectWith = function(rectangle, otherRectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
-        if (!defined(otherExtent)) {
-            throw new DeveloperError('otherExtent is required.');
+        if (!defined(otherRectangle)) {
+            throw new DeveloperError('otherRectangle is required.');
         }
         //>>includeEnd('debug');
 
-        var west = Math.max(extent.west, otherExtent.west);
-        var south = Math.max(extent.south, otherExtent.south);
-        var east = Math.min(extent.east, otherExtent.east);
-        var north = Math.min(extent.north, otherExtent.north);
+        var west = Math.max(rectangle.west, otherRectangle.west);
+        var south = Math.max(rectangle.south, otherRectangle.south);
+        var east = Math.min(rectangle.east, otherRectangle.east);
+        var north = Math.min(rectangle.north, otherRectangle.north);
         if (!defined(result)) {
-            return new Extent(west, south, east, north);
+            return new Rectangle(west, south, east, north);
         }
         result.west = west;
         result.south = south;
@@ -437,64 +437,64 @@ define([
     };
 
     /**
-     * Returns true if the cartographic is on or inside the extent, false otherwise.
-     * @memberof Extent
+     * Returns true if the cartographic is on or inside the rectangle, false otherwise.
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent
+     * @param {Rectangle} rectangle The rectangle
      * @param {Cartographic} cartographic The cartographic to test.
-     * @returns {Boolean} true if the provided cartographic is inside the extent, false otherwise.
+     * @returns {Boolean} true if the provided cartographic is inside the rectangle, false otherwise.
      */
-    Extent.contains = function(extent, cartographic) {
+    Rectangle.contains = function(rectangle, cartographic) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         //>>includeEnd('debug');
 
-        return cartographic.longitude >= extent.west &&
-               cartographic.longitude <= extent.east &&
-               cartographic.latitude >= extent.south &&
-               cartographic.latitude <= extent.north;
+        return cartographic.longitude >= rectangle.west &&
+               cartographic.longitude <= rectangle.east &&
+               cartographic.latitude >= rectangle.south &&
+               cartographic.latitude <= rectangle.north;
     };
 
     /**
-     * Determines if the extent is empty, i.e., if <code>west >= east</code>
+     * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
      * or <code>south >= north</code>.
      *
-     * @memberof Extent
+     * @memberof Rectangle
      *
-     * @param {Extent} extent The extent
-     * @returns {Boolean} True if the extent is empty; otherwise, false.
+     * @param {Rectangle} rectangle The rectangle
+     * @returns {Boolean} True if the rectangle is empty; otherwise, false.
      */
-    Extent.isEmpty = function(extent) {
+    Rectangle.isEmpty = function(rectangle) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
-        return extent.west >= extent.east || extent.south >= extent.north;
+        return rectangle.west >= rectangle.east || rectangle.south >= rectangle.north;
     };
 
     var subsampleLlaScratch = new Cartographic();
     /**
-     * Samples an extent so that it includes a list of Cartesian points suitable for passing to
+     * Samples an rectangle so that it includes a list of Cartesian points suitable for passing to
      * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
-     * for extents that cover the poles or cross the equator.
+     * for rectangles that cover the poles or cross the equator.
      *
-     * @param {Extent} extent The extent to subsample.
+     * @param {Rectangle} rectangle The rectangle to subsample.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
-     * @param {Number} [surfaceHeight=0.0] The height of the extent above the ellipsoid.
+     * @param {Number} [surfaceHeight=0.0] The height of the rectangle above the ellipsoid.
      * @param {Array} [result] The array of Cartesians onto which to store the result.
      * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
-    Extent.subsample = function(extent, ellipsoid, surfaceHeight, result) {
+    Rectangle.subsample = function(rectangle, ellipsoid, surfaceHeight, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
@@ -506,10 +506,10 @@ define([
         }
         var length = 0;
 
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
 
         var lla = subsampleLlaScratch;
         lla.height = surfaceHeight;
@@ -561,11 +561,11 @@ define([
     };
 
     /**
-     * The largest possible extent.
-     * @memberof Extent
-     * @type Extent
+     * The largest possible rectangle.
+     * @memberof Rectangle
+     * @type Rectangle
     */
-    Extent.MAX_VALUE = freezeObject(new Extent(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
+    Rectangle.MAX_VALUE = freezeObject(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 
-    return Extent;
+    return Rectangle;
 });

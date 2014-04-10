@@ -14,13 +14,13 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery tile.
-     * @param {Cartesian4} textureCoordinateExtent The texture extent of the tile that is covered
+     * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
      */
-    var TileImagery = function(imagery, textureCoordinateExtent) {
+    var TileImagery = function(imagery, textureCoordinateRectangle) {
         this.readyImagery = undefined;
         this.loadingImagery = imagery;
-        this.textureCoordinateExtent = textureCoordinateExtent;
+        this.textureCoordinateRectangle = textureCoordinateRectangle;
         this.textureTranslationAndScale = undefined;
     };
 
