@@ -130,7 +130,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b26" />
+	<property name="version" value="b27" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -365,8 +365,8 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
-		<!-- create cesiumWorkerBootstrapper -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
+		<!-- create standalone worker files -->
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -375,11 +375,22 @@
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
-		</exec>
+			<srcfile prefix="include=Workers/" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/Workers">
+					<include name="cesiumWorkerBootstrapper.js" />
+					<include name="transferTypedArrayTest.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
 
-		<!-- create each combined worker layer -->
+		<!-- create combined worker layer files -->
 		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
@@ -396,6 +407,7 @@
 					<include name="*.js" />
 					<exclude name="*.profile.js" />
 					<exclude name="cesiumWorkerBootstrapper.js" />
+					<exclude name="transferTypedArrayTest.js" />
 					<exclude name="createTaskProcessorWorker.js" />
 				</fileset>
 				<chainedmapper>
