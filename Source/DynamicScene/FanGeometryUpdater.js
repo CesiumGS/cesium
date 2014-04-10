@@ -67,7 +67,7 @@ define(['../Core/Color',
     };
 
     /**
-     * A {@link GeometryUpdater} for fans.
+     * A {@link GeometryUpdater} for {@link FanGeometry} and {@link FanOutlineGeometry}.
      * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
      * @alias FanGeometryUpdater
      * @constructor

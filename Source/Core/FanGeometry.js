@@ -37,7 +37,7 @@ define([
      *
      * @param {Spherical[]} options.directions The directions, pointing outward from the origin, that defined the fan.
      * @param {Number} options.radius The radius at which to draw the fan.
-     * @param {Boolean} options.perDirectionRadius When set to true, the magnitude of each direction is used in place of a constant radius.
+     * @param {Boolean} [options.perDirectionRadius=false] When set to true, the magnitude of each direction is used in place of a constant radius.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @see FanGeometry#createGeometry
