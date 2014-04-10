@@ -613,23 +613,20 @@ define([
      * @see Label#pixelOffset
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.context, scene.frameState).toString());
+     * console.log(l.computeScreenSpacePosition(scene).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(context, frameState) {
+    Label.prototype.computeScreenSpacePosition = function(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
+        if (!defined(scene)) {
             throw new DeveloperError('context is required.');
-        }
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
         }
         //>>includeEnd('debug');
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = Billboard._computeActualPosition(this._position, frameState, modelMatrix);
+        var actualPosition = Billboard._computeActualPosition(this._position, scene.frameState, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene);
     };
 
     /**

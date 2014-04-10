@@ -139,7 +139,7 @@ define([
         this._context = context;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(context);
+        this._camera = new Camera(this);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
@@ -416,13 +416,38 @@ define([
         },
 
         /**
-         * Gets the context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
-         * @type {Context}
+         * @type {Number}
+         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth'>drawingBufferWidth</a>
          */
-        context : {
+        drawingBufferHeight : {
             get : function() {
-                return this._context;
+                return this._context.drawingBufferHeight;
+            }
+        },
+
+        /**
+         * The drawingBufferHeight of the underlying GL context.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight'>drawingBufferHeight</a>
+         */
+        drawingBufferWidth : {
+            get : function() {
+                return this._context.drawingBufferWidth;
+            }
+        },
+
+        /**
+         * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+         */
+        maximumAliasedLineWidth : {
+            get : function() {
+                return this._context.maximumAliasedLineWidth;
             }
         },
 
@@ -881,7 +906,7 @@ define([
 
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
         var clear = scene._clearColorCommand;
@@ -1032,6 +1057,25 @@ define([
     }
 
     /**
+     * Creates a new texture atlas.
+     *
+     * @memberof Scene
+     *
+     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
+     *
+     * @returns {TextureAtlas} The new texture atlas.
+     *
+     * @see TextureAtlas
+     */
+    Scene.prototype.createTextureAtlas = function(options) {
+        return this._context.createTextureAtlas(options);
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1056,7 +1100,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.context.uniformState;
+        var us = this._context.uniformState;
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1110,12 +1154,11 @@ define([
     var scratchPixelSize = new Cartesian2();
 
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
-        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var drawingBufferWidth = context.drawingBufferWidth;
-        var drawingBufferHeight = context.drawingBufferHeight;
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
@@ -1149,13 +1192,12 @@ define([
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
 
     function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
-        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var drawingBufferWidth = context.drawingBufferWidth;
-        var drawingBufferHeight = context.drawingBufferHeight;
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
@@ -1220,10 +1262,10 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.context.uniformState;
+        var us = context.uniformState;
         var frameState = this._frameState;
 
-        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
@@ -1241,7 +1283,7 @@ define([
         createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (context.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);

@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ExtentPrimitive',
+         'Scene/RectanglePrimitive',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createCamera',
@@ -15,12 +15,12 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Math',
          'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
-         ExtentPrimitive,
+         RectanglePrimitive,
          createContext,
          destroyContext,
          createCamera,
@@ -35,7 +35,7 @@ defineSuite([
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         Extent,
+         Rectangle,
          CesiumMath,
          ClearCommand,
          SceneMode) {
@@ -43,7 +43,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
-    var extent;
+    var rectangle;
     var us;
 
     beforeAll(function() {
@@ -55,24 +55,24 @@ defineSuite([
     });
 
     beforeEach(function() {
-        extent = new ExtentPrimitive();
+        rectangle = new RectanglePrimitive();
 
         us = context.uniformState;
         us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
-        extent = extent && extent.destroy();
+        rectangle = rectangle && rectangle.destroy();
         us = undefined;
     });
 
-    function createExtent(options) {
+    function createRectangle(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var e = new ExtentPrimitive({
+        var e = new RectanglePrimitive({
             ellipsoid : Ellipsoid.UNIT_SPHERE,
             granularity : CesiumMath.toRadians(20.0),
-            extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            rectangle : Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
             id : options.id,
             asynchronous : false,
             debugShowBoundingVolume : options.debugShowBoundingVolume
@@ -83,25 +83,25 @@ defineSuite([
     }
 
     it('gets defaults', function() {
-        expect(extent.show).toEqual(true);
-        expect(extent.ellipsoid).toEqual(Ellipsoid.WGS84);
-        expect(extent.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
-        expect(extent.height).toEqual(0.0);
-        expect(extent.rotation).toEqual(0.0);
-        expect(extent.textureRotationAngle).toEqual(0.0);
-        expect(extent.material.uniforms.color).toEqual({
+        expect(rectangle.show).toEqual(true);
+        expect(rectangle.ellipsoid).toEqual(Ellipsoid.WGS84);
+        expect(rectangle.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
+        expect(rectangle.height).toEqual(0.0);
+        expect(rectangle.rotation).toEqual(0.0);
+        expect(rectangle.textureRotationAngle).toEqual(0.0);
+        expect(rectangle.material.uniforms.color).toEqual({
             red : 1.0,
             green : 1.0,
             blue : 0.0,
             alpha : 0.5
         });
-        expect(extent.asynchronous).toEqual(true);
-        expect(extent.debugShowBoundingVolume).toEqual(false);
+        expect(rectangle.asynchronous).toEqual(true);
+        expect(rectangle.debugShowBoundingVolume).toEqual(false);
     });
 
     it('renders', function() {
-        extent = createExtent();
-        extent.material.uniforms.color = {
+        rectangle = createRectangle();
+        rectangle.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
@@ -111,33 +111,33 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, extent);
+        render(context, frameState, rectangle);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
-        extent = createExtent();
-        extent.material.uniforms.color = {
+        rectangle = createRectangle();
+        rectangle.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
             blue : 0.0,
             alpha : 1.0
         };
-        extent.show = false;
+        rectangle.show = false;
 
-        expect(render(context, frameState, extent)).toEqual(0);
+        expect(render(context, frameState, rectangle)).toEqual(0);
     });
 
-    it('does not render without extent', function() {
-        extent = new ExtentPrimitive();
-        extent.ellipsoid = Ellipsoid.UNIT_SPHERE;
-        extent.granularity = CesiumMath.toRadians(20.0);
-        expect(render(context, frameState, extent)).toEqual(0);
+    it('does not render without rectangle', function() {
+        rectangle = new RectanglePrimitive();
+        rectangle.ellipsoid = Ellipsoid.UNIT_SPHERE;
+        rectangle.granularity = CesiumMath.toRadians(20.0);
+        expect(render(context, frameState, rectangle)).toEqual(0);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        scene.primitives.add(createExtent({
+        scene.primitives.add(createRectangle({
             debugShowBoundingVolume : true
         }));
 
@@ -148,7 +148,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -158,100 +158,100 @@ defineSuite([
     });
 
     it('is picked', function() {
-        extent = createExtent({
+        rectangle = createRectangle({
             id : 'id'
         });
 
-        var pickedObject = pick(context, frameState, extent, 0, 0);
-        expect(pickedObject.primitive).toEqual(extent);
+        var pickedObject = pick(context, frameState, rectangle, 0, 0);
+        expect(pickedObject.primitive).toEqual(rectangle);
         expect(pickedObject.id).toEqual('id');
     });
 
     it('is not picked (show === false)', function() {
-        extent = createExtent();
-        extent.show = false;
+        rectangle = createRectangle();
+        rectangle.show = false;
 
-        var pickedObject = pick(context, frameState, extent, 0, 0);
+        var pickedObject = pick(context, frameState, rectangle, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
     it('is not picked (alpha === 0.0)', function() {
-        extent = createExtent();
-        extent.material.uniforms.color.alpha = 0.0;
+        rectangle = createRectangle();
+        rectangle.material.uniforms.color.alpha = 0.0;
 
-        var pickedObject = pick(context, frameState, extent, 0, 0);
+        var pickedObject = pick(context, frameState, rectangle, 0, 0);
         expect(pickedObject).not.toBeDefined();
     });
 
     it('test 3D bounding sphere', function() {
-        extent = createExtent();
+        rectangle = createRectangle();
         var commandList = [];
-        extent.update(context, frameState, commandList);
+        rectangle.update(context, frameState, commandList);
         var boundingVolume = commandList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
+        expect(boundingVolume).toEqual(BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE));
     });
 
     it('test Columbus view bounding sphere', function() {
-        extent = createExtent();
+        rectangle = createRectangle();
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var commandList = [];
-        extent.update(context, frameState, commandList);
+        rectangle.update(context, frameState, commandList);
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+        var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
         expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
     });
 
     it('test 2D bounding sphere', function() {
-        extent = createExtent();
+        rectangle = createRectangle();
 
         var mode = frameState.mode;
         frameState.mode = SceneMode.SCENE2D;
         var commandList = [];
-        extent.update(context, frameState, commandList);
+        rectangle.update(context, frameState, commandList);
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+        var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
         var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
         b2D.center.x = 0.0;
         expect(boundingVolume).toEqual(b2D);
     });
 
     it('isDestroyed', function() {
-        var e = new ExtentPrimitive();
+        var e = new RectanglePrimitive();
         expect(e.isDestroyed()).toEqual(false);
         e.destroy();
         expect(e.isDestroyed()).toEqual(true);
     });
 
     it('throws when updated/rendered without a ellipsoid', function() {
-        extent = createExtent();
-        extent.ellipsoid = undefined;
+        rectangle = createRectangle();
+        rectangle.ellipsoid = undefined;
 
         expect(function() {
-            extent.update(context, frameState);
+            rectangle.update(context, frameState);
         }).toThrowDeveloperError();
     });
 
     it('throws when updated/rendered without an invalid granularity', function() {
-        extent = createExtent();
-        extent.granularity = -1.0;
+        rectangle = createRectangle();
+        rectangle.granularity = -1.0;
 
         expect(function() {
-            extent.update(context, frameState);
+            rectangle.update(context, frameState);
         }).toThrowDeveloperError();
     });
 
     it('throws when rendered without a material', function() {
-        extent = createExtent();
-        extent.material = undefined;
+        rectangle = createRectangle();
+        rectangle.material = undefined;
 
         expect(function() {
-            render(context, frameState, extent);
+            render(context, frameState, rectangle);
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

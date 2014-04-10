@@ -5,7 +5,7 @@
  * to cut it off sooner because it grows exponentially with increasing latitude.
  * The logic behind this particular cutoff value, which is the one used by
  * Google Maps, Bing Maps, and Esri, is that it makes the projection
- * square.  That is, the extent is equal in the X and Y directions.
+ * square.  That is, the rectangle is equal in the X and Y directions.
  *
  * The constant value is computed as follows:
  *   czm_pi * 0.5 - (2.0 * atan(exp(-czm_pi)))
