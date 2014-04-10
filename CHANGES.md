@@ -3,6 +3,13 @@ Change Log
 
 Beta Releases
 -------------
+### b28 - 2014-05-01
+
+* Breaking changes:
+  * `Context` is now private
+    * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
+    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+    * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
 
 ### b27 - 2014-04-01
 
