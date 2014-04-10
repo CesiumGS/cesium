@@ -105,7 +105,7 @@ defineSuite(['DynamicScene/CompositeMaterialProperty',
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
-        property.intervals.clear();
+        property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
     });

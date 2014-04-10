@@ -297,7 +297,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene.context;
+        var context = viewer.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);

@@ -33,8 +33,8 @@ require(['Cesium'], function(Cesium) {
     // Stripe Material
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-120.0, 30.0, -110.0, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-120.0, 30.0, -110.0, 40.0),
                 vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
@@ -46,8 +46,8 @@ require(['Cesium'], function(Cesium) {
     // Dot Material
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-110.0, 30.0, -100.0, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-110.0, 30.0, -100.0, 40.0),
                 vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
@@ -59,8 +59,8 @@ require(['Cesium'], function(Cesium) {
     // Checkerboard Material
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
                 vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
@@ -72,8 +72,8 @@ require(['Cesium'], function(Cesium) {
     // Grid Material    
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-90.0, 30.0, -80.0, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-90.0, 30.0, -80.0, 40.0),
                 vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
             })
         }),
