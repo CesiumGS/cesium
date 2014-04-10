@@ -23,23 +23,25 @@ define([
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />
-     * The BaseLayerPicker is a single button widget that displays a panel of available imagery
-     * providers.  When an item is selected, the corresponding imagery layer is created and inserted
-     * as the base layer of the imagery collection; removing the existing base.  Each item in the
-     * available providers list contains a name, a representative icon, and a tooltip to display more
-     * information when hovered. The list is initially empty, and must be configured before use, as
-     * illustrated in the below example.
+     * The BaseLayerPicker is a single button widget that displays a panel of available imagery and
+     * terrain providers.  When imagery is selected, the corresponding imagery layer is created and inserted
+     * as the base layer of the imagery collection; removing the existing base.  When terrain is selected,
+     * it replaces the current terrain provider.  Each item in the available providers list contains a name,
+     * a representative icon, and a tooltip to display more information when hovered. The list is initially
+     * empty, and must be configured before use, as illustrated in the below example.
      *
      * @alias BaseLayerPicker
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
-     * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
+     * @param {CentralBody} centralBody The CentralBody to use.
+     * @param {ProviderViewModel[]} [imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
+     * @param {ProviderViewModel[]} [terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
+     * @see TerrainProvider
      * @see ImageryProvider
-     * @see ProviderViewModel
      * @see ImageryLayerCollection
      *
      * @example
@@ -49,8 +51,8 @@ define([
      *
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
-     * var providerViewModels = [];
-     * providerViewModels.push(new Cesium.ProviderViewModel({
+     * var imageryViewModels = [];
+     * imageryViewModels.push(new Cesium.ProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -62,7 +64,7 @@ define([
      *      }
      *  }));
      *
-     *  providerViewModels.push(new Cesium.ProviderViewModel({
+     *  imageryViewModels.push(new Cesium.ProviderViewModel({
      *      name : 'Black Marble',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
@@ -76,7 +78,7 @@ define([
      *      }
      *  }));
      *
-     *  providerViewModels.push(new Cesium.ProviderViewModel({
+     *  imageryViewModels.push(new Cesium.ProviderViewModel({
      *      name : 'Natural Earth\u00a0II',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
@@ -92,10 +94,10 @@ define([
      *
      * //Finally, create the baseLayerPicker widget using our view models.
      * var layers = cesiumWidget.centralBody.imageryLayers;
-     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
+     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
+     * baseLayerPicker.viewModel.selectedItem = imageryViewModels[0];
      */
     var BaseLayerPicker = function(container, centralBody, imageryProviderViewModels, terrainProviderViewModels) {
         //>>includeStart('debug', pragmas.debug);

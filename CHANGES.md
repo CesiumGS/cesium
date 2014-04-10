@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b28 - 2014-05-01
+
+* Breaking changes:
+  * `BaseLayerPicker` has many breaking changes, see [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for details.
+* Added support for terrain selection to `BaseLayerPicker`.
+
 ### b27 - 2014-04-01
 
 * Breaking changes:

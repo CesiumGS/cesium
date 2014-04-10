@@ -22,12 +22,12 @@ define([
      * @alias BaseLayerPickerViewModel
      * @constructor
      *
-     * @param {ImageryLayerCollection} imageryLayers The imagery layer collection to use.
-     * @param {Array} [imageryProviderViewModels=[]] The array of ProviderViewModel instances to use.
+     * @param {CentralBody} centralBody The CentralBody to use.
+     * @param {ProviderViewModel[]} [imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
+     * @param {ProviderViewModel[]} [terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
      *
      * @exception {DeveloperError} imageryProviderViewModels must be an array.
-     *
-     * @see ProviderViewModel
+     * @exception {DeveloperError} terrainProviderViewModels must be an array.
      */
     var BaseLayerPickerViewModel = function(centralBody, imageryProviderViewModels, terrainProviderViewModels) {
         //>>includeStart('debug', pragmas.debug);
@@ -44,19 +44,24 @@ define([
 
         if (!defined(terrainProviderViewModels)) {
             terrainProviderViewModels = [];
-        } else if (!isArray(imageryProviderViewModels)) {
+        } else if (!isArray(terrainProviderViewModels)) {
             throw new DeveloperError('terrainProviderViewModels must be an array');
         }
 
         this._centralBody = centralBody;
 
         /**
-         * Gets or sets an array of ProviderViewModel instances available for selection.
+         * Gets or sets an array of ProviderViewModel instances available for imagery selection.
          * This property is observable.
          * @type {Array}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
+        /**
+         * Gets or sets an array of ProviderViewModel instances available for terrain selection.
+         * This property is observable.
+         * @type {Array}
+         */
         this.terrainProviderViewModels = terrainProviderViewModels.slice(0);
 
         /**
@@ -69,7 +74,7 @@ define([
         knockout.track(this, ['imageryProviderViewModels', 'terrainProviderViewModels', 'dropDownVisible']);
 
         /**
-         * Gets the primary tooltip.  This property is observable.
+         * Gets the button tooltip.  This property is observable.
          * @type {String}
          */
         this.buttonTooltip = undefined;
@@ -89,7 +94,7 @@ define([
         });
 
         /**
-         * Gets the image url of the currently selected item.  This property is observable.
+         * Gets the button background image.  This property is observable.
          * @type {String}
          */
         this.buttonImageUrl = undefined;
@@ -99,7 +104,7 @@ define([
         });
 
         /**
-         * Gets or sets the currently selected item.  This property is observable.
+         * Gets or sets the currently selected imagery.  This property is observable.
          * @type {ProviderViewModel}
          * @default undefined
          */
@@ -146,7 +151,7 @@ define([
         });
 
         /**
-         * Gets or sets the currently selected item.  This property is observable.
+         * Gets or sets the currently selected terrain.  This property is observable.
          * @type {ProviderViewModel}
          * @default undefined
          */
