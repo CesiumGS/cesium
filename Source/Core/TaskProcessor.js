@@ -49,8 +49,6 @@ define([
                 var result = defined(array) && array[0] === value;
                 deferred.resolve(result);
 
-                worker.terminate();
-
                 TaskProcessor._canTransferArrayBuffer = result;
             };
 
