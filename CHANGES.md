@@ -23,6 +23,7 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
   * `Context` is now private
     * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
