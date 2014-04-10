@@ -77,6 +77,21 @@ contributed by the GIS User Community.\nhttp://www.esri.com',
         }));
 
         providerViewModels.push(new ProviderViewModel({
+            name : 'ESRI World Street Map',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriWorldStreetMap.png'),
+            tooltip : '\
+This worldwide street map presents highway-level data for the world. Street-level data includes the United States; much of \
+Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
+Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
+http://www.esri.com',
+            creationFunction : function() {
+                return new ArcGisMapServerImageryProvider({
+                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
             name : 'ESRI National Geographic',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/esriNationalGeographic.png'),
             tooltip : '\
@@ -103,6 +118,19 @@ of the world.\nhttp://www.openstreetmap.org',
         }));
 
         providerViewModels.push(new ProviderViewModel({
+            name : 'Stamen Watercolor',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenWatercolor.png'),
+            tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
+area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://tile.stamen.com/watercolor/',
+                    credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
+                });
+            }
+        }));
+
+        providerViewModels.push(new ProviderViewModel({
             name : 'Stamen Toner',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
@@ -114,6 +142,17 @@ of the world.\nhttp://www.openstreetmap.org',
             }
         }));
 
+        providerViewModels.push(new ProviderViewModel({
+            name : 'MapQuest Open\u00adStreet\u00adMap',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/mapQuestOpenStreetMap.png'),
+            tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
+map of the world.\nhttp://www.openstreetmap.org',
+            creationFunction : function() {
+                return new OpenStreetMapImageryProvider({
+                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
+                });
+            }
+        }));
 
         providerViewModels.push(new ProviderViewModel({
             name : 'The Black Marble',
