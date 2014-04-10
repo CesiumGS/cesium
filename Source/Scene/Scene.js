@@ -423,7 +423,7 @@ define([
          */
         drawingBufferHeight : {
             get : function() {
-                return this._context._gl.drawingBufferHeight;
+                return this._context.drawingBufferHeight;
             }
         },
 
@@ -435,7 +435,7 @@ define([
          */
         drawingBufferWidth : {
             get : function() {
-                return this._context._gl.drawingBufferWidth;
+                return this._context.drawingBufferWidth;
             }
         },
 
@@ -447,7 +447,7 @@ define([
          */
         maximumAliasedLineWidth : {
             get : function() {
-                return this._context._aliasedLineWidthRange[1];
+                return this._context.maximumAliasedLineWidth;
             }
         },
 
