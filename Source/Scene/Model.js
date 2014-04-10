@@ -1902,7 +1902,9 @@ define([
             }
         }
 
-        if ((this.show && this._state === ModelState.LOADED) || justLoaded) {
+        var show = this.show && (this.scale !== 0.0);
+
+        if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
 
@@ -1940,7 +1942,7 @@ define([
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are shown,
         // and then have them visibile immediately when show is set to true.
-        if (this.show) {
+        if (show) {
 // PERFORMANCE_IDEA: This is terriable
             var passes = frameState.passes;
             var i;
