@@ -57,7 +57,7 @@ define([
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
      *          return new Cesium.OpenStreetMapImageryProvider({
-     *              url : 'http://tile.openstreetmap.org/'
+     *              url : '//tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
@@ -69,7 +69,7 @@ define([
      *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
      *          return new Cesium.TileMapServiceImageryProvider({
-     *              url : 'http://cesiumjs.org/blackmarble',
+     *              url : '//cesiumjs.org/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
      *          });

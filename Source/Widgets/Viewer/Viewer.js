@@ -147,14 +147,14 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
-     *         url : 'http://tile.openstreetmap.org/'
+     *         url : '//tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({

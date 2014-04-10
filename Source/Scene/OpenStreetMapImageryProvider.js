@@ -53,13 +53,13 @@ define([
      * @example
      * // OpenStreetMap tile provider
      * var osm = new Cesium.OpenStreetMapImageryProvider({
-     *     url : 'http://tile.openstreetmap.org/'
+     *     url : '//tile.openstreetmap.org/'
      * });
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
         description = defaultValue(description, {});
 
-        var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+        var url = defaultValue(description.url, '//tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';
