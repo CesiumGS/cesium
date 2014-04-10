@@ -3,14 +3,12 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        FeatureDetection,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";

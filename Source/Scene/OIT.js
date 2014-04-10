@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/clone',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/Color',
@@ -14,7 +13,6 @@ define([
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
-        clone,
         defined,
         destroyObject,
         Color,
