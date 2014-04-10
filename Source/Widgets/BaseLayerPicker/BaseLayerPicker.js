@@ -115,7 +115,7 @@ define([
         element.type = 'button';
         element.className = 'cesium-button cesium-toolbar-button';
         element.setAttribute('data-bind', '\
-attr: { title: selectedImageryName },\
+attr: { title: buttonTooltip },\
 click: toggleDropDown');
         container.appendChild(element);
 
@@ -123,7 +123,7 @@ click: toggleDropDown');
         imgElement.setAttribute('draggable', 'false');
         imgElement.className = 'cesium-baseLayerPicker-selected';
         imgElement.setAttribute('data-bind', '\
-attr: { src: selectedImageryIconUrl }');
+attr: { src: buttonImageUrl }');
         element.appendChild(imgElement);
 
         var dropPanel = document.createElement('div');

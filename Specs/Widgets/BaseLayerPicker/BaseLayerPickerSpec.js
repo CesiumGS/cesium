@@ -23,11 +23,9 @@ defineSuite([
         document.body.appendChild(container);
 
         var centralBody = new MockCentralBody();
-        var layers = centralBody.imageryLayers;
-
         var widget = new BaseLayerPicker('testContainer', centralBody);
         expect(widget.container).toBe(container);
-        expect(widget.viewModel.imageryLayers).toBe(layers);
+        expect(widget.viewModel.centralBody).toBe(centralBody);
         expect(widget.isDestroyed()).toEqual(false);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);

@@ -34,7 +34,7 @@ define([
             tooltip : 'CesiumTerrainProvider',
             creationFunction : function() {
                 return new CesiumTerrainProvider({
-                    url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles',
+                    url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
                     credit : 'Terrain data courtesy Analytical Graphics, Inc.'
                 });
             }
@@ -46,7 +46,7 @@ define([
             tooltip : 'CesiumTerrainProvider',
             creationFunction : function() {
                 return new CesiumTerrainProvider({
-                    url : 'http://cesiumjs.org/smallterrain',
+                    url : '//cesiumjs.org/smallterrain',
                     credit : 'Terrain data courtesy Analytical Graphics, Inc.'
                 });
             }

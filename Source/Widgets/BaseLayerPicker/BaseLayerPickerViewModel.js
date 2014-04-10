@@ -69,21 +69,31 @@ define([
         knockout.track(this, ['imageryProviderViewModels', 'terrainProviderViewModels', 'dropDownVisible']);
 
         /**
-         * Gets the currently selected item name.  This property is observable.
+         * Gets the primary tooltip.  This property is observable.
          * @type {String}
          */
-        this.selectedImageryName = undefined;
-        knockout.defineProperty(this, 'selectedImageryName', function() {
-            var selected = this.selectedImagery;
-            return defined(selected) ? selected.name : undefined;
+        this.buttonTooltip = undefined;
+        knockout.defineProperty(this, 'buttonTooltip', function() {
+            var selectedImagery = this.selectedImagery;
+            var selectedTerrain = this.selectedTerrain;
+
+            var imageryTip = defined(selectedImagery) ? selectedImagery.name : undefined;
+            var terrainTip = defined(selectedTerrain) ? selectedTerrain.name : undefined;
+
+            if (defined(imageryTip) && defined(terrainTip)) {
+                return imageryTip + '\n' + terrainTip;
+            } else if (defined(imageryTip)) {
+                return imageryTip;
+            }
+            return terrainTip;
         });
 
         /**
          * Gets the image url of the currently selected item.  This property is observable.
          * @type {String}
          */
-        this.selectedImageryIconUrl = undefined;
-        knockout.defineProperty(this, 'selectedImageryIconUrl', function() {
+        this.buttonImageUrl = undefined;
+        knockout.defineProperty(this, 'buttonImageUrl', function() {
             var viewModel = this.selectedImagery;
             return defined(viewModel) ? viewModel.iconUrl : undefined;
         });
@@ -129,9 +139,8 @@ define([
                         this._currentImageryProviders = [newProviders];
                         imageryLayers.addImageryProvider(newProviders, 0);
                     }
-
-                    selectedImageryViewModel(value);
                 }
+                selectedImageryViewModel(value);
                 this.dropDownVisible = false;
             }
         });
@@ -149,13 +158,14 @@ define([
                 return selectedTerrainViewModel();
             },
             set : function(value) {
+                var newProvider;
                 if (defined(value)) {
-                    var newProvider = value.creationCommand();
-                    this._centralBody.depthTestAgainstTerrain = !(newProvider instanceof EllipsoidTerrainProvider);
-                    this._centralBody.terrainProvider = newProvider;
-                    selectedTerrainViewModel(value);
+                    newProvider = value.creationCommand();
                 }
 
+                this._centralBody.depthTestAgainstTerrain = !(newProvider instanceof EllipsoidTerrainProvider);
+                this._centralBody.terrainProvider = newProvider;
+                selectedTerrainViewModel(value);
                 this.dropDownVisible = false;
             }
         });
@@ -180,14 +190,14 @@ define([
         },
 
         /**
-         * Gets the imagery layer collection.
+         * Gets the centralBody.
          * @memberof BaseLayerPickerViewModel.prototype
          *
-         * @type {ImageryLayerCollection}
+         * @type {CentralBody}
          */
-        imageryLayers : {
+        centralBody : {
             get : function() {
-                return this._centralBody.imageryLayers;
+                return this._centralBody;
             }
         }
     });
