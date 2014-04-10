@@ -39,11 +39,11 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, covered by this tiling scheme.
+         * Gets the rectangle, in radians, covered by this tiling scheme.
          * @memberof TilingScheme.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : DeveloperError.throwInstantiationError
         },
 
@@ -89,21 +89,21 @@ define([
     TilingScheme.prototype.createLevelZeroTiles = DeveloperError.throwInstantiationError;
 
     /**
-     * Transforms an extent specified in geodetic radians to the native coordinate system
+     * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      * @memberof TilingScheme
      * @function
      *
-     * @param {Extent} extent The extent to transform.
-     * @param {Extent} [result] The instance to which to copy the result, or undefined if a new instance
+     * @param {Rectangle} rectangle The rectangle to transform.
+     * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
+     * @returns {Rectangle} The specified 'result', or a new object containing the native rectangle if 'result'
      *          is undefined.
      */
-    TilingScheme.prototype.extentToNativeExtent = DeveloperError.throwInstantiationError;
+    TilingScheme.prototype.rectangleToNativeRectangle = DeveloperError.throwInstantiationError;
 
     /**
-     * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
+     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
      * of the tiling scheme.
      * @memberof TilingScheme
      * @function
@@ -114,13 +114,13 @@ define([
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      *
-     * @returns {Extent} The specified 'result', or a new object containing the extent
+     * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
-    TilingScheme.prototype.tileXYToNativeExtent = DeveloperError.throwInstantiationError;
+    TilingScheme.prototype.tileXYToNativeRectangle = DeveloperError.throwInstantiationError;
 
     /**
-     * Converts tile x, y coordinates and level to a cartographic extent in radians.
+     * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
      * @memberof TilingScheme
      * @function
      *
@@ -130,10 +130,10 @@ define([
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      *
-     * @returns {Extent} The specified 'result', or a new object containing the extent
+     * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
-    TilingScheme.prototype.tileXYToExtent = DeveloperError.throwInstantiationError;
+    TilingScheme.prototype.tileXYToRectangle = DeveloperError.throwInstantiationError;
 
     /**
      * Calculates the tile x, y coordinates of the tile containing

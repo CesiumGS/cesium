@@ -4,7 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/Extent',
+        '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
@@ -15,7 +15,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Extent,
+        Rectangle,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
@@ -431,7 +431,7 @@ define([
 
                     for (var tileIndex = 0; !selectedTile && tileIndex < tilesRenderedByTextureCount.length; ++tileIndex) {
                         var tile = tilesRenderedByTextureCount[tileIndex];
-                        if (Extent.contains(tile.extent, cartographic)) {
+                        if (Rectangle.contains(tile.rectangle, cartographic)) {
                             selectedTile = tile;
                         }
                     }
@@ -783,8 +783,8 @@ define([
                     var oldTile = this._tile;
                     if (newTile !== oldTile) {
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
-                        this.tileText += '<br>SW corner: ' + newTile.extent.west + ', ' + newTile.extent.south;
-                        this.tileText += '<br>NE corner: ' + newTile.extent.east + ', ' + newTile.extent.north;
+                        this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
+                        this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
                         this.tileText += '<br>Min: ' + newTile.minimumHeight + ' Max: ' + newTile.maximumHeight;
                     }
                     this._tile = newTile;

@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ExtentGeometry',
+         'Core/RectangleGeometry',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/GeographicProjection',
          'Core/Math',
          'Core/Matrix2',
          'Core/VertexFormat'
      ], function(
-         ExtentGeometry,
+         RectangleGeometry,
          Cartesian3,
          Ellipsoid,
-         Extent,
+         Rectangle,
          GeographicProjection,
          CesiumMath,
          Matrix2,
@@ -21,10 +21,10 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('computes positions', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0
         }));
         var positions = m.attributes.position.values;
@@ -33,16 +33,16 @@ defineSuite([
         expect(positions.length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent));
-        var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent));
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle));
+        var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
         expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON9);
     });
 
     it('computes all attributes', function() {
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.ALL,
-            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
+            rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
         }));
         expect(m.attributes.position.values.length).toEqual(9 * 3);
@@ -54,11 +54,11 @@ defineSuite([
     });
 
     it('compute positions with rotation', function() {
-        var extent = new Extent(-1, -1, 1, 1);
+        var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITIONS_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             rotation : angle,
             granularity : 1.0
         }));
@@ -68,7 +68,7 @@ defineSuite([
         expect(length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var unrotatedSECorner = Extent.getSoutheast(extent);
+        var unrotatedSECorner = Rectangle.getSoutheast(rectangle);
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);
@@ -79,9 +79,9 @@ defineSuite([
     });
 
     it('compute vertices with PI rotation', function() {
-        var extent = new Extent(-1, -1, 1, 1);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
-            extent : extent,
+        var rectangle = new Rectangle(-1, -1, 1, 1);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            rectangle : rectangle,
             rotation : CesiumMath.PI,
             granularity : 1.0
         }));
@@ -91,8 +91,8 @@ defineSuite([
         expect(length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
 
-        var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent));
-        var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getSoutheast(extent));
+        var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getNorthwest(rectangle));
+        var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getSoutheast(rectangle));
 
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);
         expect(actual).toEqualEpsilon(unrotatedSECorner, CesiumMath.EPSILON8);
@@ -102,11 +102,11 @@ defineSuite([
     });
 
     it('compute texture coordinates with rotation', function() {
-        var extent = new Extent(-1, -1, 1, 1);
+        var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
-            extent : extent,
+            rectangle : rectangle,
             stRotation : angle,
             granularity : 1.0
         }));
@@ -122,16 +122,16 @@ defineSuite([
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
     });
 
-    it('throws without extent', function() {
+    it('throws without rectangle', function() {
         expect(function() {
-            return new ExtentGeometry({});
+            return new RectangleGeometry({});
         }).toThrowDeveloperError();
     });
 
-    it('throws if rotated extent is invalid', function() {
+    it('throws if rotated rectangle is invalid', function() {
         expect(function() {
-            return ExtentGeometry.createGeometry(new ExtentGeometry({
-                extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
+            return RectangleGeometry.createGeometry(new RectangleGeometry({
+                rectangle : new Rectangle(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
         }).toThrowDeveloperError();
@@ -139,25 +139,25 @@ defineSuite([
 
     it('throws if east is less than west', function() {
         expect(function() {
-            return new ExtentGeometry({
-                extent : new Extent(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
+            return new RectangleGeometry({
+                rectangle : new Rectangle(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
             });
         }).toThrowDeveloperError();
     });
 
     it('throws if north is less than south', function() {
         expect(function() {
-            return new ExtentGeometry({
-                extent : new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
+            return new RectangleGeometry({
+                rectangle : new Rectangle(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
             });
         }).toThrowDeveloperError();
     });
 
     it('computes positions extruded', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 2
         }));
@@ -168,9 +168,9 @@ defineSuite([
     });
 
     it('computes all attributes extruded', function() {
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.ALL,
-            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
+            rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             extrudedHeight : 2
         }));
@@ -183,11 +183,11 @@ defineSuite([
     });
 
     it('compute positions with rotation extruded', function() {
-        var extent = new Extent(-1, -1, 1, 1);
+        var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITIONS_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             rotation : angle,
             granularity : 1.0,
             extrudedHeight : 2
@@ -198,7 +198,7 @@ defineSuite([
         expect(length).toEqual((9 + 8 + 4) * 3 * 2);
         expect(m.indices.length).toEqual((8 * 2 + 4 * 4) * 3);
 
-        var unrotatedSECorner = Extent.getSoutheast(extent);
+        var unrotatedSECorner = Rectangle.getSoutheast(rectangle);
         var projection = new GeographicProjection();
         var projectedSECorner = projection.project(unrotatedSECorner);
         var rotation = Matrix2.fromRotation(angle);
@@ -209,10 +209,10 @@ defineSuite([
     });
 
     it('computes extruded top open', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 2,
             closeTop : false
@@ -224,10 +224,10 @@ defineSuite([
     });
 
     it('computes extruded bottom open', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 2,
             closeBottom : false
@@ -239,10 +239,10 @@ defineSuite([
     });
 
     it('computes extruded top and bottom open', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 2,
             closeTop : false,
@@ -254,11 +254,11 @@ defineSuite([
         expect(m.indices.length).toEqual(4 * 3 * 4);
     });
 
-    it('computes non-extruded extent if height is small', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
+    it('computes non-extruded rectangle if height is small', function() {
+        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
+            rectangle : rectangle,
             granularity : 1.0,
             extrudedHeight : 0.1
         }));
