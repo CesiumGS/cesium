@@ -110,14 +110,14 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 

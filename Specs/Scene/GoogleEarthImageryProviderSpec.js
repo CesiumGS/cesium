@@ -6,7 +6,7 @@ defineSuite([
          'Core/FeatureDetection',
          'Core/loadImage',
          'Core/loadWithXhr',
-         'Core/Extent',
+         'Core/Rectangle',
          'Scene/Imagery',
          'Scene/ImageryLayer',
          'Scene/ImageryProvider',
@@ -22,7 +22,7 @@ defineSuite([
          FeatureDetection,
          loadImage,
          loadWithXhr,
-         Extent,
+         Rectangle,
          Imagery,
          ImageryLayer,
          ImageryProvider,
@@ -120,7 +120,7 @@ defineSuite([
             expect(provider.version).toEqual(version);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
 
         waitsFor(function() {
@@ -375,7 +375,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
@@ -410,7 +410,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
@@ -445,7 +445,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
+            expect(provider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
     });
 

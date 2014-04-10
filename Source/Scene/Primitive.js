@@ -60,7 +60,7 @@ define([
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
      * as shown in example 1 below, or from an array of instances, even if the geometry is from different
-     * geometry types, e.g., an {@link ExtentGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
+     * geometry types, e.g., an {@link RectangleGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
      * <p>
      * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
      * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
@@ -113,16 +113,16 @@ define([
      * scene.primitives.add(primitive);
      *
      * // 2. Draw different instances each with a unique color
-     * var extentInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.ExtentGeometry({
+     * var rectangleInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.RectangleGeometry({
      *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
-     *     extent : new Cesium.Extent(
+     *     rectangle : new Cesium.Rectangle(
      *       Cesium.Math.toRadians(-140.0),
      *       Cesium.Math.toRadians(30.0),
      *       Cesium.Math.toRadians(-100.0),
      *       Cesium.Math.toRadians(40.0))
      *     }),
-     *   id : 'extent',
+     *   id : 'rectangle',
      *   attribute : {
      *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
@@ -140,7 +140,7 @@ define([
      *   }
      * });
      * var primitive = new Cesium.Primitive({
-     *   geometryInstances : [extentInstance, ellipsoidInstance],
+     *   geometryInstances : [rectangleInstance, ellipsoidInstance],
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      * scene.primitives.add(primitive);

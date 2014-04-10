@@ -7,7 +7,7 @@ define([
         '../Core/Math',
         '../Core/Cartesian2',
         '../Core/Ellipsoid',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/GeographicProjection',
         './TilingScheme'
     ], function(
@@ -18,7 +18,7 @@ define([
         CesiumMath,
         Cartesian2,
         Ellipsoid,
-        Extent,
+        Rectangle,
         GeographicProjection,
         TilingScheme) {
     "use strict";
@@ -33,7 +33,7 @@ define([
      *
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the tiling scheme.
+     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.
      * @param {Number} [description.numberOfLevelZeroTilesX=2] The number of tiles in the X direction at level zero of
      * the tile tree.
      * @param {Number} [description.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
@@ -43,7 +43,7 @@ define([
         description = defaultValue(description, {});
 
         this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        this._extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        this._rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
         this._projection = new GeographicProjection(this._ellipsoid);
         this._numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 2);
         this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
@@ -63,13 +63,13 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, covered by this tiling scheme.
+         * Gets the rectangle, in radians, covered by this tiling scheme.
          * @memberof GeographicTilingScheme.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
-                return this._extent;
+                return this._rectangle;
             }
         },
 
@@ -122,31 +122,31 @@ define([
     };
 
     /**
-     * Transforms an extent specified in geodetic radians to the native coordinate system
+     * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      *
      * @memberof GeographicTilingScheme
      *
-     * @param {Extent} extent The extent to transform.
-     * @param {Extent} [result] The instance to which to copy the result, or undefined if a new instance
+     * @param {Rectangle} rectangle The rectangle to transform.
+     * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     * @returns {Extent} The specified 'result', or a new object containing the native extent if 'result'
+     * @returns {Rectangle} The specified 'result', or a new object containing the native rectangle if 'result'
      *          is undefined.
      */
-    GeographicTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
+    GeographicTilingScheme.prototype.rectangleToNativeRectangle = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required.');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
-        var west = CesiumMath.toDegrees(extent.west);
-        var south = CesiumMath.toDegrees(extent.south);
-        var east = CesiumMath.toDegrees(extent.east);
-        var north = CesiumMath.toDegrees(extent.north);
+        var west = CesiumMath.toDegrees(rectangle.west);
+        var south = CesiumMath.toDegrees(rectangle.south);
+        var east = CesiumMath.toDegrees(rectangle.east);
+        var north = CesiumMath.toDegrees(rectangle.north);
 
         if (!defined(result)) {
-            return new Extent(west, south, east, north);
+            return new Rectangle(west, south, east, north);
         }
 
         result.west = west;
@@ -157,7 +157,7 @@ define([
     };
 
     /**
-     * Converts tile x, y coordinates and level to an extent expressed in the native coordinates
+     * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
      * of the tiling scheme.
      *
      * @memberof GeographicTilingScheme
@@ -168,20 +168,20 @@ define([
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      *
-     * @returns {Extent} The specified 'result', or a new object containing the extent
+     * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
-    GeographicTilingScheme.prototype.tileXYToNativeExtent = function(x, y, level, result) {
-        var extentRadians = this.tileXYToExtent(x, y, level, result);
-        extentRadians.west = CesiumMath.toDegrees(extentRadians.west);
-        extentRadians.south = CesiumMath.toDegrees(extentRadians.south);
-        extentRadians.east = CesiumMath.toDegrees(extentRadians.east);
-        extentRadians.north = CesiumMath.toDegrees(extentRadians.north);
-        return extentRadians;
+    GeographicTilingScheme.prototype.tileXYToNativeRectangle = function(x, y, level, result) {
+        var rectangleRadians = this.tileXYToRectangle(x, y, level, result);
+        rectangleRadians.west = CesiumMath.toDegrees(rectangleRadians.west);
+        rectangleRadians.south = CesiumMath.toDegrees(rectangleRadians.south);
+        rectangleRadians.east = CesiumMath.toDegrees(rectangleRadians.east);
+        rectangleRadians.north = CesiumMath.toDegrees(rectangleRadians.north);
+        return rectangleRadians;
     };
 
     /**
-     * Converts tile x, y coordinates and level to a cartographic extent in radians.
+     * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
      *
      * @memberof GeographicTilingScheme
      *
@@ -191,25 +191,25 @@ define([
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      *
-     * @returns {Extent} The specified 'result', or a new object containing the extent
+     * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
-    GeographicTilingScheme.prototype.tileXYToExtent = function(x, y, level, result) {
-        var extent = this._extent;
+    GeographicTilingScheme.prototype.tileXYToRectangle = function(x, y, level, result) {
+        var rectangle = this._rectangle;
 
         var xTiles = this.getNumberOfXTilesAtLevel(level);
         var yTiles = this.getNumberOfYTilesAtLevel(level);
 
-        var xTileWidth = (extent.east - extent.west) / xTiles;
-        var west = x * xTileWidth + extent.west;
-        var east = (x + 1) * xTileWidth + extent.west;
+        var xTileWidth = (rectangle.east - rectangle.west) / xTiles;
+        var west = x * xTileWidth + rectangle.west;
+        var east = (x + 1) * xTileWidth + rectangle.west;
 
-        var yTileHeight = (extent.north - extent.south) / yTiles;
-        var north = extent.north - y * yTileHeight;
-        var south = extent.north - (y + 1) * yTileHeight;
+        var yTileHeight = (rectangle.north - rectangle.south) / yTiles;
+        var north = rectangle.north - y * yTileHeight;
+        var south = rectangle.north - (y + 1) * yTileHeight;
 
         if (!defined(result)) {
-            result = new Extent(west, south, east, north);
+            result = new Rectangle(west, south, east, north);
         }
 
         result.west = west;
@@ -234,11 +234,11 @@ define([
      *          if 'result' is undefined.
      */
     GeographicTilingScheme.prototype.positionToTileXY = function(position, level, result) {
-        var extent = this._extent;
-        if (position.latitude > extent.north ||
-            position.latitude < extent.south ||
-            position.longitude < extent.west ||
-            position.longitude > extent.east) {
+        var rectangle = this._rectangle;
+        if (position.latitude > rectangle.north ||
+            position.latitude < rectangle.south ||
+            position.longitude < rectangle.west ||
+            position.longitude > rectangle.east) {
             // outside the bounds of the tiling scheme
             return undefined;
         }
@@ -246,15 +246,15 @@ define([
         var xTiles = this.getNumberOfXTilesAtLevel(level);
         var yTiles = this.getNumberOfYTilesAtLevel(level);
 
-        var xTileWidth = (extent.east - extent.west) / xTiles;
-        var yTileHeight = (extent.north - extent.south) / yTiles;
+        var xTileWidth = (rectangle.east - rectangle.west) / xTiles;
+        var yTileHeight = (rectangle.north - rectangle.south) / yTiles;
 
-        var xTileCoordinate = (position.longitude - extent.west) / xTileWidth | 0;
+        var xTileCoordinate = (position.longitude - rectangle.west) / xTileWidth | 0;
         if (xTileCoordinate >= xTiles) {
             xTileCoordinate = xTiles - 1;
         }
 
-        var yTileCoordinate = (extent.north - position.latitude) / yTileHeight | 0;
+        var yTileCoordinate = (rectangle.north - position.latitude) / yTileHeight | 0;
         if (yTileCoordinate >= yTiles) {
             yTileCoordinate = yTiles - 1;
         }

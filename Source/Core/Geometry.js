@@ -55,7 +55,7 @@ define([
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html">Geometry and Appearances Demo</a>
      *
      * @see PolygonGeometry
-     * @see ExtentGeometry
+     * @see RectangleGeometry
      * @see EllipseGeometry
      * @see CircleGeometry
      * @see WallGeometry

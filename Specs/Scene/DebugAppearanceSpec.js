@@ -3,8 +3,8 @@ defineSuite([
          'Scene/DebugAppearance',
          'Scene/Appearance',
          'Scene/Primitive',
-         'Core/ExtentGeometry',
-         'Core/Extent',
+         'Core/RectangleGeometry',
+         'Core/Rectangle',
          'Core/GeometryInstance',
          'Core/GeometryInstanceAttribute',
          'Core/ComponentDatatype',
@@ -18,8 +18,8 @@ defineSuite([
          DebugAppearance,
          Appearance,
          Primitive,
-         ExtentGeometry,
-         Extent,
+         RectangleGeometry,
+         Rectangle,
          GeometryInstance,
          GeometryInstanceAttribute,
          ComponentDatatype,
@@ -34,21 +34,21 @@ defineSuite([
 
     var context;
     var frameState;
-    var extentInstance;
+    var rectangleInstance;
 
     beforeAll(function() {
         context = createContext();
         frameState = createFrameState();
 
-        var extent = Extent.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-        extentInstance = new GeometryInstance({
-            geometry : new ExtentGeometry({
+        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+        rectangleInstance = new GeometryInstance({
+            geometry : new RectangleGeometry({
                 vertexFormat : VertexFormat.ALL,
-                extent : extent
+                rectangle : rectangle
             })
         });
 
-        frameState.camera.viewExtent(extent);
+        frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
         us.update(context, frameState);
     });
@@ -177,7 +177,7 @@ defineSuite([
 
     it('renders normal', function() {
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'normal'
             }),
@@ -195,7 +195,7 @@ defineSuite([
 
     it('renders binormal', function() {
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
             }),
@@ -213,7 +213,7 @@ defineSuite([
 
     it('renders tangent', function() {
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
             }),
@@ -231,7 +231,7 @@ defineSuite([
 
     it('renders st', function() {
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'st'
             }),
@@ -248,7 +248,7 @@ defineSuite([
     });
 
     it('renders float', function() {
-        extentInstance.attributes = {
+        rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 1,
@@ -256,7 +256,7 @@ defineSuite([
             })
         };
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'float'
@@ -274,7 +274,7 @@ defineSuite([
     });
 
     it('renders vec2', function() {
-        extentInstance.attributes = {
+        rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
@@ -282,7 +282,7 @@ defineSuite([
             })
         };
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec2'
@@ -300,7 +300,7 @@ defineSuite([
     });
 
     it('renders vec3', function() {
-        extentInstance.attributes = {
+        rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
@@ -308,7 +308,7 @@ defineSuite([
             })
         };
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec3'
@@ -326,7 +326,7 @@ defineSuite([
     });
 
     it('renders vec4', function() {
-        extentInstance.attributes = {
+        rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
@@ -334,7 +334,7 @@ defineSuite([
             })
         };
         var primitive = new Primitive({
-            geometryInstances : extentInstance,
+            geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec4'

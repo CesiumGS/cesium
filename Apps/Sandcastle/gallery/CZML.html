@@ -141,8 +141,8 @@ require(['Cesium'], function(Cesium) {
         viewer.dataSources.add(czmlDataSource);
 
         // Zoom in a little closer...
-        var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
-        viewer.scene.camera.viewExtent(extent);
+        var rectangle = new Cesium.Rectangle(-2.056, 0.587, -2.010, 0.633);
+        viewer.scene.camera.viewRectangle(rectangle);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');

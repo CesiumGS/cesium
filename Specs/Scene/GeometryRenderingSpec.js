@@ -7,7 +7,7 @@ defineSuite([
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
          'Core/SphereGeometry',
-         'Core/ExtentGeometry',
+         'Core/RectangleGeometry',
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
          'Core/PolylineGeometry',
@@ -24,7 +24,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Matrix4',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Ellipsoid',
          'Core/PrimitiveType',
          'Core/PolylineVolumeGeometry',
@@ -54,7 +54,7 @@ defineSuite([
          EllipseGeometry,
          EllipsoidGeometry,
          SphereGeometry,
-         ExtentGeometry,
+         RectangleGeometry,
          PolygonGeometry,
          SimplePolylineGeometry,
          PolylineGeometry,
@@ -71,7 +71,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Matrix4,
-         Extent,
+         Rectangle,
          Ellipsoid,
          PrimitiveType,
          PolylineVolumeGeometry,
@@ -677,18 +677,18 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('ExtentGeometry', function() {
+    describe('RectangleGeometry', function() {
         var instance;
-        var extent;
+        var rectangle;
         beforeAll(function() {
-            extent = Extent.fromDegrees(0, 0, 1, 1);
+            rectangle = Rectangle.fromDegrees(0, 0, 1, 1);
             instance = new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    extent : extent
+                    rectangle : rectangle
                 }),
-                id : 'extent',
+                id : 'rectangle',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
@@ -717,10 +717,10 @@ defineSuite([
 
         it('rotated geometry', function() {
             var rotated = new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    extent : extent,
+                    rectangle : rectangle,
                     rotation : CesiumMath.PI_OVER_FOUR
                 }),
                 attributes : {
@@ -732,10 +732,10 @@ defineSuite([
 
         it('rotated texture', function() {
             var rotated = new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    extent : extent,
+                    rectangle : rectangle,
                     stRotation : CesiumMath.PI_OVER_TWO
                 })
             });
@@ -747,10 +747,10 @@ defineSuite([
 
         it('at height', function() {
             var atHeight = new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    extent : extent,
+                    rectangle : rectangle,
                     height : 100000.0
                 }),
                 attributes : {
@@ -761,24 +761,24 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('Extruded ExtentGeometry', function() {
+    describe('Extruded RectangleGeometry', function() {
         var instance;
-        var extent;
+        var rectangle;
         var extrudedHeight;
         var geometryHeight;
         beforeAll(function() {
-            extent = Extent.fromDegrees(-1, -1, 1, 1);
+            rectangle = Rectangle.fromDegrees(-1, -1, 1, 1);
             extrudedHeight = 200000.0;
             geometryHeight = 100000.0;
             instance = new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
-                    extent : extent,
+                    rectangle : rectangle,
                     height : geometryHeight,
                     extrudedHeight : extrudedHeight
                 }),
-                id : 'extent',
+                id : 'rectangle',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }

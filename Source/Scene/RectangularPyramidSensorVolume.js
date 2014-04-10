@@ -69,7 +69,7 @@ define([
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
-         * principal direction and in the direction of the x-axis and y-axis define the extent of the rectangular
+         * principal direction and in the direction of the x-axis and y-axis define the rectangle of the rectangular
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
          * {@link czm_model} and derived uniforms.
          * <br /><br />
