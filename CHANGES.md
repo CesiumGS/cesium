@@ -6,6 +6,23 @@ Beta Releases
 ### b28 - 2014-05-01
 
 * Breaking changes:
+  * Rename Extent to Rectangle
+    * `Extent` -> `Rectangle`
+    * `ExtentGeometry` -> `RectangleGeomtry`
+    * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
+    * `ExtentPrimitive` -> `RectanglePrimitive`
+    * `BoundingRectangle.fromExtent` -> `BoundingRectangle.fromRectangle`
+    * `BoundingSphere.fromExtent2D` -> `BoundingSphere.fromRectangle2D`
+    * `BoundingSphere.fromExtentWithHeights2D` -> `BoundingSphere.fromRectangleWithHeights2D`
+    * `BoundingSphere.fromExtent3D` -> `BoundingSphere.fromRectangle3D`
+    * `EllipsoidalOccluder.computeHorizonCullingPointFromExtent` -> `EllipsoidalOccluder.computeHorizonCullingPointFromRectangle`
+    * `Occluder.computeOccludeePointFromExtent` -> `Occluder.computeOccludeePointFromRectangle`
+    * `Camera.getExtentCameraCoordinates` -> `Camera.getRectangleCameraCoordinates`
+    * `Camera.viewExtent` -> `Camera.viewRectangle`
+    * `CameraFlightPath.createAnimationExtent` -> `CameraFlightPath.createAnimationRectangle`
+    * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
+    * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
+    * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
   * `Context` is now private
     * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
     * `Camera` constructor takes `Scene` as parameter instead of `Context`

@@ -1240,40 +1240,40 @@ define([
         this.up = Cartesian3.cross(this.right, this.direction, this.up);
     };
 
-    var viewExtent3DCartographic = new Cartographic();
-    var viewExtent3DNorthEast = new Cartesian3();
-    var viewExtent3DSouthWest = new Cartesian3();
-    var viewExtent3DNorthWest = new Cartesian3();
-    var viewExtent3DSouthEast = new Cartesian3();
-    var viewExtent3DCenter = new Cartesian3();
+    var viewRectangle3DCartographic = new Cartographic();
+    var viewRectangle3DNorthEast = new Cartesian3();
+    var viewRectangle3DSouthWest = new Cartesian3();
+    var viewRectangle3DNorthWest = new Cartesian3();
+    var viewRectangle3DSouthEast = new Cartesian3();
+    var viewRectangle3DCenter = new Cartesian3();
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
-    function extentCameraPosition3D (camera, extent, ellipsoid, result, positionOnly) {
+    function rectangleCameraPosition3D (camera, rectangle, ellipsoid, result, positionOnly) {
         var cameraRF = camera;
         if (positionOnly) {
             cameraRF = defaultRF;
         }
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
 
         // If we go across the International Date Line
         if (west > east) {
             east += CesiumMath.TWO_PI;
         }
 
-        var cart = viewExtent3DCartographic;
+        var cart = viewRectangle3DCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var northEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthEast);
+        var northEast = ellipsoid.cartographicToCartesian(cart, viewRectangle3DNorthEast);
         cart.latitude = south;
-        var southEast = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthEast);
+        var southEast = ellipsoid.cartographicToCartesian(cart, viewRectangle3DSouthEast);
         cart.longitude = west;
-        var southWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DSouthWest);
+        var southWest = ellipsoid.cartographicToCartesian(cart, viewRectangle3DSouthWest);
         cart.latitude = north;
-        var northWest = ellipsoid.cartographicToCartesian(cart, viewExtent3DNorthWest);
+        var northWest = ellipsoid.cartographicToCartesian(cart, viewRectangle3DNorthWest);
 
-        var center = Cartesian3.subtract(northEast, southWest, viewExtent3DCenter);
+        var center = Cartesian3.subtract(northEast, southWest, viewRectangle3DCenter);
         Cartesian3.multiplyByScalar(center, 0.5, center);
         Cartesian3.add(southWest, center, center);
 
@@ -1318,26 +1318,26 @@ define([
         return Cartesian3.multiplyByScalar(center, scalar, result);
     }
 
-    var viewExtentCVCartographic = new Cartographic();
-    var viewExtentCVNorthEast = new Cartesian3();
-    var viewExtentCVSouthWest = new Cartesian3();
-    function extentCameraPositionColumbusView(camera, extent, projection, result, positionOnly) {
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
+    var viewRectangleCVCartographic = new Cartographic();
+    var viewRectangleCVNorthEast = new Cartesian3();
+    var viewRectangleCVSouthWest = new Cartesian3();
+    function rectangleCameraPositionColumbusView(camera, rectangle, projection, result, positionOnly) {
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
         var invTransform = camera.inverseTransform;
 
-        var cart = viewExtentCVCartographic;
+        var cart = viewRectangleCVCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var northEast = projection.project(cart, viewExtentCVNorthEast);
+        var northEast = projection.project(cart, viewRectangleCVNorthEast);
         Matrix4.multiplyByPoint(camera.transform, northEast, northEast);
         Matrix4.multiplyByPoint(invTransform, northEast, northEast);
 
         cart.longitude = west;
         cart.latitude = south;
-        var southWest = projection.project(cart, viewExtentCVSouthWest);
+        var southWest = projection.project(cart, viewRectangleCVSouthWest);
         Matrix4.multiplyByPoint(camera.transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
@@ -1361,22 +1361,22 @@ define([
         return result;
     }
 
-    var viewExtent2DCartographic = new Cartographic();
-    var viewExtent2DNorthEast = new Cartesian3();
-    var viewExtent2DSouthWest = new Cartesian3();
-    function extentCameraPosition2D (camera, extent, projection, result, positionOnly) {
-        var north = extent.north;
-        var south = extent.south;
-        var east = extent.east;
-        var west = extent.west;
+    var viewRectangle2DCartographic = new Cartographic();
+    var viewRectangle2DNorthEast = new Cartesian3();
+    var viewRectangle2DSouthWest = new Cartesian3();
+    function rectangleCameraPosition2D (camera, rectangle, projection, result, positionOnly) {
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
 
-        var cart = viewExtent2DCartographic;
+        var cart = viewRectangle2DCartographic;
         cart.longitude = east;
         cart.latitude = north;
-        var northEast = projection.project(cart, viewExtent2DNorthEast);
+        var northEast = projection.project(cart, viewRectangle2DNorthEast);
         cart.longitude = west;
         cart.latitude = south;
-        var southWest = projection.project(cart, viewExtent2DSouthWest);
+        var southWest = projection.project(cart, viewRectangle2DSouthWest);
 
         var width = Math.abs(northEast.x - southWest.x) * 0.5;
         var height = Math.abs(northEast.y - southWest.y) * 0.5;
@@ -1420,55 +1420,55 @@ define([
         return result;
     }
     /**
-     * Get the camera position needed to view an extent on an ellipsoid or map
+     * Get the camera position needed to view an rectangle on an ellipsoid or map
      *
      * @memberof Camera
      *
-     * @param {Extent} extent The extent to view.
-     * @param {Cartesian3} [result] The camera position needed to view the extent
+     * @param {Rectangle} rectangle The rectangle to view.
+     * @param {Cartesian3} [result] The camera position needed to view the rectangle
      *
-     * @returns {Cartesian3} The camera position needed to view the extent
+     * @returns {Cartesian3} The camera position needed to view the rectangle
      */
-    Camera.prototype.getExtentCameraCoordinates = function(extent, result) {
+    Camera.prototype.getRectangleCameraCoordinates = function(rectangle, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required');
         }
         //>>includeEnd('debug');
 
         if (this._mode === SceneMode.SCENE3D) {
-            return extentCameraPosition3D(this, extent, this._projection.ellipsoid, result, true);
+            return rectangleCameraPosition3D(this, rectangle, this._projection.ellipsoid, result, true);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            return extentCameraPositionColumbusView(this, extent, this._projection, result, true);
+            return rectangleCameraPositionColumbusView(this, rectangle, this._projection, result, true);
         } else if (this._mode === SceneMode.SCENE2D) {
-            return extentCameraPosition2D(this, extent, this._projection, result, true);
+            return rectangleCameraPosition2D(this, rectangle, this._projection, result, true);
         }
 
         return undefined;
     };
 
     /**
-     * View an extent on an ellipsoid or map.
+     * View an rectangle on an ellipsoid or map.
      *
      * @memberof Camera
      *
-     * @param {Extent} extent The extent to view.
+     * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
      */
-    Camera.prototype.viewExtent = function(extent, ellipsoid) {
+    Camera.prototype.viewRectangle = function(rectangle, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required.');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         if (this._mode === SceneMode.SCENE3D) {
-            extentCameraPosition3D(this, extent, ellipsoid, this.position);
+            rectangleCameraPosition3D(this, rectangle, ellipsoid, this.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            extentCameraPositionColumbusView(this, extent, this._projection, this.position);
+            rectangleCameraPositionColumbusView(this, rectangle, this._projection, this.position);
         } else if (this._mode === SceneMode.SCENE2D) {
-            extentCameraPosition2D(this, extent, this._projection, this.position);
+            rectangleCameraPosition2D(this, rectangle, this._projection, this.position);
         }
     };
 

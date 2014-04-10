@@ -6,7 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Extent',
+        '../../Core/Rectangle',
         '../../Core/Matrix4',
         '../../Scene/Camera',
         '../../Scene/CameraColumbusViewMode',
@@ -21,7 +21,7 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         Matrix4,
         Camera,
         CameraColumbusViewMode,
@@ -46,14 +46,14 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             description = {
-                destination : Extent.MAX_VALUE,
+                destination : Rectangle.MAX_VALUE,
                 duration : duration,
                 endReferenceFrame : new Matrix4(0, 0, 1, 0,
                                                 1, 0, 0, 0,
                                                 0, 1, 0, 0,
                                                 0, 0, 0, 1)
             };
-            flight = CameraFlightPath.createAnimationExtent(scene, description);
+            flight = CameraFlightPath.createAnimationRectangle(scene, description);
             scene.animations.add(flight);
         } else if (mode === SceneMode.SCENE3D) {
             var defaultCamera = new Camera(scene);

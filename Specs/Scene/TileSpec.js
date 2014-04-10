@@ -4,7 +4,7 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/defined',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Math',
          'Scene/CesiumTerrainProvider',
          'Scene/ImageryLayerCollection',
@@ -17,7 +17,7 @@ defineSuite([
          createContext,
          destroyContext,
          defined,
-         Extent,
+         Rectangle,
          CesiumMath,
          CesiumTerrainProvider,
          ImageryLayerCollection,
@@ -35,7 +35,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without description.extent', function() {
+    it('throws without description.rectangle', function() {
         expect(function() {
             return new Tile({
                 x : 0,
@@ -47,7 +47,7 @@ defineSuite([
     it('throws without description.level', function() {
         expect(function() {
             return new Tile({
-                extent : new Extent(
+                rectangle : new Rectangle(
                     -CesiumMath.PI_OVER_FOUR,
                     0.0,
                     CesiumMath.PI_OVER_FOUR,
@@ -69,11 +69,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('creates extent on construction', function() {
+    it('creates rectangle on construction', function() {
         var desc = {tilingScheme : new WebMercatorTilingScheme(), x : 0, y : 0, level : 0};
         var tile = new Tile(desc);
-        var extent = desc.tilingScheme.tileXYToExtent(desc.x, desc.y, desc.level);
-        expect(tile.extent).toEqual(extent);
+        var rectangle = desc.tilingScheme.tileXYToRectangle(desc.x, desc.y, desc.level);
+        expect(tile.rectangle).toEqual(rectangle);
     });
 
     it('throws if constructed improperly', function() {
@@ -87,7 +87,7 @@ defineSuite([
                 y : 0,
                 level : 0,
                 tilingScheme : {
-                    tileXYToExtent : function() {
+                    tileXYToRectangle : function() {
                         return undefined;
                     }
                 }
@@ -99,7 +99,7 @@ defineSuite([
                 y : 0,
                 level : 0,
                 tilingScheme : {
-                    tileXYToExtent : function() {
+                    tileXYToRectangle : function() {
                         return undefined;
                     }
                 }
@@ -111,7 +111,7 @@ defineSuite([
                 x : 0,
                 level : 0,
                 tilingScheme : {
-                    tileXYToExtent : function() {
+                    tileXYToRectangle : function() {
                         return undefined;
                     }
                 }
@@ -123,7 +123,7 @@ defineSuite([
                 x : 0,
                 y : 0,
                 tilingScheme : {
-                    tileXYToExtent : function() {
+                    tileXYToRectangle : function() {
                         return undefined;
                     }
                 }

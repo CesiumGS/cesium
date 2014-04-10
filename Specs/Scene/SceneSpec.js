@@ -6,7 +6,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/BoundingSphere',
          'Core/Event',
-         'Core/Extent',
+         'Core/Rectangle',
          'Renderer/DrawCommand',
          'Renderer/Context',
          'Renderer/Pass',
@@ -17,7 +17,7 @@ defineSuite([
          'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/CompositePrimitive',
-         'Scene/ExtentPrimitive',
+         'Scene/RectanglePrimitive',
          'Scene/FrameState',
          'Scene/OIT',
          'Scene/ScreenSpaceCameraController',
@@ -30,7 +30,7 @@ defineSuite([
          Cartesian3,
          BoundingSphere,
          Event,
-         Extent,
+         Rectangle,
          DrawCommand,
          Context,
          Pass,
@@ -41,7 +41,7 @@ defineSuite([
          AnimationCollection,
          Camera,
          CompositePrimitive,
-         ExtentPrimitive,
+         RectanglePrimitive,
          FrameState,
          OIT,
          ScreenSpaceCameraController,
@@ -215,26 +215,26 @@ defineSuite([
     });
 
     it('opaque/translucent render order (1)', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive1 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive1 = new RectanglePrimitive({
+            rectangle : rectangle,
             asynchronous : false
         });
-        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var extentPrimitive2 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive2 = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        rectanglePrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
         var primitives = scene.primitives;
-        primitives.add(extentPrimitive1);
-        primitives.add(extentPrimitive2);
+        primitives.add(rectanglePrimitive1);
+        primitives.add(rectanglePrimitive2);
 
-        scene.camera.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.initializeFrame();
         scene.render();
@@ -243,7 +243,7 @@ defineSuite([
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
 
-        primitives.raiseToTop(extentPrimitive1);
+        primitives.raiseToTop(rectanglePrimitive1);
 
         scene.initializeFrame();
         scene.render();
@@ -254,26 +254,26 @@ defineSuite([
     });
 
     it('opaque/translucent render order (2)', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive1 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive1 = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var extentPrimitive2 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive2 = new RectanglePrimitive({
+            rectangle : rectangle,
             asynchronous : false
         });
-        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        rectanglePrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
         var primitives = scene.primitives;
-        primitives.add(extentPrimitive1);
-        primitives.add(extentPrimitive2);
+        primitives.add(rectanglePrimitive1);
+        primitives.add(rectanglePrimitive2);
 
-        scene.camera.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.initializeFrame();
         scene.render();
@@ -282,7 +282,7 @@ defineSuite([
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
 
-        primitives.raiseToTop(extentPrimitive1);
+        primitives.raiseToTop(rectanglePrimitive1);
 
         scene.initializeFrame();
         scene.render();
@@ -293,19 +293,19 @@ defineSuite([
     });
 
     it('renders fast path with no translucent primitives', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
         var primitives = scene.primitives;
-        primitives.add(extentPrimitive);
+        primitives.add(rectanglePrimitive);
 
-        scene.camera.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.initializeFrame();
         scene.render();
@@ -316,19 +316,19 @@ defineSuite([
     });
 
     it('renders with OIT and without FXAA', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
 
         var primitives = scene.primitives;
-        primitives.add(extentPrimitive);
+        primitives.add(rectanglePrimitive);
 
-        scene.camera.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.fxaaOrderIndependentTranslucency = false;
         scene.fxaa = false;
@@ -376,19 +376,19 @@ defineSuite([
 
         s.fxaa = true;
 
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
         var primitives = s.primitives;
-        primitives.add(extentPrimitive);
+        primitives.add(rectanglePrimitive);
 
-        s.camera.viewExtent(extent);
+        s.camera.viewRectangle(rectangle);
 
         s.initializeFrame();
         s.render();
@@ -406,19 +406,19 @@ defineSuite([
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = true;
 
-            var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-            var extentPrimitive = new ExtentPrimitive({
-                extent : extent,
+            var rectanglePrimitive = new RectanglePrimitive({
+                rectangle : rectangle,
                 height : 1000.0,
                 asynchronous : false
             });
-            extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
 
             var primitives = s.primitives;
-            primitives.add(extentPrimitive);
+            primitives.add(rectanglePrimitive);
 
-            s.camera.viewExtent(extent);
+            s.camera.viewRectangle(rectangle);
 
             s.initializeFrame();
             s.render();
@@ -437,19 +437,19 @@ defineSuite([
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = false;
 
-            var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-            var extentPrimitive = new ExtentPrimitive({
-                extent : extent,
+            var rectanglePrimitive = new RectanglePrimitive({
+                rectangle : rectangle,
                 height : 1000.0,
                 asynchronous : false
             });
-            extentPrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
 
             var primitives = s.primitives;
-            primitives.add(extentPrimitive);
+            primitives.add(rectanglePrimitive);
 
-            s.camera.viewExtent(extent);
+            s.camera.viewRectangle(rectangle);
 
             s.initializeFrame();
             s.render();

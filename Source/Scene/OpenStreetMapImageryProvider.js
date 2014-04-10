@@ -5,7 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Extent',
+        '../Core/Rectangle',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './Credit'
@@ -15,7 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        Extent,
+        Rectangle,
         ImageryProvider,
         WebMercatorTilingScheme,
         Credit) {
@@ -36,7 +36,7 @@ define([
      * @param {String} [description.url='http://tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
+     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
@@ -78,16 +78,16 @@ define([
         this._minimumLevel = defaultValue(description.minimumLevel, 0);
         this._maximumLevel = defaultValue(description.maximumLevel, 18);
 
-        this._extent = defaultValue(description.extent, this._tilingScheme.extent);
+        this._rectangle = defaultValue(description.rectangle, this._tilingScheme.rectangle);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = this._tilingScheme.positionToTileXY(Extent.getSouthwest(this._extent), this._minimumLevel);
-        var neTile = this._tilingScheme.positionToTileXY(Extent.getNortheast(this._extent), this._minimumLevel);
+        var swTile = this._tilingScheme.positionToTileXY(Rectangle.getSouthwest(this._rectangle), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(Rectangle.getNortheast(this._rectangle), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
-            throw new DeveloperError('The imagery provider\'s extent and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
+            throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
 
         this._errorEvent = new Event();
@@ -226,20 +226,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
          * @memberof OpenStreetMapImageryProviderr.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._extent;
+                return this._rectangle;
             }
         },
 
