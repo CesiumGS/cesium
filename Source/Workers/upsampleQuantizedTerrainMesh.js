@@ -6,7 +6,6 @@ define([
         '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
-        '../Core/FeatureDetection',
         '../Core/Intersections2D',
         '../Core/Math',
         './createTaskProcessorWorker'
@@ -17,7 +16,6 @@ define([
         defined,
         Ellipsoid,
         EllipsoidalOccluder,
-        FeatureDetection,
         Intersections2D,
         CesiumMath,
         createTaskProcessorWorker) {

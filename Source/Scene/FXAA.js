@@ -22,7 +22,6 @@ define([
         RenderbufferFormat,
         FXAAFS) {
     "use strict";
-    /*global WebGLRenderingContext*/
 
     /**
      * @private

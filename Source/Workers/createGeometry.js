@@ -3,14 +3,12 @@ define([
         'require',
         './createTaskProcessorWorker',
         '../Core/defined',
-        '../Scene/PrimitivePipeline',
-        '../ThirdParty/when'
+        '../Scene/PrimitivePipeline'
     ], function(
         require,
         createTaskProcessorWorker,
         defined,
-        PrimitivePipeline,
-        when) {
+        PrimitivePipeline) {
     "use strict";
 
     var moduleCache = {};

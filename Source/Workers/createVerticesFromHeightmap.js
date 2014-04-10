@@ -4,7 +4,6 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Rectangle',
-        '../Core/FeatureDetection',
         '../Core/HeightmapTessellator',
         './createTaskProcessorWorker'
     ], function(
@@ -12,7 +11,6 @@ define([
         Ellipsoid,
         EllipsoidalOccluder,
         Rectangle,
-        FeatureDetection,
         HeightmapTessellator,
         createTaskProcessorWorker) {
     "use strict";
