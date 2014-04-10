@@ -3,7 +3,11 @@ Change Log
 
 Beta Releases
 -------------
+### b27 - 2014-04-01
 
+* Breaking changes:
+  * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
+  
 ### b27 - 2014-04-01
 
 * Breaking changes:
