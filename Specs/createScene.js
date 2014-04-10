@@ -21,7 +21,7 @@ define([
         scene.renderForSpecs = function(time) {
             scene.initializeFrame();
             scene.render(time);
-            return scene.context.readPixels();
+            return scene._context.readPixels();
         };
 
         return scene;

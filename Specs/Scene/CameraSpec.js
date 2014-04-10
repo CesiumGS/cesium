@@ -38,7 +38,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var context;
+    var scene;
     var camera;
 
     var position;
@@ -51,8 +51,8 @@ defineSuite([
     var rotateAmount = CesiumMath.PI_OVER_TWO;
     var zoomAmount = 1.0;
 
-    var FakeContext = function() {
-        this._canvas = {
+    var FakeScene = function() {
+        this.canvas = {
             clientWidth: 512,
             clientHeight: 384
         };
@@ -66,9 +66,9 @@ defineSuite([
         dir = Cartesian3.negate(Cartesian3.UNIT_Z);
         right = Cartesian3.cross(dir, up);
 
-        context = new FakeContext();
+        scene = new FakeScene();
 
-        camera = new Camera(context);
+        camera = new Camera(scene);
         camera.position = Cartesian3.clone(position);
         camera.up = Cartesian3.clone(up);
         camera.direction = Cartesian3.clone(dir);
@@ -943,7 +943,7 @@ defineSuite([
                 CesiumMath.PI_OVER_FOUR,
                 CesiumMath.PI_OVER_TWO);
         var projection = new GeographicProjection();
-        var cam = new Camera(context);
+        var cam = new Camera(scene);
         var frustum = new OrthographicFrustum();
         frustum.right = 1.0;
         frustum.left = -1.0;
@@ -1024,12 +1024,12 @@ defineSuite([
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord, ellipsoid);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -1050,7 +1050,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1059,7 +1059,7 @@ defineSuite([
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
 
-        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -1080,7 +1080,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1089,7 +1089,7 @@ defineSuite([
         camera._mode = SceneMode.SCENE2D;
         camera._projection = projection;
 
-        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5 + 1.0);
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5 + 1.0);
         var p = camera.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c.longitude).toEqual(0.0);
@@ -1116,7 +1116,7 @@ defineSuite([
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
@@ -1129,7 +1129,7 @@ defineSuite([
         camera._mode = SceneMode.COLUMBUS_VIEW;
         camera._projection = projection;
 
-        var windowCoord = new Cartesian2(context._canvas.clientWidth * 0.5, context._canvas.clientHeight * 0.5);
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
@@ -1155,7 +1155,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1211,7 +1211,7 @@ defineSuite([
     });
 
     it('get pick ray perspective', function() {
-        var windowCoord = new Cartesian2(context._canvas.clientWidth / 2, context._canvas.clientHeight);
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth / 2, scene.canvas.clientHeight);
         var ray = camera.getPickRay(windowCoord);
 
         var windowHeight = camera.frustum.near * Math.tan(camera.frustum.fovy * 0.5);
@@ -1230,7 +1230,7 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var windowCoord = new Cartesian2((3.0 / 5.0) * context._canvas.clientWidth, (1.0 - (3.0 / 5.0)) * context._canvas.clientHeight);
+        var windowCoord = new Cartesian2((3.0 / 5.0) * scene.canvas.clientWidth, (1.0 - (3.0 / 5.0)) * scene.canvas.clientHeight);
         var ray = camera.getPickRay(windowCoord);
 
         var cameraPosition = camera.position;
@@ -1250,7 +1250,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1367,7 +1367,7 @@ defineSuite([
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
@@ -1417,7 +1417,7 @@ defineSuite([
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;

@@ -23,6 +23,10 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * `Context` is now private
+    * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
+    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+    * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 
