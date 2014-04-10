@@ -1147,8 +1147,8 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.update(context, frameState, []);
-
-        expect(b.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(0.5, 0.5));
+        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
     it('computes screen space position (2)', function() {
@@ -1158,8 +1158,8 @@ defineSuite([
             pixelOffset : new Cartesian2(1.0, 2.0)
         });
         billboards.update(context, frameState, []);
-
-        expect(b.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(1.5, 2.5));
+        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
     it('computes screen space position (3)', function() {
@@ -1169,8 +1169,8 @@ defineSuite([
             eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
         });
         billboards.update(context, frameState, []);
-
-        var p = b.computeScreenSpacePosition(context, frameState);
+        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var p = b.computeScreenSpacePosition(fakeScene);
         expect(p.x).toBeGreaterThan(0.5);
         expect(p.y).toBeGreaterThan(0.5);
     });
@@ -1180,25 +1180,17 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.remove(b);
-
+        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
         expect(function() {
-            b.computeScreenSpacePosition(context, frameState);
+            b.computeScreenSpacePosition(fakeScene);
         }).toThrowDeveloperError();
     });
 
-    it('throws when computing screen space position without context', function() {
+    it('throws when computing screen space position without scene', function() {
         var b = billboards.add();
 
         expect(function() {
             b.computeScreenSpacePosition();
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when computing screen space position without frame state', function() {
-        var b = billboards.add();
-
-        expect(function() {
-            b.computeScreenSpacePosition(context);
         }).toThrowDeveloperError();
     });
 

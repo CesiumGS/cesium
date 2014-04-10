@@ -126,7 +126,7 @@ define([
         var viewProjection = scene._context.uniformState.viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
-        return SceneTransforms.clipToDrawingBufferCoordinates(scene._context, positionCC, result);
+        return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
     };
 
     var projectedPosition = new Cartesian3();
@@ -196,13 +196,13 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(context, position, result) {
+    SceneTransforms.clipToDrawingBufferCoordinates = function(scene, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
         // Assuming viewport takes up the entire canvas...
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
+        viewport.width = scene.drawingBufferWidth;
+        viewport.height = scene.drawingBufferHeight;
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates

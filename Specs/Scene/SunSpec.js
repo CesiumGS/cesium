@@ -101,8 +101,8 @@ defineSuite([
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
-
-        var command = sun.update(context, frameState);
+        scene._frameState = frameState;
+        var command = sun.update(scene);
         expect(command).not.toBeDefined();
 
         sun.destroy();
@@ -123,8 +123,8 @@ defineSuite([
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
-
-        var command = sun.update(context, frameState);
+        scene._frameState = frameState;
+        var command = sun.update(scene);
         expect(command).not.toBeDefined();
 
         sun.destroy();

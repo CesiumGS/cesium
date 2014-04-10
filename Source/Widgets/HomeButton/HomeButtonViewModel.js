@@ -38,7 +38,6 @@ define([
         controller.ellipsoid = ellipsoid;
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
-        var context = scene._context;
         if (defined(scene) && mode === SceneMode.MORPHING) {
             scene.completeMorph();
         }
@@ -57,7 +56,7 @@ define([
             flight = CameraFlightPath.createAnimationExtent(scene, description);
             scene.animations.add(flight);
         } else if (mode === SceneMode.SCENE3D) {
-            var defaultCamera = new Camera(context);
+            var defaultCamera = new Camera(scene);
             description = {
                 destination : defaultCamera.position,
                 duration : duration,

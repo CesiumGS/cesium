@@ -139,7 +139,7 @@ define([
         this._context = context;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(context);
+        this._camera = new Camera(this);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
@@ -906,7 +906,7 @@ define([
 
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
         var clear = scene._clearColorCommand;
