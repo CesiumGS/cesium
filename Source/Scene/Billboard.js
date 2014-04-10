@@ -101,7 +101,7 @@ define([
         this._collection = defaultValue(options.collection, billboardCollection);
 
         this._pickId = undefined;
-        this._pickIdThis = options._pickIdThis;
+        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
@@ -639,13 +639,35 @@ define([
         },
 
         /**
-         * Gets the user-defined object returned when the billboard is picked.
+         * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
          */
-        id: {
-            get: function() {
+        id : {
+            get : function() {
                 return this._id;
+            },
+            set : function(value) {
+                this._id = value;
+                if (defined(this._pickId)) {
+                    this._pickId.object.id = value;
+                }
+            }
+        },
+
+        /**
+         * The primitive to return when picking this billboard.
+         * @private
+         */
+        pickPrimitive : {
+            get : function() {
+                return this._pickPrimitive;
+            },
+            set : function(value) {
+                this._pickPrimitive = value;
+                if (defined(this._pickId)) {
+                    this._pickId.object.primitive = value;
+                }
             }
         }
     });
@@ -653,7 +675,7 @@ define([
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
-                primitive : defaultValue(this._pickIdThis, this),
+                primitive : this._pickPrimitive,
                 collection : this._collection,
                 id : this._id
             });

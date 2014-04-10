@@ -576,13 +576,23 @@ define([
         },
 
         /**
-         * Gets the user-defined object returned when the label is picked.
+         * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
          * @type {Object}
          */
         id : {
             get : function() {
                 return this._id;
+            },
+            set : function(value) {
+                this._id = value;
+                var glyphs = this._glyphs;
+                for (var i = 0, len = glyphs.length; i < len; i++) {
+                    var glyph = glyphs[i];
+                    if (defined(glyph.billboard)) {
+                        glyph.billboard.id = value;
+                    }
+                }
             }
         }
     });

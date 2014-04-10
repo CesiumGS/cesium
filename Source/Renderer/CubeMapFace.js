@@ -52,6 +52,12 @@ define([
             get : function() {
                 return this._pixelDatatype;
             }
+        },
+
+        _target : {
+            get : function() {
+                return this._targetFace;
+            }
         }
     });
 
@@ -187,14 +193,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.copyTexSubImage2D(this._targetFace, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
         gl.bindTexture(target, null);
-    };
-
-    CubeMapFace.prototype._getTexture = function() {
-        return this._texture;
-    };
-
-    CubeMapFace.prototype._getTarget = function() {
-        return this._targetFace;
     };
 
     return CubeMapFace;

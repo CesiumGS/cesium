@@ -1073,6 +1073,25 @@ defineSuite([
         expect(pickedObject.id).toEqual('id');
     });
 
+    it('can change pick id', function() {
+        billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
+        var b = billboards.add({
+            position : Cartesian3.ZERO,
+            imageIndex : 0,
+            id : 'id'
+        });
+
+        var pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject.primitive).toEqual(b);
+        expect(pickedObject.id).toEqual('id');
+
+        b.id = 'id2';
+
+        pickedObject = pick(context, frameState, billboards, 0, 0);
+        expect(pickedObject.primitive).toEqual(b);
+        expect(pickedObject.id).toEqual('id2');
+    });
+
     it('is not picked', function() {
         billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
         billboards.add({
