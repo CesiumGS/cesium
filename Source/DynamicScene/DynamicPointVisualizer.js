@@ -48,7 +48,7 @@ define([
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene._context.createTextureAtlas();
+        var atlas = this._textureAtlas = scene.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);

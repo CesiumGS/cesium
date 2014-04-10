@@ -1057,6 +1057,25 @@ define([
     }
 
     /**
+     * Creates a new texture atlas.
+     *
+     * @memberof Scene
+     *
+     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
+     *
+     * @returns {TextureAtlas} The new texture atlas.
+     *
+     * @see TextureAtlas
+     */
+    Scene.prototype.createTextureAtlas = function(options) {
+        return this._context.createTextureAtlas(options);
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
