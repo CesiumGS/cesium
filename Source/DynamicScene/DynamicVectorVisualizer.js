@@ -26,32 +26,28 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPolyline
-     * @see Scene
      * @see DynamicObject
-     * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicVectorVisualizer = function(scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
         this._scene = scene;
         this._unusedIndexes = [];
-        this._primitives = scene.getPrimitives();
+        this._primitives = scene.primitives;
         var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.getPrimitives().add(polylineCollection);
+        scene.primitives.add(polylineCollection);
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -98,13 +94,14 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicVectorVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
+
         if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -166,8 +163,8 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicVectorVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._polylineCollection);
+        this.setDynamicObjectCollection(undefined);
+        this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };
 
@@ -189,7 +186,7 @@ define([
             //Remove the existing primitive if we have one
             if (defined(vectorVisualizerIndex)) {
                 polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
-                polyline.setShow(false);
+                polyline.show = false;
                 dynamicObject._vectorVisualizerIndex = undefined;
                 dynamicVectorVisualizer._unusedIndexes.push(vectorVisualizerIndex);
             }
@@ -203,28 +200,28 @@ define([
                 vectorVisualizerIndex = unusedIndexes.pop();
                 polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
             } else {
-                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.getLength();
+                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.length;
                 polyline = dynamicVectorVisualizer._polylineCollection.add();
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
-            polyline.dynamicObject = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
-            polyline.setWidth(1);
-            var material = polyline.getMaterial();
+            polyline.width = 1;
+            var material = polyline.material;
             if (!defined(material) || (material.type !== Material.PolylineArrowType)) {
                 material = Material.fromType(Material.PolylineArrowType);
-                polyline.setMaterial(material);
+                polyline.material = material;
             }
             uniforms = material.uniforms;
             Color.clone(Color.WHITE, uniforms.color);
         } else {
             polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
-            uniforms = polyline.getMaterial().uniforms;
+            uniforms = polyline.material.uniforms;
         }
 
-        polyline.setShow(true);
+        polyline.show = true;
 
         var positions = polyline._visualizerPositions;
         var position = positionProperty.getValue(time, positions[0]);
@@ -232,7 +229,7 @@ define([
         var length = lengthProperty.getValue(time);
         if (defined(position) && defined(direction) && defined(length)) {
             Cartesian3.add(position, Cartesian3.multiplyByScalar(Cartesian3.normalize(direction, direction), length, direction), direction);
-            polyline.setPositions(positions);
+            polyline.positions = positions;
         }
 
         var property = dynamicVector._color;
@@ -244,7 +241,7 @@ define([
         if (defined(property)) {
             var width = property.getValue(time);
             if (defined(width)) {
-                polyline.setWidth(width);
+                polyline.width = width;
             }
         }
     }
@@ -257,7 +254,7 @@ define([
             var vectorVisualizerIndex = dynamicObject._vectorVisualizerIndex;
             if (defined(vectorVisualizerIndex)) {
                 var polyline = thisPolylineCollection.get(vectorVisualizerIndex);
-                polyline.setShow(false);
+                polyline.show = false;
                 thisUnusedIndexes.push(vectorVisualizerIndex);
                 dynamicObject._vectorVisualizerIndex = undefined;
             }

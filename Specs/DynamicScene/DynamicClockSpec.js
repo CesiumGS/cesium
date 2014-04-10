@@ -92,6 +92,6 @@ defineSuite([
         var target = new DynamicClock();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

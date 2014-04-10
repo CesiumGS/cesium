@@ -3,8 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Extent',
         './ImageryState',
         './TerrainState',
         './TileState',
@@ -18,8 +21,11 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         defined,
+        defineProperties,
         DeveloperError,
+        Extent,
         ImageryState,
         TerrainState,
         TileState,
@@ -46,30 +52,28 @@ define([
      * @param {Number} description.y The tile y coordinate.
      * @param {Number} description.level The tile level-of-detail.
      * @param {Tile} description.parent The parent of this tile in a tile tree system.
-     *
-     * @exception {DeveloperError} Either description.extent or both description.x and description.y is required.
-     * @exception {DeveloperError} description.level is required.
      */
     var Tile = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description)) {
             throw new DeveloperError('description is required.');
         }
-
-        if (!defined(description.x) || !defined(description.y)) {
-            if (!defined(description.extent)) {
-                throw new DeveloperError('Either description.extent is required or description.x and description.y are required.');
-            }
+        if (!defined(description.x)) {
+            throw new DeveloperError('description.x is required.');
+        } else if (!defined(description.y)) {
+            throw new DeveloperError('description.y is required.');
         } else if (description.x < 0 || description.y < 0) {
             throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
         }
-
-        if (!defined(description.level) || description.zoom < 0) {
+        if (!defined(description.level)) {
             throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
         }
-
         if (!defined(description.tilingScheme)) {
             throw new DeveloperError('description.tilingScheme is required.');
         }
+        //>>includeEnd('debug');
+
+        this._children = undefined;
 
         /**
          * The tiling scheme used to tile the surface.
@@ -100,13 +104,6 @@ define([
          * @type {Tile}
          */
         this.parent = description.parent;
-
-        /**
-         * The children of this tile in a tiling scheme.
-         * @type {Array}
-         * @default undefined
-         */
-        this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
@@ -227,48 +224,50 @@ define([
         this.upsampledTerrain = undefined;
     };
 
-    /**
-     * Returns an array of tiles that would be at the next level of the tile tree.
-     *
-     * @memberof Tile
-     *
-     * @returns {Array} The list of child tiles.
-     */
-    Tile.prototype.getChildren = function() {
-        if (!defined(this.children)) {
-            var tilingScheme = this.tilingScheme;
-            var level = this.level + 1;
-            var x = this.x * 2;
-            var y = this.y * 2;
-            this.children = [new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x,
-                y : y + 1,
-                level : level,
-                parent : this
-            }), new Tile({
-                tilingScheme : tilingScheme,
-                x : x + 1,
-                y : y + 1,
-                level : level,
-                parent : this
-            })];
-        }
+    defineProperties(Tile.prototype, {
+        /**
+         * An array of tiles that would be at the next level of the tile tree.
+         * @memberof Tile.prototype
+         * @type {Array}
+         */
+        children : {
+            get : function() {
+                if (!defined(this._children)) {
+                    var tilingScheme = this.tilingScheme;
+                    var level = this.level + 1;
+                    var x = this.x * 2;
+                    var y = this.y * 2;
+                    this._children = [new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    }), new Tile({
+                        tilingScheme : tilingScheme,
+                        x : x + 1,
+                        y : y + 1,
+                        level : level,
+                        parent : this
+                    })];
+                }
 
-        return this.children;
-    };
+                return this._children;
+            }
+        }
+    });
 
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
@@ -301,11 +300,11 @@ define([
         }
         this.imagery.length = 0;
 
-        if (defined(this.children)) {
-            for (i = 0, len = this.children.length; i < len; ++i) {
-                this.children[i].freeResources();
+        if (defined(this._children)) {
+            for (i = 0, len = this._children.length; i < len; ++i) {
+                this._children[i].freeResources();
             }
-            this.children = undefined;
+            this._children = undefined;
         }
 
         this.freeVertexArray();
@@ -315,7 +314,7 @@ define([
         var indexBuffer;
 
         if (defined(this.vertexArray)) {
-            indexBuffer = this.vertexArray.getIndexBuffer();
+            indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
@@ -329,7 +328,7 @@ define([
         }
 
         if (typeof this.wireframeVertexArray !== 'undefined') {
-            indexBuffer = this.wireframeVertexArray.getIndexBuffer();
+            indexBuffer = this.wireframeVertexArray.indexBuffer;
 
             this.wireframeVertexArray.destroy();
             this.wireframeVertexArray = undefined;
@@ -369,7 +368,7 @@ define([
 
             if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
                 var imageryLayer = tileImagery.loadingImagery.imageryLayer;
-                if (imageryLayer.getImageryProvider().isReady()) {
+                if (imageryLayer.imageryProvider.ready) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
                     tileImagery.freeResources();
@@ -402,8 +401,9 @@ define([
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
-    var southeastScratch = new Cartesian3();
-    var northwestScratch = new Cartesian3();
+    var westernMidpointScratch = new Cartesian3();
+    var easternMidpointScratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
 
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var upsampleTileDetails = getUpsampleTileDetails(tile);
@@ -416,39 +416,49 @@ define([
         }
 
         // Map imagery tiles to this terrain tile
-        for (var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
+        for (var i = 0, len = imageryLayerCollection.length; i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 layer._createTileImagerySkeletons(tile, terrainProvider);
             }
         }
 
-        var ellipsoid = tile.tilingScheme.getEllipsoid();
+        var ellipsoid = tile.tilingScheme.ellipsoid;
 
         // Compute tile extent boundaries for estimating the distance to the tile.
         var extent = tile.extent;
-        ellipsoid.cartographicToCartesian(extent.getSouthwest(), tile.southwestCornerCartesian);
-        var southeastCornerCartesian = ellipsoid.cartographicToCartesian(extent.getSoutheast(), southeastScratch);
-        ellipsoid.cartographicToCartesian(extent.getNortheast(), tile.northeastCornerCartesian);
-        var northwestCornerCartesian = ellipsoid.cartographicToCartesian(extent.getNorthwest(), northwestScratch);
 
-        Cartesian3.negate(tile.southwestCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(Cartesian3.UNIT_Z, cartesian3Scratch, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.westNormal);
+        ellipsoid.cartographicToCartesian(Extent.getSouthwest(extent), tile.southwestCornerCartesian);
+        ellipsoid.cartographicToCartesian(Extent.getNortheast(extent), tile.northeastCornerCartesian);
 
-        Cartesian3.negate(tile.northeastCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch, Cartesian3.UNIT_Z, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.eastNormal);
+        // The middle latitude on the western edge.
+        cartographicScratch.longitude = extent.west;
+        cartographicScratch.latitude = (extent.south + extent.north) * 0.5;
+        cartographicScratch.height = 0.0;
+        var westernMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, westernMidpointScratch);
 
-        ellipsoid.geodeticSurfaceNormal(southeastCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(tile.southwestCornerCartesian, southeastCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.southNormal);
+        // Compute the normal of the plane on the western edge of the tile.
+        var westNormal = Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
+        Cartesian3.normalize(westNormal, tile.westNormal);
 
-        ellipsoid.geodeticSurfaceNormal(northwestCornerCartesian, cartesian3Scratch2);
-        Cartesian3.subtract(tile.northeastCornerCartesian, northwestCornerCartesian, cartesian3Scratch);
-        Cartesian3.cross(cartesian3Scratch2, cartesian3Scratch, cartesian3Scratch);
-        Cartesian3.normalize(cartesian3Scratch, tile.northNormal);
+        // The middle latitude on the eastern edge.
+        cartographicScratch.longitude = extent.east;
+        var easternMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, easternMidpointScratch);
+
+        // Compute the normal of the plane on the eastern edge of the tile.
+        var eastNormal = Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
+        Cartesian3.normalize(eastNormal, tile.eastNormal);
+
+        // Compute the normal of the plane bounding the southern edge of the tile.
+        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getSoutheast(extent), cartesian3Scratch2);
+        var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
+        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
+        Cartesian3.normalize(southNormal, tile.southNormal);
+
+        // Compute the normal of the plane bounding the northern edge of the tile.
+        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Extent.getNorthwest(extent), cartesian3Scratch2);
+        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
+        Cartesian3.normalize(northNormal, tile.northNormal);
     }
 
     function processTerrainStateMachine(tile, context, terrainProvider) {
@@ -467,7 +477,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    var waterMask = tile.terrainData.getWaterMask();
+                    var waterMask = tile.terrainData.waterMask;
                     if (defined(waterMask)) {
                         if (defined(tile.waterMaskTexture)) {
                             --tile.waterMaskTexture.referenceCount;
@@ -718,7 +728,7 @@ define([
                 });
             }
 
-            result.setSampler(waterMaskData.sampler);
+            result.sampler = waterMaskData.sampler;
         }
 
         ++result.referenceCount;

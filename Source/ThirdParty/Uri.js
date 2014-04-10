@@ -242,19 +242,20 @@ define(function() {
 		this.path = output.join('/');
 	};
 
-	/**
-	 * Resolves a relative URI against an absolute base URI.
-	 * Convenience method.
-	 * @param {String} uri the relative URI to resolve
-	 * @param {String} baseURI the base URI (must be absolute) to resolve against
-	 */
-	URI.resolve = function(sURI, sBaseURI) {
-		var uri = cache[sURI] || (cache[sURI] = new URI(sURI));
-		var baseURI = cache[sBaseURI] || (cache[sBaseURI] = new URI(sBaseURI));
-		return uri.resolve(baseURI).toString();
-	};
+	// We don't like this function because it builds up a cache that is never cleared.
+//	/**
+//	 * Resolves a relative URI against an absolute base URI.
+//	 * Convenience method.
+//	 * @param {String} uri the relative URI to resolve
+//	 * @param {String} baseURI the base URI (must be absolute) to resolve against
+//	 */
+//	URI.resolve = function(sURI, sBaseURI) {
+//		var uri = cache[sURI] || (cache[sURI] = new URI(sURI));
+//		var baseURI = cache[sBaseURI] || (cache[sBaseURI] = new URI(sBaseURI));
+//		return uri.resolve(baseURI).toString();
+//	};
 
-	var cache = {};
+//	var cache = {};
 
 	/**
 	 * Serialises the URI to a string.

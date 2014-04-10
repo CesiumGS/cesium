@@ -26,19 +26,16 @@ define([
      *        of the index before which the itemToFind should be inserted in order to maintain the
      *        sorted order of the array.
      *
-     * @exception {DeveloperError} <code>array</code> is required.
-     * @exception {DeveloperError} <code>toFind</code> is required.
-     * @exception {DeveloperError} <code>comparator</code> is required.
-     *
      * @example
      * // Create a comparator function to search through an array of numbers.
      * var comparator = function (a, b) {
      *     return a - b;
      * };
      * var numbers = [0, 2, 4, 6, 8];
-     * var index = binarySearch(numbers, 6, comparator); // 3
+     * var index = Cesium.binarySearch(numbers, 6, comparator); // 3
      */
     var binarySearch = function(array, itemToFind, comparator) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required.');
         }
@@ -48,6 +45,7 @@ define([
         if (!defined(comparator)) {
             throw new DeveloperError('comparator is required.');
         }
+        //>>includeEnd('debug');
 
         var low = 0;
         var high = array.length - 1;

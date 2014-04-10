@@ -1,10 +1,5 @@
 /*global define*/
-define([
-        './defined',
-        './DeveloperError'
-    ], function(
-        defined,
-        DeveloperError) {
+define(function() {
     "use strict";
 
     /**

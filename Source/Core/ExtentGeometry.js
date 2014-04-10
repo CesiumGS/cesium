@@ -632,7 +632,6 @@ define([
      * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      *
-     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
@@ -644,22 +643,22 @@ define([
      *
      * @example
      * // 1. create an extent
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      *
      * // 2. create an extruded extent without a top
-     * var extent = new ExtentGeometry({
-     *   ellipsoid : Ellipsoid.WGS84,
-     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     * var extent = new Cesium.ExtentGeometry({
+     *   ellipsoid : Cesium.Ellipsoid.WGS84,
+     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
-     * var geometry = ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -672,18 +671,18 @@ define([
         var stRotation = options.stRotation;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
-
-        extent.validate();
+        Extent.validate(extent);
         if (extent.east < extent.west) {
             throw new DeveloperError('options.extent.east must be greater than options.extent.west');
         }
-
         if (extent.north < extent.south) {
             throw new DeveloperError('options.extent.north must be greater than options.extent.south');
         }
+        //>>includeEnd('debug');
 
         this._extent = extent;
         this._granularity = granularity;
@@ -724,11 +723,11 @@ define([
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var radiiSquared = ellipsoid.getRadiiSquared();
+        var radiiSquared = ellipsoid.radiiSquared;
 
         Extent.clone(extent, stExtent);
-        extent.getNorthwest(nwCartographic);
-        extent.getCenter(centerCartographic);
+        Extent.getNorthwest(extent, nwCartographic);
+        Extent.getCenter(extent, centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;

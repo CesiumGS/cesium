@@ -38,8 +38,8 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var us = context.uniformState;
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -57,8 +57,8 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var us = context.uniformState;
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.5, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -74,8 +74,8 @@ defineSuite([
         var s = new SkyAtmosphere();
         s.show = false;
 
-        var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var us = context.uniformState;
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         us.update(context, frameState);
@@ -87,8 +87,8 @@ defineSuite([
     it('does not render in 2D', function() {
         var s = new SkyAtmosphere();
 
-        var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var us = context.uniformState;
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.mode = SceneMode.SCENE2D;
@@ -101,8 +101,8 @@ defineSuite([
     it('does not render without a color pass', function() {
         var s = new SkyAtmosphere();
 
-        var us = context.getUniformState();
-        var radii = Ellipsoid.WGS84.getRadii();
+        var us = context.uniformState;
+        var radii = Ellipsoid.WGS84.radii;
         var frameState = createFrameState(createCamera(
             context, new Cartesian3(radii.x * 0.1, 0.0, radii.z * 1.005), new Cartesian3(0.0, 0.0, radii.z * 1.005), Cartesian3.UNIT_Z, 1.0, 20000000.0));
         frameState.passes.render = false;
@@ -114,7 +114,7 @@ defineSuite([
 
     it('gets ellipsoid', function() {
         var s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
-        expect(s.getEllipsoid()).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(s.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     it('isDestroyed', function() {

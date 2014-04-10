@@ -29,8 +29,8 @@ defineSuite([
         expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
-        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqual(expectedNWCorner);
+        var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Extent.getNorthwest(extent));
+        expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
     it('compute positions with rotation', function() {
@@ -47,7 +47,7 @@ defineSuite([
         expect(length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
 
-        var unrotatedNWCorner = extent.getNorthwest();
+        var unrotatedNWCorner = Extent.getNorthwest(extent);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);
@@ -60,7 +60,7 @@ defineSuite([
     it('throws without extent', function() {
         expect(function() {
             return new ExtentOutlineGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if rotated extent is invalid', function() {
@@ -69,7 +69,23 @@ defineSuite([
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if east is less than west', function() {
+        expect(function() {
+            return new ExtentOutlineGeometry({
+                extent : new Extent(CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO)
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if north is less than south', function() {
+        expect(function() {
+            return new ExtentOutlineGeometry({
+                extent : new Extent(-CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO, -CesiumMath.PI_OVER_TWO)
+            });
+        }).toThrowDeveloperError();
     });
 
     it('computes positions extruded', function() {
@@ -100,7 +116,7 @@ defineSuite([
         expect(length).toEqual(8 * 3 * 2);
         expect(m.indices.length).toEqual(8 * 2 * 2 + 4 * 2);
 
-        var unrotatedNWCorner = extent.getNorthwest();
+        var unrotatedNWCorner = Extent.getNorthwest(extent);
         var projection = new GeographicProjection();
         var projectedNWCorner = projection.project(unrotatedNWCorner);
         var rotation = Matrix2.fromRotation(angle);

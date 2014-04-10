@@ -26,35 +26,32 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicPoint
      * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicBillboardVisualizer
      * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensorr
+     * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicPointVisualizer = function(scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
-        billboardCollection.setTextureAtlas(atlas);
-        scene.getPrimitives().add(billboardCollection);
+        billboardCollection.textureAtlas = atlas;
+        scene.primitives.add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -100,13 +97,14 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicPointVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
+
         if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -165,8 +163,8 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPointVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._billboardCollection);
+        this.setDynamicObjectCollection(undefined);
+        this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
@@ -194,8 +192,8 @@ define([
             //don't bother creating or updating anything else
             if (defined(pointVisualizerIndex)) {
                 billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 dynamicObject._pointVisualizerIndex = undefined;
                 dynamicPointVisualizer._unusedIndexes.push(pointVisualizerIndex);
             }
@@ -210,11 +208,11 @@ define([
                 pointVisualizerIndex = unusedIndexes.pop();
                 billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
             } else {
-                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.getLength();
+                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.length;
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard.dynamicObject = dynamicObject;
+            billboard.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
@@ -226,11 +224,11 @@ define([
             billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
         }
 
-        billboard.setShow(true);
+        billboard.show = true;
 
         position = positionProperty.getValue(time, position);
         if (defined(position)) {
-            billboard.setPosition(position);
+            billboard.position = position;
         }
 
         var property = dynamicPoint._color;
@@ -273,12 +271,14 @@ define([
         if (defined(property)) {
             scaleByDistance = property.getValue(time, scaleByDistance);
             if (defined(scaleByDistance)) {
-                billboard.setScaleByDistance(scaleByDistance);
+                billboard.scaleByDistance = scaleByDistance;
             }
         }
 
         if (needRedraw) {
-            var cssColor = defaultValue(billboard._visualizerColor, Color.WHITE).toCssColorString();
+            var centerColor = defaultValue(billboard._visualizerColor, Color.WHITE);
+            var centerAlpha = centerColor.alpha;
+            var cssColor = centerColor.toCssColorString();
             var cssOutlineColor = defaultValue(billboard._visualizerOutlineColor, Color.BLACK).toCssColorString();
             var cssPixelSize = defaultValue(billboard._visualizerPixelSize, 3);
             var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
@@ -299,6 +299,17 @@ define([
                     context2D.closePath();
                     context2D.fillStyle = cssOutlineColor;
                     context2D.fill();
+                    // Punch a hole in the center if needed.
+                    if (centerAlpha < 1.0) {
+                        context2D.save();
+                        context2D.globalCompositeOperation = 'destination-out';
+                        context2D.beginPath();
+                        context2D.arc(length / 2, length / 2, cssPixelSize / 2, 0, 2 * Math.PI, true);
+                        context2D.closePath();
+                        context2D.fillStyle = 'black';
+                        context2D.fill();
+                        context2D.restore();
+                    }
                 }
 
                 context2D.beginPath();
@@ -309,7 +320,7 @@ define([
 
                 loadedCallback(canvas);
             }, function(imageIndex) {
-                billboard.setImageIndex(imageIndex);
+                billboard.imageIndex = imageIndex;
             });
         }
     }
@@ -322,8 +333,8 @@ define([
             var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
             if (defined(pointVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(pointVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 dynamicObject._pointVisualizerIndex = undefined;
                 thisUnusedIndexes.push(pointVisualizerIndex);
             }

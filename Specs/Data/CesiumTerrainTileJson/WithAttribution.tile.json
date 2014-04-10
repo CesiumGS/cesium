@@ -1,0 +1,10 @@
+{
+    "tilejson": "2.1.0",
+    "format" : "heightmap-1.0",
+    "version" : "1.0.0",
+    "scheme" : "tms",
+    "attribution" : "This amazing data is courtesy The Amazing Data Source!",
+    "tiles" : [
+        "{z}/{x}/{y}.terrain?v={version}"
+    ]
+}

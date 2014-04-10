@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
@@ -26,13 +27,13 @@ define([
         './ImageryState',
         './TileImagery',
         './TerrainProvider',
-        './TexturePool',
         '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         BoundingRectangle,
         ComponentDatatype,
@@ -57,7 +58,6 @@ define([
         ImageryState,
         TileImagery,
         TerrainProvider,
-        TexturePool,
         when,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS) {
@@ -232,7 +232,6 @@ define([
         this._maximumAnisotropy = description.maximumAnisotropy;
 
         this._imageryCache = {};
-        this._texturePool = new TexturePool();
 
         this._skeletonPlaceholder = new TileImagery(Imagery.createPlaceholder(this));
 
@@ -247,6 +246,35 @@ define([
 
         this._requestImageError = undefined;
     };
+
+    defineProperties(ImageryLayer.prototype, {
+
+        /**
+         * Gets the imagery provider for this layer.
+         * @memberof ImageryLayer.prototype
+         * @type {ImageryProvider}
+         * @readonly
+         */
+        imageryProvider : {
+            get: function() {
+                return this._imageryProvider;
+            }
+        },
+
+        /**
+         * Gets the extent of this layer.  If this extent is smaller than the extent of the
+         * {@link ImageryProvider}, only a portion of the imagery provider is shown.
+         * @memberof ImageryLayer.prototype
+         * @type {Extent}
+         * @readonly
+         */
+        extent: {
+            get: function() {
+                return this._extent;
+            }
+        }
+    });
+
 
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
@@ -283,29 +311,6 @@ define([
      * @default 1.0
      */
     ImageryLayer.DEFAULT_GAMMA = 1.0;
-
-    /**
-     * Gets the imagery provider for this layer.
-     *
-     * @memberof ImageryLayer
-     *
-     * @returns {ImageryProvider} The imagery provider.
-     */
-    ImageryLayer.prototype.getImageryProvider = function() {
-        return this._imageryProvider;
-    };
-
-    /**
-     * Gets the extent of this layer.  If this extent is smaller than the extent of the
-     * {@link ImageryProvider}, only a portion of the imagery provider is shown.
-     *
-     * @memberof ImageryLayer
-     *
-     * @returns {Extent} The extent.
-     */
-    ImageryLayer.prototype.getExtent = function() {
-        return this._extent;
-    };
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -358,8 +363,6 @@ define([
      * imageryLayer = imageryLayer && imageryLayer.destroy();
      */
     ImageryLayer.prototype.destroy = function() {
-        this._texturePool = this._texturePool && this._texturePool.destroy();
-
         return destroyObject(this);
     };
 
@@ -389,7 +392,7 @@ define([
             insertionPoint = tile.imagery.length;
         }
 
-        if (!imageryProvider.isReady()) {
+        if (!imageryProvider.ready) {
             // The imagery provider is not ready, so we can't create skeletons, yet.
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
@@ -402,8 +405,8 @@ define([
         // the geometry tile.  The ImageryProvider and ImageryLayer both have the
         // opportunity to constrain the extent.  The imagery TilingScheme's extent
         // always fully contains the ImageryProvider's extent.
-        var extent = tile.extent.intersectWith(imageryProvider.getExtent());
-        extent = extent.intersectWith(this._extent);
+        var extent = Extent.intersectWith(tile.extent, imageryProvider.extent);
+        extent = Extent.intersectWith(extent, this._extent);
 
         if (extent.east <= extent.west || extent.north <= extent.south) {
             // There is no overlap between this terrain tile and this imagery
@@ -413,7 +416,7 @@ define([
                 return false;
             }
 
-            var baseImageryExtent = imageryProvider.getExtent().intersectWith(this._extent);
+            var baseImageryExtent = Extent.intersectWith(imageryProvider.extent, this._extent);
             var baseTerrainExtent = tile.extent;
 
             if (baseTerrainExtent.south >= baseImageryExtent.north) {
@@ -444,21 +447,21 @@ define([
         var targetGeometricError = errorRatio * terrainProvider.getLevelMaximumGeometricError(tile.level);
         var imageryLevel = getLevelWithMaximumTexelSpacing(this, targetGeometricError, latitudeClosestToEquator);
         imageryLevel = Math.max(0, imageryLevel);
-        var maximumLevel = imageryProvider.getMaximumLevel();
+        var maximumLevel = imageryProvider.maximumLevel;
         if (imageryLevel > maximumLevel) {
             imageryLevel = maximumLevel;
         }
 
-        if (defined(imageryProvider.getMinimumLevel)) {
-            var minimumLevel = imageryProvider.getMinimumLevel();
+        if (defined(imageryProvider.minimumLevel)) {
+            var minimumLevel = imageryProvider.minimumLevel;
             if (imageryLevel < minimumLevel) {
                 imageryLevel = minimumLevel;
             }
         }
 
-        var imageryTilingScheme = imageryProvider.getTilingScheme();
-        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
-        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
+        var imageryTilingScheme = imageryProvider.tilingScheme;
+        var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(Extent.getNorthwest(extent), imageryLevel);
+        var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(Extent.getSoutheast(extent), imageryLevel);
 
         // If the southeast corner of the extent lies very close to the north or west side
         // of the southeast tile, we don't actually need the southernmost or easternmost
@@ -612,7 +615,7 @@ define([
             that._requestImageError = TileProviderError.handleError(
                     that._requestImageError,
                     imageryProvider,
-                    imageryProvider.getErrorEvent(),
+                    imageryProvider.errorEvent,
                     message,
                     imagery.x, imagery.y, imagery.level,
                     doRequest);
@@ -626,6 +629,10 @@ define([
                 // Too many parallel requests, so postpone loading tile.
                 imagery.state = ImageryState.UNLOADED;
                 return;
+            }
+
+            if (defined(imageryProvider.getTileCredits)) {
+                imagery.credits = imageryProvider.getTileCredits(imagery.x, imagery.y, imagery.level);
             }
 
             when(imagePromise, success, failure);
@@ -648,8 +655,8 @@ define([
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
-        if (defined(imageryProvider.getTileDiscardPolicy)) {
-            var discardPolicy = imageryProvider.getTileDiscardPolicy();
+        if (defined(imageryProvider.tileDiscardPolicy)) {
+            var discardPolicy = imageryProvider.tileDiscardPolicy;
             if (defined(discardPolicy)) {
                 // If the discard policy is not ready yet, transition back to the
                 // RECEIVED state and we'll try again next time.
@@ -667,7 +674,7 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = this._texturePool.createTexture2D(context, {
+        var texture = context.createTexture2D({
             source : imagery.image
         });
 
@@ -694,18 +701,18 @@ define([
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
-            (extent.east - extent.west) / texture.getWidth() > 1e-5) {
+        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            (extent.east - extent.west) / texture.width > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();
                 imagery.texture = texture = reprojectedTexture;
         }
 
         // Use mipmaps if this texture has power-of-two dimensions.
-        if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
+        if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+                var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -715,7 +722,7 @@ define([
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
-            texture.setSampler(mipmapSampler);
+            texture.sampler = mipmapSampler;
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
             if (!defined(nonMipmapSampler)) {
@@ -726,7 +733,7 @@ define([
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
             }
-            texture.setSampler(nonMipmapSampler);
+            texture.sampler = nonMipmapSampler;
         }
 
         imagery.state = ImageryState.READY;
@@ -848,16 +855,16 @@ define([
 
             reproject.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : reprojectGeometry,
-                attributeIndices : reprojectAttribInds,
+                attributeLocations : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.getShaderCache().getShaderProgram(
+            reproject.shaderProgram = context.shaderCache.getShaderProgram(
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
 
-            var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
+            var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
             reproject.sampler = context.createSampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
@@ -867,10 +874,10 @@ define([
             });
         }
 
-        texture.setSampler(reproject.sampler);
+        texture.sampler = reproject.sampler;
 
-        var width = texture.getWidth();
-        var height = texture.getHeight();
+        var width = texture.width;
+        var height = texture.height;
 
         uniformMap.textureDimensions.x = width;
         uniformMap.textureDimensions.y = height;
@@ -890,12 +897,12 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         uniformMap.oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        var outputTexture = imageryLayer._texturePool.createTexture2D(context, {
+        var outputTexture = context.createTexture2D({
             width : width,
             height : height,
-            pixelFormat : texture.getPixelFormat(),
-            pixelDatatype : texture.getPixelDatatype(),
-            preMultiplyAlpha : texture.getPreMultiplyAlpha()
+            pixelFormat : texture.pixelFormat,
+            pixelDatatype : texture.pixelDatatype,
+            preMultiplyAlpha : texture.preMultiplyAlpha
         });
 
         // Allocate memory for the mipmaps.  Failure to do this before rendering
@@ -949,11 +956,11 @@ define([
     function getLevelWithMaximumTexelSpacing(layer, texelSpacing, latitudeClosestToEquator) {
         // PERFORMANCE_IDEA: factor out the stuff that doesn't change.
         var imageryProvider = layer._imageryProvider;
-        var tilingScheme = imageryProvider.getTilingScheme();
-        var ellipsoid = tilingScheme.getEllipsoid();
-        var latitudeFactor = Math.cos(latitudeClosestToEquator);
-        var tilingSchemeExtent = tilingScheme.getExtent();
-        var levelZeroMaximumTexelSpacing = ellipsoid.getMaximumRadius() * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.getTileWidth() * tilingScheme.getNumberOfXTilesAtLevel(0));
+        var tilingScheme = imageryProvider.tilingScheme;
+        var ellipsoid = tilingScheme.ellipsoid;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var tilingSchemeExtent = tilingScheme.extent;
+        var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * (tilingSchemeExtent.east - tilingSchemeExtent.west) * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 
         var twoToTheLevelPower = levelZeroMaximumTexelSpacing / texelSpacing;
         var level = Math.log(twoToTheLevelPower) / Math.log(2);

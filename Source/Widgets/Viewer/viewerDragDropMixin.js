@@ -34,7 +34,6 @@ define([
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *
-     * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
      * @exception {DeveloperError} dropTarget is already defined by another mixin.
      * @exception {DeveloperError} dropEnabled is already defined by another mixin.
@@ -50,6 +49,7 @@ define([
      * });
      */
     var viewerDragDropMixin = function(viewer, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -65,6 +65,7 @@ define([
         if (viewer.hasOwnProperty('clearOnDrop')) {
             throw new DeveloperError('clearOnDrop is already defined by another mixin.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -84,14 +85,16 @@ define([
              */
             dropTarget : {
                 //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
-                //* @exception {DeveloperError} value is required.
                 get : function() {
                     return dropTarget;
                 },
                 set : function(value) {
+                    //>>includeStart('debug', pragmas.debug);
                     if (!defined(value)) {
                         throw new DeveloperError('value is required.');
                     }
+                    //>>includeEnd('debug');
+
                     unsubscribe(dropTarget, handleDrop);
                     dropTarget = value;
                     subscribe(dropTarget, handleDrop);

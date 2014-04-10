@@ -11,7 +11,7 @@ defineSuite([
     var fakeXHR;
 
     beforeEach(function() {
-        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort']);
+        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
         fakeXHR.simulateLoad = function(response) {
             fakeXHR.status = 200;
             fakeXHR.response = response;
@@ -39,7 +39,7 @@ defineSuite([
     it('throws with no url', function() {
         expect(function() {
             loadText();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates and sends request without any custom headers', function() {

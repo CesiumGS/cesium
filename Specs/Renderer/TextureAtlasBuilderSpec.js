@@ -79,10 +79,10 @@ defineSuite([
         var sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = texture;
+        sp.allUniforms.u_texture.value = texture;
 
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -130,7 +130,7 @@ defineSuite([
                 });
                 expect(callbackCalled).toEqual(true);
 
-                var coordinates = atlas.getTextureCoordinates();
+                var coordinates = atlas.textureCoordinates;
                 expect(coordinates.length).toEqual(2);
                 return true;
             }
@@ -141,7 +141,7 @@ defineSuite([
     it('throws constructing without a TextureAtlas', function() {
         expect(function() {
             return new TextureAtlasBuilder();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromUrl throws without url', function() {
@@ -151,7 +151,7 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromUrl(undefined, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromUrl throws without callback', function() {
@@ -160,7 +160,7 @@ defineSuite([
 
         expect(function() {
             atlasBuilder.addTextureFromUrl('./Data/Images/Green.png', undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without url', function() {
@@ -171,7 +171,7 @@ defineSuite([
             atlasBuilder.addTextureFromFunction(undefined, function(loadedCallback) {
             }, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without create callback', function() {
@@ -181,7 +181,7 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', undefined, function(index) {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addTextureFromFunction throws without ready callback', function() {
@@ -191,6 +191,6 @@ defineSuite([
         expect(function() {
             atlasBuilder.addTextureFromFunction('./Data/Images/Blue.png', function(loadedCallback) {
             }, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

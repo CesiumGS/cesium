@@ -108,7 +108,15 @@ function toLink(longname, content) {
         }
     }
     else {
-	    url = linkMap.longnameToUrl[longname];
+        // support for {@link classname#methodname|Link Name}
+        url = longname;
+        var split = url.indexOf('|');
+        if (split !== -1){
+            content = url.substr(split+1);
+            url = linkMap.longnameToUrl[url.substr(0,split)];
+        } else {
+            url = linkMap.longnameToUrl[longname];
+        }
 	}
     
     content = content || longname;

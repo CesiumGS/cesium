@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/Cartesian2',
@@ -10,6 +11,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Ellipsoid,
         Extent,
         Cartesian2,
@@ -53,7 +55,7 @@ define([
             this._extentSouthwestInMeters = description.extentSouthwestInMeters;
             this._extentNortheastInMeters = description.extentNortheastInMeters;
         } else {
-            var semimajorAxisTimesPi = this._ellipsoid.getMaximumRadius() * Math.PI;
+            var semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
             this._extentSouthwestInMeters = new Cartesian2(-semimajorAxisTimesPi, -semimajorAxisTimesPi);
             this._extentNortheastInMeters = new Cartesian2(semimajorAxisTimesPi, semimajorAxisTimesPi);
         }
@@ -64,38 +66,40 @@ define([
                                   northeast.longitude, northeast.latitude);
     };
 
-    /**
-     * Gets the ellipsoid that is tiled by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    WebMercatorTilingScheme.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(WebMercatorTilingScheme.prototype, {
+        /**
+         * Gets the ellipsoid that is tiled by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
 
-    /**
-     * Gets the extent, in radians, covered by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Extent} The extent.
-     */
-    WebMercatorTilingScheme.prototype.getExtent = function() {
-        return this._extent;
-    };
+        /**
+         * Gets the extent, in radians, covered by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Extent}
+         */
+        extent : {
+            get : function() {
+                return this._extent;
+            }
+        },
 
-    /**
-     * Gets the map projection used by this tiling scheme.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Projection} The map projection.
-     */
-    WebMercatorTilingScheme.prototype.getProjection = function() {
-        return this._projection;
-    };
+        /**
+         * Gets the map projection used by this tiling scheme.
+         * @memberof WebMercatorTilingScheme.prototype
+         * @type {Projection}
+         */
+        projection : {
+            get : function() {
+                return this._projection;
+            }
+        }
+    });
 
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
@@ -147,8 +151,8 @@ define([
      */
     WebMercatorTilingScheme.prototype.extentToNativeExtent = function(extent, result) {
         var projection = this._projection;
-        var southwest = projection.project(extent.getSouthwest());
-        var northeast = projection.project(extent.getNortheast());
+        var southwest = projection.project(Extent.getSouthwest(extent));
+        var northeast = projection.project(Extent.getNortheast(extent));
 
         if (!defined(result)) {
             return new Extent(southwest.x, southwest.y, northeast.x, northeast.y);

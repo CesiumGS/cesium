@@ -34,7 +34,7 @@ define([
                 var cbBillboard = billboardCollection.get(currentIndex);
                 if (cbBillboard._visualizerUrl === textureValue) {
                     cbBillboard._visualizerTextureAvailable = true;
-                    cbBillboard.setImageIndex(imageIndex);
+                    cbBillboard.imageIndex = imageIndex;
                 }
             }
         };
@@ -49,37 +49,32 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
      *
-     * @exception {DeveloperError} scene is required.
-     *
      * @see DynamicBillboard
-     * @see Scene
      * @see DynamicObject
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
-     * @see VisualizerCollection
      * @see DynamicConeVisualizer
      * @see DynamicConeVisualizerUsingCustomSensor
      * @see DynamicLabelVisualizer
      * @see DynamicPointVisualizer
-     * @see DynamicPolygonVisualizer
-     * @see DynamicPolylineVisualizer
      * @see DynamicPyramidVisualizer
-     *
      */
     var DynamicBillboardVisualizer = function(scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.getContext().createTextureAtlas();
+        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
-        billboardCollection.setTextureAtlas(atlas);
-        scene.getPrimitives().add(billboardCollection);
+        billboardCollection.textureAtlas = atlas;
+        scene.primitives.add(billboardCollection);
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
 
@@ -125,13 +120,14 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
-     *
-     * @exception {DeveloperError} time is required.
      */
     DynamicBillboardVisualizer.prototype.update = function(time) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
-            throw new DeveloperError('time is requied.');
+            throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
+
         if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
@@ -190,8 +186,8 @@ define([
      * visualizer = visualizer && visualizer.destroy();
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
-        this._scene.getPrimitives().remove(this._billboardCollection);
+        this.setDynamicObjectCollection(undefined);
+        this._scene.primitives.remove(this._billboardCollection);
         return destroyObject(this);
     };
 
@@ -224,8 +220,8 @@ define([
             //don't bother creating or updating anything else
             if (defined(billboardVisualizerIndex)) {
                 billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 billboard._visualizerUrl = undefined;
                 billboard._visualizerTextureAvailable = false;
                 dynamicObject._billboardVisualizerIndex = undefined;
@@ -241,21 +237,21 @@ define([
                 billboardVisualizerIndex = unusedIndexes.pop();
                 billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
             } else {
-                billboardVisualizerIndex = dynamicBillboardVisualizer._billboardCollection.getLength();
+                billboardVisualizerIndex = dynamicBillboardVisualizer._billboardCollection.length;
                 billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
-            billboard.dynamicObject = dynamicObject;
+            billboard.id = dynamicObject;
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
 
             // CZML_TODO Determine official defaults
-            billboard.setColor(Color.WHITE);
-            billboard.setEyeOffset(Cartesian3.ZERO);
-            billboard.setPixelOffset(Cartesian2.ZERO);
-            billboard.setScale(1.0);
-            billboard.setHorizontalOrigin(HorizontalOrigin.CENTER);
-            billboard.setVerticalOrigin(VerticalOrigin.CENTER);
+            billboard.color = Color.WHITE;
+            billboard.eyeOffset = Cartesian3.ZERO;
+            billboard.pixelOffset = Cartesian2.ZERO;
+            billboard.scale = 1.0;
+            billboard.horizontalOrigin = HorizontalOrigin.CENTER;
+            billboard.verticalOrigin = VerticalOrigin.CENTER;
         } else {
             billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }
@@ -267,14 +263,14 @@ define([
             dynamicBillboardVisualizer._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(dynamicObject, dynamicBillboardVisualizer._billboardCollection, textureValue));
         }
 
-        billboard.setShow(billboard._visualizerTextureAvailable);
+        billboard.show = billboard._visualizerTextureAvailable;
         if (!billboard._visualizerTextureAvailable) {
             return;
         }
 
         position = positionProperty.getValue(time, position);
         if (defined(position)) {
-            billboard.setPosition(position);
+            billboard.position = position;
         }
 
         var property = dynamicBillboard._color;
@@ -282,7 +278,7 @@ define([
         if (defined(property)) {
             color = property.getValue(time, color);
             if (defined(color)) {
-                billboard.setColor(color);
+                billboard.color = color;
             }
         }
 
@@ -290,7 +286,7 @@ define([
         if (defined(property)) {
             eyeOffset = property.getValue(time, eyeOffset);
             if (defined(eyeOffset)) {
-                billboard.setEyeOffset(eyeOffset);
+                billboard.eyeOffset = eyeOffset;
             }
         }
 
@@ -298,7 +294,7 @@ define([
         if (defined(property)) {
             pixelOffset = property.getValue(time, pixelOffset);
             if (defined(pixelOffset)) {
-                billboard.setPixelOffset(pixelOffset);
+                billboard.pixelOffset = pixelOffset;
             }
         }
 
@@ -306,7 +302,7 @@ define([
         if (defined(property)) {
             var scale = property.getValue(time);
             if (defined(scale)) {
-                billboard.setScale(scale);
+                billboard.scale = scale;
             }
         }
 
@@ -314,7 +310,7 @@ define([
         if (defined(property)) {
             var rotation = property.getValue(time);
             if (defined(rotation)) {
-                billboard.setRotation(rotation);
+                billboard.rotation = rotation;
             }
         }
 
@@ -322,7 +318,7 @@ define([
         if (defined(property)) {
             var alignedAxis = property.getValue(time);
             if (defined(alignedAxis)) {
-                billboard.setAlignedAxis(alignedAxis);
+                billboard.alignedAxis = alignedAxis;
             }
         }
 
@@ -330,7 +326,7 @@ define([
         if (defined(property)) {
             var horizontalOrigin = property.getValue(time);
             if (defined(horizontalOrigin)) {
-                billboard.setHorizontalOrigin(horizontalOrigin);
+                billboard.horizontalOrigin = horizontalOrigin;
             }
         }
 
@@ -338,33 +334,33 @@ define([
         if (defined(property)) {
             var verticalOrigin = property.getValue(time);
             if (defined(verticalOrigin)) {
-                billboard.setVerticalOrigin(verticalOrigin);
+                billboard.verticalOrigin = verticalOrigin;
             }
         }
 
         property = dynamicBillboard._width;
         if (defined(property)) {
-            billboard.setWidth(property.getValue(time));
+            billboard.width = property.getValue(time);
         }
 
         property = dynamicBillboard._height;
         if (defined(property)) {
-            billboard.setHeight(property.getValue(time));
+            billboard.height = property.getValue(time);
         }
 
         property = dynamicBillboard._scaleByDistance;
         if (defined(property)) {
-            billboard.setScaleByDistance(property.getValue(time));
+            billboard.scaleByDistance = property.getValue(time);
         }
 
         property = dynamicBillboard._translucencyByDistance;
         if (defined(property)) {
-            billboard.setTranslucencyByDistance(property.getValue(time));
+            billboard.translucencyByDistance = property.getValue(time);
         }
 
         property = dynamicBillboard._pixelOffsetScaleByDistance;
         if (defined(property)) {
-            billboard.setPixelOffsetScaleByDistance(property.getValue(time));
+            billboard.pixelOffsetScaleByDistance = property.getValue(time);
         }
     }
 
@@ -376,8 +372,8 @@ define([
             var billboardVisualizerIndex = dynamicObject._billboardVisualizerIndex;
             if (defined(billboardVisualizerIndex)) {
                 var billboard = thisBillboardCollection.get(billboardVisualizerIndex);
-                billboard.setShow(false);
-                billboard.setImageIndex(-1);
+                billboard.show = false;
+                billboard.imageIndex = -1;
                 billboard._visualizerUrl = undefined;
                 billboard._visualizerTextureAvailable = false;
                 dynamicObject._billboardVisualizerIndex = undefined;

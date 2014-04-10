@@ -32,7 +32,6 @@ define([
      *                                     If not supplied, this value will be computed.
      * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
-     * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
@@ -42,7 +41,7 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var acmr = Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
+     * var acmr = Cesium.Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
     Tipsify.calculateACMR = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -50,12 +49,15 @@ define([
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
+        //>>includeEnd('debug');
 
         var numIndices = indices.length;
 
+        //>>includeStart('debug', pragmas.debug);
         if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
@@ -65,6 +67,7 @@ define([
         if (cacheSize < 3) {
             throw new DeveloperError('cacheSize must be greater than two.');
         }
+        //>>includeEnd('debug');
 
         // Compute the maximumIndex if not given
         if (!defined(maximumIndex)) {
@@ -107,7 +110,6 @@ define([
      *                                     If not supplied, this value will be computed.
      * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
-     * @exception {DeveloperError} indices is required.
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
@@ -117,7 +119,7 @@ define([
      * var indices = [0, 1, 2, 3, 4, 5];
      * var maxIndex = 5;
      * var cacheSize = 3;
-     * var reorderedIndices = Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
+     * var reorderedIndices = Cesium.Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
     Tipsify.tipsify = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -173,11 +175,15 @@ define([
             return n;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
+        //>>includeEnd('debug');
+
         var numIndices = indices.length;
 
+        //>>includeStart('debug', pragmas.debug);
         if (numIndices < 3 || numIndices % 3 !== 0) {
             throw new DeveloperError('indices length must be a multiple of three.');
         }
@@ -187,6 +193,7 @@ define([
         if (cacheSize < 3) {
             throw new DeveloperError('cacheSize must be greater than two.');
         }
+        //>>includeEnd('debug');
 
         // Determine maximum index
         var maximumIndexPlusOne = 0;

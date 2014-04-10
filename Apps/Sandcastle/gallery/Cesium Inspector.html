@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Visualize worldwide, high-resolution terrain.">
+    <meta name="cesium-sandcastle-labels" content="Tutorials, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+       
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    var centralBody = scene.primitives.centralBody;
+    centralBody.depthTestAgainstTerrain = true;
+    var ellipsoid = centralBody.ellipsoid;
+    var primitives = scene.primitives;
+
+    var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
+        url : 'http://cesiumjs.org/smallterrain',
+        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+    });
+
+    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
+    
+    //Add Cesium Inspector
+    viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+    //Add Primitives   
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : Cesium.BoxGeometry.fromDimensions({
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+                dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0)
+            }),
+            modelMatrix : Cesium.Matrix4.multiplyByTranslation(
+                Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))),
+                new Cesium.Cartesian3(0.0, 0.0, 250000)),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            closed: true
+        })
+    }));
+           
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.ExtentGeometry({
+                extent : Cesium.Extent.fromDegrees(-100.0, 30.0, -93.0, 37.0),
+                height: 100000,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance()
+    }));
+    
+    var image = new Image();
+    image.onload = function() {
+        var billboards = new Cesium.BillboardCollection();
+        var textureAtlas = scene.context.createTextureAtlas({
+            image : image
+        });
+        billboards.textureAtlas = textureAtlas;
+
+        billboards.add({
+            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 150000)),
+            imageIndex : 0
+        });
+        scene.primitives.add(billboards);
+    };
+    image.src = '../images/Cesium_Logo_overlay.png';
+
+
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>

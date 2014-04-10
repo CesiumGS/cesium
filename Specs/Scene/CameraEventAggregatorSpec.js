@@ -36,37 +36,37 @@ defineSuite([
     it('throws without a canvas', function() {
         expect(function() {
             handler2 = new CameraEventAggregator();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMovement throws without a type', function() {
         expect(function() {
             handler.getMovement();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isMoving throws without a type', function() {
         expect(function() {
             handler.isMoving();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isButtonDown throws without a type', function() {
         expect(function() {
             handler.isButtonDown();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getButtonPressTime throws without a type', function() {
         expect(function() {
             handler.getButtonPressTime();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getButtonReleaseTime throws without a type', function() {
         expect(function() {
             handler.getButtonReleaseTime();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMovement', function() {

@@ -48,8 +48,8 @@ defineSuite([
             })
         });
 
-        frameState.camera.controller.viewExtent(extent);
-        var us = context.getUniformState();
+        frameState.camera.viewExtent(extent);
+        var us = context.uniformState;
         us.update(context, frameState);
     });
 
@@ -60,7 +60,7 @@ defineSuite([
     it('constructor throws without attributeName', function() {
         expect(function() {
             return new DebugAppearance();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('default construct with normal, binormal, or tangent attribute name', function() {
@@ -172,7 +172,7 @@ defineSuite([
                 attributeName : 'invalid_datatype',
                 glslDatatype : 'invalid'
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('renders normal', function() {

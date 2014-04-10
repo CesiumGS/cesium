@@ -34,14 +34,20 @@ define(['./defined'], function(defined) {
          */
         this.message = message;
 
-        var e = new Error();
+        //Browsers such as IE don't have a stack property until you actually throw the error.
+        var stack;
+        try {
+            throw new Error();
+        } catch (e) {
+            stack = e.stack;
+        }
 
         /**
          * The stack trace of this exception, if available.
          * @type {String}
          * @constant
          */
-        this.stack = e.stack;
+        this.stack = stack;
     };
 
     DeveloperError.prototype.toString = function() {
@@ -52,6 +58,13 @@ define(['./defined'], function(defined) {
         }
 
         return str;
+    };
+
+    /**
+     * @private
+     */
+    DeveloperError.throwInstantiationError = function() {
+        throw new DeveloperError('This function defines an interface and should not be called directly.');
     };
 
     return DeveloperError;

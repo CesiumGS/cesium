@@ -29,7 +29,7 @@ define([
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
      * @example
-     * loadCubeMap(context, {
+     * Cesium.loadCubeMap(context, {
      *     positiveX : 'skybox_px.png',
      *     negativeX : 'skybox_nx.png',
      *     positiveY : 'skybox_py.png',
@@ -38,7 +38,7 @@ define([
      *     negativeZ : 'skybox_nz.png'
      * }).then(function(cubeMap) {
      *     // use the cubemap
-     * }, function() {
+     * }, function(error) {
      *     // an error occurred
      * });
      *
@@ -46,10 +46,10 @@ define([
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadCubeMap = function(context, urls, allowCrossOrigin) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
-
         if ((!defined(urls)) ||
             (!defined(urls.positiveX)) ||
             (!defined(urls.negativeX)) ||
@@ -59,6 +59,7 @@ define([
             (!defined(urls.negativeZ))) {
             throw new DeveloperError('urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
         }
+        //>>includeEnd('debug');
 
         // PERFORMANCE_IDEA: Given the size of some cube maps, we should consider tiling them, which
         // would prevent hiccups when uploading, for example, six 4096x4096 textures to the GPU.

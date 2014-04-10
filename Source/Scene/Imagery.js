@@ -32,10 +32,11 @@ define([
         this.imageUrl = undefined;
         this.image = undefined;
         this.texture = undefined;
+        this.credits = undefined;
         this.referenceCount = 0;
 
-        if (!defined(extent) && imageryLayer.getImageryProvider().isReady()) {
-            var tilingScheme = imageryLayer.getImageryProvider().getTilingScheme();
+        if (!defined(extent) && imageryLayer.imageryProvider.ready) {
+            var tilingScheme = imageryLayer.imageryProvider.tilingScheme;
             extent = tilingScheme.tileXYToExtent(x, y, level);
         }
 
@@ -67,7 +68,7 @@ define([
                 this.image.destroy();
             }
 
-            if (defined(this.texture) && defined(this.texture.destroy)) {
+            if (defined(this.texture)) {
                 this.texture.destroy();
             }
 

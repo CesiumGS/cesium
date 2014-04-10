@@ -1,20 +1,22 @@
 /*global define*/
 define([
+        './ClockRange',
+        './ClockStep',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './JulianDate',
-        './ClockStep',
-        './ClockRange',
         './Event',
-        './defaultValue'
-       ], function(
-         defined,
-         DeveloperError,
-         JulianDate,
-         ClockStep,
-         ClockRange,
-         Event,
-         defaultValue) {
+        './getTimestamp',
+        './JulianDate'
+    ], function(
+        ClockRange,
+        ClockStep,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Event,
+        getTimestamp,
+        JulianDate) {
     "use strict";
 
     /**
@@ -39,11 +41,11 @@ define([
      *
      * @example
      * // Create a clock that loops on Christmas day 2013 and runs in real-time.
-     * var clock = new Clock({
-     *    startTime : JulianDate.fromIso8601("12-25-2013"),
-     *    currentTime : JulianDate.fromIso8601("12-25-2013"),
-     *    stopTime : JulianDate.fromIso8601("12-26-2013"),
-     *    clockRange : ClockRange.LOOP_STOP,
+     * var clock = new Cesium.Clock({
+     *    startTime : Cesium.JulianDate.fromIso8601("12-25-2013"),
+     *    currentTime : Cesium.JulianDate.fromIso8601("12-25-2013"),
+     *    stopTime : Cesium.JulianDate.fromIso8601("12-26-2013"),
+     *    clockRange : Cesium.ClockRange.LOOP_STOP,
      *    clockStep : SYSTEM_CLOCK_MULTIPLIER
      * });
      */
@@ -80,9 +82,11 @@ define([
             startTime = JulianDate.clone(currentTime);
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (startTime.greaterThan(stopTime)) {
             throw new DeveloperError('startTime must come before stopTime.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The start time of the clock.
@@ -138,7 +142,7 @@ define([
          */
         this.onTick = new Event();
 
-        this._lastSystemTime = Date.now();
+        this._lastSystemTime = getTimestamp();
     };
 
     /**
@@ -150,7 +154,7 @@ define([
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */
     Clock.prototype.tick = function() {
-        var currentSystemTime = Date.now();
+        var currentSystemTime = getTimestamp();
         var currentTime = this.currentTime;
         var startTime = this.startTime;
         var stopTime = this.stopTime;

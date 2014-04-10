@@ -42,7 +42,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicPathVisualizer();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor sets expected parameters and adds no primitives to scene.', function() {
@@ -50,7 +50,7 @@ defineSuite([
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.getScene()).toEqual(scene);
         expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('update throws if no time specified.', function() {
@@ -58,7 +58,7 @@ defineSuite([
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update does nothing if no dynamicObjectCollection.', function() {
@@ -81,7 +81,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a polyline.', function() {
@@ -93,7 +93,7 @@ defineSuite([
         path.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicPath causes a primtive to be created and updated.', function() {
@@ -104,7 +104,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
@@ -122,24 +122,24 @@ defineSuite([
 
         visualizer.update(updateTime);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
-        expect(primitive.getPositions()[0]).toEqual(testObject.position.getValue(updateTime.addSeconds(-path.trailTime.getValue())));
-        expect(primitive.getPositions()[1]).toEqual(testObject.position.getValue(updateTime));
-        expect(primitive.getPositions()[2]).toEqual(testObject.position.getValue(updateTime.addSeconds(path.leadTime.getValue())));
-        expect(primitive.getShow()).toEqual(testObject.path.show.getValue(updateTime));
-        expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(updateTime));
+        expect(primitive.positions[0]).toEqual(testObject.position.getValue(updateTime.addSeconds(-path.trailTime.getValue())));
+        expect(primitive.positions[1]).toEqual(testObject.position.getValue(updateTime));
+        expect(primitive.positions[2]).toEqual(testObject.position.getValue(updateTime.addSeconds(path.leadTime.getValue())));
+        expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
+        expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
 
-        var material = primitive.getMaterial();
+        var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.color.getValue(updateTime));
         expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(updateTime));
         expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(updateTime));
 
         path.show = new ConstantProperty(false);
         visualizer.update(updateTime);
-        expect(primitive.getShow()).toEqual(testObject.path.show.getValue(updateTime));
+        expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
     });
 
     it('clear hides primitives.', function() {
@@ -150,7 +150,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
@@ -168,16 +168,16 @@ defineSuite([
 
         visualizer.update(updateTime);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
 
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
 
         visualizer.update(updateTime);
         //Clearing won't actually remove the primitive because of the
         //internal cache used by the visualizer, instead it just hides it.
         dynamicObjectCollection.removeAll();
-        expect(primitive.getShow()).toEqual(false);
+        expect(primitive.show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
@@ -188,7 +188,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
@@ -205,9 +205,9 @@ defineSuite([
         path.trailTime = new ConstantProperty(10);
 
         visualizer.update(updateTime);
-        var polylineCollection = scene.getPrimitives().get(0);
+        var polylineCollection = scene.primitives.get(0);
         var primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
     });
 
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
@@ -218,7 +218,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
 
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var position = new SampledPositionProperty();
@@ -251,17 +251,17 @@ defineSuite([
         path2.leadTime = new ConstantProperty(25);
         path2.trailTime = new ConstantProperty(10);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var polylineCollection = scene.getPrimitives().get(0);
-        expect(polylineCollection.getLength()).toEqual(1);
+        expect(scene.primitives.length).toEqual(1);
+        var polylineCollection = scene.primitives.get(0);
+        expect(polylineCollection.length).toEqual(1);
         var primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject);
+        expect(primitive.id).toEqual(testObject);
 
         visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
         visualizer.update(updateTime);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        polylineCollection = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        polylineCollection = scene.primitives.get(0);
         primitive = polylineCollection.get(0);
-        expect(primitive.dynamicObject).toEqual(testObject2);
+        expect(primitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

@@ -41,13 +41,13 @@ defineSuite([
     it('throws when constructing with an undefined start', function() {
         expect(function() {
             return new TimeInterval(undefined, new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructing with an undefined stop', function() {
         expect(function() {
             return new TimeInterval(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('IsEmpty is false for a typical interval', function() {

@@ -26,14 +26,14 @@ defineSuite([
         var command = createCommand(spyFunction, false);
         expect(function() {
             command();
-        }).toThrow();
+        }).toThrowDeveloperError();
         expect(spyFunction).not.toHaveBeenCalled();
     });
 
     it('throws without a func parameter', function() {
         expect(function() {
             return createCommand(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('works with custom canExecute observable', function() {
@@ -43,7 +43,7 @@ defineSuite([
         expect(command.canExecute).toBe(false);
         expect(function() {
             command();
-        }).toThrow();
+        }).toThrowDeveloperError();
         expect(spyFunction).not.toHaveBeenCalled();
 
         canExecute(true);
