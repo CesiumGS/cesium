@@ -44,6 +44,20 @@ defineSuite([
         expect(defaultConstruct).not.toThrow();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new OpenStreetMapImageryProvider({
+            url : 'made/up/osm/server/'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('supports a slash at the end of the URL', function() {
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server/'

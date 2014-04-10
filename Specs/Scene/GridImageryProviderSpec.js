@@ -20,6 +20,18 @@ defineSuite([
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new GridImageryProvider();
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('can provide a root tile', function() {
         var provider = new GridImageryProvider();
 
