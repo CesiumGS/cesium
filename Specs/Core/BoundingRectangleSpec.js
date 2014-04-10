@@ -4,14 +4,14 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Ellipsoid',
          'Core/GeographicProjection',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Intersect'
      ], function(
          BoundingRectangle,
          Cartesian2,
          Ellipsoid,
          GeographicProjection,
-         Extent,
+         Rectangle,
          Intersect) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -102,28 +102,28 @@ defineSuite([
         expect(rectangle.height).toEqual(0.0);
     });
 
-    it('fromExtent creates an empty rectangle with no extent', function() {
-        var rectangle = BoundingRectangle.fromExtent();
+    it('fromRectangle creates an empty rectangle with no rectangle', function() {
+        var rectangle = BoundingRectangle.fromRectangle();
         expect(rectangle.x).toEqual(0.0);
         expect(rectangle.y).toEqual(0.0);
         expect(rectangle.width).toEqual(0.0);
         expect(rectangle.height).toEqual(0.0);
     });
 
-    it('create a bounding rectangle from an extent', function() {
-        var extent = Extent.MAX_VALUE;
+    it('create a bounding rectangle from an rectangle', function() {
+        var rectangle = Rectangle.MAX_VALUE;
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
-        var expected = new BoundingRectangle(extent.west, extent.south, extent.east - extent.west, extent.north - extent.south);
-        expect(BoundingRectangle.fromExtent(extent, projection)).toEqual(expected);
+        var expected = new BoundingRectangle(rectangle.west, rectangle.south, rectangle.east - rectangle.west, rectangle.north - rectangle.south);
+        expect(BoundingRectangle.fromRectangle(rectangle, projection)).toEqual(expected);
     });
 
-    it('fromExtent works with a result parameter', function() {
-        var extent = Extent.MAX_VALUE;
-        var expected = new BoundingRectangle(extent.west, extent.south, extent.east - extent.west, extent.north - extent.south);
+    it('fromRectangle works with a result parameter', function() {
+        var rectangle = Rectangle.MAX_VALUE;
+        var expected = new BoundingRectangle(rectangle.west, rectangle.south, rectangle.east - rectangle.west, rectangle.north - rectangle.south);
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
 
         var result = new BoundingRectangle();
-        var returnedResult = BoundingRectangle.fromExtent(extent, projection, result);
+        var returnedResult = BoundingRectangle.fromRectangle(rectangle, projection, result);
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqual(expected);
     });

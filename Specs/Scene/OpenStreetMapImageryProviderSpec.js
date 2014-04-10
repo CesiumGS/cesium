@@ -5,7 +5,7 @@ defineSuite([
          'Core/defined',
          'Core/loadImage',
          'Core/DefaultProxy',
-         'Core/Extent',
+         'Core/Rectangle',
          'Scene/Imagery',
          'Scene/ImageryLayer',
          'Scene/ImageryProvider',
@@ -18,7 +18,7 @@ defineSuite([
          defined,
          loadImage,
          DefaultProxy,
-         Extent,
+         Rectangle,
          Imagery,
          ImageryLayer,
          ImageryProvider,
@@ -112,7 +112,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -184,11 +184,11 @@ defineSuite([
         });
     });
 
-    it('extent passed to constructor does not affect tile numbering', function() {
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+    it('rectangle passed to constructor does not affect tile numbering', function() {
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
-            extent : extent
+            rectangle : rectangle
         });
 
         waitsFor(function() {
@@ -200,7 +200,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(extent);
+            expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;

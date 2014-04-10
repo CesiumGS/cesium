@@ -162,7 +162,7 @@ define([
         cartesianVertices.length = 0;
 
         var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
-        var extent = parameters.childExtent;
+        var rectangle = parameters.childRectangle;
 
         for (i = 0; i < uBuffer.length; ++i) {
             u = uBuffer[i];
@@ -201,8 +201,8 @@ define([
 
             heightBuffer[i] = height;
 
-            cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
+            cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
             cartographicScratch.height = height;
 
             ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);

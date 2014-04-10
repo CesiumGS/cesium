@@ -3,7 +3,7 @@ defineSuite([
          'Scene/CentralBody',
          'Core/defined',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Renderer/ClearCommand',
          'Scene/SingleTileImageryProvider',
          'Specs/createContext',
@@ -14,7 +14,7 @@ defineSuite([
          CentralBody,
          defined,
          Ellipsoid,
-         Extent,
+         Rectangle,
          ClearCommand,
          SingleTileImageryProvider,
          createContext,
@@ -66,7 +66,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
