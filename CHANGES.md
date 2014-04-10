@@ -23,6 +23,7 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * `BaseLayerPicker` has been extended to support terrain selection.  This includes many potential breaking changes, see [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for details.
   * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
   * `Context` is now private
     * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
@@ -30,12 +31,6 @@ Beta Releases
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
-
-### b28 - 2014-05-01
-
-* Breaking changes:
-  * `BaseLayerPicker` has many breaking changes, see [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for details.
-* Added support for terrain selection to `BaseLayerPicker`.
 
 ### b27 - 2014-04-01
 
