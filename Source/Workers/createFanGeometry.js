@@ -1,24 +1,5 @@
 /*global define*/
-define([
-        '../Core/FanGeometry',
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
-    ], function(
-            FanGeometry,
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
+define(['../Core/FanGeometry'], function(FanGeometry) {
     "use strict";
-
-    function createFanGeometry(parameters, transferableObjects) {
-        var fanGeometry = parameters.geometry;
-        var geometry = FanGeometry.createGeometry(fanGeometry);
-        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
-
-        return {
-            geometry : geometry,
-            index : parameters.index
-        };
-    }
-
-    return createTaskProcessorWorker(createFanGeometry);
+    return FanGeometry.createGeometry;
 });
