@@ -15,7 +15,7 @@ define([
      * @alias Imagery
      * @private
      */
-    var Imagery = function(imageryLayer, x, y, level, extent) {
+    var Imagery = function(imageryLayer, x, y, level, rectangle) {
         this.imageryLayer = imageryLayer;
         this.x = x;
         this.y = y;
@@ -35,12 +35,12 @@ define([
         this.credits = undefined;
         this.referenceCount = 0;
 
-        if (!defined(extent) && imageryLayer.imageryProvider.ready) {
+        if (!defined(rectangle) && imageryLayer.imageryProvider.ready) {
             var tilingScheme = imageryLayer.imageryProvider.tilingScheme;
-            extent = tilingScheme.tileXYToExtent(x, y, level);
+            rectangle = tilingScheme.tileXYToRectangle(x, y, level);
         }
 
-        this.extent = extent;
+        this.rectangle = rectangle;
     };
 
     Imagery.createPlaceholder = function(imageryLayer) {

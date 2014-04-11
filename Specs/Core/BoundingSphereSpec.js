@@ -6,7 +6,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/GeographicProjection',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Intersect',
          'Core/Interval',
          'Core/Math',
@@ -18,7 +18,7 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          GeographicProjection,
-         Extent,
+         Rectangle,
          Intersect,
          Interval,
          CesiumMath,
@@ -265,39 +265,39 @@ defineSuite([
         expect(result.radius).toEqual(positionsRadius);
     });
 
-    it('fromExtent2D creates an empty sphere if no extent provided', function() {
-        var sphere = BoundingSphere.fromExtent2D();
+    it('fromRectangle2D creates an empty sphere if no rectangle provided', function() {
+        var sphere = BoundingSphere.fromRectangle2D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
         expect(sphere.radius).toEqual(0.0);
     });
 
-    it('fromExtent2D', function() {
-        var extent = Extent.MAX_VALUE;
+    it('fromRectangle2D', function() {
+        var rectangle = Rectangle.MAX_VALUE;
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
-        var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
-        expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
+        var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(rectangle.east * rectangle.east + rectangle.north * rectangle.north));
+        expect(BoundingSphere.fromRectangle2D(rectangle, projection)).toEqual(expected);
     });
 
-    it('fromExtent3D creates an empty sphere if no extent provided', function() {
-        var sphere = BoundingSphere.fromExtent3D();
+    it('fromRectangle3D creates an empty sphere if no rectangle provided', function() {
+        var sphere = BoundingSphere.fromRectangle3D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
         expect(sphere.radius).toEqual(0.0);
     });
 
-    it('fromExtent3D', function() {
-        var extent = Extent.MAX_VALUE;
+    it('fromRectangle3D', function() {
+        var rectangle = Rectangle.MAX_VALUE;
         var ellipsoid = Ellipsoid.WGS84;
         var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
-        expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
+        expect(BoundingSphere.fromRectangle3D(rectangle, ellipsoid)).toEqual(expected);
     });
 
-    it('fromExtent3D with height', function() {
-        var extent = new Extent(0.1, -0.3, 0.2, -0.4);
+    it('fromRectangle3D with height', function() {
+        var rectangle = new Rectangle(0.1, -0.3, 0.2, -0.4);
         var height = 100000.0;
         var ellipsoid = Ellipsoid.WGS84;
-        var points = Extent.subsample(extent, ellipsoid, height);
+        var points = Rectangle.subsample(rectangle, ellipsoid, height);
         var expected = BoundingSphere.fromPoints(points);
-        expect(BoundingSphere.fromExtent3D(extent, ellipsoid, height)).toEqual(expected);
+        expect(BoundingSphere.fromRectangle3D(rectangle, ellipsoid, height)).toEqual(expected);
     });
 
     it('fromCornerPoints', function() {
@@ -643,78 +643,78 @@ defineSuite([
         expect(distanceFromCenter).toBeLessThanOrEqualTo(boundingSphere.radius);
     }
 
-    it('fromExtentWithHeights2D includes specified min and max heights', function() {
-        var extent = new Extent(0.1, 0.5, 0.2, 0.6);
+    it('fromRectangleWithHeights2D includes specified min and max heights', function() {
+        var rectangle = new Rectangle(0.1, 0.5, 0.2, 0.6);
         var projection = new GeographicProjection();
         var minHeight = -327.0;
         var maxHeight = 2456.0;
-        var boundingSphere = BoundingSphere.fromExtentWithHeights2D(extent, projection, minHeight, maxHeight);
+        var boundingSphere = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, minHeight, maxHeight);
 
         // Test that the corners are inside the bounding sphere.
-        var point = Extent.getSouthwest(extent).clone();
+        var point = Rectangle.getSouthwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getSouthwest(extent).clone();
+        point = Rectangle.getSouthwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getNortheast(extent).clone();
+        point = Rectangle.getNortheast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getNortheast(extent).clone();
+        point = Rectangle.getNortheast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getSoutheast(extent).clone();
+        point = Rectangle.getSoutheast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getSoutheast(extent).clone();
+        point = Rectangle.getSoutheast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getNorthwest(extent).clone();
+        point = Rectangle.getNorthwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getNorthwest(extent).clone();
+        point = Rectangle.getNorthwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the center is inside the bounding sphere
-        point = Extent.getCenter(extent).clone();
+        point = Rectangle.getCenter(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = Extent.getCenter(extent).clone();
+        point = Rectangle.getCenter(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the edge midpoints are inside the bounding sphere.
-        point = new Cartographic(Extent.getCenter(extent).longitude, extent.south, minHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Extent.getCenter(extent).longitude, extent.south, maxHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Extent.getCenter(extent).longitude, extent.north, minHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(Extent.getCenter(extent).longitude, extent.north, maxHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, Extent.getCenter(extent).latitude, minHeight);
+        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, Extent.getCenter(extent).latitude, maxHeight);
+        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, Extent.getCenter(extent).latitude, minHeight);
+        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, Extent.getCenter(extent).latitude, maxHeight);
+        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 });

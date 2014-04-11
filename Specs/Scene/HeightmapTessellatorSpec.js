@@ -4,7 +4,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Math',
          'Core/WebMercatorProjection'
      ], function(
@@ -12,7 +12,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Ellipsoid,
-         Extent,
+         Rectangle,
          CesiumMath,
          WebMercatorProjection) {
     "use strict";
@@ -28,7 +28,7 @@ defineSuite([
                 width : 2,
                 height : 2,
                 vertices : [],
-                nativeExtent : {
+                nativeRectangle : {
                     west : 10.0,
                     south : 20.0,
                     east : 20.0,
@@ -45,7 +45,7 @@ defineSuite([
                 heightmap : [1.0, 2.0, 3.0, 4.0],
                 height : 2,
                 vertices : [],
-                nativeExtent : {
+                nativeRectangle : {
                     west : 10.0,
                     south : 20.0,
                     east : 20.0,
@@ -60,7 +60,7 @@ defineSuite([
                 heightmap : [1.0, 2.0, 3.0, 4.0],
                 width : 2,
                 vertices : [],
-                nativeExtent : {
+                nativeRectangle : {
                     west : 10.0,
                     south : 20.0,
                     east : 20.0,
@@ -77,7 +77,7 @@ defineSuite([
                 heightmap : [1.0, 2.0, 3.0, 4.0],
                 width : 2,
                 height : 2,
-                nativeExtent : {
+                nativeRectangle : {
                     west : 10.0,
                     south : 20.0,
                     east : 20.0,
@@ -88,7 +88,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws when nativeExtent is not provided', function() {
+    it('throws when nativeRectangle is not provided', function() {
         expect(function() {
             HeightmapTessellator.computeVertices({
                 heightmap : [1.0, 2.0, 3.0, 4.0],
@@ -107,7 +107,7 @@ defineSuite([
                 width : 2,
                 height : 2,
                 vertices : [],
-                nativeExtent : {
+                nativeRectangle : {
                     west : 10.0,
                     south : 20.0,
                     east : 20.0,
@@ -127,13 +127,13 @@ defineSuite([
             width : width,
             height : height,
             skirtHeight : 0.0,
-            nativeExtent : {
+            nativeRectangle : {
                 west : 10.0,
                 south : 30.0,
                 east : 20.0,
                 north : 40.0
             },
-            extent : new Extent(
+            rectangle : new Rectangle(
                 CesiumMath.toRadians(10.0),
                 CesiumMath.toRadians(30.0),
                 CesiumMath.toRadians(20.0),
@@ -142,13 +142,13 @@ defineSuite([
         HeightmapTessellator.computeVertices(description);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(nativeExtent.north, nativeExtent.south, j / (height - 1));
+            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
             latitude = CesiumMath.toRadians(latitude);
             for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(nativeExtent.west, nativeExtent.east, i / (width - 1));
+                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
                 var heightSample = description.heightmap[j * width + i];
@@ -180,7 +180,7 @@ defineSuite([
             width : width,
             height : height,
             skirtHeight : 10.0,
-            nativeExtent : {
+            nativeRectangle : {
                 west : 10.0,
                 east : 20.0,
                 south : 30.0,
@@ -190,15 +190,15 @@ defineSuite([
         HeightmapTessellator.computeVertices(description);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
         for (var j = -1; j <= height; ++j) {
             var realJ = CesiumMath.clamp(j, 0, height - 1);
-            var latitude = CesiumMath.lerp(nativeExtent.north, nativeExtent.south, realJ / (height - 1));
+            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, realJ / (height - 1));
             latitude = CesiumMath.toRadians(latitude);
             for (var i = -1; i <= width; ++i) {
                 var realI = CesiumMath.clamp(i, 0, width - 1);
-                var longitude = CesiumMath.lerp(nativeExtent.west, nativeExtent.east, realI / (width - 1));
+                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, realI / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
                 var heightSample = description.heightmap[realJ * width + realI];
@@ -234,7 +234,7 @@ defineSuite([
             width : width,
             height : height,
             skirtHeight : 0.0,
-            nativeExtent : {
+            nativeRectangle : {
                 west : 1000000.0,
                 east : 2000000.0,
                 south : 3000000.0,
@@ -246,15 +246,15 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new WebMercatorProjection(ellipsoid);
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
-        var geographicSouthwest = projection.unproject(new Cartesian2(nativeExtent.west, nativeExtent.south));
-        var geographicNortheast = projection.unproject(new Cartesian2(nativeExtent.east, nativeExtent.north));
+        var geographicSouthwest = projection.unproject(new Cartesian2(nativeRectangle.west, nativeRectangle.south));
+        var geographicNortheast = projection.unproject(new Cartesian2(nativeRectangle.east, nativeRectangle.north));
 
         for (var j = 0; j < height; ++j) {
-            var y = CesiumMath.lerp(nativeExtent.north, nativeExtent.south, j / (height - 1));
+            var y = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
             for (var i = 0; i < width; ++i) {
-                var x = CesiumMath.lerp(nativeExtent.west, nativeExtent.east, i / (width - 1));
+                var x = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
 
                 var latLon = projection.unproject(new Cartesian2(x, y));
                 var longitude = latLon.longitude;
@@ -300,13 +300,13 @@ defineSuite([
             width : width,
             height : height,
             skirtHeight : 0.0,
-            nativeExtent : {
+            nativeRectangle : {
                 west : 10.0,
                 south : 30.0,
                 east : 20.0,
                 north : 40.0
             },
-            extent : new Extent(
+            rectangle : new Rectangle(
                 CesiumMath.toRadians(10.0),
                 CesiumMath.toRadians(30.0),
                 CesiumMath.toRadians(20.0),
@@ -320,13 +320,13 @@ defineSuite([
         HeightmapTessellator.computeVertices(description);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(nativeExtent.north, nativeExtent.south, j / (height - 1));
+            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
             latitude = CesiumMath.toRadians(latitude);
             for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(nativeExtent.west, nativeExtent.east, i / (width - 1));
+                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
                 var heightSampleIndex = (j * width + i) * description.structure.stride;
@@ -367,13 +367,13 @@ defineSuite([
             width : width,
             height : height,
             skirtHeight : 0.0,
-            nativeExtent : {
+            nativeRectangle : {
                 west : 10.0,
                 south : 30.0,
                 east : 20.0,
                 north : 40.0
             },
-            extent : new Extent(
+            rectangle : new Rectangle(
                 CesiumMath.toRadians(10.0),
                 CesiumMath.toRadians(30.0),
                 CesiumMath.toRadians(20.0),
@@ -388,13 +388,13 @@ defineSuite([
         HeightmapTessellator.computeVertices(description);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(nativeExtent.north, nativeExtent.south, j / (height - 1));
+            var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
             latitude = CesiumMath.toRadians(latitude);
             for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(nativeExtent.west, nativeExtent.east, i / (width - 1));
+                var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
                 var heightSampleIndex = (j * width + i) * description.structure.stride;

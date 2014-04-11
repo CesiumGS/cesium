@@ -20,6 +20,18 @@ defineSuite([
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new TileCoordinatesImageryProvider();
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('can provide a root tile', function() {
         var provider = new TileCoordinatesImageryProvider();
 
@@ -35,7 +47,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;

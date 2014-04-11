@@ -3,7 +3,7 @@ attribute vec2 textureCoordinates;
 
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
-uniform vec4 u_tileExtent;
+uniform vec4 u_tileRectangle;
 
 // Uniforms for 2D Mercator projection
 uniform vec2 u_southAndNorthLatitude;
@@ -55,7 +55,7 @@ float get2DGeographicYPositionFraction()
 vec4 getPositionPlanarEarth(vec3 position3DWC, float height2D)
 {
     float yPositionFraction = get2DYPositionFraction();
-    vec4 rtcPosition2D = vec4(height2D, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
+    vec4 rtcPosition2D = vec4(height2D, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
     return czm_projection * (u_modifiedModelView * rtcPosition2D);
 }
 
@@ -74,7 +74,7 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     // We do not do RTC while morphing, so there is potential for jitter.
     // This is unlikely to be noticeable, though.
     float yPositionFraction = get2DYPositionFraction();
-    vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
+    vec4 position2DWC = vec4(0.0, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }

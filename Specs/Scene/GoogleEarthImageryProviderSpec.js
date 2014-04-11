@@ -6,7 +6,7 @@ defineSuite([
          'Core/FeatureDetection',
          'Core/loadImage',
          'Core/loadWithXhr',
-         'Core/Extent',
+         'Core/Rectangle',
          'Scene/Imagery',
          'Scene/ImageryLayer',
          'Scene/ImageryProvider',
@@ -22,7 +22,7 @@ defineSuite([
          FeatureDetection,
          loadImage,
          loadWithXhr,
-         Extent,
+         Rectangle,
          Imagery,
          ImageryLayer,
          ImageryProvider,
@@ -61,6 +61,31 @@ defineSuite([
         expect(constructWithoutChannel).toThrowDeveloperError();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var path = '';
+        var url = 'http://example.invalid';
+        var channel = 1234;
+        var version = 1;
+
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : url,
+            channel: channel,
+            path: path
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('can provide a root tile', function() {
         var path = '';
         var url = 'http://example.invalid';
@@ -95,7 +120,7 @@ defineSuite([
             expect(provider.version).toEqual(version);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
 
         waitsFor(function() {
@@ -350,7 +375,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
@@ -385,7 +410,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
@@ -420,7 +445,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
+            expect(provider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
     });
 

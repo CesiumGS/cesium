@@ -8,7 +8,7 @@ defineSuite([
          'Core/Cartesian3',
          'Core/defined',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/GeographicProjection',
          'Core/WebMercatorProjection',
          'Scene/CentralBody',
@@ -27,7 +27,7 @@ defineSuite([
          Cartesian3,
          defined,
          Ellipsoid,
-         Extent,
+         Rectangle,
          GeographicProjection,
          WebMercatorProjection,
          CentralBody,
@@ -88,7 +88,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
         frameState.camera.update(frameState.mode, frameState.scene2D);
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
     }
 
     var context;
@@ -289,7 +289,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -304,7 +304,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -318,7 +318,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -332,7 +332,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -340,7 +340,7 @@ defineSuite([
             expect(render(context, frameState, cb)).toBeGreaterThan(0);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
-            frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+            frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
         updateUntilDone(cb);
@@ -361,7 +361,7 @@ defineSuite([
 
         layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -382,7 +382,7 @@ defineSuite([
         layer.saturation = 0.123;
         layer.hue = 0.456;
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -437,7 +437,7 @@ defineSuite([
         layer.saturation = createFunction(0.123);
         layer.hue = createFunction(0.456);
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
@@ -476,7 +476,7 @@ defineSuite([
 
         layer.alpha = 0.0;
 
-        frameState.camera.viewExtent(new Extent(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
         updateUntilDone(cb);
 
