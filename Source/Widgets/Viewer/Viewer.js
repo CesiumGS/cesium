@@ -160,7 +160,7 @@ define([
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
-     *         url : '//tile.openstreetmap.org/'
+     *         url : '//a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({

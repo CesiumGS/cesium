@@ -61,7 +61,7 @@ define([
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
      *          return new Cesium.OpenStreetMapImageryProvider({
-     *              url : '//tile.openstreetmap.org/'
+     *              url : '//a.tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
