@@ -111,16 +111,24 @@ define([
          */
         this.currentViewName = 'View 1';
 
+        /**
+         * Gets or sets the field of view of the camera, in degrees.
+         *
+         * @type {Number}
+         * @default 60.0
+         */
+        this.fieldOfView = 60.0;
+
         this._viewNames = [];
         this._timeRotateMode = StoredViewCameraRotationMode.EARTH_FIXED.name;
         this._userRotateMode = 'Z';
-        this._fieldOfView = 60.0;
+        this._constrainedAxis = Cartesian3.UNIT_Z.clone();
         this._minFov = 0.001;
         this._maxFov = 160.0;
         this._fovRange = this._maxFov - this._minFov;
 
         knockout.track(this, ['dropDownVisible', 'editorVisible', 'tooltip', 'isTrackingObject', 'cameraFollows', 'cameraBackground',
-                              'currentViewName', '_viewNames', '_timeRotateMode', '_userRotateMode', '_fieldOfView']);
+                              'currentViewName', 'fieldOfView', '_viewNames', '_timeRotateMode', '_userRotateMode', '_constrainedAxis']);
 
         this._eventHelper.add(this._storedViewCollection.collectionChanged, function() {
             that._viewNames = that._storedViewCollection.getStoredViews().map(function (view) { return view.name; });
@@ -141,7 +149,7 @@ define([
             storedView.cameraRotationMode = that.timeRotateMode;
             storedView.constrainedAxis = camera.constrainedAxis;
 
-            // TODO: more things: sceneMode, foregroundObject, backgroundObject, and cameraRotationMode
+            // TODO: more things: sceneMode, foregroundObject, backgroundObject
         }
 
         this._saveStoredView = createCommand(function() {
@@ -161,19 +169,15 @@ define([
             var camera = scene.camera;
 
             // FOV
-            that._fieldOfView = storedView.fieldOfView;
+            that.fieldOfView = storedView.fieldOfView;
             camera.frustum.fovy = CesiumMath.toRadians(storedView.fieldOfView);
 
             // constrainedAxis
-            if (!defined(storedView.constrainedAxis)) {
-                that._userRotateMode = 'U';
-            } else if (Cartesian3.equalsEpsilon(storedView.constrainedAxis, Cartesian3.UNIT_Z, 1e-10)) {
-                that._userRotateMode = 'Z';
-            } else {
-                that._userRotateMode = 'custom';  // Neither radio button selected.
-            }
-            that.timeRotateMode = storedView.cameraRotationMode;
+            that.constrainedAxis = storedView.constrainedAxis;
             camera.constrainedAxis = storedView.constrainedAxis;
+
+            // Camera rotation over time
+            that.timeRotateMode = storedView.cameraRotationMode;
 
             /*
             // Camera flight
@@ -187,9 +191,13 @@ define([
             var flight = CameraFlightPath.createAnimation(scene, viewDescription);
             scene.animations.add(flight);
             */
-            camera.position = storedView.position;
-            camera.up = storedView.up;
-            camera.direction = storedView.direction;
+window.onTickTest(window.clock);
+            Cartesian3.clone(storedView.position, camera.position);
+            Cartesian3.clone(storedView.up, camera.up);
+            Cartesian3.clone(storedView.direction, camera.direction);
+window.camera = camera;
+window.storedView = storedView;
+console.log('set camera position ', camera.position);
         }
 
         this._visitStoredView = createCommand(function(viewName) {
@@ -264,19 +272,39 @@ define([
         });
 
         /**
-         * Gets or sets the field of view of the camera, in degrees.
-         * @memberof StoredView.prototype
-         * @type {Number}
+         * The camera's constrained axis of rotation.
+         * @type {Cartesian3}
          */
-        this.fieldOfView = undefined;
-        knockout.defineProperty(this, 'fieldOfView', {
+        this.constrainedAxis = undefined;
+        knockout.defineProperty(this, 'constrainedAxis', {
+            get: function() {
+                return that._constrainedAxis;
+            },
+            set: function(value) {
+                if (!defined(value)) {
+                    that._constrainedAxis = undefined;
+                    that._userRotateMode = 'U';
+                } else {
+                    that._constrainedAxis = Cartesian3.clone(value, that._constrainedAxis);
+
+                    if (Cartesian3.equalsEpsilon(value, Cartesian3.UNIT_Z, 1e-10)) {
+                        that._userRotateMode = 'Z';
+                    } else {
+                        that._userRotateMode = 'custom';  // Neither radio button selected.
+                    }
+                }
+            }
+        });
+
+        this._fieldOfViewText = undefined;
+        knockout.defineProperty(this, '_fieldOfViewText', {
             get : function() {
-                return that._fieldOfView;
+                return that.fieldOfView.toFixed(3);
             },
             set : function(value) {
                 var fov = window.parseFloat(value);
                 if (!window.isNaN(fov)) {
-                    that._fieldOfView = Math.max(Math.min(fov, that._maxFov), that._minFov);
+                    that.fieldOfView = Math.max(Math.min(fov, that._maxFov), that._minFov);
                 }
             }
         });
@@ -284,10 +312,10 @@ define([
         this._fovSlider = undefined;
         knockout.defineProperty(this, '_fovSlider', {
             get : function() {
-                return Math.pow((that._fieldOfView - that._minFov) / that._fovRange, 0.4);
+                return Math.pow((that.fieldOfView - that._minFov) / that._fovRange, 0.4);
             },
             set : function(value) {
-                that._fieldOfView = Math.round((Math.pow(Math.max(value, 0), 2.5) * that._fovRange + that._minFov) * 1000) * 0.001;
+                that.fieldOfView = Math.round((Math.pow(Math.max(value, 0), 2.5) * that._fovRange + that._minFov) * 1000) * 0.001;
             }
         });
 

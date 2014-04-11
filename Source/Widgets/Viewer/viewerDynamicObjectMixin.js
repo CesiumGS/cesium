@@ -299,6 +299,7 @@ define(['../../Core/BoundingSphere',
 
         if (defined(cameraControlViewModel)) {
             knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'timeRotateMode', function(value) {
+console.log('timeRotateMode ' + value.name);
                 if (value === StoredViewCameraRotationMode.ICRF) {
                     switchToIcrf();
                 } else {
@@ -309,6 +310,33 @@ define(['../../Core/BoundingSphere',
                     dynamicObjectView.rotationMode = value;
                 }
             }));
+
+            eventHelper.add(cameraControlViewModel.visitStoredView.beforeExecute, function(commandInfo) {
+                var viewName = commandInfo.args[0];
+                var storedView = cameraControlViewModel.storedViewCollection.getByName(viewName);
+window.onTickTest = onTick;
+window.clock = viewer.clock;
+                if (defined(storedView)) {
+                    // TODO: Make sure object still exists, is not destroyed etc.
+console.log('foreground object: ' + (storedView.foregroundObject || {name:'Earth'}).name);
+                    viewer.trackedObject = storedView.foregroundObject;
+
+                    var time = viewer.clock.currentTime;
+                    if (defined(dynamicObjectView)) {
+                        dynamicObjectView.update(time);
+                    } else if (useIcrf && viewer.scene.mode === SceneMode.SCENE3D) {
+                        Matrix4.clone(computeInertialToFixed(), viewer.scene.camera.transform);
+                    }
+                }
+            });
+
+            eventHelper.add(cameraControlViewModel.saveStoredView.afterExecute, function() {
+                var viewName = cameraControlViewModel.currentViewName;
+                var storedView = cameraControlViewModel.storedViewCollection.getByName(viewName);
+                if (defined(storedView)) {
+                    storedView.foregroundObject = viewer.trackedObject;
+                }
+            });
         }
 
         knockoutSubscriptions.push(subscribeAndEvaluate(viewer, 'trackedObject', function(value) {
@@ -335,8 +363,9 @@ define(['../../Core/BoundingSphere',
                     cameraControlViewModel.isTrackingObject = false;
                     cameraControlViewModel.cameraFollows = 'Earth';
                 }
-                // Note that timeRotationMode can be reset if isTrackingObject changed value above.
+                // Note that timeRotateMode can be reset if isTrackingObject changed value above.
                 rotationMode = cameraControlViewModel.timeRotateMode;
+console.log('trackedObject ' + cameraControlViewModel.cameraFollows);
             }
 
             if (isTracking && defined(value.position)) {
