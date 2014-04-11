@@ -57,6 +57,8 @@ define(['../Core/createGuid',
         this._ellipsoidSubscription = undefined;
         this._ellipse = undefined;
         this._ellipseSubscription = undefined;
+        this._fan = undefined;
+        this._fanSubscription = undefined;
         this._label = undefined;
         this._labelSubscription = undefined;
         this._path = undefined;
@@ -79,7 +81,7 @@ define(['../Core/createGuid',
         this._descriptionSubscription = undefined;
 
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
-                               'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
+                               'cone', 'ellipsoid', 'ellipse', 'fan', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
     };
 
@@ -187,6 +189,12 @@ define(['../Core/createGuid',
          * @type {DynamicEllipse}
          */
         ellipse : createDynamicPropertyDescriptor('ellipse'),
+        /**
+         * Gets or sets the fan.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicFan}
+         */
+        fan : createDynamicPropertyDescriptor('fan'),
         /**
          * Gets or sets the label.
          * @memberof DynamicObject.prototype
