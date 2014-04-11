@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/clone',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/Color',
@@ -14,7 +13,6 @@ define([
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
-        clone,
         defined,
         destroyObject,
         Color,
@@ -34,8 +32,8 @@ define([
      * @private
      */
     var OIT = function(context) {
-        var extensionsSupported = context.getFloatingPointTexture() && context.getDepthTexture();
-        this._translucentMRTSupport = context.getDrawBuffers() && extensionsSupported;
+        var extensionsSupported = context.floatingPointTexture && context.depthTexture;
+        this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
 
         // We support multipass for the Chrome D3D9 backend and ES 2.0 on mobile.
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
@@ -202,8 +200,8 @@ define([
             return;
         }
 
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var opaqueTexture = this._opaqueTexture;
         var textureChanged = !defined(opaqueTexture) || opaqueTexture.width !== width || opaqueTexture.height !== height;
@@ -409,7 +407,7 @@ define([
                 source +
                 '}\n';
 
-            shader = context.getShaderCache().getShaderProgram(vs, newSourceFS, attributeLocations);
+            shader = context.shaderCache.getShaderProgram(vs, newSourceFS, attributeLocations);
             cache[id] = shader;
         }
 

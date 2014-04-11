@@ -3,7 +3,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -21,7 +19,6 @@ define([
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
-        '../../Scene/SceneTransitioner',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
         '../../Scene/Sun',
@@ -30,7 +27,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        DefaultProxy,
         defaultValue,
         defined,
         defineProperties,
@@ -38,7 +34,6 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -48,7 +43,6 @@ define([
         Moon,
         Scene,
         SceneMode,
-        SceneTransitioner,
         SkyAtmosphere,
         SkyBox,
         Sun,
@@ -232,7 +226,6 @@ define([
             this._scene = scene;
             this._centralBody = centralBody;
             this._clock = defaultValue(options.clock, new Clock());
-            this._transitioner = new SceneTransitioner(scene, ellipsoid);
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
             this._renderLoopRunning = false;
@@ -243,10 +236,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._transitioner.to2D();
+                    this._scene.morphTo2D();
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._transitioner.toColumbusView();
+                    this._scene.morphToColumbusView();
                 }
             }
 
@@ -269,18 +262,6 @@ define([
         container : {
             get : function() {
                 return this._container;
-            }
-        },
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {SceneTransitioner}
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._transitioner;
             }
         },
 

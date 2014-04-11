@@ -3,9 +3,9 @@ defineSuite([
          'Widgets/CesiumInspector/CesiumInspectorViewModel',
          'Specs/createScene',
          'Specs/destroyScene',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/defined',
-         'Scene/ExtentPrimitive',
+         'Scene/RectanglePrimitive',
          'Scene/Tile',
          'Scene/WebMercatorTilingScheme',
          'Scene/Material',
@@ -15,9 +15,9 @@ defineSuite([
          CesiumInspectorViewModel,
          createScene,
          destroyScene,
-         Extent,
+         Rectangle,
          defined,
-         ExtentPrimitive,
+         RectanglePrimitive,
          Tile,
          WebMercatorTilingScheme,
          Material,
@@ -82,8 +82,8 @@ defineSuite([
     });
 
     it ('primitive bounding sphere', function() {
-        var p = scene.primitives.add(new ExtentPrimitive({
-            extent : new Extent(
+        var p = scene.primitives.add(new RectanglePrimitive({
+            rectangle : new Rectangle(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
                     CesiumMath.toRadians(-90.0),
@@ -106,8 +106,8 @@ defineSuite([
     });
 
     it ('primitive filter', function() {
-        var p = scene.primitives.add(new ExtentPrimitive({
-            extent : new Extent(
+        var p = scene.primitives.add(new RectanglePrimitive({
+            rectangle : new Rectangle(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
                     CesiumMath.toRadians(-90.0),
@@ -117,8 +117,8 @@ defineSuite([
             })
         );
 
-        var q = scene.primitives.add(new ExtentPrimitive({
-            extent : new Extent(
+        var q = scene.primitives.add(new RectanglePrimitive({
+            rectangle : new Rectangle(
                     CesiumMath.toRadians(-10.0),
                     CesiumMath.toRadians(0.0),
                     CesiumMath.toRadians(-9.0),
@@ -142,8 +142,8 @@ defineSuite([
     });
 
     it ('primitive reference frame', function() {
-        var p = scene.primitives.add(new ExtentPrimitive({
-            extent : new Extent(
+        var p = scene.primitives.add(new RectanglePrimitive({
+            rectangle : new Rectangle(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
                     CesiumMath.toRadians(-90.0),

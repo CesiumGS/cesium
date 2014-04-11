@@ -15,8 +15,8 @@ define([
 
     function displayTextCredit(credit, container, delimiter) {
         if (!defined(credit.element)) {
-            var text = credit.getText();
-            var link = credit.getLink();
+            var text = credit.text;
+            var link = credit.link;
             var span = document.createElement('span');
             if (credit.hasLink()) {
                 var a = document.createElement('a');
@@ -41,11 +41,11 @@ define([
 
     function displayImageCredit(credit, container) {
         if (!defined(credit.element)) {
-            var text = credit.getText();
-            var link = credit.getLink();
+            var text = credit.text;
+            var link = credit.link;
             var span = document.createElement('span');
             var content = document.createElement('img');
-            content.src = credit.getImageUrl();
+            content.src = credit.imageUrl;
             content.style['vertical-align'] = 'bottom';
             if (defined(text)) {
                 content.alt = text;

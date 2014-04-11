@@ -121,8 +121,8 @@ defineSuite([
         command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
-        expect(texture.width).toEqual(context.getCanvas().clientWidth);
-        expect(texture.height).toEqual(context.getCanvas().clientHeight);
+        expect(texture.width).toEqual(context.canvas.clientWidth);
+        expect(texture.height).toEqual(context.canvas.clientHeight);
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -167,7 +167,7 @@ defineSuite([
     });
 
     it('draws the expected floating-point texture color', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             var color = new Color(0.2, 0.4, 0.6, 0.8);
             var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
 
@@ -353,7 +353,7 @@ defineSuite([
     });
 
     it('default sampler returns undefined, data type is FLOAT ', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             texture = context.createTexture2D({
                 source : blueImage,
                 pixelFormat : PixelFormat.RGBA,
@@ -468,7 +468,7 @@ defineSuite([
     it('throws when creating a texture with width larger than the maximum texture size', function() {
         expect(function() {
             texture = context.createTexture2D({
-                width : context.getMaximumTextureSize() + 1,
+                width : context.maximumTextureSize + 1,
                 height : 16
             });
         }).toThrowDeveloperError();
@@ -487,7 +487,7 @@ defineSuite([
         expect(function() {
             texture = context.createTexture2D({
                 width : 16,
-                height : context.getMaximumTextureSize() + 1
+                height : context.maximumTextureSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -540,7 +540,7 @@ defineSuite([
     });
 
     it('throws when creating if pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, and WEBGL_depth_texture is not supported', function() {
-        if (!context.getDepthTexture()) {
+        if (!context.depthTexture) {
             expect(function() {
                 texture = context.createTexture2D({
                     width : 1,
@@ -553,7 +553,7 @@ defineSuite([
     });
 
     it('throws when creating if pixelDatatype is FLOAT, and OES_texture_float is not supported', function() {
-        if (!context.getFloatingPointTexture()) {
+        if (!context.floatingPointTexture) {
             expect(function() {
                 texture = context.createTexture2D({
                     width : 1,
@@ -591,18 +591,18 @@ defineSuite([
 
     it('throws when creating from the framebuffer with a width greater than the canvas clientWidth', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, context.getCanvas().clientWidth + 1);
+            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, context.canvas.clientWidth + 1);
         }).toThrowDeveloperError();
     });
 
     it('throws when creating from the framebuffer with a height greater than the canvas clientHeight', function() {
         expect(function() {
-            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.getCanvas().clientHeight + 1);
+            texture = context.createTexture2DFromFramebuffer(PixelFormat.RGB, 0, 0, 1, context.canvas.clientHeight + 1);
         }).toThrowDeveloperError();
     });
 
     it('throws when copying to a texture from the framebuffer with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             texture = context.createTexture2D({
                 width : 1,
                 height : 1,
@@ -617,7 +617,7 @@ defineSuite([
     });
 
     it('throws when copying to a texture from the framebuffer with a FLOAT pixel data type', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             texture = context.createTexture2D({
                 width : 1,
                 height : 1,
@@ -692,7 +692,7 @@ defineSuite([
     });
 
     it('throws when copying to a texture with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             texture = context.createTexture2D({
                 width : 1,
                 height : 1,
@@ -765,7 +765,7 @@ defineSuite([
     });
 
     it('throws when generating mipmaps with a DEPTH_COMPONENT or DEPTH_STENCIL pixel format', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             texture = context.createTexture2D({
                 width : 1,
                 height : 1,
@@ -812,7 +812,7 @@ defineSuite([
     });
 
     it('throws when data type is FLOAT and minification filter is not NEAREST or NEAREST_MIPMAP_NEAREST', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             texture = context.createTexture2D({
                 source : blueImage,
                 pixelDatatype : PixelDatatype.FLOAT
@@ -827,7 +827,7 @@ defineSuite([
     });
 
     it('throws when data type is FLOAT and magnification filter is not NEAREST', function() {
-        if (context.getFloatingPointTexture()) {
+        if (context.floatingPointTexture) {
             texture = context.createTexture2D({
                 source : blueImage,
                 pixelDatatype : PixelDatatype.FLOAT

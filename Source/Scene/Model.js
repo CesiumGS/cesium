@@ -788,7 +788,7 @@ define([
             var vs = shaders[program.vertexShader];
             var fs = shaders[program.fragmentShader];
 
-            model._rendererResources.programs[name] = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
+            model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
 
             if (model.allowPicking) {
                 // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -796,7 +796,7 @@ define([
                     sources : [fs],
                     pickColorQualifier : 'uniform'
                 });
-                model._rendererResources.pickPrograms[name] = context.getShaderCache().getShaderProgram(vs, pickFS, attributeLocations);
+                model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
             }
         }
     }
@@ -1394,7 +1394,7 @@ define([
                             } else if (defined(parameter.semantic)) {
                                 if (parameter.semantic !== 'JOINT_MATRIX') {
                                     // Map glTF semantic to Cesium automatic uniform
-                                    func = gltfSemanticUniforms[parameter.semantic](context.getUniformState());
+                                    func = gltfSemanticUniforms[parameter.semantic](context.uniformState);
                                 } else {
                                     func = undefined;
                                     jointMatrixUniformName = name;
@@ -1789,7 +1789,7 @@ define([
             var pickIds = model._pickIds;
             var length = pickIds.length;
             for (var i = 0; i < length; ++i) {
-                context.getObjectByPickColor(pickIds[i].color).id = id;
+                pickIds[i].object.id = id;
             }
         }
     }

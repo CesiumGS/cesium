@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="The outline of an extent.">
+    <meta name="description" content="The outline of an rectangle.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -30,15 +30,14 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
-    var extent = Cesium.Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+    var rectangle = Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
     
-    // Extent outline
+    // Rectangle outline
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentOutlineGeometry({
-                extent : extent
+            geometry : new Cesium.RectangleOutlineGeometry({
+                rectangle : rectangle
             }),
             attributes : {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
@@ -50,16 +49,16 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
             }
         })
     }));
 
-    // Extent
+    // Rectangle
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : extent,
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : rectangle,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {

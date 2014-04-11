@@ -145,11 +145,11 @@ define([
     };
 
     /**
-     * Clears the collection.
+     * Removes all intervals from the collection.
      *
      * @memberof TimeIntervalCollection
      */
-    TimeIntervalCollection.prototype.clear = function() {
+    TimeIntervalCollection.prototype.removeAll = function() {
         if (this._intervals.length > 0) {
             this._intervals.length = 0;
             this._intervalsChanged.raiseEvent(this);

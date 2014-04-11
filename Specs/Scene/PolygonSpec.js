@@ -55,7 +55,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
@@ -319,7 +319,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

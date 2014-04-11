@@ -254,6 +254,12 @@ define([
             get : function() {
                 return this._flipY;
             }
+        },
+
+        _target : {
+            get : function() {
+                return this._textureTarget;
+            }
         }
     });
 
@@ -273,9 +279,9 @@ define([
      * // Generate mipmaps, and then set the sampler so mipmaps are used for
      * // minification when the cube map is sampled.
      * cubeMap.generateMipmap();
-     * cubeMap.setSampler(context.createSampler({
+     * cubeMap.sampler = context.createSampler({
      *   minificationFilter : Cesium.TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-     * }));
+     * });
      */
     CubeMap.prototype.generateMipmap = function(hint) {
         hint = defaultValue(hint, MipmapHint.DONT_CARE);
@@ -296,14 +302,6 @@ define([
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);
         gl.bindTexture(target, null);
-    };
-
-    CubeMap.prototype._getTexture = function() {
-        return this._texture;
-    };
-
-    CubeMap.prototype._getTarget = function() {
-        return this._textureTarget;
     };
 
     /**

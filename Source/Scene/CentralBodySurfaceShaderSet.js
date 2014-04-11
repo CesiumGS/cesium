@@ -86,7 +86,7 @@ define([
                     '   color,\n' +
                     '   u_dayTextures[' + i + '],\n' +
                     '   textureCoordinates,\n' +
-                    '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
+                    '   u_dayTextureTexCoordsRectangle[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +
                     (applyAlpha ?      '   u_dayTextureAlpha[' + i + '],\n' : '1.0,\n') +
                     (applyBrightness ? '   u_dayTextureBrightness[' + i + '],\n' : '0.0,\n') +
@@ -100,7 +100,7 @@ define([
                 '    return color;\n' +
                 '}';
 
-            shader = context.getShaderCache().getShaderProgram(vs, fs, this._attributeLocations);
+            shader = context.shaderCache.getShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;

@@ -57,7 +57,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene.context;
+        context = scene._context;
         primitives = scene.primitives;
 
         var camera = scene.camera;
@@ -252,7 +252,7 @@ defineSuite([
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.getShaderCache().getShaderProgram(vs, fs, attributeLocations);
+                this._sp = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });

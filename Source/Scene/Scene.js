@@ -9,6 +9,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/Occluder',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -35,6 +36,7 @@ define([
         './AnimationCollection',
         './SceneMode',
         './SceneTransforms',
+        './SceneTransitioner',
         './FrameState',
         './OrthographicFrustum',
         './PerspectiveFrustum',
@@ -57,6 +59,7 @@ define([
         DeveloperError,
         GeographicProjection,
         Ellipsoid,
+        Event,
         Occluder,
         BoundingRectangle,
         BoundingSphere,
@@ -83,6 +86,7 @@ define([
         AnimationCollection,
         SceneMode,
         SceneTransforms,
+        SceneTransitioner,
         FrameState,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -135,7 +139,7 @@ define([
         this._context = context;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(context);
+        this._camera = new Camera(this);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
@@ -161,6 +165,31 @@ define([
         depthClearCommand.depth = 1.0;
         depthClearCommand.owner = this;
         this._depthClearCommand = depthClearCommand;
+
+        this._transitioner = new SceneTransitioner(this);
+
+        /**
+         * Determines whether or not to instantly complete the
+         * scene transition animation on user input.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.completeMorphOnUserInput = true;
+
+        /**
+         * The event fired at the beginning of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphStart = new Event();
+
+        /**
+         * The event fired at the completion of a scene transition.
+         * @type {Event}
+         * @default Event()
+         */
+        this.morphComplete = new Event();
 
         /**
          * The {@link SkyBox} used to draw the stars.
@@ -387,13 +416,38 @@ define([
         },
 
         /**
-         * Gets the context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
-         * @type {Context}
+         * @type {Number}
+         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth'>drawingBufferWidth</a>
          */
-        context : {
+        drawingBufferHeight : {
             get : function() {
-                return this._context;
+                return this._context.drawingBufferHeight;
+            }
+        },
+
+        /**
+         * The drawingBufferHeight of the underlying GL context.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight'>drawingBufferHeight</a>
+         */
+        drawingBufferWidth : {
+            get : function() {
+                return this._context.drawingBufferWidth;
+            }
+        },
+
+        /**
+         * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+         */
+        maximumAliasedLineWidth : {
+            get : function() {
+                return this._context.maximumAliasedLineWidth;
             }
         },
 
@@ -694,7 +748,7 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.getShaderCache().getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -826,7 +880,7 @@ define([
         var frameState = scene._frameState;
         var camera = scene._camera;
         var context = scene._context;
-        var us = context.getUniformState();
+        var us = context.uniformState;
 
         var frustum;
         if (defined(camera.frustum.fovy)) {
@@ -852,7 +906,7 @@ define([
 
         var skyBoxCommand = (frameState.passes.render && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.render && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.render && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         var sunVisible = isVisible(sunCommand, frameState);
 
         var clear = scene._clearColorCommand;
@@ -1003,6 +1057,25 @@ define([
     }
 
     /**
+     * Creates a new texture atlas.
+     *
+     * @memberof Scene
+     *
+     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
+     *
+     * @returns {TextureAtlas} The new texture atlas.
+     *
+     * @see TextureAtlas
+     */
+    Scene.prototype.createTextureAtlas = function(options) {
+        return this._context.createTextureAtlas(options);
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1010,7 +1083,7 @@ define([
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
-            this._context.getShaderCache().destroyReleasedShaderPrograms();
+            this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
         this._animations.update();
@@ -1027,7 +1100,7 @@ define([
             time = new JulianDate();
         }
 
-        var us = this.context.getUniformState();
+        var us = this._context.uniformState;
         var frameState = this._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1081,12 +1154,11 @@ define([
     var scratchPixelSize = new Cartesian2();
 
     function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
-        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
@@ -1120,13 +1192,12 @@ define([
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
 
     function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
-        var context = scene._context;
         var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
@@ -1191,10 +1262,10 @@ define([
         //>>includeEnd('debug');
 
         var context = this._context;
-        var us = this.context.getUniformState();
+        var us = context.uniformState;
         var frameState = this._frameState;
 
-        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(context, windowPosition, scratchPosition);
+        var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
 
         if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
@@ -1212,7 +1283,7 @@ define([
         createPotentiallyVisibleSet(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (context.getDrawingBufferHeight() - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);
@@ -1286,6 +1357,53 @@ define([
     };
 
     /**
+     * Instantly completes an active transition.
+     * @memberof Scene
+     */
+    Scene.prototype.completeMorph = function(){
+        this._transitioner.completeMorph();
+    };
+
+    /**
+     * Asynchronously transitions the scene to 2D.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo2D = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
+     * Asynchronously transitions the scene to Columbus View.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphToColumbusView = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
+     * Asynchronously transitions the scene to 3D.
+     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @memberof Scene
+     */
+    Scene.prototype.morphTo3D = function(duration) {
+        var centralBody = this.primitives.centralBody;
+        if (defined(centralBody)) {
+            duration = defaultValue(duration, 2000);
+            this._transitioner.morphTo3D(duration, centralBody.ellipsoid);
+        }
+    };
+
+    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1307,6 +1425,8 @@ define([
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
+
+        this._transitioner.destroy();
 
         this._oit.destroy();
         this._fxaa.destroy();

@@ -6,10 +6,11 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
@@ -33,10 +34,11 @@ define([
         Cartesian4,
         Cartographic,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
-        Extent,
+        Rectangle,
         FeatureDetection,
         getTimestamp,
         Intersect,
@@ -127,45 +129,48 @@ define([
         };
     };
 
+    defineProperties(CentralBodySurface.prototype, {
+        terrainProvider : {
+            get : function() {
+                return this._terrainProvider;
+            },
+            set : function(terrainProvider) {
+                if (this._terrainProvider === terrainProvider) {
+                    return;
+                }
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(terrainProvider)) {
+                    throw new DeveloperError('terrainProvider is required.');
+                }
+                //>>includeEnd('debug');
+
+                this._terrainProvider = terrainProvider;
+
+                // Clear the replacement queue
+                var replacementQueue = this._tileReplacementQueue;
+                replacementQueue.head = undefined;
+                replacementQueue.tail = undefined;
+                replacementQueue.count = 0;
+
+                // Free and recreate the level zero tiles.
+                var levelZeroTiles = this._levelZeroTiles;
+                if (defined(levelZeroTiles)) {
+                    for (var i = 0; i < levelZeroTiles.length; ++i) {
+                        levelZeroTiles[i].freeResources();
+                    }
+                }
+
+                this._levelZeroTiles = undefined;
+            }
+        }
+    });
+
     CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
-    };
-
-    CentralBodySurface.prototype.getTerrainProvider = function() {
-        return this._terrainProvider;
-    };
-
-    CentralBodySurface.prototype.setTerrainProvider = function(terrainProvider) {
-        if (this._terrainProvider === terrainProvider) {
-            return;
-        }
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(terrainProvider)) {
-            throw new DeveloperError('terrainProvider is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._terrainProvider = terrainProvider;
-
-        // Clear the replacement queue
-        var replacementQueue = this._tileReplacementQueue;
-        replacementQueue.head = undefined;
-        replacementQueue.tail = undefined;
-        replacementQueue.count = 0;
-
-        // Free and recreate the level zero tiles.
-        var levelZeroTiles = this._levelZeroTiles;
-        if (defined(levelZeroTiles)) {
-            for (var i = 0; i < levelZeroTiles.length; ++i) {
-                levelZeroTiles[i].freeResources();
-            }
-        }
-
-        this._levelZeroTiles = undefined;
     };
 
     CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
@@ -464,7 +469,7 @@ define([
         var distance = Math.sqrt(distanceSquaredToTile(frameState, cameraPosition, cameraPositionCartographic, tile));
         tile.distance = distance;
 
-        var height = context.getDrawingBufferHeight();
+        var height = context.drawingBufferHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
@@ -477,8 +482,8 @@ define([
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var maxGeometricError = surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
         var pixelSize = Math.max(frustum.top - frustum.bottom, frustum.right - frustum.left) / Math.max(width, height);
@@ -517,7 +522,7 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
@@ -557,11 +562,11 @@ define([
         var maximumHeight = tile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.scene2D.projection.project(Extent.getSouthwest(tile.extent), southwestCornerScratch);
+            southwestCornerCartesian = frameState.scene2D.projection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.scene2D.projection.project(Extent.getNortheast(tile.extent), northeastCornerScratch);
+            northeastCornerCartesian = frameState.scene2D.projection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
@@ -612,7 +617,7 @@ define([
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
         var allRenderable = true;
 
-        var children = tile.getChildren();
+        var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
             surface._tileReplacementQueue.markTileRendered(child);
@@ -663,7 +668,7 @@ define([
     // This is debug code to render the bounding sphere of the tile in
     // CentralBodySurface._debug.boundingSphereTile.
     CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
-        // Find the tile in the render list that overlaps this extent
+        // Find the tile in the render list that overlaps this rectangle
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         var result;
         var tile;
@@ -674,7 +679,7 @@ define([
             }
             for (var j = 0; j < tileSet.length; ++j) {
                 tile = tileSet[j];
-                if (Extent.contains(tile.extent, cartographicPick)) {
+                if (Rectangle.contains(tile.rectangle, cartographicPick)) {
                     result = tile;
                     break;
                 }
@@ -709,8 +714,8 @@ define([
             u_center3D : function() {
                 return this.center3D;
             },
-            u_tileExtent : function() {
-                return this.tileExtent;
+            u_tileRectangle : function() {
+                return this.tileRectangle;
             },
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
@@ -721,8 +726,8 @@ define([
             u_dayTextureTranslationAndScale : function() {
                 return this.dayTextureTranslationAndScale;
             },
-            u_dayTextureTexCoordsExtent : function() {
-                return this.dayTextureTexCoordsExtent;
+            u_dayTextureTexCoordsRectangle : function() {
+                return this.dayTextureTexCoordsRectangle;
             },
             u_dayTextureAlpha : function() {
                 return this.dayTextureAlpha;
@@ -760,11 +765,11 @@ define([
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
-            tileExtent : new Cartesian4(),
+            tileRectangle : new Cartesian4(),
 
             dayTextures : [],
             dayTextureTranslationAndScale : [],
-            dayTextureTexCoordsExtent : [],
+            dayTextureTexCoordsRectangle : [],
             dayTextureAlpha : [],
             dayTextureBrightness : [],
             dayTextureContrast : [],
@@ -787,7 +792,7 @@ define([
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
-    var tileExtentScratch = new Cartesian4();
+    var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian4();
     var southwestScratch = new Cartesian3();
@@ -798,7 +803,7 @@ define([
 
         var viewMatrix = frameState.camera.viewMatrix;
 
-        var maxTextures = context.getMaximumTextureImageUnits();
+        var maxTextures = context.maximumTextureImageUnits;
 
         var tileCommands = surface._tileCommands;
         var tileCommandUniformMaps = surface._tileCommandUniformMaps;
@@ -819,7 +824,7 @@ define([
                 var rtc = tile.center;
 
                 // Not used in 3D.
-                var tileExtent = tileExtentScratch;
+                var tileRectangle = tileRectangleScratch;
 
                 // Only used for Mercator projections.
                 var southLatitude = 0.0;
@@ -829,29 +834,29 @@ define([
                 var oneOverMercatorHeight = 0.0;
 
                 if (frameState.mode !== SceneMode.SCENE3D) {
-                    var southwest = projection.project(Extent.getSouthwest(tile.extent), southwestScratch);
-                    var northeast = projection.project(Extent.getNortheast(tile.extent), northeastScratch);
+                    var southwest = projection.project(Rectangle.getSouthwest(tile.rectangle), southwestScratch);
+                    var northeast = projection.project(Rectangle.getNortheast(tile.rectangle), northeastScratch);
 
-                    tileExtent.x = southwest.x;
-                    tileExtent.y = southwest.y;
-                    tileExtent.z = northeast.x;
-                    tileExtent.w = northeast.y;
+                    tileRectangle.x = southwest.x;
+                    tileRectangle.y = southwest.y;
+                    tileRectangle.z = northeast.x;
+                    tileRectangle.w = northeast.y;
 
                     // In 2D and Columbus View, use the center of the tile for RTC rendering.
                     if (frameState.mode !== SceneMode.MORPHING) {
                         rtc = rtcScratch;
                         rtc.x = 0.0;
-                        rtc.y = (tileExtent.z + tileExtent.x) * 0.5;
-                        rtc.z = (tileExtent.w + tileExtent.y) * 0.5;
-                        tileExtent.x -= rtc.y;
-                        tileExtent.y -= rtc.z;
-                        tileExtent.z -= rtc.y;
-                        tileExtent.w -= rtc.z;
+                        rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
+                        rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;
+                        tileRectangle.x -= rtc.y;
+                        tileRectangle.y -= rtc.z;
+                        tileRectangle.z -= rtc.y;
+                        tileRectangle.w -= rtc.z;
                     }
 
                     if (projection instanceof WebMercatorProjection) {
-                        southLatitude = tile.extent.south;
-                        northLatitude = tile.extent.north;
+                        southLatitude = tile.rectangle.south;
+                        northLatitude = tile.rectangle.north;
 
                         var southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(southLatitude);
                         var northMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(northLatitude);
@@ -898,7 +903,7 @@ define([
 
                     uniformMap.center3D = tile.center;
 
-                    Cartesian4.clone(tileExtent, uniformMap.tileExtent);
+                    Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
                     uniformMap.southAndNorthLatitude.x = southLatitude;
                     uniformMap.southAndNorthLatitude.y = northLatitude;
                     uniformMap.southMercatorYLowAndHighAndOneOverHeight.x = southMercatorYLow;
@@ -930,7 +935,7 @@ define([
 
                         uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
                         uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
-                        uniformMap.dayTextureTexCoordsExtent[numberOfDayTextures] = tileImagery.textureCoordinateExtent;
+                        uniformMap.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
 
                         if (typeof imageryLayer.alpha === 'function') {
                             uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha(frameState, imageryLayer, imagery.x, imagery.y, imagery.level);
@@ -1011,7 +1016,7 @@ define([
                     var boundingVolume = command.boundingVolume;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        BoundingSphere.fromExtentWithHeights2D(tile.extent, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                        BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                         Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                         if (frameState.mode === SceneMode.MORPHING) {

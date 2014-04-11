@@ -122,7 +122,10 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(context, frameState) {
+    Sun.prototype.update = function(scene) {
+        var frameState = scene.frameState;
+        var context = scene._context;
+
         if (!this.show) {
             return undefined;
         }
@@ -136,8 +139,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = context.getDrawingBufferWidth();
-        var drawingBufferHeight = context.getDrawingBufferHeight();
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -228,7 +231,7 @@ define([
             command.vertexArray = context.createVertexArray(attributes);
             command.primitiveType = PrimitiveType.TRIANGLE_FAN;
 
-            command.shaderProgram = context.getShaderCache().getShaderProgram(SunVS, SunFS, attributeLocations);
+            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -236,8 +239,8 @@ define([
             command.boundingVolume = new BoundingSphere();
         }
 
-        var sunPosition = context.getUniformState().sunPositionWC;
-        var sunPositionCV = context.getUniformState().sunPositionColumbusView;
+        var sunPosition = context.uniformState.sunPositionWC;
+        var sunPositionCV = context.uniformState.sunPositionColumbusView;
 
         var boundingVolume = this._boundingVolume;
         var boundingVolume2D = this._boundingVolume2D;
@@ -259,7 +262,7 @@ define([
         var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
         var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
-        var projMatrix = context.getUniformState().projection;
+        var projMatrix = context.uniformState.projection;
 
         var positionEC = scratchPositionEC;
         positionEC.x = 0;
@@ -268,11 +271,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(context, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(context, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);

@@ -48,7 +48,7 @@ define([
         this._unusedIndexes = [];
         this._dynamicObjectCollection = undefined;
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
+        var atlas = this._textureAtlas = scene.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
@@ -212,7 +212,7 @@ define([
                 billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
-            billboard._id = dynamicObject;
+            billboard.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             billboard._visualizerColor = Color.clone(Color.WHITE, billboard._visualizerColor);
