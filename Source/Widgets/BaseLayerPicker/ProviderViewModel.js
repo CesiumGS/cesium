@@ -16,7 +16,7 @@ define([
     /**
      * A view model that represents each item in the BaseLayerPicker.
      *
-     * @alias ImageryProviderViewModel
+     * @alias ProviderViewModel
      * @constructor
      *
      * @param {Object} description The object containing all parameters.
@@ -28,7 +28,7 @@ define([
      * @see BaseLayerPicker
      * @see ImageryProvider
      */
-    var ImageryProviderViewModel = function(description) {
+    var ProviderViewModel = function(description) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(description.name)) {
             throw new DeveloperError('description.name is required.');
@@ -72,11 +72,11 @@ define([
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     };
 
-    defineProperties(ImageryProviderViewModel.prototype, {
+    defineProperties(ProviderViewModel.prototype, {
         /**
          * Gets the Command called to create the imagery provider or array of
          * imagery providers to be added to the bottom of the layer collection.
-         * @memberof ImageryProviderViewModel.prototype
+         * @memberof ProviderViewModel.prototype
          *
          * @type {Command}
          */
@@ -87,5 +87,5 @@ define([
         }
     });
 
-    return ImageryProviderViewModel;
+    return ProviderViewModel;
 });
