@@ -44,6 +44,7 @@ define(['../Core/Cartesian2',
         './DynamicLabel',
         './DynamicEllipse',
         './DynamicEllipsoid',
+        './DynamicFan',
         './GridMaterialProperty',
         './ImageMaterialProperty',
         './DynamicModel',
@@ -111,6 +112,7 @@ define(['../Core/Cartesian2',
         DynamicLabel,
         DynamicEllipse,
         DynamicEllipsoid,
+        DynamicFan,
         GridMaterialProperty,
         ImageMaterialProperty,
         DynamicModel,
@@ -1248,26 +1250,31 @@ define(['../Core/Cartesian2',
         processPacketData(Number, materialToProcess, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri);
     }
 
-    function processDirectionData(pyramid, directions, interval, sourceUri) {
+    function processDirectionData(object, directions, interval, sourceUri) {
         var i;
         var len;
         var values = [];
-        var tmp = directions.unitSpherical;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 2) {
-                values.push(new Spherical(tmp[i], tmp[i + 1]));
-            }
-            directions.array = values;
-        }
+        var unitSphericals = directions.unitSpherical;
+        var sphericals = directions.spherical;
+        var unitCartesians = directions.unitCartesian;
 
-        tmp = directions.unitCartesian;
-        if (defined(tmp)) {
-            for (i = 0, len = tmp.length; i < len; i += 3) {
-                values.push(Spherical.fromCartesian3(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2])));
+        if (defined(unitSphericals)) {
+            for (i = 0, len = unitSphericals.length; i < len; i += 2) {
+                values.push(new Spherical(unitSphericals[i], unitSphericals[i + 1]));
+            }
+            directions.array = values;
+        } else if (defined(sphericals)) {
+            for (i = 0, len = sphericals.length; i < len; i += 3) {
+                values.push(new Spherical(sphericals[i], sphericals[i + 1], sphericals[i + 2]));
+            }
+            directions.array = values;
+        } else if (defined(unitCartesians)) {
+            for (i = 0, len = unitCartesians.length; i < len; i += 3) {
+                values.push(Spherical.fromCartesian3(new Cartesian3(unitCartesians[i], unitCartesians[i + 1], unitCartesians[i + 2])));
             }
             directions.array = values;
         }
-        processPacketData(Array, pyramid, 'directions', directions, interval, sourceUri);
+        processPacketData(Array, object, 'directions', directions, interval, sourceUri);
     }
 
     function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1304,6 +1311,46 @@ define(['../Core/Cartesian2',
                 }
             } else {
                 processDirectionData(pyramid, directions, interval, sourceUri);
+            }
+        }
+    }
+
+    function processFan(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var fanData = packet.fan;
+        if (!defined(fanData)) {
+            return;
+        }
+
+        var interval = fanData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var fan = dynamicObject.fan;
+        if (!defined(fan)) {
+            dynamicObject.fan = fan = new DynamicFan();
+        }
+
+        processPacketData(Boolean, fan, 'show', fanData.show, interval, sourceUri);
+        processPacketData(Number, fan, 'radius', fanData.radius, interval, sourceUri);
+        processMaterialPacketData(fan, 'material', fanData.material, interval, sourceUri);
+        processPacketData(Boolean, fan, 'perDirectionRadius', fanData.perDirectionRadius, interval, sourceUri);
+        processPacketData(Boolean, fan, 'fill', fanData.fill, interval, sourceUri);
+        processPacketData(Boolean, fan, 'outline', fanData.outline, interval, sourceUri);
+        processPacketData(Color, fan, 'outlineColor', fanData.outlineColor, interval, sourceUri);
+        processPacketData(Number, fan, 'numberOfRings', fanData.numberOfRings, interval, sourceUri);
+
+        //The directions property is a special case value that can be an array of unitSpherical or unit Cartesians.
+        //We pre-process this into Spherical instances and then process it like any other array.
+        var directions = fanData.directions;
+        if (defined(directions)) {
+            if (isArray(directions)) {
+                var length = directions.length;
+                for (var i = 0; i < length; i++) {
+                    processDirectionData(fan, directions[i], interval, sourceUri);
+                }
+            } else {
+                processDirectionData(fan, directions, interval, sourceUri);
             }
         }
     }
@@ -1444,6 +1491,7 @@ define(['../Core/Cartesian2',
     processEllipse, //
     processEllipsoid, //
     processCone, //
+    processFan, //
     processLabel, //
     processModel, //
     processName, //
