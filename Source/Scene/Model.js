@@ -32,6 +32,7 @@ define([
         '../Renderer/TextureWrap',
         './ModelAnimationCache',
         './ModelAnimationCollection',
+        './ModelMaterial',
         './ModelMesh',
         './ModelNode',
         './ModelTypes',
@@ -70,6 +71,7 @@ define([
         TextureWrap,
         ModelAnimationCache,
         ModelAnimationCollection,
+        ModelMaterial,
         ModelMesh,
         ModelNode,
         ModelTypes,
@@ -348,10 +350,11 @@ define([
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
-            nodes : undefined,          // Indexed with the node property's name, i.e., glTF id
-            nodesByName : undefined,    // Indexed with name property in the node
+            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
+            nodesByName : undefined,      // Indexed with name property in the node
             skinnedNodes : undefined,
-            meshesByName : undefined    // Indexed with the name property in the mesh
+            meshesByName : undefined,     // Indexed with the name property in the mesh
+            materialsByName : undefined   // Indexed with the name property in the material
         };
         this._rendererResources = {
             buffers : {},
@@ -461,6 +464,20 @@ define([
         return model;
     };
 
+    function getRuntime(model, runtimeName, name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (model._state !== ModelState.LOADED) {
+            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event.');
+        }
+
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        return (model._runtime[runtimeName])[name];
+    }
+
     /**
      * Returns the glTF node with the given <code>name</code> property.  This is used to
      * modify a node's transform for animation outside of glTF animations.
@@ -469,9 +486,10 @@ define([
      *
      * @param {String} name The glTF name of the node.
      *
-     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> was found.
+     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} name is required.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -479,17 +497,7 @@ define([
      * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        var node = this._runtime.nodesByName[name];
+        var node = getRuntime(this, 'nodesByName', name);
         return defined(node) ? node.publicNode : undefined;
     };
 
@@ -500,22 +508,29 @@ define([
      *
      * @param {String} name The glTF name of the mesh.
      *
-     * @returns {ModelMesh} The mesh or <code>undefined</code> if no node with <code>name</code> was found.
+     * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} Mesh are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} name is required.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
      */
     Model.prototype.getMesh = function(name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Meshes are not loaded.  Wait for the model\'s readyToRender event.');
-        }
+        return getRuntime(this, 'meshesByName', name);
+    };
 
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        return this._runtime.meshesByName[name];
+    /**
+     * Returns the glTF material with the given <code>name</code> property.
+     *
+     * @memberof Model
+     *
+     * @param {String} name The glTF name of the material.
+     *
+     * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
+     *
+     * @exception {DeveloperError} name is required.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
+     */
+    Model.prototype.getMaterial = function(name) {
+        return getRuntime(this, 'materialsByName', name);
     };
 
     var scratchSphereCenter = new Cartesian3();
@@ -714,7 +729,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name);
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -731,15 +746,36 @@ define([
         model._runtime.skinnedNodes = skinnedNodes;
     }
 
+    function parseMaterials(model) {
+        var runtimeMaterials = {};
+        var materials = model.gltf.materials;
+        var rendererUniformMaps = model._rendererResources.uniformMaps;
+
+        for (var name in materials) {
+            if (materials.hasOwnProperty(name)) {
+                // Allocated now so ModelMaterial can keep a reference to it.
+                rendererUniformMaps[name] = {
+                    uniformMap : undefined,
+                    values : undefined,
+                    jointMatrixUniformName : undefined
+                };
+
+                var material = materials[name];
+                runtimeMaterials[material.name] = new ModelMaterial(model, material, name);
+            }
+        }
+
+        model._runtime.materialsByName = runtimeMaterials;
+    }
+
     function parseMeshes(model) {
         var runtimeMeshes = {};
-
         var meshes = model.gltf.meshes;
 
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
-                runtimeMeshes[mesh.name] = new ModelMesh(mesh.name);
+                runtimeMeshes[mesh.name] = new ModelMesh(mesh, name);
             }
         }
 
@@ -752,6 +788,7 @@ define([
         parseShaders(model);
         parsePrograms(model);
         parseTextures(model);
+        parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
     }
@@ -1331,65 +1368,95 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getScalarUniformFunction(value, model) {
-        return function() {
-            return value;
+        var that = {
+            value : value,
+            clone : function(source, result) {
+                return source;
+            },
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec2UniformFunction(value, model) {
-        var v = Cartesian2.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian2.fromArray(value),
+            clone : Cartesian2.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec3UniformFunction(value, model) {
-        var v = Cartesian3.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian3.fromArray(value),
+            clone : Cartesian3.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec4UniformFunction(value, model) {
-        var v = Cartesian4.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian4.fromArray(value),
+            clone : Cartesian4.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat2UniformFunction(value, model) {
-        var v = Matrix2.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix2.fromColumnMajorArray(value),
+            clone : Matrix2.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat3UniformFunction(value, model) {
-        var v = Matrix3.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix3.fromColumnMajorArray(value),
+            clone : Matrix3.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat4UniformFunction(value, model) {
-        var v = Matrix4.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix4.fromColumnMajorArray(value),
+            clone : Matrix4.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getTextureUniformFunction(value, model) {
-        var tx = model._rendererResources.textures[value];
-
-        return function() {
-            return tx;
+        var that = {
+            value : model._rendererResources.textures[value],
+            clone : function(source, result) {
+                return source;
+            },
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     var gltfUniformFunctions = {};
@@ -1452,7 +1519,8 @@ define([
                 var uniforms = instanceProgram.uniforms;
                 var activeUniforms = model._rendererResources.programs[instanceProgram.program].allUniforms;
 
-                var parameterValues = {};
+                var uniformMap = {};
+                var uniformValues = {};
                 var jointMatrixUniformName;
 
                 // Uniform parameters for this pass
@@ -1463,49 +1531,40 @@ define([
                             var parameterName = uniforms[name];
                             var parameter = parameters[parameterName];
 
-                            var func;
+                            // GLTF_SPEC: In this implementation, material parameters with a
+                            // semantic or targeted via a source (for animation) are not
+                            // targetable for material animations.  Is this too strict?
+                            //
+                            // https://github.com/KhronosGroup/glTF/issues/142
 
                             if (defined(instanceParameters[parameterName])) {
                                 // Parameter overrides by the instance technique
-                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                                uniformMap[name] = uv.func;
+                                uniformValues[parameterName] = uv;
                             } else if (defined(parameter.semantic)) {
                                 if (parameter.semantic !== 'JOINT_MATRIX') {
                                     // Map glTF semantic to Cesium automatic uniform
-                                    func = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
                                 } else {
-                                    func = undefined;
                                     jointMatrixUniformName = name;
                                 }
                             } else if (defined(parameter.source)) {
-                                func = getUniformFunctionFromSource(parameter.source, model);
+                                uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
-                                // Default technique value that may be overridden by a material
-                                func = gltfUniformFunctions[parameter.type](parameter.value, model);
-                            }
-
-                            if (defined(func)) {
-                                parameterValues[parameterName] = {
-                                    uniformName : name,
-                                    func : func
-                                };
+                                // Technique value that isn't overridden by a material
+                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                                uniformMap[name] = uv2.func;
+                                uniformValues[parameterName] = uv2;
                             }
                         }
                     }
                 }
 
-                // Create uniform map
-                var uniformMap = {};
-                for (name in parameterValues) {
-                    if (parameterValues.hasOwnProperty(name)) {
-                        var pv = parameterValues[name];
-                        uniformMap[pv.uniformName] = pv.func;
-                    }
-                }
-
-                rendererUniformMaps[materialName] = {
-                    uniformMap : uniformMap,
-                    jointMatrixUniformName : jointMatrixUniformName
-                };
+                var u = rendererUniformMaps[materialName];
+                u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
+                u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
+                u.jointMatrixUniformName = jointMatrixUniformName;
             }
         }
     }

@@ -7,6 +7,7 @@ defineSuite([
          'Core/Math',
          'Core/Cartesian2',
          'Core/Cartesian3',
+         'Core/Cartesian4',
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/BoundingSphere',
@@ -24,6 +25,7 @@ defineSuite([
          CesiumMath,
          Cartesian2,
          Cartesian3,
+         Cartesian4,
          Cartographic,
          Matrix4,
          BoundingSphere,
@@ -239,6 +241,7 @@ defineSuite([
         var node = duckModel.getNode('LOD3sp');
         expect(node).toBeDefined();
         expect(node.name).toEqual('LOD3sp');
+        expect(node.id).toEqual('LOD3sp');
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
@@ -275,6 +278,70 @@ defineSuite([
         var mesh = duckModel.getMesh('LOD3spShape');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('LOD3spShape');
+        expect(mesh.id).toEqual('LOD3spShape-lib');
+    });
+
+    it('getMaterial throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.getMaterial('gltf-material-name');
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaterial throws when name is not provided', function() {
+        expect(function() {
+            return duckModel.getMaterial();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaterial returns undefined when mesh does not exist', function() {
+        expect(duckModel.getNode('name-of-material-that-does-not-exist')).not.toBeDefined();
+    });
+
+    it('getMaterial returns returns a material', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(material).toBeDefined();
+        expect(material.name).toEqual('blinn3');
+        expect(material.id).toEqual('blinn3-fx');
+    });
+
+    it('ModelMaterial.setValue throws when name is not provided', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(function() {
+            material.setValue();
+        }).toThrowDeveloperError();
+    });
+
+    it('ModelMaterial.setValue sets a scalar parameter', function() {
+        var material = duckModel.getMaterial('blinn3');
+        material.setValue('shininess', 12.34);
+        expect(material.getValue('shininess')).toEqual(12.34);
+    });
+
+    it('ModelMaterial.setValue sets a Cartesian3 parameter not overriden in the material (defined in technique only)', function() {
+        var material = duckModel.getMaterial('blinn3');
+        var light0Color = new Cartesian3(0.33, 0.66, 1.0);
+        material.setValue('light0Color', light0Color);
+        expect(material.getValue('light0Color')).toEqual(light0Color);
+    });
+
+    it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
+        var material = duckModel.getMaterial('blinn3');
+        var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
+        material.setValue('specular', specular);
+        expect(material.getValue('specular')).toEqual(specular);
+    });
+
+    it('ModelMaterial.getValue throws when name is not provided', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(function() {
+            material.getValue();
+        }).toThrowDeveloperError();
+    });
+
+    it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
     });
 
     it('computeWorldBoundingSphere throws when model is not loaded', function() {
