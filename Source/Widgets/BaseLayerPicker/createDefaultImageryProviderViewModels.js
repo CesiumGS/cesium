@@ -71,7 +71,7 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
                 });
             }
         }));
@@ -86,7 +86,7 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 });
             }
         }));
@@ -100,7 +100,7 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : 'http://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/'
+                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/'
                 });
             }
         }));
@@ -112,7 +112,7 @@ mapping applications.\nhttp://www.esri.com',
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.openstreetmap.org/'
+                    url : '//a.tile.openstreetmap.org/'
                 });
             }
         }));
@@ -124,7 +124,7 @@ of the world.\nhttp://www.openstreetmap.org',
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.stamen.com/watercolor/',
+                    url : '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
@@ -136,7 +136,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://tile.stamen.com/toner/',
+                    url : '//stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
@@ -149,7 +149,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return new OpenStreetMapImageryProvider({
-                    url : 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
+                    url : '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 });
             }
         }));
@@ -161,7 +161,7 @@ map of the world.\nhttp://www.openstreetmap.org',
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
                 return new TileMapServiceImageryProvider({
-                    url : 'http://cesiumjs.org/blackmarble',
+                    url : '//cesiumjs.org/blackmarble',
                     maximumLevel : 8,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
                 });

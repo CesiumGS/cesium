@@ -117,7 +117,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets

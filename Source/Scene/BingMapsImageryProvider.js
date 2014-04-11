@@ -80,7 +80,7 @@ define([
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : 'http://dev.virtualearth.net',
+     *     url : '//dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
