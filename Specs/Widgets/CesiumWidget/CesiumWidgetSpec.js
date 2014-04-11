@@ -154,7 +154,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene.context;
+        var context = widget.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);

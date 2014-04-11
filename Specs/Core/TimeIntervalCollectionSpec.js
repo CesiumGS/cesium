@@ -140,7 +140,7 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
         expect(intervals.empty).toEqual(false);
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.empty).toEqual(true);
     });
 
@@ -154,7 +154,7 @@ defineSuite([
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 2));
         expect(intervals.length).toEqual(3);
 
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.length).toEqual(0);
     });
 
@@ -167,7 +167,7 @@ defineSuite([
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 1));
         expect(intervals.length).toEqual(1);
 
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.length).toEqual(0);
     });
 
@@ -586,7 +586,7 @@ defineSuite([
 
         intervals.addInterval(interval);
         listener.reset();
-        intervals.clear();
+        intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(intervals);
     });
 });

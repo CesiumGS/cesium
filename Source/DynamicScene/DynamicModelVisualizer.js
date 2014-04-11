@@ -164,7 +164,7 @@ define([
     };
 
     DynamicModelVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.context;
+        var context = this._scene._context;
         var dynamicModel = dynamicObject._model;
         if (!defined(dynamicModel)) {
             return;

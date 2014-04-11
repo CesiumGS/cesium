@@ -5,7 +5,7 @@ define([
         './DeveloperError',
         './Cartesian2',
         './Cartographic',
-        './Extent',
+        './Rectangle',
         './GeographicProjection',
         './Intersect'
     ], function(
@@ -14,7 +14,7 @@ define([
         DeveloperError,
         Cartesian2,
         Cartographic,
-        Extent,
+        Rectangle,
         GeographicProjection,
         Intersect) {
     "use strict";
@@ -110,23 +110,23 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtentLowerLeft = new Cartographic();
-    var fromExtentUpperRight = new Cartographic();
+    var fromRectangleLowerLeft = new Cartographic();
+    var fromRectangleUpperRight = new Cartographic();
     /**
-     * Computes a bounding rectangle from an extent.
+     * Computes a bounding rectangle from an rectangle.
      * @memberof BoundingRectangle
      *
-     * @param {Extent} extent The valid extent used to create a bounding rectangle.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
+     * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
-    BoundingRectangle.fromExtent = function(extent, projection, result) {
+    BoundingRectangle.fromRectangle = function(rectangle, projection, result) {
         if (!defined(result)) {
             result = new BoundingRectangle();
         }
 
-        if (!defined(extent)) {
+        if (!defined(rectangle)) {
             result.x = 0;
             result.y = 0;
             result.width = 0;
@@ -136,8 +136,8 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        var lowerLeft = projection.project(Extent.getSouthwest(extent, fromExtentLowerLeft));
-        var upperRight = projection.project(Extent.getNortheast(extent, fromExtentUpperRight));
+        var lowerLeft = projection.project(Rectangle.getSouthwest(rectangle, fromRectangleLowerLeft));
+        var upperRight = projection.project(Rectangle.getNortheast(rectangle, fromRectangleUpperRight));
 
         Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 

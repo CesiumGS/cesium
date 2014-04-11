@@ -42,7 +42,7 @@ require(['Cesium'], function(Cesium) {
     blackMarble.brightness = 2.0;
     layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
         url : '../images/Cesium_Logo_overlay.png',
-        extent : new Cesium.Extent(
+        rectangle : new Cesium.Rectangle(
             Cesium.Math.toRadians(-75.0),
             Cesium.Math.toRadians(28.0),
             Cesium.Math.toRadians(-67.0),
