@@ -6,7 +6,7 @@ define([
     "use strict";
 
     /**
-     * A model's mesh.  This will eventually hold a material for material animations via the Cesium API.
+     * A model's mesh and its material.
      * <p>
      * Use {@link Model#getMesh} to create an instance.
      * </p>
@@ -16,8 +16,17 @@ define([
      *
      * @see Model#getMesh
      */
-    var ModelMesh = function(mesh, id) {
+    var ModelMesh = function(mesh, runtimeMaterialsById, id) {
+        var materials = [];
+        var primitives = mesh.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var p = primitives[i];
+            materials[i] = runtimeMaterialsById[p.material];
+        }
+
         this._name = mesh.name;
+        this._materials = materials;
         this._id = id;
     };
 
@@ -53,6 +62,15 @@ define([
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        materials : {
+            get : function() {
+                return this._materials;
             }
         }
     });

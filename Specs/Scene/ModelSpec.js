@@ -279,6 +279,7 @@ defineSuite([
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('LOD3spShape');
         expect(mesh.id).toEqual('LOD3spShape-lib');
+        expect(mesh.materials[0].name).toEqual('blinn3');
     });
 
     it('getMaterial throws when model is not loaded', function() {

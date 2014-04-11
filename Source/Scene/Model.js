@@ -354,7 +354,8 @@ define([
             nodesByName : undefined,      // Indexed with name property in the node
             skinnedNodes : undefined,
             meshesByName : undefined,     // Indexed with the name property in the mesh
-            materialsByName : undefined   // Indexed with the name property in the material
+            materialsByName : undefined,  // Indexed with the name property in the material
+            materialsById : undefined     // Indexed with the material's property name
         };
         this._rendererResources = {
             buffers : {},
@@ -748,6 +749,7 @@ define([
 
     function parseMaterials(model) {
         var runtimeMaterials = {};
+        var runtimeMaterialsById = {};
         var materials = model.gltf.materials;
         var rendererUniformMaps = model._rendererResources.uniformMaps;
 
@@ -761,21 +763,25 @@ define([
                 };
 
                 var material = materials[name];
-                runtimeMaterials[material.name] = new ModelMaterial(model, material, name);
+                var modelMaterial = new ModelMaterial(model, material, name);
+                runtimeMaterials[material.name] = modelMaterial;
+                runtimeMaterialsById[name] = modelMaterial;
             }
         }
 
         model._runtime.materialsByName = runtimeMaterials;
+        model._runtime.materialsById = runtimeMaterialsById;
     }
 
     function parseMeshes(model) {
         var runtimeMeshes = {};
+        var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
 
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
-                runtimeMeshes[mesh.name] = new ModelMesh(mesh, name);
+                runtimeMeshes[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, name);
             }
         }
 

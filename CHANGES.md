@@ -49,7 +49,7 @@ Beta Releases
 
 * Breaking changes:
    *
-* Added ability to modify glTF material parameters using `Model.getMaterial` and `ModelMaterial`.
+* Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and 'ModelMesh.material'.
 * Added `sizeInMeters` and `asynchronous` options to `Model`.
 
 ### b27 - 2014-04-01
