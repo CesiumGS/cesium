@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Core/FanGeometry',
+         'Core/Math',
          'Core/Spherical',
          'Core/VertexFormat',
          'Core/Cartesian3'
      ], function(
          FanGeometry,
+         CesiumMath,
          Spherical,
          VertexFormat,
          Cartesian3) {
@@ -76,6 +78,31 @@ defineSuite([
         expect(m.indices.length).toEqual(((directionsLength + 1) * 2) * 3);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
-        expect(m.boundingSphere.radius).toEqual(300);
+        expect(m.boundingSphere.radius).toEqualEpsilon(300, CesiumMath.EPSILON12);
+    });
+
+    it('constructor throws with undefined directions', function() {
+        expect(function() {
+            return new FanGeometry({
+                directions : undefined,
+                radius : 10000
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws with undefined radius when perDirectionRadius is false', function() {
+        expect(function() {
+            return new FanGeometry({
+                directions : directions,
+                radius : undefined,
+                perDirectionRadius : false
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('createGeometry throws with undefined parmaeter', function() {
+        expect(function() {
+            FanGeometry.createGeometry(undefined);
+        }).toThrowDeveloperError();
     });
 });

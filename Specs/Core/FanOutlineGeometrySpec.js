@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Core/FanOutlineGeometry',
+         'Core/Math',
          'Core/Spherical',
          'Core/VertexFormat',
          'Core/Cartesian3'
      ], function(
          FanOutlineGeometry,
+         CesiumMath,
          Spherical,
          VertexFormat,
          Cartesian3) {
@@ -39,7 +41,7 @@ defineSuite([
     });
 
     it('constructor computes all vertex attributes with constant radius', function() {
-        var numberOfRings = 1;
+        var numberOfRings = 3;
         var m = FanOutlineGeometry.createGeometry(new FanOutlineGeometry({
             vertexFormat : VertexFormat.ALL,
             directions : directions,
@@ -57,7 +59,7 @@ defineSuite([
 
 
     it('constructor computes all vertex attributes with perDirectionRadius', function() {
-        var numberOfRings = 1;
+        var numberOfRings = 3;
         var m = FanOutlineGeometry.createGeometry(new FanOutlineGeometry({
             vertexFormat : VertexFormat.ALL,
             directions : directions,
@@ -70,6 +72,32 @@ defineSuite([
         expect(m.indices.length).toEqual(directionsLength * 2 * numberOfRings);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
-        expect(m.boundingSphere.radius).toEqual(300);
+        expect(m.boundingSphere.radius).toEqualEpsilon(300, CesiumMath.EPSILON12);
+    });
+
+
+    it('constructor throws with undefined directions', function() {
+        expect(function() {
+            return new FanOutlineGeometry({
+                directions : undefined,
+                radius : 10000
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws with undefined radius when perDirectionRadius is false', function() {
+        expect(function() {
+            return new FanOutlineGeometry({
+                directions : directions,
+                radius : undefined,
+                perDirectionRadius : false
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('createGeometry throws with undefined parmaeter', function() {
+        expect(function() {
+            FanOutlineGeometry.createGeometry(undefined);
+        }).toThrowDeveloperError();
     });
 });

@@ -45,12 +45,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!options.perDirectionRadius && !defined(options.radius)) {
-            throw new DeveloperError('options.radius is required when options.perDirectionRadius is undefined or false.');
-        }
-
         if (!defined(options.directions)) {
             throw new DeveloperError('options.directions is required');
+        }
+        if (!options.perDirectionRadius && !defined(options.radius)) {
+            throw new DeveloperError('options.radius is required when options.perDirectionRadius is undefined or false.');
         }
         //>>includeEnd('debug');
 
