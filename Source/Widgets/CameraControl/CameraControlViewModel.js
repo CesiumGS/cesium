@@ -138,74 +138,17 @@ define([
             that.dropDownVisible = !that.dropDownVisible;
         });
 
-        function modifyStoredView(storedView) {
-            var camera = scene.camera;
-
-            storedView.position = Cartesian3.clone(camera.position);
-            storedView.direction = Cartesian3.clone(camera.direction);
-            storedView.up = Cartesian3.clone(camera.up);
-
-            storedView.fieldOfView = CesiumMath.toDegrees(camera.frustum.fovy);
-            storedView.cameraRotationMode = that.timeRotateMode;
-            storedView.constrainedAxis = camera.constrainedAxis;
-
-            // TODO: more things: sceneMode, foregroundObject, backgroundObject
-        }
-
         this._saveStoredView = createCommand(function() {
             that.editorVisible = false;
             var storedView = that._storedViewCollection.getByName(that.currentViewName);
-            if (defined(storedView)) {
-                modifyStoredView(storedView);
-            } else {
+            if (!defined(storedView)) {
                 storedView = new StoredView(that.currentViewName);
-                modifyStoredView(storedView);
                 that._storedViewCollection.add(storedView);
             }
         });
 
-        function applyStoredView(storedView) {
-            that.currentViewName = storedView.name;
-            var camera = scene.camera;
-
-            // FOV
-            that.fieldOfView = storedView.fieldOfView;
-            camera.frustum.fovy = CesiumMath.toRadians(storedView.fieldOfView);
-
-            // constrainedAxis
-            that.constrainedAxis = storedView.constrainedAxis;
-            camera.constrainedAxis = storedView.constrainedAxis;
-
-            // Camera rotation over time
-            that.timeRotateMode = storedView.cameraRotationMode;
-
-            /*
-            // Camera flight
-            var viewDescription = {
-                destination : storedView.position,
-                duration : 1500,
-                up : storedView.up,
-                direction : storedView.direction,
-                endReferenceFrame : Matrix4.IDENTITY  // TODO: calculate
-            };
-            var flight = CameraFlightPath.createAnimation(scene, viewDescription);
-            scene.animations.add(flight);
-            */
-window.onTickTest(window.clock);
-            Cartesian3.clone(storedView.position, camera.position);
-            Cartesian3.clone(storedView.up, camera.up);
-            Cartesian3.clone(storedView.direction, camera.direction);
-window.camera = camera;
-window.storedView = storedView;
-console.log('set camera position ', camera.position);
-        }
-
         this._visitStoredView = createCommand(function(viewName) {
             that.dropDownVisible = false;
-            var storedView = that._storedViewCollection.getByName(viewName);
-            if (defined(storedView)) {
-                applyStoredView(storedView);
-            }
         });
 
         this._createName = createCommand(function() {

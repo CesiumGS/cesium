@@ -5,6 +5,7 @@ define(['../../Core/BoundingSphere',
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/Math',
         '../../Core/Matrix3',
         '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
@@ -24,6 +25,7 @@ define(['../../Core/BoundingSphere',
         defined,
         DeveloperError,
         EventHelper,
+        CesiumMath,
         Matrix3,
         Matrix4,
         ScreenSpaceEventType,
@@ -299,7 +301,6 @@ define(['../../Core/BoundingSphere',
 
         if (defined(cameraControlViewModel)) {
             knockoutSubscriptions.push(subscribeAndEvaluate(cameraControlViewModel, 'timeRotateMode', function(value) {
-console.log('timeRotateMode ' + value.name);
                 if (value === StoredViewCameraRotationMode.ICRF) {
                     switchToIcrf();
                 } else {
@@ -314,19 +315,47 @@ console.log('timeRotateMode ' + value.name);
             eventHelper.add(cameraControlViewModel.visitStoredView.beforeExecute, function(commandInfo) {
                 var viewName = commandInfo.args[0];
                 var storedView = cameraControlViewModel.storedViewCollection.getByName(viewName);
-window.onTickTest = onTick;
-window.clock = viewer.clock;
                 if (defined(storedView)) {
+                    var scene = viewer.scene;
+                    var camera = scene.camera;
+
+                    cameraControlViewModel.currentViewName = storedView.name;
+
                     // TODO: Make sure object still exists, is not destroyed etc.
-console.log('foreground object: ' + (storedView.foregroundObject || {name:'Earth'}).name);
                     viewer.trackedObject = storedView.foregroundObject;
 
-                    var time = viewer.clock.currentTime;
-                    if (defined(dynamicObjectView)) {
-                        dynamicObjectView.update(time);
-                    } else if (useIcrf && viewer.scene.mode === SceneMode.SCENE3D) {
-                        Matrix4.clone(computeInertialToFixed(), viewer.scene.camera.transform);
-                    }
+                    // FOV
+                    cameraControlViewModel.fieldOfView = storedView.fieldOfView;
+                    camera.frustum.fovy = CesiumMath.toRadians(storedView.fieldOfView);
+
+                    // constrainedAxis
+                    cameraControlViewModel.constrainedAxis = storedView.constrainedAxis;
+                    camera.constrainedAxis = storedView.constrainedAxis;
+
+                    // Camera rotation over time
+                    cameraControlViewModel.timeRotateMode = storedView.cameraRotationMode;
+                    // Set current camera transform.
+                    camera.transform = Matrix4.IDENTITY.clone();
+                    onTick(viewer.clock);
+
+                    /*
+                    // Camera flight
+                    var viewDescription = {
+                        destination : storedView.position,
+                        duration : 1500,
+                        up : storedView.up,
+                        direction : storedView.direction,
+                        endReferenceFrame : camera.transform
+                    };
+                    var flight = CameraFlightPath.createAnimation(scene, viewDescription);
+                    scene.animations.add(flight);
+                    */
+                    Cartesian3.clone(storedView.position, camera.position);
+                    Cartesian3.clone(storedView.up, camera.up);
+                    Cartesian3.clone(storedView.direction, camera.direction);
+//window.camera = camera;
+//window.storedView = storedView;
+//console.log('set camera position ', camera.position);
                 }
             });
 
@@ -334,7 +363,19 @@ console.log('foreground object: ' + (storedView.foregroundObject || {name:'Earth
                 var viewName = cameraControlViewModel.currentViewName;
                 var storedView = cameraControlViewModel.storedViewCollection.getByName(viewName);
                 if (defined(storedView)) {
+                    var camera = viewer.scene.camera;
+
                     storedView.foregroundObject = viewer.trackedObject;
+
+                    storedView.position = Cartesian3.clone(camera.position);
+                    storedView.direction = Cartesian3.clone(camera.direction);
+                    storedView.up = Cartesian3.clone(camera.up);
+
+                    storedView.fieldOfView = CesiumMath.toDegrees(camera.frustum.fovy);
+                    storedView.cameraRotationMode = cameraControlViewModel.timeRotateMode;
+                    storedView.constrainedAxis = camera.constrainedAxis;
+
+                    // TODO: more things: sceneMode, backgroundObject
                 }
             });
         }
@@ -365,7 +406,6 @@ console.log('foreground object: ' + (storedView.foregroundObject || {name:'Earth
                 }
                 // Note that timeRotateMode can be reset if isTrackingObject changed value above.
                 rotationMode = cameraControlViewModel.timeRotateMode;
-console.log('trackedObject ' + cameraControlViewModel.cameraFollows);
             }
 
             if (isTracking && defined(value.position)) {
