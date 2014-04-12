@@ -78,10 +78,7 @@ defineSuite([
             asynchronous : options.asynchronous
         }));
 
-        var readyToRender = false;
         model.readyToRender.addEventListener(function(model) {
-            readyToRender = true;
-
             // Always use initial bounding sphere, ignoring animations
             var worldBoundingSphere = model.computeWorldBoundingSphere();
 
@@ -110,7 +107,7 @@ defineSuite([
         waitsFor(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
-            return readyToRender;
+            return model.ready;
         }, url + ' readyToRender', 10000);
 
         return model;
@@ -145,6 +142,7 @@ defineSuite([
        expect(duckModel.id).toEqual(duckUrl);
        expect(duckModel.allowPicking).toEqual(true);
        expect(duckModel.activeAnimations).toBeDefined();
+       expect(duckModel.ready).toEqual(true);
        expect(duckModel.asynchronous).toEqual(true);
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
        expect(duckModel.debugWireframe).toEqual(false);

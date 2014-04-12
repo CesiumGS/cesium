@@ -301,8 +301,11 @@ define([
          *     speedup : 0.5
          *   });
          * });
+         *
+         * @see Model#ready
          */
         this.readyToRender = new Event();
+        this._ready = false;
 
         /**
          * The currently playing glTF animations.
@@ -375,6 +378,26 @@ define([
     };
 
     defineProperties(Model.prototype, {
+        /**
+         * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.  This is set to
+         * <code>true</code> right before {@link Model#readyToRender} is fired.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         *
+         * @see Model#readyToRender
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
         /**
          * Determines if model WebGL resource creation will be spread out over several frames or
          * block until completion once all glTF files are loaded.
@@ -468,7 +491,7 @@ define([
     function getRuntime(model, runtimeName, name) {
         //>>includeStart('debug', pragmas.debug);
         if (model._state !== ModelState.LOADED) {
-            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event.');
+            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
 
         if (!defined(name)) {
@@ -490,7 +513,7 @@ define([
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
      * @exception {DeveloperError} name is required.
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -512,7 +535,7 @@ define([
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
      * @exception {DeveloperError} name is required.
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMesh = function(name) {
         return getRuntime(this, 'meshesByName', name);
@@ -528,7 +551,7 @@ define([
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
      * @exception {DeveloperError} name is required.
-     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMaterial = function(name) {
         return getRuntime(this, 'materialsByName', name);
@@ -550,12 +573,12 @@ define([
      *
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.computeWorldBoundingSphere = function(result) {
         //>>includeStart('debug', pragmas.debug);
         if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
+            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
         //>>includeEnd('debug');
 
@@ -2051,6 +2074,7 @@ define([
             // Called after modelMatrix update.
             var model = this;
             frameState.afterRender.push(function() {
+                model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
             return;
