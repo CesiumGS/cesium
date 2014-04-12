@@ -79,6 +79,27 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Cartesian4.fromColor = function(color, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartesian4(color.red, color.green, color.blue, color.alpha);
+        }
+
+        result.x = color.red;
+        result.y = color.green;
+        result.z = color.blue;
+        result.w = color.alpha;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian4 instance.
      * @memberof Cartesian4
      *

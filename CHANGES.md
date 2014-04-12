@@ -46,6 +46,7 @@ Beta Releases
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 * Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and 'ModelMesh.material'.
 * Added `sizeInMeters`, `asynchronous`, and `ready` properties to `Model`.
+* Added `Cartesian4.fromColor` and `Color.fromCartesian4`.
 
 ### b27 - 2014-04-01
 

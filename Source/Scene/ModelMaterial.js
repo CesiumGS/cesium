@@ -65,7 +65,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @exception {DeveloperError} name is required.
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      */
     ModelMaterial.prototype.setValue = function(name, value) {
@@ -88,8 +87,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @exception {DeveloperError} name is required.
      */
     ModelMaterial.prototype.getValue = function(name) {
         //>>includeStart('debug', pragmas.debug);

@@ -512,7 +512,6 @@ define([
      *
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} name is required.
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      *
      * @example
@@ -534,7 +533,6 @@ define([
      *
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} name is required.
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMesh = function(name) {
@@ -550,7 +548,6 @@ define([
      *
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
-     * @exception {DeveloperError} name is required.
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMaterial = function(name) {

@@ -75,6 +75,27 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Color.fromCartesian4 = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Color(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+        }
+
+        result.red = cartesian.x;
+        result.green = cartesian.y;
+        result.blue = cartesian.z;
+        result.alpha = cartesian.w;
+        return result;
+    };
+
+    /**
      * Creates a new Color specified using red, green, blue, and alpha values
      * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
      * @memberof Color
