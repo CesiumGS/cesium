@@ -7,6 +7,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HermiteSpline',
+        '../Core/LinearSpline',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -24,6 +25,7 @@ define([
         defined,
         DeveloperError,
         HermiteSpline,
+        LinearSpline,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -225,6 +227,13 @@ define([
     }
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
+        if (Math.abs(Cartesian2.magnitude(start) - Cartesian2.magnitude(end)) < 10000.0) {
+            return new LinearSpline({
+                points : [start, end],
+                times : [0.0, duration]
+            });
+        }
+
         // get minimum altitude from which the whole map is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
