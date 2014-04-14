@@ -118,7 +118,6 @@ defineSuite([
         expect(dataSource.getClock()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(true);
     });
 
     it('getName returns CZML defined name', function() {
