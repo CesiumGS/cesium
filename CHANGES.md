@@ -38,6 +38,7 @@ Beta Releases
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+  * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 
 ### b27 - 2014-04-01

@@ -6,7 +6,6 @@ define([
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
         'Scene/TileMapServiceImageryProvider',
-        'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
@@ -19,7 +18,6 @@ define([
         GeoJsonDataSource,
         PerformanceDisplay,
         TileMapServiceImageryProvider,
-        checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
         viewerDynamicObjectMixin,
@@ -38,7 +36,7 @@ define([
     var queryString = window.location.search.substring(1);
     if (queryString !== '') {
         var params = queryString.split('&');
-        for ( var i = 0, len = params.length; i < len; ++i) {
+        for (var i = 0, len = params.length; i < len; ++i) {
             var param = params[i];
             var keyValuePair = param.split('=');
             if (keyValuePair.length > 1) {
@@ -49,28 +47,13 @@ define([
 
     var loadingIndicator = document.getElementById('loadingIndicator');
 
-    checkForChromeFrame('cesiumContainer').then(function(prompting) {
-        if (!prompting) {
-            startup();
-        } else {
-            loadingIndicator.style.display = 'none';
-        }
-    }).otherwise(function(error) {
-        loadingIndicator.style.display = 'none';
-        var message = formatError(error);
-        console.error(message);
-        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
-            window.alert(message);
-        }
-    });
-
     function endsWith(str, suffix) {
         var strLength = str.length;
         var suffixLength = suffix.length;
         return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
-    function startup() {
+    try {
         var imageryProvider;
 
         if (endUserOptions.tmsImageryUrl) {
@@ -161,6 +144,13 @@ define([
                 viewer.cesiumWidget.showErrorPanel(error);
                 console.error(error);
             }
+        }
+    } catch (exception) {
+        loadingIndicator.style.display = 'none';
+        var message = formatError(exception);
+        console.error(message);
+        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+            window.alert(message);
         }
     }
 });
