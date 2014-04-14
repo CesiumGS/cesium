@@ -3,6 +3,42 @@ Change Log
 
 Beta Releases
 -------------
+### b28 - 2014-05-01
+
+* Breaking changes:
+  * Rename Extent to Rectangle
+    * `Extent` -> `Rectangle`
+    * `ExtentGeometry` -> `RectangleGeomtry`
+    * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
+    * `ExtentPrimitive` -> `RectanglePrimitive`
+    * `BoundingRectangle.fromExtent` -> `BoundingRectangle.fromRectangle`
+    * `BoundingSphere.fromExtent2D` -> `BoundingSphere.fromRectangle2D`
+    * `BoundingSphere.fromExtentWithHeights2D` -> `BoundingSphere.fromRectangleWithHeights2D`
+    * `BoundingSphere.fromExtent3D` -> `BoundingSphere.fromRectangle3D`
+    * `EllipsoidalOccluder.computeHorizonCullingPointFromExtent` -> `EllipsoidalOccluder.computeHorizonCullingPointFromRectangle`
+    * `Occluder.computeOccludeePointFromExtent` -> `Occluder.computeOccludeePointFromRectangle`
+    * `Camera.getExtentCameraCoordinates` -> `Camera.getRectangleCameraCoordinates`
+    * `Camera.viewExtent` -> `Camera.viewRectangle`
+    * `CameraFlightPath.createAnimationExtent` -> `CameraFlightPath.createAnimationRectangle`
+    * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
+    * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
+    * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * `BaseLayerPicker` has been extended to support terrain selection.
+    * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
+    * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a CentralBody and ImageryLayerCollection.
+    * `ImageryProviderViewModel` -> `ProviderViewModel`
+    * `BaseLayerPickerViewModel.selectedName` -> `BaseLayerPickerViewModel.buttonTooltip`
+    * `BaseLayerPickerViewModel.selectedIconUrl` -> `BaseLayerPickerViewModel.buttonImageUrl`
+    * `BaseLayerPickerViewModel.selectedItem` -> `BaseLayerPickerViewModel.selectedImagery`
+    * `BaseLayerPickerViewModel.imageryLayers`has been removed and replaced with `BaseLayerPickerViewModel.centralBody`
+    * See [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for full details.
+  * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
+  * `Context` is now private
+    * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
+    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+    * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
+  * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+* Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 
 ### b28 - 2014-05-01
 
@@ -20,10 +56,7 @@ Beta Releases
     should now look like:
 
            scene.camera.viewExtent(extent);
-  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
-  * Removed `TexturePool`.
-  * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
-  * Replaced getter/setter functions with properties:
+  * Finished replacing getter/setter functions with properties:
     * `ImageryLayer`
       * `getImageryProvider` -> `imageryProvider`
       * `getExtent` -> `extent`
@@ -144,7 +177,7 @@ Beta Releases
     * `VertexArray`
       * `getNumberOfAttributes` -> `numberOfAttributes`
       * `getIndexBuffer` -> `indexBuffer`   
-  * Removed the following prototype functions.  (Use 'static' versions of these functions instead):
+  * Finished removing prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`
     * `BoundingSphere`
@@ -157,12 +190,15 @@ Beta Releases
       * `normalize`
     * `Extent`
       * `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
-* `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
+  * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
+  * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
+  * Removed `TexturePool`.
+* Improved visual quality for translucent objects with [Weighted Blended Order-Independent Transparency](http://cesiumjs.org/2014/03/14/Weighted-Blended-Order-Independent-Transparency/).
 * Fixed extruded polygons rendered in the southern hemisphere. [#1490](https://github.com/AnalyticalGraphicsInc/cesium/issues/1490)
 * Fixed Primitive picking that have a closed appearance drawn on the surface. [#1333](https://github.com/AnalyticalGraphicsInc/cesium/issues/1333)
-* Improve visual quality for translucent objects with [Weighted Blended Order-Independent Transparency](http://jcgt.org/published/0002/02/09/)
-* The `debugShowBoundingVolume` property on primitives now works across all scene modes.
 * Added `StripeMaterialProperty` for supporting the `Stripe` material in DynamicScene.
+* `loadArrayBuffer`, `loadBlob`, `loadJson`, `loadText`, and `loadXML` now support loading data from data URIs.
+* The `debugShowBoundingVolume` property on primitives now works across all scene modes.
 * Eliminated the use of a texture pool for Earth surface imagery textures.  The use of the pool was leading to mipmapping problems in current versions of Google Chrome where some tiles would show imagery from entirely unrelated parts of the globe.
 
 ### b26 - 2014-03-03

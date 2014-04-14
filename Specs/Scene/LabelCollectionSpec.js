@@ -643,6 +643,26 @@ defineSuite([
         expect(pickedObject.id).toEqual('id');
     });
 
+    it('can change pick id', function() {
+        var label = labels.add({
+            position : Cartesian3.ZERO,
+            text : 'x',
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER,
+            id : 'id'
+        });
+
+        var pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id');
+
+        label.id = 'id2';
+
+        pickedObject = pick(context, frameState, labels, 0, 0);
+        expect(pickedObject.primitive).toEqual(label);
+        expect(pickedObject.id).toEqual('id2');
+    });
+
     it('does not pick a label with show set to false', function() {
         labels.add({
             show : false,
@@ -871,8 +891,8 @@ defineSuite([
                 position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
-
-            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(0.5, 0.5));
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
         it('can compute screen space position (2)', function() {
@@ -883,8 +903,8 @@ defineSuite([
                 pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
-
-            expect(label.computeScreenSpacePosition(context, frameState)).toEqual(new Cartesian2(1.5, 2.5));
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+            expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
         it('can compute screen space position (3)', function() {
@@ -895,18 +915,10 @@ defineSuite([
                 eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
             });
             labels.update(context, frameState, []);
-
-            var p = label.computeScreenSpacePosition(context, frameState);
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+            var p = label.computeScreenSpacePosition(fakeScene);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
-        });
-
-        it('throws when computing screen space position without uniform state', function() {
-            var label = labels.add();
-
-            expect(function() {
-                label.computeScreenSpacePosition();
-            }).toThrowDeveloperError();
         });
 
         it('can equal another label', function() {
@@ -1468,17 +1480,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Label.computeScreenSpacePosition throws with undefined context', function() {
+    it('Label.computeScreenSpacePosition throws with undefined scene', function() {
         var label = labels.add();
         expect(function() {
-            label.computeScreenSpacePosition(undefined, frameState);
-        }).toThrowDeveloperError();
-    });
-
-    it('Label.computeScreenSpacePosition throws with undefined frameState', function() {
-        var label = labels.add();
-        expect(function() {
-            label.computeScreenSpacePosition(context, undefined);
+            label.computeScreenSpacePosition();
         }).toThrowDeveloperError();
     });
 

@@ -3,7 +3,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -29,7 +27,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        DefaultProxy,
         defaultValue,
         defined,
         defineProperties,
@@ -37,7 +34,6 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -121,7 +117,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets

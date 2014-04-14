@@ -110,14 +110,14 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
          * @memberof TileCoordinatesImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -168,6 +168,20 @@ define([
         credit : {
             get : function() {
                 return undefined;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
+         * and texture upload time.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
             }
         }
     });

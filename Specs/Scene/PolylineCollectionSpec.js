@@ -851,7 +851,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene(scene);
     });
@@ -1435,6 +1435,31 @@ defineSuite([
         var pickedObject = pick(context, frameState, polylines, 0, 0);
         expect(pickedObject.primitive).toEqual(p);
         expect(pickedObject.id).toEqual('id');
+    });
+
+    it('can change pick id', function() {
+        var p = polylines.add({
+            positions : [{
+                x : 0.0,
+                y : -1.0,
+                z : 0.0
+            }, {
+                x : 0.0,
+                y : 1.0,
+                z : 0.0
+            }],
+            id : 'id'
+        });
+
+        var pickedObject = pick(context, frameState, polylines, 0, 0);
+        expect(pickedObject.primitive).toEqual(p);
+        expect(pickedObject.id).toEqual('id');
+
+        p.id = 'id2';
+
+        pickedObject = pick(context, frameState, polylines, 0, 0);
+        expect(pickedObject.primitive).toEqual(p);
+        expect(pickedObject.id).toEqual('id2');
     });
 
     it('is not picked (show === false)', function() {

@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
+         'Widgets/BaseLayerPicker/ProviderViewModel',
          'Widgets/createCommand',
          'ThirdParty/knockout'
      ], function(
-         ImageryProviderViewModel,
+         ProviderViewModel,
          createCommand,
          knockout) {
     "use strict";
@@ -24,7 +24,7 @@ defineSuite([
                 creationFunction : createCommand(spyCreationFunction)
             };
 
-            var viewModel = new ImageryProviderViewModel(description);
+            var viewModel = new ProviderViewModel(description);
             expect(viewModel.name).toBe(description.name());
             expect(viewModel.tooltip).toBe(description.tooltip());
             expect(viewModel.iconUrl).toBe(description.iconUrl());
@@ -42,7 +42,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -54,7 +54,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -66,7 +66,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -78,7 +78,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
     });
@@ -92,7 +92,7 @@ defineSuite([
                 creationFunction : spyCreationFunction
             };
 
-            var viewModel = new ImageryProviderViewModel(description);
+            var viewModel = new ProviderViewModel(description);
             expect(viewModel.name).toEqual(description.name);
             expect(viewModel.tooltip).toEqual(description.tooltip);
             expect(viewModel.iconUrl).toEqual(description.iconUrl);
@@ -110,7 +110,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -122,7 +122,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -134,7 +134,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
 
@@ -146,7 +146,7 @@ defineSuite([
             };
 
             expect(function() {
-                return new ImageryProviderViewModel(description);
+                return new ProviderViewModel(description);
             }).toThrowDeveloperError();
         });
     });

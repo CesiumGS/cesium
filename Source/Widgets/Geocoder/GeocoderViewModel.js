@@ -6,7 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Extent',
+        '../../Core/Rectangle',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Scene/CameraFlightPath',
@@ -21,7 +21,7 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         jsonp,
         Matrix4,
         CameraFlightPath,
@@ -245,10 +245,10 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var extent = Extent.fromDegrees(west, south, east, north);
+            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
             var camera = viewModel._scene.camera;
-            var position = camera.getExtentCameraCoordinates(extent);
+            var position = camera.getRectangleCameraCoordinates(rectangle);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;
