@@ -32,7 +32,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : 'http://cesiumjs.org/smallterrain'
+     *     url : '//cesiumjs.org/smallterrain'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
@@ -102,11 +102,11 @@ define([
 
     function createInterpolateFunction(tileRequest) {
         var tilePositions = tileRequest.positions;
-        var extent = tileRequest.tilingScheme.tileXYToExtent(tileRequest.x, tileRequest.y, tileRequest.level);
+        var rectangle = tileRequest.tilingScheme.tileXYToRectangle(tileRequest.x, tileRequest.y, tileRequest.level);
         return function(terrainData) {
             for (var i = 0; i < tilePositions.length; ++i) {
                 var position = tilePositions[i];
-                position.height = terrainData.interpolateHeight(extent, position.longitude, position.latitude);
+                position.height = terrainData.interpolateHeight(rectangle, position.longitude, position.latitude);
             }
         };
     }

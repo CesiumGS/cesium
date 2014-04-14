@@ -4,11 +4,9 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/Event',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/ScreenSpaceEventHandler',
@@ -22,11 +20,9 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        Event,
         CesiumMath,
         Matrix4,
         ScreenSpaceEventHandler,
@@ -49,7 +45,6 @@ define([
 
         this._scene = scene;
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var context = scene.context;
 
         // Position camera and size frustum so the entire 2D map is visible
         var maxRadii = ellipsoid.maximumRadius;
@@ -60,7 +55,7 @@ define([
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
         frustum.left = -frustum.right;
-        frustum.top = frustum.right * (context.drawingBufferHeight / context.drawingBufferWidth);
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
 
         var transform = new Matrix4(0.0, 0.0, 1.0, 0.0, //
@@ -83,7 +78,7 @@ define([
 
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
-        frustum.aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
 
         this._cameraCV = {
             position : position,
@@ -591,8 +586,7 @@ define([
     function updateFrustums(transitioner) {
         var scene = transitioner._scene;
 
-        var context = scene.context;
-        var ratio = context.drawingBufferHeight / context.drawingBufferWidth;
+        var ratio = scene.drawingBufferHeight / scene.drawingBufferWidth;
 
         var frustum = transitioner._camera2D.frustum;
         frustum.top = frustum.right * ratio;

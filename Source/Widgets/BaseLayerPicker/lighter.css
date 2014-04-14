@@ -6,6 +6,10 @@
     background-color: rgba(240, 240, 240, 0.75);
 }
 
+.cesium-lighter .cesium-baseLayerPicker-sectionTitle {
+    color: black;
+}
+
 .cesium-lighter .cesium-baseLayerPicker-itemLabel {
     color: black;
 }

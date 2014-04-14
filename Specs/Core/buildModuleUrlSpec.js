@@ -11,9 +11,9 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('produces an absolute URL for a module', function() {
-        var url = buildModuleUrl('Workers/taskDispatcher.js');
+        var url = buildModuleUrl('Workers/sanitizeHtml.js');
 
-        expect(url).toMatch(/Workers\/taskDispatcher.js$/);
+        expect(url).toMatch(/Workers\/sanitizeHtml.js$/);
         expect(new Uri(url).isAbsolute()).toBe(true);
 
         // make sure it actually exists at that URL

@@ -368,7 +368,7 @@ define([
                  (defined(right)) &&
                  Cartesian3.equals(left.transformedPosition, right.transformedPosition) &&
                  Matrix3.equals(left.transformMatrix, right.transformMatrix) &&
-                 Cartesian3.equals(left.extent, right.extent));
+                 Cartesian3.equals(left.rectangle, right.rectangle));
     };
 
     /**

@@ -33,9 +33,9 @@ define([
     });
 
     AutomaticUniform.prototype.getDeclaration = function(name) {
-        var declaration = 'uniform ' + this.datatype.glsl + ' ' + name;
+        var declaration = 'uniform ' + this._datatype.glsl + ' ' + name;
 
-        var size = this.size;
+        var size = this._size;
         if (size === 1) {
             declaration += ';';
         } else {

@@ -28,7 +28,7 @@ uniform float u_dayTextureSaturation[TEXTURE_UNITS];
 uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 #endif
 
-uniform vec4 u_dayTextureTexCoordsExtent[TEXTURE_UNITS];
+uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
 #ifdef SHOW_REFLECTIVE_OCEAN
@@ -53,7 +53,7 @@ vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,
     vec2 tileTextureCoordinates,
-    vec4 textureCoordinateExtent,
+    vec4 textureCoordinateRectangle,
     vec4 textureCoordinateTranslationAndScale,
     float textureAlpha,
     float textureBrightness,
@@ -63,16 +63,16 @@ vec3 sampleAndBlend(
     float textureOneOverGamma)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
-    //    tileTextureCoordinates.s < textureCoordinateExtent.s ||
-    //    tileTextureCoordinates.s > textureCoordinateExtent.p ||
-    //    tileTextureCoordinates.t < textureCoordinateExtent.t ||
-    //    tileTextureCoordinates.t > textureCoordinateExtent.q
-    // In other words, the alpha is zero if the fragment is outside the extent
+    //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
+    //    tileTextureCoordinates.s > textureCoordinateRectangle.p ||
+    //    tileTextureCoordinates.t < textureCoordinateRectangle.t ||
+    //    tileTextureCoordinates.t > textureCoordinateRectangle.q
+    // In other words, the alpha is zero if the fragment is outside the rectangle
     // covered by this texture.  Would an actual 'if' yield better performance?
-    vec2 alphaMultiplier = step(textureCoordinateExtent.st, tileTextureCoordinates); 
+    vec2 alphaMultiplier = step(textureCoordinateRectangle.st, tileTextureCoordinates); 
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
     
-    alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
+    alphaMultiplier = step(vec2(0.0), textureCoordinateRectangle.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
     
     vec2 translation = textureCoordinateTranslationAndScale.xy;

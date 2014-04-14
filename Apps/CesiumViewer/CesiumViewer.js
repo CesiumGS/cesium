@@ -103,7 +103,7 @@ define([
         });
 
         var scene = viewer.scene;
-        var context = scene.context;
+        var context = scene._context;
         if (endUserOptions.debug) {
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;
