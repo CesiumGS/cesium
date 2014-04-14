@@ -184,11 +184,12 @@ define(['../Core/defaultValue',
         }
         //>>includeEnd('debug');
 
+        var result = true;
+
         var i;
         var x;
         var visualizers;
         var vLength;
-        var result = true;
         var timeVaryingSources = this._timeVaryingSources;
         var length = timeVaryingSources.length;
         var dataSource;
@@ -200,7 +201,7 @@ define(['../Core/defaultValue',
             visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
-                visualizers[x].update(time);
+                result = visualizers[x].update(time) && result;
             }
         }
 
@@ -214,10 +215,11 @@ define(['../Core/defaultValue',
             visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
-                visualizers[x].update(time);
+                result = visualizers[x].update(time) && result;
             }
         }
         staticSourcesToUpdate.length = 0;
+
         return result;
     };
 

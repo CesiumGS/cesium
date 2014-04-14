@@ -511,6 +511,7 @@ define([
                 }
             }
         }
+        return true;
     };
 
     /**
