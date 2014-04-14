@@ -50,6 +50,7 @@ define(['../Core/Color',
     };
 
     Batch.prototype.update = function(time) {
+        var canAnimate = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -61,7 +62,7 @@ define(['../Core/Color',
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new this.appearanceType({
                         translucent : this.translucent,
@@ -73,7 +74,8 @@ define(['../Core/Color',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
+            canAnimate = false;
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
             for (var i = 0; i < length; i++) {
@@ -99,8 +101,11 @@ define(['../Core/Color',
                     attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
                 }
             }
+        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+            canAnimate = false;
         }
         this.itemsToRemove.length = removedCount;
+        return canAnimate;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -141,8 +146,8 @@ define(['../Core/Color',
         var updater;
 
         //Perform initial update
-        this._solidBatch.update(time);
-        this._translucentBatch.update(time);
+        var canAnimate = this._solidBatch.update(time);
+        canAnimate = this._translucentBatch.update(time) && canAnimate;
 
         //If any items swapped between solid/translucent, we need to
         //move them between batches
@@ -168,9 +173,11 @@ define(['../Core/Color',
 
         //If we moved anything around, we need to re-build the primitive
         if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            this._solidBatch.update(time);
-            this._translucentBatch.update(time);
+            canAnimate = this._solidBatch.update(time) && canAnimate;
+            canAnimate = this._translucentBatch.update(time) && canAnimate;
         }
+
+        return canAnimate;
     };
 
     StaticGeometryColorBatch.prototype.removeAllPrimitives = function() {

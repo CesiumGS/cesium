@@ -43,6 +43,7 @@ define(['../Core/AssociativeArray',
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].update(time);
         }
+        return true;
     };
 
     DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
@@ -232,12 +233,13 @@ define(['../Core/AssociativeArray',
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        this._outlineBatch.update(time);
-        this._closedColorBatch.update(time);
-        this._closedMaterialBatch.update(time);
-        this._openColorBatch.update(time);
-        this._openMaterialBatch.update(time);
-        this._dynamicBatch.update(time);
+        var canAnimate = this._outlineBatch.update(time);
+        canAnimate = this._closedColorBatch.update(time) && canAnimate;
+        canAnimate = this._closedMaterialBatch.update(time) && canAnimate;
+        canAnimate = this._openColorBatch.update(time) && canAnimate;
+        canAnimate = this._openMaterialBatch.update(time) && canAnimate;
+        canAnimate = this._dynamicBatch.update(time) && canAnimate;
+        return canAnimate;
     };
 
     /**

@@ -118,6 +118,7 @@ define([
                 updateObject(this, time, dynamicObjects[i]);
             }
         }
+        return true;
     };
 
     /**

@@ -182,6 +182,8 @@ define(['../Core/defaultValue',
         }
         //>>includeEnd('debug');
 
+        var result = true;
+
         var i;
         var x;
         var visualizers;
@@ -193,7 +195,7 @@ define(['../Core/defaultValue',
             visualizers = timeVaryingSources[i]._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
-                visualizers[x].update(time);
+                result = visualizers[x].update(time) && result;
             }
         }
 
@@ -203,10 +205,12 @@ define(['../Core/defaultValue',
             visualizers = staticSourcesToUpdate[i]._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
-                visualizers[x].update(time);
+                result = visualizers[x].update(time) && result;
             }
         }
         staticSourcesToUpdate.length = 0;
+
+        return result;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

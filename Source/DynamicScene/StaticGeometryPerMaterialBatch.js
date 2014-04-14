@@ -67,6 +67,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.update = function(time) {
+        var canAnimate = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
@@ -76,7 +77,7 @@ define(['../Core/defined',
             }
             if (geometries.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : MaterialProperty.getValue(time, this.materialProperty, this.material),
@@ -89,7 +90,8 @@ define(['../Core/defined',
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE){
+            canAnimate = false;
+        } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
@@ -108,7 +110,10 @@ define(['../Core/defined',
                     attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
                 }
             }
+        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+            canAnimate = false;
         }
+        return canAnimate;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -178,9 +183,11 @@ define(['../Core/defined',
             }
         }
 
+        var canAnimate = true;
         for (i = 0; i < length; i++) {
-            items[i].update(time);
+            canAnimate = items[i].update(time) && canAnimate;
         }
+        return canAnimate;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {
