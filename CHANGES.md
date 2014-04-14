@@ -39,6 +39,9 @@ Beta Releases
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
+* `Clock.canAniamte` was added to prevent time from advancing, even while the clock is animating.
+* `Viewer` now prevents time from advancing if asynchronous geometry is bring processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 
 ### b27 - 2014-04-01
 
