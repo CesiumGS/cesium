@@ -350,9 +350,11 @@ define(['../../Core/BoundingSphere',
                     var flight = CameraFlightPath.createAnimation(scene, viewDescription);
                     scene.animations.add(flight);
                     */
-                    Cartesian3.clone(storedView.position, camera.position);
-                    Cartesian3.clone(storedView.up, camera.up);
-                    Cartesian3.clone(storedView.direction, camera.direction);
+                    camera.position = Cartesian3.clone(storedView.position, camera.position);
+                    camera.direction = Cartesian3.clone(storedView.direction, camera.direction);
+                    camera.right = Cartesian3.normalize(Cartesian3.cross(storedView.direction, storedView.up, camera.right), camera.right);
+                    camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
+
 //window.camera = camera;
 //window.storedView = storedView;
 //console.log('set camera position ', camera.position);
