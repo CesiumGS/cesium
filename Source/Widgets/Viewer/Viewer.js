@@ -476,6 +476,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._renderLoopError = new Event();
+        this._allowDataSourcesToSuspendAnimation = true;
 
         //Start the render loop if not explicitly disabled in options.
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
