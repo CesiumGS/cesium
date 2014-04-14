@@ -762,6 +762,12 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
+            u_normalMap : function() {
+                return this.normalMap;
+            },
+            u_normalMapTranslationAndScale : function() {
+                return this.normalMapTranslationAndScale;
+            },
 
             center3D : undefined,
             modifiedModelView : new Matrix4(),
@@ -782,7 +788,10 @@ define([
             southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4()
+            waterMaskTranslationAndScale : new Cartesian4(),
+
+            normalMap : undefined,
+            normalMapTranslationAndScale : new Cartesian4()
         };
 
         mergeUniformMap(uniformMap, centralBodyUniformMap);
@@ -995,6 +1004,8 @@ define([
                     uniformMap.dayTextures.length = numberOfDayTextures;
                     uniformMap.waterMask = tile.waterMaskTexture;
                     Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+                    uniformMap.normalMap = tile.normalMap;
+                    Cartesian4.clone(tile.normalMapTranslationAndScale, uniformMap.normalMapTranslationAndScale);
 
                     commandList.push(command);
 

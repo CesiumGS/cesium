@@ -296,6 +296,18 @@ define([
         var northIndices = new Uint16Array(buffer, pos, northVertexCount);
         pos += northVertexCount * uint16Length;
 
+        var encodedNormalMap = new Uint8Array(buffer, pos, 256 * 256 * 3);
+        var normalXBuffer = encodedNormalMap.subarray(0, 256 * 256);
+        var normalYBuffer = encodedNormalMap.subarray(256 * 256, 2 * 256 * 256);
+        var normalZBuffer = encodedNormalMap.subarray(256 * 256 * 2, 3 * 256 * 256);
+
+        var normalMap = new Uint8Array(256 * 256 * 3);
+        for (i = 0; i < 256 * 256; ++i) {
+            normalMap[i * 3] = normalXBuffer[i];
+            normalMap[i * 3 + 1] = normalYBuffer[i];
+            normalMap[i * 3 + 2] = normalZBuffer[i];
+        }
+
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
         return new QuantizedMeshTerrainData({
@@ -314,7 +326,8 @@ define([
             southSkirtHeight : skirtHeight,
             eastSkirtHeight : skirtHeight,
             northSkirtHeight : skirtHeight,
-            childTileMask: getChildMaskForTile(provider, level, x, tmsY)
+            childTileMask : getChildMaskForTile(provider, level, x, tmsY),
+            normalMap : normalMap
         });
     }
 

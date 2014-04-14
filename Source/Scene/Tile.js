@@ -206,8 +206,10 @@ define([
         this.northNormal = new Cartesian3();
 
         this.waterMaskTexture = undefined;
-
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+
+        this.normalMap = undefined;
+        this.normalMapTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
 
         this.terrainData = undefined;
         this.center = new Cartesian3();
@@ -276,6 +278,14 @@ define([
                 this.waterMaskTexture.destroy();
             }
             this.waterMaskTexture = undefined;
+        }
+
+        if (defined(this.normalMap)) {
+            --this.normalMap.referenceCount;
+            if (this.normalMap.referenceCount === 0) {
+                this.normalMap.destroy();
+            }
+            this.normalMap = undefined;
         }
 
         this.state = TileState.START;
@@ -492,6 +502,23 @@ define([
                         tile.waterMaskTranslationAndScale.w = 1.0;
                     }
 
+                    // If there's a normal map included in the terrain data, create a
+                    // texture for it.
+                    var normalMap = tile.terrainData.normalMap;
+                    if (defined(normalMap)) {
+                        if (defined(tile.normalMap)) {
+                            --tile.normalMap.referenceCount;
+                            if (tile.normalMap.referenceCount === 0) {
+                                tile.normalMap.destroy();
+                            }
+                        }
+                        tile.normalMap = createNormalMapTexture(context, normalMap);
+                        tile.normalMapTranslationAndScale.x = 0.0;
+                        tile.normalMapTranslationAndScale.y = 0.0;
+                        tile.normalMapTranslationAndScale.z = 1.0;
+                        tile.normalMapTranslationAndScale.w = 1.0;
+                    }
+
                     propagateNewLoadedDataToChildren(tile);
                 }
                 suspendUpsampling = true;
@@ -527,6 +554,8 @@ define([
                     if (terrainProvider.hasWaterMask()) {
                         upsampleWaterMask(tile, context);
                     }
+
+                    upsampleNormalMap(tile, context);
 
                     propagateNewUpsampledDataToChildren(tile);
                 }
@@ -735,6 +764,46 @@ define([
         return result;
     }
 
+    function createNormalMapTexture(context, normalMap) {
+        var result;
+
+        var normalMapData = context.cache.tile_normalMapData;
+        if (!defined(normalMapData)) {
+            normalMapData = context.cache.tile_normalMapData = {
+                    sampler : undefined,
+                    destroy : function() {
+                    }
+            };
+        }
+
+        result = context.createTexture2D({
+            pixelFormat : PixelFormat.RGB,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            flipY : false,
+            source : {
+                width : 256,
+                height : 256,
+                arrayBufferView : normalMap
+            }
+        });
+
+        result.referenceCount = 0;
+
+        if (!defined(normalMapData.sampler)) {
+            normalMapData.sampler = context.createSampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+        }
+
+        result.sampler = normalMapData.sampler;
+
+        ++result.referenceCount;
+        return result;
+    }
+
     function upsampleWaterMask(tile, context) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
@@ -762,6 +831,35 @@ define([
         tile.waterMaskTranslationAndScale.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
         tile.waterMaskTranslationAndScale.z = scaleX;
         tile.waterMaskTranslationAndScale.w = scaleY;
+    }
+
+    function upsampleNormalMap(tile, context) {
+        // Find the nearest ancestor with loaded terrain.
+        var sourceTile = tile.parent;
+        while (defined(sourceTile) && !defined(sourceTile.terrainData) || sourceTile.terrainData.wasCreatedByUpsampling()) {
+            sourceTile = sourceTile.parent;
+        }
+
+        if (!defined(sourceTile) || !defined(sourceTile.normalMap)) {
+            // No ancestors have a normal map texture - try again later.
+            return;
+        }
+
+        tile.normalMap = sourceTile.normalMap;
+        ++tile.normalMap.referenceCount;
+
+        // Compute the normal map translation and scale
+        var sourceTileRectangle = sourceTile.rectangle;
+        var tileRectangle = tile.rectangle;
+        var tileWidth = tileRectangle.east - tileRectangle.west;
+        var tileHeight = tileRectangle.north - tileRectangle.south;
+
+        var scaleX = tileWidth / (sourceTileRectangle.east - sourceTileRectangle.west);
+        var scaleY = tileHeight / (sourceTileRectangle.north - sourceTileRectangle.south);
+        tile.normalMapTranslationAndScale.x = scaleX * (tileRectangle.west - sourceTileRectangle.west) / tileWidth;
+        tile.normalMapTranslationAndScale.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
+        tile.normalMapTranslationAndScale.z = scaleX;
+        tile.normalMapTranslationAndScale.w = scaleY;
     }
 
     return Tile;

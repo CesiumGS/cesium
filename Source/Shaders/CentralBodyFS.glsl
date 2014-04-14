@@ -45,6 +45,9 @@ uniform sampler2D u_oceanNormalMap;
 uniform vec2 u_lightingFadeDistance;
 #endif
 
+uniform sampler2D u_normalMap;
+uniform vec4 u_normalMapTranslationAndScale;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
@@ -116,7 +119,7 @@ void main()
     // coordinates strictly in the 0-1 range.
     vec3 initialColor = vec3(0.0, 0.0, 0.5);
     vec3 startDayColor = computeDayColor(initialColor, clamp(v_textureCoordinates, 0.0, 1.0));
-
+    
 #ifdef SHOW_TILE_BOUNDARIES
     if (v_textureCoordinates.x < (1.0/256.0) || v_textureCoordinates.x > (255.0/256.0) ||
         v_textureCoordinates.y < (1.0/256.0) || v_textureCoordinates.y > (255.0/256.0))
@@ -161,7 +164,14 @@ void main()
     diffuseIntensity = mix(1.0, diffuseIntensity, t);
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
-    gl_FragColor = color;
+    vec2 normalMapTranslation = u_normalMapTranslationAndScale.xy;
+    vec2 normalMapScale = u_normalMapTranslationAndScale.zw;
+    vec2 normalMapTextureCoordinates = v_textureCoordinates * normalMapScale + normalMapTranslation;
+    vec3 normal = texture2D(u_normalMap, normalMapTextureCoordinates).rgb * 2.0 - 1.0;
+    
+    vec3 normalEC = normalize(czm_normal3D * (normal));
+    float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.8 + 0.2;
+    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #endif
 }
 

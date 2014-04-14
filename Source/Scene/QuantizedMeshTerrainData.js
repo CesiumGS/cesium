@@ -178,6 +178,7 @@ define([
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
+        this._normalMap = description.normalMap;
     };
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
@@ -191,6 +192,12 @@ define([
         waterMask : {
             get : function() {
                 return this._waterMask;
+            }
+        },
+
+        normalMap : {
+            get : function() {
+                return this._normalMap;
             }
         }
     });
