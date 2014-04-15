@@ -50,20 +50,10 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         destroyScene(scene);
     });
 
-    it('Constructor sets expected values', function() {
+    it('Can create and destroy', function() {
         var objects = new DynamicObjectCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
-        expect(visualizer.getScene()).toBe(scene);
-        expect(visualizer.getDynamicObjectCollection()).toBe(objects);
-        visualizer.update(time);
-        expect(scene.primitives.length).toBe(0);
-        expect(visualizer.isDestroyed()).toBe(false);
-        visualizer.destroy();
-        expect(visualizer.isDestroyed()).toBe(true);
-
-        visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene);
-        expect(visualizer.getDynamicObjectCollection()).toBeUndefined();
-        visualizer.update(time);
+        expect(visualizer.update(time)).toBe(true);
         expect(scene.primitives.length).toBe(0);
         visualizer.destroy();
     });
