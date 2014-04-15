@@ -38,6 +38,7 @@ Beta Releases
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+  * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * `Clock.canAniamte` was added to prevent time from advancing, even while the clock is animating.
