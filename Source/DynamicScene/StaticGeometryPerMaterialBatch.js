@@ -87,10 +87,10 @@ define(['../Core/defined',
                 });
 
                 primitives.add(primitive);
+                canAnimate = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-            canAnimate = false;
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 

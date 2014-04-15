@@ -71,10 +71,10 @@ define(['../Core/Color',
                 });
 
                 primitives.add(primitive);
+                canAnimate = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-            canAnimate = false;
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
