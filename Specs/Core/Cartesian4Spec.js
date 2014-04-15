@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
          'Core/Cartesian4',
+         'Core/Color',
          'Specs/createPackableSpecs'
      ], function(
          Cartesian4,
+         Color,
          createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -45,6 +47,31 @@ defineSuite([
         expect(function() {
             Cartesian4.fromArray();
         }).toThrowDeveloperError();
+    });
+
+    it('fromElements returns a cartesian4 with corrrect coordinates', function(){
+        var cartesian4 = Cartesian4.fromElements(2, 2, 4, 7);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
+
+    it('fromElements result param returns cartesian4 with correct coordinates', function(){
+        var cartesian4 = new Cartesian4();
+        Cartesian4.fromElements(2, 2, 4, 7, cartesian4);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
+
+    it('fromColor returns a cartesian4 with corrrect coordinates', function(){
+        var cartesian4 = Cartesian4.fromColor(new Color(1.0, 2.0, 3.0, 4.0));
+        expect(cartesian4).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+    });
+
+    it('fromColor result param returns cartesian4 with correct coordinates', function(){
+        var cartesian4 = new Cartesian4();
+        var result = Cartesian4.fromColor(new Color(1.0, 2.0, 3.0, 4.0), cartesian4);
+        expect(cartesian4).toBe(result);
+        expect(cartesian4).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
     });
 
     it('clone without a result parameter', function() {
@@ -847,19 +874,6 @@ defineSuite([
         expect(function() {
             Cartesian4.equalsEpsilon(new Cartesian4(), new Cartesian4(), undefined);
         }).toThrowDeveloperError();
-    });
-
-    it('fromElements returns a cartesian4 with corrrect coordinates', function(){
-        var cartesian4 = Cartesian4.fromElements(2, 2, 4, 7);
-        var expectedResult = new Cartesian4(2, 2, 4, 7);
-        expect(cartesian4).toEqual(expectedResult);
-    });
-
-    it('fromElements result param returns cartesian4 with correct coordinates', function(){
-        var cartesian4 = new Cartesian4();
-        Cartesian4.fromElements(2, 2, 4, 7, cartesian4);
-        var expectedResult = new Cartesian4(2, 2, 4, 7);
-        expect(cartesian4).toEqual(expectedResult);
     });
 
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);

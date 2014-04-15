@@ -79,7 +79,13 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a Cartesian4 instance from a {@link Color}. <code>red</code>, <code>green</code>, <code>blue</code>,
+     * and <code>alpha</code> map to <code>x</code>, <code>y</code>, <code>z</code>, and <code>w</code>, respectively.
+     * @memberof Cartesian4
+     *
+     * @param {Color} color The source color.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.fromColor = function(color, result) {
         //>>includeStart('debug', pragmas.debug);
