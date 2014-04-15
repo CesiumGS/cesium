@@ -200,7 +200,6 @@ defineSuite([
         expect(dataSource.getName()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(false);
     });
 
     it('Works with null geometry', function() {
