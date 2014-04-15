@@ -174,6 +174,7 @@ define(['../Core/defaultValue',
      * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
+     * @param {Boolean} True if the display was updated to the provided time, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);

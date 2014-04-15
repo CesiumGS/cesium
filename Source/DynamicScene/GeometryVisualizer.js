@@ -180,6 +180,8 @@ define(['../Core/AssociativeArray',
      * @memberof GeometryVisualizer
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} True if the visualizer successfully updated to the provided time,
+     * false if the visualizer is waiting for asynchronous primitives to be created.
      */
     GeometryVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
