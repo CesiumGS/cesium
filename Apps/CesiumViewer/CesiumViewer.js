@@ -149,7 +149,7 @@ define([
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
         console.error(message);
-        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+        if ((!defined(document.getElementsByClassName)) || (document.getElementsByClassName('cesium-widget-errorPanel').length < 1)) {
             window.alert(message);
         }
     }
