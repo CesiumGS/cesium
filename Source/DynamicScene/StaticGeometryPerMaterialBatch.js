@@ -25,7 +25,7 @@ define(['../Core/defined',
         this.createPrimitive = true;
         this.primitive = undefined;
         this.geometry = new AssociativeArray();
-        this.material = Material.fromType('Color');
+        this.material = undefined;
         this.updatersWithAttributes = new AssociativeArray();
         this.attributes = new AssociativeArray();
         this.invalidated = false;
