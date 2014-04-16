@@ -33,10 +33,6 @@ define(['Core/Event',
             return that.dynamicObjectCollection;
         };
 
-        this.getIsTimeVarying = function() {
-            return that.isTimeVarying;
-        };
-
         this.destroy = function() {
             that.destroyed = true;
         };
