@@ -296,13 +296,15 @@ define([
         var northIndices = new Uint16Array(buffer, pos, northVertexCount);
         pos += northVertexCount * uint16Length;
 
-        var encodedNormalMap = new Uint8Array(buffer, pos, 256 * 256 * 3);
-        var normalXBuffer = encodedNormalMap.subarray(0, 256 * 256);
-        var normalYBuffer = encodedNormalMap.subarray(256 * 256, 2 * 256 * 256);
-        var normalZBuffer = encodedNormalMap.subarray(256 * 256 * 2, 3 * 256 * 256);
+        var normalMapWidth = 256;
 
-        var normalMap = new Uint8Array(256 * 256 * 3);
-        for (i = 0; i < 256 * 256; ++i) {
+        var encodedNormalMap = new Uint8Array(buffer, pos, normalMapWidth * normalMapWidth * 3);
+        var normalXBuffer = encodedNormalMap.subarray(0, normalMapWidth * normalMapWidth);
+        var normalYBuffer = encodedNormalMap.subarray(normalMapWidth * normalMapWidth, 2 * normalMapWidth * normalMapWidth);
+        var normalZBuffer = encodedNormalMap.subarray(normalMapWidth * normalMapWidth * 2, 3 * normalMapWidth * normalMapWidth);
+
+        var normalMap = new Uint8Array(normalMapWidth * normalMapWidth * 3);
+        for (i = 0; i < normalMapWidth * normalMapWidth; ++i) {
             normalMap[i * 3] = normalXBuffer[i];
             normalMap[i * 3 + 1] = normalYBuffer[i];
             normalMap[i * 3 + 2] = normalZBuffer[i];

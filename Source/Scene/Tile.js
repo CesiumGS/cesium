@@ -776,13 +776,14 @@ define([
             };
         }
 
+        var normalMapWidth = Math.sqrt(normalMap.length / 3);
         result = context.createTexture2D({
             pixelFormat : PixelFormat.RGB,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             flipY : false,
             source : {
-                width : 256,
-                height : 256,
+                width : normalMapWidth,
+                height : normalMapWidth,
                 arrayBufferView : normalMap
             }
         });

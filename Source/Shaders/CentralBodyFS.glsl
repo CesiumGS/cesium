@@ -169,7 +169,7 @@ void main()
     vec2 normalMapTextureCoordinates = v_textureCoordinates * normalMapScale + normalMapTranslation;
     vec3 normal = texture2D(u_normalMap, normalMapTextureCoordinates).rgb * 2.0 - 1.0;
     
-    vec3 normalEC = normalize(czm_normal3D * (normal));
+    vec3 normalEC = normalize(czm_normal3D * normal);
     float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.8 + 0.2;
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #endif
