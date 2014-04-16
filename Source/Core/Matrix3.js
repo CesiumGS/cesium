@@ -1101,11 +1101,22 @@ define([
             throw new DeveloperError('matrix is not invertible');
         }
 
-        var m = new Matrix3(m22 * m33 - m23 * m32, m13 * m32 - m12 * m33, m12 * m23 - m13 * m22,
-                            m23 * m31 - m21 * m33, m11 * m33 - m13 * m31, m13 * m21 - m11 * m23,
-                            m21 * m32 - m22 * m31, m12 * m31 - m11 * m32, m11 * m22 - m12 * m21);
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
+
+        result[0] = m22 * m33 - m23 * m32;
+        result[1] = m23 * m31 - m21 * m33;
+        result[2] = m21 * m32 - m22 * m31;
+        result[3] = m13 * m32 - m12 * m33;
+        result[4] = m11 * m33 - m13 * m31;
+        result[5] = m12 * m31 - m11 * m32;
+        result[6] = m12 * m23 - m13 * m22;
+        result[7] = m13 * m21 - m11 * m23;
+        result[8] = m11 * m22 - m12 * m21;
+
        var scale = 1.0 / determinant;
-       return Matrix3.multiplyByScalar(m, scale, result);
+       return Matrix3.multiplyByScalar(result, scale, result);
     };
 
     /**
