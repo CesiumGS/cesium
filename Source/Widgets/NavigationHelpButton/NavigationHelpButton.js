@@ -37,7 +37,9 @@ define([
      * // Note: This code assumed you already have a Scene instance.
      *
      * var scene = viewer.scene;
-     * var navigationHelpButton = new Cesium.NavigationHelpButton('navigationHelpButtonContainer', scene);
+     * var navigationHelpButton = new Cesium.NavigationHelpButton({
+     *     container : 'navigationHelpButtonContainer'
+     * });
      */
     var NavigationHelpButton = function (description) {
         //>>includeStart('debug', pragmas.debug);
@@ -158,8 +160,8 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     NavigationHelpButton.prototype.destroy = function () {
         this._viewModel.destroy();
 
-        //document.removeEventListener('mousedown', this._closeDropDown, true);
-        //document.removeEventListener('touchstart', this._closeDropDown, true);
+        document.removeEventListener('mousedown', this._closeInstructions, true);
+        document.removeEventListener('touchstart', this._closeInstructions, true);
 
         knockout.cleanNode(this._wrapper);
         this._container.removeChild(this._wrapper);
