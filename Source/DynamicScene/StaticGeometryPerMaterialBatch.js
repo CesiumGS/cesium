@@ -67,7 +67,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.update = function(time) {
-        var canAnimate = true;
+        var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
@@ -87,7 +87,7 @@ define(['../Core/defined',
                 });
 
                 primitives.add(primitive);
-                canAnimate = false;
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
@@ -111,9 +111,9 @@ define(['../Core/defined',
                 }
             }
         } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
-            canAnimate = false;
+            isUpdated = false;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -183,11 +183,11 @@ define(['../Core/defined',
             }
         }
 
-        var canAnimate = true;
+        var isUpdated = true;
         for (i = 0; i < length; i++) {
-            canAnimate = items[i].update(time) && canAnimate;
+            isUpdated = items[i].update(time) && isUpdated;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

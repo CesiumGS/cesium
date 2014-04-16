@@ -251,7 +251,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var that = this;
 
         eventHelper.add(clock.onTick, function(clock) {
-            clockViewModel.canAnimate = dataSourceDisplay.update(clock.currentTime) && that._allowDataSourcesToSuspendAnimation;
+            var isUpdated = dataSourceDisplay.update(clock.currentTime);
+            if (that._allowDataSourcesToSuspendAnimation) {
+                clockViewModel.canAnimate = isUpdated;
+            }
         });
 
         //Selection Indicator

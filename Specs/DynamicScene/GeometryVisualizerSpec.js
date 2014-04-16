@@ -84,9 +84,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {
@@ -125,9 +125,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {
@@ -167,9 +167,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {
@@ -209,9 +209,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {
@@ -252,9 +252,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {
@@ -292,9 +292,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         var primitive;
@@ -313,9 +313,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            var canAnimate = visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return canAnimate;
+            return isUpdated;
         });
 
         runs(function() {

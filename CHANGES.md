@@ -42,7 +42,7 @@ Beta Releases
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
-* `Clock.canAniamte` was added to prevent time from advancing, even while the clock is animating.
+* `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is bring processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 
 ### b27 - 2014-04-01

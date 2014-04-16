@@ -50,7 +50,7 @@ define(['../Core/Color',
 
     var colorScratch = new Color();
     Batch.prototype.update = function(time) {
-        var canAnimate = true;
+        var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -71,7 +71,7 @@ define(['../Core/Color',
                 });
 
                 primitives.add(primitive);
-                canAnimate = false;
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
@@ -97,11 +97,11 @@ define(['../Core/Color',
                 attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time), attributes.show);
             }
         } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
-            canAnimate = false;
+            isUpdated = false;
         }
 
         this.itemsToRemove.length = removedCount;
-        return canAnimate;
+        return isUpdated;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -142,8 +142,8 @@ define(['../Core/Color',
         var updater;
 
         //Perform initial update
-        var canAnimate = this._solidBatch.update(time);
-        canAnimate = this._translucentBatch.update(time) && canAnimate;
+        var isUpdated = this._solidBatch.update(time);
+        isUpdated = this._translucentBatch.update(time) && isUpdated;
 
         //If any items swapped between solid/translucent, we need to
         //move them between batches
@@ -169,10 +169,10 @@ define(['../Core/Color',
 
         //If we moved anything around, we need to re-build the primitive
         if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            canAnimate = this._solidBatch.update(time) && canAnimate;
-            canAnimate = this._translucentBatch.update(time) && canAnimate;
+            isUpdated = this._solidBatch.update(time) && isUpdated;
+            isUpdated = this._translucentBatch.update(time) && isUpdated;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {

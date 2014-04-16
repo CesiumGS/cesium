@@ -235,13 +235,13 @@ define(['../Core/AssociativeArray',
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        var canAnimate = this._outlineBatch.update(time);
-        canAnimate = this._closedColorBatch.update(time) && canAnimate;
-        canAnimate = this._closedMaterialBatch.update(time) && canAnimate;
-        canAnimate = this._openColorBatch.update(time) && canAnimate;
-        canAnimate = this._openMaterialBatch.update(time) && canAnimate;
-        canAnimate = this._dynamicBatch.update(time) && canAnimate;
-        return canAnimate;
+        var isUpdated = this._outlineBatch.update(time);
+        isUpdated = this._closedColorBatch.update(time) && isUpdated;
+        isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._openColorBatch.update(time) && isUpdated;
+        isUpdated = this._openMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._dynamicBatch.update(time) && isUpdated;
+        return isUpdated;
     };
 
     /**
