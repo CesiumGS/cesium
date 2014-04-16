@@ -40,6 +40,7 @@ Beta Releases
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
 
 ### b27 - 2014-04-01
 

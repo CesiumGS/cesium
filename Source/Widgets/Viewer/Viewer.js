@@ -23,6 +23,7 @@ define([
         '../getElement',
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
+        '../NavigationHelpButton/NavigationHelpButton',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
@@ -52,6 +53,7 @@ define([
         getElement,
         HomeButton,
         InfoBox,
+        NavigationHelpButton,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -116,6 +118,8 @@ define([
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
+     * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
+     * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {Array} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -327,6 +331,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             //Grab the dropdown for resize code.
             var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');
             this._baseLayerPickerDropDown = elements[0];
+        }
+
+        // Navigation Help Button
+        var navigationHelpButton;
+        if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
+            homeButton = new NavigationHelpButton({
+                container : toolbar,
+                instructionsInitiallyVisible : defaultValue(options.navigationInstructionsInitiallyVisible, true)
+            });
         }
 
         //Animation
