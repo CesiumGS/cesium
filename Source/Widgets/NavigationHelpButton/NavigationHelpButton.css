@@ -7,7 +7,7 @@
     position: absolute;
     top: 32px;
     right: 0;
-    width: 325px;
+    width: 250px;
     padding-bottom: 5px;
     border-radius: 10px;
     background-color: rgba(38, 38, 38, 0.75);
@@ -16,11 +16,11 @@
     -ms-transform: scale(0.01);
     -o-transform: scale(0.01);
     transform: scale(0.01);
-    -webkit-transform-origin: 309px -10px;
-    -moz-transform-origin: 309px -10px;
-    -ms-transform-origin: 309px -10px;
-    -o-transform-origin: 309px -10px;
-    transform-origin: 309px -10px;
+    -webkit-transform-origin: 234px -10px;
+    -moz-transform-origin: 234px -10px;
+    -ms-transform-origin: 234px -10px;
+    -o-transform-origin: 234px -10px;
+    transform-origin: 234px -10px;
     -webkit-transition: visibility 0s 0.25s, -webkit-transform 0.25s ease-in;
     -moz-transition: visibility 0s 0.25s, -moz-transform 0.25s ease-in;
     -ms-transition: visibility 0s 0.25s, -ms-transform 0.25s ease-in;
