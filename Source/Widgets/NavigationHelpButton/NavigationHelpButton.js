@@ -34,9 +34,7 @@ define([
      * @example
      * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
      * // and in the body, include: &lt;div id="navigationHelpButtonContainer"&gt;&lt;/div&gt;
-     * // Note: This code assumed you already have a Scene instance.
      *
-     * var scene = viewer.scene;
      * var navigationHelpButton = new Cesium.NavigationHelpButton({
      *     container : 'navigationHelpButtonContainer'
      * });
@@ -50,7 +48,7 @@ define([
 
         var container = getElement(description.container);
 
-        var viewModel = new NavigationHelpButtonViewModel(description);
+        var viewModel = new NavigationHelpButtonViewModel();
 
         if (description.instructionsInitiallyVisible) {
             viewModel.showInstructions = true;
