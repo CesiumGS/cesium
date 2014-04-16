@@ -336,7 +336,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         // Navigation Help Button
         var navigationHelpButton;
         if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
-            homeButton = new NavigationHelpButton({
+            navigationHelpButton = new NavigationHelpButton({
                 container : toolbar,
                 instructionsInitiallyVisible : defaultValue(options.navigationInstructionsInitiallyVisible, true)
             });
