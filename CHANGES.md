@@ -5,7 +5,7 @@ Beta Releases
 -------------
 ### b28 - 2014-05-01
 
-* Breaking changes:
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
   * Rename Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
