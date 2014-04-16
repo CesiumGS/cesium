@@ -157,7 +157,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.sizeInMeters=true] Determines if the units for the model are in meters or pixels.
+     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
@@ -234,25 +234,21 @@ define([
          * @type {Number}
          *
          * @default 1.0
-         *
-         * @see ModelAnimationCollection#sizeInMeters
          */
         this.scale = defaultValue(options.scale, 1.0);
         this._scale = this.scale;
 
         /**
-         * Determines if the units for the model are in meters (<code>true</code>) or
-         * pixels (<code>false</code>).  When in pixels, the model will be the same
-         * size on the screen regardless of the viewer's distance to it.
+         * The approximate minimum pixel size of the model regardless of zoom.
+         * This can be used to ensure that a model is visible even when the viewer
+         * zooms out.  When <code>0.0</code>, no minimum size is enforced.
          *
-         * @type {Boolean}
+         * @type {Number}
          *
-         * @default true
-         *
-         * @see ModelAnimationCollection#scale
+         * @default 0.0
          */
-        this.sizeInMeters = defaultValue(options.sizeInMeters, true);
-        this._sizeInMeters = this.sizeInMeters;
+        this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+        this._minimumPixelSize = this.minimumPixelSize;
 
         /**
          * User-defined object returned when the model is picked.
@@ -334,6 +330,7 @@ define([
         this._debugWireframe = false;
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, or animations
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -434,7 +431,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
-     * @param {Number} [options.sizeInMeters=true] Determines if the units for the model are in meters or pixels.
+     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -458,7 +455,7 @@ define([
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
-     *   sizeInMeters : false,            // constant pixel size
+     *   minimumPixelSize : 128,          // never smaller than 128 pixels
      *   allowPicking : false,            // not pickable
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
@@ -1983,13 +1980,13 @@ define([
     var scratchToCenter = new Cartesian3();
     var scratchProj = new Cartesian3();
 
-    function scaleInPixels(positionWC, context, frameState) {
+    function scaleInPixels(positionWC, radius, context, frameState) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
         var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
-        var distance = Cartesian3.magnitude(proj);
+        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - radius);
 
         scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
         scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
@@ -2000,6 +1997,34 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+
+    function getScale(model, context, frameState) {
+        var scale = model._scale;
+
+// TODO: chicken and egg on first frame
+        if (defined(model._initialRadius) && (model.minimumPixelSize !== 0.0)) {
+            // Compute size of bounding sphere in pixels
+            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
+            var diameterInPixels = maxPixelSize;
+            var m = model.modelMatrix;
+            scratchPosition.x = m[12];
+            scratchPosition.y = m[13];
+            scratchPosition.z = m[14];
+            var radius = (scale * Matrix4.getMaximumScale(model.modelMatrix)) * model._initialRadius;
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+            if (metersPerPixel !== 0.0) {
+                var pixelsPerMeter = 1.0 / metersPerPixel;
+                diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
+            }
+
+            // Maintain model's minimum pixel size
+            if (diameterInPixels < model.minimumPixelSize) {
+                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
+            }
+        }
+
+        return scale;
+    }
 
     /**
      * @exception {RuntimeError} Failed to load external reference.
@@ -2042,21 +2067,16 @@ define([
             this._cesiumAnimationsDirty = false;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || (this._sizeInMeters !== this.sizeInMeters) || !this.sizeInMeters;
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
+                (this._scale !== this.scale) ||
+                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0); // Minimum pixel size changed or is enabled
+
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
-                this._sizeInMeters = this.sizeInMeters;
+                this._minimumPixelSize = this.minimumPixelSize;
 
-                var scale = this.scale;
-                if (!this.sizeInMeters) {
-                    // In pixels
-                    var m = this.modelMatrix;
-                    scratchPosition.x = m[12];
-                    scratchPosition.y = m[13];
-                    scratchPosition.z = m[14];
-                    scale *= scaleInPixels(scratchPosition, context, frameState);
-                }
+                var scale = getScale(this, context, frameState);
                 Matrix4.multiplyByUniformScale(this.modelMatrix, scale, this._computedModelMatrix);
             }
 
@@ -2078,6 +2098,8 @@ define([
             // Called after modelMatrix update.
             var model = this;
             frameState.afterRender.push(function() {
+                // Get raw model radius without any scale.
+                model._initialRadius = model.computeWorldBoundingSphere().radius / (model.scale * Matrix4.getMaximumScale(model.modelMatrix));
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
