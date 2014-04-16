@@ -401,13 +401,8 @@ define([
 
         var errorHeader = document.createElement('div');
         errorHeader.className = 'cesium-widget-errorPanel-header';
-        errorHeader.textContent = title;
+        errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
-
-        var oldBrowser = !defined(window.addEventListener);
-        if (oldBrowser) {
-            errorHeader.innerHTML = title;
-        }
 
         var resizeCallback;
         if (defined(error)) {
@@ -418,38 +413,32 @@ define([
                 errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
             };
             resizeCallback();
-            if (!oldBrowser) {
+            if (defined(window.addEventListener)) {
                 window.addEventListener('resize', resizeCallback, false);
             }
 
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.textContent = error;
+            errorMessage.appendChild(document.createTextNode(error));
             errorPanelScroller.appendChild(errorMessage);
-
-            if (oldBrowser) {
-                errorMessage.innerHTML = error;
-            }
         }
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
         content.appendChild(buttonPanel);
 
-        if (!oldBrowser) {
-            var okButton = document.createElement('button');
-            okButton.type = 'button';
-            okButton.className = 'cesium-button';
-            okButton.textContent = 'OK';
-            okButton.onclick = function() {
-                if (defined(resizeCallback)) {
-                    window.removeEventListener('resize', resizeCallback, false);
-                }
-                element.removeChild(overlay);
-            };
+        var okButton = document.createElement('button');
+        okButton.setAttribute('type', 'button');
+        okButton.className = 'cesium-button';
+        okButton.appendChild(document.createTextNode('OK'));
+        okButton.onclick = function() {
+            if (defined(resizeCallback) && defined(window.removeEventListener)) {
+                window.removeEventListener('resize', resizeCallback, false);
+            }
+            element.removeChild(overlay);
+        };
 
-            buttonPanel.appendChild(okButton);
-        }
+        buttonPanel.appendChild(okButton);
 
         element.appendChild(overlay);
     };
