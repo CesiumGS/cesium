@@ -331,8 +331,7 @@ define([
     };
 
     /**
-     * Gets an event that will be raised when non-time-varying data changes
-     * or if the return value of getIsTimeVarying changes.
+     * Gets an event that will be raised when new data is done loading.
      * @memberof GeoJsonDataSource
      *
      * @returns {Event} The event.
@@ -378,17 +377,6 @@ define([
      */
     GeoJsonDataSource.prototype.getClock = function() {
         return undefined;
-    };
-
-    /**
-     * Gets a value indicating if the data varies with simulation time.  If the return value of
-     * this function changes, the changed event will be raised.
-     * @memberof GeoJsonDataSource
-     *
-     * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
-     */
-    GeoJsonDataSource.prototype.getIsTimeVarying = function() {
-        return false;
     };
 
     /**

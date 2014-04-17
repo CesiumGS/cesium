@@ -61,7 +61,7 @@ define([
      *
      * @example
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
-     *   url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
+     *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * centralBody.terrainProvider = terrainProvider;
      */

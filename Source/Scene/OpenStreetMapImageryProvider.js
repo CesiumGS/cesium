@@ -33,7 +33,7 @@ define([
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
-     * @param {String} [description.url='http://tile.openstreetmap.org'] The OpenStreetMap server url.
+     * @param {String} [description.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -53,13 +53,13 @@ define([
      * @example
      * // OpenStreetMap tile provider
      * var osm = new Cesium.OpenStreetMapImageryProvider({
-     *     url : 'http://tile.openstreetmap.org/'
+     *     url : '//a.tile.openstreetmap.org/'
      * });
      */
     var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
         description = defaultValue(description, {});
 
-        var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+        var url = defaultValue(description.url, '//a.tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';

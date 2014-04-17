@@ -89,7 +89,7 @@ define([
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
-     *     url : 'http://earth.localdomain',
+     *     url : '//earth.localdomain',
      *     channel : 1008
      * });
      */

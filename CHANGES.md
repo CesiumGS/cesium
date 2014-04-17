@@ -5,7 +5,7 @@ Beta Releases
 -------------
 ### b28 - 2014-05-01
 
-* Breaking changes:
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
   * Rename Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
@@ -23,12 +23,23 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * `BaseLayerPicker` has been extended to support terrain selection.
+    * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
+    * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a CentralBody and ImageryLayerCollection.
+    * `ImageryProviderViewModel` -> `ProviderViewModel`
+    * `BaseLayerPickerViewModel.selectedName` -> `BaseLayerPickerViewModel.buttonTooltip`
+    * `BaseLayerPickerViewModel.selectedIconUrl` -> `BaseLayerPickerViewModel.buttonImageUrl`
+    * `BaseLayerPickerViewModel.selectedItem` -> `BaseLayerPickerViewModel.selectedImagery`
+    * `BaseLayerPickerViewModel.imageryLayers`has been removed and replaced with `BaseLayerPickerViewModel.centralBody`
+    * See [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for full details.
   * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
   * `Context` is now private
     * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+  * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
+  * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 
 ### b27 - 2014-04-01
