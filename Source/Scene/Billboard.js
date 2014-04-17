@@ -101,7 +101,7 @@ define([
         this._collection = defaultValue(options.collection, billboardCollection);
 
         this._pickId = undefined;
-        this._pickIdThis = options._pickIdThis;
+        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
@@ -639,13 +639,35 @@ define([
         },
 
         /**
-         * Gets the user-defined object returned when the billboard is picked.
+         * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
          */
-        id: {
-            get: function() {
+        id : {
+            get : function() {
                 return this._id;
+            },
+            set : function(value) {
+                this._id = value;
+                if (defined(this._pickId)) {
+                    this._pickId.object.id = value;
+                }
+            }
+        },
+
+        /**
+         * The primitive to return when picking this billboard.
+         * @private
+         */
+        pickPrimitive : {
+            get : function() {
+                return this._pickPrimitive;
+            },
+            set : function(value) {
+                this._pickPrimitive = value;
+                if (defined(this._pickId)) {
+                    this._pickId.object.primitive = value;
+                }
             }
         }
     });
@@ -653,7 +675,7 @@ define([
     Billboard.prototype.getPickId = function(context) {
         if (!defined(this._pickId)) {
             this._pickId = context.createPickId({
-                primitive : defaultValue(this._pickIdThis, this),
+                primitive : this._pickPrimitive,
                 collection : this._collection,
                 id : this._id
             });
@@ -700,9 +722,9 @@ define([
     var scratchCartesian4 = new Cartesian4();
     var scrachEyeOffset = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
-    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, context, frameState) {
+    Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-        var camera = frameState.camera;
+        var camera = scene.frameState.camera;
         var view = camera.viewMatrix;
         var projection = camera.frustum.projectionMatrix;
 
@@ -717,11 +739,10 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
-        var uniformState = context.uniformState;
-        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.highResolutionSnapScale, scratchCartesian2);
+        var po = Cartesian2.multiplyByScalar(pixelOffset, scene._context.uniformState.highResolutionSnapScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 
@@ -735,8 +756,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @param {Context} context The context.
-     * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
+     * @param {Scene} scene The scene.
      *
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
@@ -746,21 +766,18 @@ define([
      * @see Billboard#pixelOffset
      *
      * @example
-     * console.log(b.computeScreenSpacePosition(scene.context, scene.frameState).toString());
+     * console.log(b.computeScreenSpacePosition(scene).toString());
      */
     var tempPixelOffset = new Cartesian2(0.0, 0.0);
-    Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
+    Billboard.prototype.computeScreenSpacePosition = function(scene) {
         var billboardCollection = this._billboardCollection;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(billboardCollection)) {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
-        }
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
@@ -769,7 +786,7 @@ define([
         Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, scene);
     };
 
     /**

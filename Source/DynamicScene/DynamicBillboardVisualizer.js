@@ -71,7 +71,7 @@ define([
         this._dynamicObjectCollection = undefined;
 
         var billboardCollection = this._billboardCollection = new BillboardCollection();
-        var atlas = this._textureAtlas = scene.context.createTextureAtlas();
+        var atlas = this._textureAtlas = scene.createTextureAtlas();
         this._textureAtlasBuilder = new TextureAtlasBuilder(atlas);
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
@@ -241,7 +241,7 @@ define([
                 billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
-            billboard._id = dynamicObject;
+            billboard.id = dynamicObject;
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
 

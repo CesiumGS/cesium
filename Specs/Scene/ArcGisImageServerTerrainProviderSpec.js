@@ -114,7 +114,7 @@ defineSuite([
     });
 
     describe('requestTileGeometry', function() {
-        it('requests expanded extent to account for center versus edge', function() {
+        it('requests expanded rectangle to account for center versus edge', function() {
             var baseUrl = 'made/up/url';
 
             loadImage.createImage = function(url, crossOrigin, deferred) {

@@ -3,7 +3,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,7 +10,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -29,7 +27,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        DefaultProxy,
         defaultValue,
         defined,
         defineProperties,
@@ -37,7 +34,6 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -121,7 +117,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -156,10 +152,13 @@ define([
         this._element = widgetNode;
 
         try {
-            var svgNS = "http://www.w3.org/2000/svg";
-            var zoomDetector = document.createElementNS(svgNS, 'svg');
-            zoomDetector.style.display = 'none';
-            widgetNode.appendChild(zoomDetector);
+            if (defined(document.createElementNS)) {
+                var svgNS = "http://www.w3.org/2000/svg";
+                var zoomDetector = document.createElementNS(svgNS, 'svg');
+                zoomDetector.style.display = 'none';
+                widgetNode.appendChild(zoomDetector);
+                this._zoomDetector = zoomDetector;
+            }
 
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
@@ -224,7 +223,6 @@ define([
 
             this._container = container;
             this._canvas = canvas;
-            this._zoomDetector = zoomDetector;
             this._canvasWidth = 0;
             this._canvasHeight = 0;
             this._scene = scene;
@@ -403,7 +401,7 @@ define([
 
         var errorHeader = document.createElement('div');
         errorHeader.className = 'cesium-widget-errorPanel-header';
-        errorHeader.textContent = title;
+        errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
 
         var resizeCallback;
@@ -415,11 +413,13 @@ define([
                 errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
             };
             resizeCallback();
-            window.addEventListener('resize', resizeCallback, false);
+            if (defined(window.addEventListener)) {
+                window.addEventListener('resize', resizeCallback, false);
+            }
 
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.textContent = error;
+            errorMessage.appendChild(document.createTextNode(error));
             errorPanelScroller.appendChild(errorMessage);
         }
 
@@ -428,11 +428,11 @@ define([
         content.appendChild(buttonPanel);
 
         var okButton = document.createElement('button');
-        okButton.type = 'button';
+        okButton.setAttribute('type', 'button');
         okButton.className = 'cesium-button';
-        okButton.textContent = 'OK';
+        okButton.appendChild(document.createTextNode('OK'));
         okButton.onclick = function() {
-            if (defined(resizeCallback)) {
+            if (defined(resizeCallback) && defined(window.removeEventListener)) {
                 window.removeEventListener('resize', resizeCallback, false);
             }
             element.removeChild(overlay);

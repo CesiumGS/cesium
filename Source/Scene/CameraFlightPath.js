@@ -583,11 +583,11 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position in which the entire extent will be visible. All arguments should
+     * Creates an animation to fly the camera from it's current position to a position in which the entire rectangle will be visible. All arguments should
      * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Extent} description.destination The final position of the camera.
+     * @param {Rectangle} description.destination The final position of the camera.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
@@ -599,16 +599,16 @@ define([
      *
      * @see Scene#animations
      */
-    CameraFlightPath.createAnimationExtent = function(scene, description) {
+    CameraFlightPath.createAnimationRectangle = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var extent = description.destination;
+        var rectangle = description.destination;
         var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
-        if (!defined(extent)) {
+        if (!defined(rectangle)) {
             throw new DeveloperError('description.destination is required.');
         }
         if (frameState.mode === SceneMode.MORPHING) {
@@ -618,7 +618,7 @@ define([
 
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
-        camera.getExtentCameraCoordinates(extent, c3destination);
+        camera.getRectangleCameraCoordinates(rectangle, c3destination);
 
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(scene, createAnimationDescription);
