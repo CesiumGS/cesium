@@ -17,8 +17,7 @@ define([
     };
 
     /**
-     * Gets an event that will be raised when non-time-varying data changes, such
-     * as the return value of getName, getClock, or getIsTimeVarying.
+     * Gets an event that will be raised when the underlying data changes.
      * @memberof DataSource
      * @function
      *
@@ -62,16 +61,6 @@ define([
      * @returns {DynamicClock} The clock associated with this data source, or undefined if none exists.
      */
     DataSource.prototype.getClock = DeveloperError.throwInstantiationError;
-
-    /**
-     * Gets a value indicating if the data varies with simulation time.  If the return value of
-     * this function changes, the changed event will be raised.
-     * @memberof DataSource
-     * @function
-     *
-     * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
-     */
-    DataSource.prototype.getIsTimeVarying = DeveloperError.throwInstantiationError;
 
     return DataSource;
 });
