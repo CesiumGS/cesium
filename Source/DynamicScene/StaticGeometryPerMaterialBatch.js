@@ -25,7 +25,7 @@ define(['../Core/defined',
         this.createPrimitive = true;
         this.primitive = undefined;
         this.geometry = new AssociativeArray();
-        this.material = Material.fromType('Color');
+        this.material = undefined;
         this.updatersWithAttributes = new AssociativeArray();
         this.attributes = new AssociativeArray();
         this.subscriptions = new AssociativeArray();
@@ -91,11 +91,12 @@ define(['../Core/defined',
                 primitives.remove(primitive);
             }
             if (geometries.length > 0) {
+                this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
                 primitive = new Primitive({
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
-                        material : MaterialProperty.getValue(time, this.materialProperty, this.material),
+                        material : this.material,
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
                     })
@@ -113,7 +114,8 @@ define(['../Core/defined',
             var attributes;
             var i;
 
-            this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
+            this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
+            this.primitive.appearance.material = this.material;
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
