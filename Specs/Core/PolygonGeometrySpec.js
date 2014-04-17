@@ -282,7 +282,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        var bs = BoundingSphere.fromPoints(positions);
+        var bs = BoundingSphere.fromVertices(p.attributes.position.values);
         expect(p.boundingSphere.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON9);
         expect(p.boundingSphere.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON9);
     });
