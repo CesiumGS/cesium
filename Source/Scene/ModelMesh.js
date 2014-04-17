@@ -6,7 +6,7 @@ define([
     "use strict";
 
     /**
-     * A model's mesh and its material.
+     * A model's mesh and its materials.
      * <p>
      * Use {@link Model#getMesh} to create an instance.
      * </p>
@@ -66,7 +66,13 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * An array of {@link ModelMaterial} instances indexed by the mesh's
+         * primitive indices.
+         *
+         * @memberof ModelMesh.prototype
+         *
+         * @type {Array}
+         * @readonly
          */
         materials : {
             get : function() {
