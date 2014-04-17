@@ -735,7 +735,6 @@ define(['../Core/createGuid',
         this._isLoadingEvent = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
-        this._timeVarying = true;
         this._name = undefined;
         this._isLoading = false;
     };
@@ -821,17 +820,6 @@ define(['../Core/createGuid',
     };
 
     KmlDataSource.prototype.update = function() {
-        return true;
-    };
-
-    /**
-     * Gets a value indicating if the data varies with simulation time.  If the return value of
-     * this function changes, the changed event will be raised.
-     * @memberof DataSource
-     *
-     * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
-     */
-    KmlDataSource.prototype.getIsTimeVarying = function() {
         return true;
     };
 
