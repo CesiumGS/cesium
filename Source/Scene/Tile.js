@@ -356,7 +356,8 @@ define([
         var isRenderable = defined(this.vertexArray);
 
         // But it's not done loading until our two state machines are terminated.
-        var isDoneLoading = !defined(this.loadedTerrain) && !defined(this.upsampledTerrain);
+        var isDoneLoading = defined(this.loadedTerrain) && this.loadedTerrain.state === TerrainState.READY;
+        isDoneLoading = isDoneLoading || (defined(this.upsampledTerrain) && this.upsampledTerrain.state === TerrainState.READY);
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
@@ -466,7 +467,7 @@ define([
         var upsampled = tile.upsampledTerrain;
         var suspendUpsampling = false;
 
-        if (defined(loaded)) {
+        if (defined(loaded) && loaded.state !== TerrainState.READY) {
             loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
@@ -499,10 +500,6 @@ define([
 
             if (loaded.state === TerrainState.READY) {
                 loaded.publishToTile(tile);
-
-                // No further loading or upsampling is necessary.
-                tile.loadedTerrain = undefined;
-                tile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
                 // Loading failed for some reason, or data is simply not available,
                 // so no need to continue trying to load.  Any retrying will happen before we
@@ -511,7 +508,7 @@ define([
             }
         }
 
-        if (!suspendUpsampling && defined(upsampled)) {
+        if (!suspendUpsampling && defined(upsampled) && upsampled.state !== TerrainState.READY) {
             upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
@@ -534,9 +531,6 @@ define([
 
             if (upsampled.state === TerrainState.READY) {
                 upsampled.publishToTile(tile);
-
-                // No further upsampling is necessary.  We need to continue loading, though.
-                tile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
                 // but maybe we'll be saved by loading.
