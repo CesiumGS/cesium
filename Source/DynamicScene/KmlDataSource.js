@@ -13,6 +13,7 @@ define(['../Core/createGuid',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
+        '../Core/Math',
         '../Core/NearFarScalar',
         '../Core/TimeInterval',
         '../Core/PolygonPipeline',
@@ -33,6 +34,7 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicLabel',
         './DynamicBillboard',
+        './ImageMaterialProperty',
         './PolylineOutlineMaterialProperty',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -52,6 +54,7 @@ define(['../Core/createGuid',
         getFilenameFromUri,
         Iso8601,
         JulianDate,
+        CesiumMath,
         NearFarScalar,
         TimeInterval,
         PolygonPipeline,
@@ -72,6 +75,7 @@ define(['../Core/createGuid',
         DynamicPolygon,
         DynamicLabel,
         DynamicBillboard,
+        ImageMaterialProperty,
         PolylineOutlineMaterialProperty,
         Uri,
         when,
@@ -118,6 +122,23 @@ define(['../Core/createGuid',
         var element = node.getElementsByTagName(tagName)[0];
         var value = defined(element) ? element.textContent : undefined;
         return value;
+    }
+
+    function resolveHref(href, sourceUri, uriResolver) {
+        var hrefResolved = false;
+        if (defined(uriResolver)) {
+            var blob = uriResolver[href];
+            if (defined(blob)) {
+                hrefResolved = true;
+                href = blob;
+            }
+        }
+        if (!hrefResolved && defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return href;
     }
 
     function getColorValue(node, tagName) {
@@ -215,6 +236,63 @@ define(['../Core/createGuid',
             if (!defined(billboard.image)) {
                 billboard.image = new ConstantProperty('http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png');
             }
+        }
+    }
+
+    function processGroundOverlay(dataSource, parent, groundOverlay, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
+        var id = createId(groundOverlay.id);
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+
+        //TODO
+        //<altitude>
+        //<altitudeMode>
+        //<gx:altitudeMode>
+        //color
+        //drawOrder
+        if (defined(parent)) {
+            dynamicObject.parent = parent;
+        }
+
+        var styleObject = processInlineStyles(groundOverlay, styleCollection, sourceUri, uriResolver);
+
+        dynamicObject.name = getStringValue(groundOverlay, 'name');
+
+        var foundGeometry = false;
+        var nodes = groundOverlay.childNodes;
+        for (var i = 0, len = nodes.length; i < len; i++) {
+            var node = nodes.item(i);
+            var nodeName = node.nodeName;
+            if (nodeName === 'TimeSpan') {
+                dynamicObject.availability = processTimeSpan(node);
+            } else if (nodeName === 'description') {
+                dynamicObject.description = new ConstantProperty(node.textContent);
+            } else if (nodeName === 'LatLonBox') {
+                var north = getNumericValue(node, 'north');
+                var south = getNumericValue(node, 'south');
+                var east = getNumericValue(node, 'east');
+                var west = getNumericValue(node, 'west');
+
+                var cb = Ellipsoid.WGS84;
+                dynamicObject.vertexPositions = new ConstantProperty([cb.cartographicToCartesian(Cartographic.fromDegrees(west, north)),
+                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(east, north)),
+                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(east, south)),
+                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(west, south))]);
+
+                var polygon = dynamicObject.polygon;
+                if (!defined(polygon)) {
+                    polygon = new DynamicPolygon();
+                    dynamicObject.polygon = polygon;
+                }
+                var icon = resolveHref(getStringValue(groundOverlay, 'href'), sourceUri, uriResolver);
+                var material = new ImageMaterialProperty();
+                material.image = new ConstantProperty(icon);
+                polygon.material = material;
+
+                mergeStyles('GroundOverlay', styleObject, dynamicObject);
+            }
+        }
+        if (!foundGeometry) {
+            mergeStyles(undefined, styleObject, dynamicObject);
         }
     }
 
@@ -382,20 +460,7 @@ define(['../Core/createGuid',
                 //TODO heading, hotSpot
                 var scale = getNumericValue(node, 'scale');
                 var color = getColorValue(node, 'color');
-                var icon = getStringValue(node, 'href');
-                var iconResolved = false;
-                if (defined(uriResolver)) {
-                    var blob = uriResolver[icon];
-                    if (defined(blob)) {
-                        iconResolved = true;
-                        icon = blob;
-                    }
-                }
-                if (!iconResolved && defined(sourceUri)) {
-                    var baseUri = new Uri(document.location.href);
-                    sourceUri = new Uri(sourceUri);
-                    icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
-                }
+                var icon = resolveHref(getStringValue(node, 'href'), sourceUri, uriResolver);
 
                 var billboard = dynamicObject.billboard;
                 if (!defined(billboard)) {
@@ -629,6 +694,8 @@ define(['../Core/createGuid',
             parent = new DynamicObject(createId(node));
             parent.name = getStringValue(node, 'name');
             dynamicObjectCollection.add(parent);
+        } else if (nodeName === 'GroundOverlay') {
+            processGroundOverlay(dataSource, parent, node, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
         }
 
         var childNodes = node.childNodes;
