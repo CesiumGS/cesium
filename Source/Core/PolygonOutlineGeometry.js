@@ -370,9 +370,6 @@ define([
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
-        var boundingSphere;
-        var outerPositions;
-
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];
@@ -406,12 +403,6 @@ define([
             polygons.push(outerRing);
         }
 
-        outerPositions = polygons[0];
-        // The bounding volume is just around the boundary points, so there could be cases for
-        // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-        // volume doesn't cover the polygon.
-        boundingSphere = BoundingSphere.fromPoints(outerPositions);
-
         var geometry;
         var geometries = [];
 
@@ -434,19 +425,7 @@ define([
         }
 
         geometry = GeometryPipeline.combine(geometries);
-
-        var center = boundingSphere.center;
-        scratchNormal = ellipsoid.geodeticSurfaceNormal(center, scratchNormal);
-        scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, height, scratchPosition);
-        center = Cartesian3.add(center, scratchPosition, center);
-
-        if (extrude) {
-            scratchBoundingSphere = BoundingSphere.clone(boundingSphere, scratchBoundingSphere);
-            center = scratchBoundingSphere.center;
-            scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, extrudedHeight, scratchPosition);
-            center = Cartesian3.add(ellipsoid.scaleToGeodeticSurface(center, center), scratchPosition, center);
-            boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
-        }
+        var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
 
         return new Geometry({
             attributes : geometry.attributes,

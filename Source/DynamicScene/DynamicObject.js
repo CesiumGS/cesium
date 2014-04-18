@@ -69,6 +69,8 @@ define(['../Core/createGuid',
         this._polylineSubscription = undefined;
         this._pyramid = undefined;
         this._pyramidSubscription = undefined;
+        this._rectangle = undefined;
+        this._rectangleSubscription = undefined;
         this._vertexPositions = undefined;
         this._vertexPositionsSubscription = undefined;
         this._vector = undefined;
@@ -80,7 +82,8 @@ define(['../Core/createGuid',
 
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
-                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description'];
+                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description', //
+                               'rectangle'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -235,6 +238,12 @@ define(['../Core/createGuid',
          * @type {DynamicPyramid}
          */
         pyramid : createDynamicPropertyDescriptor('pyramid'),
+        /**
+         * Gets or sets the rectangle.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicRectangle}
+         */
+        rectangle : createDynamicPropertyDescriptor('rectangle'),
         /**
          * Gets or sets the vertex positions.
          * @memberof DynamicObject.prototype
