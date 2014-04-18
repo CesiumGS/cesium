@@ -14,6 +14,7 @@ define([
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
+        '../Core/IntersectionTests',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
@@ -42,6 +43,7 @@ define([
         FeatureDetection,
         getTimestamp,
         Intersect,
+        IntersectionTests,
         Matrix4,
         PrimitiveType,
         Queue,
@@ -253,6 +255,42 @@ define([
         } else {
             this._onLayerRemoved(layer, index);
         }
+    };
+
+    function createComparePickTileFunction(rayOrigin) {
+        return function(a, b) {
+            var aDist = BoundingSphere.distanceSquaredTo(a.boundingSphere3D, rayOrigin);
+            var bDist = BoundingSphere.distanceSquaredTo(b.boundingSphere3D, rayOrigin);
+
+            return aDist - bDist;
+        };
+    }
+
+    var scratchSphereIntersections = [];
+
+    CentralBodySurface.prototype.pick = function(ray) {
+        var sphereIntersections = scratchSphereIntersections;
+        sphereIntersections.length = 0;
+
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        var tile;
+        for (var i = 0; i < tilesToRenderByTextureCount.length; ++i) {
+            var tileSet = tilesToRenderByTextureCount[i];
+            if (!defined(tileSet)) {
+                continue;
+            }
+            for (var j = 0; j < tileSet.length; ++j) {
+                tile = tileSet[j];
+                var boundingSphereIntersection = IntersectionTests.raySphere(ray, tile.boundingSphere3D);
+                if (defined(boundingSphereIntersection)) {
+                    sphereIntersections.push(tile);
+                }
+            }
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+
+        return sphereIntersections[0];
     };
 
     /**

@@ -292,6 +292,10 @@ define([
         }
     });
 
+    CentralBody.prototype.pick = function(ray) {
+        return this._surface.pick(ray);
+    };
+
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
