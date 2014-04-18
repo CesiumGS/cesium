@@ -57,6 +57,107 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('rayTriangle throws without ray', function() {
+        expect(function() {
+            IntersectionTests.rayTriangle();
+        }).toThrow();
+    });
+
+    it('rayTriangle throws without p0', function() {
+        expect(function() {
+            IntersectionTests.rayTriangle(new Ray());
+        }).toThrow();
+    });
+
+    it('rayTriangle throws without p1', function() {
+        expect(function() {
+            IntersectionTests.rayTriangle(new Ray(), new Cartesian3());
+        }).toThrow();
+    });
+
+    it('rayTriangle throws without p2', function() {
+        expect(function() {
+            IntersectionTests.rayTriangle(new Ray(), new Cartesian3(), new Cartesian3());
+        }).toThrow();
+    });
+
+    it('rayTriangle intersects front face', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z));
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).toEqual(Cartesian3.ZERO);
+    });
+
+    it('rayTriangle intersects back face without culling', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Z);
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).toEqual(Cartesian3.ZERO);
+    });
+
+    it('rayTriangle does not intersect back face with culling', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Z);
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2, true);
+        expect(intersection).not.toBeDefined();
+    });
+
+    it('rayTriangle does not intersect outside the 0-1 edge', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(new Cartesian3(0.0, -1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).not.toBeDefined();
+    });
+
+    it('rayTriangle does not intersect outside the 1-2 edge', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(new Cartesian3(1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).not.toBeDefined();
+    });
+
+    it('rayTriangle does not intersect outside the 2-0 edge', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(new Cartesian3(-1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).not.toBeDefined();
+    });
+
+    it('rayTriangle does not intersect parallel ray and triangle', function() {
+        var p0 = new Cartesian3(-1.0, 0.0, 0.0);
+        var p1 = new Cartesian3(1.0, 0.0, 0.0);
+        var p2 = new Cartesian3(0.0, 1.0, 0.0);
+
+        var ray = new Ray(new Cartesian3(-1.0, 0.0, 1.0), Cartesian3.UNIT_X);
+
+        var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
+        expect(intersection).not.toBeDefined();
+    });
+
     it('rayEllipsoid throws without ray', function() {
         expect(function() {
             IntersectionTests.rayEllipsoid();
