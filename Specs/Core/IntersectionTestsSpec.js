@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Core/IntersectionTests',
+         'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/defined',
          'Core/Ellipsoid',
@@ -9,6 +10,7 @@ defineSuite([
          'Core/Ray'
      ], function(
          IntersectionTests,
+         BoundingSphere,
          Cartesian3,
          defined,
          Ellipsoid,
@@ -156,6 +158,190 @@ defineSuite([
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).not.toBeDefined();
+    });
+
+    it('raySphere throws without ray', function() {
+        expect(function() {
+            IntersectionTests.raySphere();
+        }).toThrowDeveloperError();
+    });
+
+    it('raySphere throws without ellipsoid', function() {
+        expect(function() {
+            IntersectionTests.raySphere(new Ray());
+        }).toThrowDeveloperError();
+    });
+
+    it('raySphere outside intersections', function() {
+        var unitSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
+
+        var ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        var intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(0.0, 2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(0.0, 0.0, 2.0), new Cartesian3(0.0, 0.0, -1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(1.0, 1.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(-2.0, 0.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(0.0, -2.0, 0.0), new Cartesian3(0.0, 1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(0.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, 1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(-2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
+
+        ray = new Ray(new Cartesian3(0.0, -2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
+
+        ray = new Ray(new Cartesian3(0.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, -1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
+    });
+
+    it('raySphere ray inside pointing in intersection', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 5000.0);
+
+        var origin = new Cartesian3(200.0, 0.0, 0.0);
+        var direction = Cartesian3.negate(Cartesian3.normalize(origin));
+        var ray = new Ray(origin, direction);
+
+        var expected = {
+            start : 0.0,
+            stop : sphere.radius + origin.x
+        };
+        var actual = IntersectionTests.raySphere(ray, sphere);
+
+        expect(actual).toBeDefined();
+        expect(actual.start).toEqual(expected.start);
+        expect(actual.stop).toEqual(expected.stop);
+    });
+
+    it('raySphere ray inside pointing out intersection', function() {
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 5000.0);
+
+        var origin = new Cartesian3(200.0, 0.0, 0.0);
+        var direction = Cartesian3.normalize(origin);
+        var ray = new Ray(origin, direction);
+
+        var expected = {
+                start : 0.0,
+                stop : sphere.radius - origin.x
+        };
+        var actual = IntersectionTests.raySphere(ray, sphere);
+
+        expect(actual).toBeDefined();
+        expect(actual.start).toEqual(expected.start);
+        expect(actual.stop).toEqual(expected.stop);
+    });
+
+    it('raySphere tangent intersections', function() {
+        var unitSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
+
+        var ray = new Ray(Cartesian3.UNIT_X, Cartesian3.UNIT_Z);
+        var intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).not.toBeDefined();
+    });
+
+    it('raySphere no intersections', function() {
+        var unitSphere = new BoundingSphere(Cartesian3.ZERO, 1.0);
+
+        var ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(0.0, 0.0, 1.0));
+        var intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).not.toBeDefined();
+
+        ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(0.0, 0.0, -1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).not.toBeDefined();
+
+        ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).not.toBeDefined();
+
+        ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).not.toBeDefined();
+    });
+
+    it('raySphere intersection with sphere center not the origin', function() {
+        var unitSphere = new BoundingSphere(new Cartesian3(200.0, 0.0, 0.0), 1.0);
+
+        var ray = new Ray(new Cartesian3(202.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        var intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(200.0, 2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(200.0, 0.0, 2.0), new Cartesian3(0.0, 0.0, -1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(201.0, 1.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(198.0, 0.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(200.0, -2.0, 0.0), new Cartesian3(0.0, 1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(200.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, 1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+        expect(intersections.stop).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(199.0, -1.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections.start).toEqualEpsilon(1.0, CesiumMath.EPSILON14);
+
+        ray = new Ray(new Cartesian3(198.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
+
+        ray = new Ray(new Cartesian3(200.0, -2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
+
+        ray = new Ray(new Cartesian3(200.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, -1.0));
+        intersections = IntersectionTests.raySphere(ray, unitSphere);
+        expect(intersections).toBeUndefined();
     });
 
     it('rayEllipsoid throws without ray', function() {

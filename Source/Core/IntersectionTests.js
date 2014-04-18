@@ -164,6 +164,77 @@ define([
         return Cartesian3.add(origin, result, result);
     };
 
+    /**
+     * Computes the intersection points of a ray with a sphere.
+     * @memberof IntersectionTests
+     *
+     * @param {Ray} ray The ray.
+     * @param {BoundingSphere} sphere The sphere.
+     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
+     */
+    IntersectionTests.raySphere = function(ray, sphere) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(ray)) {
+            throw new DeveloperError('ray is required.');
+        }
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var origin = ray.origin;
+        var direction = ray.direction;
+
+        var center = sphere.center;
+        var radiusSquared = sphere.radius * sphere.radius;
+
+        var diff = Cartesian3.subtract(origin, center, scratchPVec);
+
+        var a = Cartesian3.dot(direction, direction);
+        var b = 2.0 * Cartesian3.dot(direction, diff);
+        var c = Cartesian3.magnitudeSquared(diff) - radiusSquared;
+
+        var det = b * b - 4.0 * a * c;
+        if (det < 0.0) {
+            return undefined;
+        } else if (det > 0.0) {
+            var denom = 1.0 / (2.0 * a);
+            var disc = Math.sqrt(det);
+            var root0 = (-b + disc) * denom;
+            var root1 = (-b - disc) * denom;
+
+            if (root0 <= 0.0 && root1 <= 0.0) {
+                return undefined;
+            } else if (root0 < 0.0) {
+                root0 = 0.0;
+            } else if (root1 < 0.0) {
+                root1 = 0.0;
+            }
+
+            if (root0 < root1) {
+                return {
+                    start : root0,
+                    stop : root1
+                };
+            }
+
+            return {
+                start : root1,
+                stop : root0
+            };
+        }
+
+        var root = -b / (2.0 * a);
+        if (root === 0.0) {
+            return undefined;
+        }
+
+        return {
+            start : root,
+            stop : root
+        };
+    };
+
     var scratchQ = new Cartesian3();
     var scratchW = new Cartesian3();
 
