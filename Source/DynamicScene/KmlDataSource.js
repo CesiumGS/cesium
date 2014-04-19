@@ -88,6 +88,13 @@ define(['../Core/createGuid',
 
     var scratch = new Cartographic();
 
+    function proxyUrl(url, proxy) {
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+        return url;
+    }
+
     function createId(node) {
         return defined(node.id) && node.id.length !== 0 ? node.id : createGuid();
     }
@@ -128,7 +135,7 @@ define(['../Core/createGuid',
         return value;
     }
 
-    function resolveHref(href, sourceUri, uriResolver) {
+    function resolveHref(href, dataSource, sourceUri, uriResolver) {
         var hrefResolved = false;
         if (defined(uriResolver)) {
             var blob = uriResolver[href];
@@ -141,6 +148,7 @@ define(['../Core/createGuid',
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
             href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
+            href = proxyUrl(href, dataSource._proxy);
         }
         return href;
     }
@@ -195,7 +203,7 @@ define(['../Core/createGuid',
             dynamicObject.parent = parent;
         }
 
-        var styleObject = processInlineStyles(placemark, styleCollection, sourceUri, uriResolver);
+        var styleObject = processInlineStyles(dataSource, placemark, styleCollection, sourceUri, uriResolver);
 
         var name = getStringValue(placemark, 'name');
         if (defined(name)) {
@@ -256,7 +264,7 @@ define(['../Core/createGuid',
             dynamicObject.parent = parent;
         }
 
-        var styleObject = processInlineStyles(groundOverlay, styleCollection, sourceUri, uriResolver);
+        var styleObject = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
 
         dynamicObject.name = getStringValue(groundOverlay, 'name');
 
@@ -288,7 +296,7 @@ define(['../Core/createGuid',
                 var material;
                 var href = getStringValue(groundOverlay, 'href');
                 if (defined(href)) {
-                    var icon = resolveHref(href, sourceUri, uriResolver);
+                    var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
                     material = new ImageMaterialProperty();
                     material.image = new ConstantProperty(icon);
                 } else {
@@ -463,7 +471,7 @@ define(['../Core/createGuid',
         return billboard;
     }
 
-    function processStyle(styleNode, dynamicObject, sourceUri, uriResolver) {
+    function processStyle(dataSource, styleNode, dynamicObject, sourceUri, uriResolver) {
         for (var i = 0, len = styleNode.childNodes.length; i < len; i++) {
             var node = styleNode.childNodes.item(i);
             var material;
@@ -472,7 +480,7 @@ define(['../Core/createGuid',
                 //TODO heading, hotSpot
                 var scale = getNumericValue(node, 'scale');
                 var color = getColorValue(node, 'color');
-                var icon = resolveHref(getStringValue(node, 'href'), sourceUri, uriResolver);
+                var icon = resolveHref(getStringValue(node, 'href'), dataSource, sourceUri, uriResolver);
 
                 var billboard = dynamicObject.billboard;
                 if (!defined(billboard)) {
@@ -598,7 +606,7 @@ define(['../Core/createGuid',
     }
 
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
-    function processInlineStyles(placeMark, styleCollection, sourceUri, uriResolver) {
+    function processInlineStyles(dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new DynamicObject();
 
         //KML_TODO Validate the behavior for multiple/conflicting styles.
@@ -606,7 +614,7 @@ define(['../Core/createGuid',
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(inlineStyles.item(inlineStylesLength - 1), result, sourceUri, uriResolver);
+            processStyle(dataSource, inlineStyles.item(inlineStylesLength - 1), result, sourceUri, uriResolver);
         }
 
         var externalStyles = placeMark.getElementsByTagName('styleUrl');
@@ -621,9 +629,9 @@ define(['../Core/createGuid',
     }
 
     //Asynchronously processes an external style file.
-    function processExternalStyles(uri, styleCollection) {
-        return when(loadXML(uri), function(styleKml) {
-            return processStyles(styleKml, styleCollection, uri, true);
+    function processExternalStyles(dataSource, uri, styleCollection) {
+        return when(loadXML(proxyUrl(uri, dataSource._proxy)), function(styleKml) {
+            return processStyles(dataSource, styleKml, styleCollection, uri, true);
         });
     }
 
@@ -631,7 +639,7 @@ define(['../Core/createGuid',
     //their id into the rovided styleCollection.
     //Returns an array of promises that will resolve when
     //each style is loaded.
-    function processStyles(kml, styleCollection, sourceUri, isExternal, uriResolver) {
+    function processStyles(dataSource, kml, styleCollection, sourceUri, isExternal, uriResolver) {
         var i;
         var id;
         var styleObject;
@@ -649,7 +657,7 @@ define(['../Core/createGuid',
                 }
                 if (!defined(styleCollection.getById(id))) {
                     styleObject = styleCollection.getOrCreateObject(id);
-                    processStyle(node, styleObject, sourceUri, uriResolver);
+                    processStyle(dataSource, node, styleObject, sourceUri, uriResolver);
                 }
             }
         }
@@ -704,7 +712,7 @@ define(['../Core/createGuid',
                         sourceUri = new Uri(sourceUri);
                         uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
                     }
-                    promises.push(processExternalStyles(uri, styleCollection, sourceUri));
+                    promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                 }
             }
         }
@@ -757,7 +765,7 @@ define(['../Core/createGuid',
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
-        return when.all(processStyles(kml, styleCollection, sourceUri, false, uriResolver), function() {
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
             dataSource._isLoading = false;
             dataSource._isLoadingEvent.raiseEvent(dataSource, false);
@@ -822,7 +830,7 @@ define(['../Core/createGuid',
      * @alias KmlDataSource
      * @constructor
      */
-    var KmlDataSource = function() {
+    var KmlDataSource = function(proxy) {
         this._changed = new Event();
         this._error = new Event();
         this._isLoadingEvent = new Event();
@@ -830,6 +838,7 @@ define(['../Core/createGuid',
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._name = undefined;
         this._isLoading = false;
+        this._proxy = proxy;
     };
 
     /**
@@ -968,7 +977,7 @@ define(['../Core/createGuid',
         }
 
         var that = this;
-        return when(loadBlob(url), function(blob) {
+        return when(loadBlob(proxyUrl(url, this._proxy)), function(blob) {
             var deferred = when.defer();
 
             //Get the blob "magic number" to determine if it's a zip or KML
