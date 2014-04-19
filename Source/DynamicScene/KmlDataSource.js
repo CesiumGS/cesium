@@ -15,6 +15,7 @@ define(['../Core/createGuid',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/NearFarScalar',
+        '../Core/Rectangle',
         '../Core/TimeInterval',
         '../Core/PolygonPipeline',
         '../Core/loadBlob',
@@ -32,6 +33,7 @@ define(['../Core/createGuid',
         './DynamicPath',
         './DynamicPolyline',
         './DynamicPolygon',
+        './DynamicRectangle',
         './DynamicLabel',
         './DynamicBillboard',
         './ImageMaterialProperty',
@@ -56,6 +58,7 @@ define(['../Core/createGuid',
         JulianDate,
         CesiumMath,
         NearFarScalar,
+        Rectangle,
         TimeInterval,
         PolygonPipeline,
         loadBlob,
@@ -73,6 +76,7 @@ define(['../Core/createGuid',
         DynamicPath,
         DynamicPolyline,
         DynamicPolygon,
+        DynamicRectangle,
         DynamicLabel,
         DynamicBillboard,
         ImageMaterialProperty,
@@ -247,7 +251,6 @@ define(['../Core/createGuid',
         //<altitude>
         //<altitudeMode>
         //<gx:altitudeMode>
-        //color
         //drawOrder
         if (defined(parent)) {
             dynamicObject.parent = parent;
@@ -257,7 +260,6 @@ define(['../Core/createGuid',
 
         dynamicObject.name = getStringValue(groundOverlay, 'name');
 
-        var foundGeometry = false;
         var nodes = groundOverlay.childNodes;
         for (var i = 0, len = nodes.length; i < len; i++) {
             var node = nodes.item(i);
@@ -267,33 +269,43 @@ define(['../Core/createGuid',
             } else if (nodeName === 'description') {
                 dynamicObject.description = new ConstantProperty(node.textContent);
             } else if (nodeName === 'LatLonBox') {
-                var north = getNumericValue(node, 'north');
-                var south = getNumericValue(node, 'south');
-                var east = getNumericValue(node, 'east');
-                var west = getNumericValue(node, 'west');
+                //TODO: Apparently values beyond the global extent are valid
+                //and should wrap around.
+                var west = Math.max(-180, Math.min(180, getNumericValue(node, 'west')));
+                var south = Math.max(-90, Math.min(90, getNumericValue(node, 'south')));
+                var east = Math.max(-180, Math.min(180, getNumericValue(node, 'east')));
+                var north = Math.max(-90, Math.min(90, getNumericValue(node, 'north')));
 
                 var cb = Ellipsoid.WGS84;
-                dynamicObject.vertexPositions = new ConstantProperty([cb.cartographicToCartesian(Cartographic.fromDegrees(west, north)),
-                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(east, north)),
-                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(east, south)),
-                                                                      cb.cartographicToCartesian(Cartographic.fromDegrees(west, south))]);
 
-                var polygon = dynamicObject.polygon;
-                if (!defined(polygon)) {
-                    polygon = new DynamicPolygon();
-                    dynamicObject.polygon = polygon;
+                var rectangle = dynamicObject.rectangle;
+                if (!defined(rectangle)) {
+                    rectangle = new DynamicRectangle();
+                    dynamicObject.rectangle = rectangle;
                 }
-                var icon = resolveHref(getStringValue(groundOverlay, 'href'), sourceUri, uriResolver);
-                var material = new ImageMaterialProperty();
-                material.image = new ConstantProperty(icon);
-                polygon.material = material;
+                rectangle.coordinates = new ConstantProperty(Rectangle.fromDegrees(west, south, east, north));
 
-                mergeStyles('GroundOverlay', styleObject, dynamicObject);
+                var material;
+                var href = getStringValue(groundOverlay, 'href');
+                if (defined(href)) {
+                    var icon = resolveHref(href, sourceUri, uriResolver);
+                    material = new ImageMaterialProperty();
+                    material.image = new ConstantProperty(icon);
+                } else {
+                    var color = getColorValue(groundOverlay, 'color');
+                    if (defined(color)) {
+                        material = ColorMaterialProperty.fromColor(color);
+                    }
+                }
+                rectangle.material = material;
+
+                var rotation = getNumericValue(node, 'rotation');
+                if (defined(rotation)) {
+                    rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
+                }
             }
         }
-        if (!foundGeometry) {
-            mergeStyles(undefined, styleObject, dynamicObject);
-        }
+        mergeStyles('GroundOverlay', styleObject, dynamicObject);
     }
 
     function processPoint(dataSource, dynamicObject, kml, node) {
@@ -519,6 +531,20 @@ define(['../Core/createGuid',
                 material = new ColorMaterialProperty();
                 material.color = new ConstantProperty(polygonColor);
                 dynamicObject.polygon.material = material;
+
+                var fill = getNumericValue(node, 'fill');
+                if (fill === 1) {
+                    dynamicObject.polygon.outline = new ConstantProperty(true);
+                } else if (fill === 0) {
+                    dynamicObject.polygon.outline = new ConstantProperty(false);
+                }
+
+                var outline = getNumericValue(node, 'outline');
+                if (outline === 1) {
+                    dynamicObject.polygon.outline = new ConstantProperty(true);
+                } else if (outline === 0) {
+                    dynamicObject.polygon.outline = new ConstantProperty(false);
+                }
             }
         }
     }
