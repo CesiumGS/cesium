@@ -141,6 +141,11 @@ define(['../Core/createGuid',
         return value;
     }
 
+    function getBooleanValue(node, tagName) {
+        var element = node.getElementsByTagName(tagName)[0];
+        return defined(element) ? element.textContent === '1' : undefined;
+    }
+
     function resolveHref(href, dataSource, sourceUri, uriResolver) {
         var hrefResolved = false;
         if (defined(uriResolver)) {
@@ -226,6 +231,9 @@ define(['../Core/createGuid',
 
         var foundGeometry = false;
         var nodes = placemark.childNodes;
+        var visibility = getBooleanValue(placemark, 'visibility');
+        dynamicObject.uiShow = defined(visibility) ? visibility : true;
+
         for (var i = 0, len = nodes.length; i < len; i++) {
             var node = nodes.item(i);
             var nodeName = node.nodeName;
@@ -282,8 +290,10 @@ define(['../Core/createGuid',
         var description = getStringValue(groundOverlay, 'description');
         dynamicObject.description = defined(description) ? new ConstantProperty(description) : undefined;
 
-        var latLonBox = getNode(groundOverlay, 'LatLonBox');
+        var visibility = getBooleanValue(groundOverlay, 'visibility');
+        dynamicObject.uiShow = defined(visibility) ? visibility : true;
 
+        var latLonBox = getNode(groundOverlay, 'LatLonBox');
         if (defined(latLonBox)) {
             //TODO: Apparently values beyond the global extent are valid
             //and should wrap around.
@@ -376,8 +386,8 @@ define(['../Core/createGuid',
             var perPositionHeight = defined(altitudeMode) && (altitudeMode !== 'clampToGround') && (altitudeMode !== 'clampToSeaFloor');
             dynamicObject.polygon.perPositionHeight = new ConstantProperty(perPositionHeight);
 
-            var extrude = getNumericValue(node, 'extrude');
-            if (extrude === 1) {
+            var extrude = getBooleanValue(node, 'extrude');
+            if (defined(extrude) && extrude) {
                 dynamicObject.polygon.extrudedHeight = new ConstantProperty(0);
             }
         }
@@ -548,18 +558,13 @@ define(['../Core/createGuid',
                 material.color = new ConstantProperty(polygonColor);
                 dynamicObject.polygon.material = material;
 
-                var fill = getNumericValue(node, 'fill');
-                if (fill === 1) {
-                    dynamicObject.polygon.fill = new ConstantProperty(true);
-                } else if (fill === 0) {
-                    dynamicObject.polygon.fill = new ConstantProperty(false);
+                var fill = getBooleanValue(node, 'fill');
+                if (defined(fill)) {
+                    dynamicObject.polygon.fill = new ConstantProperty(fill);
                 }
-
-                var outline = getNumericValue(node, 'outline');
-                if (outline === 1) {
-                    dynamicObject.polygon.outline = new ConstantProperty(true);
-                } else if (outline === 0) {
-                    dynamicObject.polygon.outline = new ConstantProperty(false);
+                var outline = getBooleanValue(node, 'outline');
+                if (defined(outline)) {
+                    dynamicObject.polygon.outline = new ConstantProperty(outline);
                 }
             }
         }
