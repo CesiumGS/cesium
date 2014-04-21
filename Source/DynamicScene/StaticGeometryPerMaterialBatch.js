@@ -67,6 +67,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.update = function(time) {
+        var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
@@ -77,7 +78,7 @@ define(['../Core/defined',
             if (geometries.length > 0) {
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : this.material,
@@ -87,6 +88,7 @@ define(['../Core/defined',
                 });
 
                 primitives.add(primitive);
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
@@ -107,10 +109,17 @@ define(['../Core/defined',
                 }
 
                 if (!updater.hasConstantFill) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
+                    var show = updater.isFilled(time);
+                    if (show !== attributes._lastShow) {
+                        attributes._lastShow = show;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                    }
                 }
             }
+        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+            isUpdated = false;
         }
+        return isUpdated;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -180,9 +189,11 @@ define(['../Core/defined',
             }
         }
 
+        var isUpdated = true;
         for (i = 0; i < length; i++) {
-            items[i].update(time);
+            isUpdated = items[i].update(time) && isUpdated;
         }
+        return isUpdated;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

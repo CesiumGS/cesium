@@ -248,9 +248,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var clock = cesiumWidget.clock;
         var clockViewModel = new ClockViewModel(clock);
         var eventHelper = new EventHelper();
+        var that = this;
 
         eventHelper.add(clock.onTick, function(clock) {
-            dataSourceDisplay.update(clock.currentTime);
+            var isUpdated = dataSourceDisplay.update(clock.currentTime);
+            if (that._allowDataSourcesToSuspendAnimation) {
+                clockViewModel.canAnimate = isUpdated;
+            }
         });
 
         //Selection Indicator
@@ -381,7 +385,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._dataSourceChangedListeners = {};
         this._knockoutSubscriptions = [];
         var automaticallyTrackDataSourceClocks = defaultValue(options.automaticallyTrackDataSourceClocks, true);
-        var that = this;
 
         function trackDataSourceClock(dataSource) {
             if (defined(dataSource)) {
@@ -456,6 +459,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._renderLoopError = new Event();
+        this._allowDataSourcesToSuspendAnimation = true;
 
         //Start the render loop if not explicitly disabled in options.
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
@@ -707,6 +711,25 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         startRenderLoop(this);
                     }
                 }
+            }
+        },
+
+        /**
+         * Gets or sets whether or not data sources can temporarily pause
+         * animation in order to avoid showing an incomplete picture to the user.
+         * For example, if asynchronous primitives are being processed in the
+         * background, the clock will not advance until the geometry is ready.
+         *
+         * @memberof Viewer.prototype
+         *
+         * @type {Boolean}
+         */
+        allowDataSourcesToSuspendAnimation : {
+            get : function() {
+                return this._allowDataSourcesToSuspendAnimation;
+            },
+            set : function(value) {
+                this._allowDataSourcesToSuspendAnimation = value;
             }
         }
     });
