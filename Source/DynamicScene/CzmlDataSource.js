@@ -1228,7 +1228,7 @@ define(['../Core/Cartesian2',
 
         var rectangle = dynamicObject.rectangle;
         if (!defined(rectangle)) {
-            dynamicObject.rectangle = rectangle = new DynamicPolygon();
+            dynamicObject.rectangle = rectangle = new DynamicRectangle();
         }
 
         processPacketData(Boolean, rectangle, 'show', rectangleData.show, interval, sourceUri);

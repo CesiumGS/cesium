@@ -25,6 +25,8 @@ define(['../Core/defaultValue',
         this._showSubscription = undefined;
         this._material = undefined;
         this._materialSubscription = undefined;
+        this._coordinates = undefined;
+        this._coordinatesSubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
         this._extrudedHeight = undefined;
@@ -60,6 +62,13 @@ define(['../Core/defaultValue',
          * @type {Property}
          */
         show : createDynamicPropertyDescriptor('show'),
+
+        /**
+         * Gets or sets the {@link Rectangle} {@link Property} specifying the polygon's extent.
+         * @memberof DynamicRectangle.prototype
+         * @type {Property}
+         */
+        coordinates : createDynamicPropertyDescriptor('coordinates'),
 
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
@@ -157,6 +166,7 @@ define(['../Core/defaultValue',
             result = new DynamicRectangle();
         }
         result.show = this.show;
+        result.coordinates = this.coordinates;
         result.material = this.material;
         result.height = this.height;
         result.extrudedHeight = this.extrudedHeight;
@@ -186,6 +196,7 @@ define(['../Core/defaultValue',
         //>>includeEnd('debug');
 
         this.show = defaultValue(this.show, source.show);
+        this.coordinates = defaultValue(this.coordinates, source.coordinates);
         this.material = defaultValue(this.material, source.material);
         this.height = defaultValue(this.height, source.height);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
