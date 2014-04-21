@@ -126,6 +126,10 @@ define(['../Core/createGuid',
         return tuple1[0] === tuple2[0] && tuple1[1] === tuple2[1] && tuple1[2] === tuple2[2];
     }
 
+    function getNode(node, tagName) {
+        return node.getElementsByTagName(tagName)[0];
+    }
+
     function getNumericValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
         return defined(element) ? parseFloat(element.textContent) : undefined;
@@ -196,7 +200,6 @@ define(['../Core/createGuid',
         return new Color(red, green, blue, alpha);
     }
 
-    // KML processing functions
     function processPlacemark(dataSource, parent, placemark, dynamicObjectCollection, styleCollection, sourceUri, uriResolver) {
         var id = createId(placemark.id);
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
@@ -269,52 +272,55 @@ define(['../Core/createGuid',
         var styleObject = processInlineStyles(dataSource, groundOverlay, styleCollection, sourceUri, uriResolver);
 
         dynamicObject.name = getStringValue(groundOverlay, 'name');
-
         var nodes = groundOverlay.childNodes;
-        for (var i = 0, len = nodes.length; i < len; i++) {
-            var node = nodes.item(i);
-            var nodeName = node.nodeName;
-            if (nodeName === 'TimeSpan') {
-                dynamicObject.availability = processTimeSpan(node);
-            } else if (nodeName === 'description') {
-                dynamicObject.description = new ConstantProperty(node.textContent);
-            } else if (nodeName === 'LatLonBox') {
-                //TODO: Apparently values beyond the global extent are valid
-                //and should wrap around.
-                var west = Math.max(-180, Math.min(180, getNumericValue(node, 'west')));
-                var south = Math.max(-90, Math.min(90, getNumericValue(node, 'south')));
-                var east = Math.max(-180, Math.min(180, getNumericValue(node, 'east')));
-                var north = Math.max(-90, Math.min(90, getNumericValue(node, 'north')));
 
-                var cb = Ellipsoid.WGS84;
+        var timeSpan = getNode(groundOverlay, 'TimeSpan');
+        if (defined(timeSpan)) {
+            dynamicObject.availability = processTimeSpan(timeSpan);
+        }
 
-                var rectangle = dynamicObject.rectangle;
-                if (!defined(rectangle)) {
-                    rectangle = new DynamicRectangle();
-                    dynamicObject.rectangle = rectangle;
-                }
-                rectangle.coordinates = new ConstantProperty(Rectangle.fromDegrees(west, south, east, north));
+        var description = getStringValue(groundOverlay, 'description');
+        dynamicObject.description = defined(description) ? new ConstantProperty(description) : undefined;
 
-                var material;
-                var href = getStringValue(groundOverlay, 'href');
-                if (defined(href)) {
-                    var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
-                    material = new ImageMaterialProperty();
-                    material.image = new ConstantProperty(icon);
-                } else {
-                    var color = getColorValue(groundOverlay, 'color');
-                    if (defined(color)) {
-                        material = ColorMaterialProperty.fromColor(color);
-                    }
-                }
-                rectangle.material = material;
+        var latLonBox = getNode(groundOverlay, 'LatLonBox');
 
-                var rotation = getNumericValue(node, 'rotation');
-                if (defined(rotation)) {
-                    rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
+        if (defined(latLonBox)) {
+            //TODO: Apparently values beyond the global extent are valid
+            //and should wrap around.
+            var west = Math.max(-180, Math.min(180, getNumericValue(latLonBox, 'west')));
+            var south = Math.max(-90, Math.min(90, getNumericValue(latLonBox, 'south')));
+            var east = Math.max(-180, Math.min(180, getNumericValue(latLonBox, 'east')));
+            var north = Math.max(-90, Math.min(90, getNumericValue(latLonBox, 'north')));
+
+            var cb = Ellipsoid.WGS84;
+
+            var rectangle = dynamicObject.rectangle;
+            if (!defined(rectangle)) {
+                rectangle = new DynamicRectangle();
+                dynamicObject.rectangle = rectangle;
+            }
+            rectangle.coordinates = new ConstantProperty(Rectangle.fromDegrees(west, south, east, north));
+
+            var material;
+            var href = getStringValue(groundOverlay, 'href');
+            if (defined(href)) {
+                var icon = resolveHref(href, dataSource, sourceUri, uriResolver);
+                material = new ImageMaterialProperty();
+                material.image = new ConstantProperty(icon);
+            } else {
+                var color = getColorValue(groundOverlay, 'color');
+                if (defined(color)) {
+                    material = ColorMaterialProperty.fromColor(color);
                 }
             }
+            rectangle.material = material;
+
+            var rotation = getNumericValue(latLonBox, 'rotation');
+            if (defined(rotation)) {
+                rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
+            }
         }
+
         mergeStyles('GroundOverlay', styleObject, dynamicObject);
     }
 
@@ -544,9 +550,9 @@ define(['../Core/createGuid',
 
                 var fill = getNumericValue(node, 'fill');
                 if (fill === 1) {
-                    dynamicObject.polygon.outline = new ConstantProperty(true);
+                    dynamicObject.polygon.fill = new ConstantProperty(true);
                 } else if (fill === 0) {
-                    dynamicObject.polygon.outline = new ConstantProperty(false);
+                    dynamicObject.polygon.fill = new ConstantProperty(false);
                 }
 
                 var outline = getNumericValue(node, 'outline');
@@ -799,7 +805,7 @@ define(['../Core/createGuid',
             uriResolver[entry.filename] = dataUri;
             deferred.resolve();
         }, function(current, total) {
-            // onprogress callback
+            // onprogress callback, currently unutilized.
         });
     }
 
@@ -808,15 +814,17 @@ define(['../Core/createGuid',
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
                 var promises = [];
+                var foundKML = false;
                 for (var i = 0; i < entries.length; i++) {
                     var entry = entries[i];
                     if (!entry.directory) {
                         var innerDefer = when.defer();
                         promises.push(innerDefer.promise);
                         var filename = entry.filename.toLowerCase();
-                        if (filename === 'doc.kml' || endsWith(filename, '.kml')) {
-                            //TODO Only take a file ending in .kml if doc.kml is not found.
-                            //We should not execute this code twice
+                        if (!foundKML && endsWith(filename, '.kml')) {
+                            //Only the first KML file found in the zip is used.
+                            //https://developers.google.com/kml/documentation/kmzarchives
+                            foundKML = true;
                             loadXmlFromZip(reader, entry, uriResolver, innerDefer);
                         } else {
                             loadDataUriFromZip(reader, entry, uriResolver, innerDefer);
@@ -826,10 +834,7 @@ define(['../Core/createGuid',
 
                 when.all(promises, function() {
                     loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
-                    // close the zip reader
-                    reader.close(function() {
-                        // onclose callback
-                    });
+                    reader.close();
                     deferred.resolve(dataSource);
                 });
             });
@@ -845,9 +850,12 @@ define(['../Core/createGuid',
     }
 
     /**
-     * A {@link DataSource} which processes KML.
+     * A {@link DataSource} which processes Keyhole Markup Language (KML).
      * @alias KmlDataSource
      * @constructor
+     *
+     * @see https://developers.google.com/kml/
+     * @see http://www.opengeospatial.org/standards/kml/
      */
     var KmlDataSource = function(proxy) {
         var composite = new CompositeDynamicObjectCollection();
@@ -866,9 +874,8 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Gets an event that will be raised when non-time-varying data changes
-     * or if the return value of getIsTimeVarying changes.
-     * @memberof DataSource
+     * Gets an event that will be raised when new data is done loading.
+     * @memberof KmlDataSource
      *
      * @returns {Event} The event.
      */
@@ -888,7 +895,7 @@ define(['../Core/createGuid',
 
     /**
      * Gets an event that will be raised when the data source either starts or stops loading.
-     * @memberof DataSource
+     * @memberof KmlDataSource
      * @function
      *
      * @returns {Event} The event.
@@ -896,10 +903,11 @@ define(['../Core/createGuid',
     KmlDataSource.prototype.getLoadingEvent = function() {
         return this._isLoadingEvent;
     };
+
     /**
      * Gets a value indicating if this data source is actively loading data.  If the return value of
      * this function changes, the loading event will be raised.
-     * @memberof DataSource
+     * @memberof KmlDataSource
      * @function
      *
      * @returns {Boolean} True if this data source is actively loading data, false otherwise.
@@ -908,17 +916,20 @@ define(['../Core/createGuid',
         return this._isLoading;
     };
 
+    /**
+     * Gets the name of the currently loaded document.
+     * @returns {String} The name of the currently loaded document.
+     */
     KmlDataSource.prototype.getName = function() {
         return this._name;
     };
 
     /**
-     * Gets the top level clock defined in KML or the availability of the
-     * underlying data if no clock is defined.  If the KML document only contains
-     * infinite data, undefined will be returned.
+     * Gets the aggregated availability of all objects in the KML document.
+     * If the document only contains static data, undefined will be returned.
      * @memberof KmlDataSource
      *
-     * @returns {DynamicClock} The clock associated with the current KML data, or undefined if none exists.
+     * @returns {DynamicClock} The clock associated with the current KML data, or undefined if the data is static.
      */
     KmlDataSource.prototype.getClock = function() {
         var availability = this._dynamicObjectCollection.computeAvailability();
@@ -937,7 +948,7 @@ define(['../Core/createGuid',
 
     /**
      * Gets the DynamicObjectCollection generated by this data source.
-     * @memberof DataSource
+     * @memberof KmlDataSource
      *
      * @returns {DynamicObjectCollection} The collection of objects generated by this data source.
      */
@@ -945,55 +956,55 @@ define(['../Core/createGuid',
         return this._composite;
     };
 
+    /**
+     * This function is part of the DataSource interface but is unused by this object.
+     * @returns {Boolean} This function always returns true.
+     */
     KmlDataSource.prototype.update = function() {
         return true;
     };
 
     /**
-     * Asynchronously loads the provided KML, replacing any existing data.
+     * Asynchronously loads the provided KML document, replacing any existing data.
      *
      * @param {Document} kml The parsed KML document to be processed.
+     * @param {string} sourceUrl The url of the document which is used for resolving relative links and other KML features.
      *
      * @returns {Promise} a promise that will resolve when the KML is processed.
-     *
-     * @exception {DeveloperError} kml is required.
      */
-    KmlDataSource.prototype.load = function(kml, source) {
+    KmlDataSource.prototype.load = function(kml, sourceUrl) {
         if (!defined(kml)) {
             throw new DeveloperError('kml is required.');
         }
 
         this._dynamicObjectCollection.removeAll();
-        return loadKml(this, kml, source);
+        return loadKml(this, kml, sourceUrl);
     };
 
     /**
-     * Asynchronously loads the provided KMZ, replacing any existing data.
+     * Asynchronously loads the provided KMZ Blob, replacing any existing data.
      *
      * @param {Blob} kmz The KMZ document to be processed.
+     * @param {string} sourceUrl The url of the document which is used for resolving relative links and other KML features.
      *
      * @returns {Promise} a promise that will resolve when the KMZ is processed.
-     *
-     * @exception {DeveloperError} kmz is required.
      */
-    KmlDataSource.prototype.loadKmz = function(kmz, url) {
+    KmlDataSource.prototype.loadKmz = function(kmz, sourceUrl) {
         if (!defined(kmz)) {
             throw new DeveloperError('kmz is required.');
         }
 
         var deferred = when.defer();
-        loadKmz(this, kmz, url, deferred);
+        loadKmz(this, kmz, sourceUrl, deferred);
         return deferred.promise;
     };
 
     /**
-     * Asynchronously loads the KMZ at the provided url, replacing any existing data.
+     * Asynchronously loads the KML or KMZ file at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.
      *
      * @returns {Promise} a promise that will resolve when the KMZ is processed.
-     *
-     * @exception {DeveloperError} url is required.
      */
     KmlDataSource.prototype.loadUrl = function(url) {
         if (!defined(url)) {
@@ -1016,7 +1027,7 @@ define(['../Core/createGuid',
                     return loadKmz(that, blob, url, deferred);
                 }
 
-                //Else, reader it as an XML file.
+                //Else, read it as an XML file.
                 reader = new FileReader();
                 reader.addEventListener("loadend", function() {
                     var parser = new DOMParser();
