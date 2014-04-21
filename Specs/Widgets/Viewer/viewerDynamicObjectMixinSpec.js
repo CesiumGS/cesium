@@ -62,8 +62,13 @@ defineSuite([
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.dynamicObjectCollection.add(dynamicObject);
 
         viewer.selectedObject = dynamicObject;
         expect(viewer.selectedObject).toBe(dynamicObject);

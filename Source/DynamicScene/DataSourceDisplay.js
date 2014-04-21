@@ -170,7 +170,8 @@ define(['../Core/defaultValue',
      * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
-     * @param {Boolean} True if the display was updated to the provided time, false otherwise.
+     *
+     * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -185,11 +186,12 @@ define(['../Core/defaultValue',
         var x;
         var visualizers;
         var vLength;
-
         var dataSources = this._dataSourceCollection;
         var length = dataSources.length;
         for (i = 0; i < length; i++) {
-            visualizers = dataSources.get(i)._visualizers;
+            var dataSource = dataSources.get(i);
+            result = dataSource.update(time) && result;
+            visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
                 result = visualizers[x].update(time) && result;

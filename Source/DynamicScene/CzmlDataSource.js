@@ -1417,6 +1417,13 @@ define(['../Core/Cartesian2',
         }
     }
 
+    function setLoading(dataSource, isLoading) {
+        if (dataSource._isLoading !== isLoading) {
+            dataSource._isLoading = isLoading;
+            dataSource._loading.raiseEvent(dataSource, isLoading);
+        }
+    }
+
     /**
      * A {@link DataSource} which processes CZML.
      * @alias CzmlDataSource
@@ -1428,6 +1435,8 @@ define(['../Core/Cartesian2',
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
+        this._isLoading = false;
+        this._loading = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._document = new DynamicObject();
@@ -1514,28 +1523,64 @@ define(['../Core/Cartesian2',
     };
 
     /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    CzmlDataSource.prototype.getIsLoading = function() {
+        return this._isLoading;
+    };
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    CzmlDataSource.prototype.getLoadingEvent = function() {
+        return this._loading;
+    };
+
+    /**
+     * Updates the data source to the provided time.
+     * @memberof CzmlDataSource
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     *
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    CzmlDataSource.prototype.update = function(time) {
+        return true;
+    };
+
+    /**
      * Processes the provided CZML without clearing any existing data.
      *
      * @param {Object} czml The CZML to be processed.
-     * @param {String} source The source of the CZML.
+     * @param {String} sourceUri The source URI of the CZML.
      */
-    CzmlDataSource.prototype.process = function(czml, source) {
+    CzmlDataSource.prototype.process = function(czml, sourceUri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
         //>>includeEnd('debug');
 
-        loadCzml(this, czml, source);
+        loadCzml(this, czml, sourceUri);
     };
 
     /**
      * Replaces any existing data with the provided CZML.
      *
      * @param {Object} czml The CZML to be processed.
-     * @param {String} source The source of the CZML.
+     * @param {String} source The source URI of the CZML.
      */
-    CzmlDataSource.prototype.load = function(czml, source) {
+    CzmlDataSource.prototype.load = function(czml, sourceUri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
@@ -1544,7 +1589,7 @@ define(['../Core/Cartesian2',
 
         this._document = new DynamicObject('document');
         this._dynamicObjectCollection.removeAll();
-        loadCzml(this, czml, source);
+        loadCzml(this, czml, sourceUri);
     };
 
     /**
@@ -1561,10 +1606,14 @@ define(['../Core/Cartesian2',
         }
         //>>includeEnd('debug');
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
+            setLoading(dataSource, false);
         }, function(error) {
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });
@@ -1584,10 +1633,14 @@ define(['../Core/Cartesian2',
         }
         //>>includeEnd('debug');
 
+        setLoading(this, true);
+
         var dataSource = this;
         return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
+            setLoading(dataSource, false);
         }, function(error) {
+            setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             return when.reject(error);
         });

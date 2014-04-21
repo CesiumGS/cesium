@@ -62,5 +62,35 @@ define([
      */
     DataSource.prototype.getClock = DeveloperError.throwInstantiationError;
 
+    /**
+     * Gets a value indicating if this data source is actively loading data.  If the return value of
+     * this function changes, the loading event will be raised.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
+     */
+    DataSource.prototype.getIsLoading = DeveloperError.throwInstantiationError;
+
+    /**
+     * Gets an event that will be raised when the data source either starts or stops loading.
+     * @memberof DataSource
+     * @function
+     *
+     * @returns {Event} The event.
+     */
+    DataSource.prototype.getLoadingEvent = DeveloperError.throwInstantiationError;
+
+    /**
+     * Updates the data source to the provided time.
+     * @memberof DataSource
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     *
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    DataSource.prototype.update = DeveloperError.throwInstantiationError;
+
     return DataSource;
 });
