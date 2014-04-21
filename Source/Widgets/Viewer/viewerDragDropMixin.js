@@ -208,9 +208,7 @@ define([
                 if (/\.czml/i.test(fileName)) {
                     dataSource = new CzmlDataSource(fileName);
                     dataSource.load(JSON.parse(evt.target.result), fileName);
-                } else if (/\.geojson/i.test(fileName) ||
-                           /\.json/i.test(fileName) ||
-                           /\.topojson/i.test(fileName)) {
+                } else if (/\.geojson/i.test(fileName) || /\.json/i.test(fileName) || /\.topojson/i.test(fileName)) {
                     dataSource = new GeoJsonDataSource(fileName);
                     loadPromise = dataSource.load(JSON.parse(evt.target.result), fileName);
                 } else {

@@ -107,9 +107,7 @@ define([
         if (/\.czml/i.test(source)) {
             dataSource = new CzmlDataSource(getFilenameFromUri(source));
             loadPromise = dataSource.loadUrl(source);
-        } else if (/\.geojson/i.test(source) ||
-                   /\.json/i.test(source) ||
-                   /\.topojson/i.test(source)) {
+        } else if (/\.geojson/i.test(source) || /\.json/i.test(source) || /\.topojson/i.test(source)) {
             dataSource = new GeoJsonDataSource(getFilenameFromUri(source));
             loadPromise = dataSource.loadUrl(source);
         } else {
@@ -122,7 +120,7 @@ define([
             loadPromise.then(function() {
                 var lookAt = endUserOptions.lookAt;
                 if (defined(lookAt)) {
-                    var dynamicObject = dataSource.getDynamicObjectCollection().getById(lookAt);
+                    var dynamicObject = dataSource.dynamicObjects.getById(lookAt);
                     if (defined(dynamicObject)) {
                         viewer.trackedObject = dynamicObject;
                     } else {

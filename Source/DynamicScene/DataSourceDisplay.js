@@ -81,7 +81,7 @@ define(['../Core/defaultValue',
      * @type {Function}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
-        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        var dynamicObjects = dataSource.dynamicObjects;
         return [new DynamicBillboardVisualizer(scene, dynamicObjects),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
