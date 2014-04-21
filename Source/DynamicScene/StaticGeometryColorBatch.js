@@ -89,14 +89,21 @@ define(['../Core/Color',
                 if (!updater.fillMaterialProperty.isConstant) {
                     var colorProperty = updater.fillMaterialProperty.color;
                     colorProperty.getValue(time, colorScratch);
-                    attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
-                    if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
-                        this.itemsToRemove[removedCount++] = updater;
+                    if (!Color.equals(attributes._lastColor, colorScratch)) {
+                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                        if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
+                            this.itemsToRemove[removedCount++] = updater;
+                        }
                     }
                 }
 
                 if (!updater.hasConstantFill) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
+                    var show = updater.isFilled(time);
+                    if (show !== attributes._lastShow) {
+                        attributes._lastShow = show;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                    }
                 }
             }
         }
