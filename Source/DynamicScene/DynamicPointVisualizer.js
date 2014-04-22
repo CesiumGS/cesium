@@ -97,6 +97,7 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicPointVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -111,6 +112,7 @@ define([
                 updateObject(this, time, dynamicObjects[i]);
             }
         }
+        return true;
     };
 
     /**

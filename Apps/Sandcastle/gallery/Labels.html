@@ -45,8 +45,8 @@ require(['Cesium'], function(Cesium) {
             text      : 'Philadelphia',
             // CSS font-family
             font      : '24px Helvetica',
-            fillColor : { red : 0.0, blue : 1.0, green : 1.0, alpha : 1.0 },
-            outlineColor : { red : 0.0, blue : 0.0, green : 0.0, alpha : 1.0 },
+            fillColor : new Cesium.Color(0.6, 0.9, 1.0),
+            outlineColor : Cesium.Color.BLACK,
             outlineWidth : 2,
             style : Cesium.LabelStyle.FILL_AND_OUTLINE
         });
