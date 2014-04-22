@@ -15,7 +15,7 @@ define(['../Core/defaultValue',
     "use strict";
 
     /**
-     * An optionally time-dynamic polygon.
+     * An optionally time-dynamic Rectangle.
      *
      * @alias DynamicRectangle
      * @constructor
@@ -57,37 +57,37 @@ define(['../Core/defaultValue',
         },
 
         /**
-         * Gets or sets the boolean {@link Property} specifying the polygon's visibility.
+         * Gets or sets the boolean {@link Property} specifying the rectangle's visibility.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
         show : createDynamicPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the {@link Rectangle} {@link Property} specifying the polygon's extent.
+         * Gets or sets the {@link Rectangle} {@link Property} specifying the extent.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
         coordinates : createDynamicPropertyDescriptor('coordinates'),
 
         /**
-         * Gets or sets the {@link MaterialProperty} specifying the appearance of the polygon.
+         * Gets or sets the {@link MaterialProperty} specifying the appearance of the rectangle.
          * @memberof DynamicRectangle.prototype
          * @type {MaterialProperty}
          */
         material : createDynamicPropertyDescriptor('material'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the height of the polygon.
-         * If undefined, the polygon will be on the surface.
+         * Gets or sets the Number {@link Property} specifying the height of the rectangle.
+         * If undefined, the rectangle will be on the surface.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
         height : createDynamicPropertyDescriptor('height'),
 
         /**
-         * Gets or sets the Number {@link Property} specifying the extruded height of the polygon.
-         * Setting this property creates a polygon shaped volume starting at height and ending
+         * Gets or sets the Number {@link Property} specifying the extruded height of the rectangle.
+         * Setting this property creates a rectangle shaped volume starting at height and ending
          * at the extruded height.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
@@ -119,14 +119,14 @@ define(['../Core/defaultValue',
         rotation : createDynamicPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon should be filled.
+         * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be filled.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
         fill : createDynamicPropertyDescriptor('fill'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon should be outlined.
+         * Gets or sets the Boolean {@link Property} specifying whether the rectangle should be outlined.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
@@ -140,14 +140,14 @@ define(['../Core/defaultValue',
         outlineColor : createDynamicPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
+         * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed top.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
         closeTop : createDynamicPropertyDescriptor('closeTop'),
 
         /**
-         * Gets or sets the Boolean {@link Property} specifying whether the polygon uses per-position heights.
+         * Gets or sets the Boolean {@link Property} specifying whether an extruded rectangle should have a closed bottom.
          * @memberof DynamicRectangle.prototype
          * @type {Property}
          */
