@@ -613,5 +613,8 @@ define([
         }
     };
 
+    //for testing
+    DynamicPathVisualizer._subSample = subSample;
+
     return DynamicPathVisualizer;
 });

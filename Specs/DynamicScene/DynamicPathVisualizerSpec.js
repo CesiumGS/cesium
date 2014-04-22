@@ -4,9 +4,11 @@ defineSuite([
          'Specs/createScene',
          'Specs/destroyScene',
          'DynamicScene/ConstantProperty',
+         'DynamicScene/ConstantPositionProperty',
          'Core/Cartesian3',
          'Core/Color',
          'Core/JulianDate',
+         'Core/ReferenceFrame',
          'DynamicScene/DynamicObjectCollection',
          'DynamicScene/DynamicPath',
          'DynamicScene/SampledPositionProperty'
@@ -15,9 +17,11 @@ defineSuite([
          createScene,
          destroyScene,
          ConstantProperty,
+         ConstantPositionProperty,
          Cartesian3,
          Color,
          JulianDate,
+         ReferenceFrame,
          DynamicObjectCollection,
          DynamicPath,
          SampledPositionProperty) {
@@ -264,4 +268,34 @@ defineSuite([
         primitive = polylineCollection.get(0);
         expect(primitive.id).toEqual(testObject2);
     });
+
+    it('subSample works for constant properties', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(1000, 2000, 3000));
+        var start = new JulianDate(0, 0);
+        var stop = new JulianDate(1, 0);
+        var updateTime = new JulianDate(1, 0.5);
+        var referenceFrame = ReferenceFrame.FIXED;
+        var maximumStep = 10;
+        var result = [];
+        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        expect(result).toEqual([property._value]);
+    });
+
+    it('subSample works for sampled properties', function() {
+        var property = new SampledPositionProperty();
+
+        var start = new JulianDate(0, 0);
+        var stop = new JulianDate(1, 0);
+
+        property.addSample(start, new Cartesian3(1000, 2000, 3000));
+        property.addSample(stop, new Cartesian3(1000, 2000, 4000));
+
+        var updateTime = new JulianDate(1, 0.5);
+        var referenceFrame = ReferenceFrame.FIXED;
+        var maximumStep = 10;
+        var result = [];
+        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        expect(result).toEqual([property._value]);
+    });
+
 }, 'WebGL');
