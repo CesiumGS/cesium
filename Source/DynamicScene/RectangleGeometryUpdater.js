@@ -448,7 +448,7 @@ define(['../Core/Color',
             options.rotation = defined(rotation) ? rotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.closeBottom = defined(closeBottom) ? closeBottom.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.closeTop = defined(closeTop) ? closeTop.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._isClosed = options.closedTop && options.closedBottom;
+            this._isClosed = defined(extrudedHeight) && defined(options.closeTop) && defined(options.closeBottom) && options.closeTop && options.closeBottom;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -541,7 +541,7 @@ define(['../Core/Color',
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : options.closedTop && options.closedBottom
+                closed : options.closeTop && options.closeBottom
             });
             options.vertexFormat = appearance.vertexFormat;
 
