@@ -10,7 +10,7 @@ define([
         './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
-        './Extent',
+        './Rectangle',
         './Geometry',
         './GeometryInstance',
         './GeometryPipeline',
@@ -34,7 +34,7 @@ define([
         IndexDatatype,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         Geometry,
         GeometryInstance,
         GeometryPipeline,
@@ -63,7 +63,7 @@ define([
     var nwCartographic = new Cartographic();
     var centerCartographic = new Cartographic();
     var center = new Cartesian3();
-    var stExtent = new Extent();
+    var stRectangle = new Rectangle();
     var textureMatrix = new Matrix2();
     var rotationMatrix = new Matrix2();
     var tangentRotationMatrix = new Matrix3();
@@ -305,8 +305,8 @@ define([
     }
 
     function calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, offset) {
-        textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
-        textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+        textureCoordsScratch.x = (stLongitude - stRectangle.west) * params.lonScalar - 0.5;
+        textureCoordsScratch.y = (stLatitude - stRectangle.south) * params.latScalar - 0.5;
 
         Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
 
@@ -332,7 +332,7 @@ define([
         return wallPositions;
     }
 
-    function constructExtent(vertexFormat, params) {
+    function constructRectangle(vertexFormat, params) {
         var ellipsoid = params.ellipsoid;
         var size = params.size;
         var height = params.height;
@@ -354,8 +354,8 @@ define([
                 positions[posIndex++] = position.z;
 
                 if (vertexFormat.st) {
-                    textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
-                    textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+                    textureCoordsScratch.x = (stLongitude - stRectangle.west) * params.lonScalar - 0.5;
+                    textureCoordsScratch.y = (stLatitude - stRectangle.south) * params.latScalar - 0.5;
 
                     Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
 
@@ -401,18 +401,18 @@ define([
         }
 
         return {
-            boundingSphere : BoundingSphere.fromExtent3D(params.extent, ellipsoid, surfaceHeight),
+            boundingSphere : BoundingSphere.fromRectangle3D(params.rectangle, ellipsoid, surfaceHeight),
             geometry : geo
         };
     }
 
-    function constructExtrudedExtent(vertexFormat, params) {
+    function constructExtrudedRectangle(vertexFormat, params) {
         var surfaceHeight = params.surfaceHeight;
         var extrudedHeight = params.extrudedHeight;
         var minHeight = Math.min(extrudedHeight, surfaceHeight);
         var maxHeight = Math.max(extrudedHeight, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(vertexFormat, params);
+            return constructRectangle(vertexFormat, params);
         }
 
         var height = params.height;
@@ -605,8 +605,8 @@ define([
             ]);
         }
 
-        var topBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var topBS = BoundingSphere.fromRectangle3D(params.rectangle, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromRectangle3D(params.rectangle, ellipsoid, minHeight, bottomBoundingSphere);
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
@@ -616,54 +616,54 @@ define([
     }
 
     /**
-     * A description of a cartographic extent on an ellipsoid centered at the origin.
+     * A description of a cartographic rectangle on an ellipsoid centered at the origin.
      *
-     * @alias ExtentGeometry
+     * @alias RectangleGeometry
      * @constructor
      *
-     * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
-     * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
-     * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
+     * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded rectangle; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
+     * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded rectangle; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      *
-     * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>options.extent.south</code>.
-     * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>options.extent.west</code>.
+     * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.rectangle.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.rectangle.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.rectangle.north</code> must be greater than <code>options.rectangle.south</code>.
+     * @exception {DeveloperError} <code>options.rectangle.east</code> must be greater than <code>options.rectangle.west</code>.
      *
-     * @see ExtentGeometry#createGeometry
+     * @see RectangleGeometry#createGeometry
      *
      * @example
-     * // 1. create an extent
-     * var extent = new Cesium.ExtentGeometry({
+     * // 1. create an rectangle
+     * var rectangle = new Cesium.RectangleGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
-     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
      *
-     * // 2. create an extruded extent without a top
-     * var extent = new Cesium.ExtentGeometry({
+     * // 2. create an extruded rectangle without a top
+     * var rectangle = new Cesium.RectangleGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
-     *   extent : Cesium.Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
-     * var geometry = Cesium.ExtentGeometry.createGeometry(extent);
+     * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
      */
-    var ExtentGeometry = function(options) {
+    var RectangleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var extent = options.extent;
+        var rectangle = options.rectangle;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var surfaceHeight = defaultValue(options.height, 0.0);
@@ -672,19 +672,19 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required.');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
         }
-        Extent.validate(extent);
-        if (extent.east < extent.west) {
-            throw new DeveloperError('options.extent.east must be greater than options.extent.west');
+        Rectangle.validate(rectangle);
+        if (rectangle.east < rectangle.west) {
+            throw new DeveloperError('options.rectangle.east must be greater than options.rectangle.west');
         }
-        if (extent.north < extent.south) {
-            throw new DeveloperError('options.extent.north must be greater than options.extent.south');
+        if (rectangle.north < rectangle.south) {
+            throw new DeveloperError('options.rectangle.north must be greater than options.rectangle.south');
         }
         //>>includeEnd('debug');
 
-        this._extent = extent;
+        this._rectangle = rectangle;
         this._granularity = granularity;
         this._ellipsoid = ellipsoid;
         this._surfaceHeight = surfaceHeight;
@@ -694,40 +694,40 @@ define([
         this._extrudedHeight = options.extrudedHeight;
         this._closeTop = options.closeTop;
         this._closeBottom = options.closeBottom;
-        this._workerName = 'createExtentGeometry';
+        this._workerName = 'createRectangleGeometry';
     };
 
     /**
-     * Computes the geometric representation of an extent, including its vertices, indices, and a bounding sphere.
-     * @memberof ExtentGeometry
+     * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
+     * @memberof RectangleGeometry
      *
-     * @param {ExtentGeometry} extentGeometry A description of the extent.
+     * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
      * @returns {Geometry} The computed vertices and indices.
      *
-     * @exception {DeveloperError} Rotated extent is invalid.
+     * @exception {DeveloperError} Rotated rectangle is invalid.
      */
-    ExtentGeometry.createGeometry = function(extentGeometry) {
-        var extent = extentGeometry._extent;
-        var granularity = extentGeometry._granularity;
-        var ellipsoid = extentGeometry._ellipsoid;
-        var surfaceHeight = extentGeometry._surfaceHeight;
-        var rotation = extentGeometry._rotation;
-        var stRotation = extentGeometry._stRotation;
-        var vertexFormat = extentGeometry._vertexFormat;
-        var extrudedHeight = extentGeometry._extrudedHeight;
-        var closeTop = extentGeometry._closeTop;
-        var closeBottom = extentGeometry._closeBottom;
+    RectangleGeometry.createGeometry = function(rectangleGeometry) {
+        var rectangle = rectangleGeometry._rectangle;
+        var granularity = rectangleGeometry._granularity;
+        var ellipsoid = rectangleGeometry._ellipsoid;
+        var surfaceHeight = rectangleGeometry._surfaceHeight;
+        var rotation = rectangleGeometry._rotation;
+        var stRotation = rectangleGeometry._stRotation;
+        var vertexFormat = rectangleGeometry._vertexFormat;
+        var extrudedHeight = rectangleGeometry._extrudedHeight;
+        var closeTop = rectangleGeometry._closeTop;
+        var closeBottom = rectangleGeometry._closeBottom;
 
-        var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
-        var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
-        var granularityX = (extent.east - extent.west) / (width - 1);
-        var granularityY = (extent.north - extent.south) / (height - 1);
+        var width = Math.ceil((rectangle.east - rectangle.west) / granularity) + 1;
+        var height = Math.ceil((rectangle.north - rectangle.south) / granularity) + 1;
+        var granularityX = (rectangle.east - rectangle.west) / (width - 1);
+        var granularityY = (rectangle.north - rectangle.south) / (height - 1);
 
         var radiiSquared = ellipsoid.radiiSquared;
 
-        Extent.clone(extent, stExtent);
-        Extent.getNorthwest(extent, nwCartographic);
-        Extent.getCenter(extent, centerCartographic);
+        Rectangle.clone(rectangle, stRectangle);
+        Rectangle.getNorthwest(rectangle, nwCartographic);
+        Rectangle.getCenter(rectangle, centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;
@@ -770,17 +770,17 @@ define([
 
             if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
                     !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
-                throw new DeveloperError('Rotated extent is invalid.');
+                throw new DeveloperError('Rotated rectangle is invalid.');
             }
 
-            stExtent.north = north;
-            stExtent.south = south;
-            stExtent.east = east;
-            stExtent.west = west;
+            stRectangle.north = north;
+            stRectangle.south = south;
+            stRectangle.east = east;
+            stRectangle.west = west;
         }
 
-        var lonScalar = 1.0 / (stExtent.east - stExtent.west);
-        var latScalar = 1.0 / (stExtent.north - stExtent.south);
+        var lonScalar = 1.0 / (stRectangle.east - stRectangle.west);
+        var latScalar = 1.0 / (stRectangle.north - stRectangle.south);
 
         var size = width * height;
 
@@ -806,7 +806,7 @@ define([
             ellipsoid : ellipsoid,
             lonScalar : lonScalar,
             latScalar : latScalar,
-            extent : extent,
+            rectangle : rectangle,
             width : width,
             height : height,
             surfaceHeight : surfaceHeight,
@@ -818,9 +818,9 @@ define([
 
         var geometry;
         if (defined(extrudedHeight)) {
-            geometry = constructExtrudedExtent(vertexFormat, params);
+            geometry = constructExtrudedRectangle(vertexFormat, params);
         } else {
-            geometry = constructExtent(vertexFormat, params);
+            geometry = constructRectangle(vertexFormat, params);
         }
 
         var boundingSphere = geometry.boundingSphere;
@@ -834,5 +834,5 @@ define([
         });
     };
 
-    return ExtentGeometry;
+    return RectangleGeometry;
 });

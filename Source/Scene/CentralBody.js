@@ -14,7 +14,7 @@ define([
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/Ellipsoid',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
         '../Core/Geometry',
@@ -59,7 +59,7 @@ define([
         Cartographic,
         ComponentDatatype,
         Ellipsoid,
-        Extent,
+        Rectangle,
         FeatureDetection,
         GeographicProjection,
         Geometry,
@@ -390,7 +390,7 @@ define([
         if (!terrainProvider.ready) {
             return;
         }
-        var terrainMaxExtent = terrainProvider.tilingScheme.extent;
+        var terrainMaxRectangle = terrainProvider.tilingScheme.rectangle;
 
         var viewProjMatrix = context.uniformState.viewProjection;
         var viewport = viewportScratch;
@@ -399,7 +399,7 @@ define([
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, vpTransformScratch);
         var latitudeExtension = 0.05;
 
-        var extent;
+        var rectangle;
         var boundingVolume;
         var frustumCull;
         var occludeePoint;
@@ -409,21 +409,21 @@ define([
         var occluder = centralBody._occluder;
 
         // handle north pole
-        if (terrainMaxExtent.north < CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(
+        if (terrainMaxRectangle.north < CesiumMath.PI_OVER_TWO) {
+            rectangle = new Rectangle(
                 -Math.PI,
-                terrainMaxExtent.north,
+                terrainMaxRectangle.north,
                 Math.PI,
                 CesiumMath.PI_OVER_TWO
             );
-            boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
+            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, centralBody._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, centralBody._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             centralBody._drawNorthPole = !frustumCull && !occluded;
             if (centralBody._drawNorthPole) {
-                rect = computePoleQuad(centralBody, frameState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = computePoleQuad(centralBody, frameState, rectangle.north, rectangle.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 polePositionsScratch[0] = rect.x;
                 polePositionsScratch[1] = rect.y;
                 polePositionsScratch[2] = rect.x + rect.width;
@@ -434,7 +434,7 @@ define([
                 polePositionsScratch[7] = rect.y + rect.height;
 
                 if (!defined(centralBody._northPoleCommand.vertexArray)) {
-                    centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
+                    centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
                     geometry = new Geometry({
                         attributes : {
                             position : new GeometryAttribute({
@@ -458,21 +458,21 @@ define([
         }
 
         // handle south pole
-        if (terrainMaxExtent.south > -CesiumMath.PI_OVER_TWO) {
-            extent = new Extent(
+        if (terrainMaxRectangle.south > -CesiumMath.PI_OVER_TWO) {
+            rectangle = new Rectangle(
                 -Math.PI,
                 -CesiumMath.PI_OVER_TWO,
                 Math.PI,
-                terrainMaxExtent.south
+                terrainMaxRectangle.south
             );
-            boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
+            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromExtent(extent, centralBody._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, centralBody._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
             centralBody._drawSouthPole = !frustumCull && !occluded;
             if (centralBody._drawSouthPole) {
-                rect = computePoleQuad(centralBody, frameState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+                rect = computePoleQuad(centralBody, frameState, rectangle.south, rectangle.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 polePositionsScratch[0] = rect.x;
                 polePositionsScratch[1] = rect.y;
                 polePositionsScratch[2] = rect.x + rect.width;
@@ -483,7 +483,7 @@ define([
                 polePositionsScratch[7] = rect.y + rect.height;
 
                  if (!defined(centralBody._southPoleCommand.vertexArray)) {
-                     centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
+                     centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
                      geometry = new Geometry({
                          attributes : {
                              position : new GeometryAttribute({

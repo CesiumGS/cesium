@@ -452,6 +452,7 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicPathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -511,6 +512,7 @@ define([
                 }
             }
         }
+        return true;
     };
 
     /**

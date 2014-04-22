@@ -50,6 +50,7 @@ define(['../Core/Color',
 
     var colorScratch = new Color();
     Batch.prototype.update = function(time) {
+        var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -61,7 +62,7 @@ define(['../Core/Color',
             var geometry = this.geometry.values;
             if (geometry.length > 0) {
                 primitive = new Primitive({
-                    asynchronous : false,
+                    asynchronous : true,
                     geometryInstances : geometry,
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
@@ -70,6 +71,7 @@ define(['../Core/Color',
                 });
 
                 primitives.add(primitive);
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
@@ -86,16 +88,32 @@ define(['../Core/Color',
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                var outlineColorProperty = updater.outlineColorProperty;
-                outlineColorProperty.getValue(time, colorScratch);
-                attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
-                if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
-                    this.itemsToRemove[removedCount++] = updater;
+                if (!updater.outlineColorProperty.isConstant) {
+                    var outlineColorProperty = updater.outlineColorProperty;
+                    outlineColorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastColor, colorScratch)) {
+                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                        if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
+                            this.itemsToRemove[removedCount++] = updater;
+                        }
+                    }
                 }
-                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time), attributes.show);
+
+                if (!updater.hasConstantOutline) {
+                    var show = updater.isOutlineVisible(time);
+                    if (show !== attributes._lastShow) {
+                        attributes._lastShow = show;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                    }
+                }
             }
+        } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
+            isUpdated = false;
         }
+
         this.itemsToRemove.length = removedCount;
+        return isUpdated;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -136,8 +154,8 @@ define(['../Core/Color',
         var updater;
 
         //Perform initial update
-        this._solidBatch.update(time);
-        this._translucentBatch.update(time);
+        var isUpdated = this._solidBatch.update(time);
+        isUpdated = this._translucentBatch.update(time) && isUpdated;
 
         //If any items swapped between solid/translucent, we need to
         //move them between batches
@@ -163,9 +181,10 @@ define(['../Core/Color',
 
         //If we moved anything around, we need to re-build the primitive
         if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            this._solidBatch.update(time);
-            this._translucentBatch.update(time);
+            isUpdated = this._solidBatch.update(time) && isUpdated;
+            isUpdated = this._translucentBatch.update(time) && isUpdated;
         }
+        return isUpdated;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {
