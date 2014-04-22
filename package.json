@@ -11,6 +11,7 @@
   "license": "Apache 2.0",
   "dependencies": {
     "requirejs": "~2.1.10",
-    "async": "~0.2.10"
+    "async": "~0.2.10",
+    "q": "~1.0.1"
   }
 }
