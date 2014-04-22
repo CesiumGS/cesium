@@ -77,13 +77,15 @@ define(['../Core/createGuid',
         this._vectorSubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
+        this._wall = undefined;
+        this._wallSubscription = undefined;
         this._description = undefined;
         this._descriptionSubscription = undefined;
 
         this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description', //
-                               'rectangle'];
+                               'rectangle', 'wall'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -256,6 +258,12 @@ define(['../Core/createGuid',
          * @type {DynamicVector}
          */
         vector : createDynamicPropertyDescriptor('vector'),
+        /**
+         * Gets or sets the wall.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicVector}
+         */
+        wall : createDynamicPropertyDescriptor('wall'),
         /**
          * Gets or sets the description.
          * @memberof DynamicObject.prototype
