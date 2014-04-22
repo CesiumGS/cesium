@@ -79,11 +79,8 @@ defineSuite([
         }));
 
         model.readyToRender.addEventListener(function(model) {
-            // Always use initial bounding sphere, ignoring animations
-            var worldBoundingSphere = model.computeWorldBoundingSphere();
-
             model.zoomTo = function() {
-                var center = worldBoundingSphere.center;
+                var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
                 var transform = Transforms.eastNorthUpToFixedFrame(center);
 
                 // View in east-north-up frame
@@ -96,7 +93,7 @@ defineSuite([
                 controller.enableTilt = false;
 
                 // Zoom in
-                var r = Math.max(worldBoundingSphere.radius, camera.frustum.near);
+                var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
                 camera.lookAt(
                     new Cartesian3(0.0, -r, r),
                     Cartesian3.ZERO,
@@ -360,6 +357,19 @@ defineSuite([
         var sphere = duckModel.computeWorldBoundingSphere(result);
         expect(sphere).toBe(result);
         expect(sphere.radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
+    });
+
+    it('boundingSphere throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.boundingSphere;
+        }).toThrowDeveloperError();
+    });
+
+    it('boundingSphere returns the bounding sphere', function() {
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, 86.949, -3.701), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(126.880, CesiumMath.EPSILON3);
     });
 
     it('destroys', function() {

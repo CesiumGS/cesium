@@ -330,7 +330,8 @@ define([
         this._debugWireframe = false;
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, or animations
+        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
+        this._boundingSphere = undefined;
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -383,6 +384,36 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * The model's bounding sphere in its local coordinate system.  This does not take into
+         * account glTF animation and skins or {@link Model#Matrix4.getMaximumScale}.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         *
+         * @default undefined
+         *
+         * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+         *
+         * @example
+         * // Center in WGS84 coordinates
+         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         */
+        boundingSphere : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (this._state !== ModelState.LOADED) {
+                    throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+                }
+                //>>includeEnd('debug');
+
+                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
+                return this._boundingSphere;
             }
         },
 
@@ -622,6 +653,86 @@ define([
 
         return result;
     };
+
+    var nodeAxisScratch = new Cartesian3();
+    var nodeTranslationScratch = new Cartesian3();
+    var nodeQuaternionScratch = new Quaternion();
+    var nodeScaleScratch = new Cartesian3();
+
+    function getTransform(node) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromArray(node.matrix);
+        }
+
+        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
+
+        return Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
+            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
+            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
+    }
+
+    var aMinScratch = new Cartesian3();
+    var aMaxScratch = new Cartesian3();
+
+    function computeBoundingSphere(gltf) {
+        var gltfNodes = gltf.nodes;
+        var gltfMeshes = gltf.meshes;
+        var gltfAccessors = gltf.accessors;
+        var rootNodes = gltf.scenes[gltf.scene].nodes;
+        var rootNodesLength = rootNodes.length;
+
+        var nodeStack = [];
+
+        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        var max = new Cartesian3(Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
+
+        for (var i = 0; i < rootNodesLength; ++i) {
+            var n = gltfNodes[rootNodes[i]];
+            n._transformToRoot = getTransform(n);
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var transformToRoot = n._transformToRoot;
+
+                var meshes = defaultValue(n.meshes, defined(n.instanceSkin) ? n.instanceSkin.sources : undefined);
+                if (defined(meshes)) {
+                    var meshesLength = meshes.length;
+                    for (var j = 0; j < meshesLength; ++j) {
+                        var primitives = gltfMeshes[meshes[j]].primitives;
+                        var primitivesLength = primitives.length;
+                        for (var m = 0; m < primitivesLength; ++m) {
+                            var position = primitives[m].attributes.POSITION;
+                            if (defined(position)) {
+                                var accessor = gltfAccessors[position];
+                                var aMin = Cartesian3.fromArray(accessor.min, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(accessor.max, 0, aMaxScratch);
+                                if (defined(min) && defined(max)) {
+                                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                                    Cartesian3.getMinimumByComponent(min, aMin, min);
+                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = gltfNodes[children[k]];
+                    child._transformToRoot = getTransform(child);
+                    Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
+                    nodeStack.push(child);
+                }
+                delete n._transformToRoot;
+            }
+        }
+
+        return BoundingSphere.fromCornerPoints(min, max);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -2001,8 +2112,7 @@ define([
     function getScale(model, context, frameState) {
         var scale = model._scale;
 
-// TODO: chicken and egg on first frame
-        if (defined(model._initialRadius) && (model.minimumPixelSize !== 0.0)) {
+        if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
             var diameterInPixels = maxPixelSize;
@@ -2010,7 +2120,7 @@ define([
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
-            var radius = (scale * Matrix4.getMaximumScale(model.modelMatrix)) * model._initialRadius;
+            var radius = model.boundingSphere.radius;
             var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
             if (metersPerPixel !== 0.0) {
                 var pixelsPerMeter = 1.0 / metersPerPixel;
@@ -2038,6 +2148,8 @@ define([
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
+            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._initialRadius = this._boundingSphere.radius;
             this._loadResources = new LoadResources();
             parse(this);
         }
@@ -2098,8 +2210,6 @@ define([
             // Called after modelMatrix update.
             var model = this;
             frameState.afterRender.push(function() {
-                // Get raw model radius without any scale.
-                model._initialRadius = model.computeWorldBoundingSphere().radius / (model.scale * Matrix4.getMaximumScale(model.modelMatrix));
                 model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
