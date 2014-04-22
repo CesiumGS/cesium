@@ -368,26 +368,6 @@ define([
 
     defineProperties(Model.prototype, {
         /**
-         * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
-         * and shader files were downloaded and the WebGL resources were created.  This is set to
-         * <code>true</code> right before {@link Model#readyToRender} is fired.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @default false
-         *
-         * @see Model#readyToRender
-         */
-        ready : {
-            get : function() {
-                return this._ready;
-            }
-        },
-
-        /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
          * account glTF animation and skins or {@link Model#Matrix4.getMaximumScale}.
          *
@@ -414,6 +394,26 @@ define([
 
                 this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
                 return this._boundingSphere;
+            }
+        },
+
+        /**
+         * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.  This is set to
+         * <code>true</code> right before {@link Model#readyToRender} is fired.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         *
+         * @see Model#readyToRender
+         */
+        ready : {
+            get : function() {
+                return this._ready;
             }
         },
 
