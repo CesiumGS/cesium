@@ -269,9 +269,8 @@ define(['../Core/createGuid',
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
 
         //TODO
-        //<altitude>
-        //<altitudeMode>
         //<gx:altitudeMode>
+        //<gx:LatLonQuad>
         //drawOrder
         if (defined(parent)) {
             dynamicObject.parent = parent;
@@ -328,6 +327,19 @@ define(['../Core/createGuid',
             var rotation = getNumericValue(latLonBox, 'rotation');
             if (defined(rotation)) {
                 rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
+            }
+
+            var altitudeMode = getStringValue(groundOverlay, 'altitude');
+            if (defined(altitudeMode)) {
+                if (altitudeMode === 'absolute') {
+                    //TODO absolute means relative to sea level, not the ellipsoid.
+                    var altitude = getNumericValue(groundOverlay, 'altitude');
+                    rectangle.height = new ConstantProperty(defined(altitude) ? altitude : 0);
+                } else if (altitudeMode === 'clampToGround') {
+                    //TODO conform to terrain.
+                } else {
+                    throw new RuntimeError('Unknown enumeration: ' + altitudeMode);
+                }
             }
         }
 
