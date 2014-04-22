@@ -3,6 +3,7 @@ define(['../Core/createGuid',
         '../Core/defined',
         '../Core/Cartographic',
         '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ClockRange',
         '../Core/ClockStep',
@@ -17,7 +18,6 @@ define(['../Core/createGuid',
         '../Core/NearFarScalar',
         '../Core/Rectangle',
         '../Core/TimeInterval',
-        '../Core/PolygonPipeline',
         '../Core/loadBlob',
         '../Core/loadXML',
         './ConstantProperty',
@@ -47,6 +47,7 @@ define(['../Core/createGuid',
         defined,
         Cartographic,
         Cartesian2,
+        Cartesian3,
         Color,
         ClockRange,
         ClockStep,
@@ -61,7 +62,6 @@ define(['../Core/createGuid',
         NearFarScalar,
         Rectangle,
         TimeInterval,
-        PolygonPipeline,
         loadBlob,
         loadXML,
         ConstantProperty,
@@ -102,13 +102,29 @@ define(['../Core/createGuid',
     }
 
     //Helper functions
-    function readCoordinate(element) {
+    function readCoordinate(element, altitudeMode) {
+        var baseHeight = 0;
+        switch (altitudeMode) {
+        case 'absolute':
+            //TODO MSL + height
+            break;
+        case 'relativeToGround':
+            //TODO Terrain + height
+            break;
+        case 'clampToGround ':
+            //TODO on terrain, ignore altitude
+            break;
+        default:
+            //TODO Same as clampToGround
+            break;
+        }
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
         scratch = Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratch);
         return Ellipsoid.WGS84.cartographicToCartesian(scratch);
     }
 
     function readCoordinates(element) {
+        //TODO: height is referenced to altitude mode
         var tuples = element.textContent.trim().split(/[\s\n]+/g);
         var numberOfCoordinates = tuples.length;
         var result = new Array(numberOfCoordinates);
@@ -122,10 +138,6 @@ define(['../Core/createGuid',
         return result;
     }
 
-    function equalCoordinateTuples(tuple1, tuple2) {
-        return tuple1[0] === tuple2[0] && tuple1[1] === tuple2[1] && tuple1[2] === tuple2[2];
-    }
-
     function getNode(node, tagName) {
         return node.getElementsByTagName(tagName)[0];
     }
@@ -137,8 +149,7 @@ define(['../Core/createGuid',
 
     function getStringValue(node, tagName) {
         var element = node.getElementsByTagName(tagName)[0];
-        var value = defined(element) ? element.textContent : undefined;
-        return value;
+        return defined(element) ? element.textContent : undefined;
     }
 
     function getBooleanValue(node, tagName) {
@@ -329,7 +340,7 @@ define(['../Core/createGuid',
                 rectangle.rotation = new ConstantProperty(CesiumMath.toRadians(rotation));
             }
 
-            var altitudeMode = getStringValue(groundOverlay, 'altitude');
+            var altitudeMode = getStringValue(groundOverlay, 'altitudeMode');
             if (defined(altitudeMode)) {
                 if (altitudeMode === 'absolute') {
                     //TODO absolute means relative to sea level, not the ellipsoid.
@@ -350,7 +361,7 @@ define(['../Core/createGuid',
         //TODO extrude, altitudeMode, gx:altitudeMode
         var el = node.getElementsByTagName('coordinates');
 
-        var cartesian3 = readCoordinate(el[0]);
+        var cartesian3 = readCoordinate(el[0], getStringValue(node, 'altitudeMode'));
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
 
         //Anything with a position gets a billboard
@@ -372,11 +383,9 @@ define(['../Core/createGuid',
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
-        if (!equalCoordinateTuples(coordinates[0], coordinates[el.length - 1])) {
+        if (!Cartesian3.equals(coordinates[0], coordinates[coordinates.length - 1])) {
             throw new RuntimeError('The first and last coordinate tuples must be the same.');
         }
-        //TODO Should we be doing this here?
-        coordinates = PolygonPipeline.removeDuplicates(coordinates);
         if (coordinates.length > 3) {
             dynamicObject.vertexPositions = new ConstantProperty(coordinates);
         }
@@ -407,12 +416,13 @@ define(['../Core/createGuid',
 
     function processGxTrack(dataSource, dynamicObject, kml, node) {
         //TODO altitudeMode, gx:angles
+        var altitudeMode = getStringValue(node, 'altitudeMode');
         var coordsEl = node.getElementsByTagName('coord');
         var coordinates = new Array(coordsEl.length);
         var timesEl = node.getElementsByTagName('when');
         var times = new Array(timesEl.length);
         for (var i = 0; i < times.length; i++) {
-            coordinates[i] = readCoordinate(coordsEl[i]);
+            coordinates[i] = readCoordinate(coordsEl[i], altitudeMode);
             times[i] = JulianDate.fromIso8601(timesEl[i].textContent);
         }
         var property = new SampledPositionProperty();
@@ -553,7 +563,7 @@ define(['../Core/createGuid',
                     throw new RuntimeError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
-                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
+                polyline.width = defined(lineWidth) ? new ConstantProperty(Math.max(lineWidth, 1.0)) : new ConstantProperty(1.0);
                 material = new PolylineOutlineMaterialProperty();
                 material.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 material.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : new ConstantProperty(new Color(0, 0, 0, 1));
@@ -561,8 +571,6 @@ define(['../Core/createGuid',
                 polyline.material = material;
                 dynamicObject.polyline = polyline;
             } else if (node.nodeName === 'PolyStyle') {
-                //Map style to polygon properties
-                //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
                 var polygonColor = getColorValue(node, 'color');
                 polygonColor = defined(polygonColor) ? polygonColor : new Color(1, 1, 1, 1);
@@ -608,6 +616,9 @@ define(['../Core/createGuid',
             targetObject.path = undefined;
             targetObject.point = undefined;
             if (defined(targetObject.polyline)) {
+                if (!defined(targetObject.polygon)) {
+                    targetObject.polygon = new DynamicPolygon();
+                }
                 targetObject.polygon.outline = defined(targetObject.polyline.show) ? targetObject.polyline.show : new ConstantProperty(true);
                 if (defined(targetObject.polyline.material)) {
                     targetObject.polygon.outlineColor = targetObject.polyline.material.color;
@@ -633,8 +644,6 @@ define(['../Core/createGuid',
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
     function processInlineStyles(dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new DynamicObject();
-
-        //KML_TODO Validate the behavior for multiple/conflicting styles.
         var inlineStyles = placeMark.getElementsByTagName('Style');
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
