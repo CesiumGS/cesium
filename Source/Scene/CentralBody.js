@@ -292,8 +292,8 @@ define([
         }
     });
 
-    CentralBody.prototype.pick = function(ray) {
-        return this._surface.pick(ray);
+    CentralBody.prototype.pick = function(ray, result) {
+        return this._surface.pick(ray, result);
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];

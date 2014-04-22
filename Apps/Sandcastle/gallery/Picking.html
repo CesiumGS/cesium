@@ -94,7 +94,6 @@ require(['Cesium'], function(Cesium) {
 
     function cleanup() {
         widget.scene.primitives.removeAll();
-        widget.scene.primitives.centralBody._surface._debug.boundingSphereTile = undefined;
         handler = handler && handler.destroy();
     }
 
@@ -118,24 +117,6 @@ require(['Cesium'], function(Cesium) {
                 label.text = '';
             }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-    
-    function pickTerrainTile(scene, ellipsoid) {
-        Sandcastle.declare(pickTerrainTile);   // For highlighting in Sandcastle.
-
-        var centralBody = scene.primitives.centralBody;
-        var camera = scene.camera;
-        
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(function(movement) {
-            var ray = camera.getPickRay(movement.position);
-            var tile = centralBody.pick(ray);
-            if (tile) {
-                centralBody._surface._debug.boundingSphereTile = tile;
-            } else {
-                centralBody._surface._debug.boundingSphereTile = undefined;
-            }
-        }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
     }
 
     function pickBillboard(scene, ellipsoid) {
@@ -507,12 +488,6 @@ require(['Cesium'], function(Cesium) {
         cleanup();
         drawRectangle(scene, ellipsoid);
         Sandcastle.highlight(drawRectangle);
-    });
-    
-    Sandcastle.addToolbarButton('Pick Terrain', function() {
-        cleanup();
-        pickTerrainTile(scene, ellipsoid);
-        Sandcastle.highlight(pickTerrainTile);
     });
 
     Sandcastle.finishedLoading();

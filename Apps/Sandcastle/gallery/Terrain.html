@@ -199,6 +199,24 @@ require(['Cesium'], function(Cesium) {
     centralBody.terrainProvider = cesiumTerrainProviderMeshes;
 
     createTerrainMenu(terrainProviders);
+    
+    var labels = new Cesium.LabelCollection();
+    var label = labels.add();
+    scene.primitives.add(labels);
+    
+    var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var ray = scene.camera.getPickRay(movement.position);
+        var cartesian = centralBody.pick(ray);
+        if (cartesian) {
+            var cartographic = centralBody.ellipsoid.cartesianToCartographic(cartesian);
+            label.show = true;
+            label.text = '(' + Cesium.Math.toDegrees(cartographic.longitude).toFixed(2) + ', ' + Cesium.Math.toDegrees(cartographic.latitude).toFixed(2) + ', ' + cartographic.height.toFixed(2) + ')';
+            label.position = cartesian;
+        } else {
+            label.text = '';
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
     Sandcastle.finishedLoading();
 });

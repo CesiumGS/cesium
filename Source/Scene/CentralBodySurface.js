@@ -268,13 +268,17 @@ define([
 
     var scratchSphereIntersections = [];
 
-    CentralBodySurface.prototype.pick = function(ray) {
+    CentralBodySurface.prototype.pick = function(ray, result) {
         var sphereIntersections = scratchSphereIntersections;
         sphereIntersections.length = 0;
 
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        var length = tilesToRenderByTextureCount.length;
+
         var tile;
-        for (var i = 0; i < tilesToRenderByTextureCount.length; ++i) {
+        var i;
+
+        for (i = 0; i < length; ++i) {
             var tileSet = tilesToRenderByTextureCount[i];
             if (!defined(tileSet)) {
                 continue;
@@ -290,7 +294,17 @@ define([
 
         sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
-        return sphereIntersections[0];
+        var intersection;
+        length = sphereIntersections.length;
+        for (i = 0; i < length; ++i) {
+            tile = sphereIntersections[i];
+            intersection = tile.pick(ray, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
     };
 
     /**
