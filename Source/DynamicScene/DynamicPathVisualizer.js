@@ -78,7 +78,7 @@ define([
             }
 
             if (t < (len - 1)) {
-                if (!sampling) {
+                if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
                     var secondsUntilNext = current.getSecondsDifference(next);
                     sampling = secondsUntilNext > maximumStep;
@@ -116,6 +116,7 @@ define([
         var i = 0;
         var index = startingIndex;
         var time = start;
+        var stepSize = Math.max(maximumStep, 60);
         var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
         while (time.lessThan(stop)) {
             if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
@@ -132,7 +133,7 @@ define([
                 index++;
             }
             i++;
-            time = start.addSeconds(maximumStep * i);
+            time = start.addSeconds(stepSize * i);
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -371,13 +372,16 @@ define([
 
         polyline.show = true;
 
-        var resolution = 60.0;
+        var maxStepSize = 60.0;
         property = dynamicPath._resolution;
         if (defined(property)) {
-            resolution = property.getValue(time);
+            var resolution = property.getValue(time);
+            if (defined(resolution)) {
+                maxStepSize = resolution;
+            }
         }
 
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
 
         property = dynamicPath._color;
         if (defined(property)) {
