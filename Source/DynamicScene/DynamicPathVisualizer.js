@@ -7,6 +7,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Color',
+        '../Core/TimeInterval',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
         './ConstantPositionProperty',
@@ -24,6 +25,7 @@ define([
          Matrix3,
          Matrix4,
          Color,
+         TimeInterval,
          Transforms,
          ReferenceFrame,
          ConstantPositionProperty,
@@ -82,10 +84,10 @@ define([
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
-                        sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                        sampleStepsToTake = Math.ceil(secondsUntilNext / maximumStep);
                         sampleStepsTaken = 0;
                         sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
-                        sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                        sampleStepsToTake = Math.max(sampleStepsToTake - 1, 1);
                     }
                 }
 
@@ -142,12 +144,22 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
-            var interval = intervals.get(0);
-            if (interval.start.lessThanOrEquals(stop)) {
-                var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+            var interval = intervals.get(i);
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var time = interval.start;
+                if (!interval.isStartIncluded) {
+                    if (interval.isStopIncluded) {
+                        time = interval.stop;
+                    } else {
+                        time = interval.start.addSeconds(interval.start.getSecondsDifference(interval.stop) / 2);
+                    }
+                }
+                var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
                 if (defined(tmp)) {
                     result[index] = tmp;
                     index++;
@@ -166,12 +178,14 @@ define([
     }
 
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            var intervalStart = interval.start;
-            if (intervalStart.lessThanOrEquals(stop)) {
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var intervalStart = interval.start;
                 var intervalStop = interval.stop;
 
                 var sampleStart = start;
