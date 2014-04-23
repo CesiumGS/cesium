@@ -250,6 +250,8 @@ defineSuite([
         duckModel.show = false;
 
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+
+        node.matrix = Matrix4.fromUniformScale(1.0);
     });
 
     it('getMesh throws when model is not loaded', function() {
@@ -338,25 +340,6 @@ defineSuite([
     it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
         var material = duckModel.getMaterial('blinn3');
         expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
-    });
-
-    it('computeWorldBoundingSphere throws when model is not loaded', function() {
-        var m = new Model();
-        expect(function() {
-            return m.computeWorldBoundingSphere();
-        }).toThrowDeveloperError();
-    });
-
-    it('computeWorldBoundingSphere computes a bounding sphere', function() {
-        var radius = duckModel.computeWorldBoundingSphere().radius;
-        expect(radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
-    });
-
-    it('computeWorldBoundingSphere uses a result parameter', function() {
-        var result = new BoundingSphere();
-        var sphere = duckModel.computeWorldBoundingSphere(result);
-        expect(sphere).toBe(result);
-        expect(sphere.radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
     });
 
     it('boundingSphere throws when model is not loaded', function() {
