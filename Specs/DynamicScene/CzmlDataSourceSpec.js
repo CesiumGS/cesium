@@ -1866,8 +1866,10 @@ defineSuite([
                         cellAlpha : 0,
                         rowCount : 36,
                         rowThickness : 1,
+                        rowOffset: 0.5,
                         columnCount : 9,
-                        columnThickness : 1
+                        columnThickness : 1,
+                        columnOffset: 0.5
                     }
                 }]
             }
