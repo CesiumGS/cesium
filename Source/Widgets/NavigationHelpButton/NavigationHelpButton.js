@@ -57,7 +57,7 @@ define([
         viewModel._svgPath = 'M16,1.466C7.973,1.466,1.466,7.973,1.466,16c0,8.027,6.507,14.534,14.534,14.534c8.027,0,14.534-6.507,14.534-14.534C30.534,7.973,24.027,1.466,16,1.466z M17.328,24.371h-2.707v-2.596h2.707V24.371zM17.328,19.003v0.858h-2.707v-1.057c0-3.19,3.63-3.696,3.63-5.963c0-1.034-0.924-1.826-2.134-1.826c-1.254,0-2.354,0.924-2.354,0.924l-1.541-1.915c0,0,1.519-1.584,4.137-1.584c2.487,0,4.796,1.54,4.796,4.136C21.156,16.208,17.328,16.627,17.328,19.003z';
 
         var wrapper = document.createElement('span');
-        wrapper.className = 'cesium-navigationHelpButton-wrapper cesium-toolbar-button';
+        wrapper.className = 'cesium-navigationHelpButton-wrapper';
         container.appendChild(wrapper);
 
         var button = document.createElement('button');
@@ -77,14 +77,14 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
                 <tr>\
                     <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseLeft.svg') + '" width="48" height="48" /></td>\
                     <td>\
-                        <div class="cesium-navigation-help-pan">Pan Viewpoint</div>\
+                        <div class="cesium-navigation-help-pan">Pan view</div>\
                         <div class="cesium-navigation-help-details">Left click + drag</div>\
                     </td>\
                 </tr>\
                 <tr>\
                     <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseRight.svg') + '" width="48" height="48" /></td>\
                     <td>\
-                        <div class="cesium-navigation-help-zoom">Zoom Viewpoint</div>\
+                        <div class="cesium-navigation-help-zoom">Zoom view</div>\
                         <div class="cesium-navigation-help-details">Right click + drag, or</div>\
                         <div class="cesium-navigation-help-details">Mouse wheel scroll</div>\
                     </td>\
@@ -92,7 +92,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
                 <tr>\
                     <td><img src="' + buildModuleUrl('Widgets/Images/NavigationHelp/MouseMiddle.svg') + '" width="48" height="48" /></td>\
                     <td>\
-                        <div class="cesium-navigation-help-rotate">Rotate Viewpoint</div>\
+                        <div class="cesium-navigation-help-rotate">Rotate view</div>\
                         <div class="cesium-navigation-help-details">Middle click + drag, or</div>\
                         <div class="cesium-navigation-help-details">CTRL + Left click + drag</div>\
                     </td>\

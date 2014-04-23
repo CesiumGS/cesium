@@ -24,9 +24,6 @@ define([
      *
      */
     var NavigationHelpButtonViewModel = function () {
-        //>>includeStart('debug', pragmas.debug);
-        //>>includeEnd('debug');
-
         /**
          * Gets or sets whether the instructions are currently shown.  This property is observable.
          * @type {Boolean}
