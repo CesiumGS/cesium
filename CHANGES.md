@@ -41,6 +41,7 @@ Beta Releases
   * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
