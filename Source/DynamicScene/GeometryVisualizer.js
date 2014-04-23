@@ -43,6 +43,7 @@ define(['../Core/AssociativeArray',
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].update(time);
         }
+        return true;
     };
 
     DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
@@ -179,6 +180,8 @@ define(['../Core/AssociativeArray',
      * @memberof GeometryVisualizer
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} True if the visualizer successfully updated to the provided time,
+     * false if the visualizer is waiting for asynchronous primitives to be created.
      */
     GeometryVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -232,12 +235,13 @@ define(['../Core/AssociativeArray',
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        this._outlineBatch.update(time);
-        this._closedColorBatch.update(time);
-        this._closedMaterialBatch.update(time);
-        this._openColorBatch.update(time);
-        this._openMaterialBatch.update(time);
-        this._dynamicBatch.update(time);
+        var isUpdated = this._outlineBatch.update(time);
+        isUpdated = this._closedColorBatch.update(time) && isUpdated;
+        isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._openColorBatch.update(time) && isUpdated;
+        isUpdated = this._openMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._dynamicBatch.update(time) && isUpdated;
+        return isUpdated;
     };
 
     /**

@@ -38,9 +38,13 @@ Beta Releases
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
+  * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
+* `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
+* `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
+* `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 
 ### b27 - 2014-04-01
 
@@ -172,7 +176,7 @@ Beta Releases
       * `getGUID` -> `guid`
     * `VertexArray`
       * `getNumberOfAttributes` -> `numberOfAttributes`
-      * `getIndexBuffer` -> `indexBuffer`   
+      * `getIndexBuffer` -> `indexBuffer`
   * Finished removing prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`

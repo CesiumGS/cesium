@@ -31,7 +31,8 @@ define([
      * @param {Number} [description.multiplier=1.0] Determines how much time advances when tick is called, negative values allow for advancing backwards.
      * @param {ClockStep} [description.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
      * @param {ClockRange} [description.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-     * @param {Boolean} [description.shouldAnimate=true] Determines if tick should actually advance time.
+     * @param {Boolean} [description.canAnimate=true] Indicates whether tick can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+     * @param {Boolean} [description.shouldAnimate=true] Indicates whether tick should attempt to advance time.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
      *
      * @exception {DeveloperError} startTime must come before stopTime.
      *
@@ -131,7 +132,16 @@ define([
         this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
 
         /**
-         * Determines if tick should actually advance time.
+         * Indicates whether tick can advance time.  This could be false if data is being buffered,
+         * for example.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+         * @type {Boolean}
+         * @default true
+         */
+        this.canAnimate = defaultValue(description.canAnimate, true);
+
+        /**
+         * Indicates whether tick should attempt to advance time.
+         * The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
          * @type {Boolean}
          * @default true
          */
@@ -160,7 +170,7 @@ define([
         var stopTime = this.stopTime;
         var multiplier = this.multiplier;
 
-        if (this.shouldAnimate) {
+        if (this.canAnimate && this.shouldAnimate) {
             if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
                 currentTime = new JulianDate();
             } else {
