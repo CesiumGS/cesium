@@ -41,6 +41,7 @@ Beta Releases
   * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
 * Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
+* Added `DynamicWall` to support DataSource provided `WallGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
