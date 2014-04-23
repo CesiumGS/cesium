@@ -157,8 +157,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * @memberof NavigationHelpButton
      */
     NavigationHelpButton.prototype.destroy = function () {
-        this._viewModel.destroy();
-
         document.removeEventListener('mousedown', this._closeInstructions, true);
         document.removeEventListener('touchstart', this._closeInstructions, true);
 
