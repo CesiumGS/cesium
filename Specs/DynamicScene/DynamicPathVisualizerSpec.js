@@ -282,8 +282,7 @@ defineSuite([
         var updateTime = new JulianDate(1, 43200);
         var referenceFrame = ReferenceFrame.FIXED;
         var maximumStep = 10;
-        var result = [];
-        DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        var result = DynamicPathVisualizer._subSample(property, start, stop, updateTime, referenceFrame, maximumStep);
         expect(result).toEqual([property._value]);
     });
 
@@ -435,8 +434,8 @@ defineSuite([
         sampledProperty.addSample(t4, new Cartesian3(0, 0, 4));
 
         var property = new CompositePositionProperty();
-        property.intervals.addInterval(new TimeInterval(t1, t2, true, true, constantProperty));
-        property.intervals.addInterval(new TimeInterval(t2, t3, false, false, intervalProperty));
+        property.intervals.addInterval(new TimeInterval(t1, t2, true, true, intervalProperty));
+        property.intervals.addInterval(new TimeInterval(t2, t3, false, false, constantProperty));
         property.intervals.addInterval(new TimeInterval(t3, t4, true, true, sampledProperty));
 
         var updateTime = new JulianDate(0, 0);
@@ -444,18 +443,11 @@ defineSuite([
         var maximumStep = 43200;
         var result = [];
         DynamicPathVisualizer._subSample(property, t1, t4, updateTime, referenceFrame, maximumStep, result);
-        expect(result).toEqual([constantProperty.getValue(t1),
-                                intervalProperty.getValue(t2.addSeconds(t2.getSecondsDifference(t3)/2)),
-                                new Cartesian3(0, 0, 3)]);
-//
-//        DynamicPathVisualizer._subSample(property, t2, t3, updateTime, referenceFrame, maximumStep, result);
-//        expect(result).toEqual([new Cartesian3(0, 0, 1), new Cartesian3(0, 0, 2), new Cartesian3(0, 0, 3)]);
-//
-//        DynamicPathVisualizer._subSample(property, t1, t2, updateTime, referenceFrame, maximumStep, result);
-//        expect(result).toEqual([new Cartesian3(0, 0, 1)]);
-//
-//        DynamicPathVisualizer._subSample(property, t3, t4, updateTime, referenceFrame, maximumStep, result);
-//        expect(result).toEqual([new Cartesian3(0, 0, 3)]);
+        expect(result).toEqual([intervalProperty.intervals.get(0).data,
+                                constantProperty.getValue(t1),
+                                sampledProperty.getValue(t3),
+                                sampledProperty.getValue(t3.addSeconds(maximumStep)),
+                                sampledProperty.getValue(t4)]);
     });
 
 }, 'WebGL');
