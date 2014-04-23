@@ -205,7 +205,7 @@ define([
                     index = subSampleCompositeProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
                     index = subSampleIntervalProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
-                } else if (property instanceof ConstantPositionProperty) {
+                } else if (intervalProperty instanceof ConstantPositionProperty) {
                     index = subSampleConstantProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else {
                     //Fallback to generic sampling.
