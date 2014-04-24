@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Core/defined',
          'Core/Ellipsoid',
          'Core/Rectangle',
@@ -11,7 +11,7 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/render'
      ], function(
-         CentralBody,
+         Globe,
          defined,
          Ellipsoid,
          Rectangle,
@@ -26,7 +26,7 @@ defineSuite([
 
     var context;
     var frameState;
-    var cb;
+    var globe;
 
     beforeAll(function() {
         context = createContext();
@@ -38,43 +38,43 @@ defineSuite([
 
     beforeEach(function() {
         frameState = createFrameState();
-        cb = new CentralBody();
+        globe = new Globe();
     });
 
     afterEach(function() {
-        cb.destroy();
+        globe.destroy();
     });
 
     /**
      * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
      * this in a "runs" function.
      */
-    function updateUntilDone(cb) {
+    function updateUntilDone(globe) {
         // update until the load queue is empty.
         waitsFor(function() {
-            cb._surface._debug.enableDebugOutput = true;
+            globe._surface._debug.enableDebugOutput = true;
             var commandList = [];
-            cb.update(context, frameState, commandList);
-            return !defined(cb._surface._tileLoadQueue.head) && cb._surface._debug.tilesWaitingForChildren === 0;
+            globe.update(context, frameState, commandList);
+            return !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
 
     it('renders with enableLighting', function() {
-        cb.enableLighting = true;
+        globe.enableLighting = true;
 
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, cb);
+            render(context, frameState, globe);
             expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
         });
     });
