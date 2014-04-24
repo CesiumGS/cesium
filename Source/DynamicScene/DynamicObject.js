@@ -16,8 +16,7 @@ define(['../Core/createGuid',
         createDynamicPropertyDescriptor) {
     "use strict";
 
-    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'definitionChanged', //
-                                 'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
+    var reservedPropertyNames = ['addProperty', 'definitionChanged', 'id', 'isAvailable', 'parent', 'propertyNames', 'removeProperty'];
 
     /**
      * DynamicObject instances are the primary data store for processed data.
@@ -32,33 +31,35 @@ define(['../Core/createGuid',
      * @see DynamicObjectCollection
      */
     var DynamicObject = function(id) {
-        this._cachedAvailabilityDate = undefined;
-        this._cachedAvailabilityValue = undefined;
-
         if (!defined(id)) {
             id = createGuid();
         }
 
-        this._id = id;
         this._availability = undefined;
-        this._parent = undefined;
-        this._name = undefined;
+        this._id = id;
         this._definitionChanged = new Event();
+        this._name = undefined;
+        this._parent = undefined;
+        this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
+                               'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
+                               'rectangle', 'vector', 'vertexPositions', 'viewFrom'];
 
-        this._position = undefined;
-        this._positionSubscription = undefined;
-        this._orientation = undefined;
-        this._orientationSubscription = undefined;
         this._billboard = undefined;
         this._billboardSubscription = undefined;
         this._cone = undefined;
         this._coneSubscription = undefined;
-        this._ellipsoid = undefined;
-        this._ellipsoidSubscription = undefined;
+        this._description = undefined;
+        this._descriptionSubscription = undefined;
         this._ellipse = undefined;
         this._ellipseSubscription = undefined;
+        this._ellipsoid = undefined;
+        this._ellipsoidSubscription = undefined;
         this._label = undefined;
         this._labelSubscription = undefined;
+        this._model = undefined;
+        this._modelSubscription = undefined;
+        this._orientation = undefined;
+        this._orientationSubscription = undefined;
         this._path = undefined;
         this._pathSubscription = undefined;
         this._point = undefined;
@@ -67,46 +68,31 @@ define(['../Core/createGuid',
         this._polygonSubscription = undefined;
         this._polyline = undefined;
         this._polylineSubscription = undefined;
+        this._position = undefined;
+        this._positionSubscription = undefined;
         this._pyramid = undefined;
         this._pyramidSubscription = undefined;
         this._rectangle = undefined;
         this._rectangleSubscription = undefined;
-        this._vertexPositions = undefined;
-        this._vertexPositionsSubscription = undefined;
         this._vector = undefined;
         this._vectorSubscription = undefined;
+        this._vertexPositions = undefined;
+        this._vertexPositionsSubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
-        this._description = undefined;
-        this._descriptionSubscription = undefined;
-
-        this._propertyNames = ['parent', 'position', 'orientation', 'billboard', //
-                               'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
-                               'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom', 'description', //
-                               'rectangle'];
     };
 
     defineProperties(DynamicObject.prototype, {
         /**
-         * Gets the event that is raised whenever a new property is assigned.
+         * The availability, if any, associated with this object.
+         * If availability is undefined, it is assumed that this object's
+         * other properties will return valid data for any provided time.
+         * If availability exists, the objects other properties will only
+         * provide valid data if queried within the given interval.
          * @memberof DynamicObject.prototype
-         * @type {Event}
+         * @type {TimeIntervalCollection}
          */
-        definitionChanged : {
-            get : function() {
-                return this._definitionChanged;
-            }
-        },
-        /**
-         * Gets the names of all properties registed on this instance.
-         * @memberof DynamicObject.prototype
-         * @type {Event}
-         */
-        propertyNames : {
-            get : function() {
-                return this._propertyNames;
-            }
-        },
+        availability : createDynamicPropertyDescriptor('availability'),
         /**
          * Gets the unique ID associated with this object.
          * @memberof DynamicObject.prototype
@@ -115,6 +101,16 @@ define(['../Core/createGuid',
         id : {
             get : function() {
                 return this._id;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicObject.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
             }
         },
         /**
@@ -137,34 +133,21 @@ define(['../Core/createGuid',
             }
         },
         /**
-         * The availability, if any, associated with this object.
-         * If availability is undefined, it is assumed that this object's
-         * other properties will return valid data for any provided time.
-         * If availability exists, the objects other properties will only
-         * provide valid data if queried within the given interval.
+         * Gets or sets the parent object.
          * @memberof DynamicObject.prototype
-         * @type {TimeIntervalCollection}
+         * @type {DynamicObject}
          */
-        availability : createDynamicPropertyDescriptor('availability'),
+        parent : createDynamicPropertyDescriptor('parent'),
         /**
-         * Gets or sets the position.
+         * Gets the names of all properties registed on this instance.
          * @memberof DynamicObject.prototype
-         * @type {PositionProperty}
+         * @type {Event}
          */
-        position : createDynamicPropertyDescriptor('position'),
-        /**
-         * Gets or sets the orientation.
-         * @memberof DynamicObject.prototype
-         * @type {Property}
-         */
-        orientation : createDynamicPropertyDescriptor('orientation'),
-        /**
-         * Gets or sets the suggested initial offset for viewing this object
-         * with the camera.  The offset is defined in the east-north-up reference frame.
-         * @memberof DynamicObject.prototype
-         * @type {Cartesian3}
-         */
-        viewFrom : createDynamicPropertyDescriptor('viewFrom'),
+        propertyNames : {
+            get : function() {
+                return this._propertyNames;
+            }
+        },
         /**
          * Gets or sets the billboard.
          * @memberof DynamicObject.prototype
@@ -177,19 +160,24 @@ define(['../Core/createGuid',
          * @type {DynamicCone}
          */
         cone : createDynamicPropertyDescriptor('cone'),
-
         /**
-         * Gets or sets the ellipsoid.
+         * Gets or sets the description.
          * @memberof DynamicObject.prototype
-         * @type {DynamicEllipsoid}
+         * @type {Property}
          */
-        ellipsoid : createDynamicPropertyDescriptor('ellipsoid'),
+        description : createDynamicPropertyDescriptor('description'),
         /**
          * Gets or sets the ellipse.
          * @memberof DynamicObject.prototype
          * @type {DynamicEllipse}
          */
         ellipse : createDynamicPropertyDescriptor('ellipse'),
+        /**
+         * Gets or sets the ellipsoid.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicEllipsoid}
+         */
+        ellipsoid : createDynamicPropertyDescriptor('ellipsoid'),
         /**
          * Gets or sets the label.
          * @memberof DynamicObject.prototype
@@ -201,13 +189,13 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {DynamicLabel}
          */
-        model : createDynamicPropertyDescriptor('model', '_model'),
+        model : createDynamicPropertyDescriptor('model'),
         /**
-         * Gets or sets the parent object.
+         * Gets or sets the orientation.
          * @memberof DynamicObject.prototype
-         * @type {DynamicObject}
+         * @type {Property}
          */
-        parent : createDynamicPropertyDescriptor('parent'),
+        orientation : createDynamicPropertyDescriptor('orientation'),
         /**
          * Gets or sets the path.
          * @memberof DynamicObject.prototype
@@ -233,6 +221,12 @@ define(['../Core/createGuid',
          */
         polyline : createDynamicPropertyDescriptor('polyline'),
         /**
+         * Gets or sets the position.
+         * @memberof DynamicObject.prototype
+         * @type {PositionProperty}
+         */
+        position : createDynamicPropertyDescriptor('position'),
+        /**
          * Gets or sets the pyramid.
          * @memberof DynamicObject.prototype
          * @type {DynamicPyramid}
@@ -245,23 +239,24 @@ define(['../Core/createGuid',
          */
         rectangle : createDynamicPropertyDescriptor('rectangle'),
         /**
-         * Gets or sets the vertex positions.
-         * @memberof DynamicObject.prototype
-         * @type {Property}
-         */
-        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
-        /**
          * Gets or sets the vector.
          * @memberof DynamicObject.prototype
          * @type {DynamicVector}
          */
         vector : createDynamicPropertyDescriptor('vector'),
         /**
-         * Gets or sets the description.
+         * Gets or sets the vertex positions.
          * @memberof DynamicObject.prototype
          * @type {Property}
          */
-        description : createDynamicPropertyDescriptor('description')
+        vertexPositions : createDynamicPropertyDescriptor('vertexPositions'),
+        /**
+         * Gets or sets the suggested initial offset for viewing this object
+         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * @memberof DynamicObject.prototype
+         * @type {Cartesian3}
+         */
+        viewFrom : createDynamicPropertyDescriptor('viewFrom')
     });
 
     /**
