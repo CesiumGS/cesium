@@ -83,6 +83,12 @@ Beta Releases
       * `getAlignedAxis`, `setAlignedAxis` -> `alignedAxis`
       * `getWidth`, `setWidth` -> `width`
       * `getHeight` `setHeight` -> `height`
+    * 'DataSource'
+      * 'getName` -> `name`
+      * 'getClock` -> `clock`
+      * 'getChangedEvent` -> `changedEvent`
+      * 'getDynamicObjectCollection` -> `dynamicObjects`
+      * 'getErrorEvent` -> `errorEvent`
     * `Label`
       * `getText`, `setText` -> `text`
       * `getFont`, `setFont` -> `font`
@@ -194,6 +200,7 @@ Beta Releases
       * `normalize`
     * `Extent`
       * `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
+  * `DataSource` now has additional required properties, `isLoading` and `loadingEvent` as well as a new optional `update` method which will be called each frame.
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
   * Removed `TexturePool`.
