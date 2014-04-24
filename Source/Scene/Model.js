@@ -2032,7 +2032,7 @@ define([
 
         var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
-        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - radius);
+        var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
 
         scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
         scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
@@ -2050,17 +2050,16 @@ define([
         if (model.minimumPixelSize !== 0.0) {
             // Compute size of bounding sphere in pixels
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var diameterInPixels = maxPixelSize;
             var m = model.modelMatrix;
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
             var radius = model.boundingSphere.radius;
             var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
-            if (metersPerPixel !== 0.0) {
-                var pixelsPerMeter = 1.0 / metersPerPixel;
-                diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
-            }
+
+            // metersPerPixel is always > 0.0
+            var pixelsPerMeter = 1.0 / metersPerPixel;
+            var diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
 
             // Maintain model's minimum pixel size
             if (diameterInPixels < model.minimumPixelSize) {
