@@ -7,6 +7,7 @@ define([
         '../Core/defineProperties',
         '../Core/loadArrayBuffer',
         '../Core/loadJson',
+        '../Core/Math',
         '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -27,6 +28,7 @@ define([
         defineProperties,
         loadArrayBuffer,
         loadJson,
+        CesiumMath,
         throttleRequestByServer,
         DeveloperError,
         Event,
@@ -192,6 +194,8 @@ define([
         });
     }
 
+    var cartesian3Scratch = new Cartesian3();
+
     function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY) {
         var pos = 0;
         var uint16Length = 2;
@@ -298,16 +302,28 @@ define([
 
         var normalMapWidth = 256;
 
-        var encodedNormalMap = new Uint8Array(buffer, pos, normalMapWidth * normalMapWidth * 3);
+        var encodedNormalMap = new Uint8Array(buffer, pos, normalMapWidth * normalMapWidth * 2);
         var normalXBuffer = encodedNormalMap.subarray(0, normalMapWidth * normalMapWidth);
         var normalYBuffer = encodedNormalMap.subarray(normalMapWidth * normalMapWidth, 2 * normalMapWidth * normalMapWidth);
-        var normalZBuffer = encodedNormalMap.subarray(normalMapWidth * normalMapWidth * 2, 3 * normalMapWidth * normalMapWidth);
 
-        var normalMap = new Uint8Array(normalMapWidth * normalMapWidth * 3);
+        var normalMap = new Uint8Array(normalMapWidth * normalMapWidth * 2);
         for (i = 0; i < normalMapWidth * normalMapWidth; ++i) {
-            normalMap[i * 3] = normalXBuffer[i];
-            normalMap[i * 3 + 1] = normalYBuffer[i];
-            normalMap[i * 3 + 2] = normalZBuffer[i];
+            normalMap[i * 2] = normalXBuffer[i];
+            normalMap[i * 2 + 1] = normalYBuffer[i];
+        }
+
+        var nextX;
+        var nextY = normalYBuffer[0];
+        normalYBuffer[0] = normalXBuffer[1];
+        normalXBuffer[1] = nextY;
+
+        for (i = 2; i < normalMapWidth * normalMapWidth; i += 2) {
+            nextY = normalYBuffer[i / 2];
+            nextX = normalYBuffer[i / 2 - 1];
+            normalYBuffer[i / 2 - 1] = normalXBuffer[i];
+            normalYBuffer[i / 2] = normalXBuffer[i + 1];
+            normalXBuffer[i] = nextX;
+            normalXBuffer[i + 1] = nextY;
         }
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;

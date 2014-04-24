@@ -207,6 +207,18 @@ define([
     };
 
     /**
+     * Returns the sign of the value, but never zero; 1 if the value is positive or zero, or -1 if the value is
+     * negative.
+     *
+     * @param {Number} value The value to return the sign of.
+     *
+     * @returns {Number} The sign of value.
+     */
+    CesiumMath.signNotZero = function(value) {
+        return value < 0.0 ? -1.0 : 1.0;
+    };
+
+    /**
      * Returns the hyperbolic sine of a {@code Number}.
      * The hyperbolic sine of <em>value</em> is defined to be
      * (<em>e<sup>x</sup>&nbsp;-&nbsp;e<sup>-x</sup></em>)/2.0
