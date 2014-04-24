@@ -16,8 +16,6 @@ define(['../Core/createGuid',
         createDynamicPropertyDescriptor) {
     "use strict";
 
-    var reservedPropertyNames = ['addProperty', 'definitionChanged', 'id', 'isAvailable', 'parent', 'propertyNames', 'removeProperty'];
-
     /**
      * DynamicObject instances are the primary data store for processed data.
      * They are used primarily by the visualizers to create and maintain graphic
@@ -298,7 +296,7 @@ define(['../Core/createGuid',
         if (propertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is already a registered property.');
         }
-        if (reservedPropertyNames.indexOf(propertyName) !== -1) {
+        if (defined(this[propertyName])) {
             throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         //>>includeEnd('debug');
@@ -323,11 +321,11 @@ define(['../Core/createGuid',
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-        if (reservedPropertyNames.indexOf(propertyName) !== -1) {
-            throw new DeveloperError(propertyName + ' is a reserved property name.');
-        }
         if (propertyNames.indexOf(propertyName) === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
+        }
+        if (defined(this[propertyName])) {
+            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         //>>includeEnd('debug');
 
