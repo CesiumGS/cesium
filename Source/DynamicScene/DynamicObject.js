@@ -296,7 +296,7 @@ define(['../Core/createGuid',
         if (propertyNames.indexOf(propertyName) !== -1) {
             throw new DeveloperError(propertyName + ' is already a registered property.');
         }
-        if (defined(this[propertyName])) {
+        if (propertyName in this) {
             throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         //>>includeEnd('debug');
@@ -323,9 +323,6 @@ define(['../Core/createGuid',
         }
         if (propertyNames.indexOf(propertyName) === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
-        }
-        if (defined(this[propertyName])) {
-            throw new DeveloperError(propertyName + ' is a reserved property name.');
         }
         //>>includeEnd('debug');
 
