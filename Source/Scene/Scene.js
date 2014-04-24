@@ -1081,11 +1081,11 @@ define([
         var frameState = scene._frameState;
         var commandList = scene._commandList;
 
-        scene._primitives.update(context, frameState, commandList);
-
         if (scene._globe) {
             scene._globe.update(context, frameState, commandList);
         }
+
+        scene._primitives.update(context, frameState, commandList);
 
         if (defined(scene.moon)) {
             scene.moon.update(context, frameState, commandList);
