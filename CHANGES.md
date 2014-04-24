@@ -6,10 +6,10 @@ Beta Releases
 ### b28 - 2014-05-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
-  * Rename `CentralBody` to `Globe`
-  * `scene.primitives.centralBody` moved to `scene.centralBody`
-  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`
-  * Rename Extent to Rectangle
+  * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Renamed `CentralBody` to `Globe`.
+  * Renamed Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
     * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
