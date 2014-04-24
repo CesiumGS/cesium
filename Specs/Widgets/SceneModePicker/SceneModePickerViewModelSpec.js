@@ -22,7 +22,7 @@ defineSuite([
     beforeEach(function() {
         scene = createScene();
         var centralBody = new CentralBody(ellipsoid);
-        scene.primitives.centralBody = centralBody;
+        scene.centralBody = centralBody;
     });
 
     afterEach(function() {

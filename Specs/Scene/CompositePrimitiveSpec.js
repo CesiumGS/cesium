@@ -15,7 +15,6 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Math',
          'Renderer/ClearCommand',
-         'Scene/CentralBody',
          'Scene/LabelCollection',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
@@ -36,7 +35,6 @@ defineSuite([
          Ellipsoid,
          CesiumMath,
          ClearCommand,
-         CentralBody,
          LabelCollection,
          HorizontalOrigin,
          VerticalOrigin,
@@ -244,14 +242,6 @@ defineSuite([
         expect(primitives.destroyPrimitives).toEqual(true);
     });
 
-    it('setting a central body', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(ellipsoid);
-        primitives.centralBody = cb;
-
-        expect(primitives.centralBody).toBe(cb);
-    });
-
     it('renders a primitive added with add()', function() {
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -457,29 +447,6 @@ defineSuite([
         expect(pickedObject.primitive).toEqual(p1);
     });
 
-    it('renders a central body', function() {
-        var savedCamera;
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-            primitives.centralBody = cb;
-
-            savedCamera = frameState.camera;
-            frameState.camera = camera;
-        });
-
-        waitsFor(function() {
-            render(context, frameState, primitives);
-            return !equals(this.env, context.readPixels(), [0, 0, 0, 0]);
-        }, 'the central body to be rendered', 5000);
-
-        runs(function() {
-            frameState.camera = savedCamera;
-        });
-    });
 
     it('is not destroyed when first constructed', function() {
         expect(primitives.isDestroyed()).toEqual(false);
@@ -536,15 +503,6 @@ defineSuite([
         expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it('destroys primitive on set centralBody', function() {
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-
-        primitives.centralBody = cb;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        primitives.centralBody = null;
-        expect(cb.isDestroyed()).toEqual(true);
-    });
 
     it('does not destroy its primitives', function() {
         var labels = new LabelCollection(context);
@@ -586,20 +544,6 @@ defineSuite([
 
         labels.destroy();
         expect(labels.isDestroyed()).toEqual(true);
-    });
-
-    it('does not destroy primitive on set centralBody', function() {
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-
-        primitives.destroyPrimitives = false;
-        primitives.centralBody = cb;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        primitives.centralBody = null;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        cb.destroy();
-        expect(cb.isDestroyed()).toEqual(true);
     });
 
     it('throws when add() without an primitive', function() {

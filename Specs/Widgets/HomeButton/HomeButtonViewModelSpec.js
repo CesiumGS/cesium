@@ -19,7 +19,7 @@ defineSuite([
     var centralBody = new CentralBody(ellipsoid);
     beforeAll(function() {
         scene = createScene();
-        scene.primitives.centralBody = centralBody;
+        scene.centralBody = centralBody;
     });
 
     afterAll(function() {

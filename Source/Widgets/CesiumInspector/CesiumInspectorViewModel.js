@@ -83,7 +83,7 @@ define([
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
 
-        var centralBody = this._scene.primitives.centralBody;
+        var centralBody = this._scene.centralBody;
         centralBody.depthTestAgainstTerrain = true;
 
         /**

@@ -137,6 +137,7 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
+        this._centralBody = undefined;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
@@ -452,6 +453,22 @@ define([
         },
 
         /**
+         * Gets or sets the depth-test ellipsoid.
+         * @memberof Scene.prototype
+         * @type {CentralBody}
+         */
+        centralBody : {
+            get: function() {
+                return this._centralBody;
+            },
+
+            set: function(centralBody) {
+                this._centralBody = this._centralBody && this._centralBody.destroy();
+                this._centralBody = centralBody;
+            }
+        },
+
+        /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
          * @type {CompositePrimitive}
@@ -515,7 +532,7 @@ define([
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
-        var cb = scene._primitives.centralBody;
+        var cb = scene.centralBody;
         if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
@@ -1041,6 +1058,10 @@ define([
 
         scene._primitives.update(context, frameState, commandList);
 
+        if (scene._centralBody) {
+            scene._centralBody.update(context, frameState, commandList);
+        }
+
         if (defined(scene.moon)) {
             scene.moon.update(context, frameState, commandList);
         }
@@ -1370,7 +1391,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
-        var centralBody = this.primitives.centralBody;
+        var centralBody = this.centralBody;
         if (defined(centralBody)) {
             duration = defaultValue(duration, 2000);
             this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
@@ -1383,7 +1404,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
-        var centralBody = this.primitives.centralBody;
+        var centralBody = this.centralBody;
         if (defined(centralBody)) {
             duration = defaultValue(duration, 2000);
             this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
@@ -1396,7 +1417,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {
-        var centralBody = this.primitives.centralBody;
+        var centralBody = this.centralBody;
         if (defined(centralBody)) {
             duration = defaultValue(duration, 2000);
             this._transitioner.morphTo3D(duration, centralBody.ellipsoid);
@@ -1420,6 +1441,7 @@ define([
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
+        this._centralBody = this._centralBody && this._centralBody.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();

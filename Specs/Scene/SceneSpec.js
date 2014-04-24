@@ -5,8 +5,10 @@ defineSuite([
          'Core/Color',
          'Core/Cartesian3',
          'Core/BoundingSphere',
+         'Core/Ellipsoid',
          'Core/Event',
          'Core/Rectangle',
+         'Renderer/ClearCommand',
          'Renderer/DrawCommand',
          'Renderer/Context',
          'Renderer/Pass',
@@ -16,12 +18,19 @@ defineSuite([
          'Renderer/UniformState',
          'Scene/AnimationCollection',
          'Scene/Camera',
+         'Scene/CentralBody',
          'Scene/CompositePrimitive',
          'Scene/RectanglePrimitive',
          'Scene/FrameState',
          'Scene/OIT',
          'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
+         'Specs/createContext',
+         'Specs/createCamera',
+         'Specs/createFrameState',
+         'Specs/equals',
+         'Specs/frameState',
+         'Specs/render',
          'Specs/destroyScene'
      ], 'Scene/Scene', function(
          defined,
@@ -29,8 +38,10 @@ defineSuite([
          Color,
          Cartesian3,
          BoundingSphere,
+         Ellipsoid,
          Event,
          Rectangle,
+         ClearCommand,
          DrawCommand,
          Context,
          Pass,
@@ -40,12 +51,19 @@ defineSuite([
          UniformState,
          AnimationCollection,
          Camera,
+         CentralBody,
          CompositePrimitive,
          RectanglePrimitive,
          FrameState,
          OIT,
          ScreenSpaceCameraController,
          createScene,
+         createContext,
+         createCamera,
+         createFrameState,
+         equals,
+         frameState,
+         render,
          destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
@@ -400,6 +418,51 @@ defineSuite([
         destroyScene(s);
     });
 
+    it('setting a central body', function() {
+        var scene = createScene();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var cb = new CentralBody(ellipsoid);
+        scene.centralBody = cb;
+
+        expect(scene.centralBody).toBe(cb);
+
+        destroyScene(scene);
+    });
+
+    it('destroys primitive on set centralBody', function() {
+        var scene = createScene();
+        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+
+        scene.centralBody = cb;
+        expect(cb.isDestroyed()).toEqual(false);
+
+        scene.centralBody = null;
+        expect(cb.isDestroyed()).toEqual(true);
+
+        destroyScene(scene);
+    });
+/*
+    it('renders a central body', function() {
+        var s = createScene();
+
+        s.centralBody = new CentralBody(Ellipsoid.UNIT_SPHERE);
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+
+        s.initializeFrame();
+        s.render();
+
+
+        var pixels = s._context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        destroyScene(s);
+
+    });*/
+
     it('renders with multipass OIT if MRT is available', function() {
         if (scene._context.drawBuffers) {
             var s = createScene();
@@ -422,7 +485,7 @@ defineSuite([
 
             s.initializeFrame();
             s.render();
-            var pixels = s.context.readPixels();
+            var pixels = s._context.readPixels();
             expect(pixels[0]).not.toEqual(0);
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
