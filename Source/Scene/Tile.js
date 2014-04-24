@@ -38,7 +38,7 @@ define([
     "use strict";
 
     /**
-     * A node in the quadtree representing the surface of a {@link CentralBody}.
+     * A node in the quadtree representing the surface of a {@link Globe}.
      * A tile holds the surface geometry for its horizontal rectangle and zero or
      * more imagery textures overlaid on the geometry.
      *

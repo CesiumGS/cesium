@@ -131,8 +131,8 @@ require([
         document.getElementById("toolbar").appendChild(tp.domNode);
 
         
-        var ellipsoid = viewer.centralBody.ellipsoid;
         var scene = viewer.scene;
+        var ellipsoid = scene.globe.ellipsoid;
         var primitives = scene.primitives;
         primitives.add(sensors);
 
