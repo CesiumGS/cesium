@@ -38,10 +38,9 @@
 
     function createScene(canvas) {
         var scene = new Cesium.Scene(canvas);
-        var globe = new Cesium.Globe();
-        scene.globe = globe;
+        scene.globe = new Cesium.Globe();
 
-        globe.imageryLayers.addImageryProvider(imageryProvider);
+        scene.imageryLayers.addImageryProvider(imageryProvider);
 
         // Prevent right-click from opening a context menu.
         canvas.oncontextmenu = function () {

@@ -39,7 +39,7 @@ require(['Cesium'], function(Cesium) {
         });
 
         Sandcastle.addToolbarMenu(terrainProviderOptions, function() {
-            globe.terrainProvider = terrainProviders[this.selectedIndex].provider;
+            scene.terrainProvider = terrainProviders[this.selectedIndex].provider;
         }, 'terrainMenu');
 
         Sandcastle.addToolbarButton('Mount Everest', function() {
@@ -161,7 +161,7 @@ require(['Cesium'], function(Cesium) {
                 }
             }
 
-            Cesium.when(Cesium.sampleTerrain(globe.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+            Cesium.when(Cesium.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
         }, 'sampleButtons');
     }
 
@@ -195,7 +195,7 @@ require(['Cesium'], function(Cesium) {
         { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
-    globe.terrainProvider = cesiumTerrainProviderMeshes;
+    scene.terrainProvider = cesiumTerrainProviderMeshes;
 
     createTerrainMenu(terrainProviders);
 
