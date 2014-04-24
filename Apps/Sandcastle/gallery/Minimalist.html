@@ -26,15 +26,14 @@
 
     var scene = new Cesium.Scene(canvas);
     var primitives = scene.primitives;
-    var centralBody = new Cesium.CentralBody();
-    primitives.centralBody = centralBody;
+    scene.globe = new Cesium.Globe();
 
     var imageryUrl = '../../../Source/Assets/Textures/';
     var imageryProvider = new Cesium.TileMapServiceImageryProvider({
         url : imageryUrl + 'NaturalEarthII'
     });
 
-    centralBody.imageryLayers.addImageryProvider(imageryProvider);
+    scene.imageryLayers.addImageryProvider(imageryProvider);
 
     scene.skyAtmosphere = new Cesium.SkyAtmosphere();
 

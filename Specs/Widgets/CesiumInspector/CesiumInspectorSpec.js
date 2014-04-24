@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/CesiumInspector/CesiumInspector',
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Core/Ellipsoid',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          CesiumInspector,
-         CentralBody,
+         Globe,
          Ellipsoid,
          createScene,
          destroyScene
@@ -19,10 +19,8 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(ellipsoid);
-        var primitives = scene.primitives;
-        primitives.centralBody = cb;
-
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
     });
 
     afterAll(function() {

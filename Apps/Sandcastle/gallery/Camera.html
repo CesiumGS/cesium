@@ -56,12 +56,12 @@ require(['Cesium'], function(Cesium) {
 
     function viewAnRectangle(scene) {
         Sandcastle.declare(viewAnRectangle); // For highlighting in Sandcastle.
-        var west = Cesium.Math.toRadians(-77.0);
-        var south = Cesium.Math.toRadians(38.0);
-        var east = Cesium.Math.toRadians(-72.0);
-        var north = Cesium.Math.toRadians(42.0);
+        var west = -77.0;
+        var south = 38.0;
+        var east = -72.0;
+        var north = 42.0;
 
-        var rectangle = new Cesium.Rectangle(west, south, east, north);
+        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
         scene.camera.viewRectangle(rectangle, ellipsoid);
 
         // Show the rectangle.  Not required; just for show.
@@ -69,11 +69,11 @@ require(['Cesium'], function(Cesium) {
         polylines.add({
             positions : ellipsoid.cartographicArrayToCartesianArray(
                     [
-                     new Cesium.Cartographic(west, south),
-                     new Cesium.Cartographic(west, north),
-                     new Cesium.Cartographic(east, north),
-                     new Cesium.Cartographic(east, south),
-                     new Cesium.Cartographic(west, south)
+                     Cesium.Cartographic.fromDegrees(west, south),
+                     Cesium.Cartographic.fromDegrees(west, north),
+                     Cesium.Cartographic.fromDegrees(east, north),
+                     Cesium.Cartographic.fromDegrees(east, south),
+                     Cesium.Cartographic.fromDegrees(west, south)
                     ])
         });
         scene.primitives.add(polylines);
@@ -81,12 +81,12 @@ require(['Cesium'], function(Cesium) {
 
     function flyToRectangle(scene) {
         Sandcastle.declare(flyToRectangle); // For highlighting in Sandcastle.
-        var west = Cesium.Math.toRadians(-90.0);
-        var south = Cesium.Math.toRadians(38.0);
-        var east = Cesium.Math.toRadians(-87.0);
-        var north = Cesium.Math.toRadians(40.0);
+        var west = -90.0;
+        var south = 38.0;
+        var east = -87.0;
+        var north = 40.0;
 
-        var rectangle = new Cesium.Rectangle(west, south, east, north);
+        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
 
         var flight = Cesium.CameraFlightPath.createAnimationRectangle(scene, {
             destination : rectangle
@@ -98,11 +98,11 @@ require(['Cesium'], function(Cesium) {
         polylines.add({
             positions : ellipsoid.cartographicArrayToCartesianArray(
                     [
-                     new Cesium.Cartographic(west, south),
-                     new Cesium.Cartographic(west, north),
-                     new Cesium.Cartographic(east, north),
-                     new Cesium.Cartographic(east, south),
-                     new Cesium.Cartographic(west, south)
+                     Cesium.Cartographic.fromDegrees(west, south),
+                     Cesium.Cartographic.fromDegrees(west, north),
+                     Cesium.Cartographic.fromDegrees(east, north),
+                     Cesium.Cartographic.fromDegrees(east, south),
+                     Cesium.Cartographic.fromDegrees(west, south)
                     ])
         });
         scene.primitives.add(polylines);
