@@ -6,7 +6,10 @@ Beta Releases
 ### b28 - 2014-05-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
-  * Rename Extent to Rectangle
+  * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Renamed `CentralBody` to `Globe`.
+  * Renamed Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
     * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
@@ -43,6 +46,7 @@ Beta Releases
 * Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
 * Added `DynamicWall` to support DataSource provided `WallGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.

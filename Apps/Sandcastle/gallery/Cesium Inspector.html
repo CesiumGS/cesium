@@ -33,9 +33,9 @@ require(['Cesium'], function(Cesium) {
        
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var centralBody = scene.primitives.centralBody;
-    centralBody.depthTestAgainstTerrain = true;
-    var ellipsoid = centralBody.ellipsoid;
+    var globe = scene.globe;
+    globe.depthTestAgainstTerrain = true;
+    var ellipsoid = globe.ellipsoid;
     var primitives = scene.primitives;
 
     var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
@@ -43,7 +43,7 @@ require(['Cesium'], function(Cesium) {
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
-    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
+    scene.terrainProvider = cesiumTerrainProviderHeightmaps;
     
     //Add Cesium Inspector
     viewer.extend(Cesium.viewerCesiumInspectorMixin);

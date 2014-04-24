@@ -34,7 +34,7 @@ define([
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
-     * @param {CentralBody} options.centralBody The CentralBody to use.
+     * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
      * @param {ProviderViewModel[]} [options.terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
@@ -95,7 +95,7 @@ define([
      * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
      *
      * //Finally, create the baseLayerPicker widget using our view models.
-     * var layers = cesiumWidget.centralBody.imageryLayers;
+     * var layers = cesiumWidget.scene.imageryLayers;
      * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
      *
      * //Use the first item in the list as the current selection.
