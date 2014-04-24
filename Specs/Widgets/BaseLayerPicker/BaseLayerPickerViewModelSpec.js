@@ -12,7 +12,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var MockCentralBody = function() {
+    var MockGlobe = function() {
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
     };
@@ -66,24 +66,24 @@ defineSuite([
         var imageryViewModels = [];
         var terrainViewModels = [];
 
-        var centralBody = new MockCentralBody();
+        var globe = new MockGlobe();
 
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels,
             terrainProviderViewModels : terrainViewModels
         });
-        expect(viewModel.centralBody).toBe(centralBody);
+        expect(viewModel.globe).toBe(globe);
         expect(viewModel.imageryProviderViewModels).toEqual(imageryViewModels);
         expect(viewModel.terrainProviderViewModels).toEqual(terrainViewModels);
     });
 
     it('selecting imagery closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
-        var centralBody = new MockCentralBody();
-        var imageryLayers = centralBody.imageryLayers;
+        var globe = new MockGlobe();
+        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels
         });
 
@@ -94,10 +94,10 @@ defineSuite([
 
     it('selecting terrain closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
-        var centralBody = new MockCentralBody();
-        var imageryLayers = centralBody.imageryLayers;
+        var globe = new MockGlobe();
+        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels
         });
 
@@ -109,11 +109,11 @@ defineSuite([
     it('tooltip, buttonImageUrl, and selectedImagery all return expected values', function() {
         var imageryViewModels = [testProviderViewModel];
         var terrainViewModels = [testProviderViewModel3];
-        var centralBody = new MockCentralBody();
-        var imageryLayers = centralBody.imageryLayers;
+        var globe = new MockGlobe();
+        var imageryLayers = globe.imageryLayers;
 
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels,
             terrainProviderViewModels : terrainViewModels
         });
@@ -133,10 +133,10 @@ defineSuite([
 
     it('selectedImagery actually sets base layer', function() {
         var imageryViewModels = [testProviderViewModel];
-        var centralBody = new MockCentralBody();
-        var imageryLayers = centralBody.imageryLayers;
+        var globe = new MockGlobe();
+        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels
         });
 
@@ -154,22 +154,22 @@ defineSuite([
 
     it('selectedTerrain actually sets terrainPRovider', function() {
         var terrainProviderViewModels = [testProviderViewModel, testProviderViewModel3];
-        var centralBody = new MockCentralBody();
+        var globe = new MockGlobe();
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             terrainProviderViewModels : terrainProviderViewModels
         });
 
         viewModel.selectedTerrain = testProviderViewModel3;
-        expect(centralBody.terrainProvider).toBe(testProvider3);
+        expect(globe.terrainProvider).toBe(testProvider3);
     });
 
     it('settings selectedImagery only removes layers added by view model', function() {
         var imageryViewModels = [testProviderViewModel];
-        var centralBody = new MockCentralBody();
-        var imageryLayers = centralBody.imageryLayers;
+        var globe = new MockGlobe();
+        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : centralBody,
+            globe : globe,
             imageryProviderViewModels : imageryViewModels
         });
 
@@ -191,7 +191,7 @@ defineSuite([
 
     it('dropDownVisible and toggleDropDown work', function() {
         var viewModel = new BaseLayerPickerViewModel({
-            centralBody : new MockCentralBody()
+            globe : new MockGlobe()
         });
 
         expect(viewModel.dropDownVisible).toEqual(false);
@@ -201,7 +201,7 @@ defineSuite([
         expect(viewModel.dropDownVisible).toEqual(false);
     });
 
-    it('constructor throws with no centralBody', function() {
+    it('constructor throws with no globe', function() {
         expect(function() {
             return new BaseLayerPickerViewModel({});
         }).toThrowDeveloperError();

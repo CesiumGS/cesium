@@ -14,7 +14,7 @@ define([
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/CentralBody',
+        '../../Scene/Globe',
         '../../Scene/Credit',
         '../../Scene/Moon',
         '../../Scene/Scene',
@@ -38,7 +38,7 @@ define([
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        CentralBody,
+        Globe,
         Credit,
         Moon,
         Scene,
@@ -182,8 +182,8 @@ define([
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var centralBody = new CentralBody(ellipsoid);
-            scene.centralBody = centralBody;
+            var globe = new Globe(ellipsoid);
+            scene.globe = globe;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -226,7 +226,7 @@ define([
             this._canvasWidth = 0;
             this._canvasHeight = 0;
             this._scene = scene;
-            this._centralBody = centralBody;
+            this._globe = globe;
             this._clock = defaultValue(options.clock, new Clock());
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;

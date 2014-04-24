@@ -18,7 +18,7 @@ defineSuite([
          'Renderer/UniformState',
          'Scene/AnimationCollection',
          'Scene/Camera',
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Scene/CompositePrimitive',
          'Scene/RectanglePrimitive',
          'Scene/FrameState',
@@ -47,7 +47,7 @@ defineSuite([
          UniformState,
          AnimationCollection,
          Camera,
-         CentralBody,
+         Globe,
          CompositePrimitive,
          RectanglePrimitive,
          FrameState,
@@ -413,23 +413,23 @@ defineSuite([
     it('setting a central body', function() {
         var scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(ellipsoid);
-        scene.centralBody = cb;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
 
-        expect(scene.centralBody).toBe(cb);
+        expect(scene.globe).toBe(globe);
 
         destroyScene(scene);
     });
 
-    it('destroys primitive on set centralBody', function() {
+    it('destroys primitive on set globe', function() {
         var scene = createScene();
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
+        var globe = new Globe(Ellipsoid.UNIT_SPHERE);
 
-        scene.centralBody = cb;
-        expect(cb.isDestroyed()).toEqual(false);
+        scene.globe = globe;
+        expect(globe.isDestroyed()).toEqual(false);
 
-        scene.centralBody = null;
-        expect(cb.isDestroyed()).toEqual(true);
+        scene.globe = null;
+        expect(globe.isDestroyed()).toEqual(true);
 
         destroyScene(scene);
     });
@@ -437,7 +437,7 @@ defineSuite([
     it('renders a central body', function() {
         var s = createScene();
 
-        s.centralBody = new CentralBody(Ellipsoid.UNIT_SPHERE);
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
@@ -446,7 +446,7 @@ defineSuite([
         s.render();
 
         waitsFor(function() {
-            render(s._context, s.frameState, s.centralBody);
+            render(s._context, s.frameState, s.globe);
             return !equals(this.env, s._context.readPixels(), [0, 0, 0, 0]);
         }, 'the central body to be rendered', 5000);
     });

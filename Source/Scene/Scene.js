@@ -137,7 +137,7 @@ define([
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
-        this._centralBody = undefined;
+        this._globe = undefined;
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
@@ -455,16 +455,16 @@ define([
         /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
-         * @type {CentralBody}
+         * @type {Globe}
          */
-        centralBody : {
+        globe : {
             get: function() {
-                return this._centralBody;
+                return this._globe;
             },
 
-            set: function(centralBody) {
-                this._centralBody = this._centralBody && this._centralBody.destroy();
-                this._centralBody = centralBody;
+            set: function(globe) {
+                this._globe = this._globe && this._globe.destroy();
+                this._globe = globe;
             }
         },
 
@@ -532,7 +532,7 @@ define([
          */
         imageryLayers: {
             get : function() {
-                return this.centralBody.imageryLayers;
+                return this.globe.imageryLayers;
             }
         },
 
@@ -543,10 +543,10 @@ define([
          */
         terrainProvider: {
             get : function() {
-                return this.centralBody.terrainProvider;
+                return this.globe.terrainProvider;
             },
             set : function(terrainProvider) {
-                this.centralBody.terrainProvider = terrainProvider;
+                this.globe.terrainProvider = terrainProvider;
             }
         }
     });
@@ -557,9 +557,9 @@ define([
     function getOccluder(scene) {
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
-        var cb = scene.centralBody;
-        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
-            var ellipsoid = cb.ellipsoid;
+        var globe = scene.globe;
+        if (scene.mode === SceneMode.SCENE3D && defined(globe)) {
+            var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;
@@ -1083,8 +1083,8 @@ define([
 
         scene._primitives.update(context, frameState, commandList);
 
-        if (scene._centralBody) {
-            scene._centralBody.update(context, frameState, commandList);
+        if (scene._globe) {
+            scene._globe.update(context, frameState, commandList);
         }
 
         if (defined(scene.moon)) {
@@ -1416,10 +1416,10 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
-        var centralBody = this.centralBody;
-        if (defined(centralBody)) {
+        var globe = this.globe;
+        if (defined(globe)) {
             duration = defaultValue(duration, 2000);
-            this._transitioner.morphTo2D(duration, centralBody.ellipsoid);
+            this._transitioner.morphTo2D(duration, globe.ellipsoid);
         }
     };
 
@@ -1429,10 +1429,10 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
-        var centralBody = this.centralBody;
-        if (defined(centralBody)) {
+        var globe = this.globe;
+        if (defined(globe)) {
             duration = defaultValue(duration, 2000);
-            this._transitioner.morphToColumbusView(duration, centralBody.ellipsoid);
+            this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
         }
     };
 
@@ -1442,10 +1442,10 @@ define([
      * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {
-        var centralBody = this.centralBody;
-        if (defined(centralBody)) {
+        var globe = this.globe;
+        if (defined(globe)) {
             duration = defaultValue(duration, 2000);
-            this._transitioner.morphTo3D(duration, centralBody.ellipsoid);
+            this._transitioner.morphTo3D(duration, globe.ellipsoid);
         }
     };
 
@@ -1466,7 +1466,7 @@ define([
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
-        this._centralBody = this._centralBody && this._centralBody.destroy();
+        this._globe = this._globe && this._globe.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
         this._debugSphere = this._debugSphere && this._debugSphere.destroy();
