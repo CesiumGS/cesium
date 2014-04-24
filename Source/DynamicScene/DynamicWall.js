@@ -62,7 +62,9 @@ define(['../Core/defaultValue',
 
         /**
          * Gets or sets the Array {@link Property} specifying the bottom heights of the wall.
-         * If undefined, the bottom of the wall will be on the surface of the ellipsoid.
+         * This array must be the same length as vertexPositions, containing a height for
+         * each position.  If undefined, the bottom of the wall will be on the surface of the
+         * ellipsoid.
          * @memberof DynamicWall.prototype
          * @type {Property}
          */
