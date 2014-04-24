@@ -526,7 +526,7 @@ define([
         },
 
         /**
-         * Gets the collection of image layers that will be rendered on the central body.
+         * Gets the collection of image layers that will be rendered on the globe.
          * @memberof Scene.prototype
          * @type {ImageryLayerCollection}
          */
@@ -537,7 +537,7 @@ define([
         },
 
         /**
-         * The terrain provider providing surface geometry for the central body.
+         * The terrain provider providing surface geometry for the globe.
          * @memberof Scene.prototype
          * @type {TerrainProvider}
          */
@@ -555,7 +555,7 @@ define([
     var scratchOccluder;
 
     function getOccluder(scene) {
-        // TODO: The occluder is the top-level central body. When we add
+        // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
         if (scene.mode === SceneMode.SCENE3D && defined(globe)) {

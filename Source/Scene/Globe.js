@@ -98,7 +98,7 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
-     * central body.
+     * globe.
      */
     var Globe = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -106,7 +106,7 @@ define([
         var imageryLayerCollection = new ImageryLayerCollection();
 
         /**
-         * The terrain provider providing surface geometry for this central body.
+         * The terrain provider providing surface geometry for this globe.
          * @type {TerrainProvider}
          */
         this.terrainProvider = terrainProvider;
@@ -168,7 +168,7 @@ define([
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
 
         /**
-         * Determines if the central body will be shown.
+         * Determines if the globe will be shown.
          *
          * @type {Boolean}
          * @default true
@@ -270,7 +270,7 @@ define([
 
     defineProperties(Globe.prototype, {
         /**
-         * Gets an ellipsoid describing the shape of this central body.
+         * Gets an ellipsoid describing the shape of this globe.
          * @memberof Globe.prototype
          * @type {Ellipsoid}
          */
@@ -281,7 +281,7 @@ define([
         },
 
         /**
-         * Gets the collection of image layers that will be rendered on this central body.
+         * Gets the collection of image layers that will be rendered on this globe.
          * @memberof Globe.prototype
          * @type {ImageryLayerCollection}
          */
