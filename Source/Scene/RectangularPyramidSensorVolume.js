@@ -45,7 +45,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the globe.
          *
          * @type {Boolean}
          *
@@ -152,7 +152,7 @@ define([
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
         /**
-         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         * The color of the polyline where the sensor outline intersects the globe.  The default is {@link Color.WHITE}.
          *
          * @type {Color}
          * @default {@link Color.WHITE}
@@ -162,7 +162,7 @@ define([
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         /**
-         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         * The approximate pixel width of the polyline where the sensor outline intersects the globe.  The default is 5.0.
          *
          * @type {Number}
          * @default 5.0

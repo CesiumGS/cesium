@@ -67,7 +67,7 @@ define([
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
-     * on a {@link CentralBody}.
+     * on a {@link Globe}.
      *
      * @alias ImageryLayer
      * @constructor

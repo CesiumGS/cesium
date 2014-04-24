@@ -46,16 +46,12 @@ require(['Cesium'], function(Cesium) {
     }
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.centralBody.ellipsoid;
         var scene = widget.scene;
+        var ellipsoid = scene.globe.ellipsoid;
         var primitives = scene.primitives;
 
         rectangle = new Cesium.RectanglePrimitive({
-            rectangle : new Cesium.Rectangle(
-                        Cesium.Math.toRadians(-120.0),
-                        Cesium.Math.toRadians(20.0),
-                        Cesium.Math.toRadians(-80.0),
-                        Cesium.Math.toRadians(50.0)),
+            rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -80.0, 50.0),
             material : Cesium.Material.fromType('Color')
         });
         primitives.add(rectangle);

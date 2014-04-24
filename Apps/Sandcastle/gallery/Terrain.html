@@ -16,8 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
-
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -40,7 +39,7 @@ require(['Cesium'], function(Cesium) {
         });
 
         Sandcastle.addToolbarMenu(terrainProviderOptions, function() {
-            centralBody.terrainProvider = terrainProviders[this.selectedIndex].provider;
+            scene.terrainProvider = terrainProviders[this.selectedIndex].provider;
         }, 'terrainMenu');
 
         Sandcastle.addToolbarButton('Mount Everest', function() {
@@ -162,15 +161,15 @@ require(['Cesium'], function(Cesium) {
                 }
             }
 
-            Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+            Cesium.when(Cesium.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
         }, 'sampleButtons');
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
 
     var scene = viewer.scene;
-    var centralBody = scene.primitives.centralBody;
-    centralBody.depthTestAgainstTerrain = true;
+    var globe = scene.globe;
+    globe.depthTestAgainstTerrain = true;
 
     var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
         url : '//cesiumjs.org/smallterrain',
@@ -196,7 +195,7 @@ require(['Cesium'], function(Cesium) {
         { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
-    centralBody.terrainProvider = cesiumTerrainProviderMeshes;
+    scene.terrainProvider = cesiumTerrainProviderMeshes;
 
     createTerrainMenu(terrainProviders);
 
