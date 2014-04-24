@@ -189,15 +189,15 @@ defineSuite([
 
     it('show tile coords', function() {
         var viewModel = new CesiumInspectorViewModel(scene);
-        expect(viewModel.scene.centralBody.imageryLayers.length).toBe(0);
+        expect(viewModel.scene.imageryLayers.length).toBe(0);
 
         viewModel.tileCoordinates  = true;
         viewModel.showTileCoordinates();
-        expect(viewModel.scene.centralBody.imageryLayers.length).toBe(1);
+        expect(viewModel.scene.imageryLayers.length).toBe(1);
 
         viewModel.tileCoordinates = false;
         viewModel.showTileCoordinates();
-        expect(viewModel.scene.centralBody.imageryLayers.length).toBe(0);
+        expect(viewModel.scene.imageryLayers.length).toBe(0);
     });
 
     it('show tile bounding sphere', function() {

@@ -523,6 +523,31 @@ define([
             get : function() {
                 return this._animations;
             }
+        },
+
+        /**
+         * Gets the collection of image layers that will be rendered on the central body.
+         * @memberof Scene.prototype
+         * @type {ImageryLayerCollection}
+         */
+        imageryLayers: {
+            get : function() {
+                return this.centralBody.imageryLayers;
+            }
+        },
+
+        /**
+         * The terrain provider providing surface geometry for the central body.
+         * @memberof Scene.prototype
+         * @type {TerrainProvider}
+         */
+        terrainProvider: {
+            get : function() {
+                return this.centralBody.terrainProvider;
+            },
+            set : function(terrainProvider) {
+                this.centralBody.terrainProvider = terrainProvider;
+            }
         }
     });
 

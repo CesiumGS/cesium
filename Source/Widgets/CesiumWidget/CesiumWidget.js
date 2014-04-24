@@ -213,12 +213,12 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayers.addImageryProvider(imageryProvider);
+                scene.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
             if (defined(options.terrainProvider)) {
-                centralBody.terrainProvider = options.terrainProvider;
+                scene.terrainProvider = options.terrainProvider;
             }
 
             this._container = container;
@@ -300,18 +300,6 @@ define([
         scene : {
             get : function() {
                 return this._scene;
-            }
-        },
-
-        /**
-         * Gets the primary central body.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get : function() {
-                return this._centralBody;
             }
         },
 

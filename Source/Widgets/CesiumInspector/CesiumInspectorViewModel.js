@@ -344,11 +344,11 @@ define([
         var tileBoundariesLayer;
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
-                    tilingScheme : centralBody.terrainProvider.tilingScheme
+                tileBoundariesLayer = scene.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
+                    tilingScheme : scene.terrainProvider.tilingScheme
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
-                centralBody.imageryLayers.remove(tileBoundariesLayer);
+                scene.imageryLayers.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
             return true;

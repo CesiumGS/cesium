@@ -25,11 +25,7 @@ defineSuite([
          'Scene/OIT',
          'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
-         'Specs/createContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
          'Specs/equals',
-         'Specs/frameState',
          'Specs/render',
          'Specs/destroyScene'
      ], 'Scene/Scene', function(
@@ -58,11 +54,7 @@ defineSuite([
          OIT,
          ScreenSpaceCameraController,
          createScene,
-         createContext,
-         createCamera,
-         createFrameState,
          equals,
-         frameState,
          render,
          destroyScene) {
     "use strict";
@@ -441,7 +433,7 @@ defineSuite([
 
         destroyScene(scene);
     });
-/*
+
     it('renders a central body', function() {
         var s = createScene();
 
@@ -453,15 +445,11 @@ defineSuite([
         s.initializeFrame();
         s.render();
 
-
-        var pixels = s._context.readPixels();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-
-        destroyScene(s);
-
-    });*/
+        waitsFor(function() {
+            render(s._context, s.frameState, s.centralBody);
+            return !equals(this.env, s._context.readPixels(), [0, 0, 0, 0]);
+        }, 'the central body to be rendered', 5000);
+    });
 
     it('renders with multipass OIT if MRT is available', function() {
         if (scene._context.drawBuffers) {

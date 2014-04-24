@@ -95,7 +95,7 @@ define([
      * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
      *
      * //Finally, create the baseLayerPicker widget using our view models.
-     * var layers = cesiumWidget.centralBody.imageryLayers;
+     * var layers = cesiumWidget.scene.imageryLayers;
      * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
      *
      * //Use the first item in the list as the current selection.
