@@ -193,7 +193,10 @@ define(['../Core/defaultValue',
         var length = dataSources.length;
         for (i = 0; i < length; i++) {
             var dataSource = dataSources.get(i);
-            result = dataSource.update(time) && result;
+            if (defined(dataSource.update)) {
+                result = dataSource.update(time) && result;
+            }
+
             visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {

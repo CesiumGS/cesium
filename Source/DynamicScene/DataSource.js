@@ -13,6 +13,9 @@ define([
      * for documentation purposes and is not intended to be instantiated directly.
      * @alias DataSource
      * @constructor
+     *
+     * @see DynamicObject
+     * @see DataSourceDisplay
      */
     var DataSource = function() {
         DeveloperError.throwInstantiationError();
@@ -68,7 +71,7 @@ define([
             get : DeveloperError.throwInstantiationError()
         },
         /**
-         * Gets an event that will be raised when the data source either starts or stops loading.
+         * Gets an event that will be raised when the value of isLoading changes.
          * @memberof DataSource.prototype
          * @type {Event}
          */
@@ -78,7 +81,10 @@ define([
     });
 
     /**
-     * Updates the data source to the provided time.
+     * Updates the data source to the provided time.  This function is optional and
+     * is not required to be implemented.  It is provided for data sources which
+     * retrieve data based on the current animation time or scene state.
+     * If implemented, update will be called by {@link DataSourceDisplay} once a frame.
      * @memberof DataSource
      * @function
      *
