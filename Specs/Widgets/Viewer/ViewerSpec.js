@@ -268,7 +268,7 @@ defineSuite([
             baseLayerPicker : false,
             terrainProvider : provider
         });
-        expect(viewer.centralBody.terrainProvider).toBe(provider);
+        expect(viewer.scene.terrainProvider).toBe(provider);
     });
 
     it('can set fullScreenElement', function() {
@@ -322,8 +322,8 @@ defineSuite([
         viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
     });
 
@@ -332,8 +332,8 @@ defineSuite([
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -342,8 +342,8 @@ defineSuite([
         viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });

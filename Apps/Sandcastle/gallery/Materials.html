@@ -614,24 +614,16 @@ require(['Cesium'], function(Cesium) {
     function createPrimitives(widget) {
         var scene = widget.scene;
         var primitives = scene.primitives;
-        var ellipsoid = widget.centralBody.ellipsoid;
+        var ellipsoid = scene.globe.ellipsoid;
 
         rectangle = new Cesium.RectanglePrimitive({
-            rectangle : new Cesium.Rectangle(
-                             Cesium.Math.toRadians(-120.0),
-                             Cesium.Math.toRadians(20.0),
-                             Cesium.Math.toRadians(-60.0),
-                             Cesium.Math.toRadians(40.0))
+            rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0)
         });
         primitives.add(rectangle);
 
         worldRectangle = new Cesium.Polygon();
         worldRectangle = new Cesium.RectanglePrimitive({
-            rectangle : new Cesium.Rectangle(
-                             Cesium.Math.toRadians(-180.0),
-                             Cesium.Math.toRadians(-90.0),
-                             Cesium.Math.toRadians(180.0),
-                             Cesium.Math.toRadians(90.0)),
+            rectangle : Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
             show : false
         });
         primitives.add(worldRectangle);

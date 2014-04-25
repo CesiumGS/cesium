@@ -148,7 +148,7 @@ define([
         var isGeographic = defaultValue(description.isGeographic, true);
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
 
-        var oneOverCentralBodySemimajorAxis = 1.0 / ellipsoid.maximumRadius;
+        var oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
         var nativeRectangle = description.nativeRectangle;
 
@@ -165,10 +165,10 @@ define([
                 geographicEast = toRadians(nativeRectangle.east);
                 geographicNorth = toRadians(nativeRectangle.north);
             } else {
-                geographicWest = nativeRectangle.west * oneOverCentralBodySemimajorAxis;
-                geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.south * oneOverCentralBodySemimajorAxis)));
-                geographicEast = nativeRectangle.east * oneOverCentralBodySemimajorAxis;
-                geographicNorth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.north * oneOverCentralBodySemimajorAxis)));
+                geographicWest = nativeRectangle.west * oneOverGlobeSemimajorAxis;
+                geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.south * oneOverGlobeSemimajorAxis)));
+                geographicEast = nativeRectangle.east * oneOverGlobeSemimajorAxis;
+                geographicNorth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.north * oneOverGlobeSemimajorAxis)));
             }
         } else {
             geographicWest = rectangle.west;
@@ -224,7 +224,7 @@ define([
             var latitude = nativeRectangle.north - granularityY * row;
 
             if (!isGeographic) {
-                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
+                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverGlobeSemimajorAxis)));
             } else {
                 latitude = toRadians(latitude);
             }
@@ -247,7 +247,7 @@ define([
                 var longitude = nativeRectangle.west + granularityX * col;
 
                 if (!isGeographic) {
-                    longitude = longitude * oneOverCentralBodySemimajorAxis;
+                    longitude = longitude * oneOverGlobeSemimajorAxis;
                 } else {
                     longitude = toRadians(longitude);
                 }

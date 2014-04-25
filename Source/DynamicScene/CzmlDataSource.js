@@ -22,6 +22,7 @@ define(['../Core/Cartesian2',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/Rectangle',
         '../Core/ReferenceFrame',
         '../Core/RuntimeError',
         '../Core/Spherical',
@@ -54,7 +55,9 @@ define(['../Core/Cartesian2',
         './DynamicPolyline',
         './DynamicPolygon',
         './DynamicPyramid',
+        './DynamicRectangle',
         './DynamicVector',
+        './DynamicWall',
         './PositionPropertyArray',
         './ReferenceProperty',
         './SampledPositionProperty',
@@ -89,6 +92,7 @@ define(['../Core/Cartesian2',
         loadJson,
         CesiumMath,
         Quaternion,
+        Rectangle,
         ReferenceFrame,
         RuntimeError,
         Spherical,
@@ -121,7 +125,9 @@ define(['../Core/Cartesian2',
         DynamicPolyline,
         DynamicPolygon,
         DynamicPyramid,
+        DynamicRectangle,
         DynamicVector,
+        DynamicWall,
         PositionPropertyArray,
         ReferenceProperty,
         SampledPositionProperty,
@@ -235,6 +241,18 @@ define(['../Core/Cartesian2',
             result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
         }
         return result;
+    }
+
+    function unwrapRectangleInterval(czmlInterval) {
+        var wsenDegrees = czmlInterval.wsenDegrees;
+        if (defined(wsenDegrees)) {
+            var length = wsenDegrees.length;
+            for (var i = 0; i < length; i++) {
+                wsenDegrees[i] = CesiumMath.toRadians(wsenDegrees[i]);
+            }
+            return wsenDegrees;
+        }
+        return czmlInterval.wsen;
     }
 
     function unwrapCartesianInterval(czmlInterval) {
@@ -381,6 +399,8 @@ define(['../Core/Cartesian2',
                 }
             }
             return unitQuaternion;
+        case Rectangle:
+            return unwrapRectangleInterval(czmlInterval);
         case Uri:
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
@@ -431,7 +451,7 @@ define(['../Core/Cartesian2',
             } else {
                 object[propertyName] = new ConstantProperty(unwrappedInterval);
             }
-            return true;
+            return;
         }
 
         var propertyCreated = false;
@@ -1197,6 +1217,63 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri);
     }
 
+    function processRectangle(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var rectangleData = packet.rectangle;
+        if (!defined(rectangleData)) {
+            return;
+        }
+
+        var interval = rectangleData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var rectangle = dynamicObject.rectangle;
+        if (!defined(rectangle)) {
+            dynamicObject.rectangle = rectangle = new DynamicRectangle();
+        }
+
+        processPacketData(Boolean, rectangle, 'show', rectangleData.show, interval, sourceUri);
+        processPacketData(Rectangle, rectangle, 'coordinates', rectangleData.coordinates, interval, sourceUri);
+        processMaterialPacketData(rectangle, 'material', rectangleData.material, interval, sourceUri);
+        processPacketData(Number, rectangle, 'height', rectangleData.height, interval, sourceUri);
+        processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri);
+        processPacketData(Number, rectangle, 'granularity', rectangleData.granularity, interval, sourceUri);
+        processPacketData(Number, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri);
+        processPacketData(Number, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri);
+        processPacketData(Boolean, rectangle, 'fill', rectangleData.fill, interval, sourceUri);
+        processPacketData(Boolean, rectangle, 'outline', rectangleData.outline, interval, sourceUri);
+        processPacketData(Color, rectangle, 'outlineColor', rectangleData.outlineColor, interval, sourceUri);
+        processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri);
+        processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri);
+    }
+
+    function processWall(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var wallData = packet.wall;
+        if (!defined(wallData)) {
+            return;
+        }
+
+        var interval = wallData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var wall = dynamicObject.wall;
+        if (!defined(wall)) {
+            dynamicObject.wall = wall = new DynamicWall();
+        }
+
+        processPacketData(Boolean, wall, 'show', wallData.show, interval, sourceUri);
+        processMaterialPacketData(wall, 'material', wallData.material, interval, sourceUri);
+        processPacketData(Array, wall, 'minimumHeights', wallData.minimumHeights, interval, sourceUri);
+        processPacketData(Array, wall, 'maximumHeights', wallData.maximumHeights, interval, sourceUri);
+        processPacketData(Number, wall, 'granularity', wallData.granularity, interval, sourceUri);
+        processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri);
+        processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri);
+        processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri);
+    }
+
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
@@ -1452,9 +1529,11 @@ define(['../Core/Cartesian2',
     processPolygon, //
     processPolyline, //
     processPyramid, //
+    processRectangle, //
     processVector, //
     processPosition, //
     processViewFrom, //
+    processWall, //
     processOrientation, //
     processVertexPositions, //
     processAvailability];

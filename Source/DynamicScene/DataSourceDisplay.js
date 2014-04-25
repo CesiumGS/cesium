@@ -16,7 +16,9 @@ define(['../Core/defaultValue',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
         './PolygonGeometryUpdater',
-        './PolylineGeometryUpdater'
+        './PolylineGeometryUpdater',
+        './RectangleGeometryUpdater',
+        './WallGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -35,7 +37,9 @@ define(['../Core/defaultValue',
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
         PolygonGeometryUpdater,
-        PolylineGeometryUpdater) {
+        PolylineGeometryUpdater,
+        RectangleGeometryUpdater,
+        WallGeometryUpdater) {
     "use strict";
 
     /**
@@ -87,6 +91,8 @@ define(['../Core/defaultValue',
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(RectangleGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(WallGeometryUpdater, scene, dynamicObjects),
                 new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
                 new DynamicLabelVisualizer(scene, dynamicObjects),
                 new DynamicModelVisualizer(scene, dynamicObjects),
@@ -170,6 +176,7 @@ define(['../Core/defaultValue',
      * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
+     * @param {Boolean} True if the display was updated to the provided time, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -177,6 +184,8 @@ define(['../Core/defaultValue',
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
+
+        var result = true;
 
         var i;
         var x;
@@ -189,9 +198,10 @@ define(['../Core/defaultValue',
             visualizers = dataSources.get(i)._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
-                visualizers[x].update(time);
+                result = visualizers[x].update(time) && result;
             }
         }
+        return result;
     };
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {

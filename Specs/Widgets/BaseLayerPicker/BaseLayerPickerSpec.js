@@ -12,7 +12,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var MockCentralBody = function(){
+    var MockGlobe = function(){
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
     };
@@ -22,12 +22,12 @@ defineSuite([
         container.id = 'testContainer';
         document.body.appendChild(container);
 
-        var centralBody = new MockCentralBody();
+        var globe = new MockGlobe();
         var widget = new BaseLayerPicker('testContainer', {
-            centralBody : centralBody
+            globe : globe
         });
         expect(widget.container).toBe(container);
-        expect(widget.viewModel.centralBody).toBe(centralBody);
+        expect(widget.viewModel.globe).toBe(globe);
         expect(widget.isDestroyed()).toEqual(false);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
@@ -41,7 +41,7 @@ defineSuite([
         document.body.appendChild(container);
 
         var widget = new BaseLayerPicker('testContainer', {
-            centralBody : new MockCentralBody()
+            globe : new MockGlobe()
         });
 
         widget.viewModel.dropDownVisible = true;
@@ -62,7 +62,7 @@ defineSuite([
         document.body.appendChild(container);
 
         var widget = new BaseLayerPicker('testContainer', {
-            centralBody : new MockCentralBody()
+            globe : new MockGlobe()
         });
 
         widget.viewModel.dropDownVisible = true;
@@ -88,7 +88,7 @@ defineSuite([
     it('constructor throws with no element', function() {
         expect(function() {
             return new BaseLayerPicker(undefined, {
-                centralBody : new MockCentralBody()
+                globe : new MockGlobe()
             });
         }).toThrowDeveloperError();
     });
@@ -96,7 +96,7 @@ defineSuite([
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
             return new BaseLayerPicker('does not exist', {
-                centralBody : new MockCentralBody()
+                globe : new MockGlobe()
             });
         }).toThrowDeveloperError();
     });

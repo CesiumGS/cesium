@@ -27,20 +27,11 @@ define([
      *
      * @see Model#getNode
      */
-    var ModelNode = function(model, node, runtimeNode) {
+    var ModelNode = function(model, node, runtimeNode, id) {
         this._model = model;
         this._runtimeNode = runtimeNode;
-
-        /**
-         * The value of the <code>name</code> property of this node.  This is the
-         * name assigned by the artist when the asset is created.  This can be
-         * different than the name of the node property, which is internal to glTF.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.name = node.name;
+        this._name = node.name;
+        this._id = id;
 
         /**
          * @private
@@ -51,6 +42,40 @@ define([
     };
 
     defineProperties(ModelNode.prototype, {
+        /**
+         * The value of the <code>name</code> property of this node.  This is the
+         * name assigned by the artist when the asset is created.  This can be
+         * different than the name of the node property ({@link ModelNode#id}),
+         * which is internal to glTF.
+         *
+         * @memberof ModelNode.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
+
+        /**
+         * The name of the glTF JSON property for this node.  This is guaranteed
+         * to be unique among all nodes.  It may not match the node's <code>
+         * name</code> property (@link ModelNode#name), which is assigned by
+         * the artist when the asset is created.
+         *
+         * @memberof ModelNode.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        id : {
+            get : function() {
+                return this._id;
+            }
+        },
+
         /**
          * The node's 4x4 matrix transform from its local coordinates to
          * its parent's.

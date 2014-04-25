@@ -41,7 +41,6 @@ define([
 
         this._scene = scene;
         this._primitives = scene.primitives;
-        this._modelCollection = [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -88,6 +87,7 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicModelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -102,6 +102,7 @@ define([
                 this._updateObject(time, dynamicObjects[i]);
             }
         }
+        return true;
     };
 
     /**

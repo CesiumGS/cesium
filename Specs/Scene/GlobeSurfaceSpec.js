@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CentralBodySurface',
+         'Scene/GlobeSurface',
          'Specs/createContext',
          'Specs/createFrameState',
          'Specs/destroyContext',
@@ -11,7 +11,7 @@ defineSuite([
          'Core/Rectangle',
          'Core/GeographicProjection',
          'Core/WebMercatorProjection',
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Scene/EllipsoidTerrainProvider',
          'Scene/ImageryLayerCollection',
          'Scene/OrthographicFrustum',
@@ -19,7 +19,7 @@ defineSuite([
          'Scene/SingleTileImageryProvider',
          'Scene/WebMapServiceImageryProvider'
      ], function(
-         CentralBodySurface,
+         GlobeSurface,
          createContext,
          createFrameState,
          destroyContext,
@@ -30,7 +30,7 @@ defineSuite([
          Rectangle,
          GeographicProjection,
          WebMercatorProjection,
-         CentralBody,
+         Globe,
          EllipsoidTerrainProvider,
          ImageryLayerCollection,
          OrthographicFrustum,
@@ -69,13 +69,13 @@ defineSuite([
      * Repeatedly calls update until the load queue is empty.  You must wrap any code to follow
      * this in a "runs" function.
      */
-    function updateUntilDone(cb) {
+    function updateUntilDone(globe) {
         // update until the load queue is empty.
         waitsFor(function() {
             surface._debug.enableDebugOutput = true;
             var commandList = [];
-            cb.update(context, frameState, commandList);
-            return !defined(cb._surface._tileLoadQueue.head) && surface._debug.tilesWaitingForChildren === 0;
+            globe.update(context, frameState, commandList);
+            return !defined(globe._surface._tileLoadQueue.head) && surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
 
@@ -94,7 +94,7 @@ defineSuite([
     var context;
 
     var frameState;
-    var cb;
+    var globe;
     var surface;
 
     beforeAll(function() {
@@ -107,18 +107,18 @@ defineSuite([
 
     beforeEach(function() {
         frameState = createFrameState();
-        cb = new CentralBody();
-        surface = cb._surface;
+        globe = new Globe();
+        surface = globe._surface;
     });
 
     afterEach(function() {
-        cb.destroy();
+        globe.destroy();
     });
 
     describe('construction', function() {
         it('throws if an terrain provider is not provided', function() {
             function constructWithoutTerrainProvider() {
-                return new CentralBodySurface({
+                return new GlobeSurface({
                     imageryLayerCollection : new ImageryLayerCollection()
                 });
             }
@@ -127,7 +127,7 @@ defineSuite([
 
         it('throws if a ImageryLayerCollection is not provided', function() {
             function constructWithoutImageryLayerCollection() {
-                return new CentralBodySurface({
+                return new GlobeSurface({
                     terrainProvider : new EllipsoidTerrainProvider()
                 });
             }
@@ -137,12 +137,12 @@ defineSuite([
 
     describe('layer updating', function() {
         it('removing a layer removes it from all tiles', function() {
-            var layerCollection = cb.imageryLayers;
+            var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
             var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 // All tiles should have one or more associated images.
@@ -163,12 +163,12 @@ defineSuite([
         });
 
         it('adding a layer adds it to all tiles after update', function() {
-            var layerCollection = cb.imageryLayers;
+            var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
             layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             var layer2;
 
@@ -177,7 +177,7 @@ defineSuite([
                 layer2 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Green4x4.png'}));
             });
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 // All tiles should have one or more associated images.
@@ -199,13 +199,13 @@ defineSuite([
         });
 
         it('moving a layer moves the corresponding TileImagery instances on every tile', function() {
-            var layerCollection = cb.imageryLayers;
+            var layerCollection = globe.imageryLayers;
 
             layerCollection.removeAll();
             var layer1 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
             var layer2 = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Green4x4.png'}));
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
@@ -229,7 +229,7 @@ defineSuite([
                 layerCollection.raiseToTop(layer1);
             });
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
@@ -254,104 +254,104 @@ defineSuite([
     }, 'WebGL');
 
     it('renders in 2D geographic', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
         frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders in 2D web mercator', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
         frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders in Columbus View geographic', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders in Columbus View web mercator', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders in 3D', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders in 3D and then Columbus View', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
             frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('renders even if imagery root tiles fail to load', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
         var providerWithInvalidRootTiles = new WebMapServiceImageryProvider({
@@ -363,15 +363,15 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
-            expect(render(context, frameState, cb)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe)).toBeGreaterThan(0);
         });
     });
 
     it('passes layer adjustment values as uniforms', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -384,11 +384,11 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
             var commandList = [];
-            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
@@ -415,7 +415,7 @@ defineSuite([
     });
 
     it('passes functional layer adjustment values as uniforms', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -439,11 +439,11 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
             var commandList = [];
-            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
@@ -470,7 +470,7 @@ defineSuite([
     });
 
     it('skips layer with uniform alpha value of zero', function() {
-        var layerCollection = cb.imageryLayers;
+        var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         var layer = layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
@@ -478,11 +478,11 @@ defineSuite([
 
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
             var commandList = [];
-            expect(render(context, frameState, cb, commandList)).toBeGreaterThan(0);
+            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
 
@@ -505,10 +505,10 @@ defineSuite([
 
     describe('switching terrain providers', function() {
         it('clears the replacement queue', function() {
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
-                var surface = cb._surface;
+                var surface = globe._surface;
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
 
@@ -518,9 +518,9 @@ defineSuite([
         });
 
         it('recreates the level zero tiles', function() {
-            var surface = cb._surface;
+            var surface = globe._surface;
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             var levelZeroTiles;
             var levelZero0;
@@ -536,7 +536,7 @@ defineSuite([
                 surface.terrainProvider = new EllipsoidTerrainProvider();
             });
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 levelZeroTiles = surface._levelZeroTiles;
@@ -546,10 +546,10 @@ defineSuite([
         });
 
         it('does nothing if the new provider is the same as the old', function() {
-            var surface = cb._surface;
+            var surface = globe._surface;
             var provider = surface.terrainProvider;
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             var levelZeroTiles;
             var levelZero0;
@@ -565,7 +565,7 @@ defineSuite([
                 surface.terrainProvider = provider;
             });
 
-            updateUntilDone(cb);
+            updateUntilDone(globe);
 
             runs(function() {
                 levelZeroTiles = surface._levelZeroTiles;
@@ -583,7 +583,7 @@ defineSuite([
         camera.right = new Cartesian3(0.99922794650124, 0.017672942642764363, 0.03508814656908402);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
-        updateUntilDone(cb);
+        updateUntilDone(globe);
 
         runs(function() {
             // Both level zero tiles should be rendered.

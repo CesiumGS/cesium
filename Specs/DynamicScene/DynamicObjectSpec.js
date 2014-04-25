@@ -141,17 +141,33 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('addProperty throws with reserved property name.', function() {
+    it('addProperty throws with defined reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.addProperty('merge');
         }).toThrowDeveloperError();
     });
 
-    it('removeProperty throws with reserved property name.', function() {
+    it('removeProperty throws with defined reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.removeProperty('merge');
+        }).toThrowDeveloperError();
+    });
+
+    it('addProperty throws with undefined reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(dynamicObject.name).toBeUndefined();
+        expect(function() {
+            dynamicObject.addProperty('name');
+        }).toThrowDeveloperError();
+    });
+
+    it('removeProperty throws with undefined reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(dynamicObject.name).toBeUndefined();
+        expect(function() {
+            dynamicObject.removeProperty('name');
         }).toThrowDeveloperError();
     });
 });
