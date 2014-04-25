@@ -81,7 +81,7 @@ define([
          *
          * @type {Enumeration}
          * @constant
-         * @default 0x1402
+         * @default 0x1404
          */
         INT : new Enumeration(0x1404, 'INT', {
             sizeInBytes : Int32Array.BYTES_PER_ELEMENT
@@ -93,7 +93,7 @@ define([
          *
          * @type {Enumeration}
          * @constant
-         * @default 0x1403
+         * @default 0x1405
          */
         UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
             sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
