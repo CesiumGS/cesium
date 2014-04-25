@@ -207,12 +207,12 @@ define(['../../Core/BoundingSphere',
         }
 
         function dataSourceAdded(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+            var dynamicObjectCollection = dataSource.dynamicObjects;
             dynamicObjectCollection.collectionChanged.addEventListener(onDynamicCollectionChanged);
         }
 
         function dataSourceRemoved(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+            var dynamicObjectCollection = dataSource.dynamicObjects;
             dynamicObjectCollection.collectionChanged.removeEventListener(onDynamicCollectionChanged);
 
             if (defined(viewer.trackedObject)) {
