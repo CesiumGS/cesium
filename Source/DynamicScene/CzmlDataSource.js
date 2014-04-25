@@ -777,7 +777,7 @@ define(['../Core/Cartesian2',
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
             existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
-        } else if (defined(packetData.stripe)){
+        } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
             }
@@ -1498,7 +1498,7 @@ define(['../Core/Cartesian2',
          * @type {String}
          */
         name : {
-            get : function(){
+            get : function() {
                 return this._name;
             }
         },

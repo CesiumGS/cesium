@@ -124,7 +124,7 @@ define([
 
     function coordinatesArrayToCartesianArray(coordinates, crsFunction) {
         var positions = new Array(coordinates.length);
-        for ( var i = 0; i < coordinates.length; i++) {
+        for (var i = 0; i < coordinates.length; i++) {
             positions[i] = crsFunction(coordinates[i]);
         }
         return positions;
@@ -151,14 +151,14 @@ define([
 
     function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, sourceUri) {
         var features = featureCollection.features;
-        for ( var i = 0, len = features.length; i < len; i++) {
+        for (var i = 0, len = features.length; i < len; i++) {
             processFeature(dataSource, features[i], undefined, crsFunction, sourceUri);
         }
     }
 
     function processGeometryCollection(dataSource, geoJson, geometryCollection, crsFunction, sourceUri) {
         var geometries = geometryCollection.geometries;
-        for ( var i = 0, len = geometries.length; i < len; i++) {
+        for (var i = 0, len = geometries.length; i < len; i++) {
             var geometry = geometries[i];
             var geometryType = geometry.type;
             var geometryHandler = geometryTypes[geometryType];
@@ -177,7 +177,7 @@ define([
 
     function processMultiPoint(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var coordinates = geometry.coordinates;
-        for ( var i = 0; i < coordinates.length; i++) {
+        for (var i = 0; i < coordinates.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPoint);
             dynamicObject.position = new ConstantProperty(crsFunction(coordinates[i]));
@@ -192,7 +192,7 @@ define([
 
     function processMultiLineString(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         var lineStrings = geometry.coordinates;
-        for ( var i = 0; i < lineStrings.length; i++) {
+        for (var i = 0; i < lineStrings.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultLine);
             dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
@@ -219,7 +219,7 @@ define([
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, sourceUri) {
         //TODO holes
         var polygons = geometry.coordinates;
-        for ( var i = 0; i < polygons.length; i++) {
+        for (var i = 0; i < polygons.length; i++) {
             var polygon = polygons[i];
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPolygon);
@@ -351,7 +351,7 @@ define([
          * @type {String}
          */
         name : {
-            get : function(){
+            get : function() {
                 return this._name;
             }
         },
