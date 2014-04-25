@@ -86,6 +86,12 @@ defineSuite(['Core/Color',
         expect(color).toEqual(new Color(1.0, 2.0, 3.0, 4.0));
     });
 
+    it('fromCartesian4 throws without a Cartesian4', function() {
+        expect(function() {
+            Color.fromCartesian4();
+        }).toThrowDeveloperError();
+    });
+
     it('clone with no parameters returns a new identical copy.', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
         var v2 = v.clone();

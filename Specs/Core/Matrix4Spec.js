@@ -610,10 +610,10 @@ defineSuite([
     });
 
     it('getScale throws without a matrix', function() {
-      expect(function() {
-          Matrix4.getScale();
-      }).toThrowDeveloperError();
-  });
+        expect(function() {
+            Matrix4.getScale();
+        }).toThrowDeveloperError();
+    });
 
     it('getMaximumScale works', function() {
         var m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));

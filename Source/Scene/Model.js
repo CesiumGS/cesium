@@ -369,7 +369,7 @@ define([
     defineProperties(Model.prototype, {
         /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
-         * account glTF animation and skins or {@link Model#Matrix4.getMaximumScale}.
+         * account glTF animation and skins or {@link Model#scale}.
          *
          * @memberof Model.prototype
          *
