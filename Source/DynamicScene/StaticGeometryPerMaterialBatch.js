@@ -25,7 +25,7 @@ define(['../Core/defined',
         this.createPrimitive = true;
         this.primitive = undefined;
         this.geometry = new AssociativeArray();
-        this.material = Material.fromType('Color');
+        this.material = undefined;
         this.updatersWithAttributes = new AssociativeArray();
         this.attributes = new AssociativeArray();
         this.invalidated = false;
@@ -67,7 +67,7 @@ define(['../Core/defined',
     };
 
     Batch.prototype.update = function(time) {
-        var canAnimate = true;
+        var isUpdated = true;
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
@@ -76,23 +76,25 @@ define(['../Core/defined',
                 primitives.remove(primitive);
             }
             if (geometries.length > 0) {
+                this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
                 primitive = new Primitive({
                     asynchronous : true,
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
-                        material : MaterialProperty.getValue(time, this.materialProperty, this.material),
+                        material : this.material,
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
                     })
                 });
 
                 primitives.add(primitive);
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-            canAnimate = false;
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
-            this.primitive.appearance.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
+            this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
+            this.primitive.appearance.material = this.material;
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
@@ -107,13 +109,17 @@ define(['../Core/defined',
                 }
 
                 if (!updater.hasConstantFill) {
-                    attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isFilled(time), attributes.show);
+                    var show = updater.isFilled(time);
+                    if (show !== attributes._lastShow) {
+                        attributes._lastShow = show;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                    }
                 }
             }
         } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
-            canAnimate = false;
+            isUpdated = false;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     Batch.prototype.destroy = function(time) {
@@ -183,11 +189,11 @@ define(['../Core/defined',
             }
         }
 
-        var canAnimate = true;
+        var isUpdated = true;
         for (i = 0; i < length; i++) {
-            canAnimate = items[i].update(time) && canAnimate;
+            isUpdated = items[i].update(time) && isUpdated;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     StaticGeometryPerMaterialBatch.prototype.removeAllPrimitives = function() {

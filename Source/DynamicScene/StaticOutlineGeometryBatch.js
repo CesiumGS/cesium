@@ -50,7 +50,7 @@ define(['../Core/Color',
 
     var colorScratch = new Color();
     Batch.prototype.update = function(time) {
-        var canAnimate = true;
+        var isUpdated = true;
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -71,10 +71,10 @@ define(['../Core/Color',
                 });
 
                 primitives.add(primitive);
+                isUpdated = false;
             }
             this.primitive = primitive;
             this.createPrimitive = false;
-            canAnimate = false;
         } else if (defined(primitive) && primitive._state === PrimitiveState.COMPLETE) {
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
@@ -88,20 +88,32 @@ define(['../Core/Color',
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                var outlineColorProperty = updater.outlineColorProperty;
-                outlineColorProperty.getValue(time, colorScratch);
-                attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
-                if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
-                    this.itemsToRemove[removedCount++] = updater;
+                if (!updater.outlineColorProperty.isConstant) {
+                    var outlineColorProperty = updater.outlineColorProperty;
+                    outlineColorProperty.getValue(time, colorScratch);
+                    if (!Color.equals(attributes._lastColor, colorScratch)) {
+                        attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
+                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
+                        if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
+                            this.itemsToRemove[removedCount++] = updater;
+                        }
+                    }
                 }
-                attributes.show = ShowGeometryInstanceAttribute.toValue(updater.isOutlineVisible(time), attributes.show);
+
+                if (!updater.hasConstantOutline) {
+                    var show = updater.isOutlineVisible(time);
+                    if (show !== attributes._lastShow) {
+                        attributes._lastShow = show;
+                        attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                    }
+                }
             }
         } else if (defined(primitive) && primitive._state !== PrimitiveState.COMPLETE) {
-            canAnimate = false;
+            isUpdated = false;
         }
 
         this.itemsToRemove.length = removedCount;
-        return canAnimate;
+        return isUpdated;
     };
 
     Batch.prototype.removeAllPrimitives = function() {
@@ -142,8 +154,8 @@ define(['../Core/Color',
         var updater;
 
         //Perform initial update
-        var canAnimate = this._solidBatch.update(time);
-        canAnimate = this._translucentBatch.update(time) && canAnimate;
+        var isUpdated = this._solidBatch.update(time);
+        isUpdated = this._translucentBatch.update(time) && isUpdated;
 
         //If any items swapped between solid/translucent, we need to
         //move them between batches
@@ -169,10 +181,10 @@ define(['../Core/Color',
 
         //If we moved anything around, we need to re-build the primitive
         if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            canAnimate = this._solidBatch.update(time) && canAnimate;
-            canAnimate = this._translucentBatch.update(time) && canAnimate;
+            isUpdated = this._solidBatch.update(time) && isUpdated;
+            isUpdated = this._translucentBatch.update(time) && isUpdated;
         }
-        return canAnimate;
+        return isUpdated;
     };
 
     StaticOutlineGeometryBatch.prototype.removeAllPrimitives = function() {

@@ -74,9 +74,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -90,7 +90,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -115,9 +115,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -131,7 +131,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -157,9 +157,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -173,7 +173,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -199,9 +199,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -215,7 +215,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -242,9 +242,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -257,7 +257,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -282,9 +282,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         var primitive;
@@ -303,9 +303,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
         waitsFor(function() {
             scene.initializeFrame();
-            visualizer.update(time);
+            var isUpdated = visualizer.update(time);
             scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
+            return isUpdated;
         });
 
         runs(function() {
@@ -318,7 +318,7 @@ defineSuite(['DynamicScene/GeometryVisualizer',
 
             objects.remove(dynamicObject);
             scene.initializeFrame();
-            visualizer.update(time);
+            expect(visualizer.update(time)).toBe(true);
             scene.render(time);
 
             expect(scene.primitives.length).toBe(0);
@@ -343,21 +343,15 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         dynamicObject.ellipse = ellipse;
         objects.add(dynamicObject);
 
-        waitsFor(function() {
-            scene.initializeFrame();
-            visualizer.update(time);
-            scene.render(time);
-            return scene.primitives.get(0)._state === PrimitiveState.COMPLETE;
-        });
-
-        runs(function() {
-            objects.remove(dynamicObject);
-            scene.initializeFrame();
-            visualizer.update(time);
-            scene.render(time);
-            expect(scene.primitives.length).toBe(0);
-            visualizer.destroy();
-        });
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        objects.remove(dynamicObject);
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        expect(scene.primitives.length).toBe(0);
+        visualizer.destroy();
     });
 
     it('Constructor throws without type', function() {

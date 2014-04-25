@@ -38,11 +38,9 @@
 
     function createScene(canvas) {
         var scene = new Cesium.Scene(canvas);
-        var primitives = scene.primitives;
-        var centralBody = new Cesium.CentralBody();
-        primitives.centralBody = centralBody;
+        scene.globe = new Cesium.Globe();
 
-        centralBody.imageryLayers.addImageryProvider(imageryProvider);
+        scene.imageryLayers.addImageryProvider(imageryProvider);
 
         // Prevent right-click from opening a context menu.
         canvas.oncontextmenu = function () {
