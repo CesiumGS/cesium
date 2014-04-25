@@ -8,8 +8,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         expect(ComponentDatatype.fromValue(ComponentDatatype.UNSIGNED_BYTE.value)).toBe(ComponentDatatype.UNSIGNED_BYTE);
         expect(ComponentDatatype.fromValue(ComponentDatatype.SHORT.value)).toBe(ComponentDatatype.SHORT);
         expect(ComponentDatatype.fromValue(ComponentDatatype.UNSIGNED_SHORT.value)).toBe(ComponentDatatype.UNSIGNED_SHORT);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.INT.value)).toBe(ComponentDatatype.INT);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.UNSIGNED_INT.value)).toBe(ComponentDatatype.UNSIGNED_INT);
         expect(ComponentDatatype.fromValue(ComponentDatatype.FLOAT.value)).toBe(ComponentDatatype.FLOAT);
         expect(ComponentDatatype.fromValue(ComponentDatatype.DOUBLE.value)).toBe(ComponentDatatype.DOUBLE);
     });
@@ -19,8 +17,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         expect(ComponentDatatype.fromTypedArray(new Uint8Array())).toBe(ComponentDatatype.UNSIGNED_BYTE);
         expect(ComponentDatatype.fromTypedArray(new Int16Array())).toBe(ComponentDatatype.SHORT);
         expect(ComponentDatatype.fromTypedArray(new Uint16Array())).toBe(ComponentDatatype.UNSIGNED_SHORT);
-        expect(ComponentDatatype.fromTypedArray(new Int32Array())).toBe(ComponentDatatype.INT);
-        expect(ComponentDatatype.fromTypedArray(new Uint32Array())).toBe(ComponentDatatype.UNSIGNED_INT);
         expect(ComponentDatatype.fromTypedArray(new Float32Array())).toBe(ComponentDatatype.FLOAT);
         expect(ComponentDatatype.fromTypedArray(new Float64Array())).toBe(ComponentDatatype.DOUBLE);
     });
@@ -30,8 +26,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         expect(ComponentDatatype.validate(ComponentDatatype.UNSIGNED_BYTE)).toBe(true);
         expect(ComponentDatatype.validate(ComponentDatatype.SHORT)).toBe(true);
         expect(ComponentDatatype.validate(ComponentDatatype.UNSIGNED_SHORT)).toBe(true);
-        expect(ComponentDatatype.validate(ComponentDatatype.INT)).toBe(true);
-        expect(ComponentDatatype.validate(ComponentDatatype.UNSIGNED_INT)).toBe(true);
         expect(ComponentDatatype.validate(ComponentDatatype.FLOAT)).toBe(true);
         expect(ComponentDatatype.validate(ComponentDatatype.DOUBLE)).toBe(true);
         expect(ComponentDatatype.validate(undefined)).toBe(false);
@@ -54,14 +48,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.UNSIGNED_SHORT, 3);
         expect(typedArray).toBeInstanceOf(Uint16Array);
         expect(typedArray.length).toBe(3);
-
-        typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.INT, 4);
-        expect(typedArray).toBeInstanceOf(Int32Array);
-        expect(typedArray.length).toBe(4);
-
-        typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.UNSIGNED_INT, 5);
-        expect(typedArray).toBeInstanceOf(Uint32Array);
-        expect(typedArray.length).toBe(5);
 
         typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, 6);
         expect(typedArray).toBeInstanceOf(Float32Array);
@@ -94,16 +80,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         expect(typedArray).toEqual(values);
         expect(typedArray.length).toBe(values.length);
 
-        typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.INT, values);
-        expect(typedArray).toBeInstanceOf(Int32Array);
-        expect(typedArray).toEqual(values);
-        expect(typedArray.length).toBe(values.length);
-
-        typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.UNSIGNED_INT, values);
-        expect(typedArray).toBeInstanceOf(Uint32Array);
-        expect(typedArray).toEqual(values);
-        expect(typedArray.length).toBe(values.length);
-
         typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, values);
         expect(typedArray).toBeInstanceOf(Float32Array);
         expect(typedArray).toEqual(values);
@@ -121,8 +97,6 @@ defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
         expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.UNSIGNED_BYTE, buffer, 0, 1)).toBeInstanceOf(Uint8Array);
         expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.SHORT, buffer, 0, 1)).toBeInstanceOf(Int16Array);
         expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.UNSIGNED_SHORT, buffer, 0, 1)).toBeInstanceOf(Uint16Array);
-        expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.INT, buffer, 0, 1)).toBeInstanceOf(Int32Array);
-        expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.UNSIGNED_INT, buffer, 0, 1)).toBeInstanceOf(Uint32Array);
         expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.FLOAT, buffer, 0, 1)).toBeInstanceOf(Float32Array);
         expect(ComponentDatatype.createArrayBufferView(ComponentDatatype.DOUBLE, buffer, 0, 1)).toBeInstanceOf(Float64Array);
     });

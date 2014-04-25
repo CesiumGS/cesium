@@ -76,30 +76,6 @@ define([
         }),
 
         /**
-         * 32-bit signed int enumeration corresponding to <code>INT</code> and the type
-         * of an element in <code>Int32Array</code>.
-         *
-         * @type {Enumeration}
-         * @constant
-         * @default 0x1404
-         */
-        INT : new Enumeration(0x1404, 'INT', {
-            sizeInBytes : Int32Array.BYTES_PER_ELEMENT
-        }),
-
-        /**
-         * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
-         * of an element in <code>Uint32Array</code>.
-         *
-         * @type {Enumeration}
-         * @constant
-         * @default 0x1405
-         */
-        UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
-            sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
-        }),
-
-        /**
          * 32-bit floating-point enumeration corresponding to <code>FLOAT</code> and the type
          * of an element in <code>Float32Array</code>.
          *
@@ -144,10 +120,6 @@ define([
             return ComponentDatatype.SHORT;
         case ComponentDatatype.UNSIGNED_SHORT.value:
             return ComponentDatatype.UNSIGNED_SHORT;
-        case ComponentDatatype.INT.value:
-            return ComponentDatatype.INT;
-        case ComponentDatatype.UNSIGNED_INT.value:
-            return ComponentDatatype.UNSIGNED_INT;
         case ComponentDatatype.FLOAT.value:
             return ComponentDatatype.FLOAT;
         case ComponentDatatype.DOUBLE.value:
@@ -175,12 +147,6 @@ define([
         if (array instanceof Uint16Array) {
             return ComponentDatatype.UNSIGNED_SHORT;
         }
-        if (array instanceof Int32Array) {
-            return ComponentDatatype.INT;
-        }
-        if (array instanceof Uint32Array) {
-            return ComponentDatatype.UNSIGNED_INT;
-        }
         if (array instanceof Float32Array) {
             return ComponentDatatype.FLOAT;
         }
@@ -207,8 +173,6 @@ define([
                 componentDatatype.value === ComponentDatatype.UNSIGNED_BYTE.value ||
                 componentDatatype.value === ComponentDatatype.SHORT.value ||
                 componentDatatype.value === ComponentDatatype.UNSIGNED_SHORT.value ||
-                componentDatatype.value === ComponentDatatype.INT.value ||
-                componentDatatype.value === ComponentDatatype.UNSIGNED_INT.value ||
                 componentDatatype.value === ComponentDatatype.FLOAT.value ||
                 componentDatatype.value === ComponentDatatype.DOUBLE.value);
     };
@@ -247,10 +211,6 @@ define([
             return new Int16Array(valuesOrLength);
         case ComponentDatatype.UNSIGNED_SHORT.value:
             return new Uint16Array(valuesOrLength);
-        case ComponentDatatype.INT.value:
-            return new Int32Array(valuesOrLength);
-        case ComponentDatatype.UNSIGNED_INT.value:
-            return new Uint32Array(valuesOrLength);
         case ComponentDatatype.FLOAT.value:
             return new Float32Array(valuesOrLength);
         case ComponentDatatype.DOUBLE.value:
@@ -295,10 +255,6 @@ define([
             return new Int16Array(buffer, byteOffset, length);
         case ComponentDatatype.UNSIGNED_SHORT.value:
             return new Uint16Array(buffer, byteOffset, length);
-        case ComponentDatatype.INT.value:
-            return new Int32Array(buffer, byteOffset, length);
-        case ComponentDatatype.UNSIGNED_INT.value:
-            return new Uint32Array(buffer, byteOffset, length);
         case ComponentDatatype.FLOAT.value:
             return new Float32Array(buffer, byteOffset, length);
         case ComponentDatatype.DOUBLE.value:

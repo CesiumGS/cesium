@@ -12,6 +12,7 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryPipeline',
+        '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/WebMercatorProjection'
     ], function(
@@ -27,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryPipeline,
+        IndexDatatype,
         Matrix4,
         WebMercatorProjection) {
     "use strict";
@@ -440,7 +442,7 @@ define([
             var geometry = items[i];
             var attributes = geometry.attributes;
 
-            count += 4 + BoundingSphere.packedLength + geometry.indices.length;
+            count += 3 + BoundingSphere.packedLength + geometry.indices.length;
 
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -472,7 +474,6 @@ define([
             BoundingSphere.pack(geometry.boundingSphere, packedData, count);
             count += BoundingSphere.packedLength;
 
-            packedData[count++] = ComponentDatatype.fromTypedArray(geometry.indices).value;
             packedData[count++] = geometry.indices.length;
             packedData.set(geometry.indices, count);
             count += geometry.indices.length;
@@ -529,9 +530,8 @@ define([
             var boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
             packedGeometryIndex += BoundingSphere.packedLength;
 
-            var type = ComponentDatatype.fromValue(packedGeometry[packedGeometryIndex++]);
             var length = packedGeometry[packedGeometryIndex++];
-            var indices = ComponentDatatype.createTypedArray(type, length);
+            var indices = IndexDatatype.createTypedArray(length / 3, length);
             for (i = 0; i < length; i++) {
                 indices[i] = packedGeometry[packedGeometryIndex++];
             }
