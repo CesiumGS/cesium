@@ -1943,4 +1943,39 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
         expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
     });
+
+    it('CZML adds data for wall.', function() {
+        var wallPacket = {
+            wall : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                granularity : 3,
+                minimumHeights : {
+                    array : [1, 2, 3]
+                },
+                maximumHeights : {
+                    array : [4, 5, 6]
+                },
+                show : true
+            }
+        };
+
+        var czmlRectangle = wallPacket.wall;
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(wallPacket);
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+
+        expect(dynamicObject.wall).toBeDefined();
+        expect(dynamicObject.wall.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(dynamicObject.wall.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
+        expect(dynamicObject.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
+        expect(dynamicObject.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
+        expect(dynamicObject.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
+    });
 });

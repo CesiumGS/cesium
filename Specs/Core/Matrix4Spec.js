@@ -594,6 +594,38 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
+    it('getScale works', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var m = Matrix4.fromScale(scale);
+        expect(Matrix4.getScale(m)).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale works with a result parameter', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new Cartesian3();
+        var computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
+
+        expect(computedScale).toBe(result);
+        expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumScale works', function() {
+        var m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+        expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+    });
+
+    it('getMaximumScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getMaximumScale();
+        }).toThrowDeveloperError();
+    });
+
     it('multiply works without a result parameter', function() {
         var left = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         var right = new Matrix4(17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
