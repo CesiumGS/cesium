@@ -104,10 +104,10 @@ define([
         var dataSource;
         var loadPromise;
 
-        if (/\.czml/i.test(source)) {
+        if (/\.czml$/i.test(source)) {
             dataSource = new CzmlDataSource(getFilenameFromUri(source));
             loadPromise = dataSource.loadUrl(source);
-        } else if (/\.geojson/i.test(source) || /\.json/i.test(source) || /\.topojson/i.test(source)) {
+        } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             dataSource = new GeoJsonDataSource(getFilenameFromUri(source));
             loadPromise = dataSource.loadUrl(source);
         } else {
