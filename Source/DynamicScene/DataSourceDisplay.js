@@ -17,7 +17,8 @@ define(['../Core/defaultValue',
         './GeometryVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
-        './RectangleGeometryUpdater'
+        './RectangleGeometryUpdater',
+        './WallGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -37,7 +38,8 @@ define(['../Core/defaultValue',
         GeometryVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
-        RectangleGeometryUpdater) {
+        RectangleGeometryUpdater,
+        WallGeometryUpdater) {
     "use strict";
 
     /**
@@ -90,6 +92,7 @@ define(['../Core/defaultValue',
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(WallGeometryUpdater, scene, dynamicObjects),
                 new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
                 new DynamicLabelVisualizer(scene, dynamicObjects),
                 new DynamicModelVisualizer(scene, dynamicObjects),
