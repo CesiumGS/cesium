@@ -50,6 +50,7 @@ Beta Releases
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
 * Upgraded Knockout from version 3.0.0 to 3.1.0.
+* Upgraded TopoJSON from version 1.1.4 to 1.6.8.
 
 ### b27 - 2014-04-01
 
