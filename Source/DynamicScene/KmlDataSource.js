@@ -88,7 +88,8 @@ define(['../Core/createGuid',
         zip) {
     "use strict";
 
-    var scratch = new Cartographic();
+    var scratchCartographic = new Cartographic();
+    var scratchCartesian = new Cartesian3();
 
     function proxyUrl(url, proxy) {
         if (defined(proxy)) {
@@ -119,8 +120,8 @@ define(['../Core/createGuid',
             break;
         }
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        scratch = Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratch);
-        return Ellipsoid.WGS84.cartographicToCartesian(scratch);
+        scratchCartographic = Cartographic.fromDegrees(digits[0], digits[1], defined(digits[2]) ? parseFloat(digits[2]) : 0, scratchCartographic);
+        return Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
     }
 
     function readCoordinates(element) {
@@ -132,8 +133,8 @@ define(['../Core/createGuid',
 
         for (var i = 0; i < tuples.length; i++) {
             var coordinates = tuples[i].split(/[\s,\n]+/g);
-            scratch = Cartographic.fromDegrees(parseFloat(coordinates[0]), parseFloat(coordinates[1]), defined(coordinates[2]) ? parseFloat(coordinates[2]) : 0, scratch);
-            result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratch);
+            scratchCartographic = Cartographic.fromDegrees(parseFloat(coordinates[0]), parseFloat(coordinates[1]), defined(coordinates[2]) ? parseFloat(coordinates[2]) : 0, scratchCartographic);
+            result[resultIndex++] = Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic);
         }
         return result;
     }
@@ -319,7 +320,9 @@ define(['../Core/createGuid',
                 rectangle = new DynamicRectangle();
                 dynamicObject.rectangle = rectangle;
             }
-            rectangle.coordinates = new ConstantProperty(Rectangle.fromDegrees(west, south, east, north));
+            var extent = Rectangle.fromDegrees(west, south, east, north);
+            rectangle.coordinates = new ConstantProperty(extent);
+            dynamicObject.position = new ConstantPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(Rectangle.getCenter(extent, scratchCartesian), scratchCartographic));
 
             var material;
             var href = getStringValue(groundOverlay, 'href');
