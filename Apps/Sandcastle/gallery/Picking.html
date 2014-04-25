@@ -322,7 +322,7 @@ require(['Cesium'], function(Cesium) {
         var DrawRectangleHelper = function(scene, handler) {
             this._canvas = scene.canvas;
             this._scene = scene;
-            this._ellipsoid = scene.primitives.centralBody.ellipsoid;
+            this._ellipsoid = scene.globe.ellipsoid;
             this._finishHandler = handler;
             this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
             this._rectanglePrimitive = new Cesium.RectanglePrimitive();
@@ -434,7 +434,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
                 Cesium.Math.toDegrees(e.north).toFixed(2) + ')';
             label.scale = 0.7;
-            label.position = widget.centralBody.ellipsoid.cartographicToCartesian(Cesium.Rectangle.getCenter(e));
+            label.position = widget.scene.globe.ellipsoid.cartographicToCartesian(Cesium.Rectangle.getCenter(e));
             label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
         };
         var drawRectangleHelper = new DrawRectangleHelper(scene, myHandler);
@@ -443,8 +443,8 @@ require(['Cesium'], function(Cesium) {
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.ellipsoid;
     var scene = widget.scene;
+    var ellipsoid = scene.globe.ellipsoid;
 
     pickCartographicPosition(scene, ellipsoid);
 

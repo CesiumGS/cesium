@@ -31,18 +31,18 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
         '../Renderer/Pass',
-        './CentralBodySurface',
-        './CentralBodySurfaceShaderSet',
+        './GlobeSurface',
+        './GlobeSurfaceShaderSet',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './SceneMode',
         './TerrainProvider',
-        '../Shaders/CentralBodyFS',
-        '../Shaders/CentralBodyFSDepth',
-        '../Shaders/CentralBodyFSPole',
-        '../Shaders/CentralBodyVS',
-        '../Shaders/CentralBodyVSDepth',
-        '../Shaders/CentralBodyVSPole',
+        '../Shaders/GlobeFS',
+        '../Shaders/GlobeFSDepth',
+        '../Shaders/GlobeFSPole',
+        '../Shaders/GlobeVS',
+        '../Shaders/GlobeVSDepth',
+        '../Shaders/GlobeVSPole',
         '../ThirdParty/when'
     ], function(
         buildModuleUrl,
@@ -76,51 +76,51 @@ define([
         DrawCommand,
         createShaderSource,
         Pass,
-        CentralBodySurface,
-        CentralBodySurfaceShaderSet,
+        GlobeSurface,
+        GlobeSurfaceShaderSet,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         SceneMode,
         TerrainProvider,
-        CentralBodyFS,
-        CentralBodyFSDepth,
-        CentralBodyFSPole,
-        CentralBodyVS,
-        CentralBodyVSDepth,
-        CentralBodyVSPole,
+        GlobeFS,
+        GlobeFSDepth,
+        GlobeFSPole,
+        GlobeVS,
+        GlobeVSDepth,
+        GlobeVSPole,
         when) {
     "use strict";
 
     /**
      * DOC_TBA
      *
-     * @alias CentralBody
+     * @alias Globe
      * @constructor
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
-     * central body.
+     * globe.
      */
-    var CentralBody = function(ellipsoid) {
+    var Globe = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         var imageryLayerCollection = new ImageryLayerCollection();
 
         /**
-         * The terrain provider providing surface geometry for this central body.
+         * The terrain provider providing surface geometry for this globe.
          * @type {TerrainProvider}
          */
         this.terrainProvider = terrainProvider;
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
-        this._surface = new CentralBodySurface({
+        this._surface = new GlobeSurface({
             terrainProvider : terrainProvider,
             imageryLayerCollection : imageryLayerCollection
         });
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new CentralBodySurfaceShaderSet(TerrainProvider.attributeLocations);
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -168,7 +168,7 @@ define([
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
 
         /**
-         * Determines if the central body will be shown.
+         * Determines if the globe will be shown.
          *
          * @type {Boolean}
          * @default true
@@ -268,10 +268,10 @@ define([
         };
     };
 
-    defineProperties(CentralBody.prototype, {
+    defineProperties(Globe.prototype, {
         /**
-         * Gets an ellipsoid describing the shape of this central body.
-         * @memberof CentralBody.prototype
+         * Gets an ellipsoid describing the shape of this globe.
+         * @memberof Globe.prototype
          * @type {Ellipsoid}
          */
         ellipsoid : {
@@ -281,8 +281,8 @@ define([
         },
 
         /**
-         * Gets the collection of image layers that will be rendered on this central body.
-         * @memberof CentralBody.prototype
+         * Gets the collection of image layers that will be rendered on this globe.
+         * @memberof Globe.prototype
          * @type {ImageryLayerCollection}
          */
         imageryLayers: {
@@ -298,12 +298,12 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
 
-    function computeDepthQuad(centralBody, frameState) {
-        var radii = centralBody._ellipsoid.radii;
+    function computeDepthQuad(globe, frameState) {
+        var radii = globe._ellipsoid.radii;
         var p = frameState.camera.positionWC;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.oneOverRadii, p, scratchCartesian1);
+        var q = Cartesian3.multiplyComponents(globe._ellipsoid.oneOverRadii, p, scratchCartesian1);
 
         var qMagnitude = Cartesian3.magnitude(q);
         var qUnit = Cartesian3.normalize(q, scratchCartesian2);
@@ -345,12 +345,12 @@ define([
         return depthQuadScratch;
     }
 
-    function computePoleQuad(centralBody, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
-        var pt1 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
-        var pt2 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
+    function computePoleQuad(globe, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
+        var pt1 = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
+        var pt2 = globe._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
         var radius = Cartesian3.magnitude(Cartesian3.subtract(pt1, pt2)) * 0.5;
 
-        var center = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
+        var center = globe._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
         var right;
         var dir = frameState.camera.direction;
@@ -381,8 +381,8 @@ define([
     var vpTransformScratch = new Matrix4();
     var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
-    function fillPoles(centralBody, context, frameState) {
-        var terrainProvider = centralBody._surface._terrainProvider;
+    function fillPoles(globe, context, frameState) {
+        var terrainProvider = globe._surface._terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -406,7 +406,7 @@ define([
         var occluded;
         var geometry;
         var rect;
-        var occluder = centralBody._occluder;
+        var occluder = globe._occluder;
 
         // handle north pole
         if (terrainMaxRectangle.north < CesiumMath.PI_OVER_TWO) {
@@ -416,14 +416,14 @@ define([
                 Math.PI,
                 CesiumMath.PI_OVER_TWO
             );
-            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
+            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, centralBody._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, globe._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint, 0.0)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
-            centralBody._drawNorthPole = !frustumCull && !occluded;
-            if (centralBody._drawNorthPole) {
-                rect = computePoleQuad(centralBody, frameState, rectangle.north, rectangle.south - latitudeExtension, viewProjMatrix, viewportTransformation);
+            globe._drawNorthPole = !frustumCull && !occluded;
+            if (globe._drawNorthPole) {
+                rect = computePoleQuad(globe, frameState, rectangle.north, rectangle.south - latitudeExtension, viewProjMatrix, viewportTransformation);
                 polePositionsScratch[0] = rect.x;
                 polePositionsScratch[1] = rect.y;
                 polePositionsScratch[2] = rect.x + rect.width;
@@ -433,8 +433,8 @@ define([
                 polePositionsScratch[6] = rect.x;
                 polePositionsScratch[7] = rect.y + rect.height;
 
-                if (!defined(centralBody._northPoleCommand.vertexArray)) {
-                    centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
+                if (!defined(globe._northPoleCommand.vertexArray)) {
+                    globe._northPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
                     geometry = new Geometry({
                         attributes : {
                             position : new GeometryAttribute({
@@ -444,7 +444,7 @@ define([
                             })
                         }
                     });
-                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                    globe._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                         geometry : geometry,
                         attributeLocations : {
                             position : 0
@@ -452,7 +452,7 @@ define([
                         bufferUsage : BufferUsage.STREAM_DRAW
                     });
                 } else {
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(polePositionsScratch);
+                    globe._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(polePositionsScratch);
                 }
             }
         }
@@ -465,14 +465,14 @@ define([
                 Math.PI,
                 terrainMaxRectangle.south
             );
-            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
+            boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
             frustumCull = frameState.cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE;
-            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, centralBody._ellipsoid);
+            occludeePoint = Occluder.computeOccludeePointFromRectangle(rectangle, globe._ellipsoid);
             occluded = (occludeePoint && !occluder.isPointVisible(occludeePoint)) || !occluder.isBoundingSphereVisible(boundingVolume);
 
-            centralBody._drawSouthPole = !frustumCull && !occluded;
-            if (centralBody._drawSouthPole) {
-                rect = computePoleQuad(centralBody, frameState, rectangle.south, rectangle.north + latitudeExtension, viewProjMatrix, viewportTransformation);
+            globe._drawSouthPole = !frustumCull && !occluded;
+            if (globe._drawSouthPole) {
+                rect = computePoleQuad(globe, frameState, rectangle.south, rectangle.north + latitudeExtension, viewProjMatrix, viewportTransformation);
                 polePositionsScratch[0] = rect.x;
                 polePositionsScratch[1] = rect.y;
                 polePositionsScratch[2] = rect.x + rect.width;
@@ -482,8 +482,8 @@ define([
                 polePositionsScratch[6] = rect.x;
                 polePositionsScratch[7] = rect.y + rect.height;
 
-                 if (!defined(centralBody._southPoleCommand.vertexArray)) {
-                     centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, centralBody._ellipsoid);
+                 if (!defined(globe._southPoleCommand.vertexArray)) {
+                     globe._southPoleCommand.boundingVolume = BoundingSphere.fromRectangle3D(rectangle, globe._ellipsoid);
                      geometry = new Geometry({
                          attributes : {
                              position : new GeometryAttribute({
@@ -493,7 +493,7 @@ define([
                              })
                          }
                      });
-                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                     globe._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                          geometry : geometry,
                          attributeLocations : {
                              position : 0
@@ -501,13 +501,13 @@ define([
                          bufferUsage : BufferUsage.STREAM_DRAW
                      });
                  } else {
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(polePositionsScratch);
+                     globe._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(polePositionsScratch);
                  }
             }
         }
 
         var poleIntensity = 0.0;
-        var baseLayer = centralBody._imageryLayerCollection.length > 0 ? centralBody._imageryLayerCollection.get(0) : undefined;
+        var baseLayer = globe._imageryLayerCollection.length > 0 ? globe._imageryLayerCollection.get(0) : undefined;
         if (defined(baseLayer) && defined(baseLayer.imageryProvider) && defined(baseLayer.imageryProvider.getPoleIntensity)) {
             poleIntensity = baseLayer.imageryProvider.getPoleIntensity();
         }
@@ -518,30 +518,30 @@ define([
             }
         };
 
-        var that = centralBody;
-        if (!defined(centralBody._northPoleCommand.uniformMap)) {
+        var that = globe;
+        if (!defined(globe._northPoleCommand.uniformMap)) {
             var northPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
                 }
             });
-            centralBody._northPoleCommand.uniformMap = combine(northPoleUniforms, centralBody._drawUniforms);
+            globe._northPoleCommand.uniformMap = combine(northPoleUniforms, globe._drawUniforms);
         }
 
-        if (!defined(centralBody._southPoleCommand.uniformMap)) {
+        if (!defined(globe._southPoleCommand.uniformMap)) {
             var southPoleUniforms = combine(drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
                 }
             });
-            centralBody._southPoleCommand.uniformMap = combine(southPoleUniforms, centralBody._drawUniforms);
+            globe._southPoleCommand.uniformMap = combine(southPoleUniforms, globe._drawUniforms);
         }
     }
 
     /**
      * @private
      */
-    CentralBody.prototype.update = function(context, frameState, commandList) {
+    Globe.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
             return;
         }
@@ -641,8 +641,8 @@ define([
 
         if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
-                CentralBodyVSDepth,
-                CentralBodyFSDepth, {
+                GlobeVSDepth,
+                GlobeFSDepth, {
                     position : 0
                 });
         }
@@ -715,7 +715,7 @@ define([
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
                     (this.enableLighting ? 'ENABLE_LIGHTING' : '')
                 ],
-                sources : [CentralBodyVS, getPositionMode, get2DYPositionFraction]
+                sources : [GlobeVS, getPositionMode, get2DYPositionFraction]
             });
 
             var showPrettyOcean = hasWaterMask && defined(this._oceanNormalMap);
@@ -726,12 +726,12 @@ define([
                     (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
                     (this.enableLighting ? 'ENABLE_LIGHTING' : '')
                 ],
-                sources : [CentralBodyFS]
+                sources : [GlobeFS]
             });
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeLocations);
+                GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
@@ -808,13 +808,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CentralBody
+     * @memberof Globe
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see CentralBody#destroy
+     * @see Globe#destroy
      */
-    CentralBody.prototype.isDestroyed = function() {
+    Globe.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -826,18 +826,18 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CentralBody
+     * @memberof Globe
      *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CentralBody#isDestroyed
+     * @see Globe#isDestroyed
      *
      * @example
-     * centralBody = centralBody && centralBody.destroy();
+     * globe = globe && globe.destroy();
      */
-    CentralBody.prototype.destroy = function() {
+    Globe.prototype.destroy = function() {
         this._northPoleCommand.vertexArray = this._northPoleCommand.vertexArray && this._northPoleCommand.vertexArray.destroy();
         this._southPoleCommand.vertexArray = this._southPoleCommand.vertexArray && this._southPoleCommand.vertexArray.destroy();
 
@@ -856,5 +856,5 @@ define([
         return destroyObject(this);
     };
 
-    return CentralBody;
+    return Globe;
 });

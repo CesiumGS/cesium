@@ -42,11 +42,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
         
         polygon = primitives.add(new Cesium.RectanglePrimitive({
-            rectangle : new Cesium.Rectangle(
-                Cesium.Math.toRadians(-110.0),
-                Cesium.Math.toRadians(0.0),
-                Cesium.Math.toRadians(-90.0),
-                Cesium.Math.toRadians(20.0)),
+            rectangle : Cesium.Rectangle.fromDegrees(-110.0, 0.0, -90.0, 20.0),
             rotation : Cesium.Math.toRadians(45),
             material : Cesium.Material.fromType(Cesium.Material.ColorType, {
                 color : new Cesium.Color(1.0, 0.0, 1.0, 0.75)
@@ -97,11 +93,7 @@ require(['Cesium'], function(Cesium) {
 
         // Create a polygon from an rectangle
         var polygonRectangle = primitives.add(new Cesium.RectanglePrimitive({
-            rectangle : new Cesium.Rectangle(
-                Cesium.Math.toRadians(-180.0),
-                Cesium.Math.toRadians(50.0),
-                Cesium.Math.toRadians(180.0),
-                Cesium.Math.toRadians(90.0))
+            rectangle : Cesium.Rectangle.fromDegrees(-180.0, 50.0, 180.0, 90.0)
         }));
         Sandcastle.declare(polygonRectangle);  // For highlighting on mouseover in Sandcastle.
 
@@ -124,7 +116,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
+    createPrimitives(viewer.scene, viewer.scene.globe.ellipsoid);
 
     Sandcastle.finishedLoading();
 });

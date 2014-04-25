@@ -146,11 +146,7 @@ require([
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
                     url : '../images/Cesium_Logo_overlay.png',
-                    rectangle : new Cesium.Rectangle(
-                            Cesium.Math.toRadians(-115.0),
-                            Cesium.Math.toRadians(38.0),
-                            Cesium.Math.toRadians(-107),
-                            Cesium.Math.toRadians(39.75))
+                    rectangle : Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
                 }),
                 1.0);
         addAdditionalLayerOption(
@@ -285,7 +281,7 @@ require([
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    imageryLayers = widget.centralBody.imageryLayers;
+    imageryLayers = widget.scene.imageryLayers;
 
     setupLayers();
 

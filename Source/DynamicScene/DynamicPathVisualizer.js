@@ -7,8 +7,10 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Color',
+        '../Core/TimeInterval',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
+        './ConstantPositionProperty',
         './SampledPositionProperty',
         './CompositePositionProperty',
         './TimeIntervalCollectionPositionProperty',
@@ -23,8 +25,10 @@ define([
          Matrix3,
          Matrix4,
          Color,
+         TimeInterval,
          Transforms,
          ReferenceFrame,
+         ConstantPositionProperty,
          SampledPositionProperty,
          CompositePositionProperty,
          TimeIntervalCollectionPositionProperty,
@@ -74,16 +78,16 @@ define([
             }
 
             if (t < (len - 1)) {
-                if (!sampling) {
+                if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
                     var secondsUntilNext = current.getSecondsDifference(next);
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
-                        sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                        sampleStepsToTake = Math.ceil(secondsUntilNext / maximumStep);
                         sampleStepsTaken = 0;
                         sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
-                        sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                        sampleStepsToTake = Math.max(sampleStepsToTake - 1, 1);
                     }
                 }
 
@@ -112,6 +116,7 @@ define([
         var i = 0;
         var index = startingIndex;
         var time = start;
+        var stepSize = Math.max(maximumStep, 60);
         var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
         while (time.lessThan(stop)) {
             if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
@@ -128,7 +133,7 @@ define([
                 index++;
             }
             i++;
-            time = start.addSeconds(maximumStep * i);
+            time = start.addSeconds(stepSize * i);
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -140,12 +145,22 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
-        var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.length; i++) {
-            var interval = intervals.get(0);
-            if (interval.start.lessThanOrEquals(stop)) {
-                var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+        var intervals = property.intervals;
+        for (var i = 0; i < intervals.length; i++) {
+            var interval = intervals.get(i);
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var time = interval.start;
+                if (!interval.isStartIncluded) {
+                    if (interval.isStopIncluded) {
+                        time = interval.stop;
+                    } else {
+                        time = interval.start.addSeconds(interval.start.getSecondsDifference(interval.stop) / 2);
+                    }
+                }
+                var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
                 if (defined(tmp)) {
                     result[index] = tmp;
                     index++;
@@ -155,22 +170,47 @@ define([
         return index;
     }
 
+    function subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var tmp = property.getValueInReferenceFrame(start, referenceFrame, result[startingIndex]);
+        if (defined(tmp)) {
+            result[startingIndex++] = tmp;
+        }
+        return startingIndex;
+    }
+
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
-        var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.length; i++) {
-            var interval = intervals.get(0);
-            if (interval.start.lessThanOrEquals(stop)) {
+        var intervals = property.intervals;
+        for (var i = 0; i < intervals.length; i++) {
+            var interval = intervals.get(i);
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var intervalStart = interval.start;
+                var intervalStop = interval.stop;
+
+                var sampleStart = start;
+                if (intervalStart.greaterThan(sampleStart)) {
+                    sampleStart = intervalStart;
+                }
+
+                var sampleStop = stop;
+                if (intervalStop.lessThan(sampleStop)) {
+                    sampleStop = intervalStop;
+                }
+
                 var intervalProperty = interval.data;
                 if (intervalProperty instanceof SampledPositionProperty) {
-                    index = subSampleSampledProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
-                    index = subSampleCompositeProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleCompositeProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
-                    index = subSampleIntervalProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleIntervalProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof ConstantPositionProperty) {
+                    index = subSampleConstantProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else {
                     //Fallback to generic sampling.
-                    index = subSampleGenericProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleGenericProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 }
             }
         }
@@ -188,7 +228,9 @@ define([
         } else if (property instanceof CompositePositionProperty) {
             length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
         } else if (property instanceof TimeIntervalCollectionPositionProperty) {
-            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+            length = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof ConstantPositionProperty) {
+            length = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
         } else {
             //Fallback to generic sampling.
             length = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
@@ -330,13 +372,16 @@ define([
 
         polyline.show = true;
 
-        var resolution = 60.0;
+        var maxStepSize = 60.0;
         property = dynamicPath._resolution;
         if (defined(property)) {
-            resolution = property.getValue(time);
+            var resolution = property.getValue(time);
+            if (defined(resolution)) {
+                maxStepSize = resolution;
+            }
         }
 
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
 
         property = dynamicPath._color;
         if (defined(property)) {
@@ -585,6 +630,9 @@ define([
             }
         }
     };
+
+    //for testing
+    DynamicPathVisualizer._subSample = subSample;
 
     return DynamicPathVisualizer;
 });

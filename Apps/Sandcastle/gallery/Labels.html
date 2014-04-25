@@ -141,7 +141,7 @@ require(['Cesium'], function(Cesium) {
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.ellipsoid;
+    var ellipsoid = widget.scene.globe.ellipsoid;
     var scene = widget.scene;
     var primitives = scene.primitives;
 

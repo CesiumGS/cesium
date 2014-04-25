@@ -134,6 +134,10 @@ define([
         } else {
             morphFrom3DTo2D(this, duration, ellipsoid, complete2DCallback);
         }
+
+        if (duration === 0 && defined(this._completeMorph)) {
+            this._completeMorph();
+        }
     };
 
     SceneTransitioner.prototype.morphToColumbusView = function(duration, ellipsoid) {
@@ -158,6 +162,10 @@ define([
         } else {
             morphFrom3DToColumbusView(this, duration, this._cameraCV, completeColumbusViewCallback);
         }
+
+        if (duration === 0 && defined(this._completeMorph)) {
+            this._completeMorph();
+        }
     };
 
     SceneTransitioner.prototype.morphTo3D = function(duration, ellipsoid) {
@@ -181,6 +189,10 @@ define([
             morphFrom2DTo3D(this, duration, ellipsoid, complete3DCallback);
         } else {
             morphFromColumbusViewTo3D(this, duration, ellipsoid, complete3DCallback);
+        }
+
+        if (duration === 0 && defined(this._completeMorph)) {
+            this._completeMorph();
         }
     };
 

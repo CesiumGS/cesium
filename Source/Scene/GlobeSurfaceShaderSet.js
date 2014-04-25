@@ -8,19 +8,19 @@ define([
     "use strict";
 
     /**
-     * Manages the shaders used to shade the surface of a {@link CentralBody}.
+     * Manages the shaders used to shade the surface of a {@link Globe}.
      *
-     * @alias CentralBodySurfaceShaderSet
+     * @alias GlobeSurfaceShaderSet
      * @private
      */
-    function CentralBodySurfaceShaderSet(attributeLocations) {
+    function GlobeSurfaceShaderSet(attributeLocations) {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
         this._attributeLocations = attributeLocations;
         this._shaders = {};
     }
 
-    CentralBodySurfaceShaderSet.prototype.invalidateShaders = function() {
+    GlobeSurfaceShaderSet.prototype.invalidateShaders = function() {
         var shaders = this._shaders;
         for ( var keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
@@ -62,7 +62,7 @@ define([
         return key;
     }
 
-    CentralBodySurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(context, textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha) {
         var key = getShaderKey(textureCount, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
         var shader = this._shaders[key];
         if (!defined(shader)) {
@@ -106,10 +106,10 @@ define([
         return shader;
     };
 
-    CentralBodySurfaceShaderSet.prototype.destroy = function() {
+    GlobeSurfaceShaderSet.prototype.destroy = function() {
         this.invalidateShaders();
         return destroyObject(this);
     };
 
-    return CentralBodySurfaceShaderSet;
+    return GlobeSurfaceShaderSet;
 });

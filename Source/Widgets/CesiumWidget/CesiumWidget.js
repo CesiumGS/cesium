@@ -14,7 +14,7 @@ define([
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/CentralBody',
+        '../../Scene/Globe',
         '../../Scene/Credit',
         '../../Scene/Moon',
         '../../Scene/Scene',
@@ -38,7 +38,7 @@ define([
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        CentralBody,
+        Globe,
         Credit,
         Moon,
         Scene,
@@ -182,8 +182,8 @@ define([
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var centralBody = new CentralBody(ellipsoid);
-            scene.primitives.centralBody = centralBody;
+            var globe = new Globe(ellipsoid);
+            scene.globe = globe;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -213,12 +213,12 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayers.addImageryProvider(imageryProvider);
+                scene.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
             if (defined(options.terrainProvider)) {
-                centralBody.terrainProvider = options.terrainProvider;
+                scene.terrainProvider = options.terrainProvider;
             }
 
             this._container = container;
@@ -226,7 +226,7 @@ define([
             this._canvasWidth = 0;
             this._canvasHeight = 0;
             this._scene = scene;
-            this._centralBody = centralBody;
+            this._globe = globe;
             this._clock = defaultValue(options.clock, new Clock());
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
@@ -238,10 +238,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._scene.morphTo2D();
+                    this._scene.morphTo2D(0);
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._scene.morphToColumbusView();
+                    this._scene.morphToColumbusView(0);
                 }
             }
 
@@ -300,18 +300,6 @@ define([
         scene : {
             get : function() {
                 return this._scene;
-            }
-        },
-
-        /**
-         * Gets the primary central body.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get : function() {
-                return this._centralBody;
             }
         },
 
