@@ -268,7 +268,7 @@ define([
 
     var scratchSphereIntersections = [];
 
-    CentralBodySurface.prototype.pick = function(ray, result) {
+    GlobeSurface.prototype.pick = function(ray, result) {
         var sphereIntersections = scratchSphereIntersections;
         sphereIntersections.length = 0;
 

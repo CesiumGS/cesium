@@ -292,7 +292,7 @@ define([
         }
     });
 
-    CentralBody.prototype.pick = function(ray, result) {
+    Globe.prototype.pick = function(ray, result) {
         return this._surface.pick(ray, result);
     };
 
