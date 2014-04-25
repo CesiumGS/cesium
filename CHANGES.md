@@ -43,12 +43,19 @@ Beta Releases
   * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
   * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
+  * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
 * Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
+* Added `DynamicWall` to support DataSource provided `WallGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
+* Added `Model.minimumPixelSize` property so models remain visible when the viewer zooms out.
+* Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and `ModelMesh.material`.
+* Added `asynchronous` and `ready` properties to `Model`.
+* Added `Cartesian4.fromColor` and `Color.fromCartesian4`.
+* Added `getScale` and `getMaximumScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
 * Upgraded Knockout from version 3.0.0 to 3.1.0.
 * Upgraded TopoJSON from version 1.1.4 to 1.6.8.
 

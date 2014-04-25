@@ -625,7 +625,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the canvas.
          * @memberof Viewer.prototype
-         * @returns {Canvas} The canvas.
+         * @type {Canvas}
          */
         canvas : {
             get : function() {
@@ -636,7 +636,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the Cesium logo element.
          * @memberof Viewer.prototype
-         * @returns {Element} The logo element.
+         * @type {Element}
          */
         cesiumLogo : {
             get : function() {
@@ -647,7 +647,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the scene.
          * @memberof Viewer.prototype
-         * @returns {Scene} The scene.
+         * @type {Scene}
          */
         scene : {
             get : function() {
@@ -658,7 +658,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the clock.
          * @memberof Viewer.prototype
-         * @returns {Clock} the clock
+         * @type {Clock}
          */
         clock : {
             get : function() {
@@ -669,7 +669,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the screen space event handler.
          * @memberof Viewer.prototype
-         * @returns {ScreenSpaceEventHandler}
+         * @type {ScreenSpaceEventHandler}
          */
         screenSpaceEventHandler : {
             get : function() {

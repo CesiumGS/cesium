@@ -144,7 +144,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(animations)) {
-            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event.');
+            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
         //>>includeEnd('debug');
 
@@ -199,7 +199,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._model._runtime.animations)) {
-            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event.');
+            throw new DeveloperError('Animations are not loaded.  Wait for the model\'s readyToRender event or ready property.');
         }
 
         if (defined(options.speedup) && (options.speedup <= 0.0)) {
