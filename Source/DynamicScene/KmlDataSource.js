@@ -804,15 +804,17 @@ define(['../Core/createGuid',
         dataSource._name = name;
 
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
+        dataSource._composite.suspendEvents();
         var styleCollection = new DynamicObjectCollection();
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
+            dataSource._composite.resumeEvents();
             dataSource._isLoading = false;
             dataSource._isLoadingEvent.raiseEvent(dataSource, false);
-            dataSource._changed.raiseEvent(this);
+            dataSource._changed.raiseEvent(dataSource);
         });
     }
 
