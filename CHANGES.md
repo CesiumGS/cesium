@@ -6,7 +6,10 @@ Beta Releases
 ### b28 - 2014-05-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
-  * Rename Extent to Rectangle
+  * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Renamed `CentralBody` to `Globe`.
+  * Renamed Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
     * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
@@ -41,6 +44,7 @@ Beta Releases
   * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
   * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
   * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
+* Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
 * Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.

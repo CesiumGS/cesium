@@ -2,13 +2,13 @@
 defineSuite([
          'Widgets/HomeButton/HomeButtonViewModel',
          'Core/Ellipsoid',
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
          HomeButtonViewModel,
          Ellipsoid,
-         CentralBody,
+         Globe,
          createScene,
          destroyScene) {
     "use strict";
@@ -16,10 +16,10 @@ defineSuite([
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
-    var centralBody = new CentralBody(ellipsoid);
+    var globe = new Globe(ellipsoid);
     beforeAll(function() {
         scene = createScene();
-        scene.primitives.centralBody = centralBody;
+        scene.globe = globe;
     });
 
     afterAll(function() {

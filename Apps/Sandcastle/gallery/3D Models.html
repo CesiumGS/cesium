@@ -29,7 +29,7 @@ require(['Cesium'], function(Cesium) {
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var ellipsoid = scene.primitives.centralBody.ellipsoid;
+    var ellipsoid = scene.globe.ellipsoid;
     
     function createModel(url, height) {
         height = Cesium.defaultValue(height, 0.0);

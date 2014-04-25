@@ -59,7 +59,7 @@ define([
      *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
-     * centralBody.terrainProvider = terrainProvider;
+     * scene.terrainProvider = terrainProvider;
      */
     var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
         //>>includeStart('debug', pragmas.debug);

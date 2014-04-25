@@ -293,14 +293,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             geocoder = new Geocoder({
                 container : geocoderContainer,
                 scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget.centralBody.ellipsoid
+                ellipsoid : cesiumWidget._globe.ellipsoid
             });
         }
 
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.centralBody.ellipsoid);
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget._globe.ellipsoid);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;
@@ -325,7 +325,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
 
             baseLayerPicker = new BaseLayerPicker(toolbar, {
-                centralBody : cesiumWidget.centralBody,
+                globe : cesiumWidget._globe,
                 imageryProviderViewModels : imageryProviderViewModels,
                 selectedImageryProviderViewModel : options.selectedImageryProviderViewModel,
                 terrainProviderViewModels : terrainProviderViewModels,
@@ -652,17 +652,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         scene : {
             get : function() {
                 return this._cesiumWidget.scene;
-            }
-        },
-
-        /**
-         * Gets the primary central body.
-         * @memberof Viewer.prototype
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get : function() {
-                return this._cesiumWidget.centralBody;
             }
         },
 
