@@ -28,7 +28,7 @@ define([
          * @type {String}
          */
         name : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets the preferred clock settings for this data source.
@@ -36,7 +36,7 @@ define([
          * @type {DynamicClock}
          */
         clock : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets the collection of {@link DynamicObject} instances.
@@ -44,7 +44,7 @@ define([
          * @type {DynamicObjectCollection}
          */
         dynamicObjects : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets a value indicating if the data source is currently loading data.
@@ -52,7 +52,7 @@ define([
          * @type {Boolean}
          */
         isLoading : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets an event that will be raised when the underlying data changes.
@@ -60,7 +60,7 @@ define([
          * @type {Event}
          */
         changedEvent : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets an event that will be raised if an error is encountered during processing.
@@ -68,7 +68,7 @@ define([
          * @type {Event}
          */
         errorEvent : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         },
         /**
          * Gets an event that will be raised when the value of isLoading changes.
@@ -76,7 +76,7 @@ define([
          * @type {Event}
          */
         loadingEvent : {
-            get : DeveloperError.throwInstantiationError()
+            get : DeveloperError.throwInstantiationError
         }
     });
 
