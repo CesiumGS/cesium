@@ -40,7 +40,7 @@ define(['../Core/createGuid',
         this._parent = undefined;
         this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
                                'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
-                               'rectangle', 'vector', 'vertexPositions', 'viewFrom'];
+                               'rectangle', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -80,6 +80,8 @@ define(['../Core/createGuid',
         this._vertexPositionsSubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
+        this._wall = undefined;
+        this._wallSubscription = undefined;
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -264,7 +266,13 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Cartesian3}
          */
-        viewFrom : createDynamicPropertyDescriptor('viewFrom')
+        viewFrom : createDynamicPropertyDescriptor('viewFrom'),
+        /**
+         * Gets or sets the wall.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicWall}
+         */
+        wall : createDynamicPropertyDescriptor('wall')
     });
 
     /**

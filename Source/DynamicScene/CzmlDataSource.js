@@ -57,6 +57,7 @@ define(['../Core/Cartesian2',
         './DynamicPyramid',
         './DynamicRectangle',
         './DynamicVector',
+        './DynamicWall',
         './PositionPropertyArray',
         './ReferenceProperty',
         './SampledPositionProperty',
@@ -126,6 +127,7 @@ define(['../Core/Cartesian2',
         DynamicPyramid,
         DynamicRectangle,
         DynamicVector,
+        DynamicWall,
         PositionPropertyArray,
         ReferenceProperty,
         SampledPositionProperty,
@@ -449,7 +451,7 @@ define(['../Core/Cartesian2',
             } else {
                 object[propertyName] = new ConstantProperty(unwrappedInterval);
             }
-            return true;
+            return;
         }
 
         var propertyCreated = false;
@@ -777,7 +779,7 @@ define(['../Core/Cartesian2',
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
             existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
-        } else if (defined(packetData.stripe)){
+        } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
             }
@@ -1250,6 +1252,32 @@ define(['../Core/Cartesian2',
         processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri);
     }
 
+    function processWall(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var wallData = packet.wall;
+        if (!defined(wallData)) {
+            return;
+        }
+
+        var interval = wallData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var wall = dynamicObject.wall;
+        if (!defined(wall)) {
+            dynamicObject.wall = wall = new DynamicWall();
+        }
+
+        processPacketData(Boolean, wall, 'show', wallData.show, interval, sourceUri);
+        processMaterialPacketData(wall, 'material', wallData.material, interval, sourceUri);
+        processPacketData(Array, wall, 'minimumHeights', wallData.minimumHeights, interval, sourceUri);
+        processPacketData(Array, wall, 'maximumHeights', wallData.maximumHeights, interval, sourceUri);
+        processPacketData(Number, wall, 'granularity', wallData.granularity, interval, sourceUri);
+        processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri);
+        processPacketData(Boolean, wall, 'outline', wallData.outline, interval, sourceUri);
+        processPacketData(Color, wall, 'outlineColor', wallData.outlineColor, interval, sourceUri);
+    }
+
     function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
@@ -1495,6 +1523,81 @@ define(['../Core/Cartesian2',
         this._document = new DynamicObject();
     };
 
+    defineProperties(CzmlDataSource.prototype, {
+        /**
+         * Gets a human-readable name for this instance.
+         * @memberof CzmlDataSource.prototype
+         * @type {String}
+         */
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
+        /**
+         * Gets the clock settings defined by the loaded CZML.  If no clock is explicitly
+         * defined in the CZML, the combined availability of all objects is returned.  If
+         * only static data exists, this value is undefined.
+         * @memberof CzmlDataSource.prototype
+         * @type {DynamicClock}
+         */
+        clock : {
+            get : function() {
+                return this._clock;
+            }
+        },
+        /**
+         * Gets the collection of {@link DynamicObject} instances.
+         * @memberof CzmlDataSource.prototype
+         * @type {DynamicObjectCollection}
+         */
+        dynamicObjects : {
+            get : function() {
+                return this._dynamicObjectCollection;
+            }
+        },
+        /**
+         * Gets a value indicating if the data source is currently loading data.
+         * @memberof CzmlDataSource.prototype
+         * @type {Boolean}
+         */
+        isLoading : {
+            get : function() {
+                return this._isLoading;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the underlying data changes.
+         * @memberof CzmlDataSource.prototype
+         * @type {Event}
+         */
+        changedEvent : {
+            get : function() {
+                return this._changed;
+            }
+        },
+        /**
+         * Gets an event that will be raised if an error is encountered during processing.
+         * @memberof CzmlDataSource.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._error;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the data source either starts or stops loading.
+         * @memberof CzmlDataSource.prototype
+         * @type {Event}
+         */
+        loadingEvent : {
+            get : function() {
+                return this._loading;
+            }
+        }
+    });
+
     /**
      * Gets the array of CZML processing functions.
      * @memberof CzmlDataSource
@@ -1519,63 +1622,10 @@ define(['../Core/Cartesian2',
     processVector, //
     processPosition, //
     processViewFrom, //
+    processWall, //
     processOrientation, //
     processVertexPositions, //
     processAvailability];
-
-    /**
-     * Gets an event that will be raised when new data is done loading.
-     * @memberof CzmlDataSource
-     *
-     * @returns {Event} The event.
-     */
-    CzmlDataSource.prototype.getChangedEvent = function() {
-        return this._changed;
-    };
-
-    /**
-     * Gets an event that will be raised if an error is encountered during processing.
-     * @memberof CzmlDataSource
-     *
-     * @returns {Event} The event.
-     */
-    CzmlDataSource.prototype.getErrorEvent = function() {
-        return this._error;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection generated by this data source.
-     * @memberof CzmlDataSource
-     *
-     * @returns {DynamicObjectCollection} The collection of objects generated by this data source.
-     */
-    CzmlDataSource.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Gets the name of this data source.  If the return value of
-     * this function changes, the changed event will be raised.
-     * @memberof CzmlDataSource
-     *
-     * @returns {String} The name.
-     */
-    CzmlDataSource.prototype.getName = function() {
-        return this._name;
-    };
-
-    /**
-     * Gets the top level clock defined in CZML or the availability of the
-     * underlying data if no clock is defined.  If the CZML document only contains
-     * infinite data, undefined will be returned.  If the return value of
-     * this function changes, the changed event will be raised.
-     * @memberof CzmlDataSource
-     *
-     * @returns {DynamicClock} The clock associated with the current CZML data, or undefined if none exists.
-     */
-    CzmlDataSource.prototype.getClock = function() {
-        return this._clock;
-    };
 
     /**
      * Gets a value indicating if this data source is actively loading data.  If the return value of

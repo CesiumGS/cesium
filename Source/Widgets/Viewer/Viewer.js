@@ -404,7 +404,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         function trackDataSourceClock(dataSource) {
             if (defined(dataSource)) {
-                var dataSourceClock = dataSource.getClock();
+                var dataSourceClock = dataSource.clock;
                 if (defined(dataSourceClock)) {
                     dataSourceClock.getValue(clock);
                     if (defined(timeline)) {
@@ -433,14 +433,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             if (automaticallyTrackDataSourceClocks) {
                 that.clockTrackedDataSource = dataSource;
             }
-            var id = dataSource.getDynamicObjectCollection().id;
-            var removalFunc = eventHelper.add(dataSource.getChangedEvent(), onDataSourceChanged);
+            var id = dataSource.dynamicObjects.id;
+            var removalFunc = eventHelper.add(dataSource.changedEvent, onDataSourceChanged);
             that._dataSourceChangedListeners[id] = removalFunc;
         };
 
         var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
             var resetClock = (that.clockTrackedDataSource === dataSource);
-            var id = dataSource.getDynamicObjectCollection().id;
+            var id = dataSource.dynamicObjects.id;
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
@@ -656,7 +656,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the canvas.
          * @memberof Viewer.prototype
-         * @returns {Canvas} The canvas.
+         * @type {Canvas}
          */
         canvas : {
             get : function() {
@@ -667,7 +667,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the Cesium logo element.
          * @memberof Viewer.prototype
-         * @returns {Element} The logo element.
+         * @type {Element}
          */
         cesiumLogo : {
             get : function() {
@@ -678,7 +678,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the scene.
          * @memberof Viewer.prototype
-         * @returns {Scene} The scene.
+         * @type {Scene}
          */
         scene : {
             get : function() {
@@ -689,7 +689,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the clock.
          * @memberof Viewer.prototype
-         * @returns {Clock} the clock
+         * @type {Clock}
          */
         clock : {
             get : function() {
@@ -700,7 +700,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the screen space event handler.
          * @memberof Viewer.prototype
-         * @returns {ScreenSpaceEventHandler}
+         * @type {ScreenSpaceEventHandler}
          */
         screenSpaceEventHandler : {
             get : function() {

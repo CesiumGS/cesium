@@ -17,7 +17,8 @@ define(['../Core/defaultValue',
         './GeometryVisualizer',
         './PolygonGeometryUpdater',
         './PolylineGeometryUpdater',
-        './RectangleGeometryUpdater'
+        './RectangleGeometryUpdater',
+        './WallGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -37,7 +38,8 @@ define(['../Core/defaultValue',
         GeometryVisualizer,
         PolygonGeometryUpdater,
         PolylineGeometryUpdater,
-        RectangleGeometryUpdater) {
+        RectangleGeometryUpdater,
+        WallGeometryUpdater) {
     "use strict";
 
     /**
@@ -83,13 +85,14 @@ define(['../Core/defaultValue',
      * @type {Function}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
-        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        var dynamicObjects = dataSource.dynamicObjects;
         return [new DynamicBillboardVisualizer(scene, dynamicObjects),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(RectangleGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(WallGeometryUpdater, scene, dynamicObjects),
                 new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
                 new DynamicLabelVisualizer(scene, dynamicObjects),
                 new DynamicModelVisualizer(scene, dynamicObjects),
@@ -193,7 +196,10 @@ define(['../Core/defaultValue',
         var length = dataSources.length;
         for (i = 0; i < length; i++) {
             var dataSource = dataSources.get(i);
-            result = dataSource.update(time) && result;
+            if (defined(dataSource.update)) {
+                result = dataSource.update(time) && result;
+            }
+
             visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
