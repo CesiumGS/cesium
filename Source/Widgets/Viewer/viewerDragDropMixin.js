@@ -9,7 +9,6 @@ define([
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
         '../../DynamicScene/KmlDataSource',
-        '../../ThirdParty/when',
         '../getElement'
     ], function(
         defaultValue,
@@ -21,7 +20,6 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
-        when,
         getElement) {
     "use strict";
 
@@ -159,12 +157,12 @@ define([
 
             var files = event.dataTransfer.files;
             var length = files.length;
-            for ( var i = 0; i < length; i++) {
-                var f = files[i];
+            for (var i = 0; i < length; i++) {
+                var file = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f);
-                reader.onerror = createDropErrorCallback(viewer, f.name);
-                reader.readAsText(f);
+                reader.onload = createOnLoadCallback(viewer, file);
+                reader.onerror = createDropErrorCallback(viewer, file);
+                reader.readAsText(file);
             }
         }
 
@@ -202,53 +200,47 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
-    function endsWith(str, suffix) {
-        var strLength = str.length;
-        var suffixLength = suffix.length;
-        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
-    }
-
     function createOnLoadCallback(viewer, file) {
-        var source = file.name;
         return function(evt) {
+            var fileName = file.name;
             try {
-                var promise;
                 var dataSource;
-                var sourceUpperCase = source.toUpperCase();
-                if (endsWith(sourceUpperCase, ".CZML")) {
-                    dataSource = new CzmlDataSource();
-                    promise = dataSource.load(JSON.parse(evt.target.result), source);
-                } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
-                endsWith(sourceUpperCase, ".JSON") || //
-                endsWith(sourceUpperCase, ".TOPOJSON")) {
-                    dataSource = new GeoJsonDataSource();
-                    promise = dataSource.load(JSON.parse(evt.target.result), source);
-                } else if (endsWith(sourceUpperCase, ".KML")) {
+                var loadPromise;
+
+                if (/\.czml$/i.test(fileName)) {
+                    dataSource = new CzmlDataSource(fileName);
+                    dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
+                    dataSource = new GeoJsonDataSource(fileName);
+                    loadPromise = dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else if (/\.kml$/i.test(fileName)) {
                     dataSource = new KmlDataSource();
                     var parser = new DOMParser();
-                    promise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), source);
-                } else if (endsWith(sourceUpperCase, ".KMZ")) {
+                    loadPromise = dataSource.load(parser.parseFromString(evt.target.result, "text/xml"), fileName);
+                } else if (/\.kmz$/i.test(fileName)) {
                     dataSource = new KmlDataSource();
-                    promise = dataSource.loadKmz(file, source);
+                    loadPromise = dataSource.loadKmz(file, fileName);
                 } else {
-                    viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-                    return undefined;
+                    viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
+                    return;
                 }
 
-                when(promise, function() {
-                    viewer.dataSources.add(dataSource);
-                }, function(error) {
-                    viewer.dropError.raiseEvent(viewer, source, error);
-                });
+                viewer.dataSources.add(dataSource);
+
+                if (defined(loadPromise)) {
+                    loadPromise.otherwise(function(error) {
+                        viewer.dropError.raiseEvent(viewer, fileName, error);
+                    });
+                }
             } catch (error) {
-                viewer.dropError.raiseEvent(viewer, source, error);
+                viewer.dropError.raiseEvent(viewer, fileName, error);
             }
         };
     }
 
-    function createDropErrorCallback(viewer, name) {
+    function createDropErrorCallback(viewer, file) {
         return function(evt) {
-            viewer.dropError.raiseEvent(viewer, name, evt.target.error);
+            viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
         };
     }
 

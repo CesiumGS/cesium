@@ -7,6 +7,7 @@ define(['../Core/createGuid',
         '../Core/Color',
         '../Core/ClockRange',
         '../Core/ClockStep',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         '../Core/Ellipsoid',
@@ -51,6 +52,7 @@ define(['../Core/createGuid',
         Color,
         ClockRange,
         ClockStep,
+        defineProperties,
         DeveloperError,
         RuntimeError,
         Ellipsoid,
@@ -904,96 +906,91 @@ define(['../Core/createGuid',
         this._proxy = proxy;
     };
 
-    /**
-     * Gets an event that will be raised when new data is done loading.
-     * @memberof KmlDataSource
-     *
-     * @returns {Event} The event.
-     */
-    KmlDataSource.prototype.getChangedEvent = function() {
-        return this._changed;
-    };
-
-    /**
-     * Gets an event that will be raised if an error is encountered during processing.
-     * @memberof KmlDataSource
-     *
-     * @returns {Event} The event.
-     */
-    KmlDataSource.prototype.getErrorEvent = function() {
-        return this._error;
-    };
-
-    /**
-     * Gets an event that will be raised when the data source either starts or stops loading.
-     * @memberof KmlDataSource
-     * @function
-     *
-     * @returns {Event} The event.
-     */
-    KmlDataSource.prototype.getLoadingEvent = function() {
-        return this._isLoadingEvent;
-    };
-
-    /**
-     * Gets a value indicating if this data source is actively loading data.  If the return value of
-     * this function changes, the loading event will be raised.
-     * @memberof KmlDataSource
-     * @function
-     *
-     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
-     */
-    KmlDataSource.prototype.getIsLoading = function() {
-        return this._isLoading;
-    };
-
-    /**
-     * Gets the name of the currently loaded document.
-     * @returns {String} The name of the currently loaded document.
-     */
-    KmlDataSource.prototype.getName = function() {
-        return this._name;
-    };
-
-    /**
-     * Gets the aggregated availability of all objects in the KML document.
-     * If the document only contains static data, undefined will be returned.
-     * @memberof KmlDataSource
-     *
-     * @returns {DynamicClock} The clock associated with the current KML data, or undefined if the data is static.
-     */
-    KmlDataSource.prototype.getClock = function() {
-        var availability = this._dynamicObjectCollection.computeAvailability();
-        if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
-            return undefined;
+    defineProperties(KmlDataSource.prototype, {
+        /**
+         * Gets a human-readable name for this instance.
+         * @memberof KmlDataSource.prototype
+         * @type {String}
+         */
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
+        /**
+         * Gets the clock settings defined by the loaded CZML.  If no clock is explicitly
+         * defined in the CZML, the combined availability of all objects is returned.  If
+         * only static data exists, this value is undefined.
+         * @memberof KmlDataSource.prototype
+         * @type {DynamicClock}
+         */
+        clock : {
+            get : function() {
+                var availability = this._dynamicObjectCollection.computeAvailability();
+                if (availability.equals(Iso8601.MAXIMUM_INTERVAL)) {
+                    return undefined;
+                }
+                var clock = new DynamicClock();
+                clock.startTime = availability.start;
+                clock.stopTime = availability.stop;
+                clock.currentTime = availability.start;
+                clock.clockRange = ClockRange.LOOP_STOP;
+                clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                clock.multiplier = Math.min(Math.max(availability.start.getSecondsDifference(availability.stop) / 60, 60), 50000000);
+                return clock;
+            }
+        },
+        /**
+         * Gets the collection of {@link DynamicObject} instances.
+         * @memberof KmlDataSource.prototype
+         * @type {DynamicObjectCollection}
+         */
+        dynamicObjects : {
+            get : function() {
+                return this._composite;
+            }
+        },
+        /**
+         * Gets a value indicating if the data source is currently loading data.
+         * @memberof KmlDataSource.prototype
+         * @type {Boolean}
+         */
+        isLoading : {
+            get : function() {
+                return this._isLoading;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the underlying data changes.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        changedEvent : {
+            get : function() {
+                return this._changed;
+            }
+        },
+        /**
+         * Gets an event that will be raised if an error is encountered during processing.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._error;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the data source either starts or stops loading.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        loadingEvent : {
+            get : function() {
+                return this._isLoadingEvent;
+            }
         }
-        var clock = new DynamicClock();
-        clock.startTime = availability.start;
-        clock.stopTime = availability.stop;
-        clock.currentTime = availability.start;
-        clock.clockRange = ClockRange.LOOP_STOP;
-        clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        clock.multiplier = Math.min(Math.max(availability.start.getSecondsDifference(availability.stop) / 60, 60), 50000000);
-        return clock;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection generated by this data source.
-     * @memberof KmlDataSource
-     *
-     * @returns {DynamicObjectCollection} The collection of objects generated by this data source.
-     */
-    KmlDataSource.prototype.getDynamicObjectCollection = function() {
-        return this._composite;
-    };
-
-    /**
-     * This function is part of the DataSource interface but is unused by this object.
-     * @returns {Boolean} This function always returns true.
-     */
-    KmlDataSource.prototype.update = function() {
-        return true;
-    };
+    });
 
     /**
      * Asynchronously loads the provided KML document, replacing any existing data.
