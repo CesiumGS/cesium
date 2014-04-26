@@ -1913,7 +1913,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(rectanglePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
 
         expect(dynamicObject.rectangle).toBeDefined();
@@ -1940,7 +1940,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(rectanglePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
     });
 
@@ -1969,7 +1969,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(wallPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.wall).toBeDefined();
         expect(dynamicObject.wall.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
