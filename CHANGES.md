@@ -26,6 +26,12 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * Converted 'DataSource' get methods into properties.
+      * 'getName` -> `name`
+      * 'getClock` -> `clock`
+      * 'getChangedEvent` -> `changedEvent`
+      * 'getDynamicObjectCollection` -> `dynamicObjects`
+      * 'getErrorEvent` -> `errorEvent`
   * `BaseLayerPicker` has been extended to support terrain selection.
     * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
     * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a CentralBody and ImageryLayerCollection.
@@ -203,6 +209,7 @@ Beta Releases
       * `normalize`
     * `Extent`
       * `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
+  * `DataSource` now has additional required properties, `isLoading` and `loadingEvent` as well as a new optional `update` method which will be called each frame.
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
   * Removed `TexturePool`.
