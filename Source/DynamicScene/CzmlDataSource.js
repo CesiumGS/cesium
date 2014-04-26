@@ -1628,42 +1628,6 @@ define(['../Core/Cartesian2',
     processAvailability];
 
     /**
-     * Gets a value indicating if this data source is actively loading data.  If the return value of
-     * this function changes, the loading event will be raised.
-     * @memberof CzmlDataSource
-     * @function
-     *
-     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
-     */
-    CzmlDataSource.prototype.getIsLoading = function() {
-        return this._isLoading;
-    };
-
-    /**
-     * Gets an event that will be raised when the data source either starts or stops loading.
-     * @memberof CzmlDataSource
-     * @function
-     *
-     * @returns {Event} The event.
-     */
-    CzmlDataSource.prototype.getLoadingEvent = function() {
-        return this._loading;
-    };
-
-    /**
-     * Updates the data source to the provided time.
-     * @memberof CzmlDataSource
-     * @function
-     *
-     * @param {JulianDate} time The simulation time.
-     *
-     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
-     */
-    CzmlDataSource.prototype.update = function(time) {
-        return true;
-    };
-
-    /**
      * Processes the provided CZML without clearing any existing data.
      *
      * @param {Object} czml The CZML to be processed.

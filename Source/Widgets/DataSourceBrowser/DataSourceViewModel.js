@@ -41,10 +41,10 @@ define([
          * Gets or sets the name of this data source.  This property is observable.
          * @type {String}
          */
-        this.name = dataSource.getName();
+        this.name = dataSource.name;
         this.children = [];
         this.expanded = true;
-        this._isLoading = dataSource.getIsLoading();
+        this._isLoading = dataSource.isLoading;
         this._uiShow = true;
 
         knockout.track(this, ['name', 'children', 'expanded', '_isLoading', '_uiShow']);
@@ -145,11 +145,11 @@ define([
 
         var that = this;
         this._eventHelper = new EventHelper();
-        this._eventHelper.add(dataSource.getLoadingEvent(), function(dataSource, isLoading) {
+        this._eventHelper.add(dataSource.loadingEvent, function(dataSource, isLoading) {
             that._isLoading = isLoading;
         });
-        this._eventHelper.add(dataSource.getChangedEvent(), function(dataSource) {
-            that.name = dataSource.getName();
+        this._eventHelper.add(dataSource.changedEvent, function(dataSource) {
+            that.name = dataSource.name;
         });
 
         this._trackClock = createCommand(function() {

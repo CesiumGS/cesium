@@ -417,44 +417,6 @@ define([
     });
 
     /**
-
-    /**
-     * Gets a value indicating if this data source is actively loading data.  If the return value of
-     * this function changes, the loading event will be raised.
-     * @memberof GeoJsonDataSource
-     * @function
-     *
-     * @returns {Boolean} True if this data source is actively loading data, false otherwise.
-     */
-    GeoJsonDataSource.prototype.getIsLoading = function() {
-        return this._isLoading;
-    };
-
-    /**
-     * Gets an event that will be raised when the data source either starts or stops loading.
-     * @memberof GeoJsonDataSource
-     * @function
-     *
-     * @returns {Event} The event.
-     */
-    GeoJsonDataSource.prototype.getLoadingEvent = function() {
-        return this._loading;
-    };
-
-    /**
-     * Updates the data source to the provided time.
-     * @memberof GeoJsonDataSource
-     * @function
-     *
-     * @param {JulianDate} time The simulation time.
-     *
-     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
-     */
-    GeoJsonDataSource.prototype.update = function(time) {
-        return true;
-    };
-
-    /**
      * Asynchronously loads the GeoJSON at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.

@@ -388,7 +388,7 @@ define([
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModel = new DataSourceViewModel(this, dataSource);
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         var dynamicObjectCollectionId = dynamicObjectCollection.id;
 
         var dataSourceViewModelHash = this._dataSourceViewModelHash[dynamicObjectCollectionId];
@@ -425,7 +425,7 @@ define([
             var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel.dataSource === dataSource) {
                 // unsubscribe from collectionChanged
-                var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+                var dynamicObjectCollection = dataSource.dynamicObjects;
                 var dynamicObjectCollectionId = dynamicObjectCollection.id;
                 this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId]();
                 this._dynamicObjectCollectionChangedListeners[dynamicObjectCollectionId] = undefined;
