@@ -9,6 +9,16 @@ Beta Releases
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
   * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
   * Renamed `CentralBody` to `Globe`.
+  * Refactored visualizers, removing `setDynamicObjectCollection`, `getDynamicObjectCollection`, `getScene`, and `removeAllPrimitives` which are all superfluous after the introduction of `DataSourceDisplay`.  The affected classes are:
+    * `DynamicBillboardVisualizer`
+    * `DynamicConeVisualizerUsingCustomSensor`
+    * `DynamicLabelVisualizer`
+    * `DynamicModelVisualizer`
+    * `DynamicPathVisualizer`
+    * `DynamicPointVisualizer`
+    * `DynamicPyramidVisualizer`
+    * `DynamicVectorVisualizer`
+    * `GeometryVisualizer`
   * Renamed Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
