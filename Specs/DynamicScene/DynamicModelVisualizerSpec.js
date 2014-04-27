@@ -55,32 +55,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-    });
-
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
         }).toThrowDeveloperError();
-    });
-
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicModelVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
-    it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicModelVisualizer(scene);
-        expect(visualizer.isDestroyed()).toEqual(false);
-        visualizer.destroy();
-        expect(visualizer.isDestroyed()).toEqual(true);
-        visualizer = undefined;
     });
 
     it('object with no model does not create one.', function() {

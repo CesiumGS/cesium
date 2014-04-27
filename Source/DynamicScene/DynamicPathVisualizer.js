@@ -423,73 +423,29 @@ define([
     };
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPath instance
-     * in DynamicObject.path to a Polyline primitive.
+     * A {@link Visualizer} which maps the {@link DynamicPath} instance
+     * in {@link DynamicObject.path} to a {@link Polyline}.
      * @alias DynamicPathVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicPath
-     * @see Polyline
-     * @see DynamicObject
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensor
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._updaters = {};
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicPathVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicPathVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicPathVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-            }
-        }
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
@@ -561,63 +517,26 @@ define([
     };
 
     /**
-     * Removes all primitives from the scene.
+     * Removes and destroys all primitives created by this instance.
+     * @memberof DynamicVectorVisualizer
      */
-    DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
+    DynamicPathVisualizer.prototype.destroy = function() {
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
+
         var updaters = this._updaters;
         for ( var key in updaters) {
             if (updaters.hasOwnProperty(key)) {
                 updaters[key].destroy();
             }
         }
-        this._updaters = {};
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._pathUpdater = undefined;
-                dynamicObjects[i]._pathVisualizerIndex = undefined;
-            }
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        var length = dynamicObjects.length;
+        for (var i = 0; i < length; i++) {
+            dynamicObjects[i]._pathUpdater = undefined;
+            dynamicObjects[i]._pathVisualizerIndex = undefined;
         }
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicPathVisualizer
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicPathVisualizer#destroy
-     */
-    DynamicPathVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicPathVisualizer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicPathVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
-    DynamicPathVisualizer.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 

@@ -45,10 +45,6 @@ defineSuite([
         return this.dynamicObjectCollection;
     };
 
-    MockVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        this.dynamicObjectCollection = dynamicObjectCollection;
-    };
-
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;

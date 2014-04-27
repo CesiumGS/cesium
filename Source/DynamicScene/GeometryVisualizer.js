@@ -208,15 +208,8 @@ define(['../Core/AssociativeArray',
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * Removes and destroys all primitives created by this instance.
      * @memberof GeometryVisualizer
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     GeometryVisualizer.prototype.destroy = function() {
         this._addedObjects.removeAll();

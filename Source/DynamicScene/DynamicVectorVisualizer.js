@@ -18,80 +18,39 @@ define([
     "use strict";
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPolyline instance
-     * in DynamicObject.vector to a Polyline primitive.
+     * A {@link Visualizer} which maps the {@link DynamicVector} instance
+     * in {@link DynamicObject.vector} to a {@link Polyline}.
      * @alias DynamicVectorVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicPolyline
-     * @see DynamicObject
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensor
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicVectorVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
+        var polylineCollection = new PolylineCollection();
+        scene.primitives.add(polylineCollection);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.primitives;
-        var polylineCollection = this._polylineCollection = new PolylineCollection();
-        scene.primitives.add(polylineCollection);
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicVectorVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicVectorVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicVectorVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
-            }
-        }
+        this._polylineCollection = polylineCollection;
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicVectorVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -113,59 +72,18 @@ define([
     };
 
     /**
-     * Removes all primitives from the scene.
-     */
-    DynamicVectorVisualizer.prototype.removeAllPrimitives = function() {
-        var i;
-        this._polylineCollection.removeAll();
-
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._vectorVisualizerIndex = undefined;
-            }
-        }
-
-        this._unusedIndexes = [];
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
+     * Removes and destroys all primitives created by this instance.
      * @memberof DynamicVectorVisualizer
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicVectorVisualizer#destroy
-     */
-    DynamicVectorVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicVectorVisualizer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicVectorVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
      */
     DynamicVectorVisualizer.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicVectorVisualizer.prototype._onObjectsRemoved, this);
+
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
+            dynamicObjects[i]._vectorVisualizerIndex = undefined;
+        }
+
         this._scene.primitives.remove(this._polylineCollection);
         return destroyObject(this);
     };

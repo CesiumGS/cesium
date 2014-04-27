@@ -77,79 +77,37 @@ define([
     }
 
     /**
-     * A DynamicObject visualizer which maps the DynamicCone instance
-     * in DynamicObject.cone to a CustomSensor primitive.
+     * A {@link Visualizer} which maps the {@link DynamicCone} instance
+     * in {@link DynamicObject.cone} to a {@link CustomSensor}.
      * @alias DynamicConeVisualizerUsingCustomSensor
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicCone
-     * @see DynamicObject
-     * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.primitives;
         this._coneCollection = [];
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
-            }
-        }
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicLabelVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -171,62 +129,25 @@ define([
     };
 
     /**
-     * Removes all primitives from the scene.
+     * Removes and destroys all primitives created by this instance.
+     * @memberof DynamicLabelVisualizer
      */
-    DynamicConeVisualizerUsingCustomSensor.prototype.removeAllPrimitives = function() {
-        var i, len;
-        for (i = 0, len = this._coneCollection.length; i < len; i++) {
+    DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
+
+        var i;
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        var length = dynamicObjects.length;
+        for (i = 0; i < length; i++) {
+            dynamicObjects[i]._coneVisualizerIndex = undefined;
+        }
+
+        length = this._coneCollection.length;
+        for (i = 0; i < length; i++) {
             this._primitives.remove(this._coneCollection[i]);
         }
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._coneVisualizerIndex = undefined;
-            }
-        }
-
-        this._unusedIndexes = [];
-        this._coneCollection = [];
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#destroy
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
         return destroyObject(this);
     };
 

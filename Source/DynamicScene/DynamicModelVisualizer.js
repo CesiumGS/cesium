@@ -25,7 +25,7 @@ define([
 
     /**
      * A {@link Visualizer} which maps the {@link DynamicModel} instance
-     * in {@link DynamicObject.model} to a {@link Model} primitive.
+     * in {@link DynamicObject.model} to a {@link Model}.
      * @alias DynamicModelVisualizer
      * @constructor
      *
@@ -42,16 +42,18 @@ define([
         }
         //>>includeEnd('debug');
 
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
+
         this._scene = scene;
         this._primitives = scene.primitives;
         this._dynamicObjectCollection = undefined;
         this._dynamicObjectCollection = dynamicObjectCollection;
-        dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
     };
 
     /**
      * Updates all models created this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicModelVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -73,19 +75,20 @@ define([
     };
 
     /**
-     * Removes and destroys all models created by this instance.
+     * Removes and destroys all primitives created by this instance.
      * @memberof DynamicModelVisualizer
      */
     DynamicModelVisualizer.prototype.destroy = function() {
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
         for (var i = dynamicObjects.length - 1; i > -1; i--) {
-            var model = dynamicObjects[i]._modelPrimitive;
+            var dynamicObject = dynamicObjects[i];
+            var model = dynamicObject._modelPrimitive;
             if (defined(model)) {
                 this._primitives.remove(model);
                 if (!model.isDestroyed()) {
                     model.destroy();
                 }
-                model = undefined;
+                dynamicObject._modelPrimitive = undefined;
             }
         }
         return destroyObject(this);

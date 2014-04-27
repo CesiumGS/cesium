@@ -25,13 +25,13 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * false if the visualizer is waiting for an asynchronous operation to
      * complete before data can be updated.
      */
-    Visualizer.prototype.update = DeveloperError.throwInstantiationError();
+    Visualizer.prototype.update = DeveloperError.throwInstantiationError;
 
     /**
      * Removes all visualization and cleans up any resources associated with this instance.
      * @memberof Visualizer
      */
-    Visualizer.prototype.destroy = DeveloperError.throwInstantiationError();
+    Visualizer.prototype.destroy = DeveloperError.throwInstantiationError;
 
     return Visualizer;
 });
