@@ -1050,28 +1050,6 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the size of a pixel in meters at a distance of one meter
-         * from the camera. The pixel size is linearly proportional to the distance from the camera.
-         *
-         * @alias czm_pixelSizeInMeters
-         * @glslUniform
-         *
-         * @example
-         * // GLSL declaration
-         * uniform float czm_pixelSizeInMeters;
-         *
-         * // Example: the pixel size at a position in eye coordinates
-         * float pixelSize = czm_pixelSizeInMeters * positionEC.z;
-         */
-        czm_pixelSizeInMeters : new AutomaticUniform({
-            size : 1,
-            datatype : UniformDatatype.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.pixelSize;
-            }
-        }),
-
-        /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *
          * @alias czm_sunPositionWC

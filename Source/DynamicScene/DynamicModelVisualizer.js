@@ -44,7 +44,6 @@ define([
 
         this._scene = scene;
         this._primitives = scene.primitives;
-        this._modelCollection = [];
         this._dynamicObjectCollection = undefined;
         this._dynamicObjectCollection = dynamicObjectCollection;
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);

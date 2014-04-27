@@ -272,17 +272,7 @@ define([
          */
         this.allowPicking = defaultValue(options.allowPicking, true);
 
-        /**
-         * Determines if the geometry instances will be created and batched on
-         * a web worker.
-         *
-         * @type Boolean
-         *
-         * @default true
-         *
-         * @private
-         */
-        this.asynchronous = defaultValue(options.asynchronous, true);
+        this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -329,6 +319,24 @@ define([
 
         this._createGeometryResults = undefined;
     };
+
+    defineProperties(Primitive.prototype, {
+        /**
+         * Determines if the geometry instances will be created and batched on a web worker.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        asynchronous : {
+            get : function() {
+                return this._asynchronous;
+            }
+        }
+    });
 
     function cloneAttribute(attribute) {
         return new GeometryAttribute({
