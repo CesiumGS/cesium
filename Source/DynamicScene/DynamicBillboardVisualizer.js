@@ -40,8 +40,7 @@ define([
     }
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicBillboard} instance
-     * in {@link DynamicObject.billboard} to a {@link Billboard}.
+     * A {@link Visualizer} which maps {@link DynamicObject#billboard} to a {@link Billboard}.
      * @alias DynamicBillboardVisualizer
      * @constructor
      *
@@ -73,7 +72,7 @@ define([
     };
 
     /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicBillboardVisualizer
      *

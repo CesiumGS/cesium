@@ -30,8 +30,7 @@ define([
     var matrix3Scratch = new Matrix3();
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicPyramid} instance
-     * in {@link DynamicObject.pyramid} to a {@link CustomSensorVolume}.
+     * A {@link Visualizer} which maps {@link DynamicObject#pyramid} to a {@link CustomSensorVolume}.
      * @alias DynamicPyramidVisualizer
      * @constructor
      *
@@ -58,7 +57,7 @@ define([
     };
 
     /**
-     * Updates all of the sensors created by this visualizer to match their
+     * Updates the sensors created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicPyramidVisualizer
      *

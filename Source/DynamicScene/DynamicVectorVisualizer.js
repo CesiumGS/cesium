@@ -18,8 +18,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicVector} instance
-     * in {@link DynamicObject.vector} to a {@link Polyline}.
+     * A {@link Visualizer} which maps {@link DynamicObject#vector} to a {@link Polyline}.
      * @alias DynamicVectorVisualizer
      * @constructor
      *
@@ -48,7 +47,7 @@ define([
     };
 
     /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicVectorVisualizer
      *

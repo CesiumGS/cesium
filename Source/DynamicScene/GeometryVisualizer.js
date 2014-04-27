@@ -92,7 +92,7 @@ define(['../Core/AssociativeArray',
     }
 
     /**
-     * A general purpose visualizer for all graphics that can be represented by {@link Primitive} instances.
+     * A general purpose visualizer for geometry represented by {@link Primitive} instances.
      * @alias GeometryVisualizer
      * @constructor
      *

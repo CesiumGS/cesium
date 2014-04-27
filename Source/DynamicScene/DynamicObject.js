@@ -285,7 +285,7 @@ define(['../Core/createGuid',
 
     /**
      * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link DynamicObject.definitionChanged} and composited
+     * observed with {@link DynamicObject#definitionChanged} and composited
      * with {@link CompositeDynamicObjectCollection}
      * @memberof DynamicObject
      *

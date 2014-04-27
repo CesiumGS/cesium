@@ -29,12 +29,6 @@ define([
         MaterialProperty) {
     "use strict";
 
-    //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
-    //because ComplexConicSensor has major performance issues.  As soon as
-    //ComplexConicSensor is working, this class can be deleted and
-    //DynamicConeVisualizer is a drop in replacement that already does things
-    //"the right way".
-
     var matrix3Scratch = new Matrix3();
 
     function assignSpherical(index, array, clock, cone) {
@@ -77,8 +71,7 @@ define([
     }
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicCone} instance
-     * in {@link DynamicObject.cone} to a {@link CustomSensor}.
+     * A {@link Visualizer} which maps {@link DynamicObject#cone} to a {@link CustomSensor}.
      * @alias DynamicConeVisualizerUsingCustomSensor
      * @constructor
      *
@@ -105,7 +98,7 @@ define([
     };
 
     /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicLabelVisualizer
      *

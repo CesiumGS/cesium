@@ -423,8 +423,7 @@ define([
     };
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicPath} instance
-     * in {@link DynamicObject.path} to a {@link Polyline}.
+     * A {@link Visualizer} which maps {@link DynamicObject#path} to a {@link Polyline}.
      * @alias DynamicPathVisualizer
      * @constructor
      *
@@ -451,6 +450,7 @@ define([
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicPathVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -518,7 +518,7 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicVectorVisualizer
+     * @memberof DynamicPathVisualizer
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

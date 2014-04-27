@@ -24,8 +24,7 @@ define([
     var matrix3Scratch = new Matrix3();
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicModel} instance
-     * in {@link DynamicObject.model} to a {@link Model}.
+     * A {@link Visualizer} which maps {@link DynamicObject#model} to a {@link Model}.
      * @alias DynamicModelVisualizer
      * @constructor
      *
@@ -51,7 +50,7 @@ define([
     };
 
     /**
-     * Updates all models created this visualizer to match their
+     * Updates models created this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicModelVisualizer
      *

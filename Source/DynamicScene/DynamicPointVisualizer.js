@@ -18,9 +18,8 @@ define([
     "use strict";
 
     /**
-     * A {@link Visualizer} which maps the {@link DynamicPoint} instance
-     * in {@link DynamicObject.point} to a {@link Billboard}.
-     * @alias DynamicLabelVisualizer
+     * A {@link Visualizer} which maps {@link DynamicObject#point} to a {@link Billboard}.
+     * @alias DynamicPointVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
@@ -52,7 +51,7 @@ define([
     };
 
     /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicPointVisualizer
      *

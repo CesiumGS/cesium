@@ -25,7 +25,7 @@ define([
 
     /**
      * A {@link Visualizer} which maps the {@link DynamicLabel} instance
-     * in {@link DynamicObject.label} to a {@link Label}.
+     * in {@link DynamicObject#label} to a {@link Label}.
      * @alias DynamicLabelVisualizer
      * @constructor
      *
@@ -53,7 +53,7 @@ define([
     };
 
     /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      * @memberof DynamicLabelVisualizer
      *
