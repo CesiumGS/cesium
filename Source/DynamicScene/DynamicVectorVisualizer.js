@@ -126,7 +126,6 @@ define([
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
             polyline.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             polyline.width = 1;
             var material = polyline.material;
             if (!defined(material) || (material.type !== Material.PolylineArrowType)) {

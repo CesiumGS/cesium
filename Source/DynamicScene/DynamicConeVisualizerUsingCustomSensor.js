@@ -194,7 +194,6 @@ define([
             dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             cone.material = Material.fromType(Material.ColorType);
             cone.intersectionColor = Color.clone(Color.YELLOW);
             cone.intersectionWidth = 5.0;

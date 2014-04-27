@@ -156,7 +156,6 @@ define([
             dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
             pyramid.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;

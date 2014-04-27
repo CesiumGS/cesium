@@ -166,7 +166,6 @@ define([
             billboard._visualizerUrl = undefined;
             billboard._visualizerTextureAvailable = false;
 
-            // CZML_TODO Determine official defaults
             billboard.color = Color.WHITE;
             billboard.eyeOffset = Cartesian3.ZERO;
             billboard.pixelOffset = Cartesian2.ZERO;

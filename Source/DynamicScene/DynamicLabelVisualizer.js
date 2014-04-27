@@ -143,7 +143,6 @@ define([
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
             label.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             label.text = '';
             label.scale = 1.0;
             label.font = '30px sans-serif';
