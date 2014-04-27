@@ -474,10 +474,6 @@ define([
             BoundingSphere.pack(geometry.boundingSphere, packedData, count);
             count += BoundingSphere.packedLength;
 
-            packedData[count++] = geometry.indices.length;
-            packedData.set(geometry.indices, count);
-            count += geometry.indices.length;
-
             var attributes = geometry.attributes;
             var attributesToWrite = [];
             for ( var property in attributes) {
@@ -502,6 +498,10 @@ define([
                 packedData.set(attribute.values, count);
                 count += attribute.values.length;
             }
+
+            packedData[count++] = geometry.indices.length;
+            packedData.set(geometry.indices, count);
+            count += geometry.indices.length;
         }
 
         transferableObjects.push(packedData.buffer);
@@ -530,22 +530,19 @@ define([
             var boundingSphere = BoundingSphere.unpack(packedGeometry, packedGeometryIndex);
             packedGeometryIndex += BoundingSphere.packedLength;
 
-            var length = packedGeometry[packedGeometryIndex++];
-            var indices = IndexDatatype.createTypedArray(length / 3, length);
-            for (i = 0; i < length; i++) {
-                indices[i] = packedGeometry[packedGeometryIndex++];
-            }
-
+            var length;
+            var values;
+            var componentsPerAttribute;
             var attributes = {};
             var numAttributes = packedGeometry[packedGeometryIndex++];
             for (i = 0; i < numAttributes; i++) {
                 var name = stringTable[packedGeometry[packedGeometryIndex++]];
                 var componentDatatype = ComponentDatatype.fromValue(packedGeometry[packedGeometryIndex++]);
-                var componentsPerAttribute = packedGeometry[packedGeometryIndex++];
+                componentsPerAttribute = packedGeometry[packedGeometryIndex++];
                 var normalize = packedGeometry[packedGeometryIndex++] !== 0;
 
                 length = packedGeometry[packedGeometryIndex++];
-                var values = ComponentDatatype.createTypedArray(componentDatatype, length);
+                values = ComponentDatatype.createTypedArray(componentDatatype, length);
                 for (var valuesIndex = 0; valuesIndex < length; valuesIndex++) {
                     values[valuesIndex] = packedGeometry[packedGeometryIndex++];
                 }
@@ -556,6 +553,13 @@ define([
                     normalize : normalize,
                     values : values
                 });
+            }
+
+            var numberOfVertices = values.length / componentsPerAttribute;
+            length = packedGeometry[packedGeometryIndex++];
+            var indices = IndexDatatype.createTypedArray(numberOfVertices, length);
+            for (i = 0; i < length; i++) {
+                indices[i] = packedGeometry[packedGeometryIndex++];
             }
 
             result[resultIndex++] = new Geometry({
