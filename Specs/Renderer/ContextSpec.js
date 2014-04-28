@@ -236,7 +236,7 @@ defineSuite([
 
         pixel = renderFragment(context, fsDragDepth, 1.0, false);
 
-        if (context.getFragmentDepth) {
+        if (context.fragmentDepth) {
             expect(pixel).toEqual([0, 255, 0, 255]);
         } else {
             expect(pixel).toEqual([255, 0, 0, 255]);

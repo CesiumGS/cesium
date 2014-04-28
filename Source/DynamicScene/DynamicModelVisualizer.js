@@ -136,7 +136,6 @@ define([
 
             dynamicObject._modelPrimitiveUri = uri;
             model.id = dynamicObject;
-            model.scale = 1.0;
             model._visualizerOrientation = Quaternion.clone(Quaternion.IDENTITY);
             this._primitives.add(model);
             dynamicObject._modelPrimitive = model;
@@ -163,6 +162,14 @@ define([
             var scale = scaleProperty.getValue(time);
             if (defined(scale)) {
                 model.scale = scale;
+            }
+        }
+
+        var minimumPixelSizeProperty = dynamicModel._minimumPixelSize;
+        if (defined(minimumPixelSizeProperty)) {
+            var minimumPixelSize = minimumPixelSizeProperty.getValue(time);
+            if (defined(minimumPixelSize)) {
+                model.minimumPixelSize = minimumPixelSize;
             }
         }
     };
