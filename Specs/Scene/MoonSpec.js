@@ -70,14 +70,14 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
         var moon = new Moon();
         moon.show = false;
 
-        var context = scene.context;
+        var context = scene._context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.uniformState;

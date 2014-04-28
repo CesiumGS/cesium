@@ -191,13 +191,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     *
-     * @alias Context
-     * @constructor
-     *
-     * @exception {RuntimeError} The browser does not support WebGL.  Visit http://get.webgl.org.
-     * @exception {RuntimeError} The browser supports WebGL, but initialization failed.
+     * @private
      */
     var Context = function(canvas, options) {
         // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
@@ -2654,6 +2648,17 @@ define([
         this.key = key;
         this.color = color;
     }
+
+    defineProperties(PickId.prototype, {
+        object : {
+            get : function() {
+                return this._pickObjects[this.key];
+            },
+            set : function(value) {
+                this._pickObjects[this.key] = value;
+            }
+        }
+    });
 
     PickId.prototype.destroy = function() {
         delete this._pickObjects[this.key];

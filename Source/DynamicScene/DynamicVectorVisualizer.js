@@ -94,6 +94,7 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicVectorVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -108,6 +109,7 @@ define([
                 updateObject(this, time, dynamicObjects[i]);
             }
         }
+        return true;
     };
 
     /**
@@ -205,7 +207,7 @@ define([
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
-            polyline._id = dynamicObject;
+            polyline.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             polyline.width = 1;

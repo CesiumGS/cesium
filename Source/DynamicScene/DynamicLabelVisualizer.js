@@ -101,6 +101,7 @@ define([
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicLabelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -115,6 +116,7 @@ define([
                 updateObject(this, time, dynamicObjects[i]);
             }
         }
+        return true;
     };
 
     /**
@@ -220,7 +222,7 @@ define([
                 label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
-            label._id = dynamicObject;
+            label.id = dynamicObject;
 
             // CZML_TODO Determine official defaults
             label.text = '';

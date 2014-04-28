@@ -56,6 +56,50 @@ defineSuite([
         expect(matrix[Matrix4.COLUMN3ROW3]).toEqual(16.0);
     });
 
+    it('can pack and unpack', function() {
+        var array = [];
+        var matrix4 = new Matrix4(
+                1.0, 2.0, 3.0, 4.0,
+                5.0, 6.0, 7.0, 8.0,
+                9.0, 10.0, 11.0, 12.0,
+                13.0, 14.0, 15.0, 16.0);
+        Matrix4.pack(matrix4, array);
+        expect(array.length).toEqual(Matrix4.packedLength);
+        expect(Matrix4.unpack(array)).toEqual(matrix4);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var matrix4 = new Matrix4(
+                1.0, 2.0, 3.0, 4.0,
+                5.0, 6.0, 7.0, 8.0,
+                9.0, 10.0, 11.0, 12.0,
+                13.0, 14.0, 15.0, 16.0);
+
+        Matrix4.pack(matrix4, packed, offset);
+        expect(packed.length).toEqual(offset + Matrix4.packedLength);
+
+        var result = new Matrix4();
+        var returnedResult = Matrix4.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(matrix4);
+    });
+
+    it('pack throws with undefined matrix4', function() {
+        var array = [];
+        expect(function() {
+            Matrix4.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var matrix4 = new Matrix4();
+        expect(function() {
+            Matrix4.pack(matrix4, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromArray works without a result parameter', function() {
         var expected = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0);
         var matrix = Matrix4.fromArray([1.0, 5.0, 9.0, 13.0, 2.0, 6.0, 10.0, 14.0, 3.0, 7.0, 11.0, 15.0, 4.0, 8.0, 12.0, 16.0]);
@@ -548,6 +592,38 @@ defineSuite([
         returnedResult = Matrix4.setRow(matrix, 3, new Cartesian4(913.0, 914.0, 915.0, 916.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
+    });
+
+    it('getScale works', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var m = Matrix4.fromScale(scale);
+        expect(Matrix4.getScale(m)).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale works with a result parameter', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new Cartesian3();
+        var computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
+
+        expect(computedScale).toBe(result);
+        expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumScale works', function() {
+        var m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+        expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+    });
+
+    it('getMaximumScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getMaximumScale();
+        }).toThrowDeveloperError();
     });
 
     it('multiply works without a result parameter', function() {

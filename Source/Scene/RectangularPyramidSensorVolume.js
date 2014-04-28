@@ -45,7 +45,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the globe.
          *
          * @type {Boolean}
          *
@@ -69,7 +69,7 @@ define([
         /**
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
-         * principal direction and in the direction of the x-axis and y-axis define the extent of the rectangular
+         * principal direction and in the direction of the x-axis and y-axis define the rectangle of the rectangular
          * cross section.  This matrix is available to GLSL vertex and fragment shaders via
          * {@link czm_model} and derived uniforms.
          * <br /><br />
@@ -152,7 +152,7 @@ define([
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
         /**
-         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         * The color of the polyline where the sensor outline intersects the globe.  The default is {@link Color.WHITE}.
          *
          * @type {Color}
          * @default {@link Color.WHITE}
@@ -162,7 +162,7 @@ define([
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         /**
-         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         * The approximate pixel width of the polyline where the sensor outline intersects the globe.  The default is 5.0.
          *
          * @type {Number}
          * @default 5.0
@@ -183,7 +183,7 @@ define([
         this.id = options.id;
 
         var customSensorOptions = clone(options);
-        customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
+        customSensorOptions._pickPrimitive = defaultValue(options._pickPrimitive, this);
         this._customSensor = new CustomSensorVolume(customSensorOptions);
     };
 

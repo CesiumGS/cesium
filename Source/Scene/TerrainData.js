@@ -39,12 +39,12 @@ define([
      * @memberof TerrainData
      * @function
      *
-     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
      * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the extent.
+     *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the rectangle.
      */
     TerrainData.prototype.interpolateHeight = DeveloperError.throwInstantiationError;
 

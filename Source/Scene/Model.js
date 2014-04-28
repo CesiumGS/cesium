@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian4',
         '../Core/combine',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -31,6 +32,7 @@ define([
         '../Renderer/TextureWrap',
         './ModelAnimationCache',
         './ModelAnimationCollection',
+        './ModelMaterial',
         './ModelMesh',
         './ModelNode',
         './ModelTypes',
@@ -43,6 +45,7 @@ define([
         Cartesian4,
         combine,
         defined,
+        defineProperties,
         defaultValue,
         destroyObject,
         DeveloperError,
@@ -68,6 +71,7 @@ define([
         TextureWrap,
         ModelAnimationCache,
         ModelAnimationCollection,
+        ModelMaterial,
         ModelMesh,
         ModelNode,
         ModelTypes,
@@ -153,8 +157,10 @@ define([
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
+     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -233,6 +239,18 @@ define([
         this._scale = this.scale;
 
         /**
+         * The approximate minimum pixel size of the model regardless of zoom.
+         * This can be used to ensure that a model is visible even when the viewer
+         * zooms out.  When <code>0.0</code>, no minimum size is enforced.
+         *
+         * @type {Number}
+         *
+         * @default 0.0
+         */
+        this.minimumPixelSize = defaultValue(options.minimumPixelSize, 0.0);
+        this._minimumPixelSize = this.minimumPixelSize;
+
+        /**
          * User-defined object returned when the model is picked.
          *
          * @type Object
@@ -245,15 +263,13 @@ define([
         this._id = options.id;
 
         /**
-         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+         * Used for picking primitives that wrap a model.
          *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
+         * @private
          */
-        this.allowPicking = defaultValue(options.allowPicking, true);
+        this.pickPrimitive = options.pickPrimitive;
+
+        this._allowPicking = defaultValue(options.allowPicking, true);
 
         /**
          * The event fired when this model is ready to render, i.e., when the external binary, image,
@@ -272,8 +288,11 @@ define([
          *     speedup : 0.5
          *   });
          * });
+         *
+         * @see Model#ready
          */
         this.readyToRender = new Event();
+        this._ready = false;
 
         /**
          * The currently playing glTF animations.
@@ -281,6 +300,8 @@ define([
          * @type {ModelAnimationCollection}
          */
         this.activeAnimations = new ModelAnimationCollection(this);
+
+        this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -309,6 +330,8 @@ define([
         this._debugWireframe = false;
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
+        this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
+        this._boundingSphere = undefined;
         this._state = ModelState.NEEDS_LOAD;
         this._loadError = undefined;
         this._loadResources = undefined;
@@ -319,10 +342,12 @@ define([
         this._runtime = {
             animations : undefined,
             rootNodes : undefined,
-            nodes : undefined,          // Indexed with the node property's name, i.e., glTF id
-            nodesByName : undefined,    // Indexed with name property in the node
+            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
+            nodesByName : undefined,      // Indexed with name property in the node
             skinnedNodes : undefined,
-            meshesByName : undefined    // Indexed with the name property in the mesh
+            meshesByName : undefined,     // Indexed with the name property in the mesh
+            materialsByName : undefined,  // Indexed with the name property in the material
+            materialsById : undefined     // Indexed with the material's property name
         };
         this._rendererResources = {
             buffers : {},
@@ -341,6 +366,91 @@ define([
         this._pickIds = [];
     };
 
+    defineProperties(Model.prototype, {
+        /**
+         * The model's bounding sphere in its local coordinate system.  This does not take into
+         * account glTF animation and skins or {@link Model#scale}.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         *
+         * @default undefined
+         *
+         * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
+         *
+         * @example
+         * // Center in WGS84 coordinates
+         * var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
+         */
+        boundingSphere : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (this._state !== ModelState.LOADED) {
+                    throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+                }
+                //>>includeEnd('debug');
+
+                this._boundingSphere.radius = (this.scale * Matrix4.getMaximumScale(this.modelMatrix)) * this._initialRadius;
+                return this._boundingSphere;
+            }
+        },
+
+        /**
+         * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.  This is set to
+         * <code>true</code> right before {@link Model#readyToRender} is fired.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         *
+         * @see Model#readyToRender
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Determines if model WebGL resource creation will be spread out over several frames or
+         * block until completion once all glTF files are loaded.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        asynchronous : {
+            get : function() {
+                return this._asynchronous;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        allowPicking : {
+            get : function() {
+                return this._allowPicking;
+            }
+        }
+    });
+
     /**
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
@@ -348,11 +458,13 @@ define([
      * @memberof Model
      *
      * @param {String} options.url The url to the glTF .json file.
+     * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
+     * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
-     * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -374,6 +486,7 @@ define([
      *   show : true,                     // default
      *   modelMatrix : modelMatrix,
      *   scale : 2.0,                     // double size
+     *   minimumPixelSize : 128,          // never smaller than 128 pixels
      *   allowPicking : false,            // not pickable
      *   debugShowBoundingVolume : false, // default
      *   debugWireframe : false
@@ -410,6 +523,20 @@ define([
         return model;
     };
 
+    function getRuntime(model, runtimeName, name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (model._state !== ModelState.LOADED) {
+            throw new DeveloperError('The model is not loaded.  Wait for the model\'s readyToRender event or ready property.');
+        }
+
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        return (model._runtime[runtimeName])[name];
+    }
+
     /**
      * Returns the glTF node with the given <code>name</code> property.  This is used to
      * modify a node's transform for animation outside of glTF animations.
@@ -418,9 +545,9 @@ define([
      *
      * @param {String} name The glTF name of the node.
      *
-     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> was found.
+     * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
-     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      *
      * @example
      * // Apply non-uniform scale to node LOD3sp
@@ -428,17 +555,7 @@ define([
      * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
      */
     Model.prototype.getNode = function(name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        var node = this._runtime.nodesByName[name];
+        var node = getRuntime(this, 'nodesByName', name);
         return defined(node) ? node.publicNode : undefined;
     };
 
@@ -449,88 +566,108 @@ define([
      *
      * @param {String} name The glTF name of the mesh.
      *
-     * @returns {ModelMesh} The mesh or <code>undefined</code> if no node with <code>name</code> was found.
+     * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
      *
-     * @exception {DeveloperError} Mesh are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
     Model.prototype.getMesh = function(name) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Meshes are not loaded.  Wait for the model\'s readyToRender event.');
-        }
-
-        if (!defined(name)) {
-            throw new DeveloperError('name is required.');
-        }
-        //>>includeEnd('debug');
-
-        return this._runtime.meshesByName[name];
+        return getRuntime(this, 'meshesByName', name);
     };
 
-    var scratchSphereCenter = new Cartesian3();
-    var scratchSpheres = [];
-    var scratchSubtract = new Cartesian3();
-
     /**
-     * Computes the bounding sphere around the entire model in world coordinates using the
-     * previous frame's {@link Model#modelMatrix} and node transforms.  This can be used in
-     * {@link readyToRender} to zoom to the model.  This can't be called before the
-     * {@link readyToRender} event is raised because it requires that the glTF nodes are loaded.
+     * Returns the glTF material with the given <code>name</code> property.
      *
      * @memberof Model
      *
-     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @param {String} name The glTF name of the material.
      *
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
-     * @exception {DeveloperError} Nodes are not loaded.  Wait for the model's readyToRender event.
+     * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
      */
-    Model.prototype.computeWorldBoundingSphere = function(result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (this._state !== ModelState.LOADED) {
-            throw new DeveloperError('Nodes are not loaded.  Wait for the model\'s readyToRender event.');
-        }
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new BoundingSphere();
-        }
-
-        // Compute bounding sphere that includes all transformed nodes
-        Cartesian3.clone(Cartesian3.ZERO, scratchSphereCenter);
-        scratchSpheres.length = 0;
-        var spheres = scratchSpheres;
-
-        var commands = this._renderCommands;
-        var length = commands.length;
-
-        for (var i = 0; i < length; ++i) {
-            var command = commands[i];
-            Cartesian3.add(command.boundingVolume.center, scratchSphereCenter, scratchSphereCenter);
-            spheres.push(command.boundingVolume);
-        }
-
-        if (spheres.length > 0) {
-            // Compute bounding sphere around the model
-            var radiusSquared = 0;
-
-            length = spheres.length;
-            Cartesian3.divideByScalar(scratchSphereCenter, length, scratchSphereCenter);
-            for (i = 0; i < length; ++i) {
-                var bbs = spheres[i];
-                var r = Cartesian3.magnitudeSquared(Cartesian3.subtract(bbs.center, scratchSphereCenter, scratchSubtract)) + bbs.radius * bbs.radius;
-
-                if (r > radiusSquared) {
-                    radiusSquared = r;
-                }
-            }
-
-            Cartesian3.clone(scratchSphereCenter, result.center);
-            result.radius = Math.sqrt(radiusSquared);
-        }
-
-        return result;
+    Model.prototype.getMaterial = function(name) {
+        return getRuntime(this, 'materialsByName', name);
     };
+
+    var nodeAxisScratch = new Cartesian3();
+    var nodeTranslationScratch = new Cartesian3();
+    var nodeQuaternionScratch = new Quaternion();
+    var nodeScaleScratch = new Cartesian3();
+
+    function getTransform(node) {
+        if (defined(node.matrix)) {
+            return Matrix4.fromArray(node.matrix);
+        }
+
+        var axis = Cartesian3.fromArray(node.rotation, 0, nodeAxisScratch);
+
+        return Matrix4.fromTranslationQuaternionRotationScale(
+            Cartesian3.fromArray(node.translation, 0, nodeTranslationScratch),
+            Quaternion.fromAxisAngle(axis, node.rotation[3], nodeQuaternionScratch),
+            Cartesian3.fromArray(node.scale, 0 , nodeScaleScratch));
+    }
+
+    var aMinScratch = new Cartesian3();
+    var aMaxScratch = new Cartesian3();
+
+    function computeBoundingSphere(gltf) {
+        var gltfNodes = gltf.nodes;
+        var gltfMeshes = gltf.meshes;
+        var gltfAccessors = gltf.accessors;
+        var rootNodes = gltf.scenes[gltf.scene].nodes;
+        var rootNodesLength = rootNodes.length;
+
+        var nodeStack = [];
+
+        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+        var max = new Cartesian3(Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
+
+        for (var i = 0; i < rootNodesLength; ++i) {
+            var n = gltfNodes[rootNodes[i]];
+            n._transformToRoot = getTransform(n);
+            nodeStack.push(n);
+
+            while (nodeStack.length > 0) {
+                n = nodeStack.pop();
+                var transformToRoot = n._transformToRoot;
+
+                var meshes = defaultValue(n.meshes, defined(n.instanceSkin) ? n.instanceSkin.sources : undefined);
+                if (defined(meshes)) {
+                    var meshesLength = meshes.length;
+                    for (var j = 0; j < meshesLength; ++j) {
+                        var primitives = gltfMeshes[meshes[j]].primitives;
+                        var primitivesLength = primitives.length;
+                        for (var m = 0; m < primitivesLength; ++m) {
+                            var position = primitives[m].attributes.POSITION;
+                            if (defined(position)) {
+                                var accessor = gltfAccessors[position];
+                                var aMin = Cartesian3.fromArray(accessor.min, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(accessor.max, 0, aMaxScratch);
+                                if (defined(min) && defined(max)) {
+                                    Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
+                                    Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
+                                    Cartesian3.getMinimumByComponent(min, aMin, min);
+                                    Cartesian3.getMaximumByComponent(max, aMax, max);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = gltfNodes[children[k]];
+                    child._transformToRoot = getTransform(child);
+                    Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
+                    nodeStack.push(child);
+                }
+                delete n._transformToRoot;
+            }
+        }
+
+        return BoundingSphere.fromCornerPoints(min, max);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -663,7 +800,7 @@ define([
                     // Publicly-accessible ModelNode instance to modify animation targets
                     publicNode : undefined
                 };
-                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode);
+                runtimeNode.publicNode = new ModelNode(model, node, runtimeNode, name);
 
                 runtimeNodes[name] = runtimeNode;
                 runtimeNodesByName[node.name] = runtimeNode;
@@ -680,15 +817,41 @@ define([
         model._runtime.skinnedNodes = skinnedNodes;
     }
 
+    function parseMaterials(model) {
+        var runtimeMaterials = {};
+        var runtimeMaterialsById = {};
+        var materials = model.gltf.materials;
+        var rendererUniformMaps = model._rendererResources.uniformMaps;
+
+        for (var name in materials) {
+            if (materials.hasOwnProperty(name)) {
+                // Allocated now so ModelMaterial can keep a reference to it.
+                rendererUniformMaps[name] = {
+                    uniformMap : undefined,
+                    values : undefined,
+                    jointMatrixUniformName : undefined
+                };
+
+                var material = materials[name];
+                var modelMaterial = new ModelMaterial(model, material, name);
+                runtimeMaterials[material.name] = modelMaterial;
+                runtimeMaterialsById[name] = modelMaterial;
+            }
+        }
+
+        model._runtime.materialsByName = runtimeMaterials;
+        model._runtime.materialsById = runtimeMaterialsById;
+    }
+
     function parseMeshes(model) {
         var runtimeMeshes = {};
-
+        var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
 
         for (var name in meshes) {
             if (meshes.hasOwnProperty(name)) {
                 var mesh = meshes[name];
-                runtimeMeshes[mesh.name] = new ModelMesh(mesh.name);
+                runtimeMeshes[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, name);
             }
         }
 
@@ -701,6 +864,7 @@ define([
         parseShaders(model);
         parsePrograms(model);
         parseTextures(model);
+        parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
     }
@@ -769,34 +933,46 @@ define([
         return attributeLocations;
     }
 
+    function createProgram(name, model, context) {
+        var programs = model.gltf.programs;
+        var shaders = model._loadResources.shaders;
+        var program = programs[name];
+
+        var attributeLocations = createAttributeLocations(program.attributes);
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
+
+        model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+
+        if (model.allowPicking) {
+            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
+            var pickFS = createShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'uniform'
+            });
+            model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+        }
+    }
+
     function createPrograms(model, context) {
         var loadResources = model._loadResources;
+        var name;
 
         if (loadResources.pendingShaderLoads !== 0) {
             return;
         }
 
-        var programs = model.gltf.programs;
-        var shaders = loadResources.shaders;
-
-        // Create one program per frame
-        if (loadResources.programsToCreate.length > 0) {
-            var name = loadResources.programsToCreate.dequeue();
-            var program = programs[name];
-
-            var attributeLocations = createAttributeLocations(program.attributes);
-            var vs = shaders[program.vertexShader];
-            var fs = shaders[program.fragmentShader];
-
-            model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
-
-            if (model.allowPicking) {
-                // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-                var pickFS = createShaderSource({
-                    sources : [fs],
-                    pickColorQualifier : 'uniform'
-                });
-                model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+        if (model.asynchronous) {
+            // Create one program per frame
+            if (loadResources.programsToCreate.length > 0) {
+                name = loadResources.programsToCreate.dequeue();
+                createProgram(name, model, context);
+            }
+        } else {
+            // Create all loaded programs this frame
+            while (loadResources.programsToCreate.length > 0) {
+                name = loadResources.programsToCreate.dequeue();
+                createProgram(name, model, context);
             }
         }
     }
@@ -824,59 +1000,73 @@ define([
         }
     }
 
+    function createTexture(gltfTexture, model, context) {
+        var textures = model.gltf.textures;
+        var texture = textures[gltfTexture.name];
+
+        var rendererSamplers = model._rendererResources.samplers;
+        var sampler = rendererSamplers[texture.sampler];
+
+        var mipmap =
+            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+            (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+            (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
+        var requiresNpot = mipmap ||
+            (sampler.wrapS === TextureWrap.REPEAT) ||
+            (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
+            (sampler.wrapT === TextureWrap.REPEAT) ||
+            (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+
+        var source = gltfTexture.image;
+        var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
+
+        if (requiresNpot && npot) {
+            // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
+            var canvas = document.createElement('canvas');
+            canvas.width = CesiumMath.nextPowerOfTwo(source.width);
+            canvas.height = CesiumMath.nextPowerOfTwo(source.height);
+            var canvasContext = canvas.getContext('2d');
+            canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
+            source = canvas;
+        }
+
+        var tx;
+
+        if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
+            tx = context.createTexture2D({
+                source : source,
+                pixelFormat : texture.internalFormat,
+                pixelDatatype : texture.type,
+                flipY : false
+            });
+        }
+        // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+
+        if (mipmap) {
+            tx.generateMipmap();
+        }
+        tx.sampler = sampler;
+
+        model._rendererResources.textures[gltfTexture.name] = tx;
+    }
+
     function createTextures(model, context) {
         var loadResources = model._loadResources;
-        var textures = model.gltf.textures;
-        var rendererSamplers = model._rendererResources.samplers;
+        var gltfTexture;
 
-        // Create one texture per frame
-        if (loadResources.texturesToCreate.length > 0) {
-            var textureToCreate = loadResources.texturesToCreate.dequeue();
-            var texture = textures[textureToCreate.name];
-            var sampler = rendererSamplers[texture.sampler];
-
-            var mipmap =
-                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-                (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-                (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
-            var requiresNpot = mipmap ||
-                (sampler.wrapS === TextureWrap.REPEAT) ||
-                (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-                (sampler.wrapT === TextureWrap.REPEAT) ||
-                (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
-
-            var source = textureToCreate.image;
-            var npot = !CesiumMath.isPowerOfTwo(source.width) || !CesiumMath.isPowerOfTwo(source.height);
-
-            if (requiresNpot && npot) {
-                // WebGL requires power-of-two texture dimensions for mipmapping and REPEAT/MIRRORED_REPEAT wrap modes.
-                var canvas = document.createElement('canvas');
-                canvas.width = CesiumMath.nextPowerOfTwo(source.width);
-                canvas.height = CesiumMath.nextPowerOfTwo(source.height);
-                var canvasContext = canvas.getContext('2d');
-                canvasContext.drawImage(source, 0, 0, source.width, source.height, 0, 0, canvas.width, canvas.height);
-                source = canvas;
+        if (model.asynchronous) {
+            // Create one texture per frame
+            if (loadResources.texturesToCreate.length > 0) {
+                gltfTexture = loadResources.texturesToCreate.dequeue();
+                createTexture(gltfTexture, model, context);
             }
-
-            var tx;
-
-            if (texture.target === WebGLRenderingContext.TEXTURE_2D) {
-                tx = context.createTexture2D({
-                    source : source,
-                    pixelFormat : texture.internalFormat,
-                    pixelDatatype : texture.type,
-                    flipY : false
-                });
+        } else {
+            // Create all loaded textures this frame
+            while (loadResources.texturesToCreate.length > 0) {
+                gltfTexture = loadResources.texturesToCreate.dequeue();
+                createTexture(gltfTexture, model, context);
             }
-            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-
-            if (mipmap) {
-                tx.generateMipmap();
-            }
-            tx.sampler = sampler;
-
-            model._rendererResources.textures[textureToCreate.name] = tx;
         }
     }
 
@@ -1254,65 +1444,95 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function getScalarUniformFunction(value, model) {
-        return function() {
-            return value;
+        var that = {
+            value : value,
+            clone : function(source, result) {
+                return source;
+            },
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec2UniformFunction(value, model) {
-        var v = Cartesian2.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian2.fromArray(value),
+            clone : Cartesian2.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec3UniformFunction(value, model) {
-        var v = Cartesian3.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian3.fromArray(value),
+            clone : Cartesian3.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getVec4UniformFunction(value, model) {
-        var v = Cartesian4.fromArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Cartesian4.fromArray(value),
+            clone : Cartesian4.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat2UniformFunction(value, model) {
-        var v = Matrix2.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix2.fromColumnMajorArray(value),
+            clone : Matrix2.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat3UniformFunction(value, model) {
-        var v = Matrix3.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix3.fromColumnMajorArray(value),
+            clone : Matrix3.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getMat4UniformFunction(value, model) {
-        var v = Matrix4.fromColumnMajorArray(value);
-
-        return function() {
-            return v;
+        var that = {
+            value : Matrix4.fromColumnMajorArray(value),
+            clone : Matrix4.clone,
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     function getTextureUniformFunction(value, model) {
-        var tx = model._rendererResources.textures[value];
-
-        return function() {
-            return tx;
+        var that = {
+            value : model._rendererResources.textures[value],
+            clone : function(source, result) {
+                return source;
+            },
+            func : function() {
+                return that.value;
+            }
         };
+        return that;
     }
 
     var gltfUniformFunctions = {};
@@ -1375,7 +1595,8 @@ define([
                 var uniforms = instanceProgram.uniforms;
                 var activeUniforms = model._rendererResources.programs[instanceProgram.program].allUniforms;
 
-                var parameterValues = {};
+                var uniformMap = {};
+                var uniformValues = {};
                 var jointMatrixUniformName;
 
                 // Uniform parameters for this pass
@@ -1386,49 +1607,40 @@ define([
                             var parameterName = uniforms[name];
                             var parameter = parameters[parameterName];
 
-                            var func;
+                            // GLTF_SPEC: In this implementation, material parameters with a
+                            // semantic or targeted via a source (for animation) are not
+                            // targetable for material animations.  Is this too strict?
+                            //
+                            // https://github.com/KhronosGroup/glTF/issues/142
 
                             if (defined(instanceParameters[parameterName])) {
                                 // Parameter overrides by the instance technique
-                                func = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                                uniformMap[name] = uv.func;
+                                uniformValues[parameterName] = uv;
                             } else if (defined(parameter.semantic)) {
                                 if (parameter.semantic !== 'JOINT_MATRIX') {
                                     // Map glTF semantic to Cesium automatic uniform
-                                    func = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
                                 } else {
-                                    func = undefined;
                                     jointMatrixUniformName = name;
                                 }
                             } else if (defined(parameter.source)) {
-                                func = getUniformFunctionFromSource(parameter.source, model);
+                                uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
                             } else if (defined(parameter.value)) {
-                                // Default technique value that may be overridden by a material
-                                func = gltfUniformFunctions[parameter.type](parameter.value, model);
-                            }
-
-                            if (defined(func)) {
-                                parameterValues[parameterName] = {
-                                    uniformName : name,
-                                    func : func
-                                };
+                                // Technique value that isn't overridden by a material
+                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                                uniformMap[name] = uv2.func;
+                                uniformValues[parameterName] = uv2;
                             }
                         }
                     }
                 }
 
-                // Create uniform map
-                var uniformMap = {};
-                for (name in parameterValues) {
-                    if (parameterValues.hasOwnProperty(name)) {
-                        var pv = parameterValues[name];
-                        uniformMap[pv.uniformName] = pv.func;
-                    }
-                }
-
-                rendererUniformMaps[materialName] = {
-                    uniformMap : uniformMap,
-                    jointMatrixUniformName : jointMatrixUniformName
-                };
+                var u = rendererUniformMaps[materialName];
+                u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
+                u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
+                u.jointMatrixUniformName = jointMatrixUniformName;
             }
         }
     }
@@ -1512,7 +1724,7 @@ define([
                 var isTranslucent = pass.states.blendEnable;
                 var rs = rendererRenderStates[instanceTechnique.technique];
                 var owner = {
-                    primitive : model,
+                    primitive : defaultValue(model.pickPrimitive, model),
                     id : model.id,
                     node : runtimeNode.publicNode,
                     mesh : runtimeMeshes[mesh.name]
@@ -1789,7 +2001,7 @@ define([
             var pickIds = model._pickIds;
             var length = pickIds.length;
             for (var i = 0; i < length; ++i) {
-                context.getObjectByPickColor(pickIds[i].color).id = id;
+                pickIds[i].object.id = id;
             }
         }
     }
@@ -1810,6 +2022,54 @@ define([
         }
     }
 
+    var scratchDrawingBufferDimensions = new Cartesian2();
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    function scaleInPixels(positionWC, radius, context, frameState) {
+        var camera = frameState.camera;
+        var frustum = camera.frustum;
+
+        var toCenter = Cartesian3.subtract(camera.positionWC, positionWC, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
+        var distance = Math.max(frustum.near, Cartesian3.magnitude(proj) - radius);
+
+        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
+        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
+        var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
+        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
+
+        return pixelScale;
+    }
+
+    var scratchPosition = new Cartesian3();
+
+    function getScale(model, context, frameState) {
+        var scale = model._scale;
+
+        if (model.minimumPixelSize !== 0.0) {
+            // Compute size of bounding sphere in pixels
+            var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
+            var m = model.modelMatrix;
+            scratchPosition.x = m[12];
+            scratchPosition.y = m[13];
+            scratchPosition.z = m[14];
+            var radius = model.boundingSphere.radius;
+            var metersPerPixel = scaleInPixels(scratchPosition, radius, context, frameState);
+
+            // metersPerPixel is always > 0.0
+            var pixelsPerMeter = 1.0 / metersPerPixel;
+            var diameterInPixels = Math.min(pixelsPerMeter * (2.0 * radius), maxPixelSize);
+
+            // Maintain model's minimum pixel size
+            if (diameterInPixels < model.minimumPixelSize) {
+                scale = (model.minimumPixelSize * metersPerPixel) / (2.0 * model._initialRadius);
+            }
+        }
+
+        return scale;
+    }
+
     /**
      * @exception {RuntimeError} Failed to load external reference.
      *
@@ -1822,6 +2082,8 @@ define([
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
+            this._boundingSphere = computeBoundingSphere(this.gltf);
+            this._initialRadius = this._boundingSphere.radius;
             this._loadResources = new LoadResources();
             parse(this);
         }
@@ -1844,16 +2106,24 @@ define([
             }
         }
 
-        if ((this.show && this._state === ModelState.LOADED) || justLoaded) {
+        var show = this.show && (this.scale !== 0.0);
+
+        if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale);
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
+                (this._scale !== this.scale) ||
+                (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0); // Minimum pixel size changed or is enabled
+
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(this.modelMatrix, this._modelMatrix);
                 this._scale = this.scale;
-                Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
+                this._minimumPixelSize = this.minimumPixelSize;
+
+                var scale = getScale(this, context, frameState);
+                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, this._computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -1874,6 +2144,7 @@ define([
             // Called after modelMatrix update.
             var model = this;
             frameState.afterRender.push(function() {
+                model._ready = true;
                 model.readyToRender.raiseEvent(model);
             });
             return;
@@ -1882,7 +2153,7 @@ define([
         // We don't check show at the top of the function since we
         // want to be able to progressively load models when they are shown,
         // and then have them visibile immediately when show is set to true.
-        if (this.show) {
+        if (show) {
 // PERFORMANCE_IDEA: This is terriable
             var passes = frameState.passes;
             var i;

@@ -52,7 +52,6 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
-        this._pixelSize = 0.0;
 
         /**
          * Gets the current frame state.
@@ -667,17 +666,6 @@ define([
         },
 
         /**
-         * The size of a pixel in meters at a distance of one meter from the camera.
-         * @memberof UniformState.prototype
-         * @returns {Number}
-         */
-        pixelSize : {
-            get : function() {
-                return this._pixelSize;
-            }
-        },
-
-        /**
          * The sun position in 3D world coordinates at the current scene time.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
@@ -878,9 +866,6 @@ define([
         this._currentFrustum.y = frustum.far;
     };
 
-    var scratchDrawingBufferDimensions = new Cartesian2();
-    var scratchPixelSize = new Cartesian2();
-
     /**
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -911,11 +896,6 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
-
-        scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
-        scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
-        var pixelSize = camera.frustum.getPixelSize(scratchDrawingBufferDimensions, undefined, scratchPixelSize);
-        this._pixelSize = Math.max(pixelSize.x, pixelSize.y);
 
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;

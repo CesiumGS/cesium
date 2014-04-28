@@ -170,10 +170,6 @@ define([
         var modifier = getModifier(event);
         var action;
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             screenSpaceEventHandler._leftMouseButtonDown = true;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
@@ -202,10 +198,6 @@ define([
             return;
         }
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             screenSpaceEventHandler._leftMouseButtonDown = false;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
@@ -396,8 +388,8 @@ define([
         if (screenSpaceEventHandler._leftMouseButtonDown && (event.touches.length === 1)) {
             pos = getPosition(screenSpaceEventHandler, event.touches[0], touchMovementEvent.endPosition);
 
-            var xDiff = screenSpaceEventHandler._lastMouseX - pos.x;
-            var yDiff = screenSpaceEventHandler._lastMouseY - pos.y;
+            var xDiff = screenSpaceEventHandler._lastMousePosition.x - pos.x;
+            var yDiff = screenSpaceEventHandler._lastMousePosition.y - pos.y;
             screenSpaceEventHandler._totalPixels += Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
             Cartesian2.clone(screenSpaceEventHandler._lastMousePosition, touchMovementEvent.startPosition);
@@ -476,10 +468,6 @@ define([
         var action;
         var pos = getPosition(screenSpaceEventHandler, event, mouseDbleClickEvent.position);
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, modifier);
         } else if (event.button === 1) {

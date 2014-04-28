@@ -80,8 +80,6 @@ define([
         if (defined(billboard)) {
             billboard.show = false;
             billboard.imageIndex = -1;
-            // Destroy pickId to allow setting _pickIdThis and _id when the billboard is reused.
-            billboard._pickId = billboard._pickId && billboard._pickId.destroy();
             labelCollection._spareBillboards.push(billboard);
             glyph.billboard = undefined;
         }
@@ -174,7 +172,9 @@ define([
                     if (labelCollection._spareBillboards.length > 0) {
                         glyph.billboard = billboard = labelCollection._spareBillboards.pop();
                     } else {
-                        glyph.billboard = billboard = labelCollection._billboardCollection.add();
+                        glyph.billboard = billboard = labelCollection._billboardCollection.add({
+                            collection : labelCollection
+                        });
                     }
 
                     billboard.show = label._show;
@@ -184,9 +184,8 @@ define([
                     billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                     billboard.verticalOrigin = label._verticalOrigin;
                     billboard.scale = label._scale;
-                    billboard._pickIdThis = label;
-                    billboard._id = label._id;
-                    billboard._collection = label._labelCollection;
+                    billboard.pickPrimitive = label;
+                    billboard.id = label._id;
                 }
 
                 glyph.billboard.imageIndex = glyphTextureInfo.index;
@@ -407,8 +406,8 @@ define([
      *   position : Cesium.Cartesian3.ZERO,
      *   text : '',
      *   font : '30px sans-serif',
-     *   fillColor : 'white',
-     *   outlineColor : 'white',
+     *   fillColor : Cesium.Color.WHITE,
+     *   outlineColor : Cesium.Color.BLACK,
      *   style : Cesium.LabelStyle.FILL,
      *   pixelOffset : Cesium.Cartesian2.ZERO,
      *   eyeOffset : Cesium.Cartesian3.ZERO,
@@ -568,7 +567,7 @@ define([
         }
 
         var labelsToUpdate = this._labelsToUpdate;
-        for ( var i = 0, len = labelsToUpdate.length; i < len; ++i) {
+        for (var i = 0, len = labelsToUpdate.length; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
                 continue;

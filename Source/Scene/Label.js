@@ -576,13 +576,23 @@ define([
         },
 
         /**
-         * Gets the user-defined object returned when the label is picked.
+         * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
          * @type {Object}
          */
         id : {
             get : function() {
                 return this._id;
+            },
+            set : function(value) {
+                this._id = value;
+                var glyphs = this._glyphs;
+                for (var i = 0, len = glyphs.length; i < len; i++) {
+                    var glyph = glyphs[i];
+                    if (defined(glyph.billboard)) {
+                        glyph.billboard.id = value;
+                    }
+                }
             }
         }
     });
@@ -603,23 +613,20 @@ define([
      * @see Label#pixelOffset
      *
      * @example
-     * console.log(l.computeScreenSpacePosition(scene.context, scene.frameState).toString());
+     * console.log(l.computeScreenSpacePosition(scene).toString());
      */
-    Label.prototype.computeScreenSpacePosition = function(context, frameState) {
+    Label.prototype.computeScreenSpacePosition = function(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
+        if (!defined(scene)) {
             throw new DeveloperError('context is required.');
-        }
-        if (!defined(frameState)) {
-            throw new DeveloperError('frameState is required.');
         }
         //>>includeEnd('debug');
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = Billboard._computeActualPosition(this._position, frameState, modelMatrix);
+        var actualPosition = Billboard._computeActualPosition(this._position, scene.frameState, modelMatrix);
 
-        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, context, frameState);
+        return Billboard._computeScreenSpacePosition(modelMatrix, actualPosition, this._eyeOffset, this._pixelOffset, scene);
     };
 
     /**

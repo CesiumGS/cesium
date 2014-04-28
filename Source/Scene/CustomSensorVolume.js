@@ -66,7 +66,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._pickId = undefined;
-        this._pickIdThis = defaultValue(options._pickIdThis, this);
+        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
 
         this._frontFaceColorCommand = new DrawCommand();
         this._backFaceColorCommand = new DrawCommand();
@@ -96,7 +96,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the globe.
          *
          * @type {Boolean}
          *
@@ -190,7 +190,7 @@ define([
         this._translucent = undefined;
 
         /**
-         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         * The color of the polyline where the sensor outline intersects the globe.  The default is {@link Color.WHITE}.
          *
          * @type {Color}
          * @default {@link Color.WHITE}
@@ -200,7 +200,7 @@ define([
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         /**
-         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         * The approximate pixel width of the polyline where the sensor outline intersects the globe.  The default is 5.0.
          *
          * @type {Number}
          * @default 5.0
@@ -526,7 +526,7 @@ define([
                 this._id = this.id;
                 this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this._pickIdThis,
+                    primitive : this._pickPrimitive,
                     id : this.id
                 });
             }

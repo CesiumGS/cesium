@@ -3,7 +3,6 @@ defineSuite([
          'Widgets/CesiumWidget/CesiumWidget',
          'Core/Clock',
          'Core/ScreenSpaceEventHandler',
-         'Scene/CentralBody',
          'Scene/EllipsoidTerrainProvider',
          'Scene/Scene',
          'Scene/SceneMode',
@@ -14,7 +13,6 @@ defineSuite([
          CesiumWidget,
          Clock,
          ScreenSpaceEventHandler,
-         CentralBody,
          EllipsoidTerrainProvider,
          Scene,
          SceneMode,
@@ -50,7 +48,6 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
-        expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
@@ -98,7 +95,7 @@ defineSuite([
             imageryProvider : new TileCoordinatesImageryProvider()
         };
         widget = new CesiumWidget(container, options);
-        var imageryLayers = widget.centralBody.imageryLayers;
+        var imageryLayers = widget.scene.imageryLayers;
         expect(imageryLayers.length).toEqual(1);
         expect(imageryLayers.get(0).imageryProvider).toBe(options.imageryProvider);
     });
@@ -107,7 +104,7 @@ defineSuite([
         widget = new CesiumWidget(container, {
             imageryProvider : false
         });
-        var imageryLayers = widget.centralBody.imageryLayers;
+        var imageryLayers = widget.scene.imageryLayers;
         expect(imageryLayers.length).toEqual(0);
     });
 
@@ -116,7 +113,7 @@ defineSuite([
             terrainProvider : new EllipsoidTerrainProvider()
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.centralBody.terrainProvider).toBe(options.terrainProvider);
+        expect(widget.scene.terrainProvider).toBe(options.terrainProvider);
     });
 
     it('sets expected options skyBox', function() {
@@ -154,7 +151,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene.context;
+        var context = widget.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
