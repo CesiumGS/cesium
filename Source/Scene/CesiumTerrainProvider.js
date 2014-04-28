@@ -312,20 +312,6 @@ define([
             normalMap[i * 2 + 1] = normalYBuffer[i];
         }
 
-        var nextX;
-        var nextY = normalYBuffer[0];
-        normalYBuffer[0] = normalXBuffer[1];
-        normalXBuffer[1] = nextY;
-
-        for (i = 2; i < normalMapWidth * normalMapWidth; i += 2) {
-            nextY = normalYBuffer[i / 2];
-            nextX = normalYBuffer[i / 2 - 1];
-            normalYBuffer[i / 2 - 1] = normalXBuffer[i];
-            normalYBuffer[i / 2] = normalXBuffer[i + 1];
-            normalXBuffer[i] = nextX;
-            normalXBuffer[i + 1] = nextY;
-        }
-
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
         return new QuantizedMeshTerrainData({
