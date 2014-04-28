@@ -65,11 +65,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                updateObject(this, time, dynamicObjects[i]);
-            }
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            updateObject(this, time, dynamicObjects[i]);
         }
         return true;
     };
@@ -80,7 +78,7 @@ define([
      */
     DynamicPointVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;
-        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        var dynamicObjects = dynamicObjectCollection.getObjects();
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             dynamicObjects[i]._pointVisualizerIndex = undefined;
         }

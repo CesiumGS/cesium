@@ -100,7 +100,7 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicLabelVisualizer
+     * @memberof DynamicConeVisualizerUsingCustomSensor
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -112,18 +112,16 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                updateObject(this, time, dynamicObjects[i]);
-            }
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            updateObject(this, time, dynamicObjects[i]);
         }
         return true;
     };
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicLabelVisualizer
+     * @memberof DynamicConeVisualizerUsingCustomSensor
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

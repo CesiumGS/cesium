@@ -461,55 +461,53 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var updaters = this._updaters;
-            for ( var key in updaters) {
-                if (updaters.hasOwnProperty(key)) {
-                    updaters[key].update(time);
-                }
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].update(time);
+            }
+        }
+
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var dynamicObject = dynamicObjects[i];
+
+            if (!defined(dynamicObject._path)) {
+                continue;
             }
 
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                var dynamicObject = dynamicObjects[i];
+            var positionProperty = dynamicObject._position;
+            if (!defined(positionProperty)) {
+                continue;
+            }
 
-                if (!defined(dynamicObject._path)) {
-                    continue;
-                }
+            var lastUpdater = dynamicObject._pathUpdater;
 
-                var positionProperty = dynamicObject._position;
-                if (!defined(positionProperty)) {
-                    continue;
-                }
+            var frameToVisualize = ReferenceFrame.FIXED;
+            if (this._scene.mode === SceneMode.SCENE3D) {
+                frameToVisualize = positionProperty._referenceFrame;
+            }
 
-                var lastUpdater = dynamicObject._pathUpdater;
+            var currentUpdater = this._updaters[frameToVisualize];
 
-                var frameToVisualize = ReferenceFrame.FIXED;
-                if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty._referenceFrame;
-                }
+            if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
+                currentUpdater.updateObject(time, dynamicObject);
+                continue;
+            }
 
-                var currentUpdater = this._updaters[frameToVisualize];
+            if (defined(lastUpdater)) {
+                lastUpdater.removeObject(dynamicObject);
+            }
 
-                if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                    continue;
-                }
+            if (!defined(currentUpdater)) {
+                currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                currentUpdater.update(time);
+                this._updaters[frameToVisualize] = currentUpdater;
+            }
 
-                if (defined(lastUpdater)) {
-                    lastUpdater.removeObject(dynamicObject);
-                }
-
-                if (!defined(currentUpdater)) {
-                    currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
-                    currentUpdater.update(time);
-                    this._updaters[frameToVisualize] = currentUpdater;
-                }
-
-                dynamicObject._pathUpdater = currentUpdater;
-                if (defined(currentUpdater)) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                }
+            dynamicObject._pathUpdater = currentUpdater;
+            if (defined(currentUpdater)) {
+                currentUpdater.updateObject(time, dynamicObject);
             }
         }
         return true;
