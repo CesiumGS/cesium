@@ -253,6 +253,7 @@ define([
 
         if (objectChanged) {
             camera.lookAt(offset, Cartesian3.ZERO, Cartesian3.UNIT_Z);
+            that._mode = scene.mode;
         } else if (scene.mode !== that._mode) {
             that._mode = scene.mode;
 
