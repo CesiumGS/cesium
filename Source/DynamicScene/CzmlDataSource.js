@@ -1137,6 +1137,7 @@ define(['../Core/Cartesian2',
 
         processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri);
+        processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri);
     }
 

@@ -113,6 +113,7 @@ defineSuite([
         var model = new DynamicModel();
         model.show = new ConstantProperty(true);
         model.scale = new ConstantProperty(2);
+        model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(duckUrl);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
@@ -127,6 +128,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(true);
         expect(primitive.scale).toEqual(2);
+        expect(primitive.minimumPixelSize).toEqual(24.0);
     });
 
     it('removing removes primitives.', function() {
