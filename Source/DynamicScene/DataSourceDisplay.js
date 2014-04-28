@@ -16,7 +16,9 @@ define(['../Core/defaultValue',
         './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
         './PolygonGeometryUpdater',
-        './PolylineGeometryUpdater'
+        './PolylineGeometryUpdater',
+        './RectangleGeometryUpdater',
+        './WallGeometryUpdater'
     ], function(
         defaultValue,
         defined,
@@ -35,7 +37,9 @@ define(['../Core/defaultValue',
         EllipsoidGeometryUpdater,
         GeometryVisualizer,
         PolygonGeometryUpdater,
-        PolylineGeometryUpdater) {
+        PolylineGeometryUpdater,
+        RectangleGeometryUpdater,
+        WallGeometryUpdater) {
     "use strict";
 
     /**
@@ -81,12 +85,14 @@ define(['../Core/defaultValue',
      * @type {Function}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
-        var dynamicObjects = dataSource.getDynamicObjectCollection();
+        var dynamicObjects = dataSource.dynamicObjects;
         return [new DynamicBillboardVisualizer(scene, dynamicObjects),
                 new GeometryVisualizer(EllipseGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(EllipsoidGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolygonGeometryUpdater, scene, dynamicObjects),
                 new GeometryVisualizer(PolylineGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(RectangleGeometryUpdater, scene, dynamicObjects),
+                new GeometryVisualizer(WallGeometryUpdater, scene, dynamicObjects),
                 new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjects),
                 new DynamicLabelVisualizer(scene, dynamicObjects),
                 new DynamicModelVisualizer(scene, dynamicObjects),
@@ -170,7 +176,8 @@ define(['../Core/defaultValue',
      * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
-     * @param {Boolean} True if the display was updated to the provided time, false otherwise.
+     *
+     * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -185,11 +192,15 @@ define(['../Core/defaultValue',
         var x;
         var visualizers;
         var vLength;
-
         var dataSources = this._dataSourceCollection;
         var length = dataSources.length;
         for (i = 0; i < length; i++) {
-            visualizers = dataSources.get(i)._visualizers;
+            var dataSource = dataSources.get(i);
+            if (defined(dataSource.update)) {
+                result = dataSource.update(time) && result;
+            }
+
+            visualizers = dataSource._visualizers;
             vLength = visualizers.length;
             for (x = 0; x < vLength; x++) {
                 result = visualizers[x].update(time) && result;

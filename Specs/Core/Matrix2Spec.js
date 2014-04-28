@@ -286,6 +286,38 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
+    it('getScale works', function() {
+        var scale = new Cartesian2(1.0, 2.0);
+        var m = Matrix2.fromScale(scale);
+        expect(Matrix2.getScale(m)).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale works with a result parameter', function() {
+        var scale = new Cartesian2(1.0, 2.0);
+        var result = new Cartesian2();
+        var computedScale = Matrix2.getScale(Matrix2.fromScale(scale), result);
+
+        expect(computedScale).toBe(result);
+        expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale throws without a matrix', function() {
+        expect(function() {
+            Matrix2.getScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumScale works', function() {
+        var m = Matrix2.fromScale(new Cartesian2(1.0, 2.0));
+        expect(Matrix2.getMaximumScale(m)).toEqualEpsilon(2.0, CesiumMath.EPSILON14);
+    });
+
+    it('getMaximumScale throws without a matrix', function() {
+        expect(function() {
+            Matrix2.getMaximumScale();
+        }).toThrowDeveloperError();
+    });
+
     it('multiply works without a result parameter', function() {
         var left = new Matrix2(1, 2, 3, 4);
         var right = new Matrix2(5, 6, 7, 8);

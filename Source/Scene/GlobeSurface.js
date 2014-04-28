@@ -58,15 +58,15 @@ define([
     "use strict";
 
     /**
-     * Manages and renders the terrain and imagery on the surface of a {@link CentralBody}.
-     * This class should be considered an implementation detail of {@link CentralBody} and not
+     * Manages and renders the terrain and imagery on the surface of a {@link Globe}.
+     * This class should be considered an implementation detail of {@link Globe} and not
      * used directly.
      *
-     * @alias CentralBodySurface
+     * @alias GlobeSurface
      * @constructor
      * @private
      */
-    var CentralBodySurface = function(options) {
+    var GlobeSurface = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.terrainProvider)) {
             throw new DeveloperError('options.terrainProvider is required.');
@@ -79,10 +79,10 @@ define([
         this._terrainProvider = options.terrainProvider;
         this._imageryLayerCollection = options.imageryLayerCollection;
 
-        this._imageryLayerCollection.layerAdded.addEventListener(CentralBodySurface.prototype._onLayerAdded, this);
-        this._imageryLayerCollection.layerRemoved.addEventListener(CentralBodySurface.prototype._onLayerRemoved, this);
-        this._imageryLayerCollection.layerMoved.addEventListener(CentralBodySurface.prototype._onLayerMoved, this);
-        this._imageryLayerCollection.layerShownOrHidden.addEventListener(CentralBodySurface.prototype._onLayerShownOrHidden, this);
+        this._imageryLayerCollection.layerAdded.addEventListener(GlobeSurface.prototype._onLayerAdded, this);
+        this._imageryLayerCollection.layerRemoved.addEventListener(GlobeSurface.prototype._onLayerRemoved, this);
+        this._imageryLayerCollection.layerMoved.addEventListener(GlobeSurface.prototype._onLayerMoved, this);
+        this._imageryLayerCollection.layerShownOrHidden.addEventListener(GlobeSurface.prototype._onLayerShownOrHidden, this);
 
         this._layerOrderChanged = false;
 
@@ -129,7 +129,7 @@ define([
         };
     };
 
-    defineProperties(CentralBodySurface.prototype, {
+    defineProperties(GlobeSurface.prototype, {
         terrainProvider : {
             get : function() {
                 return this._terrainProvider;
@@ -166,14 +166,14 @@ define([
         }
     });
 
-    CentralBodySurface.prototype.update = function(context, frameState, commandList, centralBodyUniformMap, shaderSet, renderState, projection) {
+    GlobeSurface.prototype.update = function(context, frameState, commandList, globeUniformMap, shaderSet, renderState, projection) {
         updateLayers(this);
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
-        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState);
+        createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, globeUniformMap, commandList, renderState);
     };
 
-    CentralBodySurface.prototype._onLayerAdded = function(layer, index) {
+    GlobeSurface.prototype._onLayerAdded = function(layer, index) {
         if (!defined(this._levelZeroTiles)) {
             return;
         }
@@ -192,7 +192,7 @@ define([
         }
     };
 
-    CentralBodySurface.prototype._onLayerRemoved = function(layer, index) {
+    GlobeSurface.prototype._onLayerRemoved = function(layer, index) {
         if (!defined(this._levelZeroTiles)) {
             return;
         }
@@ -235,7 +235,7 @@ define([
         }
     };
 
-    CentralBodySurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
+    GlobeSurface.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
         if (!defined(this._levelZeroTiles)) {
             return;
         }
@@ -243,7 +243,7 @@ define([
         this._layerOrderChanged = true;
     };
 
-    CentralBodySurface.prototype._onLayerShownOrHidden = function(layer, index, show) {
+    GlobeSurface.prototype._onLayerShownOrHidden = function(layer, index, show) {
         if (!defined(this._levelZeroTiles)) {
             return;
         }
@@ -261,13 +261,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CentralBodySurface
+     * @memberof GlobeSurface
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see CentralBodySurface#destroy
+     * @see GlobeSurface#destroy
      */
-    CentralBodySurface.prototype.isDestroyed = function() {
+    GlobeSurface.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -279,15 +279,15 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CentralBodySurface
+     * @memberof GlobeSurface
      *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CentralBodySurface#isDestroyed
+     * @see GlobeSurface#isDestroyed
      */
-    CentralBodySurface.prototype.destroy = function() {
+    GlobeSurface.prototype.destroy = function() {
         var levelZeroTiles = this._levelZeroTiles;
         if (defined(levelZeroTiles)) {
             for (var i = 0; i < levelZeroTiles.length; ++i) {
@@ -666,8 +666,8 @@ define([
     }
 
     // This is debug code to render the bounding sphere of the tile in
-    // CentralBodySurface._debug.boundingSphereTile.
-    CentralBodySurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
+    // GlobeSurface._debug.boundingSphereTile.
+    GlobeSurface.prototype.debugShowBoundingSphereOfTileAt = function(cartographicPick) {
         // Find the tile in the render list that overlaps this rectangle
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         var result;
@@ -693,7 +693,7 @@ define([
         this._debug.boundingSphereTile = result;
     };
 
-    CentralBodySurface.prototype.debugToggleLodUpdate = function(frameState) {
+    GlobeSurface.prototype.debugToggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
     };
 
@@ -709,7 +709,7 @@ define([
         }
     }
 
-    function createTileUniformMap(centralBodyUniformMap) {
+    function createTileUniformMap(globeUniformMap) {
         var uniformMap = {
             u_center3D : function() {
                 return this.center3D;
@@ -785,7 +785,7 @@ define([
             waterMaskTranslationAndScale : new Cartesian4()
         };
 
-        mergeUniformMap(uniformMap, centralBodyUniformMap);
+        mergeUniformMap(uniformMap, globeUniformMap);
 
         return uniformMap;
     }
@@ -798,7 +798,7 @@ define([
     var southwestScratch = new Cartesian3();
     var northeastScratch = new Cartesian3();
 
-    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, centralBodyUniformMap, commandList, renderState) {
+    function createRenderCommandsForSelectedTiles(surface, context, frameState, shaderSet, projection, globeUniformMap, commandList, renderState) {
         displayCredits(surface, frameState);
 
         var viewMatrix = frameState.camera.viewMatrix;
@@ -893,7 +893,7 @@ define([
                         command.cull = false;
                         command.boundingVolume = new BoundingSphere();
                         tileCommands[tileCommandIndex] = command;
-                        tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(centralBodyUniformMap);
+                        tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
                     }
                     command.owner = tile;
 
@@ -1084,5 +1084,5 @@ define([
         }
     }
 
-    return CentralBodySurface;
+    return GlobeSurface;
 });
