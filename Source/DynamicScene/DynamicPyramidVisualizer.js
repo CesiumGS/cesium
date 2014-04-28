@@ -79,6 +79,16 @@ define([
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof DynamicPyramidVisualizer
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    DynamicPyramidVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof DynamicPyramidVisualizer
      */

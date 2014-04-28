@@ -208,6 +208,16 @@ define(['../Core/AssociativeArray',
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof GeometryVisualizer
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    GeometryVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof GeometryVisualizer
      */

@@ -72,6 +72,16 @@ define([
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof DynamicModelVisualizer
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    DynamicModelVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof DynamicModelVisualizer
      */

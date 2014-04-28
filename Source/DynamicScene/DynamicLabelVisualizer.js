@@ -75,6 +75,16 @@ define([
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof DynamicLabelVisualizer
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    DynamicLabelVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof DynamicLabelVisualizer
      */

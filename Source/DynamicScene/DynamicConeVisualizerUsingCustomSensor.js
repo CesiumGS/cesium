@@ -120,6 +120,16 @@ define([
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof DynamicConeVisualizerUsingCustomSensor
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    DynamicConeVisualizerUsingCustomSensor.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof DynamicConeVisualizerUsingCustomSensor
      */

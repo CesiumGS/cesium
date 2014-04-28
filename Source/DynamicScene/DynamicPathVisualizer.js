@@ -514,6 +514,16 @@ define([
     };
 
     /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * @memberof DynamicPathVisualizer
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     */
+    DynamicPathVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Removes and destroys all primitives created by this instance.
      * @memberof DynamicPathVisualizer
      */
