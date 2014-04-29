@@ -37,11 +37,11 @@ Beta Releases
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
   * Converted 'DataSource' get methods into properties.
-      * 'getName` -> `name`
-      * 'getClock` -> `clock`
-      * 'getChangedEvent` -> `changedEvent`
-      * 'getDynamicObjectCollection` -> `dynamicObjects`
-      * 'getErrorEvent` -> `errorEvent`
+    * 'getName` -> `name`
+    * 'getClock` -> `clock`
+    * 'getChangedEvent` -> `changedEvent`
+    * 'getDynamicObjectCollection` -> `dynamicObjects`
+    * 'getErrorEvent` -> `errorEvent`
   * `BaseLayerPicker` has been extended to support terrain selection.
     * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
     * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a CentralBody and ImageryLayerCollection.
