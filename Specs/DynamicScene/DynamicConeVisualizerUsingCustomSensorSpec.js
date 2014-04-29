@@ -65,6 +65,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('isDestroy returns false until destroyed.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+        expect(visualizer.isDestroyed()).toEqual(false);
+        visualizer.destroy();
+        expect(visualizer.isDestroyed()).toEqual(true);
+        visualizer = undefined;
+    });
+
     it('object with no cone does not create a primitive.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);

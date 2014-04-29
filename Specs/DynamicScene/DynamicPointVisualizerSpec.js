@@ -63,6 +63,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('isDestroy returns false until destroyed.', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
+        expect(visualizer.isDestroyed()).toEqual(false);
+        visualizer.destroy();
+        expect(visualizer.isDestroyed()).toEqual(true);
+        visualizer = undefined;
+    });
+
     it('object with no point does not create a billboard.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);

@@ -55,7 +55,9 @@ defineSuite(['DynamicScene/GeometryVisualizer',
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
         expect(visualizer.update(time)).toBe(true);
         expect(scene.primitives.length).toBe(0);
+        expect(visualizer.isDestroyed()).toBe(false);
         visualizer.destroy();
+        expect(visualizer.isDestroyed()).toBe(true);
     });
 
     it('Creates and removes static color open geometry', function() {
