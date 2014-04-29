@@ -358,7 +358,7 @@ define(['../Core/createGuid',
 
         var propertyNames = this._propertyNames;
         var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
+        for (var i = 0; i < propertyNamesLength; i++) {
             var name = propertyNames[i];
             var targetProperty = this[name];
             var sourceProperty = source[name];

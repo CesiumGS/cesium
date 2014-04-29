@@ -469,7 +469,7 @@ define([
         }
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
             var dynamicObject = dynamicObjects[i];
 
             if (!defined(dynamicObject._path)) {
@@ -548,7 +548,7 @@ define([
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var _pathUpdater = dynamicObject._pathUpdater;
             if (defined(_pathUpdater)) {

@@ -66,7 +66,7 @@ define([
         //>>includeEnd('debug');
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
             updateObject(this, time, dynamicObjects[i]);
         }
         return true;
@@ -89,7 +89,7 @@ define([
     DynamicPointVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;
         var dynamicObjects = dynamicObjectCollection.getObjects();
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             dynamicObjects[i]._pointVisualizerIndex = undefined;
         }
         dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
@@ -256,7 +256,7 @@ define([
     DynamicPointVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisBillboardCollection = this._billboardCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
             if (defined(pointVisualizerIndex)) {

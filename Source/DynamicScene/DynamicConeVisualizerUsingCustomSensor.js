@@ -113,7 +113,7 @@ define([
         //>>includeEnd('debug');
 
         var dynamicObjects = this._dynamicObjectCollection.getObjects();
-        for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
             updateObject(this, time, dynamicObjects[i]);
         }
         return true;
@@ -300,7 +300,7 @@ define([
     DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisConeCollection = this._coneCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
             if (defined(coneVisualizerIndex)) {
