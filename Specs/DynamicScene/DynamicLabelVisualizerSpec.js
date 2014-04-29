@@ -55,11 +55,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters and adds collection to scene.', function() {
+    it('constructor adds collection to scene.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection instanceof LabelCollection).toEqual(true);
     });
@@ -72,13 +70,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicLabelVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicLabelVisualizer(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -260,37 +254,5 @@ defineSuite([
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.label = new DynamicLabel();
-        testObject.label.show = new ConstantProperty(true);
-        testObject.label.text = new ConstantProperty('lorum ipsum');
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.label = new DynamicLabel();
-        testObject2.label.show = new ConstantProperty(true);
-        testObject2.label.text = new ConstantProperty('the quick brown');
-
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-        var labelCollection = scene.primitives.get(0);
-
-        visualizer.update(time);
-        expect(labelCollection.length).toEqual(1);
-        var l = labelCollection.get(0);
-        expect(l.id).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(labelCollection.length).toEqual(1);
-        l = labelCollection.get(0);
-        expect(l.id).toEqual(testObject2);
     });
 }, 'WebGL');
