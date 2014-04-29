@@ -64,6 +64,7 @@ Beta Releases
 * Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
 * Added `DynamicWall` to support DataSource provided `WallGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* Added the ability to offset the grid in the `GridMaterial`.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * Add `Clock.canAnimate` to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
