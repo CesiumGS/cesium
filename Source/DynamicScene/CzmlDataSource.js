@@ -879,7 +879,7 @@ define(['../Core/Cartesian2',
                     for (i = 0, len = tmp.length; i < len; i += 3) {
                         scratchCartographic.longitude = tmp[i];
                         scratchCartographic.latitude = tmp[i + 1];
-                        scratchCartographic.height = tmp[i] + 2;
+                        scratchCartographic.height = tmp[i + 2];
                         values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
                     }
                     vertexPositionsData.array = values;
