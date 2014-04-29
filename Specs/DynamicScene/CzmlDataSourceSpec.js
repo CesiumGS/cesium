@@ -1162,7 +1162,7 @@ defineSuite([
         expect(dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
-    it('vertextPostisions worth with cartesians.', function() {
+    it('vertexPositions work with cartesians.', function() {
         var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
 
         var packet = {
@@ -1177,7 +1177,7 @@ defineSuite([
         expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertextPostisions worth with cartographicRadians.', function() {
+    it('vertexPositions work with cartographicRadians.', function() {
         var input = [new Cartographic(1.0, 2.0, 4.0), new Cartographic(5.0, 6.0, 7.0)];
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray(input);
 
@@ -1193,7 +1193,7 @@ defineSuite([
         expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
-    it('vertextPostisions worth with cartographicDegrees.', function() {
+    it('vertexPositions work with cartographicDegrees.', function() {
         var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
 
         var packet = {
