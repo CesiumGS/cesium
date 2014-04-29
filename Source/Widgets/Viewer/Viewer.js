@@ -296,14 +296,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             geocoder = new Geocoder({
                 container : geocoderContainer,
                 scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget._globe.ellipsoid
+                ellipsoid : cesiumWidget.scene.globe.ellipsoid
             });
         }
 
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget._globe.ellipsoid);
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.scene.globe.ellipsoid);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;
@@ -328,7 +328,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
 
             baseLayerPicker = new BaseLayerPicker(toolbar, {
-                globe : cesiumWidget._globe,
+                globe : cesiumWidget.scene.globe,
                 imageryProviderViewModels : imageryProviderViewModels,
                 selectedImageryProviderViewModel : options.selectedImageryProviderViewModel,
                 terrainProviderViewModels : terrainProviderViewModels,

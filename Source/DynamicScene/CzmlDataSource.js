@@ -771,6 +771,7 @@ define(['../Core/Cartesian2',
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri);
             processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
             existingMaterial.lineThickness = combineIntoCartesian2(existingMaterial.lineThickness, materialData.rowThickness, materialData.columnThickness);
+            existingMaterial.lineOffset = combineIntoCartesian2(existingMaterial.lineOffset, materialData.rowOffset, materialData.columnOffset);
             existingMaterial.lineCount = combineIntoCartesian2(existingMaterial.lineCount, materialData.rowCount, materialData.columnCount);
         } else if (defined(packetData.image)) {
             if (!(existingMaterial instanceof ImageMaterialProperty)) {
@@ -883,7 +884,7 @@ define(['../Core/Cartesian2',
                     for (i = 0, len = tmp.length; i < len; i += 3) {
                         scratchCartographic.longitude = tmp[i];
                         scratchCartographic.latitude = tmp[i + 1];
-                        scratchCartographic.height = tmp[i] + 2;
+                        scratchCartographic.height = tmp[i + 2];
                         values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
                     }
                     vertexPositionsData.array = values;
@@ -1141,6 +1142,7 @@ define(['../Core/Cartesian2',
 
         processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri);
+        processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri);
     }
 

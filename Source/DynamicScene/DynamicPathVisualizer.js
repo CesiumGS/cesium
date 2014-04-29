@@ -354,7 +354,6 @@ define([
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
             polyline.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             polyline.width = 1;
             var material = polyline.material;
             if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
@@ -423,78 +422,34 @@ define([
     };
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPath instance
-     * in DynamicObject.path to a Polyline primitive.
+     * A {@link Visualizer} which maps {@link DynamicObject#path} to a {@link Polyline}.
      * @alias DynamicPathVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicPath
-     * @see Polyline
-     * @see DynamicObject
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensor
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._updaters = {};
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicPathVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicPathVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicPathVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-            }
-        }
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicPathVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -506,123 +461,94 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var updaters = this._updaters;
-            for ( var key in updaters) {
-                if (updaters.hasOwnProperty(key)) {
-                    updaters[key].update(time);
-                }
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].update(time);
+            }
+        }
+
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var dynamicObject = dynamicObjects[i];
+
+            if (!defined(dynamicObject._path)) {
+                continue;
             }
 
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                var dynamicObject = dynamicObjects[i];
+            var positionProperty = dynamicObject._position;
+            if (!defined(positionProperty)) {
+                continue;
+            }
 
-                if (!defined(dynamicObject._path)) {
-                    continue;
-                }
+            var lastUpdater = dynamicObject._pathUpdater;
 
-                var positionProperty = dynamicObject._position;
-                if (!defined(positionProperty)) {
-                    continue;
-                }
+            var frameToVisualize = ReferenceFrame.FIXED;
+            if (this._scene.mode === SceneMode.SCENE3D) {
+                frameToVisualize = positionProperty._referenceFrame;
+            }
 
-                var lastUpdater = dynamicObject._pathUpdater;
+            var currentUpdater = this._updaters[frameToVisualize];
 
-                var frameToVisualize = ReferenceFrame.FIXED;
-                if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty._referenceFrame;
-                }
+            if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
+                currentUpdater.updateObject(time, dynamicObject);
+                continue;
+            }
 
-                var currentUpdater = this._updaters[frameToVisualize];
+            if (defined(lastUpdater)) {
+                lastUpdater.removeObject(dynamicObject);
+            }
 
-                if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                    continue;
-                }
+            if (!defined(currentUpdater)) {
+                currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                currentUpdater.update(time);
+                this._updaters[frameToVisualize] = currentUpdater;
+            }
 
-                if (defined(lastUpdater)) {
-                    lastUpdater.removeObject(dynamicObject);
-                }
-
-                if (!defined(currentUpdater)) {
-                    currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
-                    currentUpdater.update(time);
-                    this._updaters[frameToVisualize] = currentUpdater;
-                }
-
-                dynamicObject._pathUpdater = currentUpdater;
-                if (defined(currentUpdater)) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                }
+            dynamicObject._pathUpdater = currentUpdater;
+            if (defined(currentUpdater)) {
+                currentUpdater.updateObject(time, dynamicObject);
             }
         }
         return true;
     };
 
     /**
-     * Removes all primitives from the scene.
-     */
-    DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
-        var updaters = this._updaters;
-        for ( var key in updaters) {
-            if (updaters.hasOwnProperty(key)) {
-                updaters[key].destroy();
-            }
-        }
-        this._updaters = {};
-
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._pathUpdater = undefined;
-                dynamicObjects[i]._pathVisualizerIndex = undefined;
-            }
-        }
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
      * @memberof DynamicPathVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicPathVisualizer#destroy
      */
     DynamicPathVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
+     * Removes and destroys all primitives created by this instance.
      * @memberof DynamicPathVisualizer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicPathVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPathVisualizer.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
+
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].destroy();
+            }
+        }
+
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        var length = dynamicObjects.length;
+        for (var i = 0; i < length; i++) {
+            dynamicObjects[i]._pathUpdater = undefined;
+            dynamicObjects[i]._pathVisualizerIndex = undefined;
+        }
         return destroyObject(this);
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var _pathUpdater = dynamicObject._pathUpdater;
             if (defined(_pathUpdater)) {
