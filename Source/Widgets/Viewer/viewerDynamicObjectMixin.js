@@ -318,15 +318,24 @@ define(['../../Core/BoundingSphere',
                 if (defined(storedView)) {
                     var scene = viewer.scene;
                     var camera = scene.camera;
+                    var canUseFlight = true;
 
                     cameraControlViewModel.currentViewName = storedView.name;
 
                     // TODO: Make sure object still exists, is not destroyed etc.
-                    viewer.trackedObject = storedView.foregroundObject;
+                    if (defined(viewer.trackedObject) || defined(storedView.foregroundObject)) {
+                        viewer.trackedObject = storedView.foregroundObject;
+                        canUseFlight = false;
+                    }
 
                     // FOV
+                    var fovRadians = CesiumMath.toRadians(storedView.fieldOfView);
+                    if (!CesiumMath.equalsEpsilon(camera.frustum.fovy, fovRadians, 0.005)) {
+                        // Don't fly if FOV is more than a quarter of a degree different.
+                        canUseFlight = false;
+                    }
                     cameraControlViewModel.fieldOfView = storedView.fieldOfView;
-                    camera.frustum.fovy = CesiumMath.toRadians(storedView.fieldOfView);
+                    camera.frustum.fovy = fovRadians;
 
                     // constrainedAxis
                     cameraControlViewModel.constrainedAxis = storedView.constrainedAxis;
@@ -338,26 +347,23 @@ define(['../../Core/BoundingSphere',
                     camera.transform = Matrix4.IDENTITY.clone();
                     onTick(viewer.clock);
 
-                    /*
-                    // Camera flight
-                    var viewDescription = {
-                        destination : storedView.position,
-                        duration : 1500,
-                        up : storedView.up,
-                        direction : storedView.direction,
-                        endReferenceFrame : camera.transform
-                    };
-                    var flight = CameraFlightPath.createAnimation(scene, viewDescription);
-                    scene.animations.add(flight);
-                    */
-                    camera.position = Cartesian3.clone(storedView.position, camera.position);
-                    camera.direction = Cartesian3.clone(storedView.direction, camera.direction);
-                    camera.right = Cartesian3.normalize(Cartesian3.cross(storedView.direction, storedView.up, camera.right), camera.right);
-                    camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
-
-//window.camera = camera;
-//window.storedView = storedView;
-//console.log('set camera position ', camera.position);
+                    if (canUseFlight) {
+                        // Camera flight
+                        var viewDescription = {
+                            destination : storedView.position,
+                            duration : 1500,
+                            up : storedView.up,
+                            direction : storedView.direction,
+                            endReferenceFrame : camera.transform
+                        };
+                        var flight = CameraFlightPath.createAnimation(scene, viewDescription);
+                        scene.animations.add(flight);
+                    } else {
+                        camera.position = Cartesian3.clone(storedView.position, camera.position);
+                        camera.direction = Cartesian3.clone(storedView.direction, camera.direction);
+                        camera.right = Cartesian3.normalize(Cartesian3.cross(storedView.direction, storedView.up, camera.right), camera.right);
+                        camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
+                    }
                 }
             });
 
