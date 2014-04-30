@@ -40,7 +40,7 @@ define(['../Core/createGuid',
         this._parent = undefined;
         this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
                                'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
-                               'rectangle', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
+                               'rectangle', 'uiShow', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
