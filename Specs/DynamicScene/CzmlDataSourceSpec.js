@@ -1162,32 +1162,50 @@ defineSuite([
         expect(dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
-    it('CZML VertexPositions works.', function() {
+    it('vertexPositions work with cartesians.', function() {
+        var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
+
         var packet = {
             vertexPositions : {
-                cartesian : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+                cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+    });
 
-        packet = {
-            vertexPositions : [{
-                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                cartesian : [1.0, 2.0, 3.0]
-            }, {
-                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                cartesian : [4.0, 5.0, 6.0]
-            }]
+    it('vertexPositions work with cartographicRadians.', function() {
+        var input = [new Cartographic(1.0, 2.0, 4.0), new Cartographic(5.0, 6.0, 7.0)];
+        var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray(input);
+
+        var packet = {
+            vertexPositions : {
+                cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+            }
         };
-        dataSource = new CzmlDataSource();
+
+        var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
-        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual([new Cartesian3(4.0, 5.0, 6.0)]);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+    });
+
+    it('vertexPositions work with cartographicDegrees.', function() {
+        var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
+
+        var packet = {
+            vertexPositions : {
+                cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1868,8 +1886,10 @@ defineSuite([
                         cellAlpha : 0,
                         rowCount : 36,
                         rowThickness : 1,
+                        rowOffset: 0.5,
                         columnCount : 9,
-                        columnThickness : 1
+                        columnThickness : 1,
+                        columnOffset: 0.5
                     }
                 }]
             }
