@@ -3,6 +3,77 @@ Change Log
 
 Beta Releases
 -------------
+### b28 - 2014-05-01
+
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
+  * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Renamed `CentralBody` to `Globe`.
+  * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
+  * Refactored visualizers, removing `setDynamicObjectCollection`, `getDynamicObjectCollection`, `getScene`, and `removeAllPrimitives` which are all superfluous after the introduction of `DataSourceDisplay`.  The affected classes are:
+    * `DynamicBillboardVisualizer`
+    * `DynamicConeVisualizerUsingCustomSensor`
+    * `DynamicLabelVisualizer`
+    * `DynamicModelVisualizer`
+    * `DynamicPathVisualizer`
+    * `DynamicPointVisualizer`
+    * `DynamicPyramidVisualizer`
+    * `DynamicVectorVisualizer`
+    * `GeometryVisualizer`
+  * Renamed Extent to Rectangle
+    * `Extent` -> `Rectangle`
+    * `ExtentGeometry` -> `RectangleGeomtry`
+    * `ExtentGeometryOutline` -> `RectangleGeometryOutline`
+    * `ExtentPrimitive` -> `RectanglePrimitive`
+    * `BoundingRectangle.fromExtent` -> `BoundingRectangle.fromRectangle`
+    * `BoundingSphere.fromExtent2D` -> `BoundingSphere.fromRectangle2D`
+    * `BoundingSphere.fromExtentWithHeights2D` -> `BoundingSphere.fromRectangleWithHeights2D`
+    * `BoundingSphere.fromExtent3D` -> `BoundingSphere.fromRectangle3D`
+    * `EllipsoidalOccluder.computeHorizonCullingPointFromExtent` -> `EllipsoidalOccluder.computeHorizonCullingPointFromRectangle`
+    * `Occluder.computeOccludeePointFromExtent` -> `Occluder.computeOccludeePointFromRectangle`
+    * `Camera.getExtentCameraCoordinates` -> `Camera.getRectangleCameraCoordinates`
+    * `Camera.viewExtent` -> `Camera.viewRectangle`
+    * `CameraFlightPath.createAnimationExtent` -> `CameraFlightPath.createAnimationRectangle`
+    * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
+    * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
+    * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
+  * Converted `DataSource` get methods into properties.
+    * `getName` -> `name`
+    * `getClock` -> `clock`
+    * `getChangedEvent` -> `changedEvent`
+    * `getDynamicObjectCollection` -> `dynamicObjects`
+    * `getErrorEvent` -> `errorEvent`
+  * `BaseLayerPicker` has been extended to support terrain selection ([#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607)).
+    * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
+    * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a `CentralBody` and `ImageryLayerCollection`.
+    * `ImageryProviderViewModel` -> `ProviderViewModel`
+    * `BaseLayerPickerViewModel.selectedName` -> `BaseLayerPickerViewModel.buttonTooltip`
+    * `BaseLayerPickerViewModel.selectedIconUrl` -> `BaseLayerPickerViewModel.buttonImageUrl`
+    * `BaseLayerPickerViewModel.selectedItem` -> `BaseLayerPickerViewModel.selectedImagery`
+    * `BaseLayerPickerViewModel.imageryLayers`has been removed and replaced with `BaseLayerPickerViewModel.centralBody`
+  * Renamed `TimeIntervalCollection.clear` to `TimeIntervalColection.removeAll`
+  * `Context` is now private.
+    * Removed `Scene.context`. Instead, use `Scene.drawingBufferWidth`, `Scene.drawingBufferHeight`, `Scene.maximumAliasedLineWidth`, and `Scene.createTextureAtlas`.
+    * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
+    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+  * Types implementing the `ImageryProvider` interface arenow require a `hasAlphaChannel` property.
+  * Removed `checkForChromeFrame` since Chrome Frame is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
+  * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`.
+* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
+* Added `Model.minimumPixelSize` property so models remain visible when the viewer zooms out.
+* Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
+* Added `DynamicWall` to support DataSource provided `WallGeometry`.
+* Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
+* Added the ability to offset the grid in the `GridMaterial`.
+* `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
+* Add `Clock.canAnimate` to prevent time from advancing, even while the clock is animating.
+* `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
+* Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and `ModelMesh.material`.
+* Added `asynchronous` and `ready` properties to `Model`.
+* Added `Cartesian4.fromColor` and `Color.fromCartesian4`.
+* Added `getScale` and `getMaximumScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
+* Upgraded Knockout from version 3.0.0 to 3.1.0.
+* Upgraded TopoJSON from version 1.1.4 to 1.6.8.
 
 ### b27 - 2014-04-01
 
@@ -134,7 +205,7 @@ Beta Releases
       * `getGUID` -> `guid`
     * `VertexArray`
       * `getNumberOfAttributes` -> `numberOfAttributes`
-      * `getIndexBuffer` -> `indexBuffer`   
+      * `getIndexBuffer` -> `indexBuffer`
   * Finished removing prototype functions.  (Use 'static' versions of these functions instead):
     * `BoundingRectangle`
       * `union`, `expand`
@@ -148,6 +219,7 @@ Beta Releases
       * `normalize`
     * `Extent`
       * `validate`, `getSouthwest`, `getNorthwest`, `getNortheast`, `getSoutheast`, `getCenter`, `intersectWith`, `contains`, `isEmpty`, `subsample`
+  * `DataSource` now has additional required properties, `isLoading` and `loadingEvent` as well as a new optional `update` method which will be called each frame.
   * Renamed `Stripe` material uniforms `lightColor` and `darkColor` to `evenColor` and `oddColor`.
   * Replaced `SceneTransitioner` with new functions and properties on the `Scene`: `morphTo2D`, `morphToColumbusView`, `morphTo3D`, `completeMorphOnUserInput`, `morphStart`, `morphComplete`, and `completeMorph`.
   * Removed `TexturePool`.

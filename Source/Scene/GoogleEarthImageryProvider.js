@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         '../Core/Event',
-        '../Core/Extent',
+        '../Core/Rectangle',
         './ImageryProvider',
         './TileProviderError',
         './WebMercatorTilingScheme',
@@ -22,7 +22,7 @@ define([
         DeveloperError,
         RuntimeError,
         Event,
-        Extent,
+        Rectangle,
         ImageryProvider,
         TileProviderError,
         WebMercatorTilingScheme,
@@ -89,7 +89,7 @@ define([
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
-     *     url : 'http://earth.localdomain',
+     *     url : '//earth.localdomain',
      *     channel : 1008
      * });
      */
@@ -180,7 +180,7 @@ define([
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2,
-                  extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
+                  rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
               });
             // Default to mercator projection when projection is undefined
             } else if(!defined(data.projection) || data.projection === 'mercator') {
@@ -388,20 +388,20 @@ define([
             }
         },
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -458,6 +458,20 @@ define([
         credit : {
             get : function() {
                 return this._credit;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
             }
         }
     });

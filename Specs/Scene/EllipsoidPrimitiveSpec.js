@@ -146,7 +146,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

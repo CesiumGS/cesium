@@ -7,8 +7,10 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Color',
+        '../Core/TimeInterval',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
+        './ConstantPositionProperty',
         './SampledPositionProperty',
         './CompositePositionProperty',
         './TimeIntervalCollectionPositionProperty',
@@ -23,8 +25,10 @@ define([
          Matrix3,
          Matrix4,
          Color,
+         TimeInterval,
          Transforms,
          ReferenceFrame,
+         ConstantPositionProperty,
          SampledPositionProperty,
          CompositePositionProperty,
          TimeIntervalCollectionPositionProperty,
@@ -74,16 +78,16 @@ define([
             }
 
             if (t < (len - 1)) {
-                if (!sampling) {
+                if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
                     var secondsUntilNext = current.getSecondsDifference(next);
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
-                        sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                        sampleStepsToTake = Math.ceil(secondsUntilNext / maximumStep);
                         sampleStepsTaken = 0;
                         sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
-                        sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                        sampleStepsToTake = Math.max(sampleStepsToTake - 1, 1);
                     }
                 }
 
@@ -112,6 +116,7 @@ define([
         var i = 0;
         var index = startingIndex;
         var time = start;
+        var stepSize = Math.max(maximumStep, 60);
         var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
         while (time.lessThan(stop)) {
             if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
@@ -128,7 +133,7 @@ define([
                 index++;
             }
             i++;
-            time = start.addSeconds(maximumStep * i);
+            time = start.addSeconds(stepSize * i);
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -140,12 +145,22 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
-        var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.length; i++) {
-            var interval = intervals.get(0);
-            if (interval.start.lessThanOrEquals(stop)) {
-                var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+        var intervals = property.intervals;
+        for (var i = 0; i < intervals.length; i++) {
+            var interval = intervals.get(i);
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var time = interval.start;
+                if (!interval.isStartIncluded) {
+                    if (interval.isStopIncluded) {
+                        time = interval.stop;
+                    } else {
+                        time = interval.start.addSeconds(interval.start.getSecondsDifference(interval.stop) / 2);
+                    }
+                }
+                var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
                 if (defined(tmp)) {
                     result[index] = tmp;
                     index++;
@@ -155,22 +170,47 @@ define([
         return index;
     }
 
+    function subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var tmp = property.getValueInReferenceFrame(start, referenceFrame, result[startingIndex]);
+        if (defined(tmp)) {
+            result[startingIndex++] = tmp;
+        }
+        return startingIndex;
+    }
+
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var sampleInterval = new TimeInterval(start, stop, true, true);
+
         var index = startingIndex;
-        var intervals = property.getIntervals();
-        for ( var i = 0; i < intervals.length; i++) {
-            var interval = intervals.get(0);
-            if (interval.start.lessThanOrEquals(stop)) {
+        var intervals = property.intervals;
+        for (var i = 0; i < intervals.length; i++) {
+            var interval = intervals.get(i);
+            if (!interval.intersect(sampleInterval).isEmpty) {
+                var intervalStart = interval.start;
+                var intervalStop = interval.stop;
+
+                var sampleStart = start;
+                if (intervalStart.greaterThan(sampleStart)) {
+                    sampleStart = intervalStart;
+                }
+
+                var sampleStop = stop;
+                if (intervalStop.lessThan(sampleStop)) {
+                    sampleStop = intervalStop;
+                }
+
                 var intervalProperty = interval.data;
                 if (intervalProperty instanceof SampledPositionProperty) {
-                    index = subSampleSampledProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
-                    index = subSampleCompositeProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleCompositeProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
-                    index = subSampleIntervalProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleIntervalProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof ConstantPositionProperty) {
+                    index = subSampleConstantProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else {
                     //Fallback to generic sampling.
-                    index = subSampleGenericProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                    index = subSampleGenericProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 }
             }
         }
@@ -188,7 +228,9 @@ define([
         } else if (property instanceof CompositePositionProperty) {
             length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
         } else if (property instanceof TimeIntervalCollectionPositionProperty) {
-            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+            length = subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof ConstantPositionProperty) {
+            length = subSampleConstantProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
         } else {
             //Fallback to generic sampling.
             length = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
@@ -310,9 +352,8 @@ define([
                 polyline = this._polylineCollection.add();
             }
             dynamicObject._pathVisualizerIndex = pathVisualizerIndex;
-            polyline._id = dynamicObject;
+            polyline.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             polyline.width = 1;
             var material = polyline.material;
             if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
@@ -330,13 +371,16 @@ define([
 
         polyline.show = true;
 
-        var resolution = 60.0;
+        var maxStepSize = 60.0;
         property = dynamicPath._resolution;
         if (defined(property)) {
-            resolution = property.getValue(time);
+            var resolution = property.getValue(time);
+            if (defined(resolution)) {
+                maxStepSize = resolution;
+            }
         }
 
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
 
         property = dynamicPath._color;
         if (defined(property)) {
@@ -378,80 +422,37 @@ define([
     };
 
     /**
-     * A DynamicObject visualizer which maps the DynamicPath instance
-     * in DynamicObject.path to a Polyline primitive.
+     * A {@link Visualizer} which maps {@link DynamicObject#path} to a {@link Polyline}.
      * @alias DynamicPathVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicPath
-     * @see Polyline
-     * @see DynamicObject
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicConeVisualizerUsingCustomSensor
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._updaters = {};
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicPathVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicPathVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicPathVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
-            }
-        }
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
+     * @memberof DynamicPathVisualizer
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicPathVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -460,122 +461,94 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var updaters = this._updaters;
-            for ( var key in updaters) {
-                if (updaters.hasOwnProperty(key)) {
-                    updaters[key].update(time);
-                }
-            }
-
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                var dynamicObject = dynamicObjects[i];
-
-                if (!defined(dynamicObject._path)) {
-                    continue;
-                }
-
-                var positionProperty = dynamicObject._position;
-                if (!defined(positionProperty)) {
-                    continue;
-                }
-
-                var lastUpdater = dynamicObject._pathUpdater;
-
-                var frameToVisualize = ReferenceFrame.FIXED;
-                if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty._referenceFrame;
-                }
-
-                var currentUpdater = this._updaters[frameToVisualize];
-
-                if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                    continue;
-                }
-
-                if (defined(lastUpdater)) {
-                    lastUpdater.removeObject(dynamicObject);
-                }
-
-                if (!defined(currentUpdater)) {
-                    currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
-                    currentUpdater.update(time);
-                    this._updaters[frameToVisualize] = currentUpdater;
-                }
-
-                dynamicObject._pathUpdater = currentUpdater;
-                if (defined(currentUpdater)) {
-                    currentUpdater.updateObject(time, dynamicObject);
-                }
-            }
-        }
-    };
-
-    /**
-     * Removes all primitives from the scene.
-     */
-    DynamicPathVisualizer.prototype.removeAllPrimitives = function() {
         var updaters = this._updaters;
         for ( var key in updaters) {
             if (updaters.hasOwnProperty(key)) {
-                updaters[key].destroy();
+                updaters[key].update(time);
             }
         }
-        this._updaters = {};
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._pathUpdater = undefined;
-                dynamicObjects[i]._pathVisualizerIndex = undefined;
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
+            var dynamicObject = dynamicObjects[i];
+
+            if (!defined(dynamicObject._path)) {
+                continue;
+            }
+
+            var positionProperty = dynamicObject._position;
+            if (!defined(positionProperty)) {
+                continue;
+            }
+
+            var lastUpdater = dynamicObject._pathUpdater;
+
+            var frameToVisualize = ReferenceFrame.FIXED;
+            if (this._scene.mode === SceneMode.SCENE3D) {
+                frameToVisualize = positionProperty._referenceFrame;
+            }
+
+            var currentUpdater = this._updaters[frameToVisualize];
+
+            if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
+                currentUpdater.updateObject(time, dynamicObject);
+                continue;
+            }
+
+            if (defined(lastUpdater)) {
+                lastUpdater.removeObject(dynamicObject);
+            }
+
+            if (!defined(currentUpdater)) {
+                currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
+                currentUpdater.update(time);
+                this._updaters[frameToVisualize] = currentUpdater;
+            }
+
+            dynamicObject._pathUpdater = currentUpdater;
+            if (defined(currentUpdater)) {
+                currentUpdater.updateObject(time, dynamicObject);
             }
         }
+        return true;
     };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
      * @memberof DynamicPathVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicPathVisualizer#destroy
      */
     DynamicPathVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
+     * Removes and destroys all primitives created by this instance.
      * @memberof DynamicPathVisualizer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicPathVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
      */
     DynamicPathVisualizer.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
+
+        var updaters = this._updaters;
+        for ( var key in updaters) {
+            if (updaters.hasOwnProperty(key)) {
+                updaters[key].destroy();
+            }
+        }
+
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        var length = dynamicObjects.length;
+        for (var i = 0; i < length; i++) {
+            dynamicObjects[i]._pathUpdater = undefined;
+            dynamicObjects[i]._pathVisualizerIndex = undefined;
+        }
         return destroyObject(this);
     };
 
     DynamicPathVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var _pathUpdater = dynamicObject._pathUpdater;
             if (defined(_pathUpdater)) {
@@ -583,6 +556,9 @@ define([
             }
         }
     };
+
+    //for testing
+    DynamicPathVisualizer._subSample = subSample;
 
     return DynamicPathVisualizer;
 });

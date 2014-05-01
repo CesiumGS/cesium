@@ -781,14 +781,6 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_pixelSizeInMeters', function() {
-        var us = context.uniformState;
-        us.update(context, createFrameState(createMockCamera()));
-
-        var fs = 'void main() { gl_FragColor = vec4(czm_pixelSizeInMeters == 1.0); }';
-        verifyDraw(fs);
-    });
-
     it('has czm_sunPositionWC', function() {
         var us = context.uniformState;
         us.update(context, createFrameState(createMockCamera()));

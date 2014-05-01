@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Construct polygons from a set of points, an extent, or a nested hierarchy and apply materials to them.">
+    <meta name="description" content="Construct polygons from a set of points, an rectangle, or a nested hierarchy and apply materials to them.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -41,12 +41,8 @@ require(['Cesium'], function(Cesium) {
         }));
         Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
         
-        polygon = primitives.add(new Cesium.ExtentPrimitive({
-            extent : new Cesium.Extent(
-                Cesium.Math.toRadians(-110.0),
-                Cesium.Math.toRadians(0.0),
-                Cesium.Math.toRadians(-90.0),
-                Cesium.Math.toRadians(20.0)),
+        polygon = primitives.add(new Cesium.RectanglePrimitive({
+            rectangle : Cesium.Rectangle.fromDegrees(-110.0, 0.0, -90.0, 20.0),
             rotation : Cesium.Math.toRadians(45),
             material : Cesium.Material.fromType(Cesium.Material.ColorType, {
                 color : new Cesium.Color(1.0, 0.0, 1.0, 0.75)
@@ -95,15 +91,11 @@ require(['Cesium'], function(Cesium) {
         }));
         Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
 
-        // Create a polygon from an extent
-        var polygonExtent = primitives.add(new Cesium.ExtentPrimitive({
-            extent : new Cesium.Extent(
-                Cesium.Math.toRadians(-180.0),
-                Cesium.Math.toRadians(50.0),
-                Cesium.Math.toRadians(180.0),
-                Cesium.Math.toRadians(90.0))
+        // Create a polygon from an rectangle
+        var polygonRectangle = primitives.add(new Cesium.RectanglePrimitive({
+            rectangle : Cesium.Rectangle.fromDegrees(-180.0, 50.0, 180.0, 90.0)
         }));
-        Sandcastle.declare(polygonExtent);  // For highlighting on mouseover in Sandcastle.
+        Sandcastle.declare(polygonRectangle);  // For highlighting on mouseover in Sandcastle.
 
         // Apply a material to a polygon
         var checkeredPolygon = primitives.add(new Cesium.Polygon({
@@ -124,7 +116,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
+    createPrimitives(viewer.scene, viewer.scene.globe.ellipsoid);
 
     Sandcastle.finishedLoading();
 });

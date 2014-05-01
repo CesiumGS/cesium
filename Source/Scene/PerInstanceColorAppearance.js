@@ -53,22 +53,22 @@ define([
      *   })
      * }));
      *
-     * // Two extents in a primitive, each with a different color
+     * // Two rectangles in a primitive, each with a different color
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.ExtentGeometry({
-     *     extent : Cesium.Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     *   geometry : new Cesium.RectangleGeometry({
+     *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
      *   color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
      * });
      *
      * var anotherInstance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.ExtentGeometry({
-     *     extent : Cesium.Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
+     *   geometry : new Cesium.RectangleGeometry({
+     *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
      *   color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
      * });
      *
-     * var extentPrimitive = new Cesium.Primitive({
+     * var rectanglePrimitive = new Cesium.Primitive({
      *   geometryInstances : [instance, anotherInstance],
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });

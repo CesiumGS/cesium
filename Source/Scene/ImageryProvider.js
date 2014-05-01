@@ -132,12 +132,12 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by the instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
          * not be called before {@link ImageryProvider#ready} returns true.
          * @memberof ImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent: {
+        rectangle: {
             get : DeveloperError.throwInstantiationError
         },
 
@@ -174,7 +174,7 @@ define([
         /**
          * Gets the minimum level-of-detail that can be requested.  This function should
          * not be called before {@link ImageryProvider#ready} returns true. Generally,
-         * a minimum level should only be used when the extent of the imagery is small
+         * a minimum level should only be used when the rectangle of the imagery is small
          * enough that the number of tiles at the minimum level is small.  An imagery
          * provider with more than a few tiles at the minimum level will lead to
          * rendering problems.
@@ -235,6 +235,18 @@ define([
          * @type {Proxy}
          */
         proxy : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
             get : DeveloperError.throwInstantiationError
         }
     });

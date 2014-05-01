@@ -11,6 +11,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Quaternion',
+        'Core/Rectangle',
         'Core/ReferenceFrame',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
@@ -36,6 +37,7 @@ defineSuite([
         defined,
         Ellipsoid,
         Quaternion,
+        Rectangle,
         ReferenceFrame,
         Spherical,
         DynamicBillboard,
@@ -112,37 +114,36 @@ defineSuite([
 
     it('default constructor has expected values', function() {
         var dataSource = new CzmlDataSource();
-        expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getErrorEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getName()).toBeUndefined();
-        expect(dataSource.getClock()).toBeUndefined();
-        expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(true);
+        expect(dataSource.changedEvent).toBeInstanceOf(Event);
+        expect(dataSource.errorEvent).toBeInstanceOf(Event);
+        expect(dataSource.name).toBeUndefined();
+        expect(dataSource.clock).toBeUndefined();
+        expect(dataSource.dynamicObjects).toBeInstanceOf(DynamicObjectCollection);
+        expect(dataSource.dynamicObjects.getObjects().length).toEqual(0);
     });
 
-    it('getName returns CZML defined name', function() {
+    it('name returns CZML defined name', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(nameCzml);
-        expect(dataSource.getName()).toEqual('czmlName');
+        expect(dataSource.name).toEqual('czmlName');
     });
 
-    it('getName uses source name if CZML name is undefined', function() {
+    it('name uses source name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(clockCzml, 'Gallery/simple.czml?asd=true');
-        expect(dataSource.getName()).toEqual('simple.czml');
+        expect(dataSource.name).toEqual('simple.czml');
     });
 
-    it('getClock returns undefined for static CZML', function() {
+    it('clock returns undefined for static CZML', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(staticCzml);
-        expect(dataSource.getClock()).toBeUndefined();
+        expect(dataSource.clock).toBeUndefined();
     });
 
-    it('getClock returns CZML defined clock', function() {
+    it('clock returns CZML defined clock', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(clockCzml);
-        var clock = dataSource.getClock();
+        var clock = dataSource.clock;
         expect(clock).toBeDefined();
         expect(clock.startTime).toEqual(parsedClock.interval.start);
         expect(clock.stopTime).toEqual(parsedClock.interval.stop);
@@ -152,12 +153,12 @@ defineSuite([
         expect(clock.multiplier).toEqual(parsedClock.multiplier);
     });
 
-    it('getClock returns data interval if no clock defined', function() {
+    it('clock returns data interval if no clock defined', function() {
         var interval = TimeInterval.fromIso8601(dynamicCzml.availability);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(dynamicCzml);
-        var clock = dataSource.getClock();
+        var clock = dataSource.clock;
         expect(clock).toBeDefined();
         expect(clock.startTime).toEqual(interval.start);
         expect(clock.stopTime).toEqual(interval.stop);
@@ -171,7 +172,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
+            return dataSource.dynamicObjects.getObjects().length === 11;
         });
     });
 
@@ -179,7 +180,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
+            return dataSource.dynamicObjects.getObjects().length === 11;
         });
 
         runs(function() {
@@ -187,7 +188,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 12;
+            return dataSource.dynamicObjects.getObjects().length === 12;
         });
     });
 
@@ -195,7 +196,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.processUrl(simpleUrl);
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 11;
+            return dataSource.dynamicObjects.getObjects().length === 11;
         });
 
         runs(function() {
@@ -203,7 +204,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 1;
+            return dataSource.dynamicObjects.getObjects().length === 1;
         });
     });
 
@@ -215,7 +216,7 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(11);
+            expect(dataSource.dynamicObjects.getObjects().length).toEqual(11);
         });
     });
 
@@ -227,10 +228,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length === 11);
+            expect(dataSource.dynamicObjects.getObjects().length === 11);
 
             dataSource.process(vehicle, vehicleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length === 12);
+            expect(dataSource.dynamicObjects.getObjects().length === 12);
         });
     });
 
@@ -242,10 +243,10 @@ defineSuite([
         runs(function() {
             var dataSource = new CzmlDataSource();
             dataSource.process(simple, simpleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(11);
+            expect(dataSource.dynamicObjects.getObjects().length).toEqual(11);
 
             dataSource.load(vehicle, vehicleUrl);
-            expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
+            expect(dataSource.dynamicObjects.getObjects().length).toEqual(1);
         });
     });
 
@@ -281,7 +282,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('changedEvent');
-        dataSource.getChangedEvent().addEventListener(spy);
+        dataSource.changedEvent.addEventListener(spy);
 
         dataSource.load(clockCzml);
 
@@ -298,7 +299,7 @@ defineSuite([
         dataSource.load(originalCzml);
 
         var spy = jasmine.createSpy('changedEvent');
-        dataSource.getChangedEvent().addEventListener(spy);
+        dataSource.changedEvent.addEventListener(spy);
 
         var newCzml = {
             id : 'document',
@@ -315,7 +316,7 @@ defineSuite([
         dataSource.load(nameCzml);
 
         var spy = jasmine.createSpy('changedEvent');
-        dataSource.getChangedEvent().addEventListener(spy);
+        dataSource.changedEvent.addEventListener(spy);
 
         dataSource.load(nameCzml);
 
@@ -338,7 +339,7 @@ defineSuite([
         dataSource.load(originalCzml);
 
         var spy = jasmine.createSpy('changedEvent');
-        dataSource.getChangedEvent().addEventListener(spy);
+        dataSource.changedEvent.addEventListener(spy);
 
         var newCzml = {
             id : 'document',
@@ -361,7 +362,7 @@ defineSuite([
         dataSource.load(clockCzml);
 
         var spy = jasmine.createSpy('changedEvent');
-        dataSource.getChangedEvent().addEventListener(spy);
+        dataSource.changedEvent.addEventListener(spy);
 
         dataSource.load(clockCzml);
 
@@ -372,7 +373,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
-        dataSource.getErrorEvent().addEventListener(spy);
+        dataSource.errorEvent.addEventListener(spy);
 
         var promise = dataSource.loadUrl('Data/Images/Blue.png'); //not JSON
 
@@ -395,7 +396,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
-        dataSource.getErrorEvent().addEventListener(spy);
+        dataSource.errorEvent.addEventListener(spy);
 
         var promise = dataSource.processUrl('Data/Images/Blue.png'); //not JSON
 
@@ -437,7 +438,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket, sourceUri);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.billboard).toBeDefined();
         expect(dynamicObject.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
@@ -466,7 +467,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet, source);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var imageProperty = dynamicObject.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
@@ -485,7 +486,7 @@ defineSuite([
 
         dataSource = new CzmlDataSource();
         dataSource.load(packet, source);
-        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         imageProperty = dynamicObject.billboard.image;
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(source + 'image.png');
         expect(imageProperty.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(source + 'image2.png');
@@ -517,7 +518,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.billboard).toBeDefined();
         expect(dynamicObject.billboard.image.getValue(validTime)).toEqual(billboardPacket.billboard.image);
@@ -560,15 +561,15 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
-        expect(dataSource.getClock()).toBeDefined();
-        expect(dataSource.getClock().startTime).toEqual(interval.start);
-        expect(dataSource.getClock().stopTime).toEqual(interval.stop);
-        expect(dataSource.getClock().currentTime).toEqual(currentTime);
-        expect(dataSource.getClock().clockRange).toEqual(range);
-        expect(dataSource.getClock().clockStep).toEqual(step);
-        expect(dataSource.getClock().multiplier).toEqual(multiplier);
+        expect(dataSource.clock).toBeDefined();
+        expect(dataSource.clock.startTime).toEqual(interval.start);
+        expect(dataSource.clock.stopTime).toEqual(interval.stop);
+        expect(dataSource.clock.currentTime).toEqual(currentTime);
+        expect(dataSource.clock.clockRange).toEqual(range);
+        expect(dataSource.clock.clockStep).toEqual(step);
+        expect(dataSource.clock.multiplier).toEqual(multiplier);
     });
 
     it('CZML only adds clock data on the document object.', function() {
@@ -585,7 +586,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        expect(dataSource.getClock()).toBeUndefined();
+        expect(dataSource.clock).toBeUndefined();
     });
 
     it('CZML adds data for infinite cone.', function() {
@@ -635,7 +636,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.cone).toBeDefined();
         expect(dynamicObject.cone.innerHalfAngle.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.innerHalfAngle);
@@ -704,7 +705,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.cone).toBeDefined();
         expect(dynamicObject.cone.innerHalfAngle.getValue(validTime)).toEqual(conePacket.cone.innerHalfAngle);
@@ -747,7 +748,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(new JulianDate());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
@@ -767,7 +768,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
@@ -790,7 +791,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(firstDate);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
@@ -809,7 +810,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(new JulianDate());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
@@ -827,7 +828,7 @@ defineSuite([
         };
 
         dataSource.load(czml);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
         czml = {
@@ -839,7 +840,7 @@ defineSuite([
         };
 
         dataSource.load(czml);
-        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.FIXED);
     });
 
@@ -856,7 +857,7 @@ defineSuite([
         };
 
         dataSource.process(czml);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
         var czml2 = {
@@ -885,7 +886,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(czml);
 
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
@@ -908,7 +909,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(firstDate)).toEqual(0);
@@ -927,7 +928,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
@@ -947,7 +948,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsePacketInterval);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         var validTime = TimeInterval.fromIso8601(ellipsePacketInterval.ellipse.interval).start;
         var invalidTime = validTime.addSeconds(-1);
@@ -983,7 +984,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.ellipsoid).toBeDefined();
         expect(dynamicObject.ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRadii);
@@ -1016,7 +1017,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacketInterval);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.ellipsoid).toBeDefined();
         expect(dynamicObject.ellipsoid.radii.getValue(validTime)).toEqual(expectedRadii);
@@ -1056,7 +1057,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.label).toBeDefined();
         expect(dynamicObject.label.text.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.text);
@@ -1105,7 +1106,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.label).toBeDefined();
         expect(dynamicObject.label.text.getValue(validTime)).toEqual(labelPacket.label.text);
@@ -1144,7 +1145,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
@@ -1157,36 +1158,54 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
     });
 
-    it('CZML VertexPositions works.', function() {
+    it('vertexPositions work with cartesians.', function() {
+        var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
+
         var packet = {
             vertexPositions : {
-                cartesian : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+                cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
             }
         };
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+    });
 
-        packet = {
-            vertexPositions : [{
-                interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
-                cartesian : [1.0, 2.0, 3.0]
-            }, {
-                interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
-                cartesian : [4.0, 5.0, 6.0]
-            }]
+    it('vertexPositions work with cartographicRadians.', function() {
+        var input = [new Cartographic(1.0, 2.0, 4.0), new Cartographic(5.0, 6.0, 7.0)];
+        var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray(input);
+
+        var packet = {
+            vertexPositions : {
+                cartographicRadians : [input[0].longitude, input[0].latitude, input[0].height, input[1].longitude, input[1].latitude, input[1].height]
+            }
         };
-        dataSource = new CzmlDataSource();
+
+        var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
-        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual([new Cartesian3(1.0, 2.0, 3.0)]);
-        expect(dynamicObject.vertexPositions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual([new Cartesian3(4.0, 5.0, 6.0)]);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+    });
+
+    it('vertexPositions work with cartographicDegrees.', function() {
+        var expectedResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([Cartographic.fromDegrees(1.0, 2.0, 3.0), Cartographic.fromDegrees(5.0, 6.0, 7.0)]);
+
+        var packet = {
+            vertexPositions : {
+                cartographicDegrees : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
     });
 
     it('CZML ViewFrom works.', function() {
@@ -1198,7 +1217,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
@@ -1209,7 +1228,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.description.getValue(Iso8601.MINIMUM_VALUE)).toEqual(packet.description);
     });
 
@@ -1221,7 +1240,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         var interval = TimeInterval.fromIso8601(packet1.availability);
         expect(dynamicObject.availability.length).toEqual(1);
@@ -1246,7 +1265,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.process(packet1);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
         var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
@@ -1287,7 +1306,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.path).toBeDefined();
         expect(dynamicObject.path.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1324,7 +1343,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.path).toBeDefined();
         expect(dynamicObject.path.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1362,7 +1381,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.point).toBeDefined();
         expect(dynamicObject.point.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1393,7 +1412,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.point).toBeDefined();
         expect(dynamicObject.point.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1429,7 +1448,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1460,7 +1479,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.polygon).toBeDefined();
         expect(dynamicObject.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1487,7 +1506,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.polyline).toBeDefined();
         expect(dynamicObject.polyline.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1518,7 +1537,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.polyline).toBeDefined();
         expect(dynamicObject.polyline.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1557,7 +1576,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.pyramid).toBeDefined();
         expect(dynamicObject.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
@@ -1589,7 +1608,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(expected1);
         expect(dynamicObject.pyramid.directions.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(expected2);
     });
@@ -1623,7 +1642,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.pyramid).toBeDefined();
         expect(dynamicObject.pyramid.directions.getValue(validTime)).toEqual(
@@ -1663,7 +1682,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.vector).toBeDefined();
         expect(dynamicObject.vector.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1695,7 +1714,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.vector).toBeDefined();
         expect(dynamicObject.vector.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
@@ -1714,7 +1733,7 @@ defineSuite([
     it('processCzml deletes an existing object.', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(staticCzml);
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         dataSource.load(czmlDelete);
         expect(objects.length).toEqual(0);
@@ -1730,7 +1749,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(parentChildCzml);
-        var objects = dataSource.getDynamicObjectCollection();
+        var objects = dataSource.dynamicObjects;
 
         var parent = objects.getById('parent');
         expect(parent.parent).toBeUndefined();
@@ -1760,7 +1779,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(parentChildCzml);
-        var objects = dataSource.getDynamicObjectCollection();
+        var objects = dataSource.dynamicObjects;
 
         var grandparent = objects.getById('grandparent');
         expect(grandparent.parent).toBeUndefined();
@@ -1830,7 +1849,7 @@ defineSuite([
         var spy = jasmine.createSpy('changedEvent');
 
         var dataSource = new CzmlDataSource();
-        dataSource.getDynamicObjectCollection().collectionChanged.addEventListener(spy);
+        dataSource.dynamicObjects.collectionChanged.addEventListener(spy);
         dataSource.load(packets);
 
         expect(spy.callCount).toEqual(1);
@@ -1867,8 +1886,10 @@ defineSuite([
                         cellAlpha : 0,
                         rowCount : 36,
                         rowThickness : 1,
+                        rowOffset: 0.5,
                         columnCount : 9,
-                        columnThickness : 1
+                        columnThickness : 1,
+                        columnOffset: 0.5
                     }
                 }]
             }
@@ -1876,12 +1897,105 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(packet);
-        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
         expect(dynamicObject.polygon.material.getType(solid)).toBe('Color');
         expect(dynamicObject.polygon.material.getType(grid1)).toBe('Grid');
         expect(dynamicObject.polygon.material.getType(grid2)).toBe('Grid');
         expect(dynamicObject.polygon.material.getType(before)).toBeUndefined();
         expect(dynamicObject.polygon.material.getType(after)).toBeUndefined();
+    });
 
+    it('CZML adds data for rectangle.', function() {
+        var rectanglePacket = {
+            rectangle : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                coordinates : {
+                    wsen : [0, 1, 2, 3]
+                },
+                height : 1,
+                extrudedHeight : 2,
+                granularity : 3,
+                rotation : 4,
+                stRotation : 5,
+                closeBottom : true,
+                closeTop : false,
+                show : true
+            }
+        };
+
+        var czmlRectangle = rectanglePacket.rectangle;
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(rectanglePacket);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+
+
+        expect(dynamicObject.rectangle).toBeDefined();
+        expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Rectangle(0, 1, 2, 3));
+        expect(dynamicObject.rectangle.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(dynamicObject.rectangle.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
+        expect(dynamicObject.rectangle.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.height);
+        expect(dynamicObject.rectangle.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.extrudedHeight);
+        expect(dynamicObject.rectangle.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
+        expect(dynamicObject.rectangle.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.rotation);
+        expect(dynamicObject.rectangle.stRotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.stRotation);
+        expect(dynamicObject.rectangle.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeBottom);
+        expect(dynamicObject.rectangle.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.closeTop);
+    });
+
+    it('CZML adds data for rectangle in degrees.', function() {
+        var rectanglePacket = {
+            rectangle : {
+                coordinates : {
+                    wsenDegrees : [0, 1, 2, 3]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(rectanglePacket);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+        expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
+    });
+
+    it('CZML adds data for wall.', function() {
+        var wallPacket = {
+            wall : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                granularity : 3,
+                minimumHeights : {
+                    array : [1, 2, 3]
+                },
+                maximumHeights : {
+                    array : [4, 5, 6]
+                },
+                show : true
+            }
+        };
+
+        var czmlRectangle = wallPacket.wall;
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(wallPacket);
+        var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
+
+        expect(dynamicObject.wall).toBeDefined();
+        expect(dynamicObject.wall.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(dynamicObject.wall.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.show);
+        expect(dynamicObject.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
+        expect(dynamicObject.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
+        expect(dynamicObject.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
     });
 });
