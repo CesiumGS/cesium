@@ -52,7 +52,7 @@ Beta Releases
     * `BaseLayerPickerViewModel.selectedItem` -> `BaseLayerPickerViewModel.selectedImagery`
     * `BaseLayerPickerViewModel.imageryLayers`has been removed and replaced with `BaseLayerPickerViewModel.centralBody`
   * Renamed `TimeIntervalCollection.clear` to `TimeIntervalColection.removeAll`
-  * `Context` is now private
+  * `Context` is now private.
     * Removed `Scene.context`. Instead, use `Scene.drawingBufferWidth`, `Scene.drawingBufferHeight`, `Scene.maximumAliasedLineWidth`, and `Scene.createTextureAtlas`.
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
     * `Camera` constructor takes `Scene` as parameter instead of `Context`
@@ -68,7 +68,6 @@ Beta Releases
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
 * Add `Clock.canAnimate` to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
-* Added `Model.minimumPixelSize` property so models remain visible when the viewer zooms out.
 * Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and `ModelMesh.material`.
 * Added `asynchronous` and `ready` properties to `Model`.
 * Added `Cartesian4.fromColor` and `Color.fromCartesian4`.
