@@ -105,6 +105,13 @@ define([
     }
 
     defineProperties(PerspectiveFrustum.prototype, {
+        offCenterFrustum : {
+            get : function() {
+                update(this);
+                return this._offCenterFrustum;
+            }
+        },
+
         /**
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveFrustum.prototype

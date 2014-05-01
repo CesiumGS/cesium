@@ -1,23 +1,35 @@
 /*global define*/
 define([
         '../../Core/Color',
+        '../../Core/ColorGeometryInstanceAttribute',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/GeometryInstance',
+        '../../Core/GeometryPipeline',
+        '../../Core/PerspectiveFrustumGeometry',
         '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
+        '../../Scene/PerInstanceColorAppearance',
+        '../../Scene/Primitive',
         '../../Scene/TileCoordinatesImageryProvider',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         Color,
+        ColorGeometryInstanceAttribute,
         defined,
         defineProperties,
         DeveloperError,
+        GeometryInstance,
+        GeometryPipeline,
+        PerspectiveFrustumGeometry,
         Rectangle,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
+        PerInstanceColorAppearance,
+        Primitive,
         TileCoordinatesImageryProvider,
         createCommand,
         knockout) {
@@ -92,6 +104,13 @@ define([
          * @default false
          */
         this.frustums = false;
+
+        /**
+         * Gets or sets the show current view frustum state.  This property is observable.
+         * @type {Boolean}
+         * @default false
+         */
+        this.currentViewFrustum = false;
 
         /**
          * Gets or sets the show performance display state.  This property is observable.
@@ -247,7 +266,7 @@ define([
          */
         this.terrainSwitchText = '+';
 
-        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums',
+        knockout.track(this, ['filterTile', 'suspendUpdates', 'dropDownVisible', 'frustums', 'currentViewFrustum',
                               'frustumStatisticText', 'pickTileActive', 'pickPrimitiveActive', 'hasPickedPrimitive',
                               'hasPickedTile', 'tileText', 'generalVisible', 'generalSwitchText',
                               'primitivesVisible', 'primitivesSwitchText', 'terrainVisible', 'terrainSwitchText']);
@@ -277,6 +296,32 @@ define([
             } else {
                 that._scene.debugShowFrustums = false;
             }
+            return true;
+        });
+
+        var currentViewFrustumPrimitive;
+
+        this._showCurrentViewFrustum = createCommand(function() {
+            if (defined(currentViewFrustumPrimitive)) {
+                that._scene.primitives.remove(currentViewFrustumPrimitive);
+                currentViewFrustumPrimitive = undefined;
+            }
+
+            if (that.currentViewFrustum) {
+                currentViewFrustumPrimitive = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : new PerspectiveFrustumGeometry(that._scene.camera.frustum),
+                        modelMatrix : that._scene.camera.inverseViewMatrix,
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 0.5)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                    })
+                });
+                that._scene.primitives.add(currentViewFrustumPrimitive);
+            }
+
             return true;
         });
 
@@ -489,6 +534,18 @@ define([
         showFrustums : {
             get : function() {
                 return this._showFrustums;
+            }
+        },
+
+        /**
+         * Gets the command to toggle showing the current view frustum.
+         * @memberof CesiumInspectorViewModel.prototype
+         *
+         * @type {Command}
+         */
+        showCurrentViewFrustum : {
+            get : function() {
+                return this._showCurrentViewFrustum;
             }
         },
 
