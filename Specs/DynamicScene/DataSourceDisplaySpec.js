@@ -37,24 +37,9 @@ defineSuite([
         this.destroyed = false;
     };
 
-    MockVisualizer.prototype.getScene = function() {
-        return this.scene;
-    };
-
-    MockVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this.dynamicObjectCollection;
-    };
-
-    MockVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        this.dynamicObjectCollection = dynamicObjectCollection;
-    };
-
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
-    };
-
-    MockVisualizer.prototype.removeAllPrimitives = function() {
     };
 
     MockVisualizer.prototype.isDestroyed = function() {
