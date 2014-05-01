@@ -30,7 +30,6 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = scene.globe.ellipsoid;
 
     function starPositions(arms, rOuter, rInner) {
         var angle = Math.PI / arms;
@@ -55,10 +54,10 @@ require(['Cesium'], function(Cesium) {
     // Red tube
     var redTube = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-85.0, 32.0, 0.0),
-                Cesium.Cartographic.fromDegrees(-85.0, 36.0, 0.0),
-                Cesium.Cartographic.fromDegrees(-89.0, 36.0, 0.0)
+            polylinePositions : Cesium.Cartesian3.fromDegreesArray([
+                -85.0, 32.0,
+                -85.0, 36.0,
+                -89.0, 36.0
             ]),
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             shapePositions : Cesium.Shapes.compute2DCircle(60000),
@@ -72,10 +71,10 @@ require(['Cesium'], function(Cesium) {
     // Green extruded square
     var greenBox = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-90.0, 32.0, 0.0),
-                Cesium.Cartographic.fromDegrees(-90.0, 36.0, 100000.0),
-                Cesium.Cartographic.fromDegrees(-94.0, 36.0, 0.0)
+            polylinePositions : Cesium.Cartesian3.fromDegreesArray3D([
+                -90.0, 32.0, 0.0,
+                -90.0, 36.0, 100000.0,
+                -94.0, 36.0, 0.0
             ]),
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             shapePositions : boxPositions(),
@@ -89,10 +88,10 @@ require(['Cesium'], function(Cesium) {
     // Blue extruded star
     var blueStar = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-95.0, 32.0, 0.0),
-                Cesium.Cartographic.fromDegrees(-95.0, 36.0, 100000.0),
-                Cesium.Cartographic.fromDegrees(-99.0, 36.0, 200000.0)
+            polylinePositions : Cesium.Cartesian3.fromDegreesArray3D([
+                -95.0, 32.0, 0.0,
+                -95.0, 36.0, 100000.0,
+                -99.0, 36.0, 200000.0
             ]),
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             shapePositions : starPositions(7, 70000, 50000),
