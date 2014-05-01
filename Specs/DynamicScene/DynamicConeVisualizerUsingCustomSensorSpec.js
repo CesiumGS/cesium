@@ -57,13 +57,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-    });
-
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
@@ -72,13 +65,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -251,38 +240,5 @@ defineSuite([
         var time = new JulianDate();
         visualizer.update(time);
         expect(scene.primitives.get(0).id).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new ConstantProperty(1);
-        cone.outerHalfAngle = new ConstantProperty(1);
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.orientation = new ConstantProperty(new Quaternion(1, 0, 0, 0));
-        var cone2 = testObject2.cone = new DynamicCone();
-        cone2.maximumClockAngle = new ConstantProperty(0.12);
-        cone2.outerHalfAngle = new ConstantProperty(1.1);
-
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-
-        visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        var conePrimitive = scene.primitives.get(0);
-        expect(conePrimitive.id).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        conePrimitive = scene.primitives.get(0);
-        expect(conePrimitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

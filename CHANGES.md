@@ -9,6 +9,17 @@ Beta Releases
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
   * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
   * Renamed `CentralBody` to `Globe`.
+  * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
+  * Refactored visualizers, removing `setDynamicObjectCollection`, `getDynamicObjectCollection`, `getScene`, and `removeAllPrimitives` which are all superfluous after the introduction of `DataSourceDisplay`.  The affected classes are:
+    * `DynamicBillboardVisualizer`
+    * `DynamicConeVisualizerUsingCustomSensor`
+    * `DynamicLabelVisualizer`
+    * `DynamicModelVisualizer`
+    * `DynamicPathVisualizer`
+    * `DynamicPointVisualizer`
+    * `DynamicPyramidVisualizer`
+    * `DynamicVectorVisualizer`
+    * `GeometryVisualizer`
   * Renamed Extent to Rectangle
     * `Extent` -> `Rectangle`
     * `ExtentGeometry` -> `RectangleGeomtry`
@@ -26,38 +37,37 @@ Beta Releases
     * `TilingScheme.extentToNativeRectangle` -> `TilingScheme.rectangleToNativeRectangle`
     * `TilingScheme.tileXYToNativeExtent` -> `TilingScheme.tileXYToNativeRectangle`
     * `TilingScheme.tileXYToExtent` -> `TilingScheme.tileXYToRectangle`
-  * Converted 'DataSource' get methods into properties.
-      * 'getName` -> `name`
-      * 'getClock` -> `clock`
-      * 'getChangedEvent` -> `changedEvent`
-      * 'getDynamicObjectCollection` -> `dynamicObjects`
-      * 'getErrorEvent` -> `errorEvent`
-  * `BaseLayerPicker` has been extended to support terrain selection.
+  * Converted `DataSource` get methods into properties.
+    * `getName` -> `name`
+    * `getClock` -> `clock`
+    * `getChangedEvent` -> `changedEvent`
+    * `getDynamicObjectCollection` -> `dynamicObjects`
+    * `getErrorEvent` -> `errorEvent`
+  * `BaseLayerPicker` has been extended to support terrain selection ([#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607)).
     * The `BaseLayerPicker` constructor function now takes the container element and an options object instead of a CentralBody and ImageryLayerCollection.
-    * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a CentralBody and ImageryLayerCollection.
+    * The `BaseLayerPickerViewModel` constructor function now takes an options object instead of a `CentralBody` and `ImageryLayerCollection`.
     * `ImageryProviderViewModel` -> `ProviderViewModel`
     * `BaseLayerPickerViewModel.selectedName` -> `BaseLayerPickerViewModel.buttonTooltip`
     * `BaseLayerPickerViewModel.selectedIconUrl` -> `BaseLayerPickerViewModel.buttonImageUrl`
     * `BaseLayerPickerViewModel.selectedItem` -> `BaseLayerPickerViewModel.selectedImagery`
     * `BaseLayerPickerViewModel.imageryLayers`has been removed and replaced with `BaseLayerPickerViewModel.centralBody`
-    * See [#1607](https://github.com/AnalyticalGraphicsInc/cesium/pull/1607) for full details.
-  * `TimeIntervalCollection.clear` renamed to `TimeIntervalColection.removeAll`
-  * `Context` is now private
-    * Removed `Scene.context`: replaced by adding `drawingBufferWidth`, `drawingBufferHeight`, `maximumAliasedLineWidth` properties and `createTextureAtlas` function to `Scene`.
-    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+  * Renamed `TimeIntervalCollection.clear` to `TimeIntervalColection.removeAll`
+  * `Context` is now private.
+    * Removed `Scene.context`. Instead, use `Scene.drawingBufferWidth`, `Scene.drawingBufferHeight`, `Scene.maximumAliasedLineWidth`, and `Scene.createTextureAtlas`.
     * `Billboard.computeScreenSpacePosition`, `Label.computeScreenSpacePosition`, `SceneTransforms.clipToWindowCoordinates` and `SceneTransforms.clipToDrawingBufferCoordinates` take a `Scene` parameter instead of a `Context`.
-  * Types implementing the `ImageryProvider` interface are now required to have a `hasAlphaChannel` property.
-  * Removed `checkForChromeFrame` since it is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
-  * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`, since it is no longer needed.
-  * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
+    * `Camera` constructor takes `Scene` as parameter instead of `Context`
+  * Types implementing the `ImageryProvider` interface arenow require a `hasAlphaChannel` property.
+  * Removed `checkForChromeFrame` since Chrome Frame is no longer supported by Google.  See [Google's official announcement](http://blog.chromium.org/2013/06/retiring-chrome-frame.html).
+  * Types implementing `DataSource` no longer need to implement `getIsTimeVarying`.
+* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
+* Added `Model.minimumPixelSize` property so models remain visible when the viewer zooms out.
 * Added `DynamicRectangle` to support DataSource provided `RectangleGeometry`.
 * Added `DynamicWall` to support DataSource provided `WallGeometry`.
 * Improved texture upload performance and reduced memory usage when using `BingMapsImageryProvider` and other imagery providers that return false from `hasAlphaChannel`.
-* Added a `NavigationHelpButton` widget that, when clicked, displays information about how to navigate around the globe with the mouse.  The new button is enabled by default in the `Viewer` widget.
+* Added the ability to offset the grid in the `GridMaterial`.
 * `GeometryVisualizer` now creates geometry asynchronously to prevent locking up the browser.
-* `Clock.canAnimate` was added to prevent time from advancing, even while the clock is animating.
+* Add `Clock.canAnimate` to prevent time from advancing, even while the clock is animating.
 * `Viewer` now prevents time from advancing if asynchronous geometry is being processed in order to avoid showing an incomplete picture.  This can be disabled via the `Viewer.allowDataSourcesToSuspendAnimation` settings.
-* Added `Model.minimumPixelSize` property so models remain visible when the viewer zooms out.
 * Added ability to modify glTF material parameters using `Model.getMaterial`, `ModelMaterial`, and `ModelMesh.material`.
 * Added `asynchronous` and `ready` properties to `Model`.
 * Added `Cartesian4.fromColor` and `Color.fromCartesian4`.
