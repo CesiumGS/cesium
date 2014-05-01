@@ -172,6 +172,7 @@ define([
      *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
      *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
      *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
+     *      <li><code>lineOffset</code>:  Object with x and y values specifying the offset of grid lines (range is 0 to 1).</li>
      *  </ul>
      *  <li>Stripe</li>
      *  <ul>
@@ -1182,7 +1183,8 @@ define([
                 color : new Color(0.0, 1.0, 0.0, 1.0),
                 cellAlpha : 0.1,
                 lineCount : new Cartesian2(8.0, 8.0),
-                lineThickness : new Cartesian2(1.0, 1.0)
+                lineThickness : new Cartesian2(1.0, 1.0),
+                lineOffset : new Cartesian2(0.0, 0.0)
             },
             source : GridMaterial
         },

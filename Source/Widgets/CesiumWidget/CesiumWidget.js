@@ -238,10 +238,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._scene.morphTo2D();
+                    this._scene.morphTo2D(0);
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._scene.morphToColumbusView();
+                    this._scene.morphToColumbusView(0);
                 }
             }
 

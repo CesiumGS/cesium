@@ -40,7 +40,7 @@ define(['../Core/createGuid',
         this._parent = undefined;
         this._propertyNames = ['billboard', 'cone', 'description', 'ellipse', 'ellipsoid', 'label', 'model', //
                                'orientation', 'path', 'point', 'polygon', 'polyline', 'position', 'pyramid', //
-                               'rectangle', 'vector', 'vertexPositions', 'viewFrom'];
+                               'rectangle', 'vector', 'vertexPositions', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
         this._billboardSubscription = undefined;
@@ -78,6 +78,8 @@ define(['../Core/createGuid',
         this._vertexPositionsSubscription = undefined;
         this._viewFrom = undefined;
         this._viewFromSubscription = undefined;
+        this._wall = undefined;
+        this._wallSubscription = undefined;
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -254,7 +256,13 @@ define(['../Core/createGuid',
          * @memberof DynamicObject.prototype
          * @type {Cartesian3}
          */
-        viewFrom : createDynamicPropertyDescriptor('viewFrom')
+        viewFrom : createDynamicPropertyDescriptor('viewFrom'),
+        /**
+         * Gets or sets the wall.
+         * @memberof DynamicObject.prototype
+         * @type {DynamicWall}
+         */
+        wall : createDynamicPropertyDescriptor('wall')
     });
 
     /**
@@ -277,7 +285,7 @@ define(['../Core/createGuid',
 
     /**
      * Adds a property to this object.  Once a property is added, it can be
-     * observed with {@link DynamicObject.definitionChanged} and composited
+     * observed with {@link DynamicObject#definitionChanged} and composited
      * with {@link CompositeDynamicObjectCollection}
      * @memberof DynamicObject
      *
@@ -350,7 +358,7 @@ define(['../Core/createGuid',
 
         var propertyNames = this._propertyNames;
         var propertyNamesLength = propertyNames.length;
-        for ( var i = 0; i < propertyNamesLength; i++) {
+        for (var i = 0; i < propertyNamesLength; i++) {
             var name = propertyNames[i];
             var targetProperty = this[name];
             var sourceProperty = source[name];
