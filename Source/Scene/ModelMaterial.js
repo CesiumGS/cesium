@@ -18,7 +18,7 @@ define([
      * Use {@link Model#getMaterial} to create an instance.
      * </p>
      *
-     * @alias ModelMatrix
+     * @alias ModelMaterial
      * @internalConstructor
      *
      * @see Model#getMaterial
