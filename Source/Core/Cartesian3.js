@@ -849,25 +849,25 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in degrees.
      * @memberof Cartesian3
      *
-     * @param {Array} positions A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Array} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
+     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Array} [result] An array of Cartesian3 objects to store the result.
      *
-     * @returns {Cartesian3} The position
+     * @returns {Cartesian3[]} The array of positions.
      *
      * @example
      * var positions = Cartesian3.fromDegreesArray([-115.0, 37.0, -107.0, 33.0]);
      */
-    Cartesian3.fromDegreesArray = function(positions, ellipsoid, result) {
+    Cartesian3.fromDegreesArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
+        if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
         }
         //>>includeEnd('debug');
 
-        var pos = new Array(positions.length);
-        for (var i = 0; i < positions.length; i++) {
-            pos[i] = CesiumMath.toRadians(positions[i]);
+        var pos = new Array(coordinates.length);
+        for (var i = 0; i < coordinates.length; i++) {
+            pos[i] = CesiumMath.toRadians(coordinates[i]);
         }
 
         return Cartesian3.fromRadiansArray(pos, ellipsoid, result);
@@ -877,29 +877,29 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in radians.
      * @memberof Cartesian3
      *
-     * @param {Array} positions A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Array} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
+     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Array} [result] An array of Cartesian3 objects to store the result.
      *
-     * @returns {Cartesian3} The position
+     * @returns {Cartesian3[]} The array of positions.
      *
      * @example
      * var positions = Cartesian3.fromDegreesArray([-2.007, 0.645, -1.867, .575]);
      */
-    Cartesian3.fromRadiansArray = function(positions, ellipsoid, result) {
+    Cartesian3.fromRadiansArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
+        if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
         }
-        if (positions.length < 2) {
+        if (coordinates.length < 2) {
             throw new DeveloperError('positions length cannot be less than 2.');
         }
-        if (positions.length % 2 !== 0) {
+        if (coordinates.length % 2 !== 0) {
             throw new DeveloperError('positions length must be a multiple of 2.');
         }
         //>>includeEnd('debug');
 
-        var length = positions.length;
+        var length = coordinates.length;
         if (!defined(result)) {
             result = new Array(length/2);
         } else {
@@ -907,8 +907,8 @@ define([
         }
 
         for ( var i = 0; i < length; i+=2) {
-            var lon = positions[i];
-            var lat = positions[i+1];
+            var lon = coordinates[i];
+            var lat = coordinates[i+1];
             result[i/2] = Cartesian3.fromRadians(lon, lat, 0, ellipsoid, result[i/2]);
         }
 
@@ -919,33 +919,33 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in degrees.
      * @memberof Cartesian3
      *
-     * @param {Array} positions A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
+     * @param {Array} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Array} [result] An array of Cartesian3 objects to store the result.
      *
-     * @returns {Cartesian3} The position
+     * @returns {Cartesian3[]} The array of positions.
      *
      * @example
      * var positions = Cartesian3.fromDegreesArray([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
      */
-    Cartesian3.fromDegreesArray3D = function(positions, ellipsoid, result) {
+    Cartesian3.fromDegreesArray3D = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
+        if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
         }
-        if (positions.length < 3) {
+        if (coordinates.length < 3) {
             throw new DeveloperError('positions length cannot be less than 3.');
         }
-        if (positions.length % 3 !== 0) {
+        if (coordinates.length % 3 !== 0) {
             throw new DeveloperError('positions length must be a multiple of 3.');
         }
         //>>includeEnd('debug');
 
-        var pos = new Array(positions.length);
-        for (var i = 0; i < positions.length; i+=3) {
-            pos[i] = CesiumMath.toRadians(positions[i]);
-            pos[i+1] = CesiumMath.toRadians(positions[i+1]);
-            pos[i+2] = positions[i+2];
+        var pos = new Array(coordinates.length);
+        for (var i = 0; i < coordinates.length; i+=3) {
+            pos[i] = CesiumMath.toRadians(coordinates[i]);
+            pos[i+1] = CesiumMath.toRadians(coordinates[i+1]);
+            pos[i+2] = coordinates[i+2];
         }
 
         return Cartesian3.fromRadiansArray3D(pos, ellipsoid, result);
@@ -955,29 +955,29 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in radians.
      * @memberof Cartesian3
      *
-     * @param {Array} positions A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
+     * @param {Array} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Array} [result] An array of Cartesian3 objects to store the result.
      *
-     * @returns {Cartesian3} The position
+     * @returns {Cartesian3[]} The array of positions.
      *
      * @example
      * var positions = Cartesian3.fromDegreesArray([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
      */
-    Cartesian3.fromRadiansArray3D = function(positions, ellipsoid, result) {
+    Cartesian3.fromRadiansArray3D = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
+        if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
         }
-        if (positions.length < 3) {
+        if (coordinates.length < 3) {
             throw new DeveloperError('positions length cannot be less than 3.');
         }
-        if (positions.length % 3 !== 0) {
+        if (coordinates.length % 3 !== 0) {
             throw new DeveloperError('positions length must be a multiple of 3.');
         }
         //>>includeEnd('debug');
 
-        var length = positions.length;
+        var length = coordinates.length;
         if (!defined(result)) {
             result = new Array(length/3);
         } else {
@@ -985,9 +985,9 @@ define([
         }
 
         for ( var i = 0; i < length; i+=3) {
-            var lon = positions[i];
-            var lat = positions[i+1];
-            var alt = positions[i+2];
+            var lon = coordinates[i];
+            var lat = coordinates[i+1];
+            var alt = coordinates[i+2];
             result[i/3] = Cartesian3.fromRadians(lon, lat, alt, ellipsoid, result[i/3]);
         }
 
