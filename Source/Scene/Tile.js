@@ -359,7 +359,7 @@ define([
         var isDoneLoading = !defined(this.loadedTerrain) && !defined(this.upsampledTerrain);
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
-        // upsample only.  We won't refine a tile if its four children are upsample only.
+        // upsampled only.  We won't refine a tile if its four children are upsampled only.
         var isUpsampledOnly = defined(this.terrainData) && this.terrainData.wasCreatedByUpsampling();
 
         // Transition imagery states
