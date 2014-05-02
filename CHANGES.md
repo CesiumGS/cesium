@@ -3,6 +3,11 @@ Change Log
 
 Beta Releases
 -------------
+
+### b29 - 2014-06-02
+
+* Improved terrain and imagery rendering performance when very close to the surface.
+
 ### b28 - 2014-05-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
