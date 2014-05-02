@@ -358,11 +358,16 @@ define([
         // But it's not done loading until our two state machines are terminated.
         var isDoneLoading = !defined(this.loadedTerrain) && !defined(this.upsampledTerrain);
 
+        // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
+        // upsample only.  We won't refine a tile if its four children are upsample only.
+        var isUpsampleOnly = defined(this.terrainData) && this.terrainData.wasCreatedByUpsampling();
+
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
+                isUpsampleOnly = false;
                 continue;
             }
 
@@ -377,6 +382,8 @@ define([
                     --i;
                     len = tileImageryCollection.length;
                     continue;
+                } else {
+                    isUpsampleOnly = false;
                 }
             }
 
@@ -385,6 +392,9 @@ define([
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
             isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+
+            isUpsampleOnly = isUpsampleOnly && defined(tileImagery.loadingImagery) &&
+                             (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
@@ -394,7 +404,7 @@ define([
             }
 
             if (isDoneLoading) {
-                this.state = TileState.READY;
+                this.state = isUpsampleOnly ? TileState.UPSAMPLED_ONLY : TileState.READY;
             }
         }
     };
