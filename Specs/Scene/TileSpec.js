@@ -412,7 +412,7 @@ defineSuite([
 
             runs(function() {
                 expect(childTile.loadedTerrain).toBeUndefined();
-                expect(childTile.state).toBe(TileState.READY);
+                expect(childTile.state).toBe(TileState.UPSAMPLED_ONLY);
             });
         });
 
@@ -494,6 +494,22 @@ defineSuite([
                 expect(greatGrandchildTile.state).toBe(TileState.READY);
                 expect(greatGrandchildTile.loadedTerrain).toBeUndefined();
                 expect(greatGrandchildTile.upsampledTerrain).toBeUndefined();
+            });
+        });
+
+        it('entirely upsampled tile is marked as such', function() {
+            var childTile = rootTile.children[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysFailTerrainProvider, imageryLayerCollection);
+                return rootTile.state.value >= TileState.READY.value &&
+                       childTile.state.value >= TileState.READY.value;
+            }, 'child tile to be in its final state');
+
+            runs(function() {
+                expect(rootTile.state).toBe(TileState.READY);
+                expect(childTile.state).toBe(TileState.UPSAMPLED_ONLY);
             });
         });
 

@@ -360,14 +360,14 @@ define([
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
         // upsample only.  We won't refine a tile if its four children are upsample only.
-        var isUpsampleOnly = defined(this.terrainData) && this.terrainData.wasCreatedByUpsampling();
+        var isUpsampledOnly = defined(this.terrainData) && this.terrainData.wasCreatedByUpsampling();
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
-                isUpsampleOnly = false;
+                isUpsampledOnly = false;
                 continue;
             }
 
@@ -383,7 +383,7 @@ define([
                     len = tileImageryCollection.length;
                     continue;
                 } else {
-                    isUpsampleOnly = false;
+                    isUpsampledOnly = false;
                 }
             }
 
@@ -393,7 +393,7 @@ define([
             // The imagery is renderable as soon as we have any renderable imagery for this region.
             isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
 
-            isUpsampleOnly = isUpsampleOnly && defined(tileImagery.loadingImagery) &&
+            isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
                              (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
@@ -404,7 +404,7 @@ define([
             }
 
             if (isDoneLoading) {
-                this.state = isUpsampleOnly ? TileState.UPSAMPLED_ONLY : TileState.READY;
+                this.state = isUpsampledOnly ? TileState.UPSAMPLED_ONLY : TileState.READY;
             }
         }
     };
@@ -583,9 +583,9 @@ define([
         // of its ancestors receives new (better) data and we want to re-upsample from the
         // new data.
 
-        if (defined(tile.children)) {
+        if (defined(tile._children)) {
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var childTile = tile.children[childIndex];
+                var childTile = tile._children[childIndex];
                 if (childTile.state !== TileState.START) {
                     if (defined(childTile.terrainData) && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
