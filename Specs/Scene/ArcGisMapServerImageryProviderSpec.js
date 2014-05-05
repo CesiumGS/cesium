@@ -50,7 +50,7 @@ defineSuite([
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -92,7 +92,7 @@ defineSuite([
     });
 
     it('supports tiled servers in web mercator projection', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -173,7 +173,7 @@ defineSuite([
     });
 
     it('supports tiled servers in geographic projection', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -254,7 +254,7 @@ defineSuite([
     });
 
     it('supports non-tiled servers', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -316,7 +316,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -404,7 +404,7 @@ defineSuite([
     });
 
     it('raises error on unsupported WKID', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -458,7 +458,7 @@ defineSuite([
     });
 
     it('raises error on invalid URL', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl
@@ -483,7 +483,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');

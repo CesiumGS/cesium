@@ -14,33 +14,6 @@ define([
     "use strict";
     /*global console*/
 
-    function startRenderLoop(viewer) {
-        viewer._renderLoopRunning = true;
-
-        function render() {
-            if (viewer.isDestroyed()) {
-                return;
-            }
-            try {
-                viewer.resize();
-                viewer.render();
-                viewer.cesiumInspector.viewModel.update();
-                requestAnimationFrame(render);
-            } catch (e) {
-                viewer._useDefaultRenderLoop = false;
-                viewer._renderLoopRunning = false;
-                viewer._renderLoopError.raiseEvent(viewer, e);
-                if (viewer._showRenderLoopErrors) {
-                    /*global console*/
-                    viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
-                    console.error(e);
-                }
-            }
-        }
-
-        requestAnimationFrame(render);
-    }
-
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.
      * Rather than being called directly, this function is normally passed as
@@ -52,7 +25,6 @@ define([
      * @exception {DeveloperError} viewer is required.
      *
      * @example
-     * // Add basic drag and drop support and pop up an alert window on error.
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerCesiumInspectorMixin);
      */
@@ -64,9 +36,7 @@ define([
         var cesiumInspectorContainer = document.createElement('div');
         cesiumInspectorContainer.className = 'cesium-viewer-cesiumInspectorContainer';
         viewer.container.appendChild(cesiumInspectorContainer);
-        var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.cesiumWidget.scene);
-
-        viewer.useDefaultRenderLoop = false;
+        var cesiumInspector = new CesiumInspector(cesiumInspectorContainer, viewer.scene);
 
         defineProperties(viewer, {
             cesiumInspector : {
@@ -76,7 +46,9 @@ define([
             }
         });
 
-        startRenderLoop(viewer);
+        viewer.scene.postRender.addEventListener(function() {
+            viewer.cesiumInspector.viewModel.update();
+        });
     };
 
     return viewerCesiumInspectorMixin;

@@ -175,33 +175,25 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         widget = new CesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        widget.onRenderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(widget, error);
-            expect(widget.useDefaultRenderLoop).toEqual(false);
-        });
+            return !widget.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('shows the error panel when render throws', function() {
         widget = new CesiumWidget(container);
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
@@ -226,7 +218,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
