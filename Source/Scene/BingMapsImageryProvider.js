@@ -8,7 +8,7 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/Math',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
@@ -26,7 +26,7 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
-        Extent,
+        Rectangle,
         CesiumMath,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
@@ -80,7 +80,7 @@ define([
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : 'http://dev.virtualearth.net',
+     *     url : '//dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
@@ -178,7 +178,7 @@ define([
                 for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
                     var area = coverageAreas[areaIndex];
                     var bbox = area.bbox;
-                    area.bbox = new Extent(
+                    area.bbox = new Rectangle(
                             CesiumMath.toRadians(bbox[1]),
                             CesiumMath.toRadians(bbox[0]),
                             CesiumMath.toRadians(bbox[3]),
@@ -344,20 +344,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link BingMapsImageryProvider#ready} returns true.
          * @memberof BingMapsImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -415,10 +415,24 @@ define([
             get : function() {
                 return this._credit;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
+         * and texture upload time.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return false;
+            }
         }
     });
 
-    var extentScratch = new Extent();
+    var rectangleScratch = new Rectangle();
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
@@ -438,8 +452,8 @@ define([
             throw new DeveloperError('getTileCredits must not be called before the imagery provider is ready.');
         }
 
-        var extent = this._tilingScheme.tileXYToExtent(x, y, level, extentScratch);
-        return getExtentAttribution(this._attributionList, level, extent);
+        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
+        return getRectangleAttribution(this._attributionList, level, rectangle);
     };
 
     /**
@@ -556,9 +570,9 @@ define([
         return imageUrl;
     }
 
-    var intersectionScratch = new Extent();
+    var intersectionScratch = new Rectangle();
 
-    function getExtentAttribution(attributionList, level, extent) {
+    function getRectangleAttribution(attributionList, level, rectangle) {
         // Bing levels start at 1, while ours start at 0.
         ++level;
 
@@ -573,8 +587,8 @@ define([
             for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; !included && areaIndex < areaLength; ++areaIndex) {
                 var area = coverageAreas[areaIndex];
                 if (level >= area.zoomMin && level <= area.zoomMax) {
-                    var intersection = Extent.intersectWith(extent, area.bbox, intersectionScratch);
-                    if (!Extent.isEmpty(intersection)) {
+                    var intersection = Rectangle.intersectWith(rectangle, area.bbox, intersectionScratch);
+                    if (!Rectangle.isEmpty(intersection)) {
                         included = true;
                     }
                 }

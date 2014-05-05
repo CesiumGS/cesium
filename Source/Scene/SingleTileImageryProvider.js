@@ -6,7 +6,7 @@ define([
         '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Extent',
+        '../Core/Rectangle',
         './Credit',
         './GeographicTilingScheme',
         './TileProviderError',
@@ -18,7 +18,7 @@ define([
         loadImage,
         DeveloperError,
         Event,
-        Extent,
+        Rectangle,
         Credit,
         GeographicTilingScheme,
         TileProviderError,
@@ -33,7 +33,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The url for the tile.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
+     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -59,9 +59,9 @@ define([
         var proxy = description.proxy;
         this._proxy = proxy;
 
-        var extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        var rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
-            extent : extent,
+            rectangle : rectangle,
             numberOfLevelZeroTilesX : 1,
             numberOfLevelZeroTilesY : 1
         });
@@ -231,14 +231,14 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link SingleTileImageryProvider#ready} returns true.
          * @memberof SingleTileImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -295,6 +295,20 @@ define([
         credit : {
             get : function() {
                 return this._credit;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
             }
         }
     });

@@ -851,7 +851,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene(scene);
     });

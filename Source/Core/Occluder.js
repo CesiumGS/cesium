@@ -7,7 +7,7 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
-        './Extent',
+        './Rectangle',
         './Math',
         './Visibility'
     ], function(
@@ -18,7 +18,7 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         CesiumMath,
         Visibility) {
     "use strict";
@@ -405,27 +405,27 @@ define([
         return Cartesian3.add(occluderPosition, Cartesian3.multiplyByScalar(occluderPlaneNormal, distance));
     };
 
-    var computeOccludeePointFromExtentScratch = [];
+    var computeOccludeePointFromRectangleScratch = [];
     /**
-     * Computes a point that can be used as the occludee position to the visibility functions from an extent.
+     * Computes a point that can be used as the occludee position to the visibility functions from an rectangle.
      *
      * @memberof Occluder
      *
-     * @param {Extent} extent The extent used to create a bounding sphere.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
      *
      * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      */
-    Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
+    Occluder.computeOccludeePointFromRectangle = function(rectangle, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required.');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = Extent.subsample(extent, ellipsoid, 0.0, computeOccludeePointFromExtentScratch);
+        var positions = Rectangle.subsample(rectangle, ellipsoid, 0.0, computeOccludeePointFromRectangleScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center

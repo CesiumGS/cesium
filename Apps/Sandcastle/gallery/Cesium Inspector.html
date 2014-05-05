@@ -33,17 +33,17 @@ require(['Cesium'], function(Cesium) {
        
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var centralBody = scene.primitives.centralBody;
-    centralBody.depthTestAgainstTerrain = true;
-    var ellipsoid = centralBody.ellipsoid;
+    var globe = scene.globe;
+    globe.depthTestAgainstTerrain = true;
+    var ellipsoid = globe.ellipsoid;
     var primitives = scene.primitives;
 
     var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesiumjs.org/smallterrain',
+        url : '//cesiumjs.org/smallterrain',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
-    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
+    scene.terrainProvider = cesiumTerrainProviderHeightmaps;
     
     //Add Cesium Inspector
     viewer.extend(Cesium.viewerCesiumInspectorMixin);
@@ -69,8 +69,8 @@ require(['Cesium'], function(Cesium) {
            
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-100.0, 30.0, -93.0, 37.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0),
                 height: 100000,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = scene.context.createTextureAtlas({
+        var textureAtlas = scene.createTextureAtlas({
             image : image
         });
         billboards.textureAtlas = textureAtlas;

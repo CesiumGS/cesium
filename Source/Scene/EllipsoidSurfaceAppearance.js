@@ -19,7 +19,7 @@ define([
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
-     * and {@link ExtentGeometry}, which supports all materials like {@link MaterialAppearance}
+     * and {@link RectangleGeometry}, which supports all materials like {@link MaterialAppearance}
      * with {@link MaterialAppearance.MaterialSupport.ALL}.  However, this appearance requires
      * fewer vertex attributes since the fragment shader can procedurally compute <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.

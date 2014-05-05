@@ -8,7 +8,8 @@ define(['../Core/Enumeration'], function(Enumeration) {
     var TileState = {
         START : new Enumeration(0, 'START'),
         LOADING : new Enumeration(1, 'LOADING'),
-        READY : new Enumeration(2, 'READY')
+        READY : new Enumeration(2, 'READY'),
+        UPSAMPLED_ONLY : new Enumeration(3, 'UPSAMPLED_ONLY')
     };
 
     return TileState;

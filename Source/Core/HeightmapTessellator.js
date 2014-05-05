@@ -55,11 +55,11 @@ define([
      * @param {Number} description.width The width of the heightmap, in height samples.
      * @param {Number} description.height The height of the heightmap, in height samples.
      * @param {Number} description.skirtHeight The height of skirts to drape at the edges of the heightmap.
-     * @param {Extent} description.nativeExtent An extent in the native coordinates of the heightmap's projection.  For
+     * @param {Rectangle} description.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
-     * @param {Extent} [description.extent] The extent covered by the heightmap, in geodetic coordinates with north, south, east and
-     *                 west properties in radians.  Either extent or nativeExtent must be provided.  If both
+     * @param {Rectangle} [description.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
+     *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
      *                 are provided, they're assumed to be consistent.
      * @param {Boolean} [description.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
@@ -99,7 +99,7 @@ define([
      *     width : width,
      *     height : height,
      *     skirtHeight : 0.0,
-     *     nativeExtent : {
+     *     nativeRectangle : {
      *         west : 10.0,
      *         east : 20.0,
      *         south : 30.0,
@@ -118,8 +118,8 @@ define([
         if (!defined(description.vertices)) {
             throw new DeveloperError('description.vertices is required.');
         }
-        if (!defined(description.nativeExtent)) {
-            throw new DeveloperError('description.nativeExtent is required.');
+        if (!defined(description.nativeRectangle)) {
+            throw new DeveloperError('description.nativeRectangle is required.');
         }
         if (!defined(description.skirtHeight)) {
             throw new DeveloperError('description.skirtHeight is required.');
@@ -148,33 +148,33 @@ define([
         var isGeographic = defaultValue(description.isGeographic, true);
         var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
 
-        var oneOverCentralBodySemimajorAxis = 1.0 / ellipsoid.maximumRadius;
+        var oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
-        var nativeExtent = description.nativeExtent;
+        var nativeRectangle = description.nativeRectangle;
 
         var geographicWest;
         var geographicSouth;
         var geographicEast;
         var geographicNorth;
 
-        var extent = description.extent;
-        if (!defined(extent)) {
+        var rectangle = description.rectangle;
+        if (!defined(rectangle)) {
             if (isGeographic) {
-                geographicWest = toRadians(nativeExtent.west);
-                geographicSouth = toRadians(nativeExtent.south);
-                geographicEast = toRadians(nativeExtent.east);
-                geographicNorth = toRadians(nativeExtent.north);
+                geographicWest = toRadians(nativeRectangle.west);
+                geographicSouth = toRadians(nativeRectangle.south);
+                geographicEast = toRadians(nativeRectangle.east);
+                geographicNorth = toRadians(nativeRectangle.north);
             } else {
-                geographicWest = nativeExtent.west * oneOverCentralBodySemimajorAxis;
-                geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeExtent.south * oneOverCentralBodySemimajorAxis)));
-                geographicEast = nativeExtent.east * oneOverCentralBodySemimajorAxis;
-                geographicNorth = piOverTwo - (2.0 * atan(exp(-nativeExtent.north * oneOverCentralBodySemimajorAxis)));
+                geographicWest = nativeRectangle.west * oneOverGlobeSemimajorAxis;
+                geographicSouth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.south * oneOverGlobeSemimajorAxis)));
+                geographicEast = nativeRectangle.east * oneOverGlobeSemimajorAxis;
+                geographicNorth = piOverTwo - (2.0 * atan(exp(-nativeRectangle.north * oneOverGlobeSemimajorAxis)));
             }
         } else {
-            geographicWest = extent.west;
-            geographicSouth = extent.south;
-            geographicEast = extent.east;
-            geographicNorth = extent.north;
+            geographicWest = rectangle.west;
+            geographicSouth = rectangle.south;
+            geographicEast = rectangle.east;
+            geographicNorth = rectangle.north;
         }
 
         var relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
@@ -187,8 +187,8 @@ define([
         var elementMultiplier = defaultValue(structure.elementMultiplier, HeightmapTessellator.DEFAULT_STRUCTURE.elementMultiplier);
         var isBigEndian = defaultValue(structure.isBigEndian, HeightmapTessellator.DEFAULT_STRUCTURE.isBigEndian);
 
-        var granularityX = (nativeExtent.east - nativeExtent.west) / (width - 1);
-        var granularityY = (nativeExtent.north - nativeExtent.south) / (height - 1);
+        var granularityX = (nativeRectangle.east - nativeRectangle.west) / (width - 1);
+        var granularityY = (nativeRectangle.north - nativeRectangle.south) / (height - 1);
 
         var radiiSquared = ellipsoid.radiiSquared;
         var radiiSquaredX = radiiSquared.x;
@@ -221,10 +221,10 @@ define([
                 row = height - 1;
             }
 
-            var latitude = nativeExtent.north - granularityY * row;
+            var latitude = nativeRectangle.north - granularityY * row;
 
             if (!isGeographic) {
-                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverCentralBodySemimajorAxis)));
+                latitude = piOverTwo - (2.0 * atan(exp(-latitude * oneOverGlobeSemimajorAxis)));
             } else {
                 latitude = toRadians(latitude);
             }
@@ -244,10 +244,10 @@ define([
                     col = width - 1;
                 }
 
-                var longitude = nativeExtent.west + granularityX * col;
+                var longitude = nativeRectangle.west + granularityX * col;
 
                 if (!isGeographic) {
-                    longitude = longitude * oneOverCentralBodySemimajorAxis;
+                    longitude = longitude * oneOverGlobeSemimajorAxis;
                 } else {
                     longitude = toRadians(longitude);
                 }

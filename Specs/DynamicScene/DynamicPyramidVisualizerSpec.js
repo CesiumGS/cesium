@@ -55,13 +55,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-    });
-
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
@@ -70,13 +63,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicPyramidVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicPyramidVisualizer(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -186,36 +175,5 @@ defineSuite([
         var time = new JulianDate();
         visualizer.update(time);
         expect(scene.primitives.get(0).id).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.orientation = new ConstantProperty(new Quaternion(1, 0, 0, 0));
-        var pyramid2 = testObject2.pyramid = new DynamicPyramid();
-        pyramid2.directions = new ConstantProperty([new Spherical(3, 0, 0), new Spherical(2, 0, 0), new Spherical(1, 0, 0), new Spherical(0.5, 0, 0)]);
-
-        visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-
-        visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        var pyramidPrimitive = scene.primitives.get(0);
-        expect(pyramidPrimitive.id).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(scene.primitives.length).toEqual(1);
-        pyramidPrimitive = scene.primitives.get(0);
-        expect(pyramidPrimitive.id).toEqual(testObject2);
     });
 }, 'WebGL');

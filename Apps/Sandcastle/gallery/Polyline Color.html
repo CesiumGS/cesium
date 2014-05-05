@@ -30,7 +30,7 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
+    var ellipsoid = scene.globe.ellipsoid;
 
     // Per segment colors
     var positions = [];
