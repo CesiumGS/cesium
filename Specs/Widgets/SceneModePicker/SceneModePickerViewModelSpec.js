@@ -3,7 +3,7 @@ defineSuite([
          'Widgets/SceneModePicker/SceneModePickerViewModel',
          'Core/Event',
          'Core/Ellipsoid',
-         'Scene/CentralBody',
+         'Scene/Globe',
          'Specs/createScene',
          'Specs/destroyScene',
          'Scene/SceneMode'
@@ -11,7 +11,7 @@ defineSuite([
          SceneModePickerViewModel,
          Event,
          Ellipsoid,
-         CentralBody,
+         Globe,
          createScene,
          destroyScene,
          SceneMode) {
@@ -21,8 +21,8 @@ defineSuite([
     var ellipsoid = Ellipsoid.WGS84;
     beforeEach(function() {
         scene = createScene();
-        var centralBody = new CentralBody(ellipsoid);
-        scene.primitives.centralBody = centralBody;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
     });
 
     afterEach(function() {

@@ -49,8 +49,50 @@ defineSuite([
         expect(constructWithoutUrl).toThrowDeveloperError();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        jsonp.loadAndExecuteScript = function(url, functionName) {
+            expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
+            setTimeout(function() {
+                window[functionName]({
+                    "currentVersion" : 10.01,
+                    "copyrightText" : "Test copyright text",
+                    "tileInfo" : {
+                        "rows" : 128,
+                        "cols" : 256,
+                        "origin" : {
+                            "x" : -20037508.342787,
+                            "y" : 20037508.342787
+                        },
+                        "spatialReference" : {
+                            "wkid" : 102100
+                        },
+                        "lods" : [
+                            {"level" : 0, "resolution" : 156543.033928, "scale" : 591657527.591555},
+                            {"level" : 1, "resolution" : 78271.5169639999, "scale" : 295828763.795777},
+                            {"level" : 2, "resolution" : 39135.7584820001, "scale" : 147914381.897889}
+                        ]
+                    }
+                });
+            }, 1);
+        };
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('supports tiled servers in web mercator projection', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -97,7 +139,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -131,7 +173,7 @@ defineSuite([
     });
 
     it('supports tiled servers in geographic projection', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -178,7 +220,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -212,7 +254,7 @@ defineSuite([
     });
 
     it('supports non-tiled servers', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -243,7 +285,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(false);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -274,7 +316,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -327,7 +369,7 @@ defineSuite([
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.credit).toBeDefined();
             expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.proxy).toEqual(proxy);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
@@ -362,7 +404,7 @@ defineSuite([
     });
 
     it('raises error on unsupported WKID', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');
@@ -416,7 +458,7 @@ defineSuite([
     });
 
     it('raises error on invalid URL', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl
@@ -441,7 +483,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var baseUrl = 'Made/Up/TiledArcGisMapServer';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url).toEqual(baseUrl + '?callback=' + functionName + '&f=json');

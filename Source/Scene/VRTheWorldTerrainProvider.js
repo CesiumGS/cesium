@@ -8,7 +8,7 @@ define([
         '../Core/getImagePixels',
         '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
-        '../Core/Extent',
+        '../Core/Rectangle',
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -27,7 +27,7 @@ define([
         getImagePixels,
         throttleRequestByServer,
         DeveloperError,
-        Extent,
+        Rectangle,
         CesiumMath,
         Ellipsoid,
         Event,
@@ -39,8 +39,8 @@ define([
         when) {
     "use strict";
 
-    function DataExtent(extent, maxLevel) {
-        this.extent = extent;
+    function DataRectangle(rectangle, maxLevel) {
+        this.rectangle = rectangle;
         this.maxLevel = maxLevel;
     }
 
@@ -61,9 +61,9 @@ define([
      *
      * @example
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
-     *   url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
+     *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
-     * centralBody.terrainProvider = terrainProvider;
+     * scene.terrainProvider = terrainProvider;
      */
     var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -97,7 +97,7 @@ define([
         this._credit = credit;
 
         this._tilingScheme = undefined;
-        this._extents = [];
+        this._rectangles = [];
 
         var that = this;
         var metadataError;
@@ -117,18 +117,18 @@ define([
             that._heightmapHeight = parseInt(tileFormat.getAttribute('height'), 10);
             that._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, Math.min(that._heightmapWidth, that._heightmapHeight), that._tilingScheme.getNumberOfXTilesAtLevel(0));
 
-            var dataExtents = xml.getElementsByTagName('DataExtent');
+            var dataRectangles = xml.getElementsByTagName('DataExtent');
 
-            for (var i = 0; i < dataExtents.length; ++i) {
-                var dataExtent = dataExtents[i];
+            for (var i = 0; i < dataRectangles.length; ++i) {
+                var dataRectangle = dataRectangles[i];
 
-                var west = CesiumMath.toRadians(parseFloat(dataExtent.getAttribute('minx')));
-                var south = CesiumMath.toRadians(parseFloat(dataExtent.getAttribute('miny')));
-                var east = CesiumMath.toRadians(parseFloat(dataExtent.getAttribute('maxx')));
-                var north = CesiumMath.toRadians(parseFloat(dataExtent.getAttribute('maxy')));
-                var maxLevel = parseInt(dataExtent.getAttribute('maxlevel'), 10);
+                var west = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('minx')));
+                var south = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('miny')));
+                var east = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxx')));
+                var north = CesiumMath.toRadians(parseFloat(dataRectangle.getAttribute('maxy')));
+                var maxLevel = parseInt(dataRectangle.getAttribute('maxlevel'), 10);
 
-                that._extents.push(new DataExtent(new Extent(west, south, east, north), maxLevel));
+                that._rectangles.push(new DataRectangle(new Rectangle(west, south, east, north), maxLevel));
             }
 
             that._ready = true;
@@ -282,36 +282,36 @@ define([
         return false;
     };
 
-    var extentScratch = new Extent();
+    var rectangleScratch = new Rectangle();
 
     function getChildMask(provider, x, y, level) {
         var tilingScheme = provider._tilingScheme;
-        var extents = provider._extents;
-        var parentExtent = tilingScheme.tileXYToExtent(x, y, level);
+        var rectangles = provider._rectangles;
+        var parentRectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
         var childMask = 0;
 
-        for (var i = 0; i < extents.length && childMask !== 15; ++i) {
-            var extent = extents[i];
-            if (extent.maxLevel <= level) {
+        for (var i = 0; i < rectangles.length && childMask !== 15; ++i) {
+            var rectangle = rectangles[i];
+            if (rectangle.maxLevel <= level) {
                 continue;
             }
 
-            var testExtent = extent.extent;
+            var testRectangle = rectangle.rectangle;
 
-            var intersection = Extent.intersectWith(testExtent, parentExtent, extentScratch);
-            if (!Extent.isEmpty(intersection)) {
-                // Parent tile is inside this extent, so at least one child is, too.
-                if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2, level + 1)) {
+            var intersection = Rectangle.intersectWith(testRectangle, parentRectangle, rectangleScratch);
+            if (!Rectangle.isEmpty(intersection)) {
+                // Parent tile is inside this rectangle, so at least one child is, too.
+                if (isTileInRectangle(tilingScheme, testRectangle, x * 2, y * 2, level + 1)) {
                     childMask |= 4; // northwest
                 }
-                if (isTileInExtent(tilingScheme, testExtent, x * 2 + 1, y * 2, level + 1)) {
+                if (isTileInRectangle(tilingScheme, testRectangle, x * 2 + 1, y * 2, level + 1)) {
                     childMask |= 8; // northeast
                 }
-                if (isTileInExtent(tilingScheme, testExtent, x * 2, y * 2 + 1, level + 1)) {
+                if (isTileInRectangle(tilingScheme, testRectangle, x * 2, y * 2 + 1, level + 1)) {
                     childMask |= 1; // southwest
                 }
-                if (isTileInExtent(tilingScheme, testExtent, x * 2 + 1, y * 2 + 1, level + 1)) {
+                if (isTileInRectangle(tilingScheme, testRectangle, x * 2 + 1, y * 2 + 1, level + 1)) {
                     childMask |= 2; // southeast
                 }
             }
@@ -320,9 +320,9 @@ define([
         return childMask;
     }
 
-    function isTileInExtent(tilingScheme, extent, x, y, level) {
-        var tileExtent = tilingScheme.tileXYToExtent(x, y, level);
-        return !Extent.isEmpty(Extent.intersectWith(tileExtent, extent, extentScratch));
+    function isTileInRectangle(tilingScheme, rectangle, x, y, level) {
+        var tileRectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        return !Rectangle.isEmpty(Rectangle.intersectWith(tileRectangle, rectangle, rectangleScratch));
     }
 
     return VRTheWorldTerrainProvider;
