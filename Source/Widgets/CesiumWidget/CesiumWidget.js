@@ -332,7 +332,8 @@ define([
         /**
          * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
          * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.
+         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
+         * current timestamp as the second parameter.
          * @memberof CesiumWidget.prototype
          * @type {Event}
          */
@@ -345,7 +346,8 @@ define([
         /**
          * Gets the event that will be raised at the end of each render frame.  This event is raised whenever
          * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.
+         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
+         * current timestamp as the second parameter.
          * @memberof CesiumWidget.prototype
          * @type {Event}
          */
@@ -537,9 +539,9 @@ define([
         this._scene.initializeFrame();
         var currentTime = this._clock.tick();
         if (this._canRender) {
-            this._preRender.raiseEvent(this);
+            this._preRender.raiseEvent(this, currentTime);
             this._scene.render(currentTime);
-            this._postRender.raiseEvent(this);
+            this._postRender.raiseEvent(this, currentTime);
         }
     };
 
