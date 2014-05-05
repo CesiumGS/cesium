@@ -106,7 +106,7 @@ define([
             defined(document.msHidden) ? 'msvisibilitychange' :
             defined(document.webkitHidden) ? 'webkitvisibilitychange' : undefined;
 
-        document.addEventListener(this._visibilityChangeEventName, function() {
+        document.addEventListener(visibilityChangeEventName, function() {
             visibilityChanged(that);
         }, false);
     };
@@ -177,6 +177,7 @@ define([
                     }
                 } else if (viewModel.showingLowFrameRateMessage) {
                     viewModel.showingLowFrameRateMessage = false;
+                    viewModel._needsQuietPeriod = true;
                 }
             }
         }
