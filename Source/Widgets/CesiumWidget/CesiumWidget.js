@@ -236,7 +236,14 @@ define([
 
             var that = this;
             scene.renderError.addEventListener(function(scene, error) {
-                that.handleRenderError(scene, error);
+                that._useDefaultRenderLoop = false;
+                that._renderLoopRunning = false;
+                if (that._showRenderLoopErrors) {
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    that.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
+                }
             });
         } catch (error) {
             var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
@@ -487,26 +494,6 @@ define([
         var currentTime = this._clock.tick();
         if (this._canRender) {
             this._scene.render(currentTime);
-        }
-    };
-
-    /**
-     * Handles an error that occurs during rendering by stopping the default render loop and, if <code>showRenderLoopErrors</code>
-     * is true, displaying the error in a pop-up dialog and in the error console.
-     *
-     * @memberof CesiumWidget
-     *
-     * @param {Scene} scene The scene in which the render error occurred.
-     * @param {Error} error The error that occurred during rendering.
-     */
-    CesiumWidget.prototype.handleRenderError = function(scene, error) {
-        this._useDefaultRenderLoop = false;
-        this._renderLoopRunning = false;
-        if (this._showRenderLoopErrors) {
-            var title = 'An error occurred while rendering.  Rendering has stopped.';
-            var message = formatError(error);
-            this.showErrorPanel(title, message);
-            console.error(title + ' ' + message);
         }
     };
 
