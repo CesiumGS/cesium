@@ -319,51 +319,6 @@ define([
         },
 
         /**
-<<<<<<< HEAD
-         * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
-         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
-         * current timestamp as the second parameter.
-         * @memberof CesiumWidget.prototype
-         * @type {Event}
-         */
-        preRender : {
-            get : function() {
-                return this._preRender;
-            }
-        },
-
-        /**
-         * Gets the event that will be raised at the end of each render frame.  This event is raised whenever
-         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
-         * current timestamp as the second parameter.
-         * @memberof CesiumWidget.prototype
-         * @type {Event}
-         */
-        postRender : {
-            get : function() {
-                return this._postRender;
-            }
-        },
-
-        /**
-         * Gets the event that will be raised when an error is encountered during the default render loop.
-         * The widget instance and the generated exception are the only two parameters passed to the event handler.
-         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
-         * be set back to true to continue rendering after an exception.
-         * @memberof CesiumWidget.prototype
-         * @type {Event}
-         */
-        renderLoopError : {
-            get : function() {
-                return this._renderLoopError;
-            }
-        },
-
-        /**
-=======
->>>>>>> widgetAndViewerImprovements
          * Gets or sets whether or not this widget should control the render loop.
          * If set to true the widget will use {@link requestAnimationFrame} to
          * perform rendering and resizing of the widget, as well as drive the
