@@ -1190,65 +1190,69 @@ define([
         this._screenSpaceCameraController.update(this.mode);
     };
 
+    function render(scene, time) {
+        if (!defined(time)) {
+            time = new JulianDate();
+        }
+
+        scene._preRender.raiseEvent(scene, time);
+
+        var us = scene._context.uniformState;
+        var frameState = scene._frameState;
+
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+        updateFrameState(scene, frameNumber, time);
+        frameState.passes.render = true;
+        frameState.creditDisplay.beginFrame();
+
+        var context = scene._context;
+        us.update(context, frameState);
+
+        scene._commandList.length = 0;
+        scene._overlayCommandList.length = 0;
+
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+
+        var passState = scene._passState;
+
+        executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        executeOverlayCommands(scene, passState);
+
+        frameState.creditDisplay.endFrame();
+
+        if (scene.debugShowFramesPerSecond) {
+            if (!defined(scene._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = scene._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                scene._performanceDisplay = performanceDisplay;
+                scene._performanceContainer = performanceContainer;
+            }
+
+            scene._performanceDisplay.update();
+        } else if (defined(scene._performanceDisplay)) {
+            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
+            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
+        }
+
+        context.endFrame();
+        callAfterRenderFunctions(frameState);
+
+        scene._postRender.raiseEvent(scene, time);
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function(time) {
         try {
-            if (!defined(time)) {
-                time = new JulianDate();
-            }
-
-            this._preRender.raiseEvent(this, time);
-
-            var us = this._context.uniformState;
-            var frameState = this._frameState;
-
-            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameState(this, frameNumber, time);
-            frameState.passes.render = true;
-            frameState.creditDisplay.beginFrame();
-
-            var context = this._context;
-            us.update(context, frameState);
-
-            this._commandList.length = 0;
-            this._overlayCommandList.length = 0;
-
-            updatePrimitives(this);
-            createPotentiallyVisibleSet(this);
-
-            var passState = this._passState;
-
-            executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
-            executeOverlayCommands(this, passState);
-
-            frameState.creditDisplay.endFrame();
-
-            if (this.debugShowFramesPerSecond) {
-                if (!defined(this._performanceDisplay)) {
-                    var performanceContainer = document.createElement('div');
-                    performanceContainer.style.position = 'absolute';
-                    performanceContainer.style.top = '10px';
-                    performanceContainer.style.left = '10px';
-                    var container = this._canvas.parentNode;
-                    container.appendChild(performanceContainer);
-                    var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                    this._performanceDisplay = performanceDisplay;
-                    this._performanceContainer = performanceContainer;
-                }
-
-                this._performanceDisplay.update();
-            } else if (defined(this._performanceDisplay)) {
-                this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
-                this._performanceContainer.parentNode.removeChild(this._performanceContainer);
-            }
-
-            context.endFrame();
-            callAfterRenderFunctions(frameState);
-
-            this._postRender.raiseEvent(this, time);
+            render(this, time);
         } catch (error) {
             this._renderError.raiseEvent(this, error);
 
