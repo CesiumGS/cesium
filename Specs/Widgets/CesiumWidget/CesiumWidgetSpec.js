@@ -175,12 +175,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('raises renderLoopError and stops the render loop when render throws', function() {
         widget = new CesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
         var spyListener = jasmine.createSpy('listener');
-        widget.onRenderLoopError.addEventListener(spyListener);
+        widget.renderLoopError.addEventListener(spyListener);
 
         var error = 'foo';
         widget.render = function() {
@@ -237,5 +237,37 @@ defineSuite([
         runs(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
+    });
+
+    it('raises the preRender event prior to rendering', function() {
+        widget = new CesiumWidget(container);
+
+        var preRenderInvocations = 0;
+        widget.preRender.addEventListener(function() {
+            ++preRenderInvocations;
+        });
+
+        widget.resize();
+        widget.render();
+
+        expect(preRenderInvocations).toBe(1);
+
+        widget.destroy();
+    });
+
+    it('raises the postRender event after rendering', function() {
+        widget = new CesiumWidget(container);
+
+        var postRenderInvocations = 0;
+        widget.postRender.addEventListener(function() {
+            ++postRenderInvocations;
+        });
+
+        widget.resize();
+        widget.render();
+
+        expect(postRenderInvocations).toBe(1);
+
+        widget.destroy();
     });
 }, 'WebGL');

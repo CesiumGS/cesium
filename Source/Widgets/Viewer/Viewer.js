@@ -86,7 +86,7 @@ define([
             } catch (error) {
                 viewer._useDefaultRenderLoop = false;
                 viewer._renderLoopRunning = false;
-                viewer._renderLoopError.raiseEvent(viewer, error);
+                viewer.renderLoopError.raiseEvent(viewer, error);
                 if (viewer._showRenderLoopErrors) {
                     /*global console*/
                     var title = 'An error occurred while rendering.  Rendering has stopped.';
@@ -471,7 +471,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-        this._renderLoopError = new Event();
         this._allowDataSourcesToSuspendAnimation = true;
 
         //Start the render loop if not explicitly disabled in options.
@@ -678,6 +677,32 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
+         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
+         * by user code.
+         * @memberof Viewer.prototype
+         * @type {Event}
+         */
+        preRender : {
+            get : function() {
+                return this._cesiumWidget._preRender;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the end of each render frame.  This event is raised whenever
+         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
+         * by user code.
+         * @memberof Viewer.prototype
+         * @type {Event}
+         */
+        postRender : {
+            get : function() {
+                return this._cesiumWidget._postRender;
+            }
+        },
+
+        /**
          * Gets the event that will be raised when an error is encountered during the default render loop.
          * The viewer instance and the generated exception are the only two parameters passed to the event handler.
          * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
@@ -687,7 +712,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          */
         renderLoopError : {
             get : function() {
-                return this._renderLoopError;
+                return this._cesiumWidget.renderLoopError;
             }
         },
 

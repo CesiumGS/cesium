@@ -235,6 +235,8 @@ define([
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
             this._renderLoopError = new Event();
+            this._preRender = new Event();
+            this._postRender = new Event();
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -328,14 +330,40 @@ define([
         },
 
         /**
+         * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
+         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
+         * by user code.
+         * @memberof CesiumWidget.prototype
+         * @type {Event}
+         */
+        preRender : {
+            get : function() {
+                return this._preRender;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the end of each render frame.  This event is raised whenever
+         * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
+         * by user code.
+         * @memberof CesiumWidget.prototype
+         * @type {Event}
+         */
+        postRender : {
+            get : function() {
+                return this._postRender;
+            }
+        },
+
+        /**
          * Gets the event that will be raised when an error is encountered during the default render loop.
          * The widget instance and the generated exception are the only two parameters passed to the event handler.
          * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
          * be set back to true to continue rendering after an exception.
-         * @memberof Viewer.prototype
+         * @memberof CesiumWidget.prototype
          * @type {Event}
          */
-        onRenderLoopError : {
+        renderLoopError : {
             get : function() {
                 return this._renderLoopError;
             }
@@ -509,7 +537,9 @@ define([
         this._scene.initializeFrame();
         var currentTime = this._clock.tick();
         if (this._canRender) {
+            this._preRender.raiseEvent(this);
             this._scene.render(currentTime);
+            this._postRender.raiseEvent(this);
         }
     };
 

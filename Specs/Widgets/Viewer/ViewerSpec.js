@@ -587,4 +587,36 @@ defineSuite([
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
+
+    it('raises the preRender event prior to rendering', function() {
+        viewer = new Viewer(container);
+
+        var preRenderInvocations = 0;
+        viewer.preRender.addEventListener(function() {
+            ++preRenderInvocations;
+        });
+
+        viewer.resize();
+        viewer.render();
+
+        expect(preRenderInvocations).toBe(1);
+
+        viewer.destroy();
+    });
+
+    it('raises the postRender event after rendering', function() {
+        viewer = new Viewer(container);
+
+        var postRenderInvocations = 0;
+        viewer.postRender.addEventListener(function() {
+            ++postRenderInvocations;
+        });
+
+        viewer.resize();
+        viewer.render();
+
+        expect(postRenderInvocations).toBe(1);
+
+        viewer.destroy();
+    });
 }, 'WebGL');
