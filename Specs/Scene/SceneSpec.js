@@ -564,14 +564,12 @@ defineSuite([
     it('raises the preRender event prior to rendering', function() {
         var s = createScene();
 
-        var preRenderInvocations = 0;
-        s.preRender.addEventListener(function() {
-            ++preRenderInvocations;
-        });
+        var spyListener = jasmine.createSpy('listener');
+        s.preRender.addEventListener(spyListener);
 
         s.render();
 
-        expect(preRenderInvocations).toBe(1);
+        expect(spyListener.callCount).toBe(1);
 
         destroyScene(s);
     });
@@ -579,14 +577,12 @@ defineSuite([
     it('raises the postRender event after rendering', function() {
         var s = createScene();
 
-        var postRenderInvocations = 0;
-        s.postRender.addEventListener(function() {
-            ++postRenderInvocations;
-        });
+        var spyListener = jasmine.createSpy('listener');
+        s.postRender.addEventListener(spyListener);
 
         s.render();
 
-        expect(postRenderInvocations).toBe(1);
+        expect(spyListener.callCount).toBe(1);
 
         destroyScene(s);
     });
