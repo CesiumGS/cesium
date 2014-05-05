@@ -91,6 +91,8 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
+     *        to the bottom of the widget itself.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -158,8 +160,10 @@ define([
             widgetNode.appendChild(canvas);
 
             var creditContainer = document.createElement('div');
-            creditContainer.className = 'cesium-widget-credits';
-            widgetNode.appendChild(creditContainer);
+            creditContainer.className = defaultValue(options.creditCssClass, 'cesium-widget-credits');
+
+            var creditHolder = defined(options.creditContainer) ? getElement(options.creditContainer) : widgetNode;
+            creditHolder.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;

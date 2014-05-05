@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/getTimestamp',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        getTimestamp,
         knockout) {
     "use strict";
 
@@ -21,13 +23,9 @@ define([
      * @alias PerformanceWatchdogViewModel
      * @constructor
      *
-     * @param {Viewer} viewer The viewer instance for which to monitor performance.
-     * @param {Function} [errorCallback] A function to call when an error occurs while rendering.  The function will be passed
-     *        the {@link Viewer} instance as its first parameter and the exception instance as its second parameter.
+     * @param {Scene} scene The Scene instance for which to monitor performance.
      * @param {Function} [lowFrameRateCallback] A function to call when a low frame rate is detected.  The function will be passed
-     *        the {@link Viewer} instance as its only parameter.
-     * @param {String} [errorMessage='An error occurred while rendering.  Please try using a different web browser or updating your video drivers.'] The
-     *        message to display when an error occurs during rendering.  This string will be interpreted as HTML.
+     *        the {@link Scene} instance as its only parameter.
      * @param {String} [lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
      *        message to display when a low frame rate is detected.  This string will be interpreted as HTML.
      * @param {String} [redirectOnErrorUrl] The URL to which to redirect (by setting window.location.href) when an error occurs during
@@ -49,16 +47,13 @@ define([
      *        lowFrameRate event will be raised and the page will redirect to the redirectOnLowFrameRateUrl, if any.
      */
     var PerformanceWatchdogViewModel = function(description) {
-        if (!defined(description) || !defined(description.viewer)) {
-            throw new DeveloperError('description.viewer is required.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(description) || !defined(description.scene)) {
+            throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
-        this._viewer = description.viewer;
-
-        this._error = new Event();
-        if (defined(description.errorCallback)) {
-            this._error.addEventListener(description.errorCallback);
-        }
+        this._scene = description.scene;
 
         this._lowFrameRate = new Event();
         if (defined(description.lowFrameRateCallback)) {
@@ -68,7 +63,6 @@ define([
         this.redirectOnErrorUrl = description.redirectOnErrorUrl;
         this.redirectOnLowFrameRateUrl = description.redirectOnSlowPerformanceUrl;
 
-        this.errorMessage = defaultValue(description.errorMessage, 'An error occurred while rendering.  Please try using a different web browser or updating your video drivers.');
         this.lowFrameRateMessage = defaultValue(description.lowFrameRateMessage, 'This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.');
 
         this.samplingWindow = defaultValue(description.samplingWindow, 5000);
@@ -78,7 +72,8 @@ define([
         this.maximumFrameTimeAfterWarmup = 1000.0 / defaultValue(description.minimumFrameRateAfterWarmup, 8);
 
         this.notifiedOfLowFrameRate = false;
-        this.showingMessage = false;
+
+        this.showingLowFrameRateMessage = false;
 
         this._frameTimes = [];
         this._needsWarmup = true;
@@ -93,11 +88,17 @@ define([
         knockout.track(this, [
             'redirectOnErrorUrl', 'redirectOnLowFrameRateUrl', 'errorMessage', 'lowFrameRateMessage', 'samplingWindow',
             'quietPeriod', 'warmupPeriod', 'minimumFrameRateDuringWarmup', 'minimumFrameRateAfterWarmup', 'notifiedOfLowFrameRate',
-            'showingMessage']);
+            'showingLowFrameRateMessage', 'showingErrorMessage']);
 
         var that = this;
-        this._viewer.preRender.addEventListener(function() {
-            update(that);
+        this._scene.preRender.addEventListener(function(scene, time) {
+            update(that, time);
+        });
+
+        this._scene.renderError.addEventListener(function(scene, error) {
+            if (defined(that.redirectOnErrorUrl)) {
+                window.location.href = that.redirectOnErrorUrl;
+            }
         });
 
         var visibilityChangeEventName = defined(document.hidden) ? 'visibilitychange' :
@@ -124,16 +125,6 @@ define([
         },
 
         /**
-         * Gets the event that is raised when an error occurs while rendering.  The function will be passed
-         * the {@link Viewer} instance as its first parameter and the exception instance as its second parameter.
-         */
-        error : {
-            get : function() {
-                return this._error;
-            }
-        },
-
-        /**
          * Gets the event that is raised when a low frame rate is detected.  The function will be passed
          * the {@link Viewer} instance as its only parameter.
          */
@@ -144,10 +135,12 @@ define([
         }
     });
 
-    function update(viewModel, timeStamp) {
+    function update(viewModel, time) {
         if (!shouldDoPerformanceTracking(viewModel)) {
             return;
         }
+
+        var timeStamp = getTimestamp();
 
         if (viewModel._needsWarmup) {
             viewModel._needsWarmup = false;
@@ -168,8 +161,19 @@ define([
 
                 var maximumFrameTime = timeStamp > viewModel._warmupPeriodEndTime ? viewModel.maximumFrameTimeAfterWarmup : viewModel.maximumFrameTimeDuringWarmup;
                 if (averageTimeBetweenFrames > maximumFrameTime) {
-                    viewModel.showingMessage = true;
-                    viewModel.notifiedOfLowFrameRate = true;
+                    if (defined(viewModel.redirectOnLowFrameRateUrl)) {
+                        window.location.href = viewModel.redirectOnLowFrameRateUrl;
+                    } else {
+                        if (defined(viewModel.lowFrameRateCallback)) {
+                            viewModel.lowFrameRateCallback(viewModel._scene);
+                        }
+
+                        if (defined(viewModel.lowFrameRateMessage)) {
+                            viewModel.showingLowFrameRateMessage = true;
+                        }
+
+                        viewModel.notifiedOfLowFrameRate = true;
+                    }
                 }
             }
         }

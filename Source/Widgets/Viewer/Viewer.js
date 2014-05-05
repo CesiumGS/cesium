@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/clone',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -24,12 +25,14 @@ define([
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
         '../NavigationHelpButton/NavigationHelpButton',
+        '../PerformanceWatchdog/PerformanceWatchdog',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
         '../Timeline/Timeline',
         '../../ThirdParty/knockout'
     ], function(
+        clone,
         defaultValue,
         defined,
         DeveloperError,
@@ -54,6 +57,7 @@ define([
         HomeButton,
         InfoBox,
         NavigationHelpButton,
+        PerformanceWatchdog,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -100,6 +104,10 @@ define([
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {Boolean} [options.performanceWatchdog=true] If set to false, the {@link PerformanceWatchdog} will not be created.  By default, the performance watchdog monitors
+     *        the frame rate and, when the frame rate is low, it displays a message suggesting that the user try a different browser or update their video drivers.  It can also
+     *        be configured to redirect to a different URL on a rendering error or a low frame rate.
+     * @param {Object} [options.performanceWatchdogOptions] The options to pass to the constructor of the {@link PerformanceWatchdog}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -171,25 +179,25 @@ define([
         var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
 
         //>>includeStart('debug', pragmas.debug);
-        //If using BaseLayerPicker, imageryProvider is an invalid option
+        // If using BaseLayerPicker, imageryProvider is an invalid option
         if (createBaseLayerPicker && defined(options.imageryProvider)) {
             throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
 Either specify options.selectedImageryProviderViewModel instead or set options.baseLayerPicker to false.');
         }
 
-        //If not using BaseLayerPicker, selectedImageryProviderViewModel is an invalid option
+        // If not using BaseLayerPicker, selectedImageryProviderViewModel is an invalid option
         if (!createBaseLayerPicker && defined(options.selectedImageryProviderViewModel)) {
             throw new DeveloperError('options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
 Either specify options.imageryProvider instead or set options.baseLayerPicker to true.');
         }
 
-        //If using BaseLayerPicker, terrainProvider is an invalid option
+        // If using BaseLayerPicker, terrainProvider is an invalid option
         if (createBaseLayerPicker && defined(options.terrainProvider)) {
             throw new DeveloperError('options.terrainProvider is not available when using the BaseLayerPicker widget. \
 Either specify options.selectedTerrainProviderViewModel instead or set options.baseLayerPicker to false.');
         }
 
-        //If not using BaseLayerPicker, selectedTerrainProviderViewModel is an invalid option
+        // If not using BaseLayerPicker, selectedTerrainProviderViewModel is an invalid option
         if (!createBaseLayerPicker && defined(options.selectedTerrainProviderViewModel)) {
             throw new DeveloperError('options.selectedTerrainProviderViewModel is not available when not using the BaseLayerPicker widget. \
 Either specify options.terrainProvider instead or set options.baseLayerPicker to true.');
@@ -200,10 +208,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
 
-        //Cesium widget
+        // Bottom container
+        var bottomContainer = document.createElement('div');
+        bottomContainer.className = 'cesium-viewer-bottom';
+
+        this._bottomContainer = bottomContainer;
+
+        // Cesium widget
         var cesiumWidgetContainer = document.createElement('div');
         cesiumWidgetContainer.className = 'cesium-viewer-cesiumWidgetContainer';
-        viewerContainer.appendChild(cesiumWidgetContainer);
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
@@ -211,8 +224,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
-            showRenderLoopErrors : options.showRenderLoopErrors
+            showRenderLoopErrors : options.showRenderLoopErrors,
+            creditContainer : bottomContainer,
+            creditCssClass : 'cesium-viewer-credits'
         });
+
+        viewerContainer.appendChild(cesiumWidgetContainer);
+        viewerContainer.appendChild(bottomContainer);
 
         var dataSourceCollection = new DataSourceCollection();
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
@@ -229,7 +247,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         });
 
-        //Selection Indicator
+        // Selection Indicator
         var selectionIndicator;
         if (!defined(options.selectionIndicator) || options.selectionIndicator !== false) {
             var selectionIndicatorContainer = document.createElement('div');
@@ -238,7 +256,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             selectionIndicator = new SelectionIndicator(selectionIndicatorContainer, cesiumWidget.scene);
         }
 
-        //Info Box
+        // Info Box
         var infoBox;
         if (!defined(options.infoBox) || options.infoBox !== false) {
             var infoBoxContainer = document.createElement('div');
@@ -247,12 +265,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             infoBox = new InfoBox(infoBoxContainer);
         }
 
-        //Main Toolbar
+        // Main Toolbar
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
         viewerContainer.appendChild(toolbar);
 
-        //Geocoder
+        // Geocoder
         var geocoder;
         if (!defined(options.geocoder) || options.geocoder !== false) {
             var geocoderContainer = document.createElement('div');
@@ -265,7 +283,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
         }
 
-        //HomeButton
+        // HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
             homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.scene.globe.ellipsoid);
@@ -280,13 +298,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
         }
 
-        //SceneModePicker
+        // SceneModePicker
         var sceneModePicker;
         if (!defined(options.sceneModePicker) || options.sceneModePicker !== false) {
             sceneModePicker = new SceneModePicker(toolbar, cesiumWidget.scene);
         }
 
-        //BaseLayerPicker
+        // BaseLayerPicker
         var baseLayerPicker;
         if (createBaseLayerPicker) {
             var imageryProviderViewModels = defaultValue(options.imageryProviderViewModels, createDefaultImageryProviderViewModels());
@@ -314,7 +332,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
         }
 
-        //Animation
+        // Animation
         var animation;
         if (!defined(options.animation) || options.animation !== false) {
             var animationContainer = document.createElement('div');
@@ -323,7 +341,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             animation = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
         }
 
-        //Timeline
+        // Timeline
         var timeline;
         if (!defined(options.timeline) || options.timeline !== false) {
             var timelineContainer = document.createElement('div');
@@ -334,7 +352,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             timeline.zoomTo(clock.startTime, clock.stopTime);
         }
 
-        //Fullscreen
+        // Fullscreen
         var fullscreenButton;
         if (!defined(options.fullscreenButton) || options.fullscreenButton !== false) {
             var fullscreenContainer = document.createElement('div');
@@ -353,6 +371,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
         } else if (defined(timeline)) {
             timeline.container.style.right = 0;
+        }
+
+        // Performance watchdog
+        var performanceWatchdog;
+        if (!defined(options.performanceWatchdog) || options.performanceWatchdog !== false) {
+            var performanceWatchdogOptions = clone(defaultValue(options.performanceWatchdogOptions, defaultValue.EMPTY_OBJECT));
+            performanceWatchdogOptions.container = bottomContainer;
+            performanceWatchdogOptions.scene = cesiumWidget.scene;
+            performanceWatchdog = new PerformanceWatchdog(performanceWatchdogOptions);
         }
 
         /**
@@ -873,9 +900,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 }
             }
             if (timelineExists || animationExists) {
-                var creditContainer = viewer._cesiumWidget.creditContainer;
-                creditContainer.style.bottom = logoBottom + 'px';
-                creditContainer.style.left = logoLeft + 'px';
+                var bottomContainer = viewer._bottomContainer;
+                bottomContainer.style.bottom = logoBottom + 'px';
+                bottomContainer.style.left = logoLeft + 'px';
             }
         }
 
