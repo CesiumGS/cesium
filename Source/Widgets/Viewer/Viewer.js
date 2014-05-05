@@ -649,7 +649,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods
-         * as part of a custom render loop.
+         * as part of a custom render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof Viewer.prototype
          *
          * @type {Boolean}
