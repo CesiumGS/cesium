@@ -178,7 +178,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
-    it('draws with stencil test', function() {
+    it('draws with scissor test', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -201,7 +201,7 @@ defineSuite([
             renderState : context.createRenderState({
                 scissorTest : {
                     enabled : true,
-                    rectangle : new BoundingRectangle(0, 0, 0, 0)
+                    rectangle : new BoundingRectangle(1, 1, 0, 0)
                 }
             })
         });
