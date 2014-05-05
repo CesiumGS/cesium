@@ -6,7 +6,10 @@ Beta Releases
 
 ### b29 - 2014-06-02
 
+* Breaking changes
+  * Renamed `CesiumWidget.onRenderLoopError` to `CesiumWidget.renderLoopError`.
 * Improved terrain and imagery rendering performance when very close to the surface.
+* Added `preRender` and `postRender` events to `CesiumWidget` and `Viewer`.
 
 ### b28 - 2014-05-01
 
