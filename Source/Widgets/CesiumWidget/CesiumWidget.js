@@ -240,7 +240,14 @@ define([
 
             var that = this;
             scene.renderError.addEventListener(function(scene, error) {
-                that.handleRenderError(scene, error);
+                that._useDefaultRenderLoop = false;
+                that._renderLoopRunning = false;
+                if (that._showRenderLoopErrors) {
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    that.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
+                }
             });
         } catch (error) {
             var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
@@ -328,7 +335,10 @@ define([
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods as part of a custom
-         * render loop.
+         * render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof CesiumWidget.prototype
          *
          * @type {Boolean}
@@ -491,26 +501,6 @@ define([
         var currentTime = this._clock.tick();
         if (this._canRender) {
             this._scene.render(currentTime);
-        }
-    };
-
-    /**
-     * Handles an error that occurs during rendering by stopping the default render loop and, if <code>showRenderLoopErrors</code>
-     * is true, displaying the error in a pop-up dialog and in the error console.
-     *
-     * @memberof CesiumWidget
-     *
-     * @param {Scene} scene The scene in which the render error occurred.
-     * @param {Error} error The error that occurred during rendering.
-     */
-    CesiumWidget.prototype.handleRenderError = function(scene, error) {
-        this._useDefaultRenderLoop = false;
-        this._renderLoopRunning = false;
-        if (this._showRenderLoopErrors) {
-            var title = 'An error occurred while rendering.  Rendering has stopped.';
-            var message = formatError(error);
-            this.showErrorPanel(title, message);
-            console.error(title + ' ' + message);
         }
     };
 
