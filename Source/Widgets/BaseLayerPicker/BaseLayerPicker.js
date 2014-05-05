@@ -130,14 +130,13 @@ attr: { src: buttonImageUrl }');
         var dropPanel = document.createElement('div');
         dropPanel.className = 'cesium-baseLayerPicker-dropDown';
         dropPanel.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
-       "cesium-baseLayerPicker-hidden" : !dropDownVisible }');
+css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }');
         container.appendChild(dropPanel);
 
         var imageryTitle = document.createElement('div');
         imageryTitle.className = 'cesium-baseLayerPicker-sectionTitle';
         imageryTitle.setAttribute('data-bind', 'visible: imageryProviderViewModels.length > 0');
-        imageryTitle.innerHTML = 'Imagery<hr>';
+        imageryTitle.innerHTML = 'Imagery';
         dropPanel.appendChild(imageryTitle);
 
         var imageryChoices = document.createElement('div');
@@ -168,7 +167,7 @@ click: function($data) { $parent.selectedImagery = $data; }');
         var terrainTitle = document.createElement('div');
         terrainTitle.className = 'cesium-baseLayerPicker-sectionTitle';
         terrainTitle.setAttribute('data-bind', 'visible: terrainProviderViewModels.length > 0');
-        terrainTitle.innerHTML = 'Terrain<hr>';
+        terrainTitle.innerHTML = 'Terrain';
         dropPanel.appendChild(terrainTitle);
 
         var terrainChoices = document.createElement('div');
