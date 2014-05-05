@@ -61,24 +61,12 @@ define([
                 return;
             }
 
-            try {
-                if (widget._useDefaultRenderLoop) {
-                    widget.resize();
-                    widget.render();
-                    requestAnimationFrame(render);
-                } else {
-                    widget._renderLoopRunning = false;
-                }
-            } catch (error) {
-                widget._useDefaultRenderLoop = false;
+            if (widget._useDefaultRenderLoop) {
+                widget.resize();
+                widget.render();
+                requestAnimationFrame(render);
+            } else {
                 widget._renderLoopRunning = false;
-                widget._renderLoopError.raiseEvent(widget, error);
-                if (widget._showRenderLoopErrors) {
-                    var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    widget.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
-                }
             }
         }
 
@@ -234,9 +222,6 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-            this._renderLoopError = new Event();
-            this._preRender = new Event();
-            this._postRender = new Event();
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -249,6 +234,10 @@ define([
 
             this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
 
+            var that = this;
+            scene.renderError.addEventListener(function(scene, error) {
+                that.handleRenderError(scene, error);
+            });
         } catch (error) {
             var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
             this.showErrorPanel(title, error);
@@ -330,6 +319,7 @@ define([
         },
 
         /**
+<<<<<<< HEAD
          * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
          * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
          * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
@@ -372,6 +362,8 @@ define([
         },
 
         /**
+=======
+>>>>>>> widgetAndViewerImprovements
          * Gets or sets whether or not this widget should control the render loop.
          * If set to true the widget will use {@link requestAnimationFrame} to
          * perform rendering and resizing of the widget, as well as drive the
@@ -539,9 +531,27 @@ define([
         this._scene.initializeFrame();
         var currentTime = this._clock.tick();
         if (this._canRender) {
-            this._preRender.raiseEvent(this, currentTime);
             this._scene.render(currentTime);
-            this._postRender.raiseEvent(this, currentTime);
+        }
+    };
+
+    /**
+     * Handles an error that occurs during rendering by stopping the default render loop and, if <code>showRenderLoopErrors</code>
+     * is true, displaying the error in a pop-up dialog and in the error console.
+     *
+     * @memberof CesiumWidget
+     *
+     * @param {Scene} scene The scene in which the render error occurred.
+     * @param {Error} error The error that occurred during rendering.
+     */
+    CesiumWidget.prototype.handleRenderError = function(scene, error) {
+        this._useDefaultRenderLoop = false;
+        this._renderLoopRunning = false;
+        if (this._showRenderLoopErrors) {
+            var title = 'An error occurred while rendering.  Rendering has stopped.';
+            var message = formatError(error);
+            this.showErrorPanel(title, message);
+            console.error(title + ' ' + message);
         }
     };
 
