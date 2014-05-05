@@ -71,12 +71,12 @@ define([
         this.maximumFrameTimeDuringWarmup = 1000.0 / defaultValue(description.minimumFrameRateDuringWarmup, 4);
         this.maximumFrameTimeAfterWarmup = 1000.0 / defaultValue(description.minimumFrameRateAfterWarmup, 8);
 
-        this.notifiedOfLowFrameRate = false;
+        this.lowFrameRateMessageDismissed = false;
 
         this.showingLowFrameRateMessage = false;
 
         this._frameTimes = [];
-        this._needsWarmup = true;
+        this._needsQuietPeriod = true;
         this._quietPeriodEndTime = 0.0;
         this._warmupPeriodEndTime = 0.0;
 
@@ -87,7 +87,7 @@ define([
 
         knockout.track(this, [
             'redirectOnErrorUrl', 'redirectOnLowFrameRateUrl', 'errorMessage', 'lowFrameRateMessage', 'samplingWindow',
-            'quietPeriod', 'warmupPeriod', 'minimumFrameRateDuringWarmup', 'minimumFrameRateAfterWarmup', 'notifiedOfLowFrameRate',
+            'quietPeriod', 'warmupPeriod', 'minimumFrameRateDuringWarmup', 'minimumFrameRateAfterWarmup', 'lowFrameRateMessageDismissed',
             'showingLowFrameRateMessage', 'showingErrorMessage']);
 
         var that = this;
@@ -142,8 +142,8 @@ define([
 
         var timeStamp = getTimestamp();
 
-        if (viewModel._needsWarmup) {
-            viewModel._needsWarmup = false;
+        if (viewModel._needsQuietPeriod) {
+            viewModel._needsQuietPeriod = false;
             viewModel._frameTimes.length = 0;
             viewModel._quietPeriodEndTime = timeStamp + viewModel.quietPeriod;
             viewModel._warmupPeriodEndTime = viewModel._quietPeriodEndTime + viewModel.warmupPeriod + viewModel.samplingWindow;
@@ -173,7 +173,10 @@ define([
                         }
 
                         viewModel.notifiedOfLowFrameRate = true;
+                        viewModel._needsQuietPeriod = true;
                     }
+                } else if (viewModel.showingLowFrameRateMessage) {
+                    viewModel.showingLowFrameRateMessage = false;
                 }
             }
         }
@@ -183,12 +186,12 @@ define([
         if (document[viewModel._hiddenPropertyName]) {
             viewModel._frameTimes.length = 0;
         } else {
-            viewModel._needsWarmup = true;
+            viewModel._needsQuietPeriod = true;
         }
     }
 
     function shouldDoPerformanceTracking(viewModel) {
-        return !viewModel.notifiedOfLowFrameRate && !viewModel.showingMessage && !document[viewModel._hiddenPropertyName];
+        return !viewModel.lowFrameRateMessageDismissed && !viewModel.showingMessage && !document[viewModel._hiddenPropertyName];
     }
 
     return PerformanceWatchdogViewModel;
