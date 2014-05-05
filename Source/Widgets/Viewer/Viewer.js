@@ -679,7 +679,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the event that will be raised at the start of each render frame.  This event is raised whenever
          * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.
+         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
+         * current timestamp as the second parameter.
          * @memberof Viewer.prototype
          * @type {Event}
          */
@@ -692,7 +693,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the event that will be raised at the end of each render frame.  This event is raised whenever
          * <code>render</code> is called, no matter whether it is invoked by the default render loop or manually
-         * by user code.
+         * by user code.  Subscribers to the event receive the widget instance as the first parameter and the
+         * current timestamp as the second parameter.
          * @memberof Viewer.prototype
          * @type {Event}
          */
