@@ -46,7 +46,7 @@ define([
             }
         });
 
-        viewer.postRender.addEventListener(function() {
+        viewer.scene.postRender.addEventListener(function() {
             viewer.cesiumInspector.viewModel.update();
         });
     };
