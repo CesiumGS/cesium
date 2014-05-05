@@ -533,7 +533,6 @@ defineSuite([
 
         s.render();
 
-        expect(spyListener.wasCalled).toBe(true);
         expect(spyListener).toHaveBeenCalledWith(s, error);
 
         destroyScene(s);
@@ -555,7 +554,6 @@ defineSuite([
             s.render();
         }).toThrow();
 
-        expect(spyListener.wasCalled).toBe(true);
         expect(spyListener).toHaveBeenCalledWith(s, error);
 
         destroyScene(s);
