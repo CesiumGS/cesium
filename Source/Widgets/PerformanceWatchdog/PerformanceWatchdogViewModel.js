@@ -62,19 +62,75 @@ define([
             this._lowFrameRate.addEventListener(description.lowFrameRateCallback);
         }
 
+        /**
+         * Gets or sets the URL to which to redirect (by setting window.location.href) when a low frame rate
+         * condition is detected.  The exact definition of a low frame rate is specified by other properties.
+         * If this parameter is undefined, no automatic redirection happens.
+         * @type {String}
+         */
         this.redirectOnErrorUrl = description.redirectOnErrorUrl;
-        this.redirectOnLowFrameRateUrl = description.redirectOnSlowPerformanceUrl;
 
+        /**
+         * Gets or sets the URL to which to redirect (by setting window.location.href) when an error occurs during
+         * rendering.  This can be used to automatically redirect to a simpler version of the application when an inadequate web
+         * browser or GPU driver causes an error.  If this parameter is undefined, no automatic redirection happens.
+         * @type {String}
+         */
+        this.redirectOnLowFrameRateUrl = description.redirectOnLowFrameRateUrl;
+
+        /**
+         * Gets or sets the message to display when a low frame rate is detected.  This string will be interpreted as HTML.
+         * @type {String}
+         */
         this.lowFrameRateMessage = defaultValue(description.lowFrameRateMessage, 'This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.');
 
+        /**
+         * Gets or sets the length of the sliding window over which to compute the average frame rate, in milliseconds.
+         * @type {Number}
+         */
         this.samplingWindow = defaultValue(description.samplingWindow, 5000);
-        this.quietPeriod = defaultValue(description.quietPeriod, 2000);
-        this.warmupPeriod = defaultValue(description.warmupPeriod, 5000);
-        this.maximumFrameTimeDuringWarmup = 1000.0 / defaultValue(description.minimumFrameRateDuringWarmup, 4);
-        this.maximumFrameTimeAfterWarmup = 1000.0 / defaultValue(description.minimumFrameRateAfterWarmup, 8);
 
+        /**
+         * Gets or sets the length of time to wait at startup and each time the page becomes visible (i.e. when the user
+         * switches back to the tab) before starting to measure performance, in milliseconds.
+         * @type {Number}
+         */
+        this.quietPeriod = defaultValue(description.quietPeriod, 2000);
+
+        /**
+         * Gets or sets the length of the warmup period, in milliseconds.  During the warmup period, a separate
+         * (usually lower) frame rate is required.
+         * @type {Number}
+         */
+        this.warmupPeriod = defaultValue(description.warmupPeriod, 5000);
+
+        /**
+         * Gets or sets the minimum frames-per-second that are required for acceptable performance during
+         * the warmup period.  If the frame rate averages less than this during any <code>samplingWindow</code> during the <code>warmupPeriod</code>, the
+         * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
+         * @type {Number}
+         */
+        this.minimumFrameRateDuringWarmup = defaultValue(description.minimumFrameRateDuringWarmup, 4);
+
+        /**
+         * Gets or sets the minimum frames-per-second that are required for acceptable performance after
+         * the end of the warmup period.  If the frame rate averages less than this during any <code>samplingWindow</code> after the <code>warmupPeriod</code>, the
+         * <code>lowFrameRate</code> event will be raised and the page will redirect to the <code>redirectOnLowFrameRateUrl</code>, if any.
+         * @type {Number}
+         */
+        this.minimumFrameRateAfterWarmup = defaultValue(description.minimumFrameRateAfterWarmup, 8);
+
+        /**
+         * Gets or sets a value indicating whether the low frame rate message has previously been dismissed by the user.  Once it is
+         * dismissed, the message will not be redisplayed, no matter the frame rate.
+         * @type {Boolean}
+         */
         this.lowFrameRateMessageDismissed = false;
 
+        /**
+         * Gets or sets a value indicating whether the low frame rate message is currently being displayed.
+         * @type {Boolean}
+         */
         this.showingLowFrameRateMessage = false;
 
         this._frameTimes = [];
@@ -120,20 +176,21 @@ define([
 
     defineProperties(PerformanceWatchdogViewModel.prototype, {
         /**
-         * Gets the {@link Viewer} instance for which to monitor performance.
-         * @memberof PerformanceWatchdogViewModel
-         *
-         * @type {Viewer}
+         * Gets the {@link Scene} instance for which to monitor performance.
+         * @memberof PerformanceWatchdogViewModel.prototype
+         * @type {Scene}
          */
-        viewer : {
+        scene : {
             get : function() {
-                return this._viewer;
+                return this._scene;
             }
         },
 
         /**
          * Gets the event that is raised when a low frame rate is detected.  The function will be passed
-         * the {@link Viewer} instance as its only parameter.
+         * the {@link Scene} instance as its only parameter.
+         * @memberof PerformanceWatchdogViewModel.prototype
+         * @type {Event}
          */
         lowFrameRate : {
             get : function() {
@@ -141,6 +198,12 @@ define([
             }
         },
 
+        /**
+         * Gets a command that dismisses the low frame rate message.  Once it is dismissed, the message
+         * will not be redisplayed.
+         * @memberof PerformanceWatchdogViewModel.prototype
+         * @type {Command}
+         */
         dismissMessage : {
             get : function() {
                 return this._dismissMessage;
@@ -172,8 +235,10 @@ define([
 
                 var averageTimeBetweenFrames = (timeStamp - viewModel._frameTimes[0]) / (viewModel._frameTimes.length - 1);
 
-                var maximumFrameTime = timeStamp > viewModel._warmupPeriodEndTime ? viewModel.maximumFrameTimeAfterWarmup : viewModel.maximumFrameTimeDuringWarmup;
+                var maximumFrameTime = 1000.0 / (timeStamp > viewModel._warmupPeriodEndTime ? viewModel.minimumFrameRateAfterWarmup : viewModel.minimumFrameRateDuringWarmup);
                 if (averageTimeBetweenFrames > maximumFrameTime) {
+                    viewModel.lowFrameRate.raise(viewModel.scene);
+
                     if (defined(viewModel.redirectOnLowFrameRateUrl)) {
                         window.location.href = viewModel.redirectOnLowFrameRateUrl;
                     } else {
