@@ -17,6 +17,7 @@ define(['../Core/createGuid',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/NearFarScalar',
+        '../Core/PolygonPipeline',
         '../Core/Rectangle',
         '../Core/TimeInterval',
         '../Core/loadBlob',
@@ -62,6 +63,7 @@ define(['../Core/createGuid',
         JulianDate,
         CesiumMath,
         NearFarScalar,
+        PolygonPipeline,
         Rectangle,
         TimeInterval,
         loadBlob,
@@ -388,9 +390,14 @@ define(['../Core/createGuid',
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
-        if (!Cartesian3.equals(coordinates[0], coordinates[coordinates.length - 1])) {
-            throw new RuntimeError('The first and last coordinate tuples must be the same.');
-        }
+        //This should be a warning instead of an error.
+        //if (!Cartesian3.equals(coordinates[0], coordinates[coordinates.length - 1])) {
+        //    throw new RuntimeError('The first and last coordinate tuples must be the same.');
+        //}
+
+        //TODO Should we be doing this here?  If we don't, it can trigger exceptions later on, should it?
+        coordinates = PolygonPipeline.removeDuplicates(coordinates);
+
         if (coordinates.length > 3) {
             dynamicObject.vertexPositions = new ConstantProperty(coordinates);
         }
@@ -772,12 +779,11 @@ define(['../Core/createGuid',
         } else if (nodeName === 'NetworkLink') {
             parent = new DynamicObject(createId(node));
             parent.name = getStringValue(node, 'name');
-            var linkUrl = getStringValue(node, 'Link').trim();
-
-            var networkLinkSource = new KmlDataSource(dataSource._proxy);
-            when(networkLinkSource.loadUrl(linkUrl), function() {
-                dataSource._composite.addCollection(networkLinkSource.getDynamicObjectCollection(), 0);
-            });
+            //            var linkUrl = getStringValue(node, 'Link').trim();
+            //            var networkLinkSource = new KmlDataSource(dataSource._proxy);
+            //            when(networkLinkSource.loadUrl(linkUrl), function() {
+            //                dataSource._composite.addCollection(networkLinkSource.getDynamicObjectCollection(), 0);
+            //            });
         }
 
         var childNodes = node.childNodes;
@@ -809,14 +815,14 @@ define(['../Core/createGuid',
         dataSource._name = name;
 
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        dataSource._composite.suspendEvents();
+        dynamicObjectCollection.suspendEvents();
         var styleCollection = new DynamicObjectCollection();
 
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             iterateNodes(dataSource, kml, undefined, dynamicObjectCollection, styleCollection, sourceUri, uriResolver);
-            dataSource._composite.resumeEvents();
+            dynamicObjectCollection.resumeEvents();
             dataSource._isLoading = false;
             dataSource._isLoadingEvent.raiseEvent(dataSource, false);
             dataSource._changed.raiseEvent(dataSource);
@@ -891,16 +897,11 @@ define(['../Core/createGuid',
      * @see http://www.opengeospatial.org/standards/kml/
      */
     var KmlDataSource = function(proxy) {
-        var composite = new CompositeDynamicObjectCollection();
-        var collection = new DynamicObjectCollection();
-        composite.addCollection(collection, 0);
-
         this._changed = new Event();
         this._error = new Event();
         this._isLoadingEvent = new Event();
         this._clock = undefined;
-        this._composite = composite;
-        this._dynamicObjectCollection = collection;
+        this._dynamicObjectCollection = new DynamicObjectCollection();
         this._name = undefined;
         this._isLoading = false;
         this._proxy = proxy;
@@ -947,7 +948,7 @@ define(['../Core/createGuid',
          */
         dynamicObjects : {
             get : function() {
-                return this._composite;
+                return this._dynamicObjectCollection;
             }
         },
         /**

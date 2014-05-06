@@ -37,12 +37,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
-        expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getErrorEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getClock()).toBeUndefined();
-        expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(true);
+        expect(dataSource.changedEvent).toBeInstanceOf(Event);
+        expect(dataSource.errorEvent).toBeInstanceOf(Event);
+        expect(dataSource.clock).toBeUndefined();
+        expect(dataSource.dynamicObjects.getObjects().length).toEqual(0);
     });
 
     it('loads shared styles', function() {
@@ -63,7 +61,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
     });
@@ -81,7 +79,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         waitsFor(function() {
             return objects.length === 1;
         });
@@ -117,7 +115,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
 
         var billboard = objects[0].billboard;
@@ -181,7 +179,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].position.getValue(time)).toEqual(cartesianPosition);
     });
@@ -230,7 +228,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].label.text.getValue()).toEqual(name.getValue());
         expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
@@ -261,7 +259,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var object = objects[0];
         expect(objects.length).toEqual(1);
         expect(object.vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
@@ -309,7 +307,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var object = objects[0];
         expect(objects.length).toEqual(1);
         expect(object.vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
@@ -344,7 +342,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var dynamicObject = objects[0];
         expect(dynamicObject.vertexPositions.getValue()).toEqual(coordinates);
     });
@@ -368,7 +366,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
-        var object = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var object = dataSource.dynamicObjects.getObjects()[0];
         expect(object.position.getValue(time)).toEqual(value);
     });
 
@@ -415,7 +413,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(trackKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var object0 = objects[1];
         var object1 = objects[2];
         expect(objects.length).toEqual(3);
@@ -451,7 +449,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(3);
         expect(objects[1].vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
         expect(objects[1].vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
@@ -491,7 +489,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(multiKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var object1 = objects[1];
         var object2 = objects[2];
         expect(objects.length).toEqual(3);
@@ -528,7 +526,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].billboard.scale.getValue()).toEqual(scale.getValue());
         expect(objects[0].billboard.color).toEqual(color);
@@ -550,7 +548,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         var billboard = objects[0].billboard;
         expect(billboard).toBeDefined();
@@ -578,7 +576,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(iconKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
         expect(objects[0].label.fillColor).toEqual(color);
@@ -601,7 +599,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         var label = objects[0].label;
         expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
@@ -633,7 +631,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         expect(objects[0].polyline.width.getValue()).toEqual(4);
         expect(objects[0].polyline.material.outlineWidth.getValue()).toEqual(1);
@@ -655,7 +653,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         var polyline = objects[0].polyline;
         expect(polyline).toBeDefined();
@@ -703,7 +701,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polyKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var polygon = objects[0].polygon;
         var material = polygon.material.getValue();
         var generatedColor = material.color;
@@ -730,7 +728,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(kml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         expect(objects.length).toEqual(1);
         var polygon = objects[0].polygon;
         var generatedColor = polygon.material.color;
@@ -757,7 +755,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var generatedColor = objects[0].billboard.color.getValue();
         expect(objects.length).toEqual(1);
         expect(generatedColor.red).toEqual(color.red);
@@ -786,7 +784,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var generatedColor = objects[0].billboard.color.getValue();
         expect(objects.length).toEqual(1);
         expect(generatedColor.red <= color.red).toBe(true);
@@ -814,7 +812,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(pathKml, "text/xml"), 'http://test.invalid');
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var billboard = objects[0].billboard;
         expect(billboard.image.getValue()).toEqual('http://test.invalid/images/Earth_Station.png');
     });
@@ -841,7 +839,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(timeKml, "text/xml"));
 
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var objects = dataSource.dynamicObjects.getObjects();
         var dynamicObject = objects[0];
         expect(dynamicObject.availability).toBeDefined();
         expect(dynamicObject.availability.data).toBe(true);
@@ -907,7 +905,7 @@ defineSuite(['DynamicScene/KmlDataSource',
     it('loadUrl raises error with invalid url', function() {
         var dataSource = new KmlDataSource();
         var thrown = false;
-        dataSource.getErrorEvent().addEventListener(function() {
+        dataSource.errorEvent.addEventListener(function() {
             thrown = true;
         });
         dataSource.loadUrl('invalid.kml');
