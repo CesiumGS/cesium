@@ -477,7 +477,7 @@ define([
         if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
-        this._forceResize = true;
+        this._forceResize = false;
 
         var zoomFactor;
         if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {

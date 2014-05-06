@@ -437,7 +437,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._lastWidth = 0;
         this._lastHeight = 0;
         this._allowDataSourcesToSuspendAnimation = true;
-        this._forceResize = false;
 
         // Prior to each render, check if anything needs to be resized.
         cesiumWidget.scene.preRender.addEventListener(function(scene, time) {
@@ -685,7 +684,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget._resolutionScaleFactor = value;
-                this._forceResize = true;
             }
         },
 
@@ -833,10 +831,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var container = viewer._container;
         var width = container.clientWidth;
         var height = container.clientHeight;
-        if (!viewer._forceResize && width === viewer._lastWidth && height === viewer._lastHeight) {
+        if (width === viewer._lastWidth && height === viewer._lastHeight) {
             return;
         }
-        viewer._forceResize = false;
 
         var panelMaxHeight = height - 125;
         var baseLayerPickerDropDown = viewer._baseLayerPickerDropDown;
