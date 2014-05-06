@@ -297,11 +297,47 @@
 		</condition>
 	</target>
 
-	<target name="setNodePathLocation" if="nodePathValue">
-		<property name="nodePath" location="${nodePathValue}" />
-	</target>
+	<target name="setNodePath">
+		<exec executable="node" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
+			<arg value="--version" />
+		</exec>
 
-	<target name="setNodePath" depends="setNodePathValue,setNodePathLocation">
+		<!-- use node from path if return code is zero -->
+		<condition property="nodePath" value="node">
+			<equals arg1="${node.exec.result}" arg2="0" />
+		</condition>
+
+		<!-- otherwise on windows use the windows binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
+			<and>
+				<os family="windows" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise on mac use the mac binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
+			<and>
+				<os family="mac" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise on linux use the linux binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
+			<and>
+				<os family="unix" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise use node from path -->
 		<condition property="nodePath" value="node">
 			<not>
 				<isset property="nodePath" />
