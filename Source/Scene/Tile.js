@@ -284,6 +284,10 @@ define([
         }
 
         var mesh = terrain.mesh;
+        if (!defined(mesh)) {
+            return undefined;
+        }
+
         var vertices = mesh.vertices;
         var indices = mesh.indices;
 

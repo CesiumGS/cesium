@@ -141,7 +141,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         this._animations = new AnimationCollection();
 

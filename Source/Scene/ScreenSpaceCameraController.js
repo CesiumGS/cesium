@@ -52,16 +52,12 @@ define([
      * @alias ScreenSpaceCameraController
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas The canvas to listen for events.
-     * @param {Camera} camera The camera.
+     * @param {Scene} scene The scene.
      */
-    var ScreenSpaceCameraController = function(canvas, camera) {
+    var ScreenSpaceCameraController = function(scene) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
-        }
-        if (!defined(camera)) {
-            throw new DeveloperError('camera is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
@@ -233,11 +229,12 @@ define([
             modifier : KeyboardEventModifier.SHIFT
         };
 
-        this._canvas = canvas;
-        this._camera = camera;
+        this._scene = scene;
+        this._camera = scene.camera;
+        this._canvas = scene.canvas;
         this._ellipsoid = Ellipsoid.WGS84;
 
-        this._aggregator = new CameraEventAggregator(canvas);
+        this._aggregator = new CameraEventAggregator(this._canvas);
 
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
@@ -653,9 +650,27 @@ define([
     }
 
     var spin3DPick = new Cartesian3();
+    var scratchStartRay = new Ray();
+
     function spin3D(controller, movement) {
         if (defined(controller._camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
-            pan3D(controller, movement);
+            var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC).height;
+            if (height < 150000.0) {
+                var scene = controller._scene;
+                var globe = scene.globe;
+
+                var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
+                var mousePos = globe.pick(startRay);
+                if (!defined(mousePos)) {
+                    pan3D(controller, movement, controller._ellipsoid);
+                } else {
+                    var magnitude = Cartesian3.magnitude(mousePos);
+                    var ellipsoid = new Ellipsoid(magnitude, magnitude, magnitude);
+                    pan3D(controller, movement, ellipsoid);
+                }
+            } else {
+                pan3D(controller, movement, controller._ellipsoid);
+            }
         } else {
             rotate3D(controller, movement);
         }
@@ -752,10 +767,11 @@ define([
     var pan3DTemp1 = new Cartesian3();
     var pan3DTemp2 = new Cartesian3();
     var pan3DTemp3 = new Cartesian3();
-    function pan3D(controller, movement) {
+
+    function pan3D(controller, movement, ellipsoid) {
         var camera = controller._camera;
-        var p0 = camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
-        var p1 = camera.pickEllipsoid(movement.endPosition, controller._ellipsoid, pan3DP1);
+        var p0 = camera.pickEllipsoid(movement.startPosition, ellipsoid, pan3DP0);
+        var p1 = camera.pickEllipsoid(movement.endPosition, ellipsoid, pan3DP1);
 
         if (!defined(p0) || !defined(p1)) {
             return;
