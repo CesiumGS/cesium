@@ -391,26 +391,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises renderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        viewer.renderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, error);
-            expect(viewer.useDefaultRenderLoop).toEqual(false);
-        });
+            return !viewer.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('sets the clock and timeline based on the first data source', function() {
@@ -550,7 +542,7 @@ defineSuite([
         viewer = new Viewer(container);
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
@@ -575,7 +567,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 

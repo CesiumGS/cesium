@@ -169,6 +169,21 @@ define([
 
         this._transitioner = new SceneTransitioner(this);
 
+        this._renderError = new Event();
+        this._preRender = new Event();
+        this._postRender = new Event();
+
+        /**
+         * Exceptions occurring in <code>render</code> are always caught in order to raise the
+         * <code>renderError</code> event.  If this property is true, the error is rethrown
+         * after the event is raised.  If this property is false, the <code>render</code> function
+         * returns normally after raising the event.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.rethrowRenderErrors = false;
+
         /**
          * Determines whether or not to instantly complete the
          * scene transition animation on user input.
@@ -530,7 +545,7 @@ define([
          * @memberof Scene.prototype
          * @type {ImageryLayerCollection}
          */
-        imageryLayers: {
+        imageryLayers : {
             get : function() {
                 return this.globe.imageryLayers;
             }
@@ -541,12 +556,50 @@ define([
          * @memberof Scene.prototype
          * @type {TerrainProvider}
          */
-        terrainProvider: {
+        terrainProvider : {
             get : function() {
                 return this.globe.terrainProvider;
             },
             set : function(terrainProvider) {
                 this.globe.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
+         * The Scene instance and the thrown error are the only two parameters passed to the event handler.
+         * By default, errors are not rethrown after this event is raised, but that can be changed by setting
+         * the <code>rethrowRenderErrors</code> property.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        renderError : {
+            get : function() {
+                return this._renderError;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        preRender : {
+            get : function() {
+                return this._preRender;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        postRender : {
+            get : function() {
+                return this._postRender;
             }
         }
     });
@@ -1137,60 +1190,76 @@ define([
         this._screenSpaceCameraController.update(this.mode);
     };
 
+    function render(scene, time) {
+        if (!defined(time)) {
+            time = new JulianDate();
+        }
+
+        scene._preRender.raiseEvent(scene, time);
+
+        var us = scene._context.uniformState;
+        var frameState = scene._frameState;
+
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+        updateFrameState(scene, frameNumber, time);
+        frameState.passes.render = true;
+        frameState.creditDisplay.beginFrame();
+
+        var context = scene._context;
+        us.update(context, frameState);
+
+        scene._commandList.length = 0;
+        scene._overlayCommandList.length = 0;
+
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+
+        var passState = scene._passState;
+
+        executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        executeOverlayCommands(scene, passState);
+
+        frameState.creditDisplay.endFrame();
+
+        if (scene.debugShowFramesPerSecond) {
+            if (!defined(scene._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = scene._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                scene._performanceDisplay = performanceDisplay;
+                scene._performanceContainer = performanceContainer;
+            }
+
+            scene._performanceDisplay.update();
+        } else if (defined(scene._performanceDisplay)) {
+            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
+            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
+        }
+
+        context.endFrame();
+        callAfterRenderFunctions(frameState);
+
+        scene._postRender.raiseEvent(scene, time);
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function(time) {
-        if (!defined(time)) {
-            time = new JulianDate();
-        }
+        try {
+            render(this, time);
+        } catch (error) {
+            this._renderError.raiseEvent(this, error);
 
-        var us = this._context.uniformState;
-        var frameState = this._frameState;
-
-        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-        updateFrameState(this, frameNumber, time);
-        frameState.passes.render = true;
-        frameState.creditDisplay.beginFrame();
-
-        var context = this._context;
-        us.update(context, frameState);
-
-        this._commandList.length = 0;
-        this._overlayCommandList.length = 0;
-
-        updatePrimitives(this);
-        createPotentiallyVisibleSet(this);
-
-        var passState = this._passState;
-
-        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
-        executeOverlayCommands(this, passState);
-
-        frameState.creditDisplay.endFrame();
-
-        if (this.debugShowFramesPerSecond) {
-            if (!defined(this._performanceDisplay)) {
-                var performanceContainer = document.createElement('div');
-                performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '10px';
-                performanceContainer.style.left = '10px';
-                var container = this._canvas.parentNode;
-                container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                this._performanceDisplay = performanceDisplay;
-                this._performanceContainer = performanceContainer;
+            if (this.rethrowRenderErrors) {
+                throw error;
             }
-
-            this._performanceDisplay.update();
-        } else if (defined(this._performanceDisplay)) {
-            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
-            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
-
-        context.endFrame();
-        callAfterRenderFunctions(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
