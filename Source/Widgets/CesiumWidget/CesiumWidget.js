@@ -223,6 +223,7 @@ define([
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
             this._resolutionScaleFactor = 1.0;
+            this._forceResize = false;
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -375,6 +376,7 @@ define([
                     throw new DeveloperError('resolutionScaleFactor must be greater than 0.');
                 }
                 this._resolutionScaleFactor = value;
+                this._forceResize = true;
             }
         }
     });
@@ -472,9 +474,10 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
+        this._forceResize = true;
 
         var zoomFactor;
         if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
