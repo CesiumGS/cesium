@@ -208,15 +208,19 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
 
+        // Cesium widget container
+        var cesiumWidgetContainer = document.createElement('div');
+        cesiumWidgetContainer.className = 'cesium-viewer-cesiumWidgetContainer';
+        viewerContainer.appendChild(cesiumWidgetContainer);
+
         // Bottom container
         var bottomContainer = document.createElement('div');
         bottomContainer.className = 'cesium-viewer-bottom';
 
         this._bottomContainer = bottomContainer;
+        viewerContainer.appendChild(bottomContainer);
 
         // Cesium widget
-        var cesiumWidgetContainer = document.createElement('div');
-        cesiumWidgetContainer.className = 'cesium-viewer-cesiumWidgetContainer';
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
@@ -228,9 +232,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             creditContainer : bottomContainer,
             creditCssClass : 'cesium-viewer-credits'
         });
-
-        viewerContainer.appendChild(cesiumWidgetContainer);
-        viewerContainer.appendChild(bottomContainer);
 
         var dataSourceCollection = new DataSourceCollection();
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
