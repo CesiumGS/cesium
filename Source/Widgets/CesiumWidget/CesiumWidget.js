@@ -107,7 +107,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
-     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loot.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      *
