@@ -41,7 +41,18 @@ define([
 
         var element = document.createElement('div');
         element.className = 'cesium-performance-watchdog-message';
-        element.setAttribute('data-bind', 'visible: showingLowFrameRateMessage, html: lowFrameRateMessage');
+        element.setAttribute('data-bind', 'visible: showingLowFrameRateMessage');
+
+        var dismissButton = document.createElement('button');
+        dismissButton.setAttribute('type', 'button');
+        dismissButton.className = 'cesium-performance-watchdog-message-dismiss';
+        dismissButton.innerHTML = '&times;';
+        dismissButton.setAttribute('data-bind', 'click: dismissMessage');
+        element.appendChild(dismissButton);
+
+        var message = document.createElement('div');
+        message.setAttribute('data-bind', 'html: lowFrameRateMessage');
+        element.appendChild(message);
 
         container.appendChild(element);
 

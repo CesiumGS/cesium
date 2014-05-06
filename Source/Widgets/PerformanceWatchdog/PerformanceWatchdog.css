@@ -3,3 +3,7 @@
     color: black;
     padding: 5px;
 }
+
+.cesium-performance-watchdog-message-dismiss {
+    float: right;
+}

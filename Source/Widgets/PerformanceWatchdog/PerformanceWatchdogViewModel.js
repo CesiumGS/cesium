@@ -6,6 +6,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/getTimestamp',
+        '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
+        createCommand,
         knockout) {
     "use strict";
 
@@ -85,12 +87,17 @@ define([
                                    defined(document.msHidden) ? 'msHidden' :
                                    defined(document.webkitHidden) ? 'webkitHidden' : 'hiddenNotSupported';
 
+        var that = this;
+        this._dismissMessage = createCommand(function() {
+            that.showingLowFrameRateMessage = false;
+            that.lowFrameRateMessageDismissed = true;
+        });
+
         knockout.track(this, [
             'redirectOnErrorUrl', 'redirectOnLowFrameRateUrl', 'errorMessage', 'lowFrameRateMessage', 'samplingWindow',
             'quietPeriod', 'warmupPeriod', 'minimumFrameRateDuringWarmup', 'minimumFrameRateAfterWarmup', 'lowFrameRateMessageDismissed',
             'showingLowFrameRateMessage', 'showingErrorMessage']);
 
-        var that = this;
         this._scene.preRender.addEventListener(function(scene, time) {
             update(that, time);
         });
@@ -131,6 +138,12 @@ define([
         lowFrameRate : {
             get : function() {
                 return this._lowFrameRate;
+            }
+        },
+
+        dismissMessage : {
+            get : function() {
+                return this._dismissMessage;
             }
         }
     });
