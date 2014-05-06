@@ -228,6 +228,7 @@ define([
             eventType : CameraEventType.LEFT_DRAG,
             modifier : KeyboardEventModifier.SHIFT
         };
+        this.minimumTerrainHeight = 150000.0;
 
         this._scene = scene;
         this._camera = scene.camera;
@@ -655,7 +656,7 @@ define([
     function spin3D(controller, movement) {
         if (defined(controller._camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC).height;
-            if (height < 150000.0) {
+            if (height < controller.minimumTerrainHeight) {
                 var scene = controller._scene;
                 var globe = scene.globe;
 
@@ -895,17 +896,26 @@ define([
         var ray = camera.getPickRay(windowPosition, tilt3DRay);
 
         var center;
-        var intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
-        if (defined(intersection)) {
-            center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
-        } else {
-            var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
-            if (!defined(grazingAltitudeLocation)) {
-                return;
+        var intersection;
+
+        if (height < controller.minimumTerrainHeight) {
+            var globe = controller._scene.globe;
+            center = globe.pick(ray);
+        }
+
+        if (!defined(center)) {
+            intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+            if (defined(intersection)) {
+                center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
+            } else {
+                var grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
+                if (!defined(grazingAltitudeLocation)) {
+                    return;
+                }
+                var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
+                grazingAltitudeCart.height = 0.0;
+                center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
             }
-            var grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
-            grazingAltitudeCart.height = 0.0;
-            center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
         }
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
