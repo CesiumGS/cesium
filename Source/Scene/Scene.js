@@ -405,8 +405,8 @@ define([
         this.fxaa = false;
 
         this._performanceDisplay = undefined;
-
         this._debugSphere = undefined;
+        this._resolutionScale = 1.0;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -600,6 +600,30 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
+            }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof Scene.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._resolutionScale;
+            },
+            set : function(value) {
+                if (value <= 0.0) {
+                    throw new DeveloperError('resolutionScale must be greater than 0.');
+                }
+                this._resolutionScale = value;
             }
         }
     });
@@ -989,7 +1013,7 @@ define([
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
                 scene._sunPostProcess = new SunPostProcess();
-            } else {
+            } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
             }
 
@@ -1207,6 +1231,7 @@ define([
 
         var context = scene._context;
         us.update(context, frameState);
+        us.resolutionScale = scene._resolutionScale;
 
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;

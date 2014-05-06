@@ -155,6 +155,7 @@ define([
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
+        this._resolutionScale = 1.0;
     };
 
     defineProperties(UniformState.prototype, {
@@ -765,9 +766,12 @@ define([
          * DOC_TBA
          * @memberof UniformState.prototype
          */
-        highResolutionSnapScale : {
+        resolutionScale : {
             get : function() {
-                return 1.0;
+                return this._resolutionScale;
+            },
+            set : function(value) {
+                this._resolutionScale = value;
             }
         }
     });

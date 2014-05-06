@@ -222,7 +222,6 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-            this._resolutionScaleFactor = 1.0;
             this._forceResize = false;
 
             if (options.sceneMode) {
@@ -367,15 +366,12 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        resolutionScaleFactor : {
+        resolutionScale : {
             get : function() {
-                return this._resolutionScaleFactor;
+                return this._scene.resolutionScale;
             },
             set : function(value) {
-                if (value <= 0.0) {
-                    throw new DeveloperError('resolutionScaleFactor must be greater than 0.');
-                }
-                this._resolutionScaleFactor = value;
+                this._scene.resolutionScale = value;
                 this._forceResize = true;
             }
         }
@@ -479,17 +475,18 @@ define([
         }
         this._forceResize = false;
 
+        var scene = this._scene;
         var zoomFactor;
         if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
             // prefer devicePixelRatio if available.
-            zoomFactor = window.devicePixelRatio * this._resolutionScaleFactor;
+            zoomFactor = window.devicePixelRatio * scene.resolutionScale;
         } else if (this._zoomDetector.currentScale !== 1) {
             // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
             // our SVG's currentScale property does.
-            zoomFactor = this._zoomDetector.currentScale * this._resolutionScaleFactor;
+            zoomFactor = this._zoomDetector.currentScale * scene.resolutionScale;
         } else {
             // otherwise we don't know.
-            zoomFactor = this._resolutionScaleFactor;
+            zoomFactor = scene.resolutionScale;
         }
 
         this._canvasWidth = width;
@@ -505,7 +502,7 @@ define([
         this._canRender = canRender;
 
         if (canRender) {
-            var frustum = this._scene.camera.frustum;
+            var frustum = scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {

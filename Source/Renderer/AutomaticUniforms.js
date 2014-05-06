@@ -1326,6 +1326,14 @@ define([
             getValue : function(uniformState) {
                 return uniformState.temeToPseudoFixedMatrix;
             }
+        }),
+
+        czm_resolutionScale : new AutomaticUniform({
+            size : 1,
+            datatype : UniformDatatype.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.resolutionScale;
+            }
         })
     };
 

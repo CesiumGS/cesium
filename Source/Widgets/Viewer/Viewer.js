@@ -678,12 +678,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * @type {Number}
          * @default 1.0
          */
-        resolutionScaleFactor : {
+        resolutionScale : {
             get : function() {
-                return this._cesiumWidget.resolutionScaleFactor;
+                return this._cesiumWidget.resolutionScale;
             },
             set : function(value) {
-                this._cesiumWidget.resolutionScaleFactor = value;
+                this._cesiumWidget.resolutionScale = value;
             }
         },
 
