@@ -667,6 +667,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScaleFactor : {
+            get : function() {
+                return this._cesiumWidget._resolutionScaleFactor;
+            },
+            set : function(value) {
+                this._cesiumWidget._resolutionScaleFactor = value;
+            }
+        },
+
+        /**
          * Gets or sets whether or not data sources can temporarily pause
          * animation in order to avoid showing an incomplete picture to the user.
          * For example, if asynchronous primitives are being processed in the
