@@ -406,7 +406,6 @@ define([
 
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -600,26 +599,6 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
-            }
-        },
-
-        /**
-         * Gets or sets the resolution scale factor. This value should always be
-         * set to Canvas.width / Canvas.clientWidth and updated when the Canvas
-         * is resized in order for primitives based in screen space to render
-         * at the correct size.
-         * @memberof Scene.prototype
-         * @type {Number}
-         */
-        resolutionScale : {
-            get : function() {
-                return this._resolutionScale;
-            },
-            set : function(value) {
-                if (value <= 0.0) {
-                    throw new DeveloperError('resolutionScale must be greater than 0.');
-                }
-                this._resolutionScale = value;
             }
         }
     });
@@ -1227,7 +1206,6 @@ define([
 
         var context = scene._context;
         us.update(context, frameState);
-        us.resolutionScale = scene._resolutionScale;
 
         scene._commandList.length = 0;
         scene._overlayCommandList.length = 0;

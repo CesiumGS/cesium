@@ -884,6 +884,9 @@ define([
         this._mode = frameState.mode;
         this._mapProjection = frameState.scene2D.projection;
 
+        var canvas = context._canvas;
+        this._resolutionScale = canvas.width / canvas.clientWidth;
+
         var camera = frameState.camera;
 
         setView(this, camera.viewMatrix);

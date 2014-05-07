@@ -174,7 +174,6 @@ define([
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
-            scene.resolutionScale = 1.0;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;
@@ -234,6 +233,7 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+            this._resolutionScale = 1.0;
             this._forceResize = false;
             this._lastFrameTime = undefined;
             this._targetFrameRate = undefined;
@@ -404,10 +404,10 @@ define([
          */
         resolutionScale : {
             get : function() {
-                return this._scene.resolutionScale;
+                return this._resolutionScale;
             },
             set : function(value) {
-                this._scene.resolutionScale = value;
+                this._resolutionScale = value;
                 this._forceResize = true;
             }
         }
@@ -511,8 +511,7 @@ define([
         }
         this._forceResize = false;
 
-        var scene = this._scene;
-        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * scene.resolutionScale;
+        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * this._resolutionScale;
 
         this._canvasWidth = width;
         this._canvasHeight = height;
@@ -527,7 +526,7 @@ define([
         this._canRender = canRender;
 
         if (canRender) {
-            var frustum = scene.camera.frustum;
+            var frustum = this._scene.camera.frustum;
             if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {
