@@ -33,10 +33,11 @@ define([
         this._fbo = undefined;
         this._command = undefined;
 
-        var clearCommand = new ClearCommand();
-        clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        clearCommand.depth = 1.0;
-        clearCommand.owner = this;
+        var clearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            owner : this
+        });
         this._clearCommand = clearCommand;
     };
 

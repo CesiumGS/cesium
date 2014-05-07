@@ -49,25 +49,22 @@ define([
         this._adjustTranslucentFBO = undefined;
         this._adjustAlphaFBO = undefined;
 
-        var opaqueClearCommand = new ClearCommand();
-        opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        opaqueClearCommand.owner = this;
-        this._opaqueClearCommand = opaqueClearCommand;
-
-        var translucentMRTClearCommand = new ClearCommand();
-        translucentMRTClearCommand.color = new Color(0.0, 0.0, 0.0, 1.0);
-        translucentMRTClearCommand.owner = this;
-        this._translucentMRTClearCommand = translucentMRTClearCommand;
-
-        var translucentMultipassClearCommand = new ClearCommand();
-        translucentMultipassClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        translucentMultipassClearCommand.owner = this;
-        this._translucentMultipassClearCommand = translucentMultipassClearCommand;
-
-        var alphaClearCommand= new ClearCommand();
-        alphaClearCommand.color = new Color(1.0, 1.0, 1.0, 1.0);
-        alphaClearCommand.owner = this;
-        this._alphaClearCommand = alphaClearCommand;
+        this._opaqueClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            owner : this
+        });
+        this._translucentMRTClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 1.0),
+            owner : this
+        });
+        this._translucentMultipassClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            owner : this
+        });
+        this._alphaClearCommand = new ClearCommand({
+            color : new Color(1.0, 1.0, 1.0, 1.0),
+            owner : this
+        });
 
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};

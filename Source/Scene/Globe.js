@@ -125,11 +125,11 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        var clearDepthCommand = new ClearCommand();
-        clearDepthCommand.depth = 1.0;
-        clearDepthCommand.stencil = 0;
-        clearDepthCommand.owner = this;
-        this._clearDepthCommand = clearDepthCommand;
+        this._clearDepthCommand = new ClearCommand({
+            depth : 1.0,
+            stencil : 0,
+            owner : this
+        });
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;

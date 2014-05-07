@@ -165,9 +165,10 @@ define([
             });
             fbo.destroyAttachments = false;
 
-            var clearCommand = new ClearCommand();
-            clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-            clearCommand.framebuffer = fbo;
+            var clearCommand = new ClearCommand({
+                color : new Color(0.0, 0.0, 0.0, 0.0),
+                framebuffer : fbo
+            });
 
             var rs = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)

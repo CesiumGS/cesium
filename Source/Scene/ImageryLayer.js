@@ -923,9 +923,10 @@ define([
         });
         reproject.framebuffer.destroyAttachments = false;
 
-        var command = new ClearCommand();
-        command.color = Color.BLACK;
-        command.framebuffer = reproject.framebuffer;
+        var command = new ClearCommand({
+            color : Color.BLACK,
+            framebuffer : reproject.framebuffer
+        });
         command.execute(context);
 
         if ((!defined(reproject.renderState)) ||

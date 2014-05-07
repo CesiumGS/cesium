@@ -2019,18 +2019,6 @@ define([
 
     var defaultClearCommand = new ClearCommand();
 
-    /**
-     * Executes the specified clear command.
-     *
-     * @memberof Context
-     *
-     * @param {ClearCommand} [clearCommand] The command with which to clear.
-     * @param {PassState} [passState] The state for the current rendering pass.
-     *
-     * @memberof Context
-     *
-     * @see ClearCommand
-     */
     Context.prototype.clear = function(clearCommand, passState) {
         clearCommand = defaultValue(clearCommand, defaultClearCommand);
         passState = defaultValue(passState, this._defaultPassState);

@@ -510,9 +510,10 @@ defineSuite([
 
         // 1 of 2.  Triangle fan passes the depth test.
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 0.0, 0.0, 0.0);
-        command.depth = 1.0;
+        var command = new ClearCommand({
+            color : new Color (0.0, 0.0, 0.0, 0.0),
+            depth : 1.0
+        });
         command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 

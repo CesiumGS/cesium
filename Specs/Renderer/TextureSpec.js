@@ -116,8 +116,9 @@ defineSuite([
     });
 
     it('can create a texture from the framebuffer', function() {
-        var command = new ClearCommand();
-        command.color = Color.RED;
+        var command = new ClearCommand({
+            color : Color.RED
+        });
         command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
@@ -141,8 +142,9 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
 
         // Clear to red
-        var command = new ClearCommand();
-        command.color = Color.RED;
+        var command = new ClearCommand({
+            color : Color.RED
+        });
         command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 

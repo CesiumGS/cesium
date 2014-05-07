@@ -111,11 +111,12 @@ define([
         var that = this;
 
         if (!defined(this._downSampleCommand)) {
-            this._clearFBO1Command = new ClearCommand();
-            this._clearFBO1Command.color = new Color();
-
-            this._clearFBO2Command = new ClearCommand();
-            this._clearFBO2Command.color = new Color();
+            this._clearFBO1Command = new ClearCommand({
+                color : new Color()
+            });
+            this._clearFBO2Command = new ClearCommand({
+                color : new Color()
+            });
 
             var rs;
             var uniformMap = {};

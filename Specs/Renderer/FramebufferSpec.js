@@ -144,9 +144,10 @@ defineSuite([
             colorTextures : [colorTexture]
         });
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 1.0, 0.0, 1.0);
-        command.framebuffer = framebuffer;
+        var command = new ClearCommand({
+            color : new Color (0.0, 1.0, 0.0, 1.0),
+            framebuffer : framebuffer
+        });
         command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
@@ -190,9 +191,10 @@ defineSuite([
         });
         framebuffer.destroyAttachments = false;
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 1.0, 0.0, 1.0);
-        command.framebuffer = framebuffer;
+        var command = new ClearCommand({
+            color : new Color (0.0, 1.0, 0.0, 1.0),
+            framebuffer : framebuffer
+        });
         command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
@@ -388,10 +390,11 @@ defineSuite([
         }]);
 
         // 1 of 3.  Clear framebuffer
-        var command = new ClearCommand();
-        command.color = new Color(0.0, 0.0, 0.0, 0.0);
-        command.depth = 1.0;
-        command.framebuffer = framebuffer;
+        var command = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            framebuffer : framebuffer
+        });
         command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
@@ -488,9 +491,10 @@ defineSuite([
             expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
             // 5 of 5. Verify clearing multiple color attachments
-            var command = new ClearCommand();
-            command.color = new Color (0.0, 0.0, 0.0, 0.0);
-            command.framebuffer = framebuffer;
+            var command = new ClearCommand({
+                color : new Color (0.0, 0.0, 0.0, 0.0),
+                framebuffer : framebuffer
+            });
             command.execute(context);
 
             context.draw({

@@ -767,8 +767,9 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
 
         // Clear framebuffer to red and copy to +X face
-        var command = new ClearCommand();
-        command.color = new Color (1.0, 0.0, 0.0, 1.0);
+        var command = new ClearCommand({
+            color : new Color (1.0, 0.0, 0.0, 1.0)
+        });
 
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);

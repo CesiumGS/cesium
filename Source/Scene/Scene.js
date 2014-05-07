@@ -158,14 +158,14 @@ define([
 
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.color = new Color();
-        this._clearColorCommand.owner = this;
-
-        var depthClearCommand = new ClearCommand();
-        depthClearCommand.depth = 1.0;
-        depthClearCommand.owner = this;
-        this._depthClearCommand = depthClearCommand;
+        this._clearColorCommand = new ClearCommand({
+            color : new Color(),
+            owner : this
+        });
+        this._depthClearCommand = new ClearCommand({
+            depth : 1.0,
+            owner : this
+        });
 
         this._transitioner = new SceneTransitioner(this);
 
