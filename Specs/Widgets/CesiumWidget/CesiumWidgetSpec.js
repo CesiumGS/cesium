@@ -183,6 +183,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('can set resolutionScale', function() {
+        widget = new CesiumWidget(container);
+        widget.resolutionScale = 0.5;
+        expect(widget.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.resolutionScale = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');

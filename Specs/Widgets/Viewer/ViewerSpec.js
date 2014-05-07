@@ -369,6 +369,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('can set resolutionScale', function() {
+        viewer = new Viewer(container);
+        viewer.resolutionScale = 0.5;
+        expect(viewer.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.resolutionScale = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);

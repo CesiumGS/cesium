@@ -407,6 +407,9 @@ define([
                 return this._resolutionScale;
             },
             set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('resolutionScale must be greater than 0.');
+                }
                 this._resolutionScale = value;
                 this._forceResize = true;
             }
