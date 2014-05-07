@@ -194,4 +194,79 @@ defineSuite([
 
         expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
     });
+
+    it('the low frame rate message goes away after the warmup period if the frame rate returns to nominal', function() {
+        viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 10,
+            minimumFrameRateAfterWarmup : 10
+        });
+
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        spinWait(2);
+
+        // Rendering again records our first sample.
+        scene.render();
+
+        // Wait 120 millseconds, which is over the maximum frame time allowed by this instance.
+        spinWait(120);
+
+        // Record our second sample.  The watchdog should notice that our frame rate is too low.
+        scene.render();
+        expect(viewModel.showingLowFrameRateMessage).toBe(true);
+
+        // Render as fast as possible for a samplingWindow, quietPeriod, and warmupPeriod.
+        var endTime = getTimestamp() + 4;
+        while (getTimestamp() < endTime) {
+            scene.render();
+        }
+
+        // The low frame rate message should have gone away.
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+    });
+
+    it('does not show the low frame rate message again once it is dismissed', function() {
+        viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        spinWait(2);
+
+        // Rendering again records our first sample.
+        scene.render();
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        spinWait(2);
+
+        // Record our second sample.  The watchdog should notice that our frame rate is too low.
+        scene.render();
+        expect(viewModel.showingLowFrameRateMessage).toBe(true);
+
+        viewModel.dismissMessage();
+
+        // Render several slow frames.  The message should not re-appear.
+        scene.render();
+        spinWait(2);
+        scene.render();
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+    });
 }, 'WebGL');

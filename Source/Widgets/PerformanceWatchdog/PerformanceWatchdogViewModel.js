@@ -260,15 +260,7 @@ define([
                     if (defined(viewModel.redirectOnLowFrameRateUrl)) {
                         redirectToUrl(viewModel.redirectOnLowFrameRateUrl);
                     } else {
-                        if (defined(viewModel.lowFrameRateCallback)) {
-                            viewModel.lowFrameRateCallback(viewModel._scene);
-                        }
-
-                        if (defined(viewModel.lowFrameRateMessage)) {
-                            viewModel.showingLowFrameRateMessage = true;
-                        }
-
-                        viewModel.notifiedOfLowFrameRate = true;
+                        viewModel.showingLowFrameRateMessage = true;
                         viewModel._needsQuietPeriod = true;
                     }
                 } else if (viewModel.showingLowFrameRateMessage) {
@@ -288,7 +280,7 @@ define([
     }
 
     function shouldDoPerformanceTracking(viewModel) {
-        return !viewModel.lowFrameRateMessageDismissed && !viewModel.showingMessage && !document[viewModel._hiddenPropertyName];
+        return !viewModel.lowFrameRateMessageDismissed && !document[viewModel._hiddenPropertyName];
     }
 
     return PerformanceWatchdogViewModel;
