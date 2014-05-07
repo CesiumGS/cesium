@@ -35,7 +35,6 @@ define([
         './TextureWrap',
         './UniformState',
         './VertexArray',
-        './VertexLayout',
         './ClearCommand',
         './PassState',
         '../Shaders/ViewportQuadVS'
@@ -75,7 +74,6 @@ define([
         TextureWrap,
         UniformState,
         VertexArray,
-        VertexLayout,
         ClearCommand,
         PassState,
         ViewportQuadVS) {
@@ -2279,7 +2277,7 @@ define([
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
      *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
-     *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
+     *   <li><code>interleave</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>false</code>.</li>
      * </ul>
      * <br />
      * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
@@ -2316,7 +2314,7 @@ define([
      *     geometry           : geometry,
      *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      *     bufferUsage        : BufferUsage.STATIC_DRAW,
-     *     vertexLayout       : VertexLayout.INTERLEAVED
+     *     interleave         : true
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2332,7 +2330,7 @@ define([
         var bufferUsage = defaultValue(options.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
         var attributeLocations = defaultValue(options.attributeLocations, defaultValue.EMPTY_OBJECT);
-        var interleave = (defined(options.vertexLayout)) && (options.vertexLayout === VertexLayout.INTERLEAVED);
+        var interleave = defaultValue(options.interleave, false);
         var createdVAAttributes = options.vertexArrayAttributes;
 
         var name;
@@ -2463,7 +2461,8 @@ define([
                     position : 0,
                     textureCoordinates : 1
                 },
-                bufferUsage : BufferUsage.STATIC_DRAW
+                bufferUsage : BufferUsage.STATIC_DRAW,
+                interleave : true
             });
 
             this.cache.viewportQuad_vertexArray = vertexArray;

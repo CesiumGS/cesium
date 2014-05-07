@@ -9,6 +9,7 @@ define([
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/BoundingSphere',
+        '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -29,6 +30,7 @@ define([
         destroyObject,
         Matrix4,
         BoundingSphere,
+        VertexFormat,
         CullFace,
         BlendingState,
         BufferUsage,
@@ -242,13 +244,15 @@ define([
         }
 
         var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
-            dimensions : new Cartesian3(2.0, 2.0, 2.0)
+            dimensions : new Cartesian3(2.0, 2.0, 2.0),
+            vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
         vertexArray = context.createVertexArrayFromGeometry({
-            geometry: geometry,
-            attributeLocations: attributeLocations,
-            bufferUsage: BufferUsage.STATIC_DRAW
+            geometry : geometry,
+            attributeLocations : attributeLocations,
+            bufferUsage : BufferUsage.STATIC_DRAW,
+            interleave : true
         });
 
         context.cache.ellipsoidPrimitive_vertexArray = vertexArray;

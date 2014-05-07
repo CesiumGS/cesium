@@ -9,8 +9,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/VertexLayout'
+         'Renderer/ClearCommand'
      ], 'Renderer/VertexArrayFactory', function(
          createContext,
          destroyContext,
@@ -21,8 +20,7 @@ defineSuite([
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
-         ClearCommand,
-         VertexLayout) {
+         ClearCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -51,7 +49,7 @@ defineSuite([
 
     it('creates with no geometry', function() {
         va = context.createVertexArrayFromGeometry({
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
         expect(va.numberOfAttributes).toEqual(0);
         expect(va.indexBuffer).not.toBeDefined();
@@ -102,7 +100,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED,
+            interleave : true,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -181,7 +179,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(2);
@@ -226,7 +224,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(2);
@@ -277,7 +275,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(3);
@@ -338,7 +336,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(32); // No per-vertex padding needed
@@ -413,7 +411,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(4);
@@ -481,7 +479,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 32); // Includes 3 byte per-vertex padding
@@ -589,7 +587,7 @@ defineSuite([
         expect(function() {
             return context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                vertexLayout : VertexLayout.INTERLEAVED
+                interleave : true
             });
         }).toThrow();
     });

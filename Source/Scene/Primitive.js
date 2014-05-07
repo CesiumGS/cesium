@@ -22,7 +22,6 @@ define([
         '../Renderer/CullFace',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
-        '../Renderer/VertexLayout',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -50,7 +49,6 @@ define([
         CullFace,
         DrawCommand,
         Pass,
-        VertexLayout,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -705,7 +703,7 @@ define([
                     geometry : geometry,
                     attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW,
-                    vertexLayout : VertexLayout.INTERLEAVED,
+                    interleave : true,
                     vertexArrayAttributes : attributes
                 }));
             }

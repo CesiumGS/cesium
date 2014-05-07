@@ -8,6 +8,7 @@ define([
         '../Core/destroyObject',
         '../Core/GeometryPipeline',
         '../Core/Ellipsoid',
+        '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/CullFace',
@@ -25,6 +26,7 @@ define([
         destroyObject,
         GeometryPipeline,
         Ellipsoid,
+        VertexFormat,
         BufferUsage,
         DrawCommand,
         CullFace,
@@ -144,7 +146,8 @@ define([
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025),
                 slicePartitions : 256,
-                stackPartitions : 256
+                stackPartitions : 256,
+                vertexFormat : VertexFormat.POSITION_ONLY
             }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
