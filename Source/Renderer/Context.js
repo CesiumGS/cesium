@@ -2274,7 +2274,7 @@ define([
      * <br /><br />
      * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
      * <br /><br />
-     * <code>creationArguments</code> can have four properties:
+     * <code>options</code> can have four properties:
      * <ul>
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
      *   <li><code>attributeLocations</code>:  An object that maps geometry attribute names to vertex shader attribute locations.</li>
@@ -2282,11 +2282,11 @@ define([
      *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
      * <br />
-     * If <code>creationArguments</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
+     * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
      *
      * @memberof Context
      *
-     * @param {Object} [creationArguments=undefined] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
+     * @param {Object} [options=undefined] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
      *
      * @exception {RuntimeError} Each attribute list must have the same number of vertices.
      * @exception {DeveloperError} The geometry must have zero or one index lists.
@@ -2325,15 +2325,15 @@ define([
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
      */
-    Context.prototype.createVertexArrayFromGeometry = function(creationArguments) {
-        var ca = defaultValue(creationArguments, defaultValue.EMPTY_OBJECT);
-        var geometry = defaultValue(ca.geometry, defaultValue.EMPTY_OBJECT);
+    Context.prototype.createVertexArrayFromGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var geometry = defaultValue(options.geometry, defaultValue.EMPTY_OBJECT);
 
-        var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
+        var bufferUsage = defaultValue(options.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
-        var attributeLocations = defaultValue(ca.attributeLocations, defaultValue.EMPTY_OBJECT);
-        var interleave = (defined(ca.vertexLayout)) && (ca.vertexLayout === VertexLayout.INTERLEAVED);
-        var createdVAAttributes = ca.vertexArrayAttributes;
+        var attributeLocations = defaultValue(options.attributeLocations, defaultValue.EMPTY_OBJECT);
+        var interleave = (defined(options.vertexLayout)) && (options.vertexLayout === VertexLayout.INTERLEAVED);
+        var createdVAAttributes = options.vertexArrayAttributes;
 
         var name;
         var attribute;
