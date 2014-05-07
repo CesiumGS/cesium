@@ -57,7 +57,7 @@ require(['Cesium'], function(Cesium) {
             camera.transform = transform;
             camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             var controller = scene.screenSpaceCameraController;
-            controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
+            controller.globe = Cesium.Ellipsoid.UNIT_SPHERE;
             controller.enableTilt = false;
             var r = 1.25 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.25;
