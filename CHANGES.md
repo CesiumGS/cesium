@@ -11,6 +11,7 @@ Beta Releases
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
+* Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size. Also added `czm_resolutionScale` automatic GLSL uniform.
 
 ### b28 - 2014-05-01
 
