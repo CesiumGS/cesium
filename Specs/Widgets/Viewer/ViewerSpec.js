@@ -355,6 +355,20 @@ defineSuite([
         expect(viewer.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        viewer = new Viewer(container, {
+            targetFrameRate : 23
+        });
+        expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);

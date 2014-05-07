@@ -11,6 +11,7 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/Event',
         '../../Core/formatError',
+        '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
@@ -35,6 +36,7 @@ define([
         Ellipsoid,
         Event,
         formatError,
+        getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
@@ -55,6 +57,7 @@ define([
 
     function startRenderLoop(widget) {
         widget._renderLoopRunning = true;
+        widget._lastFrameTime = getTimestamp();
 
         function render() {
             if (widget.isDestroyed()) {
@@ -62,9 +65,24 @@ define([
             }
 
             if (widget._useDefaultRenderLoop) {
-                widget.resize();
-                widget.render();
-                requestAnimationFrame(render);
+                var targetFrameRate = widget._targetFrameRate;
+                if (!defined(targetFrameRate)) {
+                    widget.resize();
+                    widget.render();
+                    requestAnimationFrame(render);
+                } else {
+                    var lastFrameTime = widget._lastFrameTime;
+                    var interval = 1000.0 / targetFrameRate;
+                    var now = getTimestamp();
+                    var delta = now - lastFrameTime;
+
+                    if (delta > interval) {
+                        widget.resize();
+                        widget.render();
+                        widget._lastFrameTime = now - (delta % interval);
+                    }
+                    requestAnimationFrame(render);
+                }
             } else {
                 widget._renderLoopRunning = false;
             }
@@ -89,6 +107,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      *
@@ -222,6 +241,8 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+            this._lastFrameTime = undefined;
+            this._targetFrameRate = undefined;
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -233,6 +254,7 @@ define([
             }
 
             this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+            this.targetFrameRate = options.targetFrameRate;
 
             var that = this;
             scene.renderError.addEventListener(function(scene, error) {
@@ -322,6 +344,27 @@ define([
         screenSpaceEventHandler : {
             get : function() {
                 return this._screenSpaceEventHandler;
+            }
+        },
+
+        /**
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no affect.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Number}
+         */
+        targetFrameRate : {
+            get : function() {
+                return this._targetFrameRate;
+            },
+            set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('targetFrameRate must be greater than 0.');
+                }
+                this._targetFrameRate = value;
             }
         },
 
