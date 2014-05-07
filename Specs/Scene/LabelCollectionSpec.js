@@ -891,7 +891,7 @@ defineSuite([
                 position : Cartesian3.ZERO
             });
             labels.update(context, frameState, []);
-            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas, resolutionScale : 1};
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
             expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
         });
 
@@ -903,7 +903,7 @@ defineSuite([
                 pixelOffset : new Cartesian2(1.0, 2.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas, resolutionScale : 1};
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
             expect(label.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
         });
 
@@ -915,7 +915,7 @@ defineSuite([
                 eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
             });
             labels.update(context, frameState, []);
-            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas, resolutionScale : 1};
+            var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
             var p = label.computeScreenSpacePosition(fakeScene);
             expect(p.x).toBeGreaterThan(0.5);
             expect(p.y).toBeGreaterThan(0.5);
