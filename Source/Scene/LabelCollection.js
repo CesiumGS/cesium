@@ -202,7 +202,7 @@ define([
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
 
-    function repositionAllGlyphs(label) {
+    function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;
@@ -227,7 +227,7 @@ define([
             widthOffset -= totalWidth * scale;
         }
 
-        glyphPixelOffset.x = widthOffset;
+        glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
         var verticalOrigin = label._verticalOrigin;
@@ -243,11 +243,13 @@ define([
                 glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
+            glyphPixelOffset.y *= resolutionScale;
+
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
-            glyphPixelOffset.x += dimensions.width * scale;
+            glyphPixelOffset.x += dimensions.width * scale * resolutionScale;
         }
     }
 
@@ -315,6 +317,7 @@ define([
         this._labels = [];
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
+        this._resolutionScale = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -566,7 +569,18 @@ define([
             billboardCollection.textureAtlas = this._textureAtlas;
         }
 
-        var labelsToUpdate = this._labelsToUpdate;
+        var uniformState = context.uniformState;
+        var resolutionScale = uniformState.resolutionScale;
+        var resolutionChanged = this._resolutionScale !== resolutionScale;
+        this._resolutionScale = resolutionScale;
+
+        var labelsToUpdate;
+        if (resolutionChanged) {
+            labelsToUpdate = this._labels;
+        } else {
+            labelsToUpdate = this._labelsToUpdate;
+        }
+
         for (var i = 0, len = labelsToUpdate.length; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
@@ -580,16 +594,16 @@ define([
                 label._rebindAllGlyphs = false;
             }
 
-            if (label._repositionAllGlyphs) {
-                repositionAllGlyphs(label);
+            if (resolutionChanged || label._repositionAllGlyphs) {
+                repositionAllGlyphs(label, resolutionScale);
                 label._repositionAllGlyphs = false;
             }
 
             var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
             this._totalGlyphCount += glyphCountDifference;
         }
-        labelsToUpdate.length = 0;
 
+        this._labelsToUpdate.length = 0;
         billboardCollection.update(context, frameState, commandList);
     };
 

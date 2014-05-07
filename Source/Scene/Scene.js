@@ -406,7 +406,7 @@ define([
 
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
-        this._resolutionScale = 1.0;
+        this._resolutionScale = canvas.width / canvas.clientWidth;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -604,16 +604,12 @@ define([
         },
 
         /**
-         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
-         * performance on less powerful devices while values greater than 1.0 will render at a higher
-         * resolution and then scale down, resulting in improved visual fidelity.
-         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
-         * will cause the scene to be rendered at 320x240 and then scaled up while setting
-         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * Gets or sets the resolution scale factor. This value should always be
+         * set to Canvas.width / Canvas.clientWidth and updated when the Canvas
+         * is resized in order for primitives based in screen space to render
+         * at the correct size.
          * @memberof Scene.prototype
-         *
          * @type {Number}
-         * @default 1.0
          */
         resolutionScale : {
             get : function() {

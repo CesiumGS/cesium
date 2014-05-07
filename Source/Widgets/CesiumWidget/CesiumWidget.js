@@ -140,14 +140,6 @@ define([
         this._element = widgetNode;
 
         try {
-            if (defined(document.createElementNS)) {
-                var svgNS = "http://www.w3.org/2000/svg";
-                var zoomDetector = document.createElementNS(svgNS, 'svg');
-                zoomDetector.style.display = 'none';
-                widgetNode.appendChild(zoomDetector);
-                this._zoomDetector = zoomDetector;
-            }
-
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
                 return false;
@@ -163,6 +155,7 @@ define([
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.resolutionScale = 1.0;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;
@@ -476,18 +469,7 @@ define([
         this._forceResize = false;
 
         var scene = this._scene;
-        var zoomFactor;
-        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
-            // prefer devicePixelRatio if available.
-            zoomFactor = window.devicePixelRatio * scene.resolutionScale;
-        } else if (this._zoomDetector.currentScale !== 1) {
-            // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
-            // our SVG's currentScale property does.
-            zoomFactor = this._zoomDetector.currentScale * scene.resolutionScale;
-        } else {
-            // otherwise we don't know.
-            zoomFactor = scene.resolutionScale;
-        }
+        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * scene.resolutionScale;
 
         this._canvasWidth = width;
         this._canvasHeight = height;
