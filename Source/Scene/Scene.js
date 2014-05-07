@@ -141,7 +141,7 @@ define([
         this._primitives = new CompositePrimitive();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
 
@@ -1187,7 +1187,7 @@ define([
 
         this._animations.update();
         this._camera.update(this.mode, this.scene2D);
-        this._screenSpaceCameraController.update(this.mode);
+        this._screenSpaceCameraController.update(this._frameState);
     };
 
     function render(scene, time) {
