@@ -170,9 +170,10 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {BoundingSphere} sphere The sphere.
+     * @param {Object} [result] The result onto which to store the result.
      * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
      */
-    IntersectionTests.raySphere = function(ray, sphere) {
+    IntersectionTests.raySphere = function(ray, sphere, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required.');
@@ -181,6 +182,10 @@ define([
             throw new DeveloperError('sphere is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = {};
+        }
 
         var origin = ray.origin;
         var direction = ray.direction;
@@ -212,16 +217,14 @@ define([
             }
 
             if (root0 < root1) {
-                return {
-                    start : root0,
-                    stop : root1
-                };
+                result.start = root0;
+                result.stop = root1;
+            } else {
+                result.start = root1;
+                result.stop = root0;
             }
 
-            return {
-                start : root1,
-                stop : root0
-            };
+            return result;
         }
 
         var root = -b / (2.0 * a);
@@ -229,10 +232,8 @@ define([
             return undefined;
         }
 
-        return {
-            start : root,
-            stop : root
-        };
+        result.start = result.stop = root;
+        return result;
     };
 
     var scratchQ = new Cartesian3();

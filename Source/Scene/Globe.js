@@ -292,6 +292,20 @@ define([
         }
     });
 
+    /**
+     * Find an intersection between a ray and the globe.
+     * @memberof Globe
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection of <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.pick(ray, scene.frameState);
+     */
     Globe.prototype.pick = function(ray, frameState, result) {
         return this._surface.pick(ray, frameState, result);
     };

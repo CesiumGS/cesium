@@ -259,15 +259,33 @@ define([
 
     function createComparePickTileFunction(rayOrigin) {
         return function(a, b) {
-            var aDist = BoundingSphere.distanceSquaredTo(a.boundingSphere, rayOrigin);
-            var bDist = BoundingSphere.distanceSquaredTo(b.boundingSphere, rayOrigin);
+            var aDist = BoundingSphere.distanceSquaredTo(a.pickBoundingSphere, rayOrigin);
+            var bDist = BoundingSphere.distanceSquaredTo(b.pickBoundingSphere, rayOrigin);
 
             return aDist - bDist;
         };
     }
 
     var scratchSphereIntersections = [];
+    var scratchSphereIntersectionResult = {
+        start : 0.0,
+        stop : 0.0
+    };
 
+    /**
+     * Find an intersection between a ray and the globe surface.
+     * @memberof GlobeSurface
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection of <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = surface.pick(ray, scene.frameState);
+     */
     GlobeSurface.prototype.pick = function(ray, frameState, result) {
         var sphereIntersections = scratchSphereIntersections;
         sphereIntersections.length = 0;
@@ -286,7 +304,7 @@ define([
             for (var j = 0; j < tileSet.length; ++j) {
                 tile = tileSet[j];
 
-                var boundingVolume = new BoundingSphere();
+                var boundingVolume = tile.pickBoundingSphere;
                 if (frameState.mode !== SceneMode.SCENE3D) {
                     BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                     Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
@@ -294,12 +312,9 @@ define([
                     BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
                 }
 
-                var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume);
+                var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
                 if (defined(boundingSphereIntersection)) {
-                    sphereIntersections.push({
-                        tile : tile,
-                        boundingSphere : boundingVolume
-                    });
+                    sphereIntersections.push(tile);
                 }
             }
         }
@@ -309,7 +324,7 @@ define([
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].tile.pick(ray, frameState, result);
+            intersection = sphereIntersections[i].pick(ray, frameState, result);
             if (defined(intersection)) {
                 break;
             }

@@ -230,6 +230,11 @@ define([
             eventType : CameraEventType.LEFT_DRAG,
             modifier : KeyboardEventModifier.SHIFT
         };
+        /**
+         * The minimum height the camera must be before testing for intersection with the terrain instead of the ellipsoid.
+         * @type {Number}
+         * @default 150000.0
+         */
         this.minimumTerrainHeight = 150000.0;
 
         this._scene = scene;
@@ -545,12 +550,15 @@ define([
     var translateCVStartPos = new Cartesian3();
     var translateCVEndPos = new Cartesian3();
     var translatCVDifference = new Cartesian3();
+    var translateCVOrigin = new Cartesian3();
+    var translateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+
     function translateCV(controller, movement) {
         var camera = controller._camera;
         var startRay = camera.getPickRay(movement.startPosition, translateCVStartRay);
         var endRay = camera.getPickRay(movement.endPosition, translateCVEndRay);
 
-        var origin = Cartesian3.clone(Cartesian3.ZERO);
+        var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
         var startPlanePos;
@@ -558,7 +566,7 @@ define([
         if (controller._camera.position.z < controller.minimumTerrainHeight) {
             var scene = controller._scene;
             var globe = scene.globe;
-            startPlanePos = globe.pick(startRay, scene.frameState);
+            startPlanePos = globe.pick(startRay, scene.frameState, translateCVStartPos);
 
             if (defined(startPlanePos)) {
                 origin.x = startPlanePos.x;
@@ -574,8 +582,8 @@ define([
             Cartesian3.add(position, startPlanePos, startPlanePos);
         }
 
-        var plane = Plane.fromPointNormal(origin, normal);
-        var endPlanePos = IntersectionTests.rayPlane(endRay, plane);
+        var plane = Plane.fromPointNormal(origin, normal, translateCVPlane);
+        var endPlanePos = IntersectionTests.rayPlane(endRay, plane, translateCVEndPos);
 
         if (!defined(startPlanePos) || !defined(endPlanePos)) {
             return;
@@ -613,7 +621,7 @@ define([
         if (controller._camera.position.z < controller.minimumTerrainHeight) {
             var scene = controller._scene;
             var globe = scene.globe;
-            center = globe.pick(ray, scene.frameState);
+            center = globe.pick(ray, scene.frameState, rotateCVCenter);
         }
 
         if (!defined(center)) {
@@ -683,21 +691,27 @@ define([
 
     var spin3DPick = new Cartesian3();
     var scratchStartRay = new Ray();
+    var scratchCartographic = new Cartographic();
+    var scratchMousePos = new Cartesian3();
+    var scratchRadii = new Cartesian3();
+    var scratchEllipsoid = new Ellipsoid();
 
     function spin3D(controller, movement) {
         if (defined(controller._camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
-            var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC).height;
+            var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC, scratchCartographic).height;
             if (height < controller.minimumTerrainHeight) {
                 var scene = controller._scene;
                 var globe = scene.globe;
 
                 var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
-                var mousePos = globe.pick(startRay, scene.frameState);
+                var mousePos = globe.pick(startRay, scene.frameState, scratchMousePos);
                 if (!defined(mousePos)) {
                     pan3D(controller, movement, controller._ellipsoid);
                 } else {
                     var magnitude = Cartesian3.magnitude(mousePos);
-                    var ellipsoid = new Ellipsoid(magnitude, magnitude, magnitude);
+                    var radii = scratchRadii;
+                    radii.x = radii.y = radii.z = magnitude;
+                    var ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
                     pan3D(controller, movement, ellipsoid);
                 }
             } else {
@@ -932,7 +946,7 @@ define([
         if (height < controller.minimumTerrainHeight) {
             var scene = controller._scene;
             var globe = scene.globe;
-            center = globe.pick(ray, scene.frameState);
+            center = globe.pick(ray, scene.frameState, tilt3DCenter);
         }
 
         if (!defined(center)) {

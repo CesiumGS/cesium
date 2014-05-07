@@ -236,6 +236,8 @@ define([
 
         this.loadedTerrain = undefined;
         this.upsampledTerrain = undefined;
+
+        this.pickBoundingSphere = new BoundingSphere();
     };
 
     defineProperties(Tile.prototype, {
