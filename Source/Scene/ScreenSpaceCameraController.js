@@ -549,19 +549,37 @@ define([
         var camera = controller._camera;
         var startRay = camera.getPickRay(movement.startPosition, translateCVStartRay);
         var endRay = camera.getPickRay(movement.endPosition, translateCVEndRay);
+
+        var origin = Cartesian3.clone(Cartesian3.ZERO);
         var normal = Cartesian3.UNIT_X;
 
-        var position = startRay.origin;
-        var direction = startRay.direction;
-        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-        var startPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVStartPos);
-        Cartesian3.add(position, startPlanePos, startPlanePos);
+        var startPlanePos;
 
-        position = endRay.origin;
-        direction = endRay.direction;
-        scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-        var endPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVEndPos);
-        Cartesian3.add(position, endPlanePos, endPlanePos);
+        if (controller._camera.position.z < controller.minimumTerrainHeight) {
+            var scene = controller._scene;
+            var globe = scene.globe;
+            startPlanePos = globe.pick(startRay, scene.frameState);
+
+            if (defined(startPlanePos)) {
+                origin.x = startPlanePos.x;
+            }
+        }
+
+        if (!defined(startPlanePos)) {
+            var position = startRay.origin;
+            var direction = startRay.direction;
+
+            var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+            startPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVStartPos);
+            Cartesian3.add(position, startPlanePos, startPlanePos);
+        }
+
+        var plane = Plane.fromPointNormal(origin, normal);
+        var endPlanePos = IntersectionTests.rayPlane(endRay, plane);
+
+        if (!defined(startPlanePos) || !defined(endPlanePos)) {
+            return;
+        }
 
         var diff = Cartesian3.subtract(startPlanePos, endPlanePos, translatCVDifference);
         var temp = diff.x;
