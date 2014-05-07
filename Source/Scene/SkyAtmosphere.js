@@ -7,7 +7,6 @@ define([
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
         '../Core/GeometryPipeline',
-        '../Core/PrimitiveType',
         '../Core/Ellipsoid',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -25,7 +24,6 @@ define([
         EllipsoidGeometry,
         destroyObject,
         GeometryPipeline,
-        PrimitiveType,
         Ellipsoid,
         BufferUsage,
         DrawCommand,
@@ -67,8 +65,9 @@ define([
         this.show = true;
 
         this._ellipsoid = ellipsoid;
-        this._command = new DrawCommand();
-        this._command.owner = this;
+        this._command = new DrawCommand({
+            owner : this
+        });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
@@ -152,7 +151,6 @@ define([
                 attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
-            command.primitiveType = PrimitiveType.TRIANGLES;
             command.renderState = context.createRenderState({
                 cull : {
                     enabled : true,

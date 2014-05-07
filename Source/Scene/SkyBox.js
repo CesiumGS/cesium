@@ -9,7 +9,6 @@ define([
         '../Core/Matrix4',
         '../Core/GeometryPipeline',
         '../Core/VertexFormat',
-        '../Core/PrimitiveType',
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -27,7 +26,6 @@ define([
         Matrix4,
         GeometryPipeline,
         VertexFormat,
-        PrimitiveType,
         loadCubeMap,
         BufferUsage,
         DrawCommand,
@@ -85,8 +83,10 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this._command = new DrawCommand();
-        this._command.owner = this;
+        this._command = new DrawCommand({
+            modelMatrix : Matrix4.clone(Matrix4.IDENTITY),
+            owner : this
+        });
         this._cubeMap = undefined;
     };
 
@@ -165,8 +165,6 @@ define([
             }));
             var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
-            command.primitiveType = PrimitiveType.TRIANGLES;
-            command.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry: geometry,
                 attributeLocations: attributeLocations,

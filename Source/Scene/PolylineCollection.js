@@ -13,7 +13,6 @@ define([
         '../Core/Math',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Core/Intersect',
         '../Renderer/BlendingState',
@@ -41,7 +40,6 @@ define([
         CesiumMath,
         ComponentDatatype,
         IndexDatatype,
-        PrimitiveType,
         BoundingSphere,
         Intersect,
         BlendingState,
@@ -512,8 +510,9 @@ define([
                             var translucent = currentMaterial.isTranslucent();
 
                             if (commandIndex >= commandsLength) {
-                                command = new DrawCommand();
-                                command.owner = polylineCollection;
+                                command = new DrawCommand({
+                                    owner : polylineCollection
+                                });
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -523,7 +522,6 @@ define([
 
                             command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
-                            command.primitiveType = PrimitiveType.TRIANGLES;
                             command.shaderProgram = sp;
                             command.vertexArray = va.va;
                             command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
@@ -579,8 +577,9 @@ define([
 
                 if (defined(currentId) && count > 0) {
                     if (commandIndex >= commandsLength) {
-                        command = new DrawCommand();
-                        command.owner = polylineCollection;
+                        command = new DrawCommand({
+                            owner : polylineCollection
+                        });
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
@@ -590,7 +589,6 @@ define([
 
                     command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
-                    command.primitiveType = PrimitiveType.TRIANGLES;
                     command.shaderProgram = sp;
                     command.vertexArray = va.va;
                     command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;

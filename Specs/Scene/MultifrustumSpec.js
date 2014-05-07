@@ -13,7 +13,6 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/GeometryPipeline',
-         'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
          'Renderer/DrawCommand',
@@ -35,7 +34,6 @@ defineSuite([
          CesiumMath,
          Matrix4,
          GeometryPipeline,
-         PrimitiveType,
          BlendingState,
          BufferUsage,
          DrawCommand,
@@ -258,18 +256,16 @@ defineSuite([
                 });
             }
 
-            var command = new DrawCommand();
-            command.primitiveType = PrimitiveType.TRIANGLES;
-            command.renderState = this._rs;
-            command.shaderProgram = this._sp;
-            command.vertexArray = this._va;
-            command.uniformMap = this._um;
-            command.modelMatrix = this._modelMatrix;
-            command.executeInClosestFrustum = closestFrustum;
-            command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
-            command.pass = Pass.OPAQUE;
-
-            commandList.push(command);
+            commandList.push(new DrawCommand({
+                renderState : this._rs,
+                shaderProgram : this._sp,
+                vertexArray : this._va,
+                uniformMap : this._um,
+                modelMatrix : this._modelMatrix,
+                executeInClosestFrustum : closestFrustum,
+                boundingVolume : bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined,
+                pass : Pass.OPAQUE
+            }));
         };
 
         Primitive.prototype.destroy = function() {

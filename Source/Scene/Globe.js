@@ -131,20 +131,19 @@ define([
             owner : this
         });
 
-        this._depthCommand = new DrawCommand();
-        this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
-        this._depthCommand.pass = Pass.OPAQUE;
-        this._depthCommand.owner = this;
-
-        this._northPoleCommand = new DrawCommand();
-        this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._northPoleCommand.pass = Pass.OPAQUE;
-        this._northPoleCommand.owner = this;
-        this._southPoleCommand = new DrawCommand();
-        this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand.pass = Pass.OPAQUE;
-        this._southPoleCommand.owner = this;
+        this._depthCommand = new DrawCommand({
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._northPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._southPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;

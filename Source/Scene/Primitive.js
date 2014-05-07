@@ -838,10 +838,11 @@ define([
                 if (twoPasses) {
                     colorCommand = colorCommands[i];
                     if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand();
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : this,
+                            primitiveType : this._primitiveType
+                        });
                     }
-                    colorCommand.owner = this;
-                    colorCommand.primitiveType = this._primitiveType;
                     colorCommand.vertexArray = this._va[vaIndex];
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
@@ -853,10 +854,11 @@ define([
 
                 colorCommand = colorCommands[i];
                 if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand();
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : this,
+                        primitiveType : this._primitiveType
+                    });
                 }
-                colorCommand.owner = this;
-                colorCommand.primitiveType = this._primitiveType;
                 colorCommand.vertexArray = this._va[vaIndex];
                 colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
@@ -865,10 +867,11 @@ define([
 
                 pickCommand = pickCommands[m];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[m] = new DrawCommand();
+                    pickCommand = pickCommands[m] = new DrawCommand({
+                        owner : this,
+                        primitiveType : this._primitiveType
+                    });
                 }
-                pickCommand.owner = this;
-                pickCommand.primitiveType = this._primitiveType;
                 pickCommand.vertexArray = this._va[vaIndex];
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;

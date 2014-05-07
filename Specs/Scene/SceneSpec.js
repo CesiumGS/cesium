@@ -156,9 +156,10 @@ defineSuite([
     }
 
     it('debugCommandFilter filters commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -173,9 +174,10 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -187,11 +189,12 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            debugShowBoundingVolume : true,
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.debugShowBoundingVolume = true;
-        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -201,12 +204,13 @@ defineSuite([
     });
 
     it('debugShowCommands tints commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            shaderProgram : scene._context.shaderCache.getShaderProgram(
+                'void main() { gl_Position = vec4(1.0); }',
+                'void main() { gl_FragColor = vec4(1.0); }')
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene._context.shaderCache.getShaderProgram(
-            'void main() { gl_Position = vec4(1.0); }',
-            'void main() { gl_FragColor = vec4(1.0); }');
 
         scene.primitives.add(new CommandMockPrimitive(c));
 

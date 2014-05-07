@@ -70,7 +70,11 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand();
+        this._command = new DrawCommand({
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            boundingVolume : new BoundingSphere(),
+            owner : this
+        });
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -230,14 +234,11 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             command.vertexArray = context.createVertexArray(attributes);
-            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-
             command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
-            command.boundingVolume = new BoundingSphere();
         }
 
         var sunPosition = context.uniformState.sunPositionWC;

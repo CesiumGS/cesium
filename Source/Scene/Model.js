@@ -1730,19 +1730,20 @@ define([
                     mesh : runtimeMeshes[mesh.name]
                 };
 
-                var command = new DrawCommand();
-                command.boundingVolume = new BoundingSphere(); // updated in update()
-                command.modelMatrix = new Matrix4();           // computed in update()
-                command.primitiveType = primitive.primitive;
-                command.vertexArray = vertexArray;
-                command.count = count;
-                command.offset = offset;
-                command.shaderProgram = rendererPrograms[instanceProgram.program];
-                command.uniformMap = uniformMap;
-                command.renderState = rs;
-                command.owner = owner;
-                command.debugShowBoundingVolume = debugShowBoundingVolume;
-                command.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                var command = new DrawCommand({
+                    boundingVolume : new BoundingSphere(), // updated in update()
+                    modelMatrix : new Matrix4(),           // computed in update()
+                    primitiveType : primitive.primitive,
+                    vertexArray : vertexArray,
+                    count : count,
+                    offset : offset,
+                    shaderProgram : rendererPrograms[instanceProgram.program],
+                    uniformMap : uniformMap,
+                    renderState : rs,
+                    owner : owner,
+                    debugShowBoundingVolume : debugShowBoundingVolume,
+                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                });
                 commands.push(command);
 
                 var pickCommand;
@@ -1756,18 +1757,19 @@ define([
                             czm_pickColor : createPickColorFunction(pickId.color)
                         });
 
-                    pickCommand = new DrawCommand();
-                    pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand.modelMatrix = new Matrix4();           // computed in update()
-                    pickCommand.primitiveType = primitive.primitive;
-                    pickCommand.vertexArray = vertexArray;
-                    pickCommand.count = count;
-                    pickCommand.offset = offset;
-                    pickCommand.shaderProgram = rendererPickPrograms[instanceProgram.program];
-                    pickCommand.uniformMap = pickUniformMap;
-                    pickCommand.renderState = rs;
-                    pickCommand.owner = owner;
-                    pickCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    pickCommand = new DrawCommand({
+                        boundingVolume : new BoundingSphere(), // updated in update()
+                        modelMatrix : new Matrix4(),           // computed in update()
+                        primitiveType : primitive.primitive,
+                        vertexArray : vertexArray,
+                        count : count,
+                        offset : offset,
+                        shaderProgram : rendererPickPrograms[instanceProgram.program],
+                        uniformMap : pickUniformMap,
+                        renderState : rs,
+                        owner : owner,
+                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    });
                     pickCommands.push(pickCommand);
                 }
 

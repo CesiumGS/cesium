@@ -2130,49 +2130,6 @@ define([
         }
     }
 
-    /**
-     * Executes the specified draw command.
-     *
-     * @memberof Context
-     *
-     * @param {DrawCommand} drawCommand The command with which to draw.
-     * @param {PassState} [passState] The state for the current rendering pass.
-     * @param {RenderState} [renderState] The render state that will override the render state of the command.
-     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
-     *
-     * @memberof Context
-     *
-     * @exception {DeveloperError} drawCommand.offset must be omitted or greater than or equal to zero.
-     * @exception {DeveloperError} drawCommand.count must be omitted or greater than or equal to zero.
-     * @exception {DeveloperError} Program validation failed.
-     * @exception {DeveloperError} Framebuffer is not complete.
-     *
-     * @example
-     * // Example 1.  Draw a single triangle specifying only required arguments
-     * context.draw({
-     *     primitiveType : PrimitiveType.TRIANGLES,
-     *     shaderProgram : sp,
-     *     vertexArray   : va,
-     * });
-     *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
-     * // Example 2.  Draw a single triangle specifying every argument
-     * context.draw({
-     *     primitiveType : PrimitiveType.TRIANGLES,
-     *     offset        : 0,
-     *     count         : 3,
-     *     framebuffer   : fb,
-     *     shaderProgram : sp,
-     *     vertexArray   : va,
-     *     renderState   : rs
-     * });
-     *
-     * @see Context#createShaderProgram
-     * @see Context#createVertexArray
-     * @see Context#createFramebuffer
-     * @see Context#createRenderState
-     */
     Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
@@ -2584,16 +2541,15 @@ define([
 
         overrides = defaultValue(overrides, defaultValue.EMPTY_OBJECT);
 
-        var command = new DrawCommand();
-        command.vertexArray = vertexArray;
-        command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        command.renderState = overrides.renderState;
-        command.shaderProgram = this.shaderCache.getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations);
-        command.uniformMap = overrides.uniformMap;
-        command.owner = overrides.owner;
-        command.framebuffer = overrides.framebuffer;
-
-        return command;
+        return new DrawCommand({
+            vertexArray : vertexArray,
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            renderState : overrides.renderState,
+            shaderProgram : this.shaderCache.getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
+            uniformMap : overrides.uniformMap,
+            owner : overrides.owner,
+            framebuffer : overrides.framebuffer
+        });
     };
 
     /**

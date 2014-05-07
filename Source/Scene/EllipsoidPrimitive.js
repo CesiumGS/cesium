@@ -9,7 +9,6 @@ define([
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/BoundingSphere',
-        '../Core/PrimitiveType',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -30,7 +29,6 @@ define([
         destroyObject,
         Matrix4,
         BoundingSphere,
-        PrimitiveType,
         CullFace,
         BlendingState,
         BufferUsage,
@@ -205,8 +203,6 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, false);
         this._onlySunLighting = false;
 
-        this._owner = options._owner;
-
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -214,10 +210,12 @@ define([
         this._pickSP = undefined;
         this._pickId = undefined;
 
-        this._colorCommand = new DrawCommand();
-        this._colorCommand.owner = this;
-        this._pickCommand = new DrawCommand();
-        this._pickCommand.owner = this;
+        this._colorCommand = new DrawCommand({
+            owner : defaultValue(options._owner, this)
+        });
+        this._pickCommand = new DrawCommand({
+            owner : defaultValue(options._owner, this)
+        });
 
         var that = this;
         this._uniforms = {
@@ -358,13 +356,11 @@ define([
 
             this._sp = context.shaderCache.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
-            colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
             colorCommand.uniformMap = combine(this._uniforms, this.material._uniforms);
             colorCommand.executeInClosestFrustum = translucent;
-            colorCommand.owner = defaultValue(this._owner, this);
         }
 
         var passes = frameState.passes;
@@ -403,13 +399,11 @@ define([
 
                 this._pickSP = context.shaderCache.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
-                pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine(combine(this._uniforms, this._pickUniforms), this.material._uniforms);
                 pickCommand.executeInClosestFrustum = translucent;
-                pickCommand.owner = defaultValue(this._owner, this);
             }
 
             pickCommand.boundingVolume = this._boundingSphere;

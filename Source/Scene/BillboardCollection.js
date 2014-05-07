@@ -12,7 +12,6 @@ define([
         '../Core/Matrix4',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
@@ -38,7 +37,6 @@ define([
         Matrix4,
         ComponentDatatype,
         IndexDatatype,
-        PrimitiveType,
         BoundingSphere,
         BlendingState,
         BufferUsage,
@@ -1264,19 +1262,19 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand();
+                    command = colorList[j] = new DrawCommand({
+                        pass : Pass.OPAQUE,
+                        owner : this
+                    });
                 }
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.primitiveType = PrimitiveType.TRIANGLES;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._sp;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
-                command.pass = Pass.OPAQUE;
-                command.owner = this;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(command);
@@ -1320,19 +1318,19 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
                 if (!defined(command)) {
-                    command = pickList[j] = new DrawCommand();
+                    command = pickList[j] = new DrawCommand({
+                        pass : Pass.OPAQUE,
+                        owner : this
+                    });
                 }
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.primitiveType = PrimitiveType.TRIANGLES;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
-                command.pass = Pass.OPAQUE;
-                command.owner = this;
 
                 commandList.push(command);
             }
