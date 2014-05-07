@@ -10,7 +10,6 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         './AutomaticUniforms',
-        './UniformDatatype',
         '../Shaders/Builtin/CzmBuiltins'
     ], function(
         defined,
@@ -23,51 +22,9 @@ define([
         Matrix3,
         Matrix4,
         AutomaticUniforms,
-        UniformDatatype,
         CzmBuiltins) {
     "use strict";
     /*global console*/
-
-    function getUniformDatatype(gl, activeUniformType) {
-        switch (activeUniformType) {
-        case gl.FLOAT:
-            return UniformDatatype.FLOAT;
-        case gl.FLOAT_VEC2:
-            return UniformDatatype.FLOAT_VEC2;
-        case gl.FLOAT_VEC3:
-            return UniformDatatype.FLOAT_VEC3;
-        case gl.FLOAT_VEC4:
-            return UniformDatatype.FLOAT_VEC4;
-        case gl.INT:
-            return UniformDatatype.INT;
-        case gl.INT_VEC2:
-            return UniformDatatype.INT_VEC2;
-        case gl.INT_VEC3:
-            return UniformDatatype.INT_VEC3;
-        case gl.INT_VEC4:
-            return UniformDatatype.INT_VEC4;
-        case gl.BOOL:
-            return UniformDatatype.BOOL;
-        case gl.BOOL_VEC2:
-            return UniformDatatype.BOOL_VEC2;
-        case gl.BOOL_VEC3:
-            return UniformDatatype.BOOL_VEC3;
-        case gl.BOOL_VEC4:
-            return UniformDatatype.BOOL_VEC4;
-        case gl.FLOAT_MAT2:
-            return UniformDatatype.FLOAT_MAT2;
-        case gl.FLOAT_MAT3:
-            return UniformDatatype.FLOAT_MAT3;
-        case gl.FLOAT_MAT4:
-            return UniformDatatype.FLOAT_MAT4;
-        case gl.SAMPLER_2D:
-            return UniformDatatype.SAMPLER_2D;
-        case gl.SAMPLER_CUBE:
-            return UniformDatatype.SAMPLER_CUBE;
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + activeUniformType);
-        }
-    }
 
     var scratchUniformMatrix2;
     var scratchUniformMatrix3;
@@ -253,7 +210,6 @@ define([
      * @internalConstructor
      *
      * @see Uniform#value
-     * @see UniformDatatype
      * @see ShaderProgram#getAllUniforms
      * @see UniformState
      * @see Context#draw
@@ -371,11 +327,11 @@ define([
          * The datatype of the uniform.  This is useful when dynamically
          * creating a user interface to tweak shader uniform values.
          * @memberof Uniform.prototype
-         * @type {UniformDatatype}
+         * @type {Number}
          */
         datatype : {
             get : function() {
-                return getUniformDatatype(this._gl, this._activeUniform.type);
+                return this._activeUniform.type;
             }
         }
     });
@@ -560,11 +516,11 @@ define([
          * The datatype of the uniform.  This is useful when dynamically
          * creating a user interface to tweak shader uniform values.
          * @memberof Uniform.prototype
-         * @type {UniformDatatype}
+         * @type {Number}
          */
         datatype : {
             get : function() {
-                return getUniformDatatype(this._gl, this._activeUniform.type);
+                return this._activeUniform.type;
             }
         }
     });
