@@ -292,8 +292,8 @@ define([
         }
     });
 
-    Globe.prototype.pick = function(ray, result) {
-        return this._surface.pick(ray, result);
+    Globe.prototype.pick = function(ray, frameState, result) {
+        return this._surface.pick(ray, frameState, result);
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];

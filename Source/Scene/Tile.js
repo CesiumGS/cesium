@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
@@ -8,9 +9,13 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
+        '../Core/Math',
         '../Core/Rectangle',
+        '../Core/WebMercatorProjection',
         './ImageryState',
+        './SceneMode',
         './TerrainState',
         './TileState',
         './TileTerrain',
@@ -21,6 +26,7 @@ define([
         '../Renderer/TextureWrap'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
@@ -28,9 +34,13 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        GeographicProjection,
         IntersectionTests,
+        CesiumMath,
         Rectangle,
+        WebMercatorProjection,
         ImageryState,
+        SceneMode,
         TerrainState,
         TileState,
         TileTerrain,
@@ -273,11 +283,26 @@ define([
         }
     });
 
+    function getPosition(tile, frameState, vertices, index, result) {
+        Cartesian3.unpack(vertices, index * 6, result);
+        Cartesian3.add(tile.center, result, result);
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            var projection = frameState.scene2D.projection;
+            var ellipsoid = projection.ellipsoid;
+            var positionCart = ellipsoid.cartesianToCartographic(result);
+            projection.project(positionCart, result);
+            Cartesian3.fromElements(result.z, result.x, result.y, result);
+        }
+
+        return result;
+    }
+
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
 
-    Tile.prototype.pick = function(ray, result) {
+    Tile.prototype.pick = function(ray, frameState, result) {
         var terrain = defaultValue(this.loadedTerrain, this.upsampledTerrain);
         if (!defined(terrain)) {
             return undefined;
@@ -291,21 +316,15 @@ define([
         var vertices = mesh.vertices;
         var indices = mesh.indices;
 
-        var center = this.center;
-
         var length = indices.length;
         for (var i = 0; i < length; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = Cartesian3.unpack(vertices, i0 * 6, scratchV0);
-            var v1 = Cartesian3.unpack(vertices, i1 * 6, scratchV1);
-            var v2 = Cartesian3.unpack(vertices, i2 * 6, scratchV2);
-
-            Cartesian3.add(center, v0, v0);
-            Cartesian3.add(center, v1, v1);
-            Cartesian3.add(center, v2, v2);
+            var v0 = getPosition(this, frameState, vertices, i0, scratchV0);
+            var v1 = getPosition(this, frameState, vertices, i1, scratchV1);
+            var v2 = getPosition(this, frameState, vertices, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
             if (defined(intersection)) {

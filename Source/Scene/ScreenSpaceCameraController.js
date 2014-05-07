@@ -15,6 +15,7 @@ define([
         '../Core/isArray',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
@@ -38,6 +39,7 @@ define([
         isArray,
         CesiumMath,
         Matrix4,
+        Plane,
         Ray,
         Transforms,
         AnimationCollection,
@@ -588,11 +590,22 @@ define([
         var ray = controller._camera.getPickRay(windowPosition, rotateCVWindowRay);
         var normal = Cartesian3.UNIT_X;
 
-        var position = ray.origin;
-        var direction = ray.direction;
-        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-        var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
-        Cartesian3.add(position, center, center);
+        var center;
+
+        if (controller._camera.position.z < controller.minimumTerrainHeight) {
+            var scene = controller._scene;
+            var globe = scene.globe;
+            center = globe.pick(ray, scene.frameState);
+        }
+
+        if (!defined(center)) {
+            var position = ray.origin;
+            var direction = ray.direction;
+            var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+            center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
+            Cartesian3.add(position, center, center);
+        }
+
         var transform = Matrix4.fromTranslation(center, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
@@ -661,7 +674,7 @@ define([
                 var globe = scene.globe;
 
                 var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
-                var mousePos = globe.pick(startRay);
+                var mousePos = globe.pick(startRay, scene.frameState);
                 if (!defined(mousePos)) {
                     pan3D(controller, movement, controller._ellipsoid);
                 } else {
@@ -899,8 +912,9 @@ define([
         var intersection;
 
         if (height < controller.minimumTerrainHeight) {
-            var globe = controller._scene.globe;
-            center = globe.pick(ray);
+            var scene = controller._scene;
+            var globe = scene.globe;
+            center = globe.pick(ray, scene.frameState);
         }
 
         if (!defined(center)) {

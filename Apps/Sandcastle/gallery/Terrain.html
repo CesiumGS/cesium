@@ -206,9 +206,17 @@ require(['Cesium'], function(Cesium) {
     var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
         var ray = scene.camera.getPickRay(movement.position);
-        var cartesian = globe.pick(ray);
+        var cartesian = globe.pick(ray, scene.frameState);
         if (cartesian) {
-            var cartographic = globe.ellipsoid.cartesianToCartographic(cartesian);
+            var cartographic;
+            if (scene.frameState.mode === Cesium.SceneMode.SCENE3D) {
+                cartographic = globe.ellipsoid.cartesianToCartographic(cartesian);
+            } else {
+                cartesian = Cesium.Cartesian3.fromElements(cartesian.y, cartesian.z, cartesian.x);
+                cartographic = scene.scene2D.projection.unproject(cartesian);
+                cartesian = globe.ellipsoid.cartographicToCartesian(cartographic);
+            }
+            
             label.show = true;
             label.text = '(' + Cesium.Math.toDegrees(cartographic.longitude).toFixed(2) + ', ' + Cesium.Math.toDegrees(cartographic.latitude).toFixed(2) + ', ' + cartographic.height.toFixed(2) + ')';
             label.position = cartesian;
