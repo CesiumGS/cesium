@@ -8,6 +8,7 @@ define([
         defineProperties,
         Matrix4) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
 
