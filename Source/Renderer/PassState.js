@@ -6,11 +6,7 @@ define(function() {
      * The state for a particular rendering pass.  This is used to supplement the state
      * in a command being executed.
      *
-     * @alias PassState
-     * @constructor
-     *
-     * @see DrawCommand
-     * @see ClearCommand
+     * @private
      */
     var PassState = function(context) {
         /**

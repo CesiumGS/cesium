@@ -26,15 +26,7 @@ define([
     }
 
     /**
-     * A framebuffer is a target for draw and clear calls.  It can contain color, depth, and stencil attachments
-     * that are written to in response to these calls.  If the attachments are textures, they can be read in
-     * later rendering passes.
-     *
-     * @alias Framebuffer
-     *
-     * @see Context#createFramebuffer
-     *
-     * @internalConstructor
+     * @private
      */
     var Framebuffer = function(gl, maximumColorAttachments, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -212,67 +204,31 @@ define([
                 return status;
             }
         },
-
-        /**
-         * The number of color textures or renderbuffers attached to this framebuffer.
-         * @memberof Framebuffer.prototype
-         * @type {Number}
-         */
         numberOfColorAttachments : {
             get : function() {
                 return this._activeColorAttachments.length;
             }
         },
-
-        /**
-         * The depth texture attached to this framebuffer.
-         * @memberof Framebuffer.prototype
-         * @type {Texture}
-         */
         depthTexture: {
             get : function() {
                 return this._depthTexture;
             }
         },
-
-        /**
-         * The depth renderbuffer attached to this framebuffer.
-         * @memberof Framebuffer.protyotype
-         * @type {Texture}
-         */
         depthRenderbuffer: {
             get : function() {
                 return this._depthRenderbuffer;
             }
         },
-
-        /**
-         * The stencil renderbuffer attached to this framebuffer.
-         * @memberof Framebuffer.prototype
-         * @type {Texture}
-         */
         stencilRenderbuffer : {
             get : function() {
                 return this._stencilRenderbuffer;
             }
         },
-
-        /**
-         * The depth-stencil texture attached to this framebuffer.
-         * @memberof Framebuffer.prototype
-         * @type {Texture}
-         */
         depthStencilTexture : {
             get : function() {
                 return this._depthStencilTexture;
             }
         },
-
-        /**
-         * The depth-stencil renderbuffer attached to this framebuffer.
-         * @memberof Framebuffer.prototype
-         * @type {Texture}
-         */
         depthStencilRenderbuffer : {
             get : function() {
                 return this._depthStencilRenderbuffer;
@@ -307,18 +263,6 @@ define([
         return this._activeColorAttachments;
     };
 
-    /**
-     * Returns a color texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @param {Number} index The index of the color texture attachment.
-     *
-     * @returns {Texture} The color texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} index is required, must be greater than or equal to zero and must be less than the number of color attachments.
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
     Framebuffer.prototype.getColorTexture = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorTextures.length) {
@@ -329,18 +273,6 @@ define([
         return this._colorTextures[index];
     };
 
-    /**
-     * Returns a color renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @param {Number} index The index of the color renderbuffer attachment.
-     *
-     * @returns {Texture} The color renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} index is required, must be greater than or equal to zero and must be less than the number of color attachments.
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
     Framebuffer.prototype.getColorRenderbuffer = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorRenderbuffers.length) {
@@ -351,52 +283,10 @@ define([
         return this._colorRenderbuffers[index];
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see Framebuffer#destroy
-     */
     Framebuffer.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Framebuffer attachments are only destoryed if the framebuffer owns them, i.e., {@link destroyAttachments}
-     * is true.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     *
-     * @see Framebuffer#isDestroyed
-     * @see Framebuffer#destroyAttachments
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml'>glDeleteFramebuffers</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>
-     *
-     * @example
-     * var texture = context.createTexture2D({ width : 1, height : 1 });
-     * framebuffer = context.createFramebuffer({ colorTextures : [texture] });
-     * // ...
-     * framebuffer = framebuffer.destroy();
-     * // texture is also destroyed.
-     */
     Framebuffer.prototype.destroy = function() {
         if (this.destroyAttachments) {
             // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.
