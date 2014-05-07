@@ -1,5 +1,7 @@
 /*global define*/
 define([], function() {
+    "use strict";
+
     var redirectToUrl = function(url) {
         redirectToUrl.implementation(url);
     };

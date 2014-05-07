@@ -33,11 +33,10 @@ defineSuite([
         }
     });
 
-    function asyncSleep(milliseconds) {
-        var doneTime = getTimestamp() + milliseconds;
-        waitsFor(function() {
-            return getTimestamp() >= doneTime;
-        });
+    function spinWait(milliseconds) {
+        var endTime = getTimestamp() + milliseconds;
+        while (getTimestamp() < endTime) {
+        }
     }
 
     it('throws when constructed without a scene', function() {
@@ -115,21 +114,17 @@ defineSuite([
         scene.render();
 
         // Wait until we're well past the end of the quiet period.
-        asyncSleep(20);
+        spinWait(2);
 
         // Rendering again records our first sample.
-        runs(function() {
-            scene.render();
-        });
+        scene.render();
 
         // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
-        asyncSleep(20);
+        spinWait(2);
 
         // Record our second sample.  The watchdog should notice that our frame rate is too low.
-        runs(function() {
-            scene.render();
-            expect(viewModel.showingLowFrameRateMessage).toBe(true);
-        });
+        scene.render();
+        expect(viewModel.showingLowFrameRateMessage).toBe(true);
     });
 
     it('does not report a low frame rate during the queit period', function() {
@@ -146,13 +141,11 @@ defineSuite([
         scene.render();
 
         // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
-        asyncSleep(20);
+        spinWait(2);
 
         // Render again.  Even though our frame rate is too low, the watchdog shouldn't bark because we're in the quiet period.
-        runs(function() {
-            scene.render();
-            expect(viewModel.showingLowFrameRateMessage).toBe(false);
-        });
+        scene.render();
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
     });
 
     it('redirects on render error when a redirectOnErrorUrl is provided', function() {
@@ -184,26 +177,21 @@ defineSuite([
             minimumFrameRateAfterWarmup : 1000
         });
 
-        expect(viewModel.showingLowFrameRateMessage).toBe(false);
-
         // Rendering once starts the quiet period
         scene.render();
 
         // Wait until we're well past the end of the quiet period.
-        asyncSleep(20);
+        spinWait(2);
 
         // Rendering again records our first sample.
-        runs(function() {
-            scene.render();
-        });
+        scene.render();
 
         // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
-        asyncSleep(100);
+        spinWait(2);
 
         // Record our second sample.  The watchdog should notice that our frame rate is too low.
-        runs(function() {
-            scene.render();
-            expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
-        });
+        scene.render();
+
+        expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
     });
 }, 'WebGL');
