@@ -96,6 +96,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
@@ -211,6 +212,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
+            targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors
         });
 
@@ -640,6 +642,24 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         screenSpaceEventHandler : {
             get : function() {
                 return this._cesiumWidget.screenSpaceEventHandler;
+            }
+        },
+
+        /**
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no effect.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         */
+        targetFrameRate : {
+            get : function() {
+                return this._cesiumWidget.targetFrameRate;
+            },
+            set : function(value) {
+                this._cesiumWidget.targetFrameRate = value;
             }
         },
 

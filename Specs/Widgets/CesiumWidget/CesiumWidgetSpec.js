@@ -90,6 +90,13 @@ defineSuite([
         expect(widget.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        widget = new CesiumWidget(container, {
+            targetFrameRate : 23
+        });
+        expect(widget.targetFrameRate).toBe(23);
+    });
+
     it('sets expected options imageryProvider', function() {
         var options = {
             imageryProvider : new TileCoordinatesImageryProvider()
@@ -166,6 +173,13 @@ defineSuite([
     it('throws if no container provided', function() {
         expect(function() {
             return new CesiumWidget(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.targetFrameRate = -1;
         }).toThrowDeveloperError();
     });
 
