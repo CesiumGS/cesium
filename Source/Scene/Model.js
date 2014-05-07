@@ -942,7 +942,7 @@ define([
         var vs = shaders[program.vertexShader];
         var fs = shaders[program.fragmentShader];
 
-        model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+        model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -950,7 +950,7 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
-            model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
         }
     }
 
@@ -2205,7 +2205,7 @@ define([
     function release(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                property[name].release();
+                property[name].destroy();
             }
         }
     }

@@ -337,6 +337,7 @@ define([
         this._activeUniform = activeUniform;
         this._uniformName = uniformName;
         this._location = location;
+        this._cachedShader = undefined;  // Used by ShaderCache
 
         /**
          * @private
@@ -591,8 +592,6 @@ define([
      * @internalConstructor
      *
      * @exception {DeveloperError} A circular dependency was found in the Cesium built-in functions/structs/constants.
-     *
-     * @see Context#createShaderProgram
      */
     var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         this._gl = gl;
@@ -1207,20 +1206,13 @@ define([
      * shaderProgram = shaderProgram && shaderProgram.destroy();
      */
     ShaderProgram.prototype.destroy = function() {
-        this._gl.deleteProgram(this._program);
-        return destroyObject(this);
+        this._cachedShader.cache.releaseShaderProgram(this);
+        return undefined;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     */
-    ShaderProgram.prototype.release = function() {
-        if (this._cachedShader) {
-            return this._cachedShader.cache.releaseShaderProgram(this);
-        }
-
-        return this.destroy();
+    ShaderProgram.prototype.finalDestroy = function() {
+        this._gl.deleteProgram(this._program);
+        return destroyObject(this);
     };
 
     return ShaderProgram;

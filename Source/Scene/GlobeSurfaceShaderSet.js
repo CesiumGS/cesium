@@ -24,7 +24,7 @@ define([
         var shaders = this._shaders;
         for ( var keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
-                shaders[keyword].release();
+                shaders[keyword].destroy();
             }
         }
 
@@ -100,7 +100,7 @@ define([
                 '    return color;\n' +
                 '}';
 
-            shader = context.shaderCache.getShaderProgram(vs, fs, this._attributeLocations);
+            shader = context.createShaderProgram(vs, fs, this._attributeLocations);
             this._shaders[key] = shader;
         }
         return shader;

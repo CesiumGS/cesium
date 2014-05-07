@@ -636,10 +636,8 @@ define([
             this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(depthQuad);
         }
 
-        var shaderCache = context.shaderCache;
-
         if (!defined(this._depthCommand.shaderProgram)) {
-            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+            this._depthCommand.shaderProgram = context.createShaderProgram(
                 GlobeVSDepth,
                 GlobeFSDepth, {
                     position : 0
@@ -729,7 +727,7 @@ define([
             });
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+            var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
                 GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
@@ -842,10 +840,10 @@ define([
 
         this._surfaceShaderSet = this._surfaceShaderSet && this._surfaceShaderSet.destroy();
 
-        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
+        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.destroy();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
 
-        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.release();
+        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.destroy();
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();

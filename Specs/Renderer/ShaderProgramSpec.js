@@ -616,16 +616,6 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
     });
 
-    it('destroys', function() {
-        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
-        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        var s = context.createShaderProgram(vs, fs);
-
-        expect(s.isDestroyed()).toEqual(false);
-        s.destroy();
-        expect(s.isDestroyed()).toEqual(true);
-    });
-
     it('fails vertex shader compile', function() {
         var vs = 'does not compile.';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
@@ -653,17 +643,6 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
-    });
-
-    it('fails to destroy', function() {
-        var vs = 'void main() { gl_Position = vec4(1.0); }';
-        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        var s = context.createShaderProgram(vs, fs);
-        s.destroy();
-
-        expect(function() {
-            s.destroy();
         }).toThrow();
     });
 

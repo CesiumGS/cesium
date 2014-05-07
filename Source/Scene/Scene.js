@@ -843,7 +843,7 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
@@ -851,7 +851,7 @@ define([
             // Replace shader for frustum visualization
             var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
             command.execute(scene._context, passState, renderState, sp);
-            sp.release();
+            sp.destroy();
         }
     }
 

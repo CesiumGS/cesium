@@ -250,7 +250,7 @@ defineSuite([
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });
@@ -270,7 +270,7 @@ defineSuite([
 
         Primitive.prototype.destroy = function() {
             this._va = this._va && this._va.destroy();
-            this._sp = this._sp && this._sp.release();
+            this._sp = this._sp && this._sp.destroy();
             return destroyObject(this);
         };
 

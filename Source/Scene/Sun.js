@@ -201,7 +201,7 @@ define([
             clearCommand.execute(context);
             drawCommand.execute(context);
 
-            drawCommand.shaderProgram.release();
+            drawCommand.shaderProgram.destroy();
             fbo.destroy();
         }
 
@@ -234,7 +234,7 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             command.vertexArray = context.createVertexArray(attributes);
-            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
+            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -323,7 +323,7 @@ define([
     Sun.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+        command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 
         this._texture = this._texture && this._texture.destroy();
 

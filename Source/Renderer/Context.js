@@ -28,7 +28,6 @@ define([
         './RenderbufferFormat',
         './RenderState',
         './ShaderCache',
-        './ShaderProgram',
         './Texture',
         './TextureAtlas',
         './TextureMagnificationFilter',
@@ -69,7 +68,6 @@ define([
         RenderbufferFormat,
         RenderState,
         ShaderCache,
-        ShaderProgram,
         Texture,
         TextureAtlas,
         TextureMagnificationFilter,
@@ -400,11 +398,6 @@ define([
             }
         },
 
-        /**
-         * DOC_TBA
-         * @memberof Context.prototype
-         * @type {ShaderCache}
-         */
         shaderCache : {
             get : function() {
                 return this._shaderCache;
@@ -1000,69 +993,12 @@ define([
         }
     });
 
-    /**
-     * Creates a shader program given the GLSL source for a vertex and fragment shader.
-     * <br /><br />
-     * The vertex and fragment shader are individually compiled, and then linked together
-     * to create a shader program.  An exception is thrown if any errors are encountered,
-     * as described below.
-     * <br /><br />
-     * The program's active uniforms and attributes are queried and can be accessed using
-     * the returned shader program.  The caller can explicitly define the vertex
-     * attribute indices using the optional <code>attributeLocations</code> argument as
-     * shown in example two below.
-     *
-     * @memberof Context
-     *
-     * @param {String} vertexShaderSource The GLSL source for the vertex shader.
-     * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
-     * @param {Object} [attributeLocations=undefined] An optional object that maps vertex attribute names to indices for use with vertex arrays.
-     *
-     * @returns {ShaderProgram} The compiled and linked shader program, ready for use in a draw call.
-     *
-     * @exception {RuntimeError} Vertex shader failed to compile.
-     * @exception {RuntimeError} Fragment shader failed to compile.
-     * @exception {RuntimeError} Program failed to link.
-     *
-     * @see Context#draw
-     * @see Context#createVertexArray
-     * @see Context#getShaderCache
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateShader.xml'>glCreateShader</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glShaderSource.xml'>glShaderSource</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCompileShader.xml'>glCompileShader</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glCreateProgram.xml'>glCreateProgram</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glAttachShader.xml'>glAttachShader</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glLinkProgram.xml'>glLinkProgram</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetShaderiv.xml'>glGetShaderiv</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveUniform.xml'>glGetActiveUniform</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniformLocation.xml'>glGetUniformLocation</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetUniform.xml'>glGetUniform</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindAttribLocation.xml'>glBindAttribLocation</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetActiveAttrib.xml'>glGetActiveAttrib</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGetAttribLocation.xml'>glGetAttribLocation</a>
-     *
-     * @example
-     * // Example 1. Create a shader program allowing the GL to determine
-     * // attribute indices.
-     * var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
-     * var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-     * var sp = context.createShaderProgram(vs, fs);
-     *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Create a shader program with explicit attribute indices.
-     * var vs = 'attribute vec4 position;' +
-     *          'attribute vec3 normal;' +
-     *          'void main() { ... }';
-     * var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-     * var attributes = {
-     *     position : 0,
-     *     normal   : 1
-     * };
-     * sp = context.createShaderProgram(vs, fs, attributes);
-     */
+    Context.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
+        return this.shaderCache.replaceShaderProgram(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations);
+    };
+
     Context.prototype.createShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        return new ShaderProgram(this._gl, this._logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return this.shaderCache.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
     function createBuffer(gl, bufferTarget, typedArrayOrSizeInBytes, usage) {
@@ -2545,7 +2481,7 @@ define([
             vertexArray : vertexArray,
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             renderState : overrides.renderState,
-            shaderProgram : this.shaderCache.getShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
+            shaderProgram : this.createShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
             uniformMap : overrides.uniformMap,
             owner : overrides.owner,
             framebuffer : overrides.framebuffer

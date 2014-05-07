@@ -159,18 +159,17 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var shaderCache = context.shaderCache;
             var vs = createShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromSpace = context.createShaderProgram(vs, SkyAtmosphereFS);
 
             vs = createShaderSource({
                 defines : ['SKY_FROM_ATMOSPHERE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromAtmosphere = context.createShaderProgram(vs, SkyAtmosphereFS);
         }
 
         var cameraPosition = frameState.camera.positionWC;
@@ -227,8 +226,8 @@ define([
     SkyAtmosphere.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.release();
-        this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.release();
+        this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
+        this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
         return destroyObject(this);
     };
 

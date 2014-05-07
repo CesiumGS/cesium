@@ -53,7 +53,7 @@ define([
         fxaa._depthRenderbuffer = undefined;
 
         if (defined(fxaa._command)) {
-            fxaa._command.shaderProgram = fxaa._command.shaderProgram && fxaa._command.shaderProgram.release();
+            fxaa._command.shaderProgram = fxaa._command.shaderProgram && fxaa._command.shaderProgram.destroy();
             fxaa._command = undefined;
         }
     }

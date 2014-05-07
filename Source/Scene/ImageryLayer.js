@@ -816,7 +816,7 @@ define([
                         this.vertexArray.destroy();
                     }
                     if (defined(this.shaderProgram)) {
-                        this.shaderProgram.release();
+                        this.shaderProgram.destroy();
                     }
                 }
             };
@@ -862,7 +862,7 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.shaderCache.getShaderProgram(
+            reproject.shaderProgram = context.createShaderProgram(
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);

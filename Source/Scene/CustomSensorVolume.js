@@ -501,7 +501,7 @@ define([
                     sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
                 });
 
-                frontFaceColorCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                frontFaceColorCommand.shaderProgram = context.replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
                 frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
@@ -538,7 +538,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                pickCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                pickCommand.shaderProgram = context.replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
@@ -569,8 +569,8 @@ define([
      */
     CustomSensorVolume.prototype.destroy = function() {
         this._frontFaceColorCommand.vertexArray = this._frontFaceColorCommand.vertexArray && this._frontFaceColorCommand.vertexArray.destroy();
-        this._frontFaceColorCommand.shaderProgram = this._frontFaceColorCommand.shaderProgram && this._frontFaceColorCommand.shaderProgram.release();
-        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
+        this._frontFaceColorCommand.shaderProgram = this._frontFaceColorCommand.shaderProgram && this._frontFaceColorCommand.shaderProgram.destroy();
+        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.destroy();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

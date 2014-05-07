@@ -404,7 +404,7 @@ define([
                 source +
                 '}\n';
 
-            shader = context.shaderCache.getShaderProgram(vs, newSourceFS, attributeLocations);
+            shader = context.createShaderProgram(vs, newSourceFS, attributeLocations);
             cache[id] = shader;
         }
 
@@ -549,22 +549,22 @@ define([
         destroyResources(this);
 
         if (defined(this._compositeCommand)) {
-            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
+            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.destroy();
         }
 
         if (defined(this._adjustTranslucentCommand)) {
-            this._adjustTranslucentCommand.shaderProgram = this._adjustTranslucentCommand.shaderProgram && this._adjustTranslucentCommand.shaderProgram.release();
+            this._adjustTranslucentCommand.shaderProgram = this._adjustTranslucentCommand.shaderProgram && this._adjustTranslucentCommand.shaderProgram.destroy();
         }
 
         if (defined(this._adjustAlphaCommand)) {
-            this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.release();
+            this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.destroy();
         }
 
         var name;
         var cache = this._translucentShaderCache;
         for (name in cache) {
             if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].release();
+                cache[name].destroy();
             }
         }
         this._translucentShaderCache = {};
@@ -572,7 +572,7 @@ define([
         cache = this._alphaShaderCache;
         for (name in cache) {
             if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].release();
+                cache[name].destroy();
             }
         }
         this._alphaShaderCache = {};

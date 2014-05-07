@@ -354,7 +354,7 @@ define([
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.shaderCache.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
+            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
@@ -397,7 +397,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.shaderCache.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
+                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
@@ -450,8 +450,8 @@ define([
      * e = e && e.destroy();
      */
     EllipsoidPrimitive.prototype.destroy = function() {
-        this._sp = this._sp && this._sp.release();
-        this._pickSP = this._pickSP && this._pickSP.release();
+        this._sp = this._sp && this._sp.destroy();
+        this._pickSP = this._pickSP && this._pickSP.destroy();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

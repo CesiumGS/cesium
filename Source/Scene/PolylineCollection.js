@@ -277,8 +277,8 @@ define([
             this._createVertexArray = true;
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
-                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.release();
+                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
+                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.destroy();
             }
             polyline._destroy();
             return true;
@@ -991,7 +991,7 @@ define([
             if (defined(polylines[i])) {
                 var bucket = polylines[i]._bucket;
                 if (defined(bucket)) {
-                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
                 }
             }
         }
@@ -1055,8 +1055,8 @@ define([
         var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.shaderCache.getShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.shaderCache.getShaderProgram(vsSource, fsPick, attributeLocations);
+        this.shaderProgram = context.createShaderProgram(vsSource, fsSource, attributeLocations);
+        this.pickShaderProgram = context.createShaderProgram(vsSource, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {
