@@ -3,18 +3,22 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/getTimestamp',
+        '../../Core/redirectToUrl',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         Event,
         getTimestamp,
+        redirectToUrl,
         createCommand,
         knockout) {
     "use strict";
@@ -154,13 +158,13 @@ define([
             'quietPeriod', 'warmupPeriod', 'minimumFrameRateDuringWarmup', 'minimumFrameRateAfterWarmup', 'lowFrameRateMessageDismissed',
             'showingLowFrameRateMessage', 'showingErrorMessage']);
 
-        this._scene.preRender.addEventListener(function(scene, time) {
+        this._preRenderRemoveListener = this._scene.preRender.addEventListener(function(scene, time) {
             update(that, time);
         });
 
-        this._scene.renderError.addEventListener(function(scene, error) {
+        this._renderErrorRemoveListener = this._scene.renderError.addEventListener(function(scene, error) {
             if (defined(that.redirectOnErrorUrl)) {
-                window.location.href = that.redirectOnErrorUrl;
+                redirectToUrl(that.redirectOnErrorUrl);
             }
         });
 
@@ -169,9 +173,15 @@ define([
             defined(document.msHidden) ? 'msvisibilitychange' :
             defined(document.webkitHidden) ? 'webkitvisibilitychange' : undefined;
 
-        document.addEventListener(visibilityChangeEventName, function() {
+        function visibilityChangeListener() {
             visibilityChanged(that);
-        }, false);
+        }
+
+        document.addEventListener(visibilityChangeEventName, this._visibilityChangeListener, false);
+
+        this._visibilityChangeRemoveListener = function() {
+            document.removeEventListener(visibilityChangeEventName, visibilityChangeListener, false);
+        };
     };
 
     defineProperties(PerformanceWatchdogViewModel.prototype, {
@@ -211,6 +221,14 @@ define([
         }
     });
 
+    PerformanceWatchdogViewModel.prototype.destroy = function() {
+        this._preRenderRemoveListener();
+        this._renderErrorRemoveListener();
+        this._visibilityChangeRemoveListener();
+
+        return destroyObject(this);
+    };
+
     function update(viewModel, time) {
         if (!shouldDoPerformanceTracking(viewModel)) {
             return;
@@ -237,10 +255,10 @@ define([
 
                 var maximumFrameTime = 1000.0 / (timeStamp > viewModel._warmupPeriodEndTime ? viewModel.minimumFrameRateAfterWarmup : viewModel.minimumFrameRateDuringWarmup);
                 if (averageTimeBetweenFrames > maximumFrameTime) {
-                    viewModel.lowFrameRate.raise(viewModel.scene);
+                    viewModel.lowFrameRate.raiseEvent(viewModel.scene);
 
                     if (defined(viewModel.redirectOnLowFrameRateUrl)) {
-                        window.location.href = viewModel.redirectOnLowFrameRateUrl;
+                        redirectToUrl(viewModel.redirectOnLowFrameRateUrl);
                     } else {
                         if (defined(viewModel.lowFrameRateCallback)) {
                             viewModel.lowFrameRateCallback(viewModel._scene);

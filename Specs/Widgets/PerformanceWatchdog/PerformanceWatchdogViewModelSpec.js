@@ -1,10 +1,16 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
+         'Core/defined',
+         'Core/getTimestamp',
+         'Core/redirectToUrl',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
              PerformanceWatchdogViewModel,
+             defined,
+             getTimestamp,
+             redirectToUrl,
              createScene,
              destroyScene) {
     "use strict";
@@ -19,18 +25,33 @@ defineSuite([
         destroyScene(scene);
     });
 
+    var viewModel;
+    afterEach(function() {
+        if (defined(viewModel)) {
+            viewModel.destroy();
+            viewModel = undefined;
+        }
+    });
+
+    function asyncSleep(milliseconds) {
+        var doneTime = getTimestamp() + milliseconds;
+        waitsFor(function() {
+            return getTimestamp() >= doneTime;
+        });
+    }
+
     it('throws when constructed without a scene', function() {
         expect(function() {
-            var viewModel = new PerformanceWatchdogViewModel();
+            viewModel = new PerformanceWatchdogViewModel();
         }).toThrow();
 
         expect(function() {
-            var viewModel = new PerformanceWatchdogViewModel({});
+            viewModel = new PerformanceWatchdogViewModel({});
         }).toThrow();
     });
 
     it('can be constructed with just a scene', function() {
-        var viewModel = new PerformanceWatchdogViewModel({
+        viewModel = new PerformanceWatchdogViewModel({
             scene : scene
         });
 
@@ -62,7 +83,7 @@ defineSuite([
             lowFrameRateCallback : function() {}
         };
 
-        var viewModel = new PerformanceWatchdogViewModel(options);
+        viewModel = new PerformanceWatchdogViewModel(options);
 
         expect(viewModel.redirectOnErrorUrl).toBe('http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/error');
         expect(viewModel.redirectOnLowFrameRateUrl).toBe('http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/low/frame/rate');
@@ -77,4 +98,112 @@ defineSuite([
         expect(viewModel.scene).toBe(scene);
         expect(viewModel.lowFrameRate.numberOfListeners).toBe(1);
     });
-});
+
+    it('shows a message on low frame rate', function() {
+        viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        asyncSleep(20);
+
+        // Rendering again records our first sample.
+        runs(function() {
+            scene.render();
+        });
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        asyncSleep(20);
+
+        // Record our second sample.  The watchdog should notice that our frame rate is too low.
+        runs(function() {
+            scene.render();
+            expect(viewModel.showingLowFrameRateMessage).toBe(true);
+        });
+    });
+
+    it('does not report a low frame rate during the queit period', function() {
+        viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            quietPeriod : 1000,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        asyncSleep(20);
+
+        // Render again.  Even though our frame rate is too low, the watchdog shouldn't bark because we're in the quiet period.
+        runs(function() {
+            scene.render();
+            expect(viewModel.showingLowFrameRateMessage).toBe(false);
+        });
+    });
+
+    it('redirects on render error when a redirectOnErrorUrl is provided', function() {
+        spyOn(redirectToUrl, 'implementation');
+        spyOn(scene.primitives, 'update').andCallFake(function() {
+            throw 'error';
+        });
+
+        var viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            redirectOnErrorUrl : 'http://fake.redirect/target'
+        });
+
+        scene.render();
+
+        expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
+    });
+
+    it('redirects on low frame rate when a redirectOnLowFrameRateUrl is provided', function() {
+        spyOn(redirectToUrl, 'implementation');
+
+        viewModel = new PerformanceWatchdogViewModel({
+            scene : scene,
+            redirectOnLowFrameRateUrl : 'http://fake.redirect/target',
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        expect(viewModel.showingLowFrameRateMessage).toBe(false);
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        asyncSleep(20);
+
+        // Rendering again records our first sample.
+        runs(function() {
+            scene.render();
+        });
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        asyncSleep(100);
+
+        // Record our second sample.  The watchdog should notice that our frame rate is too low.
+        runs(function() {
+            scene.render();
+            expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
+        });
+    });
+}, 'WebGL');

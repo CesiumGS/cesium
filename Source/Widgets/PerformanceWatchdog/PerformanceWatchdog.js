@@ -103,6 +103,7 @@ define([
      * @memberof PerformanceWatchdog
      */
     PerformanceWatchdog.prototype.destroy = function() {
+        this._viewModel.destroy();
         knockout.cleanNode(this._element);
         this._container.removeChild(this._element);
 
