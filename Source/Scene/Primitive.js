@@ -83,6 +83,7 @@ define([
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -237,6 +238,8 @@ define([
          */
         this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
 
+        this._interleave = defaultValue(options.interleave, false);
+
         /**
          * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
          *
@@ -319,6 +322,23 @@ define([
     };
 
     defineProperties(Primitive.prototype, {
+        /**
+         * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         *
+         * @readonly
+         */
+        interleave : {
+            get : function() {
+                return this._interleave;
+            }
+        },
+
         /**
          * Determines if the geometry instances will be created and batched on a web worker.
          *
@@ -703,7 +723,7 @@ define([
                     geometry : geometry,
                     attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW,
-                    interleave : true,
+                    interleave : this._interleave,
                     vertexArrayAttributes : attributes
                 }));
             }

@@ -126,6 +126,7 @@ defineSuite([
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
         expect(primitive.vertexCacheOptimize).toEqual(false);
+        expect(primitive.interleave).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.allowPicking).toEqual(true);
