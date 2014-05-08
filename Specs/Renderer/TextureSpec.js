@@ -9,6 +9,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
+         'Renderer/DrawCommand',
          'Renderer/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/TextureWrap',
@@ -24,6 +25,7 @@ defineSuite([
          PrimitiveType,
          BufferUsage,
          ClearCommand,
+         DrawCommand,
          PixelFormat,
          PixelDatatype,
          TextureWrap,
@@ -75,11 +77,12 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
 
         return context.readPixels();
     }
@@ -224,20 +227,20 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
-        };
+        });
 
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 
@@ -300,20 +303,20 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
-        };
+        });
 
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         // After copy...
@@ -321,12 +324,12 @@ defineSuite([
 
         // Now green on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.LIME.toBytes());
 
         // Still red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 

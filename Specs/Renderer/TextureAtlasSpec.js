@@ -7,6 +7,7 @@ defineSuite([
          'Core/Cartesian2',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
+         'Renderer/DrawCommand',
          'Renderer/PixelFormat'
      ], function(
          TextureAtlas,
@@ -16,6 +17,7 @@ defineSuite([
          Cartesian2,
          BufferUsage,
          ClearCommand,
+         DrawCommand,
          PixelFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -88,11 +90,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
 
         sp = sp.destroy();
         va = va.destroy();

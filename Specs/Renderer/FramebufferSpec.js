@@ -8,6 +8,7 @@ defineSuite([
          'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
+         'Renderer/DrawCommand',
          'Renderer/DepthFunction',
          'Renderer/RenderbufferFormat'
      ], 'Renderer/Framebuffer', function(
@@ -19,6 +20,7 @@ defineSuite([
          PixelDatatype,
          BufferUsage,
          ClearCommand,
+         DrawCommand,
          DepthFunction,
          RenderbufferFormat) {
     "use strict";
@@ -144,11 +146,11 @@ defineSuite([
             colorTextures : [colorTexture]
         });
 
-        var command = new ClearCommand({
+        var clearCommand = new ClearCommand({
             color : new Color (0.0, 1.0, 0.0, 1.0),
             framebuffer : framebuffer
         });
-        command.execute(context);
+        clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -167,11 +169,12 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -191,11 +194,11 @@ defineSuite([
         });
         framebuffer.destroyAttachments = false;
 
-        var command = new ClearCommand({
+        var clearCommand = new ClearCommand({
             color : new Color (0.0, 1.0, 0.0, 1.0),
             framebuffer : framebuffer
         });
-        command.execute(context);
+        clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -214,11 +217,12 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         cubeMap = cubeMap.destroy();
@@ -248,12 +252,13 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer
         });
+        command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -266,11 +271,12 @@ defineSuite([
         });
         sp2.allUniforms.u_texture.value = colorTexture;
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         sp2 = sp2.destroy();
@@ -290,7 +296,7 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -301,6 +307,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
 
         // 2 of 3.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -313,11 +320,12 @@ defineSuite([
         });
         sp2.allUniforms.u_texture.value = texture;
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
             vertexArray : va
         });
+        command.execute(context);
 
         sp2 = sp2.destroy();
 
@@ -390,18 +398,18 @@ defineSuite([
         }]);
 
         // 1 of 3.  Clear framebuffer
-        var command = new ClearCommand({
+        var clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
             depth : 1.0,
             framebuffer : framebuffer
         });
-        command.execute(context);
+        clearCommand.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -413,12 +421,13 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);
 
         // 3 of 3.  Passes depth test
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -430,6 +439,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([255, 255, 255, 255]);
@@ -464,12 +474,13 @@ defineSuite([
                 componentsPerAttribute : 4
             }]);
 
-            context.draw({
+            var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
                 vertexArray : va,
                 framebuffer : framebuffer
             });
+            command.execute(context);
 
             // 3 of 5.  Verify default color buffer is still black.
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -483,25 +494,27 @@ defineSuite([
             sp2.allUniforms.u_texture0.value = colorTexture0;
             sp2.allUniforms.u_texture1.value = colorTexture1;
 
-            context.draw({
+            command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp2,
                 vertexArray : va
             });
+            command.execute(context);
             expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
             // 5 of 5. Verify clearing multiple color attachments
-            var command = new ClearCommand({
+            var clearCommand = new ClearCommand({
                 color : new Color (0.0, 0.0, 0.0, 0.0),
                 framebuffer : framebuffer
             });
-            command.execute(context);
+            clearCommand.execute(context);
 
-            context.draw({
+            command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp2,
                 vertexArray : va
             });
+            command.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             sp2 = sp2.destroy();
@@ -656,7 +669,7 @@ defineSuite([
         }]);
 
         expect(function() {
-            context.draw({
+            var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
                 vertexArray : va,
@@ -667,6 +680,7 @@ defineSuite([
                     }
                 })
             });
+            command.execute(context);
         }).toThrowDeveloperError();
     });
 

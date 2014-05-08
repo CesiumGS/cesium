@@ -12,7 +12,7 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/ShaderProgram'
+         'Renderer/DrawCommand'
      ], function(
          ShaderProgram,
          createContext,
@@ -25,7 +25,8 @@ defineSuite([
          Matrix4,
          PrimitiveType,
          BufferUsage,
-         ClearCommand) {
+         ClearCommand,
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -80,11 +81,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : shaderProgram,
             vertexArray : va
         });
+        command.execute(context);
 
         return context.readPixels();
     }

@@ -22,6 +22,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/ClearCommand',
+        '../Renderer/DrawCommand',
         './GeographicTilingScheme',
         './Imagery',
         './TileProviderError',
@@ -54,6 +55,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         ClearCommand,
+        DrawCommand,
         GeographicTilingScheme,
         Imagery,
         TileProviderError,
@@ -938,7 +940,7 @@ define([
             });
         }
 
-        context.draw({
+        var drawCommand = new DrawCommand({
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
             renderState : reproject.renderState,
@@ -946,6 +948,7 @@ define([
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });
+        drawCommand.execute(context);
 
         return outputTexture;
     }

@@ -9,7 +9,8 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
+         'Renderer/ClearCommand',
+         'Renderer/DrawCommand'
      ], 'Renderer/VertexArrayFactory', function(
          createContext,
          destroyContext,
@@ -20,7 +21,8 @@ defineSuite([
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
-         ClearCommand) {
+         ClearCommand,
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -306,11 +308,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -361,22 +364,24 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 0,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 1,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -439,11 +444,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -511,13 +517,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 0,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var vs2 =
@@ -539,13 +546,14 @@ defineSuite([
         sp = sp.destroy();
         sp = context.createShaderProgram(vs2, fs, attributeLocations);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 1,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
