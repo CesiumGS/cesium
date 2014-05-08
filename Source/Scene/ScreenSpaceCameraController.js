@@ -664,7 +664,7 @@ define([
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
-        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z);
+        rotate3D(controller, movement, frameState, transform, Cartesian3.UNIT_Z);
 
         controller.globe = oldGlobe;
     }
@@ -730,19 +730,19 @@ define([
                 var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
                 var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
                 if (!defined(mousePos)) {
-                    pan3D(controller, movement, controller._ellipsoid);
+                    pan3D(controller, movement, frameState, controller._ellipsoid);
                 } else {
                     var magnitude = Cartesian3.magnitude(mousePos);
                     var radii = scratchRadii;
                     radii.x = radii.y = radii.z = magnitude;
                     var ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                    pan3D(controller, movement, ellipsoid);
+                    pan3D(controller, movement, frameState, ellipsoid);
                 }
             } else {
-                pan3D(controller, movement, controller._ellipsoid);
+                pan3D(controller, movement, frameState, controller._ellipsoid);
             }
         } else {
-            rotate3D(controller, movement);
+            rotate3D(controller, movement, frameState);
         }
     }
 
@@ -751,7 +751,7 @@ define([
     var rotate3DNegateScratch = new Cartesian3();
     var rotate3DInverseMatrixScratch = new Matrix4();
 
-    function rotate3D(controller, movement, transform, constrainedAxis, restrictedAngle) {
+    function rotate3D(controller, movement, frameState, transform, constrainedAxis, restrictedAngle) {
         var camera = controller._camera;
         var oldAxis = camera.constrainedAxis;
         if (defined(constrainedAxis)) {
@@ -838,7 +838,7 @@ define([
     var pan3DTemp2 = new Cartesian3();
     var pan3DTemp3 = new Cartesian3();
 
-    function pan3D(controller, movement, ellipsoid) {
+    function pan3D(controller, movement, frameState, ellipsoid) {
         var camera = controller._camera;
         var p0 = camera.pickEllipsoid(movement.startPosition, ellipsoid, pan3DP0);
         var p1 = camera.pickEllipsoid(movement.endPosition, ellipsoid, pan3DP1);
@@ -991,7 +991,7 @@ define([
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
-        rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
+        rotate3D(controller, movement, frameState, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.globe = oldGlobe;
     }
