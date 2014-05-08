@@ -223,25 +223,8 @@ define([
         this._id = createGuid();
 
         // Validation and logging disabled by default for speed.
-
-        /**
-         * DOC_TBA
-         * @performance DOC_TBA: slow.
-         * @type {Boolean}
-         */
         this.validateFramebuffer = false;
-
-        /**
-         * DOC_TBA
-         * @performance DOC_TBA: slow.
-         * @type {Boolean}
-         */
         this.validateShaderProgram = false;
-
-        /**
-         * DOC_TBA
-         * @type {Boolean}
-         */
         this.logShaderCompilation = false;
 
         this._throwOnWebGLError = false;
@@ -364,7 +347,6 @@ define([
          * be stored globally, except they're tied to a particular context, and to manage
          * their lifetime.
          *
-         * @private
          * @type {Object}
          */
         this.cache = {};
@@ -374,39 +356,21 @@ define([
     };
 
     defineProperties(Context.prototype, {
-        /**
-         * A unique ID for this context.
-         * @memberof Context.prototype
-         * @type {String}
-         */
         id : {
             get : function() {
                 return this._id;
             }
         },
-
-        /**
-         * The canvas assoicated with this context.
-         * @memberof Context.prototype
-         * @type {HTMLCanvasElement}
-         */
         canvas : {
             get : function() {
                 return this._canvas;
             }
         },
-
         shaderCache : {
             get : function() {
                 return this._shaderCache;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof Context.prototype
-         * @type {UniformState}
-         */
         uniformState : {
             get : function() {
                 return this._us;
@@ -567,7 +531,7 @@ define([
         },
 
         /**
-         * Rhe maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code>
+         * The maximum number of <code>vec4</code>, <code>ivec4</code>, and <code>bvec4</code>
          * uniforms that can be used by a fragment shader with this WebGL implementation.  The minimum is 16.
          * @memberof Context.prototype
          * @type {Number}
@@ -807,22 +771,12 @@ define([
             }
         },
 
-        /**
-         * DOC_TBA
-         * @memberof Context.prototype
-         * @type {Boolean}
-         * @see <a href='http://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/'>EXT_texture_filter_anisotropic</a>
-         */
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
             }
         },
 
-        /**
-         * DOC_TBA
-         * @memberof Context.prototype
-         */
         maximumTextureFilterAnisotropy : {
             get : function() {
                 return this._maximumTextureFilterAnisotropy;
@@ -896,11 +850,6 @@ define([
             }
         },
 
-        /**
-         * DOC_TBA
-         * @memberof Context.prototype
-         * @type {Boolean}
-         */
         throwOnWebGLError : {
             get : function() {
                 return this._throwOnWebGLError;
@@ -1449,8 +1398,6 @@ define([
     };
 
     /**
-     * DOC_TBA.
-     *
      * options.source can be {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, or {HTMLVideoElement}.
      *
      * @memberof Context
@@ -1633,23 +1580,6 @@ define([
         return new Framebuffer(this._gl, this._maximumColorAttachments, options);
     };
 
-    /**
-     * DOC_TBA.
-     *
-     * @memberof Context
-     *
-     * @param {Object} [options] DOC_TBA.
-     *
-     * @returns {createRenderbuffer} DOC_TBA.
-     *
-     * @exception {DeveloperError} Invalid format.
-     * @exception {DeveloperError} Width must be greater than zero.
-     * @exception {DeveloperError} Width must be less than or equal to the maximum renderbuffer size.
-     * @exception {DeveloperError} Height must be greater than zero.
-     * @exception {DeveloperError} Height must be less than or equal to the maximum renderbuffer size.
-     *
-     * @see Context#createFramebuffer
-     */
     Context.prototype.createRenderbuffer = function(options) {
         var gl = this._gl;
 
@@ -1833,19 +1763,6 @@ define([
         return cachedState;
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     *
-     * @exception {DeveloperError} Invalid sampler.wrapS.
-     * @exception {DeveloperError} Invalid sampler.wrapT.
-     * @exception {DeveloperError} Invalid sampler.minificationFilter.
-     * @exception {DeveloperError} Invalid sampler.magnificationFilter.
-     *
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     */
     Context.prototype.createSampler = function(sampler) {
         var s = {
             wrapS : defaultValue(sampler.wrapS, TextureWrap.CLAMP_TO_EDGE),
@@ -2077,9 +1994,6 @@ define([
         continueDraw(this, drawCommand, shaderProgram);
     };
 
-    /**
-     * @private
-     */
     Context.prototype.endFrame = function() {
         var gl = this._gl;
         gl.useProgram(null);
@@ -2102,14 +2016,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     *
-     * @exception {DeveloperError} readState.width must be greater than zero.
-     * @exception {DeveloperError} readState.height must be greater than zero.
-     */
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
@@ -2420,9 +2326,6 @@ define([
         textureCoordinates : 1
     };
 
-    /**
-     * @private
-     */
     Context.prototype.createViewportQuadCommand = function(fragmentShaderSource, overrides) {
         // Per-context cache for viewport quads
         var vertexArray = this.cache.viewportQuad_vertexArray;
@@ -2481,13 +2384,6 @@ define([
         });
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof Context
-     *
-     * @see Scene#pick
-     */
     Context.prototype.createPickFramebuffer = function() {
         return new PickFramebuffer(this);
     };

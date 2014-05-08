@@ -252,7 +252,6 @@ define([
      * // }
      *
      * @see Context#createVertexArrayFromGeometry
-     * @see ShaderCache
      */
     GeometryPipeline.createAttributeLocations = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
