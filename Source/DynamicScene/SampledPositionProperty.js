@@ -22,6 +22,43 @@ define(['./PositionProperty',
         ReferenceFrame) {
     "use strict";
 
+    var PositionVelocity = function(position, velocity){
+        this.position = position;
+        this.velocity = velocity;
+    };
+
+    PositionVelocity = Cartesian3.packedLength * 2;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    PositionVelocity.pack = function(value, array, startingIndex) {
+        Cartesian3.pack(value.position, array, startingIndex);
+        Cartesian3.pack(value.velocity, array, startingIndex + Cartesian3.packedLength);
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Cartesian3
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     */
+    PositionVelocity.unpack = function(array, startingIndex, result) {
+        if(!defined(result)){
+            result = new PositionVelocity();
+        }
+
+        result.position = Cartesian3.unpack(array, startingIndex, result.position);
+        result.velocity = Cartesian3.unpack(array, startingIndex, result.velocity);
+    };
+
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.
      *
@@ -31,7 +68,7 @@ define(['./PositionProperty',
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     var SampledPositionProperty = function(referenceFrame) {
-        this._property = new SampledProperty(Cartesian3);
+        this._property = new SampledProperty(PositionVelocity);
         this._definitionChanged = new Event();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
 
@@ -134,9 +171,9 @@ define(['./PositionProperty',
 
         result = this._property.getValue(time, result);
         if (defined(result)) {
-            return PositionProperty.convertToReferenceFrame(time, result, this._referenceFrame, referenceFrame, result);
+            return PositionProperty.convertToReferenceFrame(time, result.position, this._referenceFrame, referenceFrame, result.position);
         }
-        return result;
+        return result.position;
     };
 
     /**
@@ -158,8 +195,8 @@ define(['./PositionProperty',
      * @param {JulianDate} time The sample time.
      * @param {Cartesian3} value The value at the provided time.
      */
-    SampledPositionProperty.prototype.addSample = function(time, value) {
-        this._property.addSample(time, value);
+    SampledPositionProperty.prototype.addSample = function(time, position, velocity) {
+        this._property.addSample(time, new PositionVelocity(position, velocity));
     };
 
     /**
@@ -171,7 +208,11 @@ define(['./PositionProperty',
      *
      * @exception {DeveloperError} times and values must be the same length..
      */
-    SampledPositionProperty.prototype.addSamples = function(times, values) {
+    SampledPositionProperty.prototype.addSamples = function(times, positions, velocities) {
+        var values = [];
+        for (var i = 0; i < positions.length; i++) {
+            values.push(new PositionVelocity(positions[i], velocities[i]));
+        }
         this._property.addSamples(times, values);
     };
 
