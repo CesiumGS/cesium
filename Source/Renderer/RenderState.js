@@ -30,12 +30,7 @@ define([
     "use strict";
 
     /**
-     * An immutable render state.  Do not create this directly.  See {@link Context#createRenderState}.
-     *
-     * @alias RenderState
-     * @internalConstructor
-     *
-     * @see Context#createRenderState
+     * @private
      */
     var RenderState = function(context, renderState) {
         var rs = defaultValue(renderState, {});
@@ -396,9 +391,6 @@ define([
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
 
-    /**
-     * @private
-     */
     RenderState.apply = function(gl, renderState, passState) {
         applyFrontFace(gl, renderState);
         applyCull(gl, renderState);
@@ -496,9 +488,6 @@ define([
         return funcs;
     }
 
-    /**
-     * @private
-     */
     RenderState.partialApply = function(gl, previousState, nextState, passState) {
         // When a new render state is applied, instead of making WebGL calls for all the states or first
         // comparing the states one-by-one with the previous state (basically a linear search), we take
