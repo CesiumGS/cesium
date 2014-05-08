@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
@@ -9,11 +8,8 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
-        '../Core/Math',
         '../Core/Rectangle',
-        '../Core/WebMercatorProjection',
         './ImageryState',
         './SceneMode',
         './TerrainState',
@@ -26,7 +22,6 @@ define([
         '../Renderer/TextureWrap'
     ], function(
         BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
@@ -34,11 +29,8 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        GeographicProjection,
         IntersectionTests,
-        CesiumMath,
         Rectangle,
-        WebMercatorProjection,
         ImageryState,
         SceneMode,
         TerrainState,
@@ -238,6 +230,7 @@ define([
         this.upsampledTerrain = undefined;
 
         this.pickBoundingSphere = new BoundingSphere();
+        this.pickTerrain = undefined;
     };
 
     defineProperties(Tile.prototype, {
@@ -305,7 +298,7 @@ define([
     var scratchV2 = new Cartesian3();
 
     Tile.prototype.pick = function(ray, frameState, result) {
-        var terrain = defaultValue(this.loadedTerrain, this.upsampledTerrain);
+        var terrain = this.pickTerrain;
         if (!defined(terrain)) {
             return undefined;
         }
@@ -358,6 +351,11 @@ define([
         if (defined(this.upsampledTerrain)) {
             this.upsampledTerrain.freeResources();
             this.upsampledTerrain = undefined;
+        }
+
+        if (defined(this.pickTerrain)) {
+            this.pickTerrain.freeResources();
+            this.pickTerrain = undefined;
         }
 
         var i, len;
@@ -424,8 +422,7 @@ define([
         var isRenderable = defined(this.vertexArray);
 
         // But it's not done loading until our two state machines are terminated.
-        var isDoneLoading = defined(this.loadedTerrain) && this.loadedTerrain.state === TerrainState.READY;
-        isDoneLoading = isDoneLoading || (defined(this.upsampledTerrain) && this.upsampledTerrain.state === TerrainState.READY);
+        var isDoneLoading = !defined(this.loadedTerrain) && !defined(this.upsampledTerrain);
 
         // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
         // upsampled only.  We won't refine a tile if its four children are upsampled only.
@@ -545,7 +542,7 @@ define([
         var upsampled = tile.upsampledTerrain;
         var suspendUpsampling = false;
 
-        if (defined(loaded) && loaded.state !== TerrainState.READY) {
+        if (defined(loaded)) {
             loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
@@ -578,6 +575,11 @@ define([
 
             if (loaded.state === TerrainState.READY) {
                 loaded.publishToTile(tile);
+
+                // No further loading or upsampling is necessary.
+                tile.pickTerrain = defaultValue(tile.loadedTerrain, tile.upsampledTerrain);
+                tile.loadedTerrain = undefined;
+                tile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
                 // Loading failed for some reason, or data is simply not available,
                 // so no need to continue trying to load.  Any retrying will happen before we
@@ -586,7 +588,7 @@ define([
             }
         }
 
-        if (!suspendUpsampling && defined(upsampled) && upsampled.state !== TerrainState.READY) {
+        if (!suspendUpsampling && defined(upsampled)) {
             upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
@@ -609,6 +611,10 @@ define([
 
             if (upsampled.state === TerrainState.READY) {
                 upsampled.publishToTile(tile);
+
+                // No further upsampling is necessary.  We need to continue loading, though.
+                tile.pickTerrain = tile.upsampledTerrain;
+                tile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
                 // but maybe we'll be saved by loading.
