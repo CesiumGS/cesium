@@ -7,19 +7,15 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,console*/
 
     it('logs a warning', function() {
-        var consoleLog = console.log;
-        var spy = jasmine.createSpy('listener');
-        console.log = spy;
+        spyOn(console, 'log');
 
         deprecationWarning('identifier', 'message');
         deprecationWarning('identifier', 'message');
         deprecationWarning('another identifier', 'another message');
 
-        expect(spy.calls.length).toEqual(2);
-        expect(spy.calls[0].args[0]).toBe('message');
-        expect(spy.calls[1].args[0]).toBe('another message');
-
-        console.log = consoleLog;
+        expect(console.log.calls.length).toEqual(2);
+        expect(console.log.calls[0].args[0]).toBe('message');
+        expect(console.log.calls[1].args[0]).toBe('another message');
     });
 
     it('throws without identifier', function() {
