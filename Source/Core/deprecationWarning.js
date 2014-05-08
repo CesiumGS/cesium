@@ -45,6 +45,8 @@ define([
      *         }
      *     }
      * });
+     *
+     * @private
      */
     var deprecationWarning = function(identifier, message) {
         //>>includeStart('debug', pragmas.debug);
