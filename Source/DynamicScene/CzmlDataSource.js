@@ -260,6 +260,10 @@ define(['../Core/Cartesian2',
             return czmlInterval.cartesian;
         }
 
+        if (defined(czmlInterval.cartesianVelocity)) {
+            return czmlInterval.cartesianVelocity;
+        }
+
         if (defined(czmlInterval.unitCartesian)) {
             return czmlInterval.unitCartesian;
         }
@@ -592,7 +596,8 @@ define(['../Core/Cartesian2',
         var referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
         var unwrappedInterval = unwrapCartesianInterval(packetData);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
-        var packedLength = Cartesian3.packedLength;
+        var hasVelocity = defined(packetData.cartesianVelocity);
+        var packedLength = hasVelocity ? 6 : Cartesian3.packedLength;
         var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
         var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
 
@@ -615,7 +620,7 @@ define(['../Core/Cartesian2',
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
-                property = new SampledPositionProperty(referenceFrame);
+                property = new SampledPositionProperty(referenceFrame, hasVelocity);
                 object[propertyName] = property;
                 propertyCreated = true;
             }
@@ -697,7 +702,7 @@ define(['../Core/Cartesian2',
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
             //If not, create a SampledPositionProperty for it.
             interval = combinedInterval.clone();
-            interval.data = new SampledPositionProperty(referenceFrame);
+            interval.data = new SampledPositionProperty(referenceFrame, hasVelocity);
             intervals.addInterval(interval);
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
