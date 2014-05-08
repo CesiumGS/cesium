@@ -40,7 +40,7 @@ define([
         var viewModel = new PerformanceWatchdogViewModel(description);
 
         var element = document.createElement('div');
-        element.className = 'cesium-performance-watchdog-message';
+        element.className = 'cesium-performance-watchdog-message-area';
         element.setAttribute('data-bind', 'visible: showingLowFrameRateMessage');
 
         var dismissButton = document.createElement('button');
@@ -51,6 +51,7 @@ define([
         element.appendChild(dismissButton);
 
         var message = document.createElement('div');
+        message.className = 'cesium-performance-watchdog-message';
         message.setAttribute('data-bind', 'html: lowFrameRateMessage');
         element.appendChild(message);
 
