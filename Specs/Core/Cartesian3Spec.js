@@ -1056,7 +1056,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromDegreesArray3D', function(){
+    it('fromDegreesArrayHeights', function(){
         var lon1 = 90;
         var lat1 = -70;
         var alt1 = 200000;
@@ -1065,30 +1065,30 @@ defineSuite([
         var alt2 = 100000;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var actual = Cartesian3.fromDegreesArray3D([lon1, lat1, alt1, lon2, lat2, alt2]);
+        var actual = Cartesian3.fromDegreesArrayHeights([lon1, lat1, alt1, lon2, lat2, alt2]);
         var expected = ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(lon1, lat1, alt1), Cartographic.fromDegrees(lon2, lat2, alt2)]);
         expect(actual).toEqual(expected);
     });
 
-    it('fromDegreesArray3D throws with no positions', function() {
+    it('fromDegreesArrayHeights throws with no positions', function() {
         expect(function() {
-            Cartesian3.fromDegreesArray3D();
+            Cartesian3.fromDegreesArrayHeights();
         }).toThrowDeveloperError();
     });
 
-    it('fromDegreesArray3D throws with positions length < 3', function() {
+    it('fromDegreesArrayHeights throws with positions length < 3', function() {
         expect(function() {
-            Cartesian3.fromDegreesArray3D([]);
+            Cartesian3.fromDegreesArrayHeights([]);
         }).toThrowDeveloperError();
     });
 
-    it('fromDegreesArray3D throws with positions length not multiple of 3', function() {
+    it('fromDegreesArrayHeights throws with positions length not multiple of 3', function() {
         expect(function() {
-            Cartesian3.fromDegreesArray3D([1, 3, 5, 2]);
+            Cartesian3.fromDegreesArrayHeights([1, 3, 5, 2]);
         }).toThrowDeveloperError();
     });
 
-    it('fromRadiansArray3D', function(){
+    it('fromRadiansArrayHeights', function(){
         var lon1 = CesiumMath.toRadians(90);
         var lat1 = CesiumMath.toRadians(-70);
         var alt1 = 200000;
@@ -1097,26 +1097,26 @@ defineSuite([
         var alt2 = 100000;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var actual = Cartesian3.fromRadiansArray3D([lon1, lat1, alt1, lon2, lat2, alt2]);
+        var actual = Cartesian3.fromRadiansArrayHeights([lon1, lat1, alt1, lon2, lat2, alt2]);
         var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1, alt1), new Cartographic(lon2, lat2, alt2)]);
         expect(actual).toEqual(expected);
     });
 
-    it('fromRadiansArray3D throws with no positions', function() {
+    it('fromRadiansArrayHeights throws with no positions', function() {
         expect(function() {
-            Cartesian3.fromRadiansArray3D();
+            Cartesian3.fromRadiansArrayHeights();
         }).toThrowDeveloperError();
     });
 
-    it('fromRadiansArray3D throws with positions length < 3', function() {
+    it('fromRadiansArrayHeights throws with positions length < 3', function() {
         expect(function() {
-            Cartesian3.fromRadiansArray3D([]);
+            Cartesian3.fromRadiansArrayHeights([]);
         }).toThrowDeveloperError();
     });
 
-    it('fromRadiansArray3D throws with positions length not multiple of 3', function() {
+    it('fromRadiansArrayHeights throws with positions length not multiple of 3', function() {
         expect(function() {
-            Cartesian3.fromRadiansArray3D([1, 3, 5, 2]);
+            Cartesian3.fromRadiansArrayHeights([1, 3, 5, 2]);
         }).toThrowDeveloperError();
     });
 

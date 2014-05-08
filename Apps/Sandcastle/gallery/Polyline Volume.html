@@ -71,7 +71,7 @@ require(['Cesium'], function(Cesium) {
     // Green extruded square
     var greenBox = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : Cesium.Cartesian3.fromDegreesArray3D([
+            polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
                 -90.0, 32.0, 0.0,
                 -90.0, 36.0, 100000.0,
                 -94.0, 36.0, 0.0
@@ -88,7 +88,7 @@ require(['Cesium'], function(Cesium) {
     // Blue extruded star
     var blueStar = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
-            polylinePositions : Cesium.Cartesian3.fromDegreesArray3D([
+            polylinePositions : Cesium.Cartesian3.fromDegreesArrayHeights([
                 -95.0, 32.0, 0.0,
                 -95.0, 36.0, 100000.0,
                 -99.0, 36.0, 200000.0

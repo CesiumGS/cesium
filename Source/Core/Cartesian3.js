@@ -817,7 +817,7 @@ define([
      * @returns {Cartesian3} The position
      *
      * @example
-     * var position = Cartesian3.fromDegrees(-2.007, 0.645);
+     * var position = Cartesian3.fromRadians(-2.007, 0.645);
      */
     Cartesian3.fromRadians = function(longitude, latitude, height, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -884,7 +884,7 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromDegreesArray([-2.007, 0.645, -1.867, .575]);
+     * var positions = Cartesian3.fromRadiansArray([-2.007, 0.645, -1.867, .575]);
      */
     Cartesian3.fromRadiansArray = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -926,9 +926,9 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromDegreesArray([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
+     * var positions = Cartesian3.fromDegreesArrayHeights([-115.0, 37.0, 100000.0, -107.0, 33.0, 150000.0]);
      */
-    Cartesian3.fromDegreesArray3D = function(coordinates, ellipsoid, result) {
+    Cartesian3.fromDegreesArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
@@ -948,7 +948,7 @@ define([
             pos[i+2] = coordinates[i+2];
         }
 
-        return Cartesian3.fromRadiansArray3D(pos, ellipsoid, result);
+        return Cartesian3.fromRadiansArrayHeights(pos, ellipsoid, result);
     };
 
     /**
@@ -962,9 +962,9 @@ define([
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
-     * var positions = Cartesian3.fromDegreesArray([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
+     * var positions = Cartesian3.fromradiansArrayHeights([-2.007, 0.645, 100000.0, -1.867, .575, 150000.0]);
      */
-    Cartesian3.fromRadiansArray3D = function(coordinates, ellipsoid, result) {
+    Cartesian3.fromRadiansArrayHeights = function(coordinates, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(coordinates)) {
             throw new DeveloperError('positions is required.');
