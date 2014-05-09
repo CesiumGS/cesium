@@ -1047,8 +1047,7 @@ define([
 
         // Ideally, we would render the sky box and atmosphere last for
         // early-z, but we would have to draw it in each frustum
-        frustum.near = camera.frustum.near;
-        frustum.far = camera.frustum.far;
+        frustum.updateNearFar(camera.frustum.near, camera.frustum.far);
         us.updateFrustum(frustum);
 
         if (defined(skyBoxCommand)) {
@@ -1084,14 +1083,14 @@ define([
         for (i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
-            frustum.near = frustumCommands.near;
-            frustum.far = frustumCommands.far;
 
+            var near = frustumCommands.near;
             if (index !== 0) {
                 // Avoid tearing artifacts between adjacent frustums
-                frustum.near *= 0.99;
+                near *= 0.99;
             }
 
+            frustum.updateNearFar(near, frustumCommands.far);
             us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
@@ -1101,7 +1100,7 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            frustum.near = frustumCommands.near;
+            frustum.updateNearFar(frustumCommands.near, frustumCommands.far);
             us.updateFrustum(frustum);
 
             commands = frustumCommands.translucentCommands;
@@ -1314,8 +1313,16 @@ define([
         var drawingBufferWidth = scene.drawingBufferWidth;
         var drawingBufferHeight = scene.drawingBufferHeight;
 
-        var tanPhi = Math.tan(frustum.fovy * 0.5);
-        var tanTheta = frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
+
+        if (defined(frustum.fovy)) {
+            tanPhi = Math.tan(frustum.fovy * 0.5);
+            tanTheta = frustum.aspectRatio * tanPhi;
+        } else {
+            tanPhi = frustum.top / frustum.near;
+            tanTheta = frustum.right / frustum.near;
+        }
 
         var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
         var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;

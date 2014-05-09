@@ -135,6 +135,18 @@ define([
     });
 
     /**
+     * Moves the near and far plane while maintaining the same frustum shape.
+     * @memberof PerspectiveFrustum
+     *
+     * @param {Number} near The near plane distance.
+     * @param {Number} far The far plane distance.
+     */
+    PerspectiveFrustum.prototype.updateNearFar = function(near, far) {
+        this.near = near;
+        this.far = far;
+    };
+
+    /**
      * Creates a culling volume for this frustum.
      *
      * @memberof PerspectiveFrustum

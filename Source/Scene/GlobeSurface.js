@@ -473,10 +473,16 @@ define([
 
         var camera = frameState.camera;
         var frustum = camera.frustum;
-        var fovy = frustum.fovy;
+
+        var tanPhi;
+        if (defined(frustum.fovy)) {
+            tanPhi = Math.tan(frustum.fovy * 0.5);
+        } else {
+            tanPhi = frustum.top / frustum.near;
+        }
 
         // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        return (maxGeometricError * height) / (2 * distance * tanPhi);
     }
 
     function screenSpaceError2D(surface, context, frameState, cameraPosition, cameraPositionCartographic, tile) {

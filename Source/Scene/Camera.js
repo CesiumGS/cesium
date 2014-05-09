@@ -1309,8 +1309,17 @@ define([
           Math.abs(Cartesian3.dot(right, southWest))
         );
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
+
+        if (defined(camera.frustum.fovy)) {
+            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            tanTheta = camera.frustum.aspectRatio * tanPhi;
+        } else {
+            tanPhi = camera.frustum.top / camera.frustum.near;
+            tanTheta = camera.frustum.right / camera.frustum.near;
+        }
+
         var d = Math.max(width / tanTheta, height / tanPhi);
 
         var scalar = mag + d;
@@ -1341,8 +1350,17 @@ define([
         Matrix4.multiplyByPoint(camera.transform, southWest, southWest);
         Matrix4.multiplyByPoint(invTransform, southWest, southWest);
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
+
+        if (defined(camera.frustum.fovy)) {
+            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            tanTheta = camera.frustum.aspectRatio * tanPhi;
+        } else {
+            tanPhi = camera.frustum.top / camera.frustum.near;
+            tanTheta = camera.frustum.right / camera.frustum.near;
+        }
+
         if (!defined(result)) {
             result = new Cartesian3();
         }
@@ -1558,9 +1576,17 @@ define([
         var width = camera._scene.canvas.clientWidth;
         var height = camera._scene.canvas.clientHeight;
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
         var near = camera.frustum.near;
+
+        if (defined(camera.frustum.fovy)) {
+            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            tanTheta = camera.frustum.aspectRatio * tanPhi;
+        } else {
+            tanPhi = camera.frustum.top / near;
+            tanTheta = camera.frustum.right / near;
+        }
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         var y = (2.0 / height) * (height - windowPosition.y) - 1.0;
@@ -1627,7 +1653,7 @@ define([
         }
 
         var frustum = this.frustum;
-        if (defined(frustum.aspectRatio) && defined(frustum.fovy) && defined(frustum.near)) {
+        if (defined(frustum.infiniteProjectionMatrix)) {
             return getPickRayPerspective(this, windowPosition, result);
         }
 
@@ -1739,8 +1765,17 @@ define([
 
         position = Matrix4.multiplyByPoint(camera.transform, camera.position, posScratch);
 
-        var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
-        var tanTheta = camera.frustum.aspectRatio * tanPhi;
+        var tanPhi;
+        var tanTheta;
+
+        if (defined(camera.frustum.fovy)) {
+            tanPhi = Math.tan(camera.frustum.fovy * 0.5);
+            tanTheta = camera.frustum.aspectRatio * tanPhi;
+        } else {
+            tanPhi = camera.frustum.top / camera.frustum.near;
+            tanTheta = camera.frustum.right / camera.frustum.near;
+        }
+
         var distToC = Cartesian3.magnitude(Cartesian3.subtract(position, center, scratchCartesian3));
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;

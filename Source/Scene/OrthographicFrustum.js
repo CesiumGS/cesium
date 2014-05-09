@@ -141,6 +141,18 @@ define([
         }
     });
 
+    /**
+     * Moves the near and far plane while maintaining the same frustum shape.
+     * @memberof OrthographicFrustum
+     *
+     * @param {Number} near The near plane distance.
+     * @param {Number} far The far plane distance.
+     */
+    OrthographicFrustum.prototype.updateNearFar = function(near, far) {
+        this.near = near;
+        this.far = far;
+    };
+
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesPoint = new Cartesian3();

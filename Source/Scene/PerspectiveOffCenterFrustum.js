@@ -162,6 +162,24 @@ define([
         }
     });
 
+    /**
+     * Moves the near and far plane while maintaining the same frustum shape.
+     * @memberof PerspectiveOffCenterFrustum
+     *
+     * @param {Number} near The near plane distance.
+     * @param {Number} far The far plane distance.
+     */
+    PerspectiveOffCenterFrustum.prototype.updateNearFar = function(near, far) {
+        var ratio = this.right / this.top;
+
+        this.top = near * (this.top / this.near);
+        this.bottom = -this.top;
+        this.right = ratio * this.top;
+        this.left = -this.right;
+        this.near = near;
+        this.far = far;
+    };
+
     var getPlanesRight = new Cartesian3();
     var getPlanesNearCenter = new Cartesian3();
     var getPlanesFarCenter = new Cartesian3();

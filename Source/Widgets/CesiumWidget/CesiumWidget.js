@@ -524,8 +524,8 @@ define([
             if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {
-                frustum.top = frustum.right * (height / width);
-                frustum.bottom = -frustum.top;
+                frustum.right = (width / height) * frustum.top;
+                frustum.left = -frustum.right;
             }
         }
     };
