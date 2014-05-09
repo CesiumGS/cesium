@@ -2,7 +2,7 @@
 defineSuite([
          'Renderer/DrawCommand',
          'Core/PrimitiveType',
-         'Renderer/Pass'
+         'Scene/Pass'
      ], function(
          DrawCommand,
          PrimitiveType,

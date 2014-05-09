@@ -28,7 +28,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
-        '../Renderer/Pass',
+        './Pass',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',

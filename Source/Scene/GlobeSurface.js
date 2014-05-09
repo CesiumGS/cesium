@@ -19,7 +19,7 @@ define([
         '../Core/Queue',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        './Pass',
         './ImageryLayer',
         './ImageryState',
         './SceneMode',

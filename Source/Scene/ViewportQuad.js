@@ -7,7 +7,7 @@ define([
         '../Core/BoundingRectangle',
         './Material',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
+        './Pass',
         './BlendingState',
         '../Shaders/ViewportQuadFS'
     ], function(

@@ -20,7 +20,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        './Pass',
         './CullFace',
         './PrimitivePipeline',
         './PrimitiveState',

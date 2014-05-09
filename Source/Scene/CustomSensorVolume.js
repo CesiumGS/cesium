@@ -15,7 +15,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
+        './Pass',
         './BlendingState',
         './CullFace',
         './Material',

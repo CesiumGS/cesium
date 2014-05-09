@@ -15,9 +15,9 @@ defineSuite([
          'Core/GeometryPipeline',
          'Renderer/BufferUsage',
          'Renderer/DrawCommand',
-         'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
+         'Scene/Pass',
          'Scene/BlendingState',
          'Scene/BillboardCollection'
      ], 'Scene/Multifrustum', function(
@@ -36,9 +36,9 @@ defineSuite([
          GeometryPipeline,
          BufferUsage,
          DrawCommand,
-         Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
+         Pass,
          BlendingState,
          BillboardCollection) {
     "use strict";

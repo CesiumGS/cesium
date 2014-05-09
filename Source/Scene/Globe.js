@@ -29,7 +29,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
+        './Pass',
         './DepthFunction',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',

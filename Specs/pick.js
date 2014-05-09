@@ -3,7 +3,7 @@ define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
-        'Renderer/Pass',
+        'Scene/Pass',
         'Scene/CreditDisplay',
         'Scene/FrameState'
     ], function(
