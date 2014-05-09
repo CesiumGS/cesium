@@ -49,7 +49,7 @@ define([
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
-     * var ellipsoid = widget.centralBody.ellipsoid;
+     * var ellipsoid = scene.globe.ellipsoid;
      * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
@@ -79,7 +79,7 @@ define([
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
 
-        return SceneTransforms.clipToWindowCoordinates(scene.context, positionCC, result);
+        return SceneTransforms.clipToWindowCoordinates(scene, positionCC, result);
     };
 
     /**
@@ -97,7 +97,7 @@ define([
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
-     * var ellipsoid = widget.centralBody.ellipsoid;
+     * var ellipsoid = scene.globe.ellipsoid;
      * var position = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
@@ -123,10 +123,10 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene.context.uniformState.viewProjection;
+        var viewProjection = scene._context.uniformState.viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
-        return SceneTransforms.clipToDrawingBufferCoordinates(scene.context, positionCC, result);
+        return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
     };
 
     var projectedPosition = new Cartesian3();
@@ -176,8 +176,8 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToWindowCoordinates = function(context, position, result) {
-        var canvas = context.canvas;
+    SceneTransforms.clipToWindowCoordinates = function(scene, position, result) {
+        var canvas = scene.canvas;
 
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
@@ -196,13 +196,13 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(context, position, result) {
+    SceneTransforms.clipToDrawingBufferCoordinates = function(scene, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
         // Assuming viewport takes up the entire canvas...
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
+        viewport.width = scene.drawingBufferWidth;
+        viewport.height = scene.drawingBufferHeight;
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
@@ -214,10 +214,10 @@ define([
     /**
      * @private
      */
-    SceneTransforms.transformWindowToDrawingBuffer = function(context, windowPosition, result) {
-        var canvas = context.canvas;
-        var xScale = context.drawingBufferWidth / canvas.clientWidth;
-        var yScale = context.drawingBufferHeight / canvas.clientHeight;
+    SceneTransforms.transformWindowToDrawingBuffer = function(scene, windowPosition, result) {
+        var canvas = scene.canvas;
+        var xScale = scene.drawingBufferWidth / canvas.clientWidth;
+        var yScale = scene.drawingBufferHeight / canvas.clientHeight;
         return Cartesian2.fromElements(windowPosition.x * xScale, windowPosition.y * yScale, result);
     };
 

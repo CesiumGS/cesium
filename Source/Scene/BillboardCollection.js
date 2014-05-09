@@ -128,7 +128,7 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = context.createTextureAtlas({images : images});
+     * var atlas = scene.createTextureAtlas({images : images});
      * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
@@ -284,7 +284,7 @@ define([
          * // added to the collection.
          * var billboards = new Cesium.BillboardCollection();
          * var images = [image0, image1];
-         * var atlas = context.createTextureAtlas({images : images});
+         * var atlas = scene.createTextureAtlas({images : images});
          * billboards.textureAtlas = atlas;
          * billboards.add({
          *   // ...
@@ -322,7 +322,7 @@ define([
          * // Set destroyTextureAtlas
          * // Destroy a billboard collection but not its texture atlas.
          *
-         * var atlas = context.createTextureAtlas({images : images});
+         * var atlas = scene.createTextureAtlas({images : images});
          * billboards.textureAtlas = atlas;
          * billboards.destroyTextureAtlas = false;
          * billboards = billboards.destroy();
@@ -1033,10 +1033,6 @@ define([
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
-        var pixelScale;
-        var size;
-        var offset;
-
         var toCenter = Cartesian3.subtract(camera.positionWC, boundingVolume.center, scratchToCenter);
         var proj = Cartesian3.multiplyByScalar(camera.directionWC, Cartesian3.dot(toCenter, camera.directionWC), scratchProj);
         var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
@@ -1044,14 +1040,14 @@ define([
         scratchDrawingBufferDimensions.x = context.drawingBufferWidth;
         scratchDrawingBufferDimensions.y = context.drawingBufferHeight;
         var pixelSize = frustum.getPixelSize(scratchDrawingBufferDimensions, distance);
-        pixelScale = Math.max(pixelSize.x, pixelSize.y);
+        var pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
-        size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
+        var size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
         if (collection._allHorizontalCenter) {
             size *= 0.5;
         }
 
-        offset = pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
+        var offset = pixelScale * collection._maxPixelOffset + collection._maxEyeOffset;
         boundingVolume.radius += size + offset;
     }
 

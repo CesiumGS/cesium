@@ -1,9 +1,7 @@
 /*global define*/
 define(['../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Event',
         './createDynamicPropertyDescriptor',
         './ConstantProperty',
@@ -11,10 +9,8 @@ define(['../Core/Color',
         './StripeOrientation'
     ], function(
         Color,
-        defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Event,
         createDynamicPropertyDescriptor,
         ConstantProperty,

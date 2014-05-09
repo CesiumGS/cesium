@@ -337,7 +337,9 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            }
         }
     });
 
@@ -356,7 +358,9 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            }
         }
     });
 

@@ -30,12 +30,11 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
    
     // Red wall,constant min and max heights
-    var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-115.0, 44.0),
-        Cesium.Cartographic.fromDegrees(-90.0, 44.0)
+    var positions = Cesium.Cartesian3.fromDegreesArray([
+        -115.0, 44.0,
+        -90.0, 44.0
     ]);
     
     var redWallInstance = new Cesium.GeometryInstance({
@@ -50,12 +49,12 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Green wall, contsant height
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-107.0, 43.0),
-        Cesium.Cartographic.fromDegrees(-97.0, 43.0),
-        Cesium.Cartographic.fromDegrees(-97.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-107.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-107.0, 43.0)
+    positions = Cesium.Cartesian3.fromDegreesArray([
+        -107.0, 43.0,
+        -97.0, 43.0,
+        -97.0, 40.0,
+        -107.0, 40.0,
+        -107.0, 43.0
     ]);
     
     var greenWallInstance = new Cesium.GeometryInstance({
@@ -69,18 +68,18 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Blue wall, height specified at each position
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-115.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-112.5, 50.0),
-        Cesium.Cartographic.fromDegrees(-110.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-107.5, 50.0),
-        Cesium.Cartographic.fromDegrees(-105.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-102.5, 50.0),
-        Cesium.Cartographic.fromDegrees(-100.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-97.5, 50.0),
-        Cesium.Cartographic.fromDegrees(-95.0, 50.0),
-        Cesium.Cartographic.fromDegrees(-92.5, 50.0),
-        Cesium.Cartographic.fromDegrees(-90.0, 50.0)
+    positions = Cesium.Cartesian3.fromDegreesArray([
+        -115.0, 50.0,
+        -112.5, 50.0,
+        -110.0, 50.0,
+        -107.5, 50.0,
+        -105.0, 50.0,
+        -102.5, 50.0,
+        -100.0, 50.0,
+        -97.5, 50.0,
+        -95.0, 50.0,
+        -92.5, 50.0,
+        -90.0, 50.0
     ]);
     var maximumHeights = [100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000, 200000, 100000];
     var minimumHeights =  [0, 100000,  0, 100000, 0, 100000, 0, 100000, 0, 100000, 0];

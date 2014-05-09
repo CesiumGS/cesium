@@ -25,6 +25,8 @@ define(['../Core/defaultValue',
         this._showSubscription = undefined;
         this._scale = undefined;
         this._scaleSubscription = undefined;
+        this._minimumPixelSize = undefined;
+        this._minimumPixelSizeSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._definitionChanged = new Event();
@@ -49,11 +51,17 @@ define(['../Core/defaultValue',
          */
         show : createDynamicPropertyDescriptor('show'),
         /**
-         * Gets or sets the {@Cartesian3} {@link Property} specifying the model's scale.
+         * Gets or sets the Number {@link Property} specifying the model's scale.
          * @memberof DynamicModel.prototype
          * @type {Property}
          */
         scale : createDynamicPropertyDescriptor('scale'),
+        /**
+         * Gets or sets the Number {@link Property} specifying the model's approximate minimum pixel size regardless of zoom.
+         * @memberof DynamicModel.prototype
+         * @type {Property}
+         */
+        minimumPixelSize : createDynamicPropertyDescriptor('minimumPixelSize'),
         /**
          * Gets or sets the string {@link Property} specifying the model's uri.
          * @memberof DynamicModel.prototype
@@ -75,6 +83,7 @@ define(['../Core/defaultValue',
         }
         result.show = this.show;
         result.scale = this.scale;
+        result.minimumPixelSize = this.minimumPixelSize;
         result.uri = this.uri;
         return result;
     };
@@ -95,6 +104,7 @@ define(['../Core/defaultValue',
 
         this.show = defaultValue(this.show, source.show);
         this.scale = defaultValue(this.scale, source.scale);
+        this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.uri = defaultValue(this.uri, source.uri);
     };
 

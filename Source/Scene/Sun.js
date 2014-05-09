@@ -122,7 +122,10 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(context, frameState) {
+    Sun.prototype.update = function(scene) {
+        var frameState = scene.frameState;
+        var context = scene._context;
+
         if (!this.show) {
             return undefined;
         }
@@ -136,8 +139,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = context.drawingBufferWidth;
-        var drawingBufferHeight = context.drawingBufferHeight;
+        var drawingBufferWidth = scene.drawingBufferWidth;
+        var drawingBufferHeight = scene.drawingBufferHeight;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -268,11 +271,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(context, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(context, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);

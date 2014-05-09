@@ -307,7 +307,7 @@ define([
     var Sl7 = -112 * 1e-7;
     var Sl8 = -80 * 1e-7;
 
-    var scratchDate = new JulianDate();
+    var scratchDate = new JulianDate(0, 0.0, TimeStandard.TAI);
     /**
      * Gets a point describing the motion of the Earth-Moon barycenter according to the equations
      * described in section 6.

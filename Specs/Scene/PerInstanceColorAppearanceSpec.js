@@ -4,8 +4,8 @@ defineSuite([
          'Scene/Appearance',
          'Scene/Material',
          'Scene/Primitive',
-         'Core/ExtentGeometry',
-         'Core/Extent',
+         'Core/RectangleGeometry',
+         'Core/Rectangle',
          'Core/GeometryInstance',
          'Core/ColorGeometryInstanceAttribute',
          'Renderer/ClearCommand',
@@ -18,8 +18,8 @@ defineSuite([
          Appearance,
          Material,
          Primitive,
-         ExtentGeometry,
-         Extent,
+         RectangleGeometry,
+         Rectangle,
          GeometryInstance,
          ColorGeometryInstanceAttribute,
          ClearCommand,
@@ -38,12 +38,12 @@ defineSuite([
         context = createContext();
         frameState = createFrameState();
 
-        var extent = Extent.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+        var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
-                geometry : new ExtentGeometry({
+                geometry : new RectangleGeometry({
                     vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
-                    extent : extent
+                    rectangle : rectangle
                 }),
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
@@ -52,7 +52,7 @@ defineSuite([
             asynchronous : false
         });
 
-        frameState.camera.viewExtent(extent);
+        frameState.camera.viewRectangle(rectangle);
         var us = context.uniformState;
         us.update(context, frameState);
     });
