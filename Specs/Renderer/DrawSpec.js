@@ -8,14 +8,8 @@ defineSuite([
          'Core/BoundingRectangle',
          'Core/Color',
          'Renderer/BufferUsage',
-         'Renderer/BlendEquation',
-         'Renderer/BlendFunction',
          'Renderer/ClearCommand',
-         'Renderer/DrawCommand',
-         'Renderer/CullFace',
-         'Renderer/DepthFunction',
-         'Renderer/StencilFunction',
-         'Renderer/StencilOperation'
+         'Renderer/DrawCommand'
      ], 'Renderer/Draw', function(
          createContext,
          destroyContext,
@@ -25,16 +19,10 @@ defineSuite([
          BoundingRectangle,
          Color,
          BufferUsage,
-         BlendEquation,
-         BlendFunction,
          ClearCommand,
-         DrawCommand,
-         CullFace,
-         DepthFunction,
-         StencilFunction,
-         StencilOperation) {
+         DrawCommand) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -302,12 +290,12 @@ defineSuite([
             renderState : context.createRenderState({
                 blending : {
                     enabled : true,
-                    equationRgb : BlendEquation.ADD, // Optional, default
-                    equationAlpha : BlendEquation.ADD, // Optional, default
-                    functionSourceRgb : BlendFunction.ONE, // Optional, default
-                    functionSourceAlpha : BlendFunction.ONE, // Optional, default
-                    functionDestinationRgb : BlendFunction.ONE,
-                    functionDestinationAlpha : BlendFunction.ONE
+                    equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                    equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                    functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
+                    functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
+                    functionDestinationRgb : WebGLRenderingContext.ONE,
+                    functionDestinationAlpha : WebGLRenderingContext.ONE
                 }
             })
         });
@@ -343,12 +331,12 @@ defineSuite([
             renderState : context.createRenderState({
                 blending : {
                     enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.SUBTRACT, // does not actually matter
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.ONE, // Don't blend alpha
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ZERO
+                    equationRgb : WebGLRenderingContext.FUNC_ADD,
+                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
+                    functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
+                    functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
+                    functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLRenderingContext.ZERO
                 }
             })
         });
@@ -389,12 +377,12 @@ defineSuite([
                         blue : 0.5,
                         alpha : 0.5
                     },
-                    equationRgb : BlendEquation.SUBTRACT,
-                    equationAlpha : BlendEquation.SUBTRACT,
-                    functionSourceRgb : BlendFunction.CONSTANT_COLOR,
-                    functionSourceAlpha : BlendFunction.ONE,
-                    functionDestinationRgb : BlendFunction.ZERO,
-                    functionDestinationAlpha : BlendFunction.ZERO
+                    equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
+                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
+                    functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
+                    functionSourceAlpha : WebGLRenderingContext.ONE,
+                    functionDestinationRgb : WebGLRenderingContext.ZERO,
+                    functionDestinationAlpha : WebGLRenderingContext.ZERO
                 }
             })
         });
@@ -428,7 +416,7 @@ defineSuite([
             renderState : context.createRenderState({
                 cull : {
                     enabled : true,
-                    face : CullFace.FRONT
+                    face : WebGLRenderingContext.FRONT
                 }
             })
         });
@@ -443,7 +431,7 @@ defineSuite([
             renderState : context.createRenderState({
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
@@ -475,7 +463,7 @@ defineSuite([
                 frontFace : WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
@@ -491,7 +479,7 @@ defineSuite([
                 frontFace : WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
@@ -517,7 +505,7 @@ defineSuite([
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.LESS_OR_EQUAL
+                    func : WebGLRenderingContext.LEQUAL
                 }
             })
         });
@@ -697,7 +685,7 @@ defineSuite([
         var rs = context.createRenderState({
             stencilTest : {
                 enabled : true,
-                frontFunction : StencilFunction.EQUAL,
+                frontFunction : WebGLRenderingContext.EQUAL,
                 reference : 1,
                 mask : 1
             }
@@ -732,7 +720,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     frontOperation : {
-                        zPass : StencilOperation.INCREMENT
+                        zPass : WebGLRenderingContext.INCR
                     }
                 }
             })
@@ -766,7 +754,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             stencilTest : {
                 enabled : true,
-                backFunction : StencilFunction.NOT_EQUAL,
+                backFunction : WebGLRenderingContext.NOTEQUAL,
                 reference : 0
             }
         });
@@ -801,7 +789,7 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     backOperation : {
-                        zPass : StencilOperation.INVERT
+                        zPass : WebGLRenderingContext.INVERT
                     }
                 }
             })

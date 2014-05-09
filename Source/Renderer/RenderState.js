@@ -6,13 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
         '../Core/RuntimeError',
-        '../Core/WindingOrder',
-        './CullFace',
-        './DepthFunction',
-        './BlendEquation',
-        './BlendFunction',
-        './StencilFunction',
-        './StencilOperation'
+        '../Core/WindingOrder'
     ], function(
         Color,
         defaultValue,
@@ -20,14 +14,72 @@ define([
         DeveloperError,
         BoundingRectangle,
         RuntimeError,
-        WindingOrder,
-        CullFace,
-        DepthFunction,
-        BlendEquation,
-        BlendFunction,
-        StencilFunction,
-        StencilOperation) {
+        WindingOrder) {
     "use strict";
+    /*global WebGLRenderingContext*/
+
+    function validateBlendEquation(blendEquation) {
+        return ((blendEquation === WebGLRenderingContext.FUNC_ADD) ||
+                (blendEquation === WebGLRenderingContext.FUNC_SUBTRACT) ||
+                (blendEquation === WebGLRenderingContext.FUNC_REVERSE_SUBTRACT));
+    }
+
+    function validateBlendFunction(blendFunction) {
+        return ((blendFunction === WebGLRenderingContext.ZERO) ||
+                (blendFunction === WebGLRenderingContext.ONE) ||
+                (blendFunction === WebGLRenderingContext.SRC_COLOR) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_SRC_COLOR) ||
+                (blendFunction === WebGLRenderingContext.DST_COLOR) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_DST_COLOR) ||
+                (blendFunction === WebGLRenderingContext.SRC_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_SRC_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.DST_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_DST_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.CONSTANT_COLOR) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_CONSTANT_COLOR) ||
+                (blendFunction === WebGLRenderingContext.CONSTANT_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.ONE_MINUS_CONSTANT_ALPHA) ||
+                (blendFunction === WebGLRenderingContext.SRC_ALPHA_SATURATE));
+    }
+
+    function validateCullFace(cullFace) {
+        return ((cullFace === WebGLRenderingContext.FRONT) ||
+                (cullFace === WebGLRenderingContext.BACK) ||
+                (cullFace === WebGLRenderingContext.FRONT_AND_BACK));
+    }
+
+    function validateDepthFunction(depthFunction) {
+        return ((depthFunction === WebGLRenderingContext.NEVER) ||
+                (depthFunction === WebGLRenderingContext.LESS) ||
+                (depthFunction === WebGLRenderingContext.EQUAL) ||
+                (depthFunction === WebGLRenderingContext.LEQUAL) ||
+                (depthFunction === WebGLRenderingContext.GREATER) ||
+                (depthFunction === WebGLRenderingContext.NOTEQUAL) ||
+                (depthFunction === WebGLRenderingContext.GEQUAL) ||
+                (depthFunction === WebGLRenderingContext.ALWAYS));
+    }
+
+    function validateStencilFunction (stencilFunction) {
+        return ((stencilFunction === WebGLRenderingContext.NEVER) ||
+                (stencilFunction === WebGLRenderingContext.LESS) ||
+                (stencilFunction === WebGLRenderingContext.EQUAL) ||
+                (stencilFunction === WebGLRenderingContext.LEQUAL) ||
+                (stencilFunction === WebGLRenderingContext.GREATER) ||
+                (stencilFunction === WebGLRenderingContext.NOTEQUAL) ||
+                (stencilFunction === WebGLRenderingContext.GEQUAL) ||
+                (stencilFunction === WebGLRenderingContext.ALWAYS));
+    }
+
+    function validateStencilOperation(stencilOperation) {
+        return ((stencilOperation === WebGLRenderingContext.ZERO) ||
+                (stencilOperation === WebGLRenderingContext.KEEP) ||
+                (stencilOperation === WebGLRenderingContext.REPLACE) ||
+                (stencilOperation === WebGLRenderingContext.INCR) ||
+                (stencilOperation === WebGLRenderingContext.DECR) ||
+                (stencilOperation === WebGLRenderingContext.INVERT) ||
+                (stencilOperation === WebGLRenderingContext.INCREMENT_WRAP) ||
+                (stencilOperation === WebGLRenderingContext.DECR_WRAP));
+    }
 
     /**
      * @private
@@ -52,7 +104,7 @@ define([
         this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);
         this.cull = {
             enabled : defaultValue(cull.enabled, false),
-            face : defaultValue(cull.face, CullFace.BACK)
+            face : defaultValue(cull.face, WebGLRenderingContext.BACK)
         };
         this.lineWidth = defaultValue(rs.lineWidth, 1.0);
         this.polygonOffset = {
@@ -70,7 +122,7 @@ define([
         };
         this.depthTest = {
             enabled : defaultValue(depthTest.enabled, false),
-            func : defaultValue(depthTest.func, DepthFunction.LESS) // func, because function is a JavaScript keyword
+            func : defaultValue(depthTest.func, WebGLRenderingContext.LESS) // func, because function is a JavaScript keyword
         };
         this.colorMask = {
             red : defaultValue(colorMask.red, true),
@@ -88,28 +140,28 @@ define([
                 defaultValue(blendingColor.blue, 0.0),
                 defaultValue(blendingColor.alpha, 0.0)
             ),
-            equationRgb : defaultValue(blending.equationRgb, BlendEquation.ADD),
-            equationAlpha : defaultValue(blending.equationAlpha, BlendEquation.ADD),
-            functionSourceRgb : defaultValue(blending.functionSourceRgb, BlendFunction.ONE),
-            functionSourceAlpha : defaultValue(blending.functionSourceAlpha, BlendFunction.ONE),
-            functionDestinationRgb : defaultValue(blending.functionDestinationRgb, BlendFunction.ZERO),
-            functionDestinationAlpha : defaultValue(blending.functionDestinationAlpha, BlendFunction.ZERO)
+            equationRgb : defaultValue(blending.equationRgb, WebGLRenderingContext.FUNC_ADD),
+            equationAlpha : defaultValue(blending.equationAlpha, WebGLRenderingContext.FUNC_ADD),
+            functionSourceRgb : defaultValue(blending.functionSourceRgb, WebGLRenderingContext.ONE),
+            functionSourceAlpha : defaultValue(blending.functionSourceAlpha, WebGLRenderingContext.ONE),
+            functionDestinationRgb : defaultValue(blending.functionDestinationRgb, WebGLRenderingContext.ZERO),
+            functionDestinationAlpha : defaultValue(blending.functionDestinationAlpha, WebGLRenderingContext.ZERO)
         };
         this.stencilTest = {
             enabled : defaultValue(stencilTest.enabled, false),
-            frontFunction : defaultValue(stencilTest.frontFunction, StencilFunction.ALWAYS),
-            backFunction : defaultValue(stencilTest.backFunction, StencilFunction.ALWAYS),
+            frontFunction : defaultValue(stencilTest.frontFunction, WebGLRenderingContext.ALWAYS),
+            backFunction : defaultValue(stencilTest.backFunction, WebGLRenderingContext.ALWAYS),
             reference : defaultValue(stencilTest.reference, 0),
             mask : defaultValue(stencilTest.mask, ~0),
             frontOperation : {
-                fail : defaultValue(stencilTestFrontOperation.fail, StencilOperation.KEEP),
-                zFail : defaultValue(stencilTestFrontOperation.zFail, StencilOperation.KEEP),
-                zPass : defaultValue(stencilTestFrontOperation.zPass, StencilOperation.KEEP)
+                fail : defaultValue(stencilTestFrontOperation.fail, WebGLRenderingContext.KEEP),
+                zFail : defaultValue(stencilTestFrontOperation.zFail, WebGLRenderingContext.KEEP),
+                zPass : defaultValue(stencilTestFrontOperation.zPass, WebGLRenderingContext.KEEP)
             },
             backOperation : {
-                fail : defaultValue(stencilTestBackOperation.fail, StencilOperation.KEEP),
-                zFail : defaultValue(stencilTestBackOperation.zFail, StencilOperation.KEEP),
-                zPass : defaultValue(stencilTestBackOperation.zPass, StencilOperation.KEEP)
+                fail : defaultValue(stencilTestBackOperation.fail, WebGLRenderingContext.KEEP),
+                zFail : defaultValue(stencilTestBackOperation.zFail, WebGLRenderingContext.KEEP),
+                zPass : defaultValue(stencilTestBackOperation.zPass, WebGLRenderingContext.KEEP)
             }
         };
         this.sampleCoverage = {
@@ -131,7 +183,7 @@ define([
         if (!WindingOrder.validate(this.frontFace)) {
             throw new DeveloperError('Invalid renderState.frontFace.');
         }
-        if (!CullFace.validate(this.cull.face)) {
+        if (!validateCullFace(this.cull.face)) {
             throw new DeveloperError('Invalid renderState.cull.face.');
         }
         if ((this.scissorTest.rectangle.width < 0) ||
@@ -150,7 +202,7 @@ define([
             // Would be clamped by GL
             throw new DeveloperError('renderState.depthRange.far must be less than or equal to one.');
         }
-        if (!DepthFunction.validate(this.depthTest.func)) {
+        if (!validateDepthFunction(this.depthTest.func)) {
             throw new DeveloperError('Invalid renderState.depthTest.func.');
         }
         if ((this.blending.color.red < 0.0) || (this.blending.color.red > 1.0) ||
@@ -160,46 +212,46 @@ define([
             // Would be clamped by GL
             throw new DeveloperError('renderState.blending.color components must be greater than or equal to zero and less than or equal to one.');
         }
-        if (!BlendEquation.validate(this.blending.equationRgb)) {
+        if (!validateBlendEquation(this.blending.equationRgb)) {
             throw new DeveloperError('Invalid renderState.blending.equationRgb.');
         }
-        if (!BlendEquation.validate(this.blending.equationAlpha)) {
+        if (!validateBlendEquation(this.blending.equationAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.equationAlpha.');
         }
-        if (!BlendFunction.validate(this.blending.functionSourceRgb)) {
+        if (!validateBlendFunction(this.blending.functionSourceRgb)) {
             throw new DeveloperError('Invalid renderState.blending.functionSourceRgb.');
         }
-        if (!BlendFunction.validate(this.blending.functionSourceAlpha)) {
+        if (!validateBlendFunction(this.blending.functionSourceAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.functionSourceAlpha.');
         }
-        if (!BlendFunction.validate(this.blending.functionDestinationRgb)) {
+        if (!validateBlendFunction(this.blending.functionDestinationRgb)) {
             throw new DeveloperError('Invalid renderState.blending.functionDestinationRgb.');
         }
-        if (!BlendFunction.validate(this.blending.functionDestinationAlpha)) {
+        if (!validateBlendFunction(this.blending.functionDestinationAlpha)) {
             throw new DeveloperError('Invalid renderState.blending.functionDestinationAlpha.');
         }
-        if (!StencilFunction.validate(this.stencilTest.frontFunction)) {
+        if (!validateStencilFunction(this.stencilTest.frontFunction)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontFunction.');
         }
-        if (!StencilFunction.validate(this.stencilTest.backFunction)) {
+        if (!validateStencilFunction(this.stencilTest.backFunction)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backFunction.');
         }
-        if (!StencilOperation.validate(this.stencilTest.frontOperation.fail)) {
+        if (!validateStencilOperation(this.stencilTest.frontOperation.fail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.fail.');
         }
-        if (!StencilOperation.validate(this.stencilTest.frontOperation.zFail)) {
+        if (!validateStencilOperation(this.stencilTest.frontOperation.zFail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zFail.');
         }
-        if (!StencilOperation.validate(this.stencilTest.frontOperation.zPass)) {
+        if (!validateStencilOperation(this.stencilTest.frontOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.frontOperation.zPass.');
         }
-        if (!StencilOperation.validate(this.stencilTest.backOperation.fail)) {
+        if (!validateStencilOperation(this.stencilTest.backOperation.fail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.fail.');
         }
-        if (!StencilOperation.validate(this.stencilTest.backOperation.zFail)) {
+        if (!validateStencilOperation(this.stencilTest.backOperation.zFail)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zFail.');
         }
-        if (!StencilOperation.validate(this.stencilTest.backOperation.zPass)) {
+        if (!validateStencilOperation(this.stencilTest.backOperation.zPass)) {
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
         }
         //>>includeEnd('debug');

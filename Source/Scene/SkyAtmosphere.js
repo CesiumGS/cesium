@@ -11,10 +11,10 @@ define([
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
         '../Renderer/createShaderSource',
-        '../Scene/SceneMode',
+        './BlendingState',
+        './CullFace',
+        './SceneMode',
         '../Shaders/SkyAtmosphereVS',
         '../Shaders/SkyAtmosphereFS'
     ], function(
@@ -29,9 +29,9 @@ define([
         VertexFormat,
         BufferUsage,
         DrawCommand,
-        CullFace,
-        BlendingState,
         createShaderSource,
+        BlendingState,
+        CullFace,
         SceneMode,
         SkyAtmosphereVS,
         SkyAtmosphereFS) {

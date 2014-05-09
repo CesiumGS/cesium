@@ -9,7 +9,6 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/DrawCommand',
-         'Renderer/DepthFunction',
          'Renderer/RenderbufferFormat'
      ], 'Renderer/Framebuffer', function(
          createContext,
@@ -21,7 +20,6 @@ defineSuite([
          BufferUsage,
          ClearCommand,
          DrawCommand,
-         DepthFunction,
          RenderbufferFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
@@ -417,7 +415,7 @@ defineSuite([
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.NEVER
+                    func : WebGLRenderingContext.NEVER
                 }
             })
         });
@@ -435,7 +433,7 @@ defineSuite([
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.ALWAYS
+                    func : WebGLRenderingContext.ALWAYS
                 }
             })
         });

@@ -12,8 +12,8 @@ define([
         '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/BlendingState',
-        '../Scene/SceneMode',
+        './BlendingState',
+        './SceneMode',
         '../Shaders/SkyBoxVS',
         '../Shaders/SkyBoxFS'
     ], function(

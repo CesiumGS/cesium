@@ -13,12 +13,12 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/GeometryPipeline',
-         'Renderer/BlendingState',
          'Renderer/BufferUsage',
          'Renderer/DrawCommand',
          'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
+         'Scene/BlendingState',
          'Scene/BillboardCollection'
      ], 'Scene/Multifrustum', function(
          createScene,
@@ -34,12 +34,12 @@ defineSuite([
          CesiumMath,
          Matrix4,
          GeometryPipeline,
-         BlendingState,
          BufferUsage,
          DrawCommand,
          Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
+         BlendingState,
          BillboardCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

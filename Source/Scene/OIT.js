@@ -4,12 +4,12 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Renderer/createShaderSource',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/PixelFormat',
         '../Renderer/RenderState',
+        '../Scene/BlendEquation',
+        '../Scene/BlendFunction',
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
@@ -17,12 +17,12 @@ define([
         destroyObject,
         Color,
         createShaderSource,
-        BlendEquation,
-        BlendFunction,
         ClearCommand,
         PixelDatatype,
         PixelFormat,
         RenderState,
+        BlendEquation,
+        BlendFunction,
         AdjustTranslucentFS,
         CompositeOITFS) {
     "use strict";

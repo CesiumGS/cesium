@@ -6,9 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
         './Material',
-        '../Renderer/BlendingState',
         '../Renderer/createShaderSource',
         '../Renderer/Pass',
+        './BlendingState',
         '../Shaders/ViewportQuadFS'
     ], function(
         Color,
@@ -17,9 +17,9 @@ define([
         DeveloperError,
         BoundingRectangle,
         Material,
-        BlendingState,
         createShaderSource,
         Pass,
+        BlendingState,
         ViewportQuadFS) {
     "use strict";
 
