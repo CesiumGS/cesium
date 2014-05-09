@@ -148,15 +148,6 @@ define([
         /**
          * DOC_TBA
          *
-         * @type {BufferUsage}
-         * @default {@link BufferUsage.STATIC_DRAW}
-         */
-        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
-        this._bufferUsage = this.bufferUsage;
-
-        /**
-         * DOC_TBA
-         *
          * @type {Number}
          * @default {@link Number.POSITIVE_INFINITY}
          */
@@ -334,7 +325,7 @@ define([
             vertices[k++] = n.z;
         }
 
-        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), customSensorVolume.bufferUsage);
+        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), BufferUsage.STATIC_DRAW);
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
@@ -454,10 +445,9 @@ define([
         }
 
         // Recreate vertex buffer when directions change
-        var directionsChanged = this._directionsDirty || (this._bufferUsage !== this.bufferUsage);
+        var directionsChanged = this._directionsDirty;
         if (directionsChanged) {
             this._directionsDirty = false;
-            this._bufferUsage = this.bufferUsage;
             this._va = this._va && this._va.destroy();
 
             var directions = this._directions;

@@ -8,7 +8,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Renderer/BufferUsage',
         './Material',
         './CustomSensorVolume'
     ], function(
@@ -20,7 +19,6 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
-        BufferUsage,
         Material,
         CustomSensorVolume) {
     "use strict";
@@ -90,14 +88,6 @@ define([
          * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        /**
-         * DOC_TBA
-         *
-         * @type {BufferUsage}
-         * @default {@link BufferUsage.STATIC_DRAW}
-         */
-        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
 
         /**
          * DOC_TBA
@@ -208,7 +198,6 @@ define([
         s.showIntersection = this.showIntersection;
         s.showThroughEllipsoid = this.showThroughEllipsoid;
         s.modelMatrix = this.modelMatrix;
-        s.bufferUsage = this.bufferUsage;
         s.radius = this.radius;
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
