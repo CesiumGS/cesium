@@ -989,17 +989,10 @@ define([
 
             if (!defined(center)) {
                 intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
-                if (defined(intersection)) {
-                    center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
-                } else {
-                    grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
-                    if (!defined(grazingAltitudeLocation)) {
-                        return;
-                    }
-                    grazingAltitudeCart = ellipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
-                    grazingAltitudeCart.height = 0.0;
-                    center = ellipsoid.cartographicToCartesian(grazingAltitudeCart, tilt3DCenter);
+                if (!defined(intersection)) {
+                    return;
                 }
+                center = Ray.getPoint(ray, intersection.start, tilt3DCenter);
             }
 
             Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
@@ -1018,17 +1011,10 @@ define([
 
         if (!defined(verticalCenter)) {
             intersection = IntersectionTests.rayEllipsoid(ray, newEllipsoid);
-            if (defined(intersection)) {
-                verticalCenter = Ray.getPoint(ray, intersection.start);
-            } else {
-                grazingAltitudeLocation = IntersectionTests.grazingAltitudeLocation(ray, newEllipsoid);
-                if (!defined(grazingAltitudeLocation)) {
-                    return;
-                }
-                grazingAltitudeCart = newEllipsoid.cartesianToCartographic(grazingAltitudeLocation, tilt3DCart);
-                grazingAltitudeCart.height = 0.0;
-                verticalCenter = newEllipsoid.cartographicToCartesian(grazingAltitudeCart);
+            if (!defined(intersection)) {
+                return;
             }
+            verticalCenter = Ray.getPoint(ray, intersection.start);
         }
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
