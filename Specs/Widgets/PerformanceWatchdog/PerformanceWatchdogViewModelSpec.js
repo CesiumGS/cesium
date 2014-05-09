@@ -4,6 +4,7 @@ defineSuite([
          'Core/defined',
          'Core/getTimestamp',
          'Core/redirectToUrl',
+         'Scene/FrameRateMonitor',
          'Specs/createScene',
          'Specs/destroyScene'
      ], function(
@@ -11,6 +12,7 @@ defineSuite([
              defined,
              getTimestamp,
              redirectToUrl,
+             FrameRateMonitor,
              createScene,
              destroyScene) {
     "use strict";
@@ -31,6 +33,8 @@ defineSuite([
             viewModel.destroy();
             viewModel = undefined;
         }
+
+        FrameRateMonitor.fromScene(scene).destroy();
     });
 
     function spinWait(milliseconds) {
@@ -54,58 +58,34 @@ defineSuite([
             scene : scene
         });
 
-        expect(viewModel.redirectOnErrorUrl).toBeUndefined();
-        expect(viewModel.redirectOnLowFrameRateUrl).toBeUndefined();
         expect(viewModel.lowFrameRateMessage).toBeDefined();
-        expect(viewModel.samplingWindow).toBe(5000);
-        expect(viewModel.quietPeriod).toBe(2000);
-        expect(viewModel.warmupPeriod).toBe(5000);
-        expect(viewModel.minimumFrameRateDuringWarmup).toBe(4);
-        expect(viewModel.minimumFrameRateAfterWarmup).toBe(8);
         expect(viewModel.lowFrameRateMessageDismissed).toBe(false);
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.lowFrameRate.numberOfListeners).toBe(0);
     });
 
     it('honors parameters to the constructor', function() {
         var options = {
             scene : scene,
-            redirectOnErrorUrl : 'http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/error',
-            redirectOnLowFrameRateUrl : 'http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/low/frame/rate',
-            lowFrameRateMessage : 'why so slow?',
-            samplingWindow : 3000,
-            quietPeriod : 1000,
-            warmupPeriod : 6000,
-            minimumFrameRateDuringWarmup : 1,
-            minimumFrameRateAfterWarmup : 2,
-            lowFrameRateCallback : function() {}
+            lowFrameRateMessage : 'why so slow?'
         };
 
         viewModel = new PerformanceWatchdogViewModel(options);
 
-        expect(viewModel.redirectOnErrorUrl).toBe('http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/error');
-        expect(viewModel.redirectOnLowFrameRateUrl).toBe('http://redirected.here/by/PerformanceWatchdogViewModelSpec/for/low/frame/rate');
         expect(viewModel.lowFrameRateMessage).toBe('why so slow?');
-        expect(viewModel.samplingWindow).toBe(3000);
-        expect(viewModel.quietPeriod).toBe(1000);
-        expect(viewModel.warmupPeriod).toBe(6000);
-        expect(viewModel.minimumFrameRateDuringWarmup).toBe(1);
-        expect(viewModel.minimumFrameRateAfterWarmup).toBe(2);
-        expect(viewModel.lowFrameRateMessageDismissed).toBe(false);
-        expect(viewModel.showingLowFrameRateMessage).toBe(false);
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.lowFrameRate.numberOfListeners).toBe(1);
     });
 
     it('shows a message on low frame rate', function() {
+        var monitor = FrameRateMonitor.fromScene(scene);
+        monitor.quietPeriod = 1;
+        monitor.warmupPeriod = 1;
+        monitor.samplingWindow = 1;
+        monitor.minimumFrameRateDuringWarmup = 1000;
+        monitor.minimumFrameRateAfterWarmup = 1000;
+
         viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
-            minimumFrameRateDuringWarmup : 1000,
-            minimumFrameRateAfterWarmup : 1000
+            scene : scene
         });
 
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
@@ -128,13 +108,15 @@ defineSuite([
     });
 
     it('does not report a low frame rate during the queit period', function() {
+        var monitor = FrameRateMonitor.fromScene(scene);
+        monitor.quietPeriod = 1000;
+        monitor.warmupPeriod = 1;
+        monitor.samplingWindow = 1;
+        monitor.minimumFrameRateDuringWarmup = 1000;
+        monitor.minimumFrameRateAfterWarmup = 1000;
+
         viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            quietPeriod : 1000,
-            warmupPeriod : 1,
-            samplingWindow : 1,
-            minimumFrameRateDuringWarmup : 1000,
-            minimumFrameRateAfterWarmup : 1000
+            scene : scene
         });
 
         // Rendering once starts the quiet period
@@ -148,61 +130,16 @@ defineSuite([
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
     });
 
-    it('redirects on render error when a redirectOnErrorUrl is provided', function() {
-        spyOn(redirectToUrl, 'implementation');
-        spyOn(scene.primitives, 'update').andCallFake(function() {
-            throw 'error';
-        });
-
-        var viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            redirectOnErrorUrl : 'http://fake.redirect/target'
-        });
-
-        scene.render();
-
-        expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
-    });
-
-    it('redirects on low frame rate when a redirectOnLowFrameRateUrl is provided', function() {
-        spyOn(redirectToUrl, 'implementation');
-
-        viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            redirectOnLowFrameRateUrl : 'http://fake.redirect/target',
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
-            minimumFrameRateDuringWarmup : 1000,
-            minimumFrameRateAfterWarmup : 1000
-        });
-
-        // Rendering once starts the quiet period
-        scene.render();
-
-        // Wait until we're well past the end of the quiet period.
-        spinWait(2);
-
-        // Rendering again records our first sample.
-        scene.render();
-
-        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
-        spinWait(2);
-
-        // Record our second sample.  The watchdog should notice that our frame rate is too low.
-        scene.render();
-
-        expect(redirectToUrl.implementation).toHaveBeenCalledWith('http://fake.redirect/target');
-    });
-
     it('the low frame rate message goes away after the warmup period if the frame rate returns to nominal', function() {
+        var monitor = FrameRateMonitor.fromScene(scene);
+        monitor.quietPeriod = 1;
+        monitor.warmupPeriod = 1;
+        monitor.samplingWindow = 1;
+        monitor.minimumFrameRateDuringWarmup = 10;
+        monitor.minimumFrameRateAfterWarmup = 10;
+
         viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
-            minimumFrameRateDuringWarmup : 10,
-            minimumFrameRateAfterWarmup : 10
+            scene : scene
         });
 
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
@@ -224,7 +161,7 @@ defineSuite([
         expect(viewModel.showingLowFrameRateMessage).toBe(true);
 
         // Render as fast as possible for a samplingWindow, quietPeriod, and warmupPeriod.
-        var endTime = getTimestamp() + 4;
+        var endTime = getTimestamp() + 50;
         while (getTimestamp() < endTime) {
             scene.render();
         }
@@ -234,13 +171,15 @@ defineSuite([
     });
 
     it('does not show the low frame rate message again once it is dismissed', function() {
+        var monitor = FrameRateMonitor.fromScene(scene);
+        monitor.quietPeriod = 1;
+        monitor.warmupPeriod = 1;
+        monitor.samplingWindow = 1;
+        monitor.minimumFrameRateDuringWarmup = 1000;
+        monitor.minimumFrameRateAfterWarmup = 1000;
+
         viewModel = new PerformanceWatchdogViewModel({
-            scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
-            minimumFrameRateDuringWarmup : 1000,
-            minimumFrameRateAfterWarmup : 1000
+            scene : scene
         });
 
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
