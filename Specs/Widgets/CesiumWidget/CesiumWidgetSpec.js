@@ -90,6 +90,13 @@ defineSuite([
         expect(widget.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        widget = new CesiumWidget(container, {
+            targetFrameRate : 23
+        });
+        expect(widget.targetFrameRate).toBe(23);
+    });
+
     it('sets expected options imageryProvider', function() {
         var options = {
             imageryProvider : new TileCoordinatesImageryProvider()
@@ -169,39 +176,38 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if targetFrameRate less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');
         }).toThrowDeveloperError();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         widget = new CesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        widget.onRenderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(widget, error);
-            expect(widget.useDefaultRenderLoop).toEqual(false);
-        });
+            return !widget.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('shows the error panel when render throws', function() {
         widget = new CesiumWidget(container);
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
@@ -226,7 +232,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 

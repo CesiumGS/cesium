@@ -67,39 +67,6 @@ define([
         clock.shouldAnimate = false;
     }
 
-    function startRenderLoop(viewer) {
-        viewer._renderLoopRunning = true;
-
-        function render() {
-            if (viewer.isDestroyed()) {
-                return;
-            }
-
-            try {
-                if (viewer._useDefaultRenderLoop) {
-                    viewer.resize();
-                    viewer.render();
-                    requestAnimationFrame(render);
-                } else {
-                    viewer._renderLoopRunning = false;
-                }
-            } catch (error) {
-                viewer._useDefaultRenderLoop = false;
-                viewer._renderLoopRunning = false;
-                viewer._renderLoopError.raiseEvent(viewer, error);
-                if (viewer._showRenderLoopErrors) {
-                    /*global console*/
-                    var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    viewer.cesiumWidget.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
-                }
-            }
-        }
-
-        requestAnimationFrame(render);
-    }
-
     /**
      * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
      * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
@@ -129,6 +96,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
@@ -243,7 +211,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
-            useDefaultRenderLoop : false
+            useDefaultRenderLoop : options.useDefaultRenderLoop,
+            targetFrameRate : options.targetFrameRate,
+            showRenderLoopErrors : options.showRenderLoopErrors
         });
 
         var dataSourceCollection = new DataSourceCollection();
@@ -468,14 +438,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
-        this._useDefaultRenderLoop = undefined;
-        this._renderLoopRunning = false;
-        this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-        this._renderLoopError = new Event();
         this._allowDataSourcesToSuspendAnimation = true;
 
-        //Start the render loop if not explicitly disabled in options.
-        this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+        // Prior to each render, check if anything needs to be resized.
+        cesiumWidget.scene.preRender.addEventListener(function(scene, time) {
+            resizeViewer(that);
+        });
     };
 
     defineProperties(Viewer.prototype, {
@@ -678,16 +646,20 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Gets the event that will be raised when an error is encountered during the default render loop.
-         * The viewer instance and the generated exception are the only two parameters passed to the event handler.
-         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
-         * be set back to true to continue rendering after an exception.
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no effect.
          * @memberof Viewer.prototype
-         * @type {Event}
+         *
+         * @type {Number}
          */
-        renderLoopError : {
+        targetFrameRate : {
             get : function() {
-                return this._renderLoopError;
+                return this._cesiumWidget.targetFrameRate;
+            },
+            set : function(value) {
+                this._cesiumWidget.targetFrameRate = value;
             }
         },
 
@@ -697,22 +669,20 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods
-         * as part of a custom render loop.
+         * as part of a custom render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof Viewer.prototype
          *
          * @type {Boolean}
          */
         useDefaultRenderLoop : {
             get : function() {
-                return this._useDefaultRenderLoop;
+                return this._cesiumWidget.useDefaultRenderLoop;
             },
             set : function(value) {
-                if (this._useDefaultRenderLoop !== value) {
-                    this._useDefaultRenderLoop = value;
-                    if (value && !this._renderLoopRunning) {
-                        startRenderLoop(this);
-                    }
-                }
+                this._cesiumWidget.useDefaultRenderLoop = value;
             }
         },
 
@@ -767,88 +737,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     Viewer.prototype.resize = function() {
         var cesiumWidget = this._cesiumWidget;
         cesiumWidget.resize();
-
-        var container = this._container;
-        var width = container.clientWidth;
-        var height = container.clientHeight;
-        if (width === this._lastWidth && height === this._lastHeight) {
-            return;
-        }
-
-        var panelMaxHeight = height - 125;
-        var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
-
-        if (defined(baseLayerPickerDropDown)) {
-            baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
-        }
-
-        if (defined(this._infoBox)) {
-            this._infoBox.viewModel.maxHeight = panelMaxHeight;
-        }
-
-        var timeline = this._timeline;
-        var timelineExists = defined(timeline);
-        var animationExists = defined(this._animation);
-        var animationContainer;
-        var resizeWidgets = !animationExists;
-        var animationWidth = 0;
-
-        if (animationExists) {
-            var lastWidth = this._lastWidth;
-            animationContainer = this._animation.container;
-            if (width > 900) {
-                if (lastWidth <= 900) {
-                    animationWidth = 169;
-                    animationContainer.style.width = '169px';
-                    animationContainer.style.height = '112px';
-                    resizeWidgets = true;
-                    this._animation.resize();
-                }
-            } else if (width >= 600) {
-                if (lastWidth < 600 || lastWidth > 900) {
-                    animationWidth = 136;
-                    animationContainer.style.width = '136px';
-                    animationContainer.style.height = '90px';
-                    resizeWidgets = true;
-                    this._animation.resize();
-                }
-            } else if (lastWidth > 600 || lastWidth === 0) {
-                animationWidth = 106;
-                animationContainer.style.width = '106px';
-                animationContainer.style.height = '70px';
-                resizeWidgets = true;
-                this._animation.resize();
-            }
-        }
-
-        if (resizeWidgets) {
-            var logoBottom = 0;
-            var logoLeft = animationWidth + 5;
-            if (timelineExists) {
-                var fullscreenButton = this._fullscreenButton;
-                var timelineContainer = timeline.container;
-                var timelineStyle = timelineContainer.style;
-
-                logoBottom = timelineContainer.clientHeight + 3;
-                timelineStyle.left = animationWidth + 'px';
-
-                if (defined(fullscreenButton)) {
-                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
-                }
-            }
-            if (timelineExists || animationExists) {
-                var creditContainer = cesiumWidget.creditContainer;
-                creditContainer.style.bottom = logoBottom + 'px';
-                creditContainer.style.left = logoLeft + 'px';
-            }
-        }
-
-        if (timelineExists) {
-            timeline.resize();
-        }
-
-        this._lastWidth = width;
-        this._lastHeight = height;
+        resizeViewer(this);
     };
 
     /**
@@ -936,6 +825,90 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         return destroyObject(this);
     };
+
+    function resizeViewer(viewer) {
+        var container = viewer._container;
+        var width = container.clientWidth;
+        var height = container.clientHeight;
+        if (width === viewer._lastWidth && height === viewer._lastHeight) {
+            return;
+        }
+
+        var panelMaxHeight = height - 125;
+        var baseLayerPickerDropDown = viewer._baseLayerPickerDropDown;
+
+        if (defined(baseLayerPickerDropDown)) {
+            baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(viewer._infoBox)) {
+            viewer._infoBox.viewModel.maxHeight = panelMaxHeight;
+        }
+
+        var timeline = viewer._timeline;
+        var timelineExists = defined(timeline);
+        var animationExists = defined(viewer._animation);
+        var animationContainer;
+        var resizeWidgets = !animationExists;
+        var animationWidth = 0;
+
+        if (animationExists) {
+            var lastWidth = viewer._lastWidth;
+            animationContainer = viewer._animation.container;
+            if (width > 900) {
+                if (lastWidth <= 900) {
+                    animationWidth = 169;
+                    animationContainer.style.width = '169px';
+                    animationContainer.style.height = '112px';
+                    resizeWidgets = true;
+                    viewer._animation.resize();
+                }
+            } else if (width >= 600) {
+                if (lastWidth < 600 || lastWidth > 900) {
+                    animationWidth = 136;
+                    animationContainer.style.width = '136px';
+                    animationContainer.style.height = '90px';
+                    resizeWidgets = true;
+                    viewer._animation.resize();
+                }
+            } else if (lastWidth > 600 || lastWidth === 0) {
+                animationWidth = 106;
+                animationContainer.style.width = '106px';
+                animationContainer.style.height = '70px';
+                resizeWidgets = true;
+                viewer._animation.resize();
+            }
+        }
+
+        if (resizeWidgets) {
+            var logoBottom = 0;
+            var logoLeft = animationWidth + 5;
+            if (timelineExists) {
+                var fullscreenButton = viewer._fullscreenButton;
+                var timelineContainer = timeline.container;
+                var timelineStyle = timelineContainer.style;
+
+                logoBottom = timelineContainer.clientHeight + 3;
+                timelineStyle.left = animationWidth + 'px';
+
+                if (defined(fullscreenButton)) {
+                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
+                }
+            }
+            if (timelineExists || animationExists) {
+                var creditContainer = viewer._cesiumWidget.creditContainer;
+                creditContainer.style.bottom = logoBottom + 'px';
+                creditContainer.style.left = logoLeft + 'px';
+            }
+        }
+
+        if (timelineExists) {
+            timeline.resize();
+        }
+
+        viewer._lastWidth = width;
+        viewer._lastHeight = height;
+    }
 
     return Viewer;
 });
