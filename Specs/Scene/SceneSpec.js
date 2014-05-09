@@ -519,4 +519,69 @@ defineSuite([
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
     });
+
+    it('raises renderError when render throws', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = 'foo';
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        s.render();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('a render error is rethrown if rethrowRenderErrors is true', function() {
+        var s = createScene();
+        s.rethrowRenderErrors = true;
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = 'foo';
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        expect(function() {
+            s.render();
+        }).toThrow();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('raises the preRender event prior to rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
+    });
+
+    it('raises the postRender event after rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.postRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
+    });
 }, 'WebGL');

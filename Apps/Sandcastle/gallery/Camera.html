@@ -26,9 +26,6 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
-
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
@@ -42,8 +39,7 @@ require(['Cesium'], function(Cesium) {
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
         function fly(position) {
-            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
-            destination = ellipsoid.cartographicToCartesian(destination);
+            var destination = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
 
             var flight = Cesium.CameraFlightPath.createAnimation(scene, {
                 destination : destination
@@ -62,18 +58,17 @@ require(['Cesium'], function(Cesium) {
         var north = 42.0;
 
         var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-        scene.camera.viewRectangle(rectangle, ellipsoid);
+        scene.camera.viewRectangle(rectangle, scene.globe.ellipsoid);
 
         // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray(
-                    [
-                     Cesium.Cartographic.fromDegrees(west, south),
-                     Cesium.Cartographic.fromDegrees(west, north),
-                     Cesium.Cartographic.fromDegrees(east, north),
-                     Cesium.Cartographic.fromDegrees(east, south),
-                     Cesium.Cartographic.fromDegrees(west, south)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                     west, south,
+                     west, north,
+                     east, north,
+                     east, south,
+                     west, south
                     ])
         });
         scene.primitives.add(polylines);
@@ -96,13 +91,12 @@ require(['Cesium'], function(Cesium) {
         // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray(
-                    [
-                     Cesium.Cartographic.fromDegrees(west, south),
-                     Cesium.Cartographic.fromDegrees(west, north),
-                     Cesium.Cartographic.fromDegrees(east, north),
-                     Cesium.Cartographic.fromDegrees(east, south),
-                     Cesium.Cartographic.fromDegrees(west, south)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                     west, south,
+                     west, north,
+                     east, north,
+                     east, south,
+                     west, south
                     ])
         });
         scene.primitives.add(polylines);
@@ -110,7 +104,7 @@ require(['Cesium'], function(Cesium) {
 
     function eastNorthUp(scene) {
         Sandcastle.declare(eastNorthUp); // For highlighting in Sandcastle.
-        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+        var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
         // View in east-north-up frame
@@ -164,6 +158,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function reset(scene) {
+        var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
 
