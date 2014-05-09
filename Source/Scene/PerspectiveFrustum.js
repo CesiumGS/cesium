@@ -63,7 +63,15 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        this._xOffset = 0.0;
+        this._yOffset = 0.0;
     };
+
+    PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
+      this._xOffset = xOffset;
+      this._yOffset = yOffset;
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
@@ -101,6 +109,14 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            // now apply offsets
+            var dx = f.right - f.left;
+            f.left += dx * frustum._xOffset;
+            f.right += dx * frustum._xOffset;
+            var dy = f.top - f.bottom;
+            f.top += dy * frustum._yOffset;
+            f.bottom += dy * frustum._yOffset;
         }
     }
 
@@ -216,6 +232,9 @@ define([
         result._aspectRatio = undefined;
         result._near = undefined;
         result._far = undefined;
+
+        result._xOffset = this._xOffset;
+        result._yOffset = this._yOffset;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 
