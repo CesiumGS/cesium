@@ -195,6 +195,7 @@ define([
 
     function createQuantizedMeshTerrainData(provider, buffer, level, x, y, tmsY) {
         var pos = 0;
+        var uint8Length = 1;
         var uint16Length = 2;
         var uint32Length = 4;
         var float32Length = 4;
@@ -297,6 +298,10 @@ define([
         var northIndices = new Uint16Array(buffer, pos, northVertexCount);
         pos += northVertexCount * uint16Length;
 
+        var encodedNormalBuffer;
+        encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
+        pos += vertexCount * 2 * uint8Length;
+
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
         return new QuantizedMeshTerrainData({
@@ -306,6 +311,7 @@ define([
             boundingSphere : boundingSphere,
             horizonOcclusionPoint : horizonOcclusionPoint,
             quantizedVertices : encodedVertexBuffer,
+            encodedNormals : encodedNormalBuffer,
             indices : indices,
             westIndices : westIndices,
             southIndices : southIndices,

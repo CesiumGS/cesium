@@ -2,18 +2,20 @@
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/defined',
         '../Core/Ellipsoid',
         '../Core/Math',
         './createTaskProcessorWorker'
     ], function(
         Cartesian3,
         Cartographic,
+        defined,
         Ellipsoid,
         CesiumMath,
         createTaskProcessorWorker) {
     "use strict";
 
-    var vertexStride = 6;
+    var vertexStride = 8;
     var maxShort = 32767;
 
     var xIndex = 0;
@@ -22,13 +24,18 @@ define([
     var hIndex = 3;
     var uIndex = 4;
     var vIndex = 5;
+    var nxIndex = 6;
+    var nyIndex = 7;
 
     var cartesian3Scratch = new Cartesian3();
+    var cartesian3Scratch2 = new Cartesian3();
+    var cartesian3Scratch3 = new Cartesian3();
     var cartographicScratch = new Cartographic();
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
         var quantizedVertices = parameters.quantizedVertices;
         var quantizedVertexCount = quantizedVertices.length / 3;
+        var octEncodedNormals = parameters.octEncodedNormals;
         var edgeVertexCount = parameters.westIndices.length + parameters.eastIndices.length +
                               parameters.southIndices.length + parameters.northIndices.length;
         var minimumHeight = parameters.minimumHeight;
@@ -49,7 +56,7 @@ define([
 
         var vertexBuffer = new Float32Array(quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride);
 
-        for (var i = 0, bufferIndex = 0; i < quantizedVertexCount; ++i, bufferIndex += vertexStride) {
+        for (var i = 0, bufferIndex = 0, n = 0; i < quantizedVertexCount; ++i, bufferIndex += vertexStride, n += 2) {
             var u = uBuffer[i] / maxShort;
             var v = vBuffer[i] / maxShort;
             var height = CesiumMath.lerp(minimumHeight, maximumHeight, heightBuffer[i] / maxShort);
@@ -66,6 +73,13 @@ define([
             vertexBuffer[bufferIndex + hIndex] = height;
             vertexBuffer[bufferIndex + uIndex] = u;
             vertexBuffer[bufferIndex + vIndex] = v;
+            if (defined(octEncodedNormals)) {
+                vertexBuffer[bufferIndex + nxIndex] = octEncodedNormals[n];
+                vertexBuffer[bufferIndex + nyIndex] = octEncodedNormals[n + 1];
+            } else {
+                vertexBuffer[bufferIndex + nxIndex] = 0.0;
+                vertexBuffer[bufferIndex + nyIndex] = 0.0;
+            }
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
@@ -108,12 +122,15 @@ define([
 
         var vertexIndex = vertexBufferIndex / vertexStride;
 
+
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
             var offset = index * vertexStride;
             var u = vertexBuffer[offset + uIndex];
             var v = vertexBuffer[offset + vIndex];
             var h = vertexBuffer[offset + hIndex];
+            var nx = vertexBuffer[offset + nxIndex];
+            var ny = vertexBuffer[offset + nyIndex];
 
             cartographicScratch.longitude = CesiumMath.lerp(rectangle.west, rectangle.east, u);
             cartographicScratch.latitude = CesiumMath.lerp(rectangle.south, rectangle.north, v);
@@ -128,6 +145,8 @@ define([
             vertexBuffer[vertexBufferIndex++] = cartographicScratch.height;
             vertexBuffer[vertexBufferIndex++] = u;
             vertexBuffer[vertexBufferIndex++] = v;
+            vertexBuffer[vertexBufferIndex++] = nx;
+            vertexBuffer[vertexBufferIndex++] = ny;
 
             if (previousIndex !== -1) {
                 indexBuffer[indexBufferIndex++] = previousIndex;
