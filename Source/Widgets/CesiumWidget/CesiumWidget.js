@@ -112,6 +112,7 @@ define([
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
+     * @param {String} [options.creditCssClass] The CSS class to apply to the DOM element containing the {@link CreditDisplay}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
