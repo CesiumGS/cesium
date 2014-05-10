@@ -3,7 +3,6 @@ defineSuite([
          'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
          'Core/defined',
          'Core/getTimestamp',
-         'Core/redirectToUrl',
          'Scene/FrameRateMonitor',
          'Specs/createScene',
          'Specs/destroyScene'
@@ -11,7 +10,6 @@ defineSuite([
              PerformanceWatchdogViewModel,
              defined,
              getTimestamp,
-             redirectToUrl,
              FrameRateMonitor,
              createScene,
              destroyScene) {

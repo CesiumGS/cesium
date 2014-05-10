@@ -7,7 +7,6 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/getTimestamp',
-        '../../Core/redirectToUrl',
         '../../Scene/FrameRateMonitor',
         '../createCommand',
         '../../ThirdParty/knockout'
@@ -19,7 +18,6 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
-        redirectToUrl,
         FrameRateMonitor,
         createCommand,
         knockout) {

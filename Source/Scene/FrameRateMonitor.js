@@ -6,8 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/redirectToUrl'
+        '../Core/getTimestamp'
     ], function(
         defaultValue,
         defined,
@@ -15,8 +14,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        getTimestamp,
-        redirectToUrl) {
+        getTimestamp) {
     "use strict";
 
     /**
