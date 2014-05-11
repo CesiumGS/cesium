@@ -3,13 +3,11 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/requestAnimationFrame',
         '../CesiumInspector/CesiumInspector'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        requestAnimationFrame,
         CesiumInspector) {
     "use strict";
     /*global console*/

@@ -29,9 +29,10 @@ define([
      * @alias PerformanceWatchdogViewModel
      * @constructor
      *
-     * @param {Scene} scene The Scene instance for which to monitor performance.
-     * @param {String} [lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
-     *        message to display when a low frame rate is detected.  This string will be interpreted as HTML.
+     * @param {Scene} description.scene The Scene instance for which to monitor performance.
+     * @param {String} [description.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+     *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
+     *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
      */
     var PerformanceWatchdogViewModel = function(description) {
         //>>includeStart('debug', pragmas.debug);

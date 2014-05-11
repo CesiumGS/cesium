@@ -25,7 +25,6 @@ define([
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
         '../NavigationHelpButton/NavigationHelpButton',
-        '../PerformanceWatchdog/PerformanceWatchdog',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
@@ -57,7 +56,6 @@ define([
         HomeButton,
         InfoBox,
         NavigationHelpButton,
-        PerformanceWatchdog,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
@@ -105,10 +103,6 @@ define([
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
-     * @param {Boolean} [options.performanceWatchdog=true] If set to false, the {@link PerformanceWatchdog} will not be created.  By default, the performance watchdog monitors
-     *        the frame rate and, when the frame rate is low, it displays a message suggesting that the user try a different browser or update their video drivers.  It can also
-     *        be configured to redirect to a different URL on a rendering error or a low frame rate.
-     * @param {Object} [options.performanceWatchdogOptions] The options to pass to the constructor of the {@link PerformanceWatchdog}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -218,7 +212,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var bottomContainer = document.createElement('div');
         bottomContainer.className = 'cesium-viewer-bottom';
 
-        this._bottomContainer = bottomContainer;
         viewerContainer.appendChild(bottomContainer);
 
         // Cesium widget
@@ -376,15 +369,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        // Performance watchdog
-        var performanceWatchdog;
-        if (!defined(options.performanceWatchdog) || options.performanceWatchdog !== false) {
-            var performanceWatchdogOptions = clone(defaultValue(options.performanceWatchdogOptions, defaultValue.EMPTY_OBJECT));
-            performanceWatchdogOptions.container = bottomContainer;
-            performanceWatchdogOptions.scene = cesiumWidget.scene;
-            performanceWatchdog = new PerformanceWatchdog(performanceWatchdogOptions);
-        }
-
         /**
          * Gets or sets the data source to track with the viewer's clock.
          * @type {DataSource}
@@ -448,6 +432,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         eventHelper.add(dataSourceCollection.dataSourceRemoved, onDataSourceRemoved);
 
         this._container = container;
+        this._bottomContainer = bottomContainer;
         this._element = viewerContainer;
         this._cesiumWidget = cesiumWidget;
         this._selectionIndicator = selectionIndicator;
@@ -483,6 +468,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         container : {
             get : function() {
                 return this._container;
+            }
+        },
+
+        /**
+         * Gets the DOM element for the area at the bottom of the window containing the
+         * {@link CreditDisplay} and potentially other things.
+         * @memberof Viewer.prototype
+         * @type {Element}
+         */
+        bottomContainer : {
+            get : function() {
+                return this._bottomContainer;
             }
         },
 

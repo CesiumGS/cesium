@@ -18,12 +18,19 @@ define([
     "use strict";
 
     /**
-     * Monitors performance of the application and displays a message and optionally redirects to a different URL if
-     * poor performance is detected.  This widget can also detect errors during rendering and redirect to a different
-     * URL.
+     * Monitors performance of the application and displays a message if poor performance is detected.
      *
      * @alias PerformanceWatchdog
      * @constructor
+     *
+     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
+     * @param {Scene} description.scene The {@link Scene} for which to monitor performance.
+     * @param {String} [description.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+     *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
+     *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
+     *
+     * @exception {DeveloperError} description.container is required.
+     * @exception {DeveloperError} description.scene is required.
      */
     var PerformanceWatchdog = function(description) {
         //>>includeStart('debug', pragmas.debug);
@@ -81,7 +88,7 @@ define([
          * Gets the view model.
          * @memberof PerformanceWatchdog.prototype
          *
-         * @type {HomeButtonViewModel}
+         * @type {PerformanceWatchdogViewModel}
          */
         viewModel : {
             get : function() {
