@@ -16,13 +16,13 @@ require([
     var viewer = new Cesium.Viewer('cesiumContainer');
 
     var scene = viewer.scene;
-    var centralBody = scene.primitives.centralBody;
+    var centralBody = scene.globe;
     //centralBody.depthTestAgainstTerrain = true;
-    
+
     var quadtree = new Cesium.QuadtreePrimitive({
     	tileProvider : new Cesium.ExtentTileProvider()
     });
-    
+
     scene.primitives.add(quadtree);
 
     var tp = new TitlePane({
