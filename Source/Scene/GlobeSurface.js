@@ -90,7 +90,6 @@ define([
         this._levelZeroTiles = undefined;
 
         this._tilesToRenderByTextureCount = [];
-        this._generalTilesToRender = [];
         this._tileCommands = [];
         this._tileCommandUniformMaps = [];
         this._tileTraversalQueue = new Queue();

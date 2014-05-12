@@ -217,8 +217,6 @@ define([
      */
     QuadtreeTileProvider.prototype.getDistanceToTile = DeveloperError.throwInstantiationError;
 
-    QuadtreeTileProvider.prototype.divideTile = DeveloperError.throwInstantiationError;
-
     /**
      * Releases the geometry for a given tile.
      *
