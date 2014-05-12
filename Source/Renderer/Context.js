@@ -29,7 +29,7 @@ define([
         './RenderState',
         './ShaderCache',
         './Texture',
-        '../Source/TextureAtlas',   // TODO: remove
+        '../Scene/TextureAtlas',   // TODO: remove
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap',
