@@ -383,6 +383,7 @@ define([
 
         this._billboards.push(b);
         this._createVertexArray = true;
+        this._billboardsToUpdate[this._billboardsToUpdateIndex++] = b;
 
         return b;
     };
