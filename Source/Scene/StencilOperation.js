@@ -3,80 +3,72 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines the action taken based on the result of the stencil test.
      *
      * @exports StencilOperation
      */
     var StencilOperation = {
         /**
-         * DOC_TBA
+         * 0.  Sets the stencil buffer value to zero.
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         ZERO : 0,
 
         /**
-         * DOC_TBA
+         * 0x1E00.  Does not change the stencil buffer.
          *
          * @type {Number}
          * @constant
-         * @default 0x1E00
          */
         KEEP : 0x1E00,
 
         /**
-         * DOC_TBA
+         * 0x1E01.  Replaces the stencil buffer value with the reference value.
          *
          * @type {Number}
          * @constant
-         * @default 0x1E01
          */
         REPLACE : 0x1E01,
 
         /**
-         * DOC_TBA
+         * 0x1E02.  Increments the stencil buffer value, clamping to unsigned byte.
          *
          * @type {Number}
          * @constant
-         * @default 0x1E02
          */
         INCREMENT : 0x1E02, // WebGL: INCR
 
         /**
-         * DOC_TBA
+         * 0x1E03.  Decrements the stencil buffer value, clamping to zero.
          *
          * @type {Number}
          * @constant
-         * @default 0x1E03
          */
         DECREMENT : 0x1E03, // WebGL: DECR
 
         /**
-         * DOC_TBA
+         * 0x150A. Bitwise inverts the existing stencil buffer value.
          *
          * @type {Number}
          * @constant
-         * @default 0x150A
          */
         INVERT : 0x150A,
 
         /**
-         * DOC_TBA
+         * 0x8507.  Increments the stencil buffer value, wrapping to zero when exceeding the unsigned byte range.
          *
          * @type {Number}
          * @constant
-         * @default 0x8507
          */
         INCREMENT_WRAP : 0x8507, // WebGL: INCR_WRAP
 
         /**
-         * DOC_TBA
+         * 0x8508.  Decrements the stencil buffer value, wrapping to the maximum unsigned byte instead of going below zero.
          *
          * @type {Number}
          * @constant
-         * @default 0x8508
          */
         DECREMENT_WRAP : 0x8508  // WebGL: DECR_WRAP
     };

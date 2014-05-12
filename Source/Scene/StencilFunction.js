@@ -3,80 +3,72 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines the function used to compare stencil values for the stencil test.
      *
      * @exports StencilFunction
      */
     var StencilFunction = {
         /**
-         * DOC_TBA
+         * 0x0200. The stencil test never passes.
          *
          * @type {Number}
          * @constant
-         * @default 0x0200
          */
         NEVER : 0x0200,
 
         /**
-         * DOC_TBA
+         * 0x0201.  The stencil test passes when the masked reference value is less than the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0201
          */
         LESS : 0x0201,
 
         /**
-         * DOC_TBA
+         * 0x0202.  The stencil test passes when the masked reference value is equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0202
          */
         EQUAL : 0x0202,
 
         /**
-         * DOC_TBA
+         * 0x0203.  The stencil test passes when the masked reference value is less than or equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0203
          */
         LESS_OR_EQUAL : 0x0203, // WebGL: LEQUAL
 
         /**
-         * DOC_TBA
+         * 0x0204.  The stencil test passes when the masked reference value is greater than the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0204
          */
         GREATER : 0x0204,
 
         /**
-         * DOC_TBA
+         * 0x0205.  The stencil test passes when the masked reference value is not equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0205
          */
         NOT_EQUAL : 0x0205, // WebGL: NOTEQUAL
 
         /**
-         * DOC_TBA
+         * 0x0206.  The stencil test passes when the masked reference value is greater than or equal to the masked stencil value.
          *
          * @type {Number}
          * @constant
-         * @default 0x0206
          */
         GREATER_OR_EQUAL : 0x0206, // WebGL: GEQUAL
 
         /**
-         * DOC_TBA
+         * 0x0207.  The stencil test always passes.
          *
          * @type {Number}
          * @constant
-         * @default 0x0207
          */
         ALWAYS : 0x0207
     };
