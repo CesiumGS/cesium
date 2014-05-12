@@ -20,6 +20,14 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
+    QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError = function(tilingScheme) {
+        return tilingScheme.ellipsoid.maximumRadius * 2 * Math.PI * 0.25 / (65 * tilingScheme.getNumberOfXTilesAtLevel(0));
+    };
+
+    QuadtreeTileProvider.defaultGetLevelMaximumGeometricError = function() {
+
+    };
+
     defineProperties(QuadtreeTileProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
