@@ -8,9 +8,9 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
-  * Removed `Scene.createTextureAtlas`.  Use `new TextureAtlas` instead.
+  * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
   * Removed `Tipsify`, `FrustumCommands`, and all `Renderer` types (except noted below) from the public Cesium API.  These are still available but are not part of the official API and are likely to change in future versions.    
-  * For AMD users only: Moved `PixelFormat` from `Renderer` to `Core`.  Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
+  * For AMD users only: moved `PixelFormat` from `Renderer` to `Core`.  Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
