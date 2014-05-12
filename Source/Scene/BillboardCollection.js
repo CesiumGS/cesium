@@ -126,7 +126,10 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = scene.createTextureAtlas({images : images});
+     * var atlas = new TextureAtlas({
+     *   scene : scene,
+     *   images : images
+     * });
      * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
@@ -282,7 +285,10 @@ define([
          * // added to the collection.
          * var billboards = new Cesium.BillboardCollection();
          * var images = [image0, image1];
-         * var atlas = scene.createTextureAtlas({images : images});
+         * var atlas = new TextureAtlas({
+         *   scene : scene,
+         *   images : images
+         * });
          * billboards.textureAtlas = atlas;
          * billboards.add({
          *   // ...
@@ -320,7 +326,10 @@ define([
          * // Set destroyTextureAtlas
          * // Destroy a billboard collection but not its texture atlas.
          *
-         * var atlas = scene.createTextureAtlas({images : images});
+         * var atlas = new TextureAtlas({
+         *   scene : scene,
+         *   images : images
+         * });
          * billboards.textureAtlas = atlas;
          * billboards.destroyTextureAtlas = false;
          * billboards = billboards.destroy();

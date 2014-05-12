@@ -601,6 +601,15 @@ define([
             get : function() {
                 return this._postRender;
             }
+        },
+
+        /**
+         * @private
+         */
+        context : {
+            get : function() {
+                return this._context;
+            }
         }
     });
 
@@ -812,7 +821,7 @@ define([
     }
 
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
-        var context = scene._context;
+        var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fragmentShaderSource = sp.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
@@ -850,7 +859,7 @@ define([
         if (defined(command.shaderProgram) || defined(shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene._context, passState, renderState, sp);
+            command.execute(scene.context, passState, renderState, sp);
             sp.destroy();
         }
     }
@@ -957,7 +966,7 @@ define([
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
-        var context = scene._context;
+        var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
@@ -974,7 +983,7 @@ define([
     function executeCommands(scene, passState, clearColor, picking) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var context = scene._context;
+        var context = scene.context;
         var us = context.uniformState;
 
         var frustum;
@@ -1121,7 +1130,7 @@ define([
     }
 
     function executeOverlayCommands(scene, passState) {
-        var context = scene._context;
+        var context = scene.context;
         var commandList = scene._overlayCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1130,7 +1139,7 @@ define([
     }
 
     function updatePrimitives(scene) {
-        var context = scene._context;
+        var context = scene.context;
         var frameState = scene._frameState;
         var commandList = scene._commandList;
 
@@ -1156,25 +1165,6 @@ define([
     }
 
     /**
-     * Creates a new texture atlas.
-     *
-     * @memberof Scene
-     *
-     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @returns {TextureAtlas} The new texture atlas.
-     *
-     * @see TextureAtlas
-     */
-    Scene.prototype.createTextureAtlas = function(options) {
-        return this._context.createTextureAtlas(options);
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1197,7 +1187,7 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
 
-        var us = scene._context.uniformState;
+        var us = scene.context.uniformState;
         var frameState = scene._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1205,7 +1195,7 @@ define([
         frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
 
-        var context = scene._context;
+        var context = scene.context;
         us.update(context, frameState);
 
         scene._commandList.length = 0;

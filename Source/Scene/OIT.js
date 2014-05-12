@@ -429,7 +429,7 @@ define([
         var shaderProgram;
         var j;
 
-        var context = scene._context;
+        var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
@@ -472,7 +472,7 @@ define([
     }
 
     function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
-        var context = scene._context;
+        var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 

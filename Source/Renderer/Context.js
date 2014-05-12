@@ -29,7 +29,6 @@ define([
         './RenderState',
         './ShaderCache',
         './Texture',
-        '../Scene/TextureAtlas',   // TODO: remove
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap',
@@ -68,7 +67,6 @@ define([
         RenderState,
         ShaderCache,
         Texture,
-        TextureAtlas,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -1374,27 +1372,6 @@ define([
         gl.bindTexture(textureTarget, null);
 
         return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, undefined, width, height);
-    };
-
-    /**
-     * Creates a new texture atlas with this context.
-     *
-     * @memberof Context
-     *
-     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @returns {TextureAtlas} The new texture atlas.
-     *
-     * @see TextureAtlas
-     */
-    Context.prototype.createTextureAtlas = function(options) {
-        options = defaultValue(options, {});
-        options.context = this;
-        return new TextureAtlas(options);
     };
 
     /**

@@ -9,6 +9,7 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
+        '../Scene/TextureAtlas',
         '../Scene/TextureAtlasBuilder'
     ], function(
         DeveloperError,
@@ -20,6 +21,7 @@ define([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
+        TextureAtlas,
         TextureAtlasBuilder) {
     "use strict";
 
@@ -58,7 +60,9 @@ define([
         //>>includeEnd('debug');
 
         var billboardCollection = new BillboardCollection();
-        var atlas = scene.createTextureAtlas();
+        var atlas = new TextureAtlas({
+            scene : scene
+        });
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicBillboardVisualizer.prototype._onObjectsRemoved, this);

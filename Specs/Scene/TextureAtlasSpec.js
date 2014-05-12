@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/TextureAtlas',
-         'Specs/createContext',
-         'Specs/destroyContext',
+         'Specs/createScene',
+         'Specs/destroyScene',
          'Core/PrimitiveType',
          'Core/Cartesian2',
          'Core/PixelFormat',
@@ -11,8 +11,8 @@ defineSuite([
          'Renderer/DrawCommand'
      ], function(
          TextureAtlas,
-         createContext,
-         destroyContext,
+         createScene,
+         destroyScene,
          PrimitiveType,
          Cartesian2,
          PixelFormat,
@@ -22,7 +22,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var context;
+    var scene;
     var atlas;
     var greenImage;
     var tallGreenImage;
@@ -32,11 +32,11 @@ defineSuite([
     var bigGreenImage;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
     });
 
     afterAll(function() {
-        destroyContext(context);
+        destroyScene(scene);
     });
 
     afterEach(function() {
@@ -68,6 +68,7 @@ defineSuite([
     });
 
     var draw = function(texture, textureCoordinate, expectedColorArray) {
+        var context = scene.context;
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform sampler2D u_texture;' +
@@ -88,7 +89,7 @@ defineSuite([
         }]);
 
         ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(context.readPixels()).toEqual([0, 0, 0, 255]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -104,7 +105,12 @@ defineSuite([
     };
 
     it('creates a single image atlas', function() {
-        atlas = context.createTextureAtlas({image : greenImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : greenImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -124,7 +130,12 @@ defineSuite([
     });
 
     it('renders a single image atlas', function() {
-        atlas = context.createTextureAtlas({image : greenImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : greenImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -136,7 +147,10 @@ defineSuite([
     });
 
     it('creates a single image atlas with default values', function() {
-        atlas = context.createTextureAtlas({image : greenImage});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : greenImage
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -156,7 +170,10 @@ defineSuite([
     });
 
     it('renders a single image atlas with default values', function() {
-        atlas = context.createTextureAtlas({image : greenImage});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : greenImage
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -168,7 +185,12 @@ defineSuite([
     });
 
     it('creates a single image atlas with non-square initialSize', function() {
-        atlas = context.createTextureAtlas({image : tallGreenImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1.0, 5.0)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : tallGreenImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1.0, 5.0)
+        });
 
         var texture = atlas.texture;
         var tallGreenCoords = atlas.textureCoordinates[0];
@@ -186,7 +208,12 @@ defineSuite([
     });
 
     it('renders a single image atlas with non-square initialSize', function() {
-        atlas = context.createTextureAtlas({image : tallGreenImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1.0, 5.0)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : tallGreenImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1.0, 5.0)
+        });
 
         var texture = atlas.texture;
         var tallGreenCoords = atlas.textureCoordinates[0];
@@ -204,7 +231,12 @@ defineSuite([
 
     it('creates a two image atlas', function() {
         var images = [greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -229,7 +261,12 @@ defineSuite([
 
     it('renders a two image atlas', function() {
         var images = [greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         var texture = atlas.texture;
         var greenCoords = atlas.textureCoordinates[0];
@@ -248,7 +285,12 @@ defineSuite([
 
     it('renders a four image atlas', function() {
         var images = [greenImage, blueImage, blueImage, greenImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         var texture = atlas.texture;
         var c0 = atlas.textureCoordinates[0];
@@ -281,7 +323,12 @@ defineSuite([
 
     it('creates a four image atlas with non-zero borderWidthInPixels', function() {
         var images = [greenImage, blueImage, greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 2, initialSize : new Cartesian2(4, 4)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 2,
+            initialSize : new Cartesian2(4, 4)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -316,7 +363,12 @@ defineSuite([
 
     it('renders a four image atlas with non-zero borderWidthInPixels', function() {
         var images = [greenImage, blueImage, greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 2, initialSize : new Cartesian2(4, 4)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 2,
+            initialSize : new Cartesian2(4, 4)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -344,7 +396,12 @@ defineSuite([
 
     it('creates an atlas with different image heights', function() {
         var images = [blueImage, tallGreenImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(4, 4)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(4, 4)
+        });
 
         var texture = atlas.texture;
         var blueCoords = atlas.textureCoordinates[0];
@@ -369,7 +426,12 @@ defineSuite([
 
     it('renders an atlas with different image heights', function() {
         var images = [blueImage, tallGreenImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(4, 4)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(4, 4)
+        });
 
         var texture = atlas.texture;
         var blueCoords = atlas.textureCoordinates[0];
@@ -392,7 +454,11 @@ defineSuite([
     });
 
     it('creates an atlas that adds images at different points in time', function() {
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         atlas.addImage(greenImage); // G1
         atlas.addImage(blueImage); // B1
@@ -434,7 +500,11 @@ defineSuite([
     });
 
     it('renders an atlas that adds images at different points in time', function() {
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         atlas.addImage(greenImage);
         atlas.addImage(blueImage);
@@ -469,7 +539,12 @@ defineSuite([
     });
 
     it('creates an atlas that dynamically resizes', function() {
-        atlas = context.createTextureAtlas({image : blueImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : blueImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -511,8 +586,12 @@ defineSuite([
     });
 
     it('renders an atlas that dynamically resizes', function() {
-
-        atlas = context.createTextureAtlas({image : blueImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : blueImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var blueCoordinates = atlas.textureCoordinates[0];
@@ -541,7 +620,12 @@ defineSuite([
     });
 
     it('creates an atlas with smaller initialSize than first image', function() {
-        atlas = context.createTextureAtlas({image : bigRedImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : bigRedImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -559,7 +643,12 @@ defineSuite([
     });
 
     it('renders an atlas with smaller initialSize than first image', function() {
-        atlas = context.createTextureAtlas({image : bigRedImage, borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            image : bigRedImage,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates[0];
@@ -572,7 +661,12 @@ defineSuite([
 
     it('creates a two image atlas with non-zero borderWidthInPixels that resizes', function() {
         var images = [greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 2, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 2,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -597,7 +691,12 @@ defineSuite([
 
     it('renders a two image atlas with non-zero borderWidthInPixels that resizes', function() {
         var images = [greenImage, blueImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 2, initialSize : new Cartesian2(2, 2)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 2,
+            initialSize : new Cartesian2(2, 2)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -615,7 +714,12 @@ defineSuite([
 
     it('creates a two image atlas with non-square initialSize that resizes', function() {
         var images = [tallGreenImage, tallGreenImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(1.0, 4.0)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1.0, 4.0)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -639,7 +743,12 @@ defineSuite([
 
     it('renders a two image atlas with non-square initialSize that resizes', function() {
         var images = [tallGreenImage, tallGreenImage];
-        atlas = context.createTextureAtlas({images : images, borderWidthInPixels : 0, initialSize : new Cartesian2(1.0, 4.0)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            images : images,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1.0, 4.0)
+        });
 
         var texture = atlas.texture;
         var coordinates = atlas.textureCoordinates;
@@ -666,7 +775,11 @@ defineSuite([
     });
 
     it('creates an atlas that dynamically resizes twice', function() {
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
         atlas.addImage(blueImage);
         atlas.addImage(bigGreenImage);
         atlas.addImages([bigRedImage, bigRedImage, bigRedImage, bigRedImage, bigRedImage, bigRedImage]);
@@ -814,7 +927,11 @@ defineSuite([
     });
 
     it('renders an atlas that dynamically resizes twice', function() {
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
         atlas.addImage(blueImage);
         atlas.addImage(bigGreenImage);
         atlas.addImage(bigRedImage);
@@ -842,7 +959,11 @@ defineSuite([
 
     it('gets index after calling addImage and addImages', function() {
         var images = [blueImage, tallGreenImage];
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(4, 4)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(4, 4)
+        });
         var index;
 
         index = atlas.addImage(images[0]);
@@ -879,8 +1000,11 @@ defineSuite([
     });
 
     it('creates an atlas with subregions', function() {
-
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         atlas.addSubRegions(greenImage, [
             { x:0.0, y:0.0, width:0.5, height:0.5 },
@@ -922,8 +1046,11 @@ defineSuite([
     });
 
     it('creates an atlas that resizes with subregions', function() {
-
-        atlas = context.createTextureAtlas({borderWidthInPixels : 0, initialSize : new Cartesian2(1, 1)});
+        atlas = new TextureAtlas({
+            scene : scene,
+            borderWidthInPixels : 0,
+            initialSize : new Cartesian2(1, 1)
+        });
 
         atlas.addSubRegions(greenImage, [
             { x:0.0, y:0.0, width:0.5, height:0.5 },
@@ -973,7 +1100,7 @@ defineSuite([
     });
 
     it('GUID changes when atlas is modified', function() {
-        atlas = context.createTextureAtlas();
+        atlas = new TextureAtlas({ scene : scene });
         var guid1 = atlas.guid;
 
         atlas.addImage(greenImage);
@@ -995,34 +1122,40 @@ defineSuite([
     });
 
     it('throws without image', function() {
+        atlas = new TextureAtlas({ scene : scene });
        expect(function() {
-           atlas = context.createTextureAtlas();
            atlas.addImage();
        }).toThrowDeveloperError();
     });
 
     it('throws without images', function() {
+        atlas = new TextureAtlas({ scene : scene });
         expect(function() {
-            atlas = context.createTextureAtlas();
             atlas.addImages([]);
         }).toThrowDeveloperError();
     });
 
     it('throws with a negative borderWidthInPixels', function() {
         expect(function() {
-            atlas = context.createTextureAtlas({borderWidthInPixels : -1});
+            atlas = new TextureAtlas({
+                scene : scene,
+                borderWidthInPixels : -1
+            });
         }).toThrowDeveloperError();
     });
 
     it('throws with a initialSize less than one', function() {
         expect(function() {
-            atlas = context.createTextureAtlas({initialSize : new Cartesian2(0, 0)});
+            atlas = new TextureAtlas({
+                scene : scene,
+                initialSize : new Cartesian2(0, 0)
+            });
         }).toThrowDeveloperError();
     });
 
-    it('throws without context', function() {
+    it('throws without scene', function() {
         expect(function() {
-            return new TextureAtlas();
+            return new TextureAtlas({});
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

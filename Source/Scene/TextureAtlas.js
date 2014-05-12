@@ -42,7 +42,7 @@ define([
      *
      * @alias TextureAtlas
      *
-     * @param {Context} options.context The context in which the texture gets created.
+     * @param {Context} options.scene The scene in which the texture gets created.
      * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
@@ -56,13 +56,12 @@ define([
      */
     var TextureAtlas = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var context = options.context;
         var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
         var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
+        if (!defined(options.scene)) {
+            throw new DeveloperError('scene is required.');
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
@@ -72,6 +71,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var context = options.scene.context;
         this._context = context;
         this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         this._borderWidthInPixels = borderWidthInPixels;

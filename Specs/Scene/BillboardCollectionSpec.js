@@ -87,7 +87,11 @@ defineSuite([
     });
 
     function createTextureAtlas(context, images) {
-        var atlas = context.createTextureAtlas({
+        var mockScene = {
+            context : context
+        };
+        var atlas = new TextureAtlas({
+            scene : mockScene,
             images : images,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
@@ -995,7 +999,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -1147,7 +1151,7 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
@@ -1158,7 +1162,7 @@ defineSuite([
             pixelOffset : new Cartesian2(1.0, 2.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
@@ -1169,7 +1173,7 @@ defineSuite([
             eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         var p = b.computeScreenSpacePosition(fakeScene);
         expect(p.x).toBeGreaterThan(0.5);
         expect(p.y).toBeGreaterThan(0.5);
@@ -1180,7 +1184,7 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.remove(b);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(function() {
             b.computeScreenSpacePosition(fakeScene);
         }).toThrowDeveloperError();

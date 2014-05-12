@@ -128,7 +128,7 @@ define([
      */
     Sun.prototype.update = function(scene) {
         var frameState = scene.frameState;
-        var context = scene._context;
+        var context = scene.context;
 
         if (!this.show) {
             return undefined;

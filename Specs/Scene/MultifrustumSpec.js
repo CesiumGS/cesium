@@ -19,7 +19,8 @@ defineSuite([
          'Renderer/TextureMagnificationFilter',
          'Scene/Pass',
          'Scene/BlendingState',
-         'Scene/BillboardCollection'
+         'Scene/BillboardCollection',
+         'Scene/TextureAtlas'
      ], 'Scene/Multifrustum', function(
          createScene,
          destroyScene,
@@ -40,7 +41,8 @@ defineSuite([
          TextureMagnificationFilter,
          Pass,
          BlendingState,
-         BillboardCollection) {
+         BillboardCollection,
+         TextureAtlas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,7 +57,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene._context;
+        context = scene.context;
         primitives = scene.primitives;
 
         var camera = scene.camera;
@@ -93,7 +95,8 @@ defineSuite([
     var billboard2;
 
     function createBillboards() {
-        atlas = context.createTextureAtlas({
+        atlas = new TextureAtlas({
+            scene : scene,
             images : [greenImage, blueImage, whiteImage],
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)

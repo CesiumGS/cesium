@@ -12,7 +12,8 @@ define([
         './Label',
         './LabelStyle',
         './HorizontalOrigin',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        './TextureAtlas'
     ], function(
         defaultValue,
         defineProperties,
@@ -26,7 +27,8 @@ define([
         Label,
         LabelStyle,
         HorizontalOrigin,
-        VerticalOrigin) {
+        VerticalOrigin,
+        TextureAtlas) {
     "use strict";
 
     // A glyph represents a single character in a particular label.  It may or may
@@ -562,7 +564,11 @@ define([
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
         if (!defined(this._textureAtlas)) {
-            this._textureAtlas = context.createTextureAtlas();
+            this._textureAtlas = new TextureAtlas({
+                scene : {
+                    context : context
+                }
+            });
             billboardCollection.textureAtlas = this._textureAtlas;
         }
 
