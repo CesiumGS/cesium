@@ -973,13 +973,11 @@ define([
         var mag = Cartesian3.magnitude(center);
         var newEllipsoid = Ellipsoid.fromCartesian3(new Cartesian3(mag, mag, mag));
 
-        if (!defined(verticalCenter)) {
-            intersection = IntersectionTests.rayEllipsoid(ray, newEllipsoid);
-            if (!defined(intersection)) {
-                return;
-            }
-            verticalCenter = Ray.getPoint(ray, intersection.start);
+        intersection = IntersectionTests.rayEllipsoid(ray, newEllipsoid);
+        if (!defined(intersection)) {
+            return;
         }
+        verticalCenter = Ray.getPoint(ray, intersection.start);
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
         var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, newEllipsoid);
@@ -988,8 +986,28 @@ define([
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
-        rotate3D(controller, startPosition, movement, frameState, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle, false, true);
-        rotate3D(controller, startPosition, movement, frameState, verticalTransform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle, true, false);
+        var constrainedAxis = Cartesian3.UNIT_Z;
+        var restrictedAngle = CesiumMath.PI_OVER_TWO - angle;
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true);
+
+        var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2), Cartesian3.normalize(camera.position));
+        if (Cartesian3.dot(camera.right, tangent) < 0.0) {
+
+            if (movement.startPosition.y > movement.endPosition.y) {
+                constrainedAxis = undefined;
+                restrictedAngle = undefined;
+            }
+
+            var oldConstrainedAxis = camera.constrainedAxis;
+            camera.constrainedAxis = undefined;
+
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false);
+
+            camera.constrainedAxis = oldConstrainedAxis;
+        } else {
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false);
+        }
+
 
         controller.globe = oldGlobe;
     }
