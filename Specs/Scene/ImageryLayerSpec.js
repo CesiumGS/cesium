@@ -3,7 +3,7 @@ defineSuite([
          'Scene/ImageryLayer',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/jsonp',
          'Core/loadImage',
          'Core/loadWithXhr',
@@ -20,7 +20,7 @@ defineSuite([
          ImageryLayer,
          createContext,
          destroyContext,
-         Extent,
+         Rectangle,
          jsonp,
          loadImage,
          loadWithXhr,
@@ -69,7 +69,7 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
@@ -137,7 +137,7 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
@@ -192,11 +192,11 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         });
 
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var layer = new ImageryLayer(provider, {
-            extent : extent
+            rectangle : rectangle
         });
-        expect(layer.getExtent()).toEqual(extent);
+        expect(layer.rectangle).toEqual(rectangle);
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
@@ -222,22 +222,22 @@ defineSuite([
 
             // Both tiles should have imagery from this layer completely covering them.
             expect(tiles[0].imagery.length).toBe(4);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.x).toBe(0.0);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.w).toBe(1.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.x).toBe(0.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.y).toBe(0.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.z).toBe(1.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.w).toBe(1.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.y).toBe(0.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.z).toBe(1.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.x).toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.w).toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.x).toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.y).toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.z).toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.w).toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.y).toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.z).toBe(1.0);
 
             expect(tiles[1].imagery.length).toBe(2);
-            expect(tiles[1].imagery[0].textureCoordinateExtent.x).toBe(0.0);
-            expect(tiles[1].imagery[0].textureCoordinateExtent.w).toBe(1.0);
-            expect(tiles[1].imagery[0].textureCoordinateExtent.z).toBe(1.0);
-            expect(tiles[1].imagery[1].textureCoordinateExtent.x).toBe(0.0);
-            expect(tiles[1].imagery[1].textureCoordinateExtent.y).toBe(0.0);
-            expect(tiles[1].imagery[1].textureCoordinateExtent.z).toBe(1.0);
+            expect(tiles[1].imagery[0].textureCoordinateRectangle.x).toBe(0.0);
+            expect(tiles[1].imagery[0].textureCoordinateRectangle.w).toBe(1.0);
+            expect(tiles[1].imagery[0].textureCoordinateRectangle.z).toBe(1.0);
+            expect(tiles[1].imagery[1].textureCoordinateRectangle.x).toBe(0.0);
+            expect(tiles[1].imagery[1].textureCoordinateRectangle.y).toBe(0.0);
+            expect(tiles[1].imagery[1].textureCoordinateRectangle.z).toBe(1.0);
         });
     });
 
@@ -267,22 +267,22 @@ defineSuite([
             // Only the western tile should have imagery from this layer.
             // And the imagery should not cover it completely.
             expect(tiles[0].imagery.length).toBe(4);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.x).not.toBe(0.0);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.y).not.toBe(0.0);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.z).not.toBe(1.0);
-            expect(tiles[0].imagery[0].textureCoordinateExtent.w).not.toBe(1.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.x).not.toBe(0.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.y).not.toBe(0.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.z).not.toBe(1.0);
-            expect(tiles[0].imagery[1].textureCoordinateExtent.w).not.toBe(1.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.x).not.toBe(0.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.y).not.toBe(0.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.z).not.toBe(1.0);
-            expect(tiles[0].imagery[2].textureCoordinateExtent.w).not.toBe(1.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.x).not.toBe(0.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.y).not.toBe(0.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.z).not.toBe(1.0);
-            expect(tiles[0].imagery[3].textureCoordinateExtent.w).not.toBe(1.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.x).not.toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.y).not.toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.z).not.toBe(1.0);
+            expect(tiles[0].imagery[0].textureCoordinateRectangle.w).not.toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.x).not.toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.y).not.toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.z).not.toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateRectangle.w).not.toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.x).not.toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.y).not.toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.z).not.toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateRectangle.w).not.toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.x).not.toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.y).not.toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.z).not.toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateRectangle.w).not.toBe(1.0);
 
             expect(tiles[1].imagery.length).toBe(0);
         });
@@ -309,11 +309,11 @@ defineSuite([
 
         runs(function() {
             var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
-            var level1 = level0[0].getChildren();
-            var level2 = level1[0].getChildren();
-            var level3 = level2[0].getChildren();
-            var level4 = level3[0].getChildren();
-            var level5 = level4[0].getChildren();
+            var level1 = level0[0].children;
+            var level2 = level1[0].children;
+            var level3 = level2[0].children;
+            var level4 = level3[0].children;
+            var level5 = level4[0].children;
 
             layer._createTileImagerySkeletons(level0[0], terrainProvider);
             expect(level0[0].imagery.length).toBe(0);

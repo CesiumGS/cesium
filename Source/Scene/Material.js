@@ -172,13 +172,14 @@ define([
      *      <li><code>cellAlpha</code>: Alpha value for the cells between grid lines.  This will be combined with color.alpha.</li>
      *      <li><code>lineCount</code>:  Object with x and y values specifying the number of columns and rows respectively.</li>
      *      <li><code>lineThickness</code>:  Object with x and y values specifying the thickness of grid lines (in pixels where available).</li>
+     *      <li><code>lineOffset</code>:  Object with x and y values specifying the offset of grid lines (range is 0 to 1).</li>
      *  </ul>
      *  <li>Stripe</li>
      *  <ul>
      *      <li><code>horizontal</code>:  Boolean that determines if the stripes are horizontal or vertical.</li>
-     *      <li><code>lightColor</code>:  rgba color object for the stripe's light alternating color.</li>
-     *      <li><code>darkColor</code>:  rgba color object for the stripe's dark alternating color.</li>
-     *      <li><code>offset</code>:  Number that controls the stripe offset from the edge.</li>
+     *      <li><code>evenColor</code>:  rgba color object for the stripe's first color.</li>
+     *      <li><code>oddColor</code>:  rgba color object for the stripe's second color.</li>
+     *      <li><code>offset</code>:  Number that controls at which point into the pattern to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning of the odd color, 2.0 being the even color again, and any multiple or fractional values being in between.</li>
      *      <li><code>repeat</code>:  Number that controls the total number of stripes, half light and half dark.</li>
      *  </ul>
      *  <li>Checkerboard</li>
@@ -704,7 +705,7 @@ define([
 
             if (!defined(texture)) {
                 material._texturePaths[uniformId] = undefined;
-                texture = material._textures[uniformId] = context.getDefaultTexture();
+                texture = material._textures[uniformId] = context.defaultTexture;
 
                 uniformDimensionsName = uniformId + 'Dimensions';
                 if (uniforms.hasOwnProperty(uniformDimensionsName)) {
@@ -750,7 +751,7 @@ define([
 
             if (!defined(material._textures[uniformId])) {
                 material._texturePaths[uniformId] = undefined;
-                material._textures[uniformId] = context.getDefaultCubeMap();
+                material._textures[uniformId] = context.defaultCubeMap;
             }
 
             if (uniformValue === Material.DefaultCubeMapId) {
@@ -1182,7 +1183,8 @@ define([
                 color : new Color(0.0, 1.0, 0.0, 1.0),
                 cellAlpha : 0.1,
                 lineCount : new Cartesian2(8.0, 8.0),
-                lineThickness : new Cartesian2(1.0, 1.0)
+                lineThickness : new Cartesian2(1.0, 1.0),
+                lineOffset : new Cartesian2(0.0, 0.0)
             },
             source : GridMaterial
         },
@@ -1198,8 +1200,8 @@ define([
             type : Material.StripeType,
             uniforms : {
                 horizontal : true,
-                lightColor : new Color(1.0, 1.0, 1.0, 0.5),
-                darkColor : new Color(0.0, 0.0, 1.0, 0.5),
+                evenColor : new Color(1.0, 1.0, 1.0, 0.5),
+                oddColor : new Color(0.0, 0.0, 1.0, 0.5),
                 offset : 0.0,
                 repeat : 5.0
             },
@@ -1207,7 +1209,7 @@ define([
         },
         translucent : function(material) {
             var uniforms = material.uniforms;
-            return (uniforms.lightColor.alpha < 1.0) || (uniforms.darkColor.alpha < 0.0);
+            return (uniforms.evenColor.alpha < 1.0) || (uniforms.oddColor.alpha < 0.0);
         }
     });
 

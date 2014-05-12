@@ -24,7 +24,6 @@ define([
      * @example
      * // Example 1. Add primitives to a composite.
      * var primitives = new Cesium.CompositePrimitive();
-     * primitives.centralBody = new Cesium.CentralBody();
      * primitives.add(billboards);
      * primitives.add(labels);
      *
@@ -39,7 +38,6 @@ define([
      * parent.add(labels);      // Add regular primitive
      */
     var CompositePrimitive = function() {
-        this._centralBody = undefined;
         this._primitives = [];
         this._guid = createGuid();
 
@@ -75,28 +73,12 @@ define([
          * Determines if primitives in this composite will be shown.
          *
          * @type Boolean
+         * @default true
          */
         this.show = true;
     };
 
     defineProperties(CompositePrimitive.prototype, {
-
-        /**
-         * Gets or sets the depth-test ellipsoid.
-         * @memberof CompositePrimitive.prototype
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get: function() {
-                return this._centralBody;
-            },
-
-            set: function(centralBody) {
-                this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
-                this._centralBody = centralBody;
-            }
-        },
-
         /**
          * Gets the length of the list of primitives
          * @memberof CompositePrimitive.prototype
@@ -212,8 +194,6 @@ define([
      * DOC_TBA
      *
      * @memberof CompositePrimitive
-     *
-     * Does not include central body.
      *
      * @param {Object} primitive DOC_TBA
      *
@@ -351,7 +331,7 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#getLength
+     * @see CompositePrimitive#length
      *
      * @example
      * // Toggle the show property of every primitive in the composite -
@@ -378,10 +358,6 @@ define([
     CompositePrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
             return;
-        }
-
-        if (this._centralBody) {
-            this._centralBody.update(context, frameState, commandList);
         }
 
         var primitives = this._primitives;
@@ -432,7 +408,6 @@ define([
      */
     CompositePrimitive.prototype.destroy = function() {
         this.removeAll();
-        this._centralBody = this.destroyPrimitives && this._centralBody && this._centralBody.destroy();
         return destroyObject(this);
     };
 

@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Intersections2D',
         '../Core/Math',
@@ -15,6 +16,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Intersections2D,
         CesiumMath,
@@ -178,6 +180,21 @@ define([
         this._waterMask = description.waterMask;
     };
 
+    defineProperties(QuantizedMeshTerrainData.prototype, {
+        /**
+         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+         * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+         * @memberof QuantizedMeshTerrainData.prototype
+         * @type {Uint8Array|Image|Canvas}
+         */
+        waterMask : {
+            get : function() {
+                return this._waterMask;
+            }
+        }
+    });
+
     var arrayScratch = [];
 
     function sortIndicesIfNecessary(indices, sortFunction) {
@@ -229,7 +246,7 @@ define([
         //>>includeEnd('debug');
 
         var ellipsoid = tilingScheme.ellipsoid;
-        var extent = tilingScheme.tileXYToExtent(x, y, level);
+        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
             minimumHeight : this._minimumHeight,
@@ -244,7 +261,7 @@ define([
             southSkirtHeight : this._southSkirtHeight,
             eastSkirtHeight : this._eastSkirtHeight,
             northSkirtHeight : this._northSkirtHeight,
-            extent : extent,
+            rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
             ellipsoid : ellipsoid
         });
@@ -320,7 +337,7 @@ define([
         var isNorthChild = thisY * 2 === descendantY;
 
         var ellipsoid = tilingScheme.ellipsoid;
-        var childExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
+        var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
             vertices : this._quantizedVertices,
@@ -329,7 +346,7 @@ define([
             maximumHeight : this._maximumHeight,
             isEastChild : isEastChild,
             isNorthChild : isNorthChild,
-            childExtent : childExtent,
+            childRectangle : childRectangle,
             ellipsoid : ellipsoid
         });
 
@@ -377,17 +394,17 @@ define([
      *
      * @memberof QuantizedMeshTerrainData
      *
-     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
      * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the extent.
+     *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the rectangle.
      */
-    QuantizedMeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
-        var u = (longitude - extent.west) / (extent.east - extent.west);
+    QuantizedMeshTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
+        var u = (longitude - rectangle.west) / (rectangle.east - rectangle.west);
         u *= maxShort;
-        var v = (latitude - extent.south) / (extent.north - extent.south);
+        var v = (latitude - rectangle.south) / (rectangle.north - rectangle.south);
         v *= maxShort;
 
         var uBuffer = this._uValues;
@@ -460,19 +477,6 @@ define([
         }
 
         return (this._childTileMask & (1 << bitNumber)) !== 0;
-    };
-
-    /**
-     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
-     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
-     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     *
-     *  @memberof QuantizedMeshTerrainData
-     *
-     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
-     */
-    QuantizedMeshTerrainData.prototype.getWaterMask = function() {
-        return this._waterMask;
     };
 
     /**

@@ -30,16 +30,15 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Polyline Glow
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
-                positions : [
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0)),
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 40.0))
-                ],
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -100.0, 40.0,
+                    -90.0, 40.0
+                ]),
                 width : 10.0,
                 vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
             })
@@ -53,10 +52,10 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
-                positions : [
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 38.0)),
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 38.0))
-                ],
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -100.0, 38.0,
+                    -90.0, 38.0
+                ]),
                 width : 10.0,
                 vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
             })
@@ -70,10 +69,10 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
-                positions : [
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 36.0)),
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 36.0))
-                ],
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -100.0, 36.0,
+                    -90.0, 36.0
+                ]),
                 width : 10.0,
                 vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
             })

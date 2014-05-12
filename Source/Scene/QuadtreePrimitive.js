@@ -202,7 +202,7 @@ define([
         var distance = QuadtreePrimitive._tileProvider.getDistanceToTile(tile.data, frameState);
         tile.distance = distance;
 
-        var height = context.getDrawingBufferHeight();
+        var height = context.drawingBufferHeight;
 
         var camera = frameState.camera;
         var frustum = camera.frustum;

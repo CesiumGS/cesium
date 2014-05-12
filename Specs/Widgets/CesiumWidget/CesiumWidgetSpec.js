@@ -3,11 +3,9 @@ defineSuite([
          'Widgets/CesiumWidget/CesiumWidget',
          'Core/Clock',
          'Core/ScreenSpaceEventHandler',
-         'Scene/CentralBody',
          'Scene/EllipsoidTerrainProvider',
          'Scene/Scene',
          'Scene/SceneMode',
-         'Scene/SceneTransitioner',
          'Scene/SkyBox',
          'Scene/TileCoordinatesImageryProvider',
          'Specs/EventHelper'
@@ -15,11 +13,9 @@ defineSuite([
          CesiumWidget,
          Clock,
          ScreenSpaceEventHandler,
-         CentralBody,
          EllipsoidTerrainProvider,
          Scene,
          SceneMode,
-         SceneTransitioner,
          SkyBox,
          TileCoordinatesImageryProvider,
          EventHelper) {
@@ -52,9 +48,7 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
-        expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);
-        expect(widget.sceneTransitioner).toBeInstanceOf(SceneTransitioner);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
         widget.destroy();
@@ -77,6 +71,7 @@ defineSuite([
         widget = new CesiumWidget(container, {
             sceneMode : SceneMode.SCENE2D
         });
+        widget.scene.completeMorph();
         expect(widget.scene.mode).toBe(SceneMode.SCENE2D);
     });
 
@@ -84,6 +79,7 @@ defineSuite([
         widget = new CesiumWidget(container, {
             sceneMode : SceneMode.COLUMBUS_VIEW
         });
+        widget.scene.completeMorph();
         expect(widget.scene.mode).toBe(SceneMode.COLUMBUS_VIEW);
     });
 
@@ -94,21 +90,28 @@ defineSuite([
         expect(widget.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        widget = new CesiumWidget(container, {
+            targetFrameRate : 23
+        });
+        expect(widget.targetFrameRate).toBe(23);
+    });
+
     it('sets expected options imageryProvider', function() {
         var options = {
             imageryProvider : new TileCoordinatesImageryProvider()
         };
         widget = new CesiumWidget(container, options);
-        var imageryLayers = widget.centralBody.imageryLayers;
+        var imageryLayers = widget.scene.imageryLayers;
         expect(imageryLayers.length).toEqual(1);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
+        expect(imageryLayers.get(0).imageryProvider).toBe(options.imageryProvider);
     });
 
     it('does not create an ImageryProvider if option is false', function() {
         widget = new CesiumWidget(container, {
             imageryProvider : false
         });
-        var imageryLayers = widget.centralBody.imageryLayers;
+        var imageryLayers = widget.scene.imageryLayers;
         expect(imageryLayers.length).toEqual(0);
     });
 
@@ -117,7 +120,7 @@ defineSuite([
             terrainProvider : new EllipsoidTerrainProvider()
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.centralBody.terrainProvider).toBe(options.terrainProvider);
+        expect(widget.scene.terrainProvider).toBe(options.terrainProvider);
     });
 
     it('sets expected options skyBox', function() {
@@ -155,7 +158,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene.context;
+        var context = widget.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -173,39 +176,38 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if targetFrameRate less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');
         }).toThrowDeveloperError();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         widget = new CesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        widget.onRenderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(widget, error);
-            expect(widget.useDefaultRenderLoop).toEqual(false);
-        });
+            return !widget.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('shows the error panel when render throws', function() {
         widget = new CesiumWidget(container);
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
@@ -230,7 +232,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 

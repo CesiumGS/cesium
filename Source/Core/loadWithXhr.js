@@ -27,6 +27,7 @@ define([
      * @param {String} [options.method='GET'] The HTTP method to use.
      * @param {String} [options.data] The data to send with the request, if any.
      * @param {Object} [options.headers] HTTP headers to send with the request, if any.
+     * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
@@ -45,7 +46,7 @@ define([
      *     responseType : 'blob'
      * }).then(function(blob) {
      *     // use the data
-     * }, function() {
+     * }, function(error) {
      *     // an error occurred
      * });
      */
@@ -62,19 +63,78 @@ define([
         var method = defaultValue(options.method, 'GET');
         var data = options.data;
         var headers = options.headers;
+        var overrideMimeType = options.overrideMimeType;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
 
             return deferred.promise;
         });
     };
 
+    var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+
+    function decodeDataUriText(isBase64, data) {
+        var result = decodeURIComponent(data);
+        if (isBase64) {
+            return atob(result);
+        }
+        return result;
+    }
+
+    function decodeDataUriArrayBuffer(isBase64, data) {
+        var byteString = decodeDataUriText(isBase64, data);
+        var buffer = new ArrayBuffer(byteString.length);
+        var view = new Uint8Array(buffer);
+        for (var i = 0; i < byteString.length; i++) {
+            view[i] = byteString.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+    function decodeDataUri(dataUriRegexResult, responseType) {
+        responseType = defaultValue(responseType, '');
+        var mimeType = dataUriRegexResult[1];
+        var isBase64 = !!dataUriRegexResult[2];
+        var data = dataUriRegexResult[3];
+
+        switch (responseType) {
+        case '':
+        case 'text':
+            return decodeDataUriText(isBase64, data);
+        case 'arraybuffer':
+            return decodeDataUriArrayBuffer(isBase64, data);
+        case 'blob':
+            var buffer = decodeDataUriArrayBuffer(isBase64, data);
+            return new Blob([buffer], {
+                type : mimeType
+            });
+        case 'document':
+            var parser = new DOMParser();
+            return parser.parseFromString(decodeDataUriText(isBase64, data), mimeType);
+        case 'json':
+            return JSON.parse(decodeDataUriText(isBase64, data));
+        default:
+            throw new DeveloperError('Unhandled responseType: ' + responseType);
+        }
+    }
+
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        var dataUriRegexResult = dataUriRegex.exec(url);
+        if (dataUriRegexResult !== null) {
+            deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
+            return;
+        }
+
         var xhr = new XMLHttpRequest();
+
+        if (defined(overrideMimeType)) {
+            xhr.overrideMimeType(overrideMimeType);
+        }
+
         xhr.open(method, url, true);
 
         if (defined(headers)) {

@@ -69,7 +69,7 @@ define([
          * west properties in radians.
          * @type {Extent}
          */
-        this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
+        this.extent = this.tilingScheme.tileXYToRectangle(this.x, this.y, this.level);
 
         /**
          * The previous tile in the {@link TileReplacementQueue}.

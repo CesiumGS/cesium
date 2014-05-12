@@ -50,7 +50,7 @@ define([
         this.mesh = undefined;
 
         if (defined(this.vertexArray)) {
-            var indexBuffer = this.vertexArray.getIndexBuffer();
+            var indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;

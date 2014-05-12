@@ -6,7 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Extent',
+        '../../Core/Rectangle',
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Scene/CameraColumbusViewMode',
@@ -22,7 +22,7 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         jsonp,
         Matrix4,
         CameraColumbusViewMode,
@@ -39,7 +39,7 @@ define([
      * @constructor
      *
      * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -252,10 +252,10 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var extent = Extent.fromDegrees(west, south, east, north);
+            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
             var camera = viewModel._scene.camera;
-            var position = camera.controller.getExtentCameraCoordinates(extent);
+            var position = camera.getRectangleCameraCoordinates(rectangle);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;

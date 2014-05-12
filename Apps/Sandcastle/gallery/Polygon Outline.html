@@ -30,15 +30,14 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Blue polygon outline
-    var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-95, 37.0),
-        Cesium.Cartographic.fromDegrees(-95, 32.0),
-        Cesium.Cartographic.fromDegrees(-90, 33.0),
-        Cesium.Cartographic.fromDegrees(-87, 31.0),
-        Cesium.Cartographic.fromDegrees(-87, 35.0)
+    var positions = Cesium.Cartesian3.fromDegreesArray([
+        -95, 37.0,
+        -95, 32.0,
+        -90, 33.0,
+        -87, 31.0,
+        -87, 35.0
     ]);
     
     var bluePolygonOutlineInstance = new Cesium.GeometryInstance({
@@ -63,18 +62,18 @@ require(['Cesium'], function(Cesium) {
 
     // Green extruded polygon outline
     var polygonHierarchy = {
-        positions : ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-108.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-98.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-98.0, 40.0),
-            Cesium.Cartographic.fromDegrees(-108.0, 40.0)
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            -108.0, 30.0,
+            -98.0, 30.0,
+            -98.0, 40.0,
+            -108.0, 40.0
         ]),
         holes : [{
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-106.0, 31.0),
-                Cesium.Cartographic.fromDegrees(-106.0, 39.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 39.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 31.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -106.0, 31.0,
+                -106.0, 39.0,
+                -100.0, 39.0,
+                -100.0, 31.0
             ])
         }]
     };
@@ -103,10 +102,10 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Red polygon outline with per position heights
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-95, 44.0, 400000),
-        Cesium.Cartographic.fromDegrees(-95, 39.0, 100000),
-        Cesium.Cartographic.fromDegrees(-87, 42.0, 100000)
+    positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+        -95, 44.0, 400000,
+        -95, 39.0, 100000,
+        -87, 42.0, 100000
     ]);
     
     var redPolygonOutlineInstance = new Cesium.GeometryInstance({
@@ -140,7 +139,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
             }
         })
     }));

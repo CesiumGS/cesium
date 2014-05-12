@@ -49,19 +49,17 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-        ]);
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))];
         polygon.asynchronous = false;
 
         polylines = new PolylineCollection();
@@ -91,7 +89,7 @@ defineSuite([
     }
 
     function renderPolylineMaterial(material) {
-        polyline.setMaterial(material);
+        polyline.material = material;
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

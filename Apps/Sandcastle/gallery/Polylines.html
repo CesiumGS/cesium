@@ -27,15 +27,15 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    function createPrimitives(scene, ellipsoid) {
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
         var polylines = new Cesium.PolylineCollection();
 
         // A simple polyline with two points.
         var polyline = polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-120.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-110.0, 30.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -120.0, 40.0,
+                -110.0, 30.0
             ]),
             material : Cesium.Material.fromType('Color', {
                 color : new Cesium.Color(1.0, 1.0, 1.0, 1.0)
@@ -45,11 +45,11 @@ require(['Cesium'], function(Cesium) {
 
         // Apply a polyline outline material
         var widePolyline = polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 38.0),
-                Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 32.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -105.0, 40.0,
+                -100.0, 38.0,
+                -105.0, 35.0,
+                -100.0, 32.0
             ]),
             material : Cesium.Material.fromType(Cesium.Material.PolylineOutlineType, {
                 outlineWidth : 5.0
@@ -60,9 +60,9 @@ require(['Cesium'], function(Cesium) {
 
         // Apply a polyline glow material
         var coloredPolyline = polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-85.0, 40.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -95.0, 30.0,
+                -85.0, 40.0
             ]),
             material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType, {
                 innerWidth : 3.0,
@@ -74,11 +74,11 @@ require(['Cesium'], function(Cesium) {
         
         // A polyline loop
         var loopPolyline = polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-105.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-105.0, 25.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 22.0),
-                Cesium.Cartographic.fromDegrees(-100.0, 28.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -105.0, 30.0,
+                -105.0, 25.0,
+                -100.0, 22.0,
+                -100.0, 28.0
             ]),
             width : 3.0,
             loop : true
@@ -90,7 +90,7 @@ require(['Cesium'], function(Cesium) {
         // Draw a line in a local reference frame
         // The arrow points to the east, i.e. along the local x-axis.
         var localPolylines = new Cesium.PolylineCollection();
-        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0));
+        var center = Cesium.Cartesian3.fromDegrees(-80.0, 35.0);
         localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
         
         var localPolyline = localPolylines.add({
@@ -111,7 +111,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
+    createPrimitives(viewer.scene);
 
     Sandcastle.finishedLoading();
 });

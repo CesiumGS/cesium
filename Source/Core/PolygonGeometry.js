@@ -393,6 +393,8 @@ define([
         });
     }
 
+    var createGeometryFromPositionsExtrudedPositions = [];
+
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight) {
         var topGeo = createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight).geometry;
         var edgePoints = topGeo.attributes.position.values;
@@ -433,10 +435,14 @@ define([
 
         geos.walls = [];
         var outerRing = hierarchy.outerRing;
-        var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerRing, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(outerRing, createGeometryFromPositionsExtrudedPositions);
+
+        var windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing = outerRing.reverse();
+            outerRing.reverse();
         }
+
         var wallGeo = computeWallIndices(outerRing, granularity, perPositionHeight);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
@@ -445,10 +451,15 @@ define([
         var holes = hierarchy.holes;
         for (i = 0; i < holes.length; i++) {
             var hole = holes[i];
-            windingOrder = PolygonPipeline.computeWindingOrder2D(hole);
-            if (windingOrder !== WindingOrder.CLOCKWISE) {
-                hole = hole.reverse();
+
+            tangentPlane = EllipsoidTangentPlane.fromPoints(hole, ellipsoid);
+            positions2D = tangentPlane.projectPointsOntoPlane(hole, createGeometryFromPositionsExtrudedPositions);
+
+            windingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+            if (windingOrder === WindingOrder.CLOCKWISE) {
+                hole.reverse();
             }
+
             wallGeo = computeWallIndices(hole, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
@@ -652,7 +663,6 @@ define([
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
-        var boundingSphere;
         var walls;
         var topAndBottom;
         var outerPositions;
@@ -711,10 +721,6 @@ define([
         }
 
         outerPositions = polygons[0];
-        // The bounding volume is just around the boundary points, so there could be cases for
-        // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-        // volume doesn't cover the polygon.
-        boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
         var geometry;
         var geometries = [];
@@ -749,24 +755,11 @@ define([
         }
 
         geometry = GeometryPipeline.combine(geometries);
-
-        var center = boundingSphere.center;
-        scratchNormal = ellipsoid.geodeticSurfaceNormal(center, scratchNormal);
-        scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, height, scratchPosition);
-        center = Cartesian3.add(center, scratchPosition, center);
-
-        if (extrude) {
-            scratchBoundingSphere = BoundingSphere.clone(boundingSphere, scratchBoundingSphere);
-            center = scratchBoundingSphere.center;
-            scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, extrudedHeight, scratchPosition);
-            center = Cartesian3.add(ellipsoid.scaleToGeodeticSurface(center, center), scratchPosition, center);
-            boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
-        }
-
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
 
         var attributes = geometry.attributes;
+        var boundingSphere = BoundingSphere.fromVertices(attributes.position.values);
 
         if (!vertexFormat.position) {
             delete attributes.position;

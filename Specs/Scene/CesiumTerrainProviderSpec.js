@@ -32,11 +32,11 @@ defineSuite([
 
     function returnTileJson(path) {
         var oldLoad = loadWithXhr.load;
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (url.indexOf('layer.json') >= 0) {
                 return loadWithXhr.defaultLoad(path, responseType, method, data, headers, deferred);
             } else {
-                return oldLoad(url, responseType, method, data, headers, deferred);
+                return oldLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
             }
         };
     }
@@ -244,7 +244,7 @@ defineSuite([
         });
 
         runs(function() {
-            expect(provider.credit.getText()).toBe('This amazing data is courtesy The Amazing Data Source!');
+            expect(provider.credit.text).toBe('This amazing data is courtesy The Amazing Data Source!');
         });
     });
 
@@ -252,7 +252,7 @@ defineSuite([
         it('uses the proxy if one is supplied', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url.indexOf('/proxy/?')).toBe(0);
 
                 // Just return any old file, as long as its big enough
@@ -288,7 +288,7 @@ defineSuite([
         it('provides HeightmapTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Just return any old file, as long as its big enough
                 return loadWithXhr.defaultLoad('Data/EarthOrientationParameters/IcrfToFixedStkComponentsRotationData.json', responseType, method, data, headers, deferred);
             };
@@ -325,7 +325,7 @@ defineSuite([
         it('provides QuantizedMeshTerrainData', function() {
             var baseUrl = 'made/up/url';
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
             };
 
@@ -363,7 +363,7 @@ defineSuite([
 
             var deferreds = [];
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
             };

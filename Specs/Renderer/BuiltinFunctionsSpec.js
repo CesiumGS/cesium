@@ -39,7 +39,7 @@ defineSuite([
         var sp = context.createShaderProgram(vs, fs);
 
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -96,12 +96,12 @@ defineSuite([
         var camera = createCamera(context);
         camera.frustum.near = 1.0;
 
-        var canvas = context.getCanvas();
+        var canvas = context.canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
-        context.getUniformState().update(context, createFrameState(camera));
+        context.uniformState.viewport = vp;
+        context.uniformState.update(context, createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -122,12 +122,12 @@ defineSuite([
         var camera = createCamera(context);
         camera.frustum.near = 1.0;
 
-        var canvas = context.getCanvas();
+        var canvas = context.canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
-        context.getUniformState().update(context, createFrameState(camera));
+        context.uniformState.viewport = vp;
+        context.uniformState.update(context, createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -159,7 +159,7 @@ defineSuite([
 
     it('has czm_translateRelativeToEye', function() {
         var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
-        context.getUniformState().update(context, createFrameState(camera));
+        context.uniformState.update(context, createFrameState(camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);

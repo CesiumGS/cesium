@@ -578,9 +578,9 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
-     * @see UniformState#getModelViewProjection
+     * @see UniformState#modelViewProjection
      * @see czm_modelViewProjection
-     * @see UniformState#getViewportTransformation
+     * @see UniformState#viewportTransformation
      * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {

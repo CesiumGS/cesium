@@ -7,6 +7,7 @@ defineSuite([
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
+             'Core/defined',
              'Core/JulianDate',
              'Core/Cartesian2',
              'Core/Cartesian3',
@@ -24,6 +25,7 @@ defineSuite([
               DynamicBillboard,
               DynamicObjectCollection,
               DynamicObject,
+              defined,
               JulianDate,
               Cartesian2,
               Cartesian3,
@@ -57,11 +59,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters and adds collection to scene.', function() {
+    it('constructor adds collection to scene.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection instanceof BillboardCollection).toEqual(true);
     });
@@ -74,13 +74,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicBillboardVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicBillboardVisualizer(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -165,22 +161,22 @@ defineSuite([
 
             waitsFor(function() {
                 visualizer.update(time);
-                if (bb.getShow()) {
-                    expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
-                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
-                    expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
-                    expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
-                    expect(bb.getRotation()).toEqual(testObject.billboard.rotation.getValue(time));
-                    expect(bb.getAlignedAxis()).toEqual(testObject.billboard.alignedAxis.getValue(time));
-                    expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
-                    expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
-                    expect(bb.getWidth()).toEqual(testObject.billboard.width.getValue(time));
-                    expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
-                    expect(bb.getScaleByDistance()).toEqual(testObject.billboard.scaleByDistance.getValue(time));
-                    expect(bb.getTranslucencyByDistance()).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
-                    expect(bb.getPixelOffsetScaleByDistance()).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+                if (bb.show) {
+                    expect(bb.position).toEqual(testObject.position.getValue(time));
+                    expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
+                    expect(bb.eyeOffset).toEqual(testObject.billboard.eyeOffset.getValue(time));
+                    expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
+                    expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
+                    expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
+                    expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
+                    expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
+                    expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
+                    expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
+                    expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
+                    expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
+                    expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
                 }
-                return bb.getShow(); //true once the image is loaded.
+                return bb.show; //true once the image is loaded.
             });
         });
 
@@ -204,22 +200,22 @@ defineSuite([
 
             waitsFor(function() {
                 visualizer.update(time);
-                var imageReady = bb.getImageIndex() === 1; //true once the green image is loaded
+                var imageReady = defined(bb) && bb.imageIndex === 1; //true once the green image is loaded
                 if (imageReady) {
-                    expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
-                    expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
-                    expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
-                    expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
-                    expect(bb.getRotation()).toEqual(testObject.billboard.rotation.getValue(time));
-                    expect(bb.getAlignedAxis()).toEqual(testObject.billboard.alignedAxis.getValue(time));
-                    expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
-                    expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
-                    expect(bb.getPixelOffset()).toEqual(testObject.billboard.pixelOffset.getValue(time));
-                    expect(bb.getWidth()).toEqual(testObject.billboard.width.getValue(time));
-                    expect(bb.getHeight()).toEqual(testObject.billboard.height.getValue(time));
-                    expect(bb.getScaleByDistance()).toEqual(testObject.billboard.scaleByDistance.getValue(time));
-                    expect(bb.getTranslucencyByDistance()).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
-                    expect(bb.getPixelOffsetScaleByDistance()).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
+                    expect(bb.position).toEqual(testObject.position.getValue(time));
+                    expect(bb.color).toEqual(testObject.billboard.color.getValue(time));
+                    expect(bb.eyeOffset).toEqual(testObject.billboard.eyeOffset.getValue(time));
+                    expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
+                    expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
+                    expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
+                    expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
+                    expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
+                    expect(bb.pixelOffset).toEqual(testObject.billboard.pixelOffset.getValue(time));
+                    expect(bb.width).toEqual(testObject.billboard.width.getValue(time));
+                    expect(bb.height).toEqual(testObject.billboard.height.getValue(time));
+                    expect(bb.scaleByDistance).toEqual(testObject.billboard.scaleByDistance.getValue(time));
+                    expect(bb.translucencyByDistance).toEqual(testObject.billboard.translucencyByDistance.getValue(time));
+                    expect(bb.pixelOffsetScaleByDistance).toEqual(testObject.billboard.pixelOffsetScaleByDistance.getValue(time));
                 }
                 return imageReady;
             });
@@ -230,7 +226,7 @@ defineSuite([
 
             waitsFor(function() {
                 visualizer.update(time);
-                return !bb.getShow();
+                return !bb.show;
             });
         });
     });
@@ -256,11 +252,11 @@ defineSuite([
 
         waitsFor(function() {
             visualizer.update(time);
-            if (bb.getShow()) {
+            if (bb.show) {
                 //Clearing won't actually remove the billboard because of the
                 //internal cache used by the visualizer, instead it just hides it.
                 dynamicObjectCollection.removeAll();
-                expect(bb.getShow()).toEqual(false);
+                expect(bb.show).toEqual(false);
                 return true;
             }
             return false;
@@ -286,37 +282,5 @@ defineSuite([
         expect(billboardCollection.length).toEqual(1);
         var bb = billboardCollection.get(0);
         expect(bb.id).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.billboard = new DynamicBillboard();
-        testObject.billboard.show = new ConstantProperty(true);
-        testObject.billboard.image = new ConstantProperty('Data/Images/Blue.png');
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.billboard = new DynamicBillboard();
-        testObject2.billboard.show = new ConstantProperty(true);
-        testObject2.billboard.image = new ConstantProperty('Data/Images/Green.png');
-
-        visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-        var billboardCollection = scene.primitives.get(0);
-
-        visualizer.update(time);
-        expect(billboardCollection.length).toEqual(1);
-        var bb = billboardCollection.get(0);
-        expect(bb.id).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(billboardCollection.length).toEqual(1);
-        bb = billboardCollection.get(0);
-        expect(bb.id).toEqual(testObject2);
     });
 }, 'WebGL');

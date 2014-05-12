@@ -48,7 +48,7 @@ defineSuite([
     beforeEach(function() {
         ellipsoid = new EllipsoidPrimitive();
         frameState = createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, frameState);
     });
 
@@ -146,7 +146,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

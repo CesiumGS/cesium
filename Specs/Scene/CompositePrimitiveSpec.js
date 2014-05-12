@@ -5,7 +5,6 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createCamera',
          'Specs/createFrameState',
-         'Specs/equals',
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
@@ -15,7 +14,6 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Math',
          'Renderer/ClearCommand',
-         'Scene/CentralBody',
          'Scene/LabelCollection',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
@@ -26,7 +24,6 @@ defineSuite([
          destroyContext,
          createCamera,
          createFrameState,
-         equals,
          frameState,
          pick,
          render,
@@ -36,7 +33,6 @@ defineSuite([
          Ellipsoid,
          CesiumMath,
          ClearCommand,
-         CentralBody,
          LabelCollection,
          HorizontalOrigin,
          VerticalOrigin,
@@ -65,7 +61,7 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
 
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, createFrameState(camera));
     });
 
@@ -96,12 +92,10 @@ defineSuite([
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
+        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree, -degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree, -degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
-                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
-                             ]);
+                              ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))];
         polygon.asynchronous = false;
         return polygon;
     }
@@ -244,14 +238,6 @@ defineSuite([
 
     it('gets default destroyPrimitives', function() {
         expect(primitives.destroyPrimitives).toEqual(true);
-    });
-
-    it('setting a central body', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(ellipsoid);
-        primitives.centralBody = cb;
-
-        expect(primitives.centralBody).toBe(cb);
     });
 
     it('renders a primitive added with add()', function() {
@@ -459,29 +445,6 @@ defineSuite([
         expect(pickedObject.primitive).toEqual(p1);
     });
 
-    it('renders a central body', function() {
-        var savedCamera;
-
-        runs(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-            primitives.centralBody = cb;
-
-            savedCamera = frameState.camera;
-            frameState.camera = camera;
-        });
-
-        waitsFor(function() {
-            render(context, frameState, primitives);
-            return !equals(this.env, context.readPixels(), [0, 0, 0, 0]);
-        }, 'the central body to be rendered', 5000);
-
-        runs(function() {
-            frameState.camera = savedCamera;
-        });
-    });
 
     it('is not destroyed when first constructed', function() {
         expect(primitives.isDestroyed()).toEqual(false);
@@ -538,15 +501,6 @@ defineSuite([
         expect(labels.isDestroyed()).toEqual(true);
     });
 
-    it('destroys primitive on set centralBody', function() {
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-
-        primitives.centralBody = cb;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        primitives.centralBody = null;
-        expect(cb.isDestroyed()).toEqual(true);
-    });
 
     it('does not destroy its primitives', function() {
         var labels = new LabelCollection(context);
@@ -588,20 +542,6 @@ defineSuite([
 
         labels.destroy();
         expect(labels.isDestroyed()).toEqual(true);
-    });
-
-    it('does not destroy primitive on set centralBody', function() {
-        var cb = new CentralBody(Ellipsoid.UNIT_SPHERE);
-
-        primitives.destroyPrimitives = false;
-        primitives.centralBody = cb;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        primitives.centralBody = null;
-        expect(cb.isDestroyed()).toEqual(false);
-
-        cb.destroy();
-        expect(cb.isDestroyed()).toEqual(true);
     });
 
     it('throws when add() without an primitive', function() {

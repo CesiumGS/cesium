@@ -104,6 +104,58 @@ define([
     };
 
     /**
+     * Gets the ComponentDatatype for the provided value.
+     *
+     * @param {Number} value The value.
+     *
+     * @returns {ComponentDatatype} The ComponentDatatype for the provided value, or undefined if no enumeration with the provided value exists.
+     */
+    ComponentDatatype.fromValue = function(value) {
+        switch (value) {
+        case ComponentDatatype.BYTE.value:
+            return ComponentDatatype.BYTE;
+        case ComponentDatatype.UNSIGNED_BYTE.value:
+            return ComponentDatatype.UNSIGNED_BYTE;
+        case ComponentDatatype.SHORT.value:
+            return ComponentDatatype.SHORT;
+        case ComponentDatatype.UNSIGNED_SHORT.value:
+            return ComponentDatatype.UNSIGNED_SHORT;
+        case ComponentDatatype.FLOAT.value:
+            return ComponentDatatype.FLOAT;
+        case ComponentDatatype.DOUBLE.value:
+            return ComponentDatatype.DOUBLE;
+        }
+    };
+
+    /**
+     * Gets the ComponentDatatype for the provided TypedArray instance.
+     *
+     * @param {TypedArray} array The typed array.
+     *
+     * @returns {ComponentDatatype} The ComponentDatatype for the provided array, or undefined if the array is not a TypedArray.
+     */
+    ComponentDatatype.fromTypedArray = function(array) {
+        if (array instanceof Int8Array) {
+            return ComponentDatatype.BYTE;
+        }
+        if (array instanceof Uint8Array) {
+            return ComponentDatatype.UNSIGNED_BYTE;
+        }
+        if (array instanceof Int16Array) {
+            return ComponentDatatype.SHORT;
+        }
+        if (array instanceof Uint16Array) {
+            return ComponentDatatype.UNSIGNED_SHORT;
+        }
+        if (array instanceof Float32Array) {
+            return ComponentDatatype.FLOAT;
+        }
+        if (array instanceof Float64Array) {
+            return ComponentDatatype.DOUBLE;
+        }
+    };
+
+    /**
      * Validates that the provided component datatype is a valid {@link ComponentDatatype}
      *
      * @param {ComponentDatatype} componentDatatype The component datatype to validate.

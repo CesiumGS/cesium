@@ -6,7 +6,7 @@ defineSuite([
          'Core/FeatureDetection',
          'Core/loadImage',
          'Core/loadWithXhr',
-         'Core/Extent',
+         'Core/Rectangle',
          'Scene/Imagery',
          'Scene/ImageryLayer',
          'Scene/ImageryProvider',
@@ -22,7 +22,7 @@ defineSuite([
          FeatureDetection,
          loadImage,
          loadWithXhr,
-         Extent,
+         Rectangle,
          Imagery,
          ImageryLayer,
          ImageryProvider,
@@ -61,13 +61,38 @@ defineSuite([
         expect(constructWithoutChannel).toThrowDeveloperError();
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var path = '';
+        var url = 'http://example.invalid';
+        var channel = 1234;
+        var version = 1;
+
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : url,
+            channel: channel,
+            path: path
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('can provide a root tile', function() {
         var path = '';
         var url = 'http://example.invalid';
         var channel = 1234;
         var version = 1;
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
         };
 
@@ -95,7 +120,7 @@ defineSuite([
             expect(provider.version).toEqual(version);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
 
         waitsFor(function() {
@@ -114,7 +139,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
                 // Just return any old image.
@@ -141,7 +166,7 @@ defineSuite([
         var version = 1;
         var channel = 1234;
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve('{\n' +
                 'isAuthenticated: true,\n' +
                 'layers: [\n' +
@@ -188,7 +213,7 @@ defineSuite([
         var url = 'http://example.invalid';
         var proxy = new DefaultProxy('/proxy/');
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
         };
 
@@ -256,7 +281,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
         };
 
@@ -287,7 +312,7 @@ defineSuite([
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             // Succeed after 2 tries
             if (tries === 2) {
                 // valid URL
@@ -295,7 +320,7 @@ defineSuite([
             }
 
             // invalid URL
-            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred);
+            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
         };
 
         waitsFor(function() {
@@ -321,7 +346,7 @@ defineSuite([
     });
 
     it('defaults to WebMercatorTilingScheme when no projection specified', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
                 "isAuthenticated": true,
                 "layers": [
@@ -350,12 +375,12 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
     it('Projection is WebMercatorTilingScheme when server projection is mercator', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
                 "isAuthenticated": true,
                 "layers": [
@@ -385,12 +410,12 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
     });
 
     it('Projection is GeographicTilingScheme when server projection is flat', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
                 "isAuthenticated": true,
                 "layers": [
@@ -420,12 +445,12 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
+            expect(provider.rectangle).toEqual(new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
     });
 
     it('raises error when channel cannot be found', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_channel.json', responseType, method, data, headers, deferred);
         };
 
@@ -451,7 +476,7 @@ defineSuite([
     });
 
     it('raises error when channel version cannot be found', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_version.json', responseType, method, data, headers, deferred);
         };
 
@@ -477,7 +502,7 @@ defineSuite([
     });
 
     it('raises error when unsupported projection is specified', function() {
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_projection.json', responseType, method, data, headers, deferred);
         };
 

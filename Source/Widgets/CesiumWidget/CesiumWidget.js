@@ -3,7 +3,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,17 +10,16 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
+        '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/CentralBody',
+        '../../Scene/Globe',
         '../../Scene/Credit',
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
-        '../../Scene/SceneTransitioner',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
         '../../Scene/Sun',
@@ -30,7 +28,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        DefaultProxy,
         defaultValue,
         defined,
         defineProperties,
@@ -38,17 +35,16 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        FeatureDetection,
         formatError,
+        getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        CentralBody,
+        Globe,
         Credit,
         Moon,
         Scene,
         SceneMode,
-        SceneTransitioner,
         SkyAtmosphere,
         SkyBox,
         Sun,
@@ -61,30 +57,34 @@ define([
 
     function startRenderLoop(widget) {
         widget._renderLoopRunning = true;
+        widget._lastFrameTime = getTimestamp();
 
         function render() {
             if (widget.isDestroyed()) {
                 return;
             }
 
-            try {
-                if (widget._useDefaultRenderLoop) {
+            if (widget._useDefaultRenderLoop) {
+                var targetFrameRate = widget._targetFrameRate;
+                if (!defined(targetFrameRate)) {
                     widget.resize();
                     widget.render();
                     requestAnimationFrame(render);
                 } else {
-                    widget._renderLoopRunning = false;
+                    var lastFrameTime = widget._lastFrameTime;
+                    var interval = 1000.0 / targetFrameRate;
+                    var now = getTimestamp();
+                    var delta = now - lastFrameTime;
+
+                    if (delta > interval) {
+                        widget.resize();
+                        widget.render();
+                        widget._lastFrameTime = now - (delta % interval);
+                    }
+                    requestAnimationFrame(render);
                 }
-            } catch (error) {
-                widget._useDefaultRenderLoop = false;
+            } else {
                 widget._renderLoopRunning = false;
-                widget._renderLoopError.raiseEvent(widget, error);
-                if (widget._showRenderLoopErrors) {
-                    var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    widget.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
-                }
             }
         }
 
@@ -107,6 +107,7 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
      *
@@ -123,7 +124,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -158,10 +159,13 @@ define([
         this._element = widgetNode;
 
         try {
-            var svgNS = "http://www.w3.org/2000/svg";
-            var zoomDetector = document.createElementNS(svgNS, 'svg');
-            zoomDetector.style.display = 'none';
-            widgetNode.appendChild(zoomDetector);
+            if (defined(document.createElementNS)) {
+                var svgNS = "http://www.w3.org/2000/svg";
+                var zoomDetector = document.createElementNS(svgNS, 'svg');
+                zoomDetector.style.display = 'none';
+                widgetNode.appendChild(zoomDetector);
+                this._zoomDetector = zoomDetector;
+            }
 
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
@@ -177,7 +181,7 @@ define([
             widgetNode.appendChild(creditContainer);
 
             var scene = new Scene(canvas, options.contextOptions, creditContainer);
-            scene.camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
+            scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
             var creditDisplay = scene.frameState.creditDisplay;
@@ -185,8 +189,8 @@ define([
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var centralBody = new CentralBody(ellipsoid);
-            scene.primitives.centralBody = centralBody;
+            var globe = new Globe(ellipsoid);
+            scene.globe = globe;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -216,42 +220,53 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayers.addImageryProvider(imageryProvider);
+                scene.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
             if (defined(options.terrainProvider)) {
-                centralBody.terrainProvider = options.terrainProvider;
+                scene.terrainProvider = options.terrainProvider;
             }
 
             this._container = container;
             this._canvas = canvas;
-            this._zoomDetector = zoomDetector;
-            this._canvasWidth = canvas.width;
-            this._canvasHeight = canvas.height;
+            this._canvasWidth = 0;
+            this._canvasHeight = 0;
             this._scene = scene;
-            this._centralBody = centralBody;
+            this._globe = globe;
             this._clock = defaultValue(options.clock, new Clock());
-            this._transitioner = new SceneTransitioner(scene, ellipsoid);
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
             this._renderLoopRunning = false;
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-            this._renderLoopError = new Event();
+            this._lastFrameTime = undefined;
+            this._targetFrameRate = undefined;
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._transitioner.to2D();
+                    this._scene.morphTo2D(0);
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._transitioner.toColumbusView();
+                    this._scene.morphToColumbusView(0);
                 }
             }
 
             this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+            this.targetFrameRate = options.targetFrameRate;
 
+            var that = this;
+            scene.renderError.addEventListener(function(scene, error) {
+                that._useDefaultRenderLoop = false;
+                that._renderLoopRunning = false;
+                if (that._showRenderLoopErrors) {
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    that.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
+                }
+            });
         } catch (error) {
             var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
             this.showErrorPanel(title, error);
@@ -269,18 +284,6 @@ define([
         container : {
             get : function() {
                 return this._container;
-            }
-        },
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {SceneTransitioner}
-         */
-        sceneTransitioner : {
-            get : function() {
-                return this._transitioner;
             }
         },
 
@@ -321,18 +324,6 @@ define([
         },
 
         /**
-         * Gets the primary central body.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get : function() {
-                return this._centralBody;
-            }
-        },
-
-        /**
          * Gets the clock.
          * @memberof CesiumWidget.prototype
          *
@@ -357,16 +348,23 @@ define([
         },
 
         /**
-         * Gets the event that will be raised when an error is encountered during the default render loop.
-         * The widget instance and the generated exception are the only two parameters passed to the event handler.
-         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
-         * be set back to true to continue rendering after an exception.
-         * @memberof Viewer.prototype
-         * @type {Event}
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no affect.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Number}
          */
-        onRenderLoopError : {
+        targetFrameRate : {
             get : function() {
-                return this._renderLoopError;
+                return this._targetFrameRate;
+            },
+            set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('targetFrameRate must be greater than 0.');
+                }
+                this._targetFrameRate = value;
             }
         },
 
@@ -376,7 +374,10 @@ define([
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods as part of a custom
-         * render loop.
+         * render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof CesiumWidget.prototype
          *
          * @type {Boolean}
@@ -418,7 +419,7 @@ define([
 
         var errorHeader = document.createElement('div');
         errorHeader.className = 'cesium-widget-errorPanel-header';
-        errorHeader.textContent = title;
+        errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
 
         var resizeCallback;
@@ -430,11 +431,13 @@ define([
                 errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
             };
             resizeCallback();
-            window.addEventListener('resize', resizeCallback, false);
+            if (defined(window.addEventListener)) {
+                window.addEventListener('resize', resizeCallback, false);
+            }
 
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.textContent = error;
+            errorMessage.appendChild(document.createTextNode(error));
             errorPanelScroller.appendChild(errorMessage);
         }
 
@@ -443,11 +446,11 @@ define([
         content.appendChild(buttonPanel);
 
         var okButton = document.createElement('button');
-        okButton.type = 'button';
+        okButton.setAttribute('type', 'button');
         okButton.className = 'cesium-button';
-        okButton.textContent = 'OK';
+        okButton.appendChild(document.createTextNode('OK'));
         okButton.onclick = function() {
-            if (defined(resizeCallback)) {
+            if (defined(resizeCallback) && defined(window.removeEventListener)) {
                 window.removeEventListener('resize', resizeCallback, false);
             }
             element.removeChild(overlay);

@@ -207,12 +207,12 @@ define(['../../Core/BoundingSphere',
         }
 
         function dataSourceAdded(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+            var dynamicObjectCollection = dataSource.dynamicObjects;
             dynamicObjectCollection.collectionChanged.addEventListener(onDynamicCollectionChanged);
         }
 
         function dataSourceRemoved(dataSourceCollection, dataSource) {
-            var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+            var dynamicObjectCollection = dataSource.dynamicObjects;
             dynamicObjectCollection.collectionChanged.removeEventListener(onDynamicCollectionChanged);
 
             if (defined(viewer.trackedObject)) {
@@ -275,7 +275,7 @@ define(['../../Core/BoundingSphere',
             }
 
             if (isTracking && defined(value.position)) {
-                dynamicObjectView = new DynamicObjectView(value, scene, viewer.centralBody.ellipsoid);
+                dynamicObjectView = new DynamicObjectView(value, scene, viewer.scene.globe.ellipsoid);
             } else {
                 dynamicObjectView = undefined;
             }

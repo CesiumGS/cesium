@@ -124,12 +124,12 @@ define([
         };
         this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
-            (!defined(viewport.width)) ? context.getDrawingBufferWidth() : viewport.width,
-            (!defined(viewport.height)) ? context.getDrawingBufferHeight() : viewport.height) : undefined;
+            (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
+            (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
 
-        if ((this.lineWidth < context.getMinimumAliasedLineWidth()) ||
-                (this.lineWidth > context.getMaximumAliasedLineWidth())) {
-                throw new RuntimeError('renderState.lineWidth is out of range.  Check getMinimumAliasedLineWidth() and getMaximumAliasedLineWidth().');
+        if ((this.lineWidth < context.minimumAliasedLineWidth) ||
+                (this.lineWidth > context.maximumAliasedLineWidth)) {
+                throw new RuntimeError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -219,11 +219,11 @@ define([
             }
             //>>includeEnd('debug');
 
-            if (this.viewport.width > context.getMaximumViewportWidth()) {
-                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.getMaximumViewportWidth().toString() + ').  Check getMaximumViewportWidth().');
+            if (this.viewport.width > context.maximumViewportWidth) {
+                throw new RuntimeError('renderState.viewport.width must be less than or equal to the maximum viewport width (' + this.maximumViewportWidth.toString() + ').  Check maximumViewportWidth.');
             }
-            if (this.viewport.height > context.getMaximumViewportHeight()) {
-                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.getMaximumViewportHeight().toString() + ').  Check getMaximumViewportHeight().');
+            if (this.viewport.height > context.maximumViewportHeight) {
+                throw new RuntimeError('renderState.viewport.height must be less than or equal to the maximum viewport height (' + this.maximumViewportHeight.toString() + ').  Check maximumViewportHeight.');
             }
         }
 
@@ -388,11 +388,11 @@ define([
 
         if (!defined(viewport)) {
             viewport = scratchViewport;
-            viewport.width = passState.context.getDrawingBufferWidth();
-            viewport.height = passState.context.getDrawingBufferHeight();
+            viewport.width = passState.context.drawingBufferWidth;
+            viewport.height = passState.context.drawingBufferHeight;
         }
 
-        passState.context.getUniformState().setViewport(viewport);
+        passState.context.uniformState.viewport = viewport;
         gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
     }
 
@@ -516,6 +516,88 @@ define([
         for (var i = 0; i < len; ++i) {
             funcs[i](gl, nextState, passState);
         }
+    };
+
+    /**
+     * Duplicates a RenderState instance. The object returned must still be created with {@link Context#createRenderState}.
+     *
+     * @param renderState The render state to be cloned.
+     * @returns {Object} The duplicated render state.
+     */
+    RenderState.clone = function(renderState) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(renderState)) {
+            throw new DeveloperError('renderState is required.');
+        }
+        //>>includeEnd('debug');
+
+        return {
+            frontFace : renderState.frontFace,
+            cull : {
+                enabled : renderState.cull.enabled,
+                face : renderState.cull.face
+            },
+            lineWidth : renderState.lineWidth,
+            polygonOffset : {
+                enabled : renderState.polygonOffset.enabled,
+                factor : renderState.polygonOffset.factor,
+                units : renderState.polygonOffset.units
+            },
+            scissorTest : {
+                enabled : renderState.scissorTest.enabled,
+                rectangle : BoundingRectangle.clone(renderState.scissorTest.rectangle)
+            },
+            depthRange : {
+                near : renderState.depthRange.near,
+                far : renderState.depthRange.far
+            },
+            depthTest : {
+                enabled : renderState.depthTest.enabled,
+                func : renderState.depthTest.func
+            },
+            colorMask : {
+                red : renderState.colorMask.red,
+                green : renderState.colorMask.green,
+                blue : renderState.colorMask.blue,
+                alpha : renderState.colorMask.alpha
+            },
+            depthMask : renderState.depthMask,
+            stencilMask : renderState.stencilMask,
+            blending : {
+                enabled : renderState.blending.enabled,
+                color : Color.clone(renderState.blending.color),
+                equationRgb : renderState.blending.equationRgb,
+                equationAlpha : renderState.blending.equationAlpha,
+                functionSourceRgb : renderState.blending.functionSourceRgb,
+                functionSourceAlpha : renderState.blending.functionSourceAlpha,
+                functionDestinationRgb : renderState.blending.functionDestinationRgb,
+                functionDestinationAlpha : renderState.blending.functionDestinationAlpha
+            },
+            stencilTest : {
+                enabled : renderState.stencilTest.enabled,
+                frontFunction : renderState.stencilTest.frontFunction,
+                backFunction : renderState.stencilTest.backFunction,
+                reference : renderState.stencilTest.reference,
+                mask : renderState.stencilTest.mask,
+                frontOperation : {
+                    fail : renderState.stencilTest.frontOperation.fail,
+                    zFail : renderState.stencilTest.frontOperation.zFail,
+                    zPass : renderState.stencilTest.frontOperation.zPass
+                },
+                backOperation : {
+                    fail : renderState.stencilTest.backOperation.fail,
+                    zFail : renderState.stencilTest.backOperation.zFail,
+                    zPass : renderState.stencilTest.backOperation.zPass
+                }
+            },
+            sampleCoverage : {
+                enabled : renderState.sampleCoverage.enabled,
+                value : renderState.sampleCoverage.value,
+                invert : renderState.sampleCoverage.invert
+            },
+            dither : renderState.dither,
+            viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
+        };
     };
 
     return RenderState;

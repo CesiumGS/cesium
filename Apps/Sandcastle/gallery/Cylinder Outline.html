@@ -30,13 +30,12 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     var length = 400000.0;
     var radius = 150000.0;
 
     // Red cylinder outline
-    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
@@ -73,7 +72,7 @@ require(['Cesium'], function(Cesium) {
     });
 
     // Blue cylinder outline
-    positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 40.0));
+    positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-95.0, 40.0);
     modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
@@ -111,7 +110,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
             }
         })
     }));

@@ -5,14 +5,16 @@ define([
         './defineProperties',
         './DeveloperError',
         './Cartesian3',
-        './BoundingSphere'
+        './BoundingSphere',
+        './Rectangle'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Cartesian3,
-        BoundingSphere) {
+        BoundingSphere,
+        Rectangle) {
     "use strict";
 
     /**
@@ -25,7 +27,7 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use as an occluder.
      * @param {Cartesian3} [cameraPosition] The coordinate of the viewer/camera.  If this parameter is not
-     *        specified, {@link EllipsoidalOccluder#setCameraPosition} must be called before
+     *        specified, {@link EllipsoidalOccluder#cameraPosition} must be called before
      *        testing visibility.
      *
      * @constructor
@@ -233,25 +235,25 @@ define([
     var subsampleScratch = [];
 
     /**
-     * Computes a point that can be used for horizon culling of an extent.  If the point is below
-     * the horizon, the ellipsoid-conforming extent is guaranteed to be below the horizon as well.
+     * Computes a point that can be used for horizon culling of an rectangle.  If the point is below
+     * the horizon, the ellipsoid-conforming rectangle is guaranteed to be below the horizon as well.
      * The returned point is expressed in the ellipsoid-scaled space and is suitable for use with
      * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
      *
-     * @param {Extent} extent The extent for which to compute the horizon culling point.
-     * @param {Ellipsoid} ellipsoid The ellipsoid on which the extent is defined.  This may be different from
+     * @param {Rectangle} rectangle The rectangle for which to compute the horizon culling point.
+     * @param {Ellipsoid} ellipsoid The ellipsoid on which the rectangle is defined.  This may be different from
      *                    the ellipsoid used by this instance for occlusion testing.
      * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
      * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
      */
-    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromExtent = function(extent, ellipsoid, result) {
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectangle = function(rectangle, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(extent)) {
-            throw new DeveloperError('extent is required.');
+        if (!defined(rectangle)) {
+            throw new DeveloperError('rectangle is required.');
         }
         //>>includeEnd('debug');
 
-        var positions = extent.subsample(ellipsoid, 0.0, subsampleScratch);
+        var positions = Rectangle.subsample(rectangle, ellipsoid, 0.0, subsampleScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make

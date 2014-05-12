@@ -259,14 +259,14 @@ define([
      * the collection's vertex buffer is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
      * For best performance, remove as many polylines as possible before calling <code>update</code>.
      * If you intend to temporarily hide a polyline, it is usually more efficient to call
-     * {@link Polyline#setShow} instead of removing and re-adding the polyline.
+     * {@link Polyline#show} instead of removing and re-adding the polyline.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see PolylineCollection#add
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
-     * @see Polyline#setShow
+     * @see Polyline#show
      *
      * @example
      * var p = polylines.add(...);
@@ -337,7 +337,7 @@ define([
      * Returns the polyline in the collection at the specified index.  Indices are zero-based
      * and increase as polylines are added.  Removing a polyline shifts all polylines after
      * it to the left, changing their indices.  This function is commonly used with
-     * {@link PolylineCollection#getLength} to iterate over all the polylines
+     * {@link PolylineCollection#length} to iterate over all the polylines
      * in the collection.
      *
      * @memberof PolylineCollection
@@ -352,14 +352,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#getLength
+     * @see PolylineCollection#length
      *
      * @example
      * // Toggle the show property of every polyline in the collection
      * var len = polylines.length;
      * for (var i = 0; i < len; ++i) {
      *   var p = polylines.get(i);
-     *   p.setShow(!p.getShow());
+     *   p.show = !p.show;
      * }
      */
     PolylineCollection.prototype.get = function(index) {
@@ -943,9 +943,9 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var p = polylines[i];
-            if (p.getPositions().length > 1) {
+            if (p.positions.length > 1) {
                 p.update();
-                var material = p.getMaterial();
+                var material = p.material;
                 var value = polylineBuckets[material.type];
                 if (!defined(value)) {
                     value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
@@ -1057,8 +1057,8 @@ define([
         var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsPick, attributeLocations);
+        this.shaderProgram = context.shaderCache.getShaderProgram(vsSource, fsSource, attributeLocations);
+        this.pickShaderProgram = context.shaderCache.getShaderProgram(vsSource, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {
@@ -1069,7 +1069,7 @@ define([
     PolylineBucket.prototype.getPolylinePositionsLength = function(polyline) {
         var length;
         if (this.mode === SceneMode.SCENE3D || !intersectsIDL(polyline)) {
-            length = polyline.getPositions().length;
+            length = polyline.positions.length;
             return length * 4.0 - 4.0;
         }
 
@@ -1094,8 +1094,8 @@ define([
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
             var polyline = polylines[i];
-            var width = polyline.getWidth();
-            var show = polyline.getShow() && width > 0.0;
+            var width = polyline.width;
+            var show = polyline.show && width > 0.0;
             var segments = this.getSegments(polyline);
             var positions = segments.positions;
             var lengths = segments.lengths;
@@ -1277,7 +1277,7 @@ define([
             var segments;
             if (this.mode === SceneMode.SCENE3D) {
                 segments = scratchSegmentLengths;
-                var positionsLength = polyline.getPositions().length;
+                var positionsLength = polyline.positions.length;
                 if (positionsLength > 0) {
                     segments[0] = positionsLength;
                 } else {
@@ -1364,7 +1364,7 @@ define([
     var scratchLengths = new Array(1);
 
     PolylineBucket.prototype.getSegments = function(polyline) {
-        var positions = polyline.getPositions();
+        var positions = polyline.positions;
 
         if (this.mode === SceneMode.SCENE3D) {
             scratchLengths[0] = positions.length;
@@ -1435,8 +1435,8 @@ define([
             var count = 0;
             var position;
 
-            var width = polyline.getWidth();
-            var show = polyline.getShow() && width > 0.0;
+            var width = polyline.width;
+            var show = polyline.show && width > 0.0;
 
             positionsLength = positions.length;
             for ( var i = 0; i < positionsLength; ++i) {

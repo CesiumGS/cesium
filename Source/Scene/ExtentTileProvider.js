@@ -7,9 +7,9 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Extent',
-        '../Core/ExtentGeometry',
-        '../Core/ExtentOutlineGeometry',
+        '../Core/Rectangle',
+        '../Core/RectangleGeometry',
+        '../Core/RectangleOutlineGeometry',
         '../Core/GeometryInstance',
         '../Core/Intersect',
         './GeographicTilingScheme',
@@ -25,9 +25,9 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        Extent,
-        ExtentGeometry,
-        ExtentOutlineGeometry,
+        Rectangle,
+        RectangleGeometry,
+        RectangleOutlineGeometry,
         GeometryInstance,
         Intersect,
         GeographicTilingScheme,
@@ -65,7 +65,7 @@ define([
          * @type {Extent}
          */
         extent: {
-            get : function() { return Extent.MAX_VALUE; }
+            get : function() { return Rectangle.MAX_VALUE; }
         },
 
         /**
@@ -183,13 +183,13 @@ define([
      */
     ExtentTileProvider.prototype.loadTile = function(context, frameState, x, y, level, tile) {
         if (!defined(tile)) {
-            var extent = this.tilingScheme.tileXYToExtent(x, y, level);
+            var extent = this.tilingScheme.tileXYToRectangle(x, y, level);
             var color = Color.fromBytes(255, 0, 0, 255);
 
             return new Primitive({
                 geometryInstances : new GeometryInstance({
-                    geometry : new ExtentOutlineGeometry({
-                        extent : extent
+                    geometry : new RectangleOutlineGeometry({
+                        rectangle : extent
                     }),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(color)

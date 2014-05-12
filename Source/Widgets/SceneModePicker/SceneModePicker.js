@@ -31,40 +31,39 @@ define([
      * <img src="images/sceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
      * <p>The SceneModePicker is a single button widget for switching between scene modes;
      * shown to the left in its expanded state. Programatic switching of scene modes will
-     * be automatically reflected in the widget as long as the specified SceneTransitioner
+     * be automatically reflected in the widget as long as the specified Scene
      * is used to perform the change.</p><p style="clear: both;"></p><br/>
      *
      * @alias SceneModePicker
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
+     * @param {Scene} scene The Scene instance to use.
+     * @param {Number} [duration] The time, in milliseconds, it takes for the scene to transition.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     *
-     * @see SceneTransitioner
      *
      * @example
      * // In HTML head, include a link to the SceneModePicker.css stylesheet,
      * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
      * // Note: This code assumed you already have a Scene instance.
      *
-     * var transitioner = new Cesium.SceneTransitioner(scene);
-     * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', transitioner);
+     * var scene = viewer.scene;
+     * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
-    var SceneModePicker = function(container, transitioner) {
+    var SceneModePicker = function(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-        if (!defined(transitioner)) {
-            throw new DeveloperError('transitioner is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
         container = getElement(container);
 
-        var viewModel = new SceneModePickerViewModel(transitioner);
+        var viewModel = new SceneModePickerViewModel(scene);
 
         viewModel._globePath = globePath;
         viewModel._flatMapPath = flatMapPath;

@@ -174,13 +174,13 @@ define([
         }];
 
         var indexBuffers = buffers.indices.indexBuffers || {};
-        var indexBuffer = indexBuffers[context.getId()];
+        var indexBuffer = indexBuffers[context.id];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
             indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            indexBuffer.setVertexArrayDestroyable(false);
+            indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
-            indexBuffers[context.getId()] = indexBuffer;
+            indexBuffers[context.id] = indexBuffer;
             buffers.indices.indexBuffers = indexBuffers;
         } else {
             ++indexBuffer.referenceCount;
@@ -207,7 +207,7 @@ define([
     /**
      * Specifies the quality of terrain created from heightmaps.  A value of 1.0 will
      * ensure that adjacent heightmap vertices are separated by no more than
-     * {@link CentralBody.maximumScreenSpaceError} screen pixels and will probably go very slowly.
+     * {@link Globe.maximumScreenSpaceError} screen pixels and will probably go very slowly.
      * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
      * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
      */
