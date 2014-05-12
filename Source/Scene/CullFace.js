@@ -3,35 +3,32 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines which triangles, if any, are culled.
      *
      * @exports CullFace
      */
     var CullFace = {
         /**
-         * DOC_TBA
+         * 0x0404.  Front-facing triangles are culled.
          *
          * @type {Number}
          * @constant
-         * Wdefault 0x0404
          */
         FRONT : 0x0404,
 
         /**
-         * DOC_TBA
+         * 0x405.  Back-facing triangles are culled.
          *
          * @type {Number}
          * @constant
-         * @default 0x405
          */
         BACK : 0x0405,
 
         /**
-         * DOC_TBA
+         * 0x0408.  Both face- and back-facing triangles are culled.
          *
          * @type {Number}
          * @constant
-         * @default 0x408
          */
         FRONT_AND_BACK : 0x0408
     };

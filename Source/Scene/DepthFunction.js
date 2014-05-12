@@ -3,80 +3,72 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines the function used to compare two depths for the depth test.
      *
      * @exports DepthFunction
      */
     var DepthFunction = {
         /**
-         * DOC_TBA
+         * 0x200.  The depth test never passes.
          *
          * @type {Number}
          * @constant
-         * @default 0x200
          */
         NEVER : 0x0200,
 
         /**
-         * DOC_TBA
+         * 0x201.  The depth test passes if the incoming depth is less than the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x201
          */
         LESS : 0x201,
 
         /**
-         * DOC_TBA
+         * 0x202.  The depth test passes if the incoming depth is equal to the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x202
          */
         EQUAL : 0x0202,
 
         /**
-         * DOC_TBA
+         * 0x203.  The depth test passes if the incoming depth is less than or equal to the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x203
          */
         LESS_OR_EQUAL : 0x203, // LEQUAL
 
         /**
-         * DOC_TBA
+         * 0x204.  The depth test passes if the incoming depth is greater than the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x204
          */
         GREATER : 0x0204,
 
         /**
-         * DOC_TBA
+         * 0x0205.  The depth test passes if the incoming depth is not equal to the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x25
          */
         NOT_EQUAL : 0x0205, // NOTEQUAL
 
         /**
-         * DOC_TBA
+         * 0x206.  The depth test passes if the incoming depth is greater than or equal to the stored depth.
          *
          * @type {Number}
          * @constant
-         * @default 0x206
          */
         GREATER_OR_EQUAL : 0x0206, // GEQUAL
 
         /**
-         * DOC_TBA
+         * 0x207.  The depth test always passes.
          *
          * @type {Number}
          * @constant
-         * @default 0x207
          */
         ALWAYS : 0x0207
     };

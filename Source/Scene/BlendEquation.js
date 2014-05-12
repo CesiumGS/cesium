@@ -3,35 +3,32 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Determines how two pixels' values are combined.
      *
      * @exports BlendEquation
      */
     var BlendEquation = {
         /**
-         * DOC_TBA
+         * 0x8006.  Pixel values are added componentwise.  This is used in additive blending for translucency.
          *
          * @type {Number}
          * @constant
-         * @default 0x8006
          */
         ADD : 0x8006, // WebGL: FUNC_ADD
 
         /**
-         * DOC_TBA
+         * 0x800A.  Pixel values are subtracted componentwise (source - destination).  This is used in alpha blending for translucency.
          *
          * @type {Number}
          * @constant
-         * @default 0x800A
          */
         SUBTRACT : 0x800A, // WebGL: FUNC_SUBTRACT
 
         /**
-         * DOC_TBA
+         * 0x800B.  Pixel values are subtracted componentwise (destination - source).
          *
          * @type {Number}
          * @constant
-         * @default 0x800B
          */
         REVERSE_SUBTRACT : 0x800B // WebGL: FUNC_REVERSE_SUBTRACT
 
