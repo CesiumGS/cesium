@@ -22,7 +22,7 @@ defineSuite([
          'Renderer/ClearCommand',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
-         'Renderer/TextureAtlas',
+         'Scene/TextureAtlas',
          'Scene/HorizontalOrigin',
          'Scene/VerticalOrigin',
          'Scene/SceneMode',

@@ -9,7 +9,7 @@ define([
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlasBuilder'
     ], function(
         DeveloperError,
         defined,

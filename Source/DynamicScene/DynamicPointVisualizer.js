@@ -6,7 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Scene/BillboardCollection',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlasBuilder'
     ], function(
         Color,
         defaultValue,
