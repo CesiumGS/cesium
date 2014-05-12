@@ -170,12 +170,12 @@ define([
      * @param {Number} far The far plane distance.
      */
     PerspectiveOffCenterFrustum.prototype.updateNearFar = function(near, far) {
-        var ratio = this.right / this.top;
+        var ratio = near / this.near;
 
-        this.top = near * (this.top / this.near);
-        this.bottom = -this.top;
-        this.right = ratio * this.top;
-        this.left = -this.right;
+        this.top = ratio * this.top;
+        this.bottom = ratio * this.bottom;
+        this.right = ratio * this.right;
+        this.left = ratio * this.left;
         this.near = near;
         this.far = far;
     };
