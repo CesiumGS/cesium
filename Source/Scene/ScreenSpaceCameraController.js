@@ -638,23 +638,46 @@ define([
     var rotateCVWindowPos = new Cartesian2();
     var rotateCVWindowRay = new Ray();
     var rotateCVCenter = new Cartesian3();
-    var rotateTransform = new Matrix4();
+    var rotateCVVerticalCenter = new Cartesian3();
+    var rotateCVTransform = new Matrix4();
+    var rotateCVVerticalTransform = new Matrix4();
+    var rotateCVOrigin = new Cartesian3();
+    var rotateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var rotateCVCartesian3 = new Cartesian3();
+
     function rotateCV(controller, startPosition, movement, frameState) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
         }
 
-        var windowPosition = rotateCVWindowPos;
-        windowPosition.x = controller._canvas.clientWidth / 2;
-        windowPosition.y = controller._canvas.clientHeight / 2;
-        var ray = controller._camera.getPickRay(windowPosition, rotateCVWindowRay);
-        var normal = Cartesian3.UNIT_X;
+        var ellipsoid = controller._ellipsoid;
+        var camera = controller._camera;
 
         var center;
+        var ray;
+        var intersection;
 
-        if (defined(controller._globe) && controller._camera.position.z < controller.minimumTerrainHeight) {
-            center = controller._globe.pick(ray, frameState, rotateCVCenter);
+        if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
+            center = Cartesian3.clone(controller._tiltCenter, rotateCVCenter);
+        } else {
+            ray = camera.getPickRay(startPosition, rotateCVWindowRay);
+            if (defined(controller._globe)) {
+                center = controller._globe.pick(ray, frameState, rotateCVCenter);
+            }
+
+            if (!defined(center)) {
+                intersection = IntersectionTests.rayEllipsoid(ray, ellipsoid);
+                if (!defined(intersection)) {
+                    return;
+                }
+                center = Ray.getPoint(ray, intersection.start, rotateCVCenter);
+            }
+
+            Cartesian2.clone(startPosition, controller._tiltCenterMousePosition);
+            Cartesian3.clone(center, controller._tiltCenter);
         }
+
+        var normal = Cartesian3.UNIT_X;
 
         if (!defined(center)) {
             var position = ray.origin;
@@ -664,12 +687,42 @@ define([
             Cartesian3.add(position, center, center);
         }
 
-        var transform = Matrix4.fromTranslation(center, rotateTransform);
+        var windowPosition = rotateCVWindowPos;
+        windowPosition.x = controller._canvas.clientWidth / 2;
+        windowPosition.y = controller._tiltCenterMousePosition.y;
+        ray = camera.getPickRay(windowPosition, rotateCVWindowRay);
+
+        var origin = Cartesian3.clone(Cartesian3.ZERO, rotateCVOrigin);
+        origin.x = center.x;
+
+        var plane = Plane.fromPointNormal(origin, normal, rotateCVPlane);
+        var verticalCenter = IntersectionTests.rayPlane(ray, plane, rotateCVVerticalCenter);
+
+        var transform = Matrix4.fromTranslation(center, rotateCVTransform);
+        var verticalTransform = Matrix4.fromTranslation(verticalCenter, rotateCVVerticalTransform);
 
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
-        rotate3D(controller, startPosition, movement, frameState, transform, Cartesian3.UNIT_Z);
+        var constrainedAxis = Cartesian3.UNIT_Z;
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, undefined, false, true);
+
+        var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
+        if (Cartesian3.dot(camera.right, tangent) < 0.0) {
+
+            if (movement.startPosition.y > movement.endPosition.y) {
+                constrainedAxis = undefined;
+            }
+
+            var oldConstrainedAxis = camera.constrainedAxis;
+            camera.constrainedAxis = undefined;
+
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
+
+            camera.constrainedAxis = oldConstrainedAxis;
+        } else {
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
+        }
 
         controller.globe = oldGlobe;
     }
