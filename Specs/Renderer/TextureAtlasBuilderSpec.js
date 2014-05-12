@@ -4,10 +4,10 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/PrimitiveType',
-         'Core/PixelFormat'
+         'Core/PixelFormat',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/DrawCommand',
+         'Renderer/DrawCommand'
      ], function(
          TextureAtlasBuilder,
          createContext,
