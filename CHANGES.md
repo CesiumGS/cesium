@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
-  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previuos `title` and `error` parameters.
+  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
