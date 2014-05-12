@@ -217,7 +217,17 @@ defineSuite([
 
         runs(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
-            expect(widget._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            var messages = widget._element.querySelectorAll('.cesium-widget-errorPanel-message');
+
+            var found = false;
+            for (var i = 0; i < messages.length; ++i) {
+                if (messages[i].textContent === error) {
+                    found = true;
+                }
+            }
+
+            expect(found).toBe(true);
 
             // click the OK button to dismiss the panel
             EventHelper.fireClick(widget._element.querySelector('.cesium-button'));

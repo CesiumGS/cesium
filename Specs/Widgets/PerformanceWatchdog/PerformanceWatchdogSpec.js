@@ -67,6 +67,8 @@ defineSuite([
                 scene : undefined
             });
         }).toThrowDeveloperError();
+
+        document.body.removeChild(container);
     });
 
     it('constructor throws with string element that does not exist', function() {
