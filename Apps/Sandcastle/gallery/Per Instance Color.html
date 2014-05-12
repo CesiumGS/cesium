@@ -34,8 +34,8 @@ require(['Cesium'], function(Cesium) {
     
     for (var i = 0; i < 4; i++) {
         instances.push(new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {

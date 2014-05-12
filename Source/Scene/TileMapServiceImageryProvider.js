@@ -7,7 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/loadXML',
-        '../Core/Extent',
+        '../Core/Rectangle',
         './Credit',
         './ImageryProvider',
         './WebMercatorTilingScheme',
@@ -20,7 +20,7 @@ define([
         DeveloperError,
         Event,
         loadXML,
-        Extent,
+        Rectangle,
         Credit,
         ImageryProvider,
         WebMercatorTilingScheme,
@@ -43,7 +43,7 @@ define([
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
      *                 to result in rendering problems.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
+     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link WebMercatorTilingScheme}
      * is used.
@@ -67,7 +67,7 @@ define([
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
      *    fileExtension: 'png',
      *    maximumLevel: 4,
-     *    extent: new Cesium.Extent(
+     *    rectangle: new Cesium.Rectangle(
      *        Cesium.Math.toRadians(-120.0),
      *        Cesium.Math.toRadians(20.0),
      *        Cesium.Math.toRadians(-60.0),
@@ -137,14 +137,14 @@ define([
             that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesetsList[0].getAttribute('order'), 10));
             that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesetsList[tilesetsList.length - 1].getAttribute('order'), 10));
 
-            // extent handling
-            that._extent = description.extent;
-            if (!defined(that._extent)) {
+            // rectangle handling
+            that._rectangle = description.rectangle;
+            if (!defined(that._rectangle)) {
                 var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
                 var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
-                that._extent = new Extent(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+                that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
             } else {
-                that._extent = Extent.clone(that._extent);
+                that._rectangle = Rectangle.clone(that._rectangle);
             }
 
             // tiling scheme handling
@@ -154,25 +154,25 @@ define([
                 tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
             }
 
-            // The extent must not be outside the bounds allowed by the tiling scheme.
-            if (that._extent.west < tilingScheme.extent.west) {
-                that._extent.west = tilingScheme.extent.west;
+            // The rectangle must not be outside the bounds allowed by the tiling scheme.
+            if (that._rectangle.west < tilingScheme.rectangle.west) {
+                that._rectangle.west = tilingScheme.rectangle.west;
             }
-            if (that._extent.east > tilingScheme.extent.east) {
-                that._extent.east = tilingScheme.extent.east;
+            if (that._rectangle.east > tilingScheme.rectangle.east) {
+                that._rectangle.east = tilingScheme.rectangle.east;
             }
-            if (that._extent.south < tilingScheme.extent.south) {
-                that._extent.south = tilingScheme.extent.south;
+            if (that._rectangle.south < tilingScheme.rectangle.south) {
+                that._rectangle.south = tilingScheme.rectangle.south;
             }
-            if (that._extent.north > tilingScheme.extent.north) {
-                that._extent.north = tilingScheme.extent.north;
+            if (that._rectangle.north > tilingScheme.rectangle.north) {
+                that._rectangle.north = tilingScheme.rectangle.north;
             }
 
             // Check the number of tiles at the minimum level.  If it's more than four,
             // try requesting the lower levels anyway, because starting at the higher minimum
             // level will cause too many tiles to be downloaded and rendered.
-            var swTile = tilingScheme.positionToTileXY(Extent.getSouthwest(that._extent), that._minimumLevel);
-            var neTile = tilingScheme.positionToTileXY(Extent.getNortheast(that._extent), that._minimumLevel);
+            var swTile = tilingScheme.positionToTileXY(Rectangle.getSouthwest(that._rectangle), that._minimumLevel);
+            var neTile = tilingScheme.positionToTileXY(Rectangle.getNortheast(that._rectangle), that._minimumLevel);
             var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
             if (tileCount > 4) {
                 that._minimumLevel = 0;
@@ -188,7 +188,7 @@ define([
             that._minimumLevel = defaultValue(description.minimumLevel, 0);
             that._maximumLevel = defaultValue(description.maximumLevel, 18);
             that._tilingScheme = defaultValue(description.tilingScheme, new WebMercatorTilingScheme());
-            that._extent = defaultValue(description.extent, that._tilingScheme.extent);
+            that._rectangle = defaultValue(description.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
         });
 
@@ -321,20 +321,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link TileMapServiceImageryProvider#ready} returns true.
          * @memberof TileMapServiceImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._extent;
+                return this._rectangle;
             }
         },
 
@@ -391,6 +391,20 @@ define([
         credit : {
             get : function() {
                 return this._credit;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
             }
         }
     });

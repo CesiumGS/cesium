@@ -48,7 +48,7 @@ defineSuite([
         // create a mock canvas object to add events to so they are callable.
         canvas = new MockCanvas();
         camera = new Camera({
-            _canvas: canvas,
+            canvas: canvas,
             drawingBufferWidth : canvas.clientWidth * 2,
             drawingBufferHeight: canvas.clientHeight * 2
         });

@@ -55,11 +55,11 @@ define([
      *
      * @example
      * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-     *   url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+     *   url : '//elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
      *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
-     * centralBody.terrainProvider = terrainProvider;
+     * scene.terrainProvider = terrainProvider;
      */
     var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
         //>>includeStart('debug', pragmas.debug);
@@ -166,21 +166,21 @@ define([
      *          pending and the request will be retried later.
      */
     ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
-        var extent = this._tilingScheme.tileXYToExtent(x, y, level);
+        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
 
         // Each pixel in the heightmap represents the height at the center of that
-        // pixel.  So expand the extent by half a sample spacing in each direction
-        // so that the first height is on the edge of the extent we need rather than
-        // half a sample spacing into the extent.
-        var xSpacing = (extent.east - extent.west) / (this._heightmapWidth - 1);
-        var ySpacing = (extent.north - extent.south) / (this._heightmapWidth - 1);
+        // pixel.  So expand the rectangle by half a sample spacing in each direction
+        // so that the first height is on the edge of the rectangle we need rather than
+        // half a sample spacing into the rectangle.
+        var xSpacing = (rectangle.east - rectangle.west) / (this._heightmapWidth - 1);
+        var ySpacing = (rectangle.north - rectangle.south) / (this._heightmapWidth - 1);
 
-        extent.west -= xSpacing * 0.5;
-        extent.east += xSpacing * 0.5;
-        extent.south -= ySpacing * 0.5;
-        extent.north += ySpacing * 0.5;
+        rectangle.west -= xSpacing * 0.5;
+        rectangle.east += xSpacing * 0.5;
+        rectangle.south -= ySpacing * 0.5;
+        rectangle.north += ySpacing * 0.5;
 
-        var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
+        var bbox = CesiumMath.toDegrees(rectangle.west) + '%2C' + CesiumMath.toDegrees(rectangle.south) + '%2C' + CesiumMath.toDegrees(rectangle.east) + '%2C' + CesiumMath.toDegrees(rectangle.north);
 
         var url = this._url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this._heightmapWidth + '%2C' + this._heightmapWidth + '&bboxSR=4326&imageSR=4326&bbox=' + bbox;
         if (this._token) {

@@ -3,7 +3,7 @@ defineSuite([
          'Widgets/Viewer/Viewer',
          'Widgets/Animation/Animation',
          'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
+         'Widgets/BaseLayerPicker/ProviderViewModel',
          'Widgets/CesiumWidget/CesiumWidget',
          'Widgets/FullscreenButton/FullscreenButton',
          'Widgets/HomeButton/HomeButton',
@@ -24,7 +24,7 @@ defineSuite([
          Viewer,
          Animation,
          BaseLayerPicker,
-         ImageryProviderViewModel,
+         ProviderViewModel,
          CesiumWidget,
          FullscreenButton,
          HomeButton,
@@ -50,7 +50,7 @@ defineSuite([
         }
     };
 
-    var testProviderViewModel = new ImageryProviderViewModel({
+    var testProviderViewModel = new ProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -265,9 +265,10 @@ defineSuite([
         var provider = new EllipsoidTerrainProvider();
 
         viewer = new Viewer(container, {
+            baseLayerPicker : false,
             terrainProvider : provider
         });
-        expect(viewer.centralBody.terrainProvider).toBe(provider);
+        expect(viewer.scene.terrainProvider).toBe(provider);
     });
 
     it('can set fullScreenElement', function() {
@@ -297,7 +298,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene.context;
+        var context = viewer.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -321,9 +322,9 @@ defineSuite([
         viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
     });
 
     it('can set imageryProvider when BaseLayerPicker is disabled', function() {
@@ -331,8 +332,8 @@ defineSuite([
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -341,9 +342,9 @@ defineSuite([
         viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).imageryProvider).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });
 
@@ -352,6 +353,20 @@ defineSuite([
             useDefaultRenderLoop : false
         });
         expect(viewer.useDefaultRenderLoop).toBe(false);
+    });
+
+    it('can set target frame rate', function() {
+        viewer = new Viewer(container, {
+            targetFrameRate : 23
+        });
+        expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined container', function() {
@@ -390,26 +405,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises renderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        viewer.renderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, error);
-            expect(viewer.useDefaultRenderLoop).toEqual(false);
-        });
+            return !viewer.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('sets the clock and timeline based on the first data source', function() {
@@ -549,7 +556,7 @@ defineSuite([
         viewer = new Viewer(container);
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
@@ -574,7 +581,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 

@@ -6,7 +6,7 @@ defineSuite([
          'Core/Visibility',
          'Core/Math',
          'Core/Ellipsoid',
-         'Core/Extent'
+         'Core/Rectangle'
      ], function(
          Occluder,
          Cartesian3,
@@ -14,7 +14,7 @@ defineSuite([
          Visibility,
          CesiumMath,
          Ellipsoid,
-         Extent) {
+         Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -256,25 +256,25 @@ defineSuite([
         expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
-    it('compute occludee point from extent throws without an extent', function() {
+    it('compute occludee point from rectangle throws without an rectangle', function() {
         expect(function() {
-            return Occluder.computeOccludeePointFromExtent();
+            return Occluder.computeOccludeePointFromRectangle();
         }).toThrowDeveloperError();
     });
 
-    it('compute invalid occludee point from extent', function() {
-        var extent = Extent.MAX_VALUE;
-        expect(Occluder.computeOccludeePointFromExtent(extent)).toEqual(undefined);
+    it('compute invalid occludee point from rectangle', function() {
+        var rectangle = Rectangle.MAX_VALUE;
+        expect(Occluder.computeOccludeePointFromRectangle(rectangle)).toEqual(undefined);
     });
 
-    it('compute valid occludee point from extent', function() {
+    it('compute valid occludee point from rectangle', function() {
         var edge = Math.PI / 32.0;
-        var extent = new Extent(-edge, -edge, edge, edge);
+        var rectangle = new Rectangle(-edge, -edge, edge, edge);
         var ellipsoid = Ellipsoid.WGS84;
-        var positions = Extent.subsample(extent, ellipsoid);
+        var positions = Rectangle.subsample(rectangle, ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
         var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), bs.center, positions);
-        var actual = Occluder.computeOccludeePointFromExtent(extent);
+        var actual = Occluder.computeOccludeePointFromRectangle(rectangle);
         expect(actual).toEqual(point);
     });
 

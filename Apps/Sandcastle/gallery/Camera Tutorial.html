@@ -41,7 +41,7 @@ require(['Cesium'], function(Cesium) {
     canvas.onclick = function() {
         canvas.focus();
     };
-    var ellipsoid = viewer.centralBody.ellipsoid;
+    var ellipsoid = scene.globe.ellipsoid;
 
     // disable the default event handlers
     scene.screenSpaceCameraController.enableRotate = false;

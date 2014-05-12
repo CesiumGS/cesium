@@ -3,16 +3,14 @@ define([
         '../Core/BoundingSphere',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
-        '../Core/Extent',
-        '../Core/FeatureDetection',
+        '../Core/Rectangle',
         '../Core/HeightmapTessellator',
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
         Ellipsoid,
         EllipsoidalOccluder,
-        Extent,
-        FeatureDetection,
+        Rectangle,
         HeightmapTessellator,
         createTaskProcessorWorker) {
     "use strict";
@@ -32,7 +30,7 @@ define([
         transferableObjects.push(vertices.buffer);
 
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
-        parameters.extent = Extent.clone(parameters.extent);
+        parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
         parameters.vertices = vertices;
 

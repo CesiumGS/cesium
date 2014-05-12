@@ -313,11 +313,11 @@ defineSuite([
 
      describe('interpolateHeight', function() {
          var tilingScheme;
-         var extent;
+         var rectangle;
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();
-             extent = tilingScheme.tileXYToExtent(7, 6, 5);
+             rectangle = tilingScheme.tileXYToRectangle(7, 6, 5);
          });
 
          it('returns undefined if given a position outside the mesh', function() {
@@ -349,7 +349,7 @@ defineSuite([
                  childTileMask : 15
              });
 
-             expect(mesh.interpolateHeight(extent, 0.0, 0.0)).toBeUndefined();
+             expect(mesh.interpolateHeight(rectangle, 0.0, 0.0)).toBeUndefined();
          });
 
          it('returns a height interpolated from the correct triangle', function() {
@@ -385,24 +385,24 @@ defineSuite([
 
 
              // position in the northwest quadrant of the tile.
-             var longitude = extent.west + (extent.east - extent.west) * 0.25;
-             var latitude = extent.south + (extent.north - extent.south) * 0.75;
+             var longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.25;
+             var latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.75;
 
-             var result = mesh.interpolateHeight(extent, longitude, latitude);
+             var result = mesh.interpolateHeight(rectangle, longitude, latitude);
              expect(result).toBeLessThan(0.0);
 
              // position in the southeast quadrant of the tile.
-             longitude = extent.west + (extent.east - extent.west) * 0.75;
-             latitude = extent.south + (extent.north - extent.south) * 0.25;
+             longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.75;
+             latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.25;
 
-             result = mesh.interpolateHeight(extent, longitude, latitude);
+             result = mesh.interpolateHeight(rectangle, longitude, latitude);
              expect(result).toBeGreaterThan(0.0);
 
              // position on the line between the southwest and northeast corners.
-             longitude = extent.west + (extent.east - extent.west) * 0.5;
-             latitude = extent.south + (extent.north - extent.south) * 0.5;
+             longitude = rectangle.west + (rectangle.east - rectangle.west) * 0.5;
+             latitude = rectangle.south + (rectangle.north - rectangle.south) * 0.5;
 
-             result = mesh.interpolateHeight(extent, longitude, latitude);
+             result = mesh.interpolateHeight(rectangle, longitude, latitude);
              expect(result).toEqualEpsilon(0.0, 1e-10);
          });
      });

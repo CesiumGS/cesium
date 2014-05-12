@@ -338,3 +338,7 @@ Terms of use: http://www.nasa.gov/audience/formedia/features/MP_Photo_Guidelines
 http://raphaeljs.com/icons/
 
 http://raphaeljs.com/license.html
+
+### Mouse vector icons made by Freepik from Flaticon.com
+
+http://www.flaticon.com/authors/freepik

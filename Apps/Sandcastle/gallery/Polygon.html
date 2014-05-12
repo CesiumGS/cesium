@@ -30,15 +30,14 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
     
     // Red polygon
-    var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-115.0, 37.0),
-        Cesium.Cartographic.fromDegrees(-115.0, 32.0),
-        Cesium.Cartographic.fromDegrees(-107.0, 33.0),
-        Cesium.Cartographic.fromDegrees(-102.0, 31.0),
-        Cesium.Cartographic.fromDegrees(-102.0, 35.0)
+    var positions = Cesium.Cartesian3.fromDegreesArray([
+        -115.0, 37.0,
+        -115.0, 32.0,
+        -107.0, 33.0,
+        -102.0, 31.0,
+        -102.0, 35.0
     ]);
     
     var redPolygonInstance = new Cesium.GeometryInstance({
@@ -53,32 +52,32 @@ require(['Cesium'], function(Cesium) {
 
     // Blue polygon with holes
     var polygonHierarchy = {
-        positions : ellipsoid.cartographicArrayToCartesianArray([
-            Cesium.Cartographic.fromDegrees(-99.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-85.0, 30.0),
-            Cesium.Cartographic.fromDegrees(-85.0, 40.0),
-            Cesium.Cartographic.fromDegrees(-99.0, 40.0)
+        positions : Cesium.Cartesian3.fromDegreesArray([
+            -99.0, 30.0,
+            -85.0, 30.0,
+            -85.0, 40.0,
+            -99.0, 40.0
         ]),
         holes : [{
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-97.0, 31.0),
-                Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-                Cesium.Cartographic.fromDegrees(-87.0, 39.0),
-                Cesium.Cartographic.fromDegrees(-87.0, 31.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -97.0, 31.0,
+                -97.0, 39.0,
+                -87.0, 39.0,
+                -87.0, 31.0
             ]),
             holes : [{
-                positions : ellipsoid.cartographicArrayToCartesianArray([
-                    Cesium.Cartographic.fromDegrees(-95.0, 33.0),
-                    Cesium.Cartographic.fromDegrees(-89.0, 33.0),
-                    Cesium.Cartographic.fromDegrees(-89.0, 37.0),
-                    Cesium.Cartographic.fromDegrees(-95.0, 37.0)
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -95.0, 33.0,
+                    -89.0, 33.0,
+                    -89.0, 37.0,
+                    -95.0, 37.0
                 ]),
                 holes : [{
-                    positions : ellipsoid.cartographicArrayToCartesianArray([
-                        Cesium.Cartographic.fromDegrees(-93.0, 34.0),
-                        Cesium.Cartographic.fromDegrees(-91.0, 34.0),
-                        Cesium.Cartographic.fromDegrees(-91.0, 36.0),
-                        Cesium.Cartographic.fromDegrees(-93.0, 36.0)
+                    positions : Cesium.Cartesian3.fromDegreesArray([
+                        -93.0, 34.0,
+                        -91.0, 34.0,
+                        -91.0, 36.0,
+                        -93.0, 36.0
                     ])
                 }]
             }]
@@ -95,10 +94,10 @@ require(['Cesium'], function(Cesium) {
     });
 
     // Green extruded polygon
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-108.0, 42.0),
-        Cesium.Cartographic.fromDegrees(-100.0, 42.0),
-        Cesium.Cartographic.fromDegrees(-104.0, 40.0)
+    positions = Cesium.Cartesian3.fromDegreesArray([
+        -108.0, 42.0,
+        -100.0, 42.0,
+        -104.0, 40.0
     ]);
     
     var greenPolygonInstance = new Cesium.GeometryInstance({
@@ -113,11 +112,11 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Orange extruded polygon with per position heights
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-108.0, 25.0, 100000),
-        Cesium.Cartographic.fromDegrees(-100.0, 25.0, 100000),
-        Cesium.Cartographic.fromDegrees(-100.0, 30.0, 100000),
-        Cesium.Cartographic.fromDegrees(-108.0, 30.0, 300000)
+    positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+        -108.0, 25.0, 100000,
+        -100.0, 25.0, 100000,
+        -100.0, 30.0, 100000,
+        -108.0, 30.0, 300000
     ]);
     
     var orangePolygonInstance = new Cesium.GeometryInstance({

@@ -62,8 +62,13 @@ defineSuite([
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.dynamicObjects.add(dynamicObject);
 
         viewer.selectedObject = dynamicObject;
         expect(viewer.selectedObject).toBe(dynamicObject);
@@ -124,7 +129,7 @@ defineSuite([
 
         var beforeDynamicObject = new DynamicObject();
         beforeDynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        preMixinDataSource.dynamicObjectCollection.add(beforeDynamicObject);
+        preMixinDataSource.dynamicObjects.add(beforeDynamicObject);
 
         viewer.extend(viewerDynamicObjectMixin);
 
@@ -134,7 +139,7 @@ defineSuite([
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        postMixinDataSource.dynamicObjectCollection.add(dynamicObject);
+        postMixinDataSource.dynamicObjects.add(dynamicObject);
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
@@ -144,7 +149,7 @@ defineSuite([
             value : jasmine.createSpy('command')
         });
 
-        postMixinDataSource.dynamicObjectCollection.remove(dynamicObject);
+        postMixinDataSource.dynamicObjects.remove(dynamicObject);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
 
@@ -152,7 +157,7 @@ defineSuite([
         viewer.homeButton.viewModel.command.reset();
 
         viewer.trackedObject = beforeDynamicObject;
-        preMixinDataSource.dynamicObjectCollection.remove(beforeDynamicObject);
+        preMixinDataSource.dynamicObjects.remove(beforeDynamicObject);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
     });
@@ -170,12 +175,12 @@ defineSuite([
         var postMixinDataSource = new MockDataSource();
         viewer.dataSources.add(postMixinDataSource);
 
-        var preMixinListenerCount = preMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length;
-        var postMixinListenerCount = postMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length;
+        var preMixinListenerCount = preMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
+        var postMixinListenerCount = postMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
 
         viewer = viewer.destroy();
 
-        expect(preMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
-        expect(postMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
+        expect(preMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
+        expect(postMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');

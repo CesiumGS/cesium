@@ -3,7 +3,7 @@ defineSuite([
          'Scene/WebMercatorTilingScheme',
          'Core/Cartesian2',
          'Core/Ellipsoid',
-         'Core/Extent',
+         'Core/Rectangle',
          'Core/Math',
          'Core/Cartographic',
          'Core/WebMercatorProjection',
@@ -13,7 +13,7 @@ defineSuite([
          WebMercatorTilingScheme,
          Cartesian2,
          Ellipsoid,
-         Extent,
+         Rectangle,
          CesiumMath,
          Cartographic,
          WebMercatorProjection,
@@ -43,32 +43,32 @@ defineSuite([
         expect(tilingScheme.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
-    describe('Conversions from tile indices to cartographic extents', function() {
-        it('tileXYToExtent returns full extent for single root tile.', function() {
-            var extent = tilingScheme.tileXYToExtent(0, 0, 0);
-            var tilingSchemeExtent = tilingScheme.extent;
-            expect(extent.west).toEqualEpsilon(tilingSchemeExtent.west, CesiumMath.EPSILON10);
-            expect(extent.south).toEqualEpsilon(tilingSchemeExtent.south, CesiumMath.EPSILON10);
-            expect(extent.east).toEqualEpsilon(tilingSchemeExtent.east, CesiumMath.EPSILON10);
-            expect(extent.north).toEqualEpsilon(tilingSchemeExtent.north, CesiumMath.EPSILON10);
+    describe('Conversions from tile indices to cartographic rectangles', function() {
+        it('tileXYToRectangle returns full rectangle for single root tile.', function() {
+            var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0);
+            var tilingSchemeRectangle = tilingScheme.rectangle;
+            expect(rectangle.west).toEqualEpsilon(tilingSchemeRectangle.west, CesiumMath.EPSILON10);
+            expect(rectangle.south).toEqualEpsilon(tilingSchemeRectangle.south, CesiumMath.EPSILON10);
+            expect(rectangle.east).toEqualEpsilon(tilingSchemeRectangle.east, CesiumMath.EPSILON10);
+            expect(rectangle.north).toEqualEpsilon(tilingSchemeRectangle.north, CesiumMath.EPSILON10);
         });
 
-        it('tileXYToExtent uses result parameter if provided', function() {
-            var tilingSchemeExtent = tilingScheme.extent;
-            var result = new Extent(0.0, 0.0, 0.0);
-            var extent = tilingScheme.tileXYToExtent(0, 0, 0, result);
-            expect(result).toEqual(extent);
-            expect(extent.west).toEqualEpsilon(tilingSchemeExtent.west, CesiumMath.EPSILON10);
-            expect(extent.south).toEqualEpsilon(tilingSchemeExtent.south, CesiumMath.EPSILON10);
-            expect(extent.east).toEqualEpsilon(tilingSchemeExtent.east, CesiumMath.EPSILON10);
-            expect(extent.north).toEqualEpsilon(tilingSchemeExtent.north, CesiumMath.EPSILON10);
+        it('tileXYToRectangle uses result parameter if provided', function() {
+            var tilingSchemeRectangle = tilingScheme.rectangle;
+            var result = new Rectangle(0.0, 0.0, 0.0);
+            var rectangle = tilingScheme.tileXYToRectangle(0, 0, 0, result);
+            expect(result).toEqual(rectangle);
+            expect(rectangle.west).toEqualEpsilon(tilingSchemeRectangle.west, CesiumMath.EPSILON10);
+            expect(rectangle.south).toEqualEpsilon(tilingSchemeRectangle.south, CesiumMath.EPSILON10);
+            expect(rectangle.east).toEqualEpsilon(tilingSchemeRectangle.east, CesiumMath.EPSILON10);
+            expect(rectangle.north).toEqualEpsilon(tilingSchemeRectangle.north, CesiumMath.EPSILON10);
         });
 
         it('tiles are numbered from the northwest corner.', function() {
-            var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
-            var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
-            var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
-            var southwest = tilingScheme.tileXYToExtent(0, 1, 1);
+            var northwest = tilingScheme.tileXYToRectangle(0, 0, 1);
+            var northeast = tilingScheme.tileXYToRectangle(1, 0, 1);
+            var southeast = tilingScheme.tileXYToRectangle(1, 1, 1);
+            var southwest = tilingScheme.tileXYToRectangle(0, 1, 1);
 
             expect(northeast.north).toEqual(northwest.north);
             expect(northeast.south).toEqual(northwest.south);
@@ -92,10 +92,10 @@ defineSuite([
         });
 
         it('adjacent tiles have overlapping coordinates', function() {
-            var northwest = tilingScheme.tileXYToExtent(0, 0, 1);
-            var northeast = tilingScheme.tileXYToExtent(1, 0, 1);
-            var southeast = tilingScheme.tileXYToExtent(1, 1, 1);
-            var southwest = tilingScheme.tileXYToExtent(0, 1, 1);
+            var northwest = tilingScheme.tileXYToRectangle(0, 0, 1);
+            var northeast = tilingScheme.tileXYToRectangle(1, 0, 1);
+            var southeast = tilingScheme.tileXYToRectangle(1, 1, 1);
+            var southwest = tilingScheme.tileXYToRectangle(0, 1, 1);
 
             expect(northeast.south).toEqualEpsilon(southeast.north, CesiumMath.EPSILON15);
             expect(northwest.south).toEqualEpsilon(southwest.north, CesiumMath.EPSILON15);
@@ -108,42 +108,42 @@ defineSuite([
     describe('Conversions from cartographic positions to tile indices', function() {
         it('calculates correct tile indices for 4 corners at level 0', function() {
             var coordinates;
-            var tilingSchemeExtent = tilingScheme.extent;
+            var tilingSchemeRectangle = tilingScheme.rectangle;
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getSouthwest(tilingSchemeExtent), 0);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getSouthwest(tilingSchemeRectangle), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getNorthwest(tilingSchemeExtent), 0);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getNorthwest(tilingSchemeRectangle), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getNortheast(tilingSchemeExtent), 0);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getNortheast(tilingSchemeRectangle), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getSoutheast(tilingSchemeExtent), 0);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getSoutheast(tilingSchemeRectangle), 0);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
         });
 
         it('calculates correct tile indices for 4 corners at level 1', function() {
             var coordinates;
-            var tilingSchemeExtent = tilingScheme.extent;
+            var tilingSchemeRectangle = tilingScheme.rectangle;
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getSouthwest(tilingSchemeExtent), 1);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getSouthwest(tilingSchemeRectangle), 1);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(1);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getNorthwest(tilingSchemeExtent), 1);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getNorthwest(tilingSchemeRectangle), 1);
             expect(coordinates.x).toEqual(0);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getNortheast(tilingSchemeExtent), 1);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getNortheast(tilingSchemeRectangle), 1);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(0);
 
-            coordinates = tilingScheme.positionToTileXY(Extent.getSoutheast(tilingSchemeExtent), 1);
+            coordinates = tilingScheme.positionToTileXY(Rectangle.getSoutheast(tilingSchemeRectangle), 1);
             expect(coordinates.x).toEqual(1);
             expect(coordinates.y).toEqual(1);
         });
@@ -190,48 +190,48 @@ defineSuite([
         expect(tilingScheme.projection).toBeInstanceOf(WebMercatorProjection);
     });
 
-    describe('extentToNativeExtent', function() {
+    describe('rectangleToNativeRectangle', function() {
         it('converts radians to web mercator meters', function() {
             var tilingScheme = new WebMercatorTilingScheme();
-            var extentInRadians = new Extent(0.1, 0.2, 0.3, 0.4);
-            var nativeExtent = tilingScheme.extentToNativeExtent(extentInRadians);
+            var rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
+            var nativeRectangle = tilingScheme.rectangleToNativeRectangle(rectangleInRadians);
 
             var projection = new WebMercatorProjection();
-            var expectedSouthwest = projection.project(Extent.getSouthwest(extentInRadians));
-            var expectedNortheast = projection.project(Extent.getNortheast(extentInRadians));
+            var expectedSouthwest = projection.project(Rectangle.getSouthwest(rectangleInRadians));
+            var expectedNortheast = projection.project(Rectangle.getNortheast(rectangleInRadians));
 
-            expect(nativeExtent.west).toEqualEpsilon(expectedSouthwest.x, CesiumMath.EPSILON13);
-            expect(nativeExtent.south).toEqualEpsilon(expectedSouthwest.y, CesiumMath.EPSILON13);
-            expect(nativeExtent.east).toEqualEpsilon(expectedNortheast.x, CesiumMath.EPSILON13);
-            expect(nativeExtent.north).toEqualEpsilon(expectedNortheast.y, CesiumMath.EPSILON13);
+            expect(nativeRectangle.west).toEqualEpsilon(expectedSouthwest.x, CesiumMath.EPSILON13);
+            expect(nativeRectangle.south).toEqualEpsilon(expectedSouthwest.y, CesiumMath.EPSILON13);
+            expect(nativeRectangle.east).toEqualEpsilon(expectedNortheast.x, CesiumMath.EPSILON13);
+            expect(nativeRectangle.north).toEqualEpsilon(expectedNortheast.y, CesiumMath.EPSILON13);
         });
 
         it('uses result parameter if provided', function() {
             var tilingScheme = new WebMercatorTilingScheme();
-            var extentInRadians = new Extent(0.1, 0.2, 0.3, 0.4);
+            var rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
 
             var projection = new WebMercatorProjection();
-            var expectedSouthwest = projection.project(Extent.getSouthwest(extentInRadians));
-            var expectedNortheast = projection.project(Extent.getNortheast(extentInRadians));
+            var expectedSouthwest = projection.project(Rectangle.getSouthwest(rectangleInRadians));
+            var expectedNortheast = projection.project(Rectangle.getNortheast(rectangleInRadians));
 
-            var resultExtent = new Extent(0.0, 0.0, 0.0, 0.0);
-            var outputExtent = tilingScheme.extentToNativeExtent(extentInRadians, resultExtent);
-            expect(outputExtent).toEqual(resultExtent);
+            var resultRectangle = new Rectangle(0.0, 0.0, 0.0, 0.0);
+            var outputRectangle = tilingScheme.rectangleToNativeRectangle(rectangleInRadians, resultRectangle);
+            expect(outputRectangle).toEqual(resultRectangle);
 
-            expect(resultExtent.west).toEqualEpsilon(expectedSouthwest.x, CesiumMath.EPSILON13);
-            expect(resultExtent.south).toEqualEpsilon(expectedSouthwest.y, CesiumMath.EPSILON13);
-            expect(resultExtent.east).toEqualEpsilon(expectedNortheast.x, CesiumMath.EPSILON13);
-            expect(resultExtent.north).toEqualEpsilon(expectedNortheast.y, CesiumMath.EPSILON13);
+            expect(resultRectangle.west).toEqualEpsilon(expectedSouthwest.x, CesiumMath.EPSILON13);
+            expect(resultRectangle.south).toEqualEpsilon(expectedSouthwest.y, CesiumMath.EPSILON13);
+            expect(resultRectangle.east).toEqualEpsilon(expectedNortheast.x, CesiumMath.EPSILON13);
+            expect(resultRectangle.north).toEqualEpsilon(expectedNortheast.y, CesiumMath.EPSILON13);
         });
     });
 
     describe('positionToTileXY', function() {
-        it('returns undefined when outside extent', function() {
+        it('returns undefined when outside rectangle', function() {
             var projection = new WebMercatorProjection();
-            var extentInRadians = new Extent(0.1, 0.2, 0.3, 0.4);
+            var rectangleInRadians = new Rectangle(0.1, 0.2, 0.3, 0.4);
             var tilingScheme = new WebMercatorTilingScheme({
-                extentSouthwestInMeters : projection.project(Extent.getSouthwest(extentInRadians)),
-                extentNortheastInMeters : projection.project(Extent.getNortheast(extentInRadians))
+                rectangleSouthwestInMeters : projection.project(Rectangle.getSouthwest(rectangleInRadians)),
+                rectangleNortheastInMeters : projection.project(Rectangle.getNortheast(rectangleInRadians))
             });
 
             var tooFarWest = new Cartographic(0.05, 0.3);
@@ -264,7 +264,7 @@ defineSuite([
         it('does not return tile outside valid range', function() {
             var tilingScheme = new WebMercatorTilingScheme();
 
-            var southeastCorner = Extent.getSoutheast(tilingScheme.extent);
+            var southeastCorner = Rectangle.getSoutheast(tilingScheme.rectangle);
             expect(tilingScheme.positionToTileXY(southeastCorner, 1)).toEqual(new Cartesian2(1, 1));
         });
 

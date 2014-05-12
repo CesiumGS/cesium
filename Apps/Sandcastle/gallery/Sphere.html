@@ -30,11 +30,10 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Create sphere are position with model matrix
     var radius = 300000.0;
-    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, radius)

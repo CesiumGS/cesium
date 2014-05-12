@@ -6,7 +6,7 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Extent',
+        './Rectangle',
         './GeographicProjection',
         './Intersect',
         './Interval',
@@ -18,7 +18,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         GeographicProjection,
         Intersect,
         Interval,
@@ -214,44 +214,44 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtent2DLowerLeft = new Cartesian3();
-    var fromExtent2DUpperRight = new Cartesian3();
-    var fromExtent2DSouthwest = new Cartographic();
-    var fromExtent2DNortheast = new Cartographic();
+    var fromRectangle2DLowerLeft = new Cartesian3();
+    var fromRectangle2DUpperRight = new Cartesian3();
+    var fromRectangle2DSouthwest = new Cartographic();
+    var fromRectangle2DNortheast = new Cartographic();
 
     /**
-     * Computes a bounding sphere from an extent projected in 2D.
+     * Computes a bounding sphere from an rectangle projected in 2D.
      *
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The extent around which to create a bounding sphere.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
+     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent2D = function(extent, projection, result) {
-        return BoundingSphere.fromExtentWithHeights2D(extent, projection, 0.0, 0.0, result);
+    BoundingSphere.fromRectangle2D = function(rectangle, projection, result) {
+        return BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, 0.0, 0.0, result);
     };
 
     /**
-     * Computes a bounding sphere from an extent projected in 2D.  The bounding sphere accounts for the
-     * object's minimum and maximum heights over the extent.
+     * Computes a bounding sphere from an rectangle projected in 2D.  The bounding sphere accounts for the
+     * object's minimum and maximum heights over the rectangle.
      *
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The extent around which to create a bounding sphere.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
-     * @param {Number} [minimumHeight=0.0] The minimum height over the extent.
-     * @param {Number} [maximumHeight=0.0] The maximum height over the extent.
+     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+     * @param {Number} [minimumHeight=0.0] The minimum height over the rectangle.
+     * @param {Number} [maximumHeight=0.0] The maximum height over the rectangle.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
+    BoundingSphere.fromRectangleWithHeights2D = function(rectangle, projection, minimumHeight, maximumHeight, result) {
         if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (!defined(extent)) {
+        if (!defined(rectangle)) {
             result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
@@ -259,13 +259,13 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        Extent.getSouthwest(extent, fromExtent2DSouthwest);
-        fromExtent2DSouthwest.height = minimumHeight;
-        Extent.getNortheast(extent, fromExtent2DNortheast);
-        fromExtent2DNortheast.height = maximumHeight;
+        Rectangle.getSouthwest(rectangle, fromRectangle2DSouthwest);
+        fromRectangle2DSouthwest.height = minimumHeight;
+        Rectangle.getNortheast(rectangle, fromRectangle2DNortheast);
+        fromRectangle2DNortheast.height = maximumHeight;
 
-        var lowerLeft = projection.project(fromExtent2DSouthwest, fromExtent2DLowerLeft);
-        var upperRight = projection.project(fromExtent2DNortheast, fromExtent2DUpperRight);
+        var lowerLeft = projection.project(fromRectangle2DSouthwest, fromRectangle2DLowerLeft);
+        var upperRight = projection.project(fromRectangle2DNortheast, fromRectangle2DUpperRight);
 
         var width = upperRight.x - lowerLeft.x;
         var height = upperRight.y - lowerLeft.y;
@@ -279,26 +279,26 @@ define([
         return result;
     };
 
-    var fromExtent3DScratch = [];
+    var fromRectangle3DScratch = [];
 
     /**
-     * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
-     * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
+     * Computes a bounding sphere from an rectangle in 3D. The bounding sphere is created using a subsample of points
+     * on the ellipsoid and contained in the rectangle. It may not be accurate for all rectangles on all types of ellipsoids.
      * @memberof BoundingSphere
      *
-     * @param {Extent} extent The valid extent used to create a bounding sphere.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     * @param {Rectangle} rectangle The valid rectangle used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
+    BoundingSphere.fromRectangle3D = function(rectangle, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
-        if (defined(extent)) {
-            positions = Extent.subsample(extent, ellipsoid, surfaceHeight, fromExtent3DScratch);
+        if (defined(rectangle)) {
+            positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
         }
 
         return BoundingSphere.fromPoints(positions, result);
@@ -496,8 +496,8 @@ define([
      *
      * @memberof BoundingSphere
      *
-     * @param {Number} [corner] The minimum height over the extent.
-     * @param {Number} [oppositeCorner] The maximum height over the extent.
+     * @param {Number} [corner] The minimum height over the rectangle.
+     * @param {Number} [oppositeCorner] The maximum height over the rectangle.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
@@ -747,8 +747,6 @@ define([
         return Intersect.INSIDE;
     };
 
-    var columnScratch = new Cartesian3();
-
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
      * @memberof BoundingSphere
@@ -774,9 +772,7 @@ define([
         }
 
         result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
-        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+        result.radius = Matrix4.getMaximumScale(transform) * sphere.radius;
 
         return result;
     };
