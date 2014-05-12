@@ -5,20 +5,20 @@ defineSuite([
          'Specs/destroyContext',
          'Core/PrimitiveType',
          'Core/Cartesian2',
+         'Core/PixelFormat',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/DrawCommand',
-         'Renderer/PixelFormat'
+         'Renderer/DrawCommand'
      ], function(
          TextureAtlas,
          createContext,
          destroyContext,
          PrimitiveType,
          Cartesian2,
+         PixelFormat,
          BufferUsage,
          ClearCommand,
-         DrawCommand,
-         PixelFormat) {
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

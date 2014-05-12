@@ -4,7 +4,7 @@ defineSuite([
          'Specs/destroyContext',
          'Core/PrimitiveType',
          'Core/Color',
-         'Renderer/PixelFormat',
+         'Core/PixelFormat',
          'Renderer/PixelDatatype',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',

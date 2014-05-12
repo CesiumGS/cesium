@@ -8,7 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        './PixelFormat'
+        '../Core/PixelFormat'
     ], function(
         BoundingRectangle,
         Cartesian2,

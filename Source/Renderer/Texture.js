@@ -7,9 +7,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/PixelFormat',
         './MipmapHint',
         './PixelDatatype',
-        './PixelFormat',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -21,9 +21,9 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
+        PixelFormat,
         MipmapHint,
         PixelDatatype,
-        PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {

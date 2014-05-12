@@ -16,13 +16,13 @@ define([
         '../Core/createGuid',
         '../Core/Matrix4',
         '../Core/Math',
+        '../Core/PixelFormat',
         './Buffer',
         './BufferUsage',
         './CubeMap',
         './DrawCommand',
         './Framebuffer',
         './PixelDatatype',
-        './PixelFormat',
         './PickFramebuffer',
         './Renderbuffer',
         './RenderbufferFormat',
@@ -55,13 +55,13 @@ define([
         createGuid,
         Matrix4,
         CesiumMath,
+        PixelFormat,
         Buffer,
         BufferUsage,
         CubeMap,
         DrawCommand,
         Framebuffer,
         PixelDatatype,
-        PixelFormat,
         PickFramebuffer,
         Renderbuffer,
         RenderbufferFormat,
@@ -1308,10 +1308,10 @@ define([
      * @memberof Context
      *
      * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
-     * @param {PixelFormat} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
-     * @param {PixelFormat} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
-     * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
-     * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
+     * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
+     * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
      *
      * @returns {Texture} A texture with contents from the framebuffer.
      *

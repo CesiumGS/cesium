@@ -4,10 +4,10 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Color',
+        '../Core/PixelFormat',
         '../Renderer/createShaderSource',
         '../Renderer/ClearCommand',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
@@ -15,10 +15,10 @@ define([
         destroyObject,
         Cartesian2,
         Color,
+        PixelFormat,
         createShaderSource,
         ClearCommand,
         PixelDatatype,
-        PixelFormat,
         RenderbufferFormat,
         FXAAFS) {
     "use strict";

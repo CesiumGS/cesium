@@ -5,7 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
-        './PixelFormat'
+        '../Core/PixelFormat'
     ], function(
         defaultValue,
         defined,
