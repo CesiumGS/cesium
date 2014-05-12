@@ -8,11 +8,17 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
+  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previuos `title` and `error` parameters.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
+* Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
+* `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
+* `CesiumWidget` now takes two new optional parameters, `creditContainer` and `creditCssClass`.
+* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
+
 
 ### b28 - 2014-05-01
 
