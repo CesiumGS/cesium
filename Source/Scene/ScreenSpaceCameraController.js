@@ -917,9 +917,12 @@ define([
 
     var tilt3DWindowPos = new Cartesian2();
     var tilt3DRay = new Ray();
-    var tilt3DCart = new Cartographic();
-    var tilt3DCenter = Cartesian4.clone(Cartesian4.UNIT_W);
+    var tilt3DCenter = new Cartesian3();
+    var tilt3DVerticalCenter = new Cartesian3();
     var tilt3DTransform = new Matrix4();
+    var tilt3DVerticalTransform = new Matrix4();
+    var tilt3DNormal = new Cartesian3();
+    var tilt3DCartesian3 = new Cartesian3();
 
     function tilt3D(controller, startPosition, movement, frameState) {
         if (defined(movement.angleAndHeight)) {
@@ -936,18 +939,15 @@ define([
             return;
         }
 
+        var center;
         var ray;
         var intersection;
-        var grazingAltitudeLocation;
-        var grazingAltitudeCart;
-
-        var center;
 
         if (Cartesian2.equals(startPosition, controller._tiltCenterMousePosition)) {
             center = Cartesian3.clone(controller._tiltCenter, tilt3DCenter);
         } else {
             ray = camera.getPickRay(startPosition, tilt3DRay);
-            if (defined(controller._globe) && height < controller.minimumTerrainHeight) {
+            if (defined(controller._globe)) {
                 center = controller._globe.pick(ray, frameState, tilt3DCenter);
             }
 
@@ -971,16 +971,17 @@ define([
         ray = camera.getPickRay(windowPosition, tilt3DRay);
 
         var mag = Cartesian3.magnitude(center);
-        var newEllipsoid = Ellipsoid.fromCartesian3(new Cartesian3(mag, mag, mag));
+        var radii = Cartesian3.fromElements(mag, mag, mag, scratchRadii);
+        var newEllipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
 
         intersection = IntersectionTests.rayEllipsoid(ray, newEllipsoid);
         if (!defined(intersection)) {
             return;
         }
-        verticalCenter = Ray.getPoint(ray, intersection.start);
+        verticalCenter = Ray.getPoint(ray, intersection.start, tilt3DVerticalCenter);
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
-        var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, newEllipsoid);
+        var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, newEllipsoid, tilt3DVerticalTransform);
 
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
@@ -990,7 +991,7 @@ define([
         var restrictedAngle = CesiumMath.PI_OVER_TWO - angle;
         rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true);
 
-        var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2), Cartesian3.normalize(camera.position));
+        var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2, tilt3DNormal), Cartesian3.normalize(camera.position, tilt3DCartesian3), tilt3DCartesian3);
         if (Cartesian3.dot(camera.right, tangent) < 0.0) {
 
             if (movement.startPosition.y > movement.endPosition.y) {
@@ -1007,7 +1008,6 @@ define([
         } else {
             rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false);
         }
-
 
         controller.globe = oldGlobe;
     }
