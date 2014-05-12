@@ -77,31 +77,31 @@ define([
      * for more details on Fabric.
      * <br /><br />
      * <style type="text/css">
-     *  #materialoptionss code {
+     *  #materialDescriptions code {
      *      font-weight: normal;
      *      font-family: Consolas, 'Lucida Console', Monaco, monospace;
      *      color: #A35A00;
      *  }
-     *  #materialoptionss ul, #materialoptionss ul ul {
+     *  #materialDescriptions ul, #materialDescriptions ul ul {
      *      list-style-type: none;
      *  }
-     *  #materialoptionss ul ul {
+     *  #materialDescriptions ul ul {
      *      margin-bottom: 10px;
      *  }
-     *  #materialoptionss ul ul li {
+     *  #materialDescriptions ul ul li {
      *      font-weight: normal;
      *      color: #000000;
      *      text-indent: -2em;
      *      margin-left: 2em;
      *  }
-     *  #materialoptionss ul li {
+     *  #materialDescriptions ul li {
      *      font-weight: bold;
      *      color: #0053CF;
      *  }
      * </style>
      *
      * Base material types and their uniforms:
-     * <div id='materialoptionss'>
+     * <div id='materialDescriptions'>
      * <ul>
      *  <li>Color</li>
      *  <ul>
