@@ -31,12 +31,12 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by the instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
          * not be called before {@link QuadtreeTileProvider#ready} returns true.
          * @memberof QuadtreeTileProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent: {
+        rectangle : {
             get : DeveloperError.throwInstantiationError
         },
 
@@ -53,7 +53,7 @@ define([
         /**
          * Gets the minimum level-of-detail that can be requested.  This function should
          * not be called before {@link QuadtreeTileProvider#ready} returns true. Generally,
-         * a minimum level should only be used when the extent of the geometry is small
+         * a minimum level should only be used when the rectangle of the geometry is small
          * enough that the number of tiles at the minimum level is small.  A geometry
          * provider with more than a few tiles at the minimum level will lead to
          * rendering problems.

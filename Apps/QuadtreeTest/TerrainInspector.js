@@ -20,7 +20,7 @@ require([
     //centralBody.depthTestAgainstTerrain = true;
 
     var quadtree = new Cesium.QuadtreePrimitive({
-    	tileProvider : new Cesium.ExtentTileProvider()
+    	tileProvider : new Cesium.RectangleTileProvider()
     });
 
     scene.primitives.add(quadtree);

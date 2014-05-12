@@ -38,20 +38,20 @@ define([
     "use strict";
 
     /**
-     * @alias ExtentTileProvider
+     * @alias RectangleTileProvider
      * @constructor
      */
-    var ExtentTileProvider = function ExtentTileProvider() {
+    var RectangleTileProvider = function RectangleTileProvider() {
         this._tilingScheme = new GeographicTilingScheme();
         this._errorEvent = new Event();
 
         this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 65, this._tilingScheme.getNumberOfXTilesAtLevel(0));
     };
 
-    defineProperties(ExtentTileProvider.prototype, {
+    defineProperties(RectangleTileProvider.prototype, {
         /**
          * Gets a value indicating whether or not the provider is ready for use.
-         * @memberof ExtentTileProvider.prototype
+         * @memberof RectangleTileProvider.prototype
          * @type {Boolean}
          */
         ready : {
@@ -59,19 +59,19 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by the instance.  This function should
-         * not be called before {@link ExtentTileProvider#ready} returns true.
-         * @memberof ExtentTileProvider.prototype
-         * @type {Extent}
+         * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
+         * not be called before {@link RectangleTileProvider#ready} returns true.
+         * @memberof RectangleTileProvider.prototype
+         * @type {Rectangle}
          */
-        extent: {
+        rectangle : {
             get : function() { return Rectangle.MAX_VALUE; }
         },
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
-         * not be called before {@link ExtentTileProvider#ready} returns true.
-         * @memberof ExtentTileProvider.prototype
+         * not be called before {@link RectangleTileProvider#ready} returns true.
+         * @memberof RectangleTileProvider.prototype
          * @type {Number}
          */
         maximumLevel : {
@@ -80,12 +80,12 @@ define([
 
         /**
          * Gets the minimum level-of-detail that can be requested.  This function should
-         * not be called before {@link ExtentTileProvider#ready} returns true. Generally,
-         * a minimum level should only be used when the extent of the geometry is small
+         * not be called before {@link RectangleTileProvider#ready} returns true. Generally,
+         * a minimum level should only be used when the rectangle of the geometry is small
          * enough that the number of tiles at the minimum level is small.  A geometry
          * provider with more than a few tiles at the minimum level will lead to
          * rendering problems.
-         * @memberof ExtentTileProvider.prototype
+         * @memberof RectangleTileProvider.prototype
          * @type {Number}
          */
         minimumLevel : {
@@ -94,8 +94,8 @@ define([
 
         /**
          * Gets the tiling scheme used by the provider.  This function should
-         * not be called before {@link ExtentTileProvider#ready} returns true.
-         * @memberof ExtentTileProvider.prototype
+         * not be called before {@link RectangleTileProvider#ready} returns true.
+         * @memberof RectangleTileProvider.prototype
          * @type {TilingScheme}
          */
         tilingScheme : {
@@ -106,7 +106,7 @@ define([
          * Gets an event that is raised when the geometry provider encounters an asynchronous error..  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
          * are passed an instance of {@link TileProviderError}.
-         * @memberof ExtentTileProvider.prototype
+         * @memberof RectangleTileProvider.prototype
          * @type {Event}
          */
         errorEvent : {
@@ -116,8 +116,8 @@ define([
         /**
          * Gets the credit to display when this geometry provider is active.  Typically this is used to credit
          * the source of the geometry. This function should
-         * not be called before {@link ExtentTileProvider#ready} returns true.
-         * @memberof ExtentTileProvider.prototype
+         * not be called before {@link RectangleTileProvider#ready} returns true.
+         * @memberof RectangleTileProvider.prototype
          * @type {Credit}
          */
         credit : {
@@ -126,7 +126,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof ExtentTileProvider.prototype
+         * @memberof RectangleTileProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -137,18 +137,18 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
-     * @memberof CesiumTerrainProvider
+     * @memberof RectangleTileProvider
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
-    ExtentTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
+    RectangleTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
     };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
@@ -157,16 +157,16 @@ define([
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the geometry provider is ready.
      */
-    ExtentTileProvider.prototype.getTileCredits = function(tile) {
+    RectangleTileProvider.prototype.getTileCredits = function(tile) {
         return undefined;
     };
 
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
-     * until {@link ExtentTileProvider#isTileDoneLoading} returns true.  This function should
-     * not be called before {@link ExtentTileProvider#isReady} returns true.
+     * until {@link RectangleTileProvider#isTileDoneLoading} returns true.  This function should
+     * not be called before {@link RectangleTileProvider#isReady} returns true.
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Context} context The rendering context.
@@ -181,15 +181,15 @@ define([
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    ExtentTileProvider.prototype.loadTile = function(context, frameState, x, y, level, tile) {
+    RectangleTileProvider.prototype.loadTile = function(context, frameState, x, y, level, tile) {
         if (!defined(tile)) {
-            var extent = this.tilingScheme.tileXYToRectangle(x, y, level);
+            var rectangle = this.tilingScheme.tileXYToRectangle(x, y, level);
             var color = Color.fromBytes(255, 0, 0, 255);
 
             return new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : new RectangleOutlineGeometry({
-                        rectangle : extent
+                        rectangle : rectangle
                     }),
                     attributes : {
                         color : ColorGeometryInstanceAttribute.fromColor(color)
@@ -214,37 +214,37 @@ define([
     /**
      * Gets the current state of the given tile.
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
      *
      * @returns {QuadtreeTileState} The current state of the tile.
      */
-    ExtentTileProvider.prototype.getTileState = function(tile) {
+    RectangleTileProvider.prototype.getTileState = function(tile) {
         return defined(tile) && tile.isReady() ? QuadtreeTileState.READY : QuadtreeTileState.LOADING;
     };
 
     /**
      * Returns true if the tile is renderable.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link ExtentTileProvider#renderTile}
+     * {@link RectangleTileProvider#renderTile}
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
      *
      * @returns {Boolean} true if the tile is renderable; otherwise, false.
      */
-    ExtentTileProvider.prototype.isTileRenderable = function(tile) {
+    RectangleTileProvider.prototype.isTileRenderable = function(tile) {
         return defined(tile) && tile.isReady();
     };
 
     /**
      * Returns true if the tile is visible.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link ExtentTileProvider#renderTile}
+     * {@link RectangleTileProvider#renderTile}
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
@@ -252,7 +252,7 @@ define([
      *
      * @returns {Boolean} true if the tile is visible; otherwise, false.
      */
-    ExtentTileProvider.prototype.isTileVisible = function(tile, frameState) {
+    RectangleTileProvider.prototype.isTileVisible = function(tile, frameState) {
         var boundingSphere = tile.getBoundingSphere(frameState);
         if (!defined(boundingSphere)) {
             return false;
@@ -264,7 +264,7 @@ define([
     /**
      * Renders a given tile.
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
@@ -272,7 +272,7 @@ define([
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @param {Command[]} commandList The list of rendering commands.  This method should add additional commands to this list.
      */
-    ExtentTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
+    RectangleTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
         tile.update(context, frameState, commandList);
     };
 
@@ -281,7 +281,7 @@ define([
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
@@ -289,25 +289,21 @@ define([
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    ExtentTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
+    RectangleTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
         return Math.max(0.0, Cartesian3.magnitude(Cartesian3.subtract(tile.getBoundingSphere(frameState).center, frameState.camera.position)) - tile._boundingSphere.radius);
-    };
-
-    ExtentTileProvider.prototype.divideTile = function() {
-        return undefined;
     };
 
     /**
      * Releases the geometry for a given tile.
      *
-     * @memberof ExtentTileProvider
+     * @memberof RectangleTileProvider
      * @function
      *
      * @param {Object} tile The tile instance.
      */
-    ExtentTileProvider.prototype.releaseTile = function(tile) {
+    RectangleTileProvider.prototype.releaseTile = function(tile) {
         tile.destroy();
     };
 
-    return ExtentTileProvider;
+    return RectangleTileProvider;
 });

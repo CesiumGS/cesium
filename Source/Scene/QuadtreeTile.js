@@ -65,11 +65,11 @@ define([
         this.children = undefined;
 
         /**
-         * The cartographic extent of the tile, with north, south, east and
+         * The cartographic rectangle of the tile, with north, south, east and
          * west properties in radians.
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        this.extent = this.tilingScheme.tileXYToRectangle(this.x, this.y, this.level);
+        this.rectangle = this.tilingScheme.tileXYToRectangle(this.x, this.y, this.level);
 
         /**
          * The previous tile in the {@link TileReplacementQueue}.
