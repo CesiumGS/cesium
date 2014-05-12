@@ -227,52 +227,11 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        /**
-         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-
+        this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
         this._interleave = defaultValue(options.interleave, false);
-
-        /**
-         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
-
-        /**
-         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         *
-         * @readonly
-         */
-        this.allow3DOnly = defaultValue(options.allow3DOnly, false);
-
-        /**
-         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.allowPicking = defaultValue(options.allowPicking, true);
-
+        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
+        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
+        this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
@@ -323,19 +282,82 @@ define([
 
     defineProperties(Primitive.prototype, {
         /**
+         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+         *
+         * @memberof Primitive.prototype
+         * @readonly
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        vertexCacheOptimize : {
+            get : function() {
+                return this._vertexCacheOptimize;
+            }
+        },
+
+        /**
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
          * @memberof Primitive.prototype
+         * @readonly
          *
          * @type {Boolean}
          *
          * @default false
-         *
-         * @readonly
          */
         interleave : {
             get : function() {
                 return this._interleave;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        releaseGeometryInstances : {
+            get : function() {
+                return this._releaseGeometryInstances;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        allow3DOnly : {
+            get : function() {
+                return this._allow3DOnly;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        allowPicking : {
+            get : function() {
+                return this._allowPicking;
             }
         },
 
