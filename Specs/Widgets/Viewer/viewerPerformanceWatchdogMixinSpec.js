@@ -42,4 +42,10 @@ defineSuite([
         });
         expect(viewer.performanceWatchdog.viewModel.lowFrameRateMessage).toBe('Foo');
     });
+
+    it('throws if not given a viewer', function() {
+        expect(function() {
+            viewerPerformanceWatchdogMixin();
+        }).toThrowDeveloperError();
+    });
 }, 'WebGL');
