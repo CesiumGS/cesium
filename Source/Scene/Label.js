@@ -604,8 +604,7 @@ define([
      *
      * @memberof Label
      *
-     * @param {Context} context The context.
-     * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
+     * @param {Scene} scene The scene the label is in.
      *
      * @returns {Cartesian2} The screen-space position of the label.
      *

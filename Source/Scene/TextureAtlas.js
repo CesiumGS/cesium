@@ -42,7 +42,7 @@ define([
      *
      * @alias TextureAtlas
      *
-     * @param {Context} options.scene The scene in which the texture gets created.
+     * @param {Scene} options.scene The scene in which the texture gets created.
      * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.

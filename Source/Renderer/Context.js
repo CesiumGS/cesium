@@ -297,31 +297,6 @@ define([
         this._nextPickColor = new Uint32Array(1);
 
         /**
-         * Returns the read-only options used to create this context.  The <code>webgl</code> property corresponds to the
-         * <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> object used to
-         * create the WebGL context.  Default values are shown in the code example below.
-         * <p>
-         * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
-         * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
-         * <code>options.webgl.alpha</code> to true.
-         * </p>
-         * <p>
-         * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
-         * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
-         * which is not appropriate for almost any Cesium app.
-         * </p>
-         * <p>
-         * The other <code>options.webgl</code> properties match the WebGL defaults for <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>.
-         * </p>
-         * <p>
-         * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
-         * WebGL extension is supported.  Check {@link Context#getTextureFilterAnisotropic}.  Setting this to false will improve
-         * performance, but hurt visual quality, especially for horizon views.
-         * </p>
-         *
-         * @type {Object}
-         * @constant
-         *
          * @example
          * {
          *   webgl : {
