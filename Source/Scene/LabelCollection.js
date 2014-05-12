@@ -385,7 +385,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @param {Object}[description] A template describing the label's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the label's properties as shown in Example 1.
      *
      * @returns {Label} The label that was added to the collection.
      *
@@ -424,8 +424,8 @@ define([
      *   font : '24px Helvetica',
      * });
      */
-    LabelCollection.prototype.add = function(description) {
-        var label = new Label(description, this);
+    LabelCollection.prototype.add = function(options) {
+        var label = new Label(options, this);
 
         this._labels.push(label);
         this._labelsToUpdate.push(label);

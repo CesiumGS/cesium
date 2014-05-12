@@ -433,7 +433,7 @@ defineSuite([
         expect(t.isDestroyed()).toEqual(true);
     });
 
-    it('throws when creating a texture without a description', function() {
+    it('throws when creating a texture without a options', function() {
         expect(function() {
             texture = context.createTexture2D();
         }).toThrowDeveloperError();

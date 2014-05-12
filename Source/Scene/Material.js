@@ -77,31 +77,31 @@ define([
      * for more details on Fabric.
      * <br /><br />
      * <style type="text/css">
-     *  #materialDescriptions code {
+     *  #materialoptionss code {
      *      font-weight: normal;
      *      font-family: Consolas, 'Lucida Console', Monaco, monospace;
      *      color: #A35A00;
      *  }
-     *  #materialDescriptions ul, #materialDescriptions ul ul {
+     *  #materialoptionss ul, #materialoptionss ul ul {
      *      list-style-type: none;
      *  }
-     *  #materialDescriptions ul ul {
+     *  #materialoptionss ul ul {
      *      margin-bottom: 10px;
      *  }
-     *  #materialDescriptions ul ul li {
+     *  #materialoptionss ul ul li {
      *      font-weight: normal;
      *      color: #000000;
      *      text-indent: -2em;
      *      margin-left: 2em;
      *  }
-     *  #materialDescriptions ul li {
+     *  #materialoptionss ul li {
      *      font-weight: bold;
      *      color: #0053CF;
      *  }
      * </style>
      *
      * Base material types and their uniforms:
-     * <div id='materialDescriptions'>
+     * <div id='materialoptionss'>
      * <ul>
      *  <li>Color</li>
      *  <ul>
@@ -241,10 +241,10 @@ define([
      *
      * @alias Material
      *
-     * @param {Boolean} [description.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
-     * @param {Boolean|Function} [description.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
+     * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
+     * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
-     * @param {Object} description.fabric The fabric JSON used to generate the material.
+     * @param {Object} options.fabric The fabric JSON used to generate the material.
      *
      * @constructor
      *
@@ -275,11 +275,11 @@ define([
      *     }
      * });
      *
-     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed description of Fabric.
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric wiki page</a> for a more detailed options of Fabric.
      *
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html">Cesium Sandcastle Materials Demo</a>
      */
-    var Material = function(description) {
+    var Material = function(options) {
         /**
          * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type {String}
@@ -329,7 +329,7 @@ define([
 
         this._updateFunctions = [];
 
-        initializeMaterial(description, this);
+        initializeMaterial(options, this);
         defineProperties(this, {
             type : {
                 value : this.type,
@@ -543,11 +543,11 @@ define([
         return destroyObject(this);
     };
 
-    function initializeMaterial(description, result) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        result._strict = defaultValue(description.strict, false);
-        result._count = defaultValue(description.count, 0);
-        result._template = clone(defaultValue(description.fabric, defaultValue.EMPTY_OBJECT));
+    function initializeMaterial(options, result) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        result._strict = defaultValue(options.strict, false);
+        result._count = defaultValue(options.count, 0);
+        result._template = clone(defaultValue(options.fabric, defaultValue.EMPTY_OBJECT));
         result._template.uniforms = clone(defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT));
         result._template.materials = clone(defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT));
 
@@ -583,7 +583,7 @@ define([
 
         var defaultTranslucent = result._translucentFunctions.length === 0 ? true : undefined;
         translucent = defaultValue(translucent, defaultTranslucent);
-        translucent = defaultValue(description.translucent, translucent);
+        translucent = defaultValue(options.translucent, translucent);
 
         if (defined(translucent)) {
             if (typeof translucent === 'function') {

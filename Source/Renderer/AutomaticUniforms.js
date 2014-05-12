@@ -67,6 +67,9 @@ define([
         return declaration;
     };
 
+    /**
+     * @private
+     */
     var AutomaticUniforms = {
         /**
          * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,

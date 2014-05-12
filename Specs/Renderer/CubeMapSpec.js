@@ -879,7 +879,7 @@ defineSuite([
         expect(c.isDestroyed()).toEqual(true);
     });
 
-    it('fails to create (description)', function() {
+    it('fails to create (options)', function() {
         expect(function() {
             cubeMap = context.createCubeMap();
         }).toThrowDeveloperError();

@@ -12,7 +12,7 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      */
-    var NeverTileDiscardPolicy = function(description) {
+    var NeverTileDiscardPolicy = function(options) {
     };
 
     /**

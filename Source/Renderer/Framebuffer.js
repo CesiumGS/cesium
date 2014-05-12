@@ -28,8 +28,8 @@ define([
     /**
      * @private
      */
-    var Framebuffer = function(gl, maximumColorAttachments, description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var Framebuffer = function(gl, maximumColorAttachments, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._gl = gl;
         this._framebuffer = gl.createFramebuffer();
@@ -54,35 +54,35 @@ define([
          *
          * @see Framebuffer#destroy
          */
-        this.destroyAttachments = defaultValue(description.destroyAttachments, true);
+        this.destroyAttachments = defaultValue(options.destroyAttachments, true);
 
         // Throw if a texture and renderbuffer are attached to the same point.  This won't
         // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(description.colorTextures) && defined(description.colorRenderbuffers)) {
+        if (defined(options.colorTextures) && defined(options.colorRenderbuffers)) {
             throw new DeveloperError('Cannot have both color texture and color renderbuffer attachments.');
         }
-        if (defined(description.depthTexture) && defined(description.depthRenderbuffer)) {
+        if (defined(options.depthTexture) && defined(options.depthRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth texture and depth renderbuffer attachment.');
         }
-        if (defined(description.depthStencilTexture) && defined(description.depthStencilRenderbuffer)) {
+        if (defined(options.depthStencilTexture) && defined(options.depthStencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.');
         }
         //>>includeEnd('debug');
 
         // Avoid errors defined in Section 6.5 of the WebGL spec
-        var depthAttachment = (defined(description.depthTexture) || defined(description.depthRenderbuffer));
-        var depthStencilAttachment = (defined(description.depthStencilTexture) || defined(description.depthStencilRenderbuffer));
+        var depthAttachment = (defined(options.depthTexture) || defined(options.depthRenderbuffer));
+        var depthStencilAttachment = (defined(options.depthStencilTexture) || defined(options.depthStencilRenderbuffer));
 
         //>>includeStart('debug', pragmas.debug);
         if (depthAttachment && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
         }
-        if (defined(description.stencilRenderbuffer) && depthStencilAttachment) {
+        if (defined(options.stencilRenderbuffer) && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
         }
-        if (depthAttachment && defined(description.stencilRenderbuffer)) {
+        if (depthAttachment && defined(options.stencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth and stencil attachment.');
         }
         //>>includeEnd('debug');
@@ -97,8 +97,8 @@ define([
         var length;
         var attachmentEnum;
 
-        if (defined(description.colorTextures)) {
-            var textures = description.colorTextures;
+        if (defined(options.colorTextures)) {
+            var textures = options.colorTextures;
             length = this._colorTextures.length = this._activeColorAttachments.length = textures.length;
 
             //>>includeStart('debug', pragmas.debug);
@@ -123,8 +123,8 @@ define([
             }
         }
 
-        if (defined(description.colorRenderbuffers)) {
-            var renderbuffers = description.colorRenderbuffers;
+        if (defined(options.colorRenderbuffers)) {
+            var renderbuffers = options.colorRenderbuffers;
             length = this._colorRenderbuffers.length = this._activeColorAttachments.length = renderbuffers.length;
 
             //>>includeStart('debug', pragmas.debug);
@@ -142,8 +142,8 @@ define([
             }
         }
 
-        if (defined(description.depthTexture)) {
-            texture = description.depthTexture;
+        if (defined(options.depthTexture)) {
+            texture = options.depthTexture;
 
             //>>includeStart('debug', pragmas.debug);
             if (texture.pixelFormat !== PixelFormat.DEPTH_COMPONENT) {
@@ -155,20 +155,20 @@ define([
             this._depthTexture = texture;
         }
 
-        if (defined(description.depthRenderbuffer)) {
-            renderbuffer = description.depthRenderbuffer;
+        if (defined(options.depthRenderbuffer)) {
+            renderbuffer = options.depthRenderbuffer;
             attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
             this._depthRenderbuffer = renderbuffer;
         }
 
-        if (defined(description.stencilRenderbuffer)) {
-            renderbuffer = description.stencilRenderbuffer;
+        if (defined(options.stencilRenderbuffer)) {
+            renderbuffer = options.stencilRenderbuffer;
             attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
             this._stencilRenderbuffer = renderbuffer;
         }
 
-        if (defined(description.depthStencilTexture)) {
-            texture = description.depthStencilTexture;
+        if (defined(options.depthStencilTexture)) {
+            texture = options.depthStencilTexture;
 
             //>>includeStart('debug', pragmas.debug);
             if (texture.pixelFormat !== PixelFormat.DEPTH_STENCIL) {
@@ -180,8 +180,8 @@ define([
             this._depthStencilTexture = texture;
         }
 
-        if (defined(description.depthStencilRenderbuffer)) {
-            renderbuffer = description.depthStencilRenderbuffer;
+        if (defined(options.depthStencilRenderbuffer)) {
+            renderbuffer = options.depthStencilRenderbuffer;
             attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
             this._depthStencilRenderbuffer = renderbuffer;
         }

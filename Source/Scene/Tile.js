@@ -46,30 +46,30 @@ define([
      * @constructor
      * @private
      *
-     * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part, such as a
+     * @param {TilingScheme} options.tilingScheme The tiling scheme of which the new tile is a part, such as a
      *                                                {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
-     * @param {Number} description.x The tile x coordinate.
-     * @param {Number} description.y The tile y coordinate.
-     * @param {Number} description.level The tile level-of-detail.
-     * @param {Tile} description.parent The parent of this tile in a tile tree system.
+     * @param {Number} options.x The tile x coordinate.
+     * @param {Number} options.y The tile y coordinate.
+     * @param {Number} options.level The tile level-of-detail.
+     * @param {Tile} options.parent The parent of this tile in a tile tree system.
      */
-    var Tile = function(description) {
+    var Tile = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description)) {
-            throw new DeveloperError('description is required.');
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
         }
-        if (!defined(description.x)) {
-            throw new DeveloperError('description.x is required.');
-        } else if (!defined(description.y)) {
-            throw new DeveloperError('description.y is required.');
-        } else if (description.x < 0 || description.y < 0) {
-            throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
+        if (!defined(options.x)) {
+            throw new DeveloperError('options.x is required.');
+        } else if (!defined(options.y)) {
+            throw new DeveloperError('options.y is required.');
+        } else if (options.x < 0 || options.y < 0) {
+            throw new DeveloperError('options.x and options.y must be greater than or equal to zero.');
         }
-        if (!defined(description.level)) {
-            throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
+        if (!defined(options.level)) {
+            throw new DeveloperError('options.level is required and must be greater than or equal to zero.');
         }
-        if (!defined(description.tilingScheme)) {
-            throw new DeveloperError('description.tilingScheme is required.');
+        if (!defined(options.tilingScheme)) {
+            throw new DeveloperError('options.tilingScheme is required.');
         }
         //>>includeEnd('debug');
 
@@ -79,31 +79,31 @@ define([
          * The tiling scheme used to tile the surface.
          * @type {TilingScheme}
          */
-        this.tilingScheme = description.tilingScheme;
+        this.tilingScheme = options.tilingScheme;
 
         /**
          * The x coordinate.
          * @type {Number}
          */
-        this.x = description.x;
+        this.x = options.x;
 
         /**
          * The y coordinate.
          * @type {Number}
          */
-        this.y = description.y;
+        this.y = options.y;
 
         /**
          * The level-of-detail, where zero is the coarsest, least-detailed.
          * @type {Number}
          */
-        this.level = description.level;
+        this.level = options.level;
 
         /**
          * The parent of this tile in a tiling scheme.
          * @type {Tile}
          */
-        this.parent = description.parent;
+        this.parent = options.parent;
 
         /**
          * The cartographic rectangle of the tile, with north, south, east and
