@@ -29,12 +29,11 @@ require(['Cesium'], function(Cesium) {
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var ellipsoid = scene.globe.ellipsoid;
     
     function createModel(url, height) {
         height = Cesium.defaultValue(height, 0.0);
 
-        var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, height)));
+        var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
         
         scene.primitives.removeAll(); // Remove previous model
         var model = scene.primitives.add(Cesium.Model.fromGltf({

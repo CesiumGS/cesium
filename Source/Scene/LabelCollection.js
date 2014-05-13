@@ -330,7 +330,7 @@ define([
          * @see czm_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
