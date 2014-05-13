@@ -533,7 +533,7 @@ define([
      * @returns {Cartesian3} The intersection point or undefined if there is no intersection.
      *
      * @example
-     * var origin = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
+     * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
      * var normal = ellipsoid.geodeticSurfaceNormal(origin);
      * var plane = Cesium.Plane.fromPointNormal(origin, normal);
      *
@@ -594,7 +594,7 @@ define([
      * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
      *
      * @example
-     * var origin = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0));
+     * var origin = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
      * var normal = ellipsoid.geodeticSurfaceNormal(origin);
      * var plane = Cesium.Plane.fromPointNormal(origin, normal);
      *
@@ -603,7 +603,7 @@ define([
      * var p2 = new Cesium.Cartesian3(...);
      *
      * // convert the triangle composed of points (p0, p1, p2) to three triangles that don't cross the plane
-     * var triangles = Cesium.IntersectionTests.lineSegmentPlane(p0, p1, p2, plane);
+     * var triangles = Cesium.IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
      */
     IntersectionTests.trianglePlaneIntersection = function(p0, p1, p2, plane) {
         //>>includeStart('debug', pragmas.debug);
