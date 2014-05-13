@@ -41,6 +41,7 @@ define([
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @alias TextureAtlas
+     * @constructor
      *
      * @param {Scene} options.scene The scene in which the texture gets created.
      * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
@@ -48,8 +49,6 @@ define([
      * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
      * @param {Array} options.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
      * @param {Image} options.image Optional single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @internalConstructor
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.

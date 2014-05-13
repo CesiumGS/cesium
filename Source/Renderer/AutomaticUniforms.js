@@ -31,28 +31,29 @@ define([
         }
     });
 
-    var datatypeToGlsl = {};
-
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext !== 'undefined') {
-        datatypeToGlsl[WebGLRenderingContext.FLOAT] = 'float';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC2] = 'vec2';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC3] = 'vec3';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC4] = 'vec4';
-        datatypeToGlsl[WebGLRenderingContext.INT] = 'int';
-        datatypeToGlsl[WebGLRenderingContext.INT_VEC2] = 'ivec2';
-        datatypeToGlsl[WebGLRenderingContext.INT_VEC3] = 'ivec3';
-        datatypeToGlsl[WebGLRenderingContext.INT_VEC4] = 'ivec4';
-        datatypeToGlsl[WebGLRenderingContext.BOOL] = 'bool';
-        datatypeToGlsl[WebGLRenderingContext.BOOL_VEC2] = 'bvec2';
-        datatypeToGlsl[WebGLRenderingContext.BOOL_VEC3] = 'bvec3';
-        datatypeToGlsl[WebGLRenderingContext.BOOL_VEC4] = 'bvec4';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT2] = 'mat2';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT3] = 'mat3';
-        datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT4] = 'mat4';
-        datatypeToGlsl[WebGLRenderingContext.SAMPLER_2D] = 'sampler2D';
-        datatypeToGlsl[WebGLRenderingContext.SAMPLER_CUBE] = 'samplerCube';
+    if (typeof WebGLRenderingContext === 'undefined') {
+        return {};
     }
+
+    var datatypeToGlsl = {};
+    datatypeToGlsl[WebGLRenderingContext.FLOAT] = 'float';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC2] = 'vec2';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC3] = 'vec3';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC4] = 'vec4';
+    datatypeToGlsl[WebGLRenderingContext.INT] = 'int';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC2] = 'ivec2';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC3] = 'ivec3';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC4] = 'ivec4';
+    datatypeToGlsl[WebGLRenderingContext.BOOL] = 'bool';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC2] = 'bvec2';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC3] = 'bvec3';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC4] = 'bvec4';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT2] = 'mat2';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT3] = 'mat3';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT4] = 'mat4';
+    datatypeToGlsl[WebGLRenderingContext.SAMPLER_2D] = 'sampler2D';
+    datatypeToGlsl[WebGLRenderingContext.SAMPLER_CUBE] = 'samplerCube';
 
     AutomaticUniform.prototype.getDeclaration = function(name) {
         var declaration = 'uniform ' + datatypeToGlsl[this._datatype] + ' ' + name;
