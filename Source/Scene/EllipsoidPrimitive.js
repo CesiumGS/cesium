@@ -67,8 +67,7 @@ define([
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
      * primitives.add(new Cesium.EllipsoidPrimitive({
-     *   center : ellipsoid.cartographicToCartesian(
-     *     Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+     *   center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
      *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * }));
      *
@@ -76,8 +75,7 @@ define([
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
      * var e = new Cesium.EllipsoidPrimitive();
      * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
-     *   ellipsoid.cartographicToCartesian(
-     *     Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
+     *   Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0));
      * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
@@ -133,8 +131,7 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = ellipsoid.cartographicToCartesian(
-         *   Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
