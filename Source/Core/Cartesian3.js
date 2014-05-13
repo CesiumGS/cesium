@@ -767,13 +767,6 @@ define([
         return result;
     };
 
-    var scratchN = new Cartesian3();
-    var scratchK = new Cartesian3();
-    //Cannot require in Ellipsoid- circular dependency
-    var mockWGS84 = {
-            radiiSquared : new Cartesian3(6378137.0*6378137.0, 6378137.0*6378137.0, 6356752.3142451793*6356752.3142451793)
-    };
-
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in degrees.
      * @memberof Cartesian3
@@ -804,6 +797,10 @@ define([
         return Cartesian3.fromRadians(lon, lat, height, ellipsoid, result);
     };
 
+    var scratchN = new Cartesian3();
+    var scratchK = new Cartesian3();
+    var wgs84RadiiSquared = new Cartesian3(6378137.0 * 6378137.0, 6378137.0 * 6378137.0, 6356752.3142451793 * 6356752.3142451793);
+
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in radians.
      * @memberof Cartesian3
@@ -829,8 +826,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        height = defaultValue(height, 0);
-        ellipsoid = defaultValue(ellipsoid, mockWGS84);
+        height = defaultValue(height, 0.0);
+        var radiiSquared = defined(ellipsoid) ? ellipsoid.radiiSquared : wgs84RadiiSquared;
 
         var cosLatitude = Math.cos(latitude);
         scratchN.x = cosLatitude * Math.cos(longitude);
@@ -838,7 +835,7 @@ define([
         scratchN.z = Math.sin(latitude);
         scratchN = Cartesian3.normalize(scratchN, scratchN);
 
-        Cartesian3.multiplyComponents(ellipsoid.radiiSquared, scratchN, scratchK);
+        Cartesian3.multiplyComponents(radiiSquared, scratchN, scratchK);
         var gamma = Math.sqrt(Cartesian3.dot(scratchN, scratchK));
         scratchK = Cartesian3.divideByScalar(scratchK, gamma, scratchK);
         scratchN = Cartesian3.multiplyByScalar(scratchN, height, scratchN);
