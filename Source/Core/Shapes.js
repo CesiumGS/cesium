@@ -101,7 +101,7 @@ define([
          * // Create a polyline of a circle
          * var polyline = new Cesium.Polyline();
          * polyline.positions = Cesium.Shapes.computeCircleBoundary(
-         *   ellipsoid, Cesium.Cartesian3.fromDegreesArray(-75.59777, 40.03883, 0.0), 100000.0);
+         *   ellipsoid, Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), 100000.0);
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
             granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
