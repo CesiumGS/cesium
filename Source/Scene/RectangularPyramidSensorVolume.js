@@ -86,7 +86,7 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));

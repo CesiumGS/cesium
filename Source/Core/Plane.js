@@ -71,7 +71,7 @@ define([
      * @returns {Plane} A new plane instance or the modified result parameter.
      *
      * @example
-     * var point = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 40.0));
+     * var point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
      * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
      */
