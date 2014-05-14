@@ -118,7 +118,7 @@
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
 	</target>
-	
+
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
 	<property name="pragmas.debug" value="true" />
