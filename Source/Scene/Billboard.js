@@ -742,7 +742,7 @@ define([
         var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
-        var po = Cartesian2.multiplyByScalar(pixelOffset, scene._context.uniformState.highResolutionSnapScale, scratchCartesian2);
+        var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 

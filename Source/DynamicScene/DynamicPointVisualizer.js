@@ -6,7 +6,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Scene/BillboardCollection',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlas',
+        '../Scene/TextureAtlasBuilder'
     ], function(
         Color,
         defaultValue,
@@ -14,6 +15,7 @@ define([
         destroyObject,
         DeveloperError,
         BillboardCollection,
+        TextureAtlas,
         TextureAtlasBuilder) {
     "use strict";
 
@@ -37,7 +39,9 @@ define([
 
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
 
-        var atlas = scene.createTextureAtlas();
+        var atlas = new TextureAtlas({
+            scene : scene
+        });
         var billboardCollection = new BillboardCollection();
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);

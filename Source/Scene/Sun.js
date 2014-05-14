@@ -13,11 +13,11 @@ define([
         '../Core/Color',
         '../Core/BoundingRectangle',
         '../Core/Matrix4',
-        '../Renderer/BlendingState',
+        '../Core/PixelFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/PixelFormat',
         '../Renderer/ClearCommand',
+        './BlendingState',
         './SceneTransforms',
         './SceneMode',
         '../Shaders/SunVS',
@@ -37,11 +37,11 @@ define([
         Color,
         BoundingRectangle,
         Matrix4,
-        BlendingState,
+        PixelFormat,
         BufferUsage,
         DrawCommand,
-        PixelFormat,
         ClearCommand,
+        BlendingState,
         SceneTransforms,
         SceneMode,
         SunVS,
@@ -70,7 +70,11 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand();
+        this._command = new DrawCommand({
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            boundingVolume : new BoundingSphere(),
+            owner : this
+        });
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -124,7 +128,7 @@ define([
      */
     Sun.prototype.update = function(scene) {
         var frameState = scene.frameState;
-        var context = scene._context;
+        var context = scene.context;
 
         if (!this.show) {
             return undefined;
@@ -165,9 +169,10 @@ define([
             });
             fbo.destroyAttachments = false;
 
-            var clearCommand = new ClearCommand();
-            clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-            clearCommand.framebuffer = fbo;
+            var clearCommand = new ClearCommand({
+                color : new Color(0.0, 0.0, 0.0, 0.0),
+                framebuffer : fbo
+            });
 
             var rs = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
@@ -196,7 +201,7 @@ define([
             clearCommand.execute(context);
             drawCommand.execute(context);
 
-            drawCommand.shaderProgram.release();
+            drawCommand.shaderProgram.destroy();
             fbo.destroy();
         }
 
@@ -229,14 +234,11 @@ define([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
             command.vertexArray = context.createVertexArray(attributes);
-            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-
-            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
+            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
-            command.boundingVolume = new BoundingSphere();
         }
 
         var sunPosition = context.uniformState.sunPositionWC;
@@ -321,7 +323,7 @@ define([
     Sun.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+        command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 
         this._texture = this._texture && this._texture.destroy();
 

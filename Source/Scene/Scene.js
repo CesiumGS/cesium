@@ -28,7 +28,7 @@ define([
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
-        '../Renderer/Pass',
+        './Pass',
         './Camera',
         './ScreenSpaceCameraController',
         './CompositePrimitive',
@@ -104,12 +104,53 @@ define([
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
+     * <p>
+     * <em><code>contextOptions</code> parameter details:</em>
+     * </p>
+     * <p>
+     * The default values are:
+     * <code>
+     * {
+     *   webgl : {
+     *     alpha : false,
+     *     depth : true,
+     *     stencil : false,
+     *     antialias : true,
+     *     premultipliedAlpha : true,
+     *     preserveDrawingBuffer : false
+     *     failIfMajorPerformanceCaveat : true
+     *   },
+     *   allowTextureFilterAnisotropic : true
+     * }
+     * </code>
+     * </p>
+     * <p>
+     * The <code>webgl</code> property corresponds to the <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
+     * object used to create the WebGL context.
+     * </p>
+     * <p>
+     * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
+     * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
+     * <code>options.webgl.alpha</code> to true.
+     * </p>
+     * <p>
+     * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
+     * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
+     * which is not appropriate for almost any Cesium app.
+     * </p>
+     * <p>
+     * The other <code>options.webgl</code> properties match the WebGL defaults for <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>.
+     * </p>
+     * <p>
+     * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
+     * WebGL extension is supported.  Setting this to false will improve performance, but hurt visual quality, especially for horizon views.
+     * </p>
      *
      * @alias Scene
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties.  See details above.
      * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
@@ -158,14 +199,14 @@ define([
 
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.color = new Color();
-        this._clearColorCommand.owner = this;
-
-        var depthClearCommand = new ClearCommand();
-        depthClearCommand.depth = 1.0;
-        depthClearCommand.owner = this;
-        this._depthClearCommand = depthClearCommand;
+        this._clearColorCommand = new ClearCommand({
+            color : new Color(),
+            owner : this
+        });
+        this._depthClearCommand = new ClearCommand({
+            depth : 1.0,
+            owner : this
+        });
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -405,7 +446,6 @@ define([
         this.fxaa = false;
 
         this._performanceDisplay = undefined;
-
         this._debugSphere = undefined;
 
         // initial guess at frustums.
@@ -600,6 +640,15 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
+            }
+        },
+
+        /**
+         * @private
+         */
+        context : {
+            get : function() {
+                return this._context;
             }
         }
     });
@@ -812,7 +861,7 @@ define([
     }
 
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
-        var context = scene._context;
+        var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fragmentShaderSource = sp.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
@@ -843,15 +892,15 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
         if (defined(command.shaderProgram) || defined(shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene._context, passState, renderState, sp);
-            sp.release();
+            command.execute(scene.context, passState, renderState, sp);
+            sp.destroy();
         }
     }
 
@@ -957,7 +1006,7 @@ define([
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
-        var context = scene._context;
+        var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
@@ -974,7 +1023,7 @@ define([
     function executeCommands(scene, passState, clearColor, picking) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var context = scene._context;
+        var context = scene.context;
         var us = context.uniformState;
 
         var frustum;
@@ -989,7 +1038,7 @@ define([
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
                 scene._sunPostProcess = new SunPostProcess();
-            } else {
+            } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
             }
 
@@ -1121,7 +1170,7 @@ define([
     }
 
     function executeOverlayCommands(scene, passState) {
-        var context = scene._context;
+        var context = scene.context;
         var commandList = scene._overlayCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1130,7 +1179,7 @@ define([
     }
 
     function updatePrimitives(scene) {
-        var context = scene._context;
+        var context = scene.context;
         var frameState = scene._frameState;
         var commandList = scene._commandList;
 
@@ -1156,25 +1205,6 @@ define([
     }
 
     /**
-     * Creates a new texture atlas.
-     *
-     * @memberof Scene
-     *
-     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @returns {TextureAtlas} The new texture atlas.
-     *
-     * @see TextureAtlas
-     */
-    Scene.prototype.createTextureAtlas = function(options) {
-        return this._context.createTextureAtlas(options);
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1197,7 +1227,7 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
 
-        var us = scene._context.uniformState;
+        var us = scene.context.uniformState;
         var frameState = scene._frameState;
 
         var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
@@ -1205,7 +1235,7 @@ define([
         frameState.passes.render = true;
         frameState.creditDisplay.beginFrame();
 
-        var context = scene._context;
+        var context = scene.context;
         us.update(context, frameState);
 
         scene._commandList.length = 0;

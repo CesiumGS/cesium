@@ -8,14 +8,14 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Event',
          'Core/Rectangle',
+         'Core/PixelFormat',
          'Renderer/ClearCommand',
          'Renderer/DrawCommand',
          'Renderer/Context',
-         'Renderer/Pass',
          'Renderer/PassState',
          'Renderer/PixelDatatype',
-         'Renderer/PixelFormat',
          'Renderer/UniformState',
+         'Scene/Pass',
          'Scene/AnimationCollection',
          'Scene/Camera',
          'Scene/Globe',
@@ -37,14 +37,14 @@ defineSuite([
          Ellipsoid,
          Event,
          Rectangle,
+         PixelFormat,
          ClearCommand,
          DrawCommand,
          Context,
-         Pass,
          PassState,
          PixelDatatype,
-         PixelFormat,
          UniformState,
+         Pass,
          AnimationCollection,
          Camera,
          Globe,
@@ -86,7 +86,7 @@ defineSuite([
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.animations).toBeInstanceOf(AnimationCollection);
 
-        var contextAttributes = scene._context._gl.getContextAttributes();
+        var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
         expect(contextAttributes.stencil).toEqual(false);
@@ -122,12 +122,12 @@ defineSuite([
     it('draws background color', function() {
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -156,9 +156,10 @@ defineSuite([
     }
 
     it('debugCommandFilter filters commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -173,9 +174,10 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -187,26 +189,28 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            debugShowBoundingVolume : true,
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.debugShowBoundingVolume = true;
-        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            shaderProgram : scene.context.createShaderProgram(
+                'void main() { gl_Position = vec4(1.0); }',
+                'void main() { gl_FragColor = vec4(1.0); }')
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene._context.shaderCache.getShaderProgram(
-            'void main() { gl_Position = vec4(1.0); }',
-            'void main() { gl_FragColor = vec4(1.0); }');
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -248,7 +252,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -257,7 +261,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene._context.readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -287,7 +291,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -296,7 +300,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene._context.readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -319,7 +323,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -345,14 +349,14 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
     });
 
     it('renders with forced FXAA', function() {
-        var context = scene._context;
+        var context = scene.context;
 
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
@@ -452,7 +456,7 @@ defineSuite([
     });
 
     it('renders with multipass OIT if MRT is available', function() {
-        if (scene._context.drawBuffers) {
+        if (scene.context.drawBuffers) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = true;
@@ -483,7 +487,7 @@ defineSuite([
     });
 
     it('renders with alpha blending if floating point textures are available', function() {
-        if (scene._context.floatingPointTexture) {
+        if (scene.context.floatingPointTexture) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = false;

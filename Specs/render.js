@@ -3,7 +3,7 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Core/Intersect',
-        'Renderer/Pass',
+        'Scene/Pass',
         'Scene/SceneMode'
      ], function(
          defaultValue,
