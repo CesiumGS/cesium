@@ -29,13 +29,13 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
 
-    it('throws without a description', function() {
+    it('throws without a options', function() {
         expect(function() {
             return new Tile();
         }).toThrowDeveloperError();
     });
 
-    it('throws without description.rectangle', function() {
+    it('throws without options.rectangle', function() {
         expect(function() {
             return new Tile({
                 x : 0,
@@ -44,7 +44,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without description.level', function() {
+    it('throws without options.level', function() {
         expect(function() {
             return new Tile({
                 rectangle : new Rectangle(

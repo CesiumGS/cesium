@@ -158,7 +158,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene._context;
+        var context = widget.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -180,6 +180,19 @@ defineSuite([
         widget = new CesiumWidget(container);
         expect(function() {
             widget.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        widget = new CesiumWidget(container);
+        widget.resolutionScale = 0.5;
+        expect(widget.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.resolutionScale = -1;
         }).toThrowDeveloperError();
     });
 

@@ -98,13 +98,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if description is undefined', function() {
+    it('throws if options is undefined', function() {
         expect(function() {
             return new NavigationHelpButton(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('throws if description.container is undefined', function() {
+    it('throws if options.container is undefined', function() {
         expect(function() {
             return new NavigationHelpButton({
                 container : undefined

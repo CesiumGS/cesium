@@ -26,7 +26,8 @@ defineSuite([
          'Scene/PolylineCollection',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
-         'Scene/Material'
+         'Scene/Material',
+         'Scene/TextureAtlas'
      ], 'Scene/PrimitiveCulling', function(
          CompositePrimitive,
          createContext,
@@ -54,7 +55,8 @@ defineSuite([
          PolylineCollection,
          SceneMode,
          OrthographicFrustum,
-         Material) {
+         Material,
+         TextureAtlas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -366,7 +368,15 @@ defineSuite([
     });
 
     function createBillboard() {
-        var atlas = context.createTextureAtlas({images : [greenImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
+        var mockScene = {
+            context : context
+        };
+        var atlas = new TextureAtlas({
+            scene : mockScene,
+            images : [greenImage],
+            borderWidthInPixels : 1,
+            initialSize : new Cartesian2(3, 3)
+        });
 
         // ANGLE Workaround
         atlas.texture.sampler = context.createSampler({

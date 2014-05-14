@@ -298,7 +298,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene._context;
+        var context = viewer.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -366,6 +366,19 @@ defineSuite([
         viewer = new Viewer(container);
         expect(function() {
             viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        viewer = new Viewer(container);
+        viewer.resolutionScale = 0.5;
+        expect(viewer.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.resolutionScale = -1;
         }).toThrowDeveloperError();
     });
 
