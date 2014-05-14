@@ -118,7 +118,7 @@
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
 	</target>
-
+	
 	<!-- properties controlling which steps get run -->
 	<property name="build.minification" value="false" />
 	<property name="pragmas.debug" value="true" />
@@ -236,6 +236,10 @@
 		<attribute name="pathsoutput" />
 		<element name="sourcefiles" type="resources" />
 	</scriptdef>
+	
+    <scriptdef name="sortRequires" language="javascript" src="${tasksDirectory}/sortRequires.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+        <element name="sourcefiles" type="fileset" />
+    </scriptdef>
 
 	<target name="jsHint" depends="build" description="Runs JSHint on the entire source tree.">
 		<runJsHint jshintpath="${jsHintPath}" jshintoptionspath="${jsHintOptionsPath}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
@@ -257,6 +261,23 @@
 		</runJsHint>
 		<fail if="jsHint.failure" message="JSHint failed!" />
 	</target>
+
+    <target name="sortRequires" description="Sorts the list of requires in all source files">
+    	<sortRequires>
+    		<sourcefiles dir="${basedir}">
+                <include name="Source/**/*.js" />
+                <exclude name="Source/Shaders/**" />
+                <exclude name="Source/ThirdParty/**" />
+                <exclude name="Source/Workers/cesiumWorkerBootstrapper.js" />
+
+                <include name="Apps/**/*.js" />
+
+                <exclude name="Apps/Sandcastle/ThirdParty/**" />
+
+                <include name="Specs/**/*.js" />
+    		</sourcefiles>
+    	</sortRequires>
+    </target>
 
 	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
 		<echo message="Source:" />
