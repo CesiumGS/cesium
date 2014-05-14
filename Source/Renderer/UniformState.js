@@ -766,13 +766,11 @@ define([
          * Gets the scaling factor for transforming from the canvas
          * pixel space to canvas coordinate space.
          * @memberof UniformState.prototype
+         * @type {Number}
          */
         resolutionScale : {
             get : function() {
                 return this._resolutionScale;
-            },
-            set : function(value) {
-                this._resolutionScale = value;
             }
         }
     });
