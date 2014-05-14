@@ -9,7 +9,7 @@ load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile
 var window = window || {};
 
 var jsFileRegex = /\.js$/i;
-var requiresRegex = /([\s\S]*?(define|defineSuite)\(\[)([\S\s]*?)\]([\s\S]*?)\(([\S\s]*?)\) {([\s\S]*)/;
+var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)\]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
 var splitRegex = /,\s*/;
 
 var filesChecked = 0;
@@ -24,14 +24,14 @@ forEachFile('sourcefiles', function(relativePath, file) {
         self.log('Sorted requires in ' + filesChecked + ' files');
     }
     ++filesChecked;
-
+    
     var contents = readFileContents(file);
     var result = requiresRegex.exec(contents);
     if (result === null) {
         self.log(relativePath + ' does not have the expected syntax.');
         return;
     }
-
+    
     // In specs, the first require is significant,
     // unless the spec is given an explicit name.
     var preserveFirst = false;
@@ -40,12 +40,33 @@ forEachFile('sourcefiles', function(relativePath, file) {
     }
 
     var names = result[3].split(splitRegex);
-    var identifiers = result[5].split(splitRegex);
+    if (names.length === 1 && names[0].trim() === '') {
+        names.length = 0;
+    }
     
+    var i;
+    for (i = 0; i < names.length; ++i) {
+        if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
+            self.log(relativePath + ' contains comments in the require list.  Skipping so nothing gets broken.');
+            return;
+        }
+    }
+    
+    var identifiers = result[5].split(splitRegex);
+    if (identifiers.length === 1 && identifiers[0].trim() === '') {
+        identifiers.length = 0;
+    }
+
+    for (i = 0; i < identifiers.length; ++i) {
+        if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
+            self.log(relativePath + ' contains comments in the require list.  Skipping so nothing gets broken.');
+            return;
+        }
+    }
+
     var requires = [];
     
-    var i = preserveFirst ? 1 : 0;
-    for (; i < names.length && i < identifiers.length; ++i) {
+    for (preserveFirst ? 1 : 0; i < names.length && i < identifiers.length; ++i) {
         requires.push({
             name : names[i].trim(),
             identifier : identifiers[i].trim()
@@ -75,20 +96,31 @@ forEachFile('sourcefiles', function(relativePath, file) {
     // any additional names or identifiers that don't have a corresponding pair.
     var sortedNames = requires.map(function(item) { return item.name; });
     for (i = sortedNames.length; i < names.length; ++i) {
-        sortedNames.push(names[i]);
+        sortedNames.push(names[i].trim());
     }
     
     var sortedIdentifiers = requires.map(function(item) { return item.identifier; });
     for (i = sortedIdentifiers.length; i < identifiers.length; ++i) {
-        sortedIdentifiers.push(identifiers[i]);
+        sortedIdentifiers.push(identifiers[i].trim());
+    }
+    
+    var outputNames = ']';
+    if (sortedNames.length > 0) {
+        outputNames = '\r\n        ' +
+                      sortedNames.join(',\r\n        ') +
+                      '\r\n    ]';
+    }
+    
+    var outputIdentifiers = '(';
+    if (sortedIdentifiers.length > 0) {
+        outputIdentifiers = '(\r\n        ' +
+                            sortedIdentifiers.join(',\r\n        ');
     }
     
     contents = result[1] +
-               '\r\n        ' +
-               sortedNames.join(',\r\n        ') +
-               '\r\n    ]' +
-               result[4] + '(\r\n        ' +
-               sortedIdentifiers.join(',\r\n        ') +
+               outputNames +
+               result[4] +
+               outputIdentifiers +
                ') {' +
                result[6];
     
