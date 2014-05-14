@@ -7,9 +7,10 @@ defineSuite([
          'Core/Color',
          'Core/loadImage',
          'Core/PrimitiveType',
+         'Core/PixelFormat',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/PixelFormat',
+         'Renderer/DrawCommand',
          'Renderer/PixelDatatype',
          'Renderer/TextureWrap',
          'Renderer/TextureMinificationFilter',
@@ -22,9 +23,10 @@ defineSuite([
          Color,
          loadImage,
          PrimitiveType,
+         PixelFormat,
          BufferUsage,
          ClearCommand,
-         PixelFormat,
+         DrawCommand,
          PixelDatatype,
          TextureWrap,
          TextureMinificationFilter,
@@ -75,11 +77,12 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
 
         return context.readPixels();
     }
@@ -116,8 +119,9 @@ defineSuite([
     });
 
     it('can create a texture from the framebuffer', function() {
-        var command = new ClearCommand();
-        command.color = Color.RED;
+        var command = new ClearCommand({
+            color : Color.RED
+        });
         command.execute(context);
 
         texture = context.createTexture2DFromFramebuffer();
@@ -141,8 +145,9 @@ defineSuite([
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
 
         // Clear to red
-        var command = new ClearCommand();
-        command.color = Color.RED;
+        var command = new ClearCommand({
+            color : Color.RED
+        });
         command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
@@ -222,20 +227,20 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
-        };
+        });
 
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 
@@ -298,20 +303,20 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
-        };
+        });
 
         // Blue on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.BLUE.toBytes());
 
         // Red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
 
         // After copy...
@@ -319,12 +324,12 @@ defineSuite([
 
         // Now green on top
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.75);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.LIME.toBytes());
 
         // Still red on bottom
         sp.allUniforms.u_txCoords.value = new Cartesian2(0.5, 0.25);
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual(Color.RED.toBytes());
     });
 
@@ -428,7 +433,7 @@ defineSuite([
         expect(t.isDestroyed()).toEqual(true);
     });
 
-    it('throws when creating a texture without a description', function() {
+    it('throws when creating a texture without a options', function() {
         expect(function() {
             texture = context.createTexture2D();
         }).toThrowDeveloperError();
