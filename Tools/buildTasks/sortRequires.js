@@ -15,23 +15,23 @@ var splitRegex = /,\s*/;
 var filesChecked = 0;
 forEachFile('sourcefiles', function(relativePath, file) {
     "use strict";
-    
+
     if (!jsFileRegex.test(relativePath)) {
         return;
     }
-    
+
     if (filesChecked > 0 && filesChecked % 50 === 0) {
         self.log('Sorted requires in ' + filesChecked + ' files');
     }
     ++filesChecked;
-    
+
     var contents = readFileContents(file);
     var result = requiresRegex.exec(contents);
     if (result === null) {
         self.log(relativePath + ' does not have the expected syntax.');
         return;
     }
-    
+
     // In specs, the first require is significant,
     // unless the spec is given an explicit name.
     var preserveFirst = false;
@@ -43,7 +43,7 @@ forEachFile('sourcefiles', function(relativePath, file) {
     if (names.length === 1 && names[0].trim() === '') {
         names.length = 0;
     }
-    
+
     var i;
     for (i = 0; i < names.length; ++i) {
         if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
@@ -51,7 +51,7 @@ forEachFile('sourcefiles', function(relativePath, file) {
             return;
         }
     }
-    
+
     var identifiers = result[5].split(splitRegex);
     if (identifiers.length === 1 && identifiers[0].trim() === '') {
         identifiers.length = 0;
@@ -65,14 +65,14 @@ forEachFile('sourcefiles', function(relativePath, file) {
     }
 
     var requires = [];
-    
-    for (preserveFirst ? 1 : 0; i < names.length && i < identifiers.length; ++i) {
+
+    for (i = preserveFirst ? 1 : 0; i < names.length && i < identifiers.length; ++i) {
         requires.push({
             name : names[i].trim(),
             identifier : identifiers[i].trim()
         });
     }
-    
+
     requires.sort(function(a, b) {
         var aName = a.name.toLowerCase();
         var bName = b.name.toLowerCase();
@@ -84,45 +84,45 @@ forEachFile('sourcefiles', function(relativePath, file) {
             return 0;
         }
     });
-    
+
     if (preserveFirst) {
         requires.splice(0, 0, {
             name : names[0].trim(),
             identifier : identifiers[0].trim()
         });
     }
-    
+
     // Convert back to separate lists for the names and identifiers, and add
     // any additional names or identifiers that don't have a corresponding pair.
     var sortedNames = requires.map(function(item) { return item.name; });
     for (i = sortedNames.length; i < names.length; ++i) {
         sortedNames.push(names[i].trim());
     }
-    
+
     var sortedIdentifiers = requires.map(function(item) { return item.identifier; });
     for (i = sortedIdentifiers.length; i < identifiers.length; ++i) {
         sortedIdentifiers.push(identifiers[i].trim());
     }
-    
+
     var outputNames = ']';
     if (sortedNames.length > 0) {
         outputNames = '\r\n        ' +
                       sortedNames.join(',\r\n        ') +
                       '\r\n    ]';
     }
-    
+
     var outputIdentifiers = '(';
     if (sortedIdentifiers.length > 0) {
         outputIdentifiers = '(\r\n        ' +
                             sortedIdentifiers.join(',\r\n        ');
     }
-    
+
     contents = result[1] +
                outputNames +
                result[4] +
                outputIdentifiers +
                ') {' +
                result[6];
-    
+
     writeFileContents(file, contents);
 });
