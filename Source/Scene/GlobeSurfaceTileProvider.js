@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/defined',
@@ -10,13 +11,21 @@ define([
         '../Core/FeatureDetection',
         '../Core/Intersect',
         '../Core/Matrix4',
+        '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/WebMercatorProjection',
+        '../Renderer/DrawCommand',
+        '../Renderer/Pass',
         './GlobeSurfaceTile',
+        './ImageryLayer',
+        './ImageryState',
         './QuadtreeTileState',
-        './SceneMode'
+        './SceneMode',
+        './TerrainProvider',
+        '../ThirdParty/when'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         defined,
@@ -26,11 +35,18 @@ define([
         FeatureDetection,
         Intersect,
         Matrix4,
+        PrimitiveType,
         Rectangle,
         WebMercatorProjection,
+        DrawCommand,
+        Pass,
         GlobeSurfaceTile,
+        ImageryLayer,
+        ImageryState,
         QuadtreeTileState,
-        SceneMode) {
+        SceneMode,
+        TerrainProvider,
+        when) {
     "use strict";
 
     /**
@@ -43,6 +59,8 @@ define([
     var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
+        this._surfaceShaderSet = options.surfaceShaderSet;
+        this._renderState = undefined;
 
         this._errorEvent = new Event();
     };
@@ -102,7 +120,6 @@ define([
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
@@ -116,7 +133,7 @@ define([
      * @memberof GlobeSurfaceTileProvider
      * @function
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
@@ -128,63 +145,23 @@ define([
 
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
-     * until {@link GlobeSurfaceTileProvider#isTileDoneLoading} returns true.  This function should
-     * not be called before {@link GlobeSurfaceTileProvider#isReady} returns true.
+     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileState#LOADING}.  This function should
+     * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
      *
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
      * @param {Context} context The rendering context.
-     * @param {Number} x The tile X coordinate.
-     * @param {Number} y The tile Y coordinate.
-     * @param {Number} level The tile level.
-     * @param {Object} tile The tile instance returned from a previous invocation, if any.
-     *
-     * @returns {Object} The tile instance, which may be undefined if the tile cannot begin
-     *                   loading yet, perhaps because too many requests to the same server
-     *                   are already in flight.
+     * @param {FrameState} frameState The frame state.
+     * @param {QuadtreeTile} tile The tile to load.
      *
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
-    GlobeSurfaceTileProvider.prototype.loadTile = function(context, x, y, level, tile) {
-        if (!defined(tile)) {
-            tile = new GlobeSurfaceTile();
+    GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, tile) {
+        if (!defined(tile.data)) {
+            tile.data = new GlobeSurfaceTile();
         }
 
-        tile.processStateMachine(context, this._terrainProvider, this._imageryLayers);
-    };
-
-    /**
-     * Gets the current state of the given tile.
-     *
-     * @memberof GlobeSurfaceTileProvider
-     * @function
-     *
-     * @param {Object} tile The tile instance.
-     *
-     * @returns {QuadtreeTileState} The current state of the tile.
-     */
-    GlobeSurfaceTileProvider.prototype.getTileState = function(tile) {
-        if (!defined(tile)) {
-            return QuadtreeTileState.LOADING;
-        }
-
-        return tile.state;
-    };
-
-    /**
-     * Returns true if the tile is renderable.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link GlobeSurfaceTileProvider#renderTile}
-     *
-     * @memberof GlobeSurfaceTileProvider
-     * @function
-     *
-     * @param {Object} tile The tile instance.
-     *
-     * @returns {Boolean} true if the tile is renderable; otherwise, false.
-     */
-    GlobeSurfaceTileProvider.prototype.isTileRenderable = function(tile) {
-        return defined(tile) && tile.isRenderable;
+        GlobeSurfaceTile.processStateMachine(tile, context, this._terrainProvider, this._imageryLayers);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -194,26 +171,27 @@ define([
      * {@link GlobeSurfaceTileProvider#renderTile}
      *
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information about the current frame.
      * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
      *
      * @returns {Boolean} true if the tile is visible; otherwise, false.
      */
     GlobeSurfaceTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
+        var surfaceTile = tile.data;
+
         var cullingVolume = frameState.cullingVolume;
 
-        var boundingVolume = tile.boundingSphere3D;
+        var boundingVolume = surfaceTile.boundingSphere3D;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
-                boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+                boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -222,7 +200,7 @@ define([
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
-            var occludeePointInScaledSpace = tile.occludeePointInScaledSpace;
+            var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
                 return true;
             }
@@ -245,17 +223,19 @@ define([
      * Renders a given tile.
      *
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @param {Command[]} commandList The list of rendering commands.  This method should add additional commands to this list.
      */
     GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
-        var viewMatrix = frameState.camera.viewMatrix;
+        var surfaceTile = tile.data;
 
-        var rtc = tile.center;
+        var viewMatrix = frameState.camera.viewMatrix;
+        var maxTextures = context.maximumTextureImageUnits;
+
+        var rtc = surfaceTile.center;
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
@@ -313,30 +293,33 @@ define([
         Matrix4.multiplyByVector(viewMatrix, centerEye, centerEye);
         Matrix4.setColumn(viewMatrix, 3, centerEye, modifiedModelViewScratch);
 
-        var tileImageryCollection = tile.imagery;
+        var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
         do {
             var numberOfDayTextures = 0;
 
-            ++tileCommandIndex;
-            var command = tileCommands[tileCommandIndex];
-            if (!defined(command)) {
-                command = new DrawCommand();
+            //++tileCommandIndex;
+            // TODO: pool commands and uniform maps.
+            //var command = tileCommands[tileCommandIndex];
+            //if (!defined(command)) {
+                var command = new DrawCommand();
                 command.owner = tile;
                 command.cull = false;
                 command.boundingVolume = new BoundingSphere();
-                tileCommands[tileCommandIndex] = command;
-                tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
-            }
+                //tileCommands[tileCommandIndex] = command;
+                //tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
+            //}
             command.owner = tile;
 
-            command.debugShowBoundingVolume = (tile === surface._debug.boundingSphereTile);
+            // TODO
+            //command.debugShowBoundingVolume = (tile === this._debug.boundingSphereTile);
 
-            var uniformMap = tileCommandUniformMaps[tileCommandIndex];
+            //var uniformMap = tileCommandUniformMaps[tileCommandIndex];
+            var uniformMap = createTileUniformMap();
 
-            uniformMap.center3D = tile.center;
+            uniformMap.center3D = surfaceTile.center;
 
             Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
             uniformMap.southAndNorthLatitude.x = southLatitude;
@@ -428,64 +411,256 @@ define([
             // trim texture array to the used length so we don't end up using old textures
             // which might get destroyed eventually
             uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.waterMask = tile.waterMaskTexture;
-            Cartesian4.clone(tile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+            uniformMap.waterMask = surfaceTile.waterMaskTexture;
+            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
             commandList.push(command);
 
-            command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
-            command.renderState = renderState;
+            command.shaderProgram = this._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
+            command.renderState = this._renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
-            command.vertexArray = tile.vertexArray;
+            command.vertexArray = surfaceTile.vertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.OPAQUE;
 
-            if (surface._debug.wireframe) {
-                createWireframeVertexArrayIfNecessary(context, surface, tile);
-                if (defined(tile.wireframeVertexArray)) {
-                    command.vertexArray = tile.wireframeVertexArray;
-                    command.primitiveType = PrimitiveType.LINES;
-                }
-            }
+            // TODO
+//            if (this._debug.wireframe) {
+//                createWireframeVertexArrayIfNecessary(context, this, tile);
+//                if (defined(surfaceTile.wireframeVertexArray)) {
+//                    command.vertexArray = surfaceTile.wireframeVertexArray;
+//                    command.primitiveType = PrimitiveType.LINES;
+//                }
+//            }
 
             var boundingVolume = command.boundingVolume;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {
-                    boundingVolume = BoundingSphere.union(tile.boundingSphere3D, boundingVolume, boundingVolume);
+                    boundingVolume = BoundingSphere.union(surfaceTile.boundingSphere3D, boundingVolume, boundingVolume);
                 }
             } else {
-                BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
+                BoundingSphere.clone(surfaceTile.boundingSphere3D, boundingVolume);
             }
 
         } while (imageryIndex < imageryLen);
     };
 
+    var southwestCornerScratch = new Cartesian3();
+    var northeastCornerScratch = new Cartesian3();
+    var negativeUnitY = Cartesian3.negate(Cartesian3.UNIT_Y);
+    var negativeUnitZ = Cartesian3.negate(Cartesian3.UNIT_Z);
+    var vectorScratch = new Cartesian3();
+
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
+     * @param {Cartesian3} cameraCartesianPosition The position of the camera in world coordinates.
+     * @param {Cartographic} cameraCartographicPosition The position of the camera in cartographic / geodetic coordinates.
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    GlobeSurfaceTileProvider.prototype.getDistanceToTile = DeveloperError.throwInstantiationError;
+    GlobeSurfaceTileProvider.prototype.getDistanceToTile = function(tile, frameState, cameraCartesianPosition, cameraCartographicPosition) {
+        var surfaceTile = tile.data;
+
+        var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
+        var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
+        var westNormal = surfaceTile.westNormal;
+        var southNormal = surfaceTile.southNormal;
+        var eastNormal = surfaceTile.eastNormal;
+        var northNormal = surfaceTile.northNormal;
+        var maximumHeight = surfaceTile.maximumHeight;
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            southwestCornerCartesian = frameState.scene2D.projection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
+            southwestCornerCartesian.z = southwestCornerCartesian.y;
+            southwestCornerCartesian.y = southwestCornerCartesian.x;
+            southwestCornerCartesian.x = 0.0;
+            northeastCornerCartesian = frameState.scene2D.projection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
+            northeastCornerCartesian.z = northeastCornerCartesian.y;
+            northeastCornerCartesian.y = northeastCornerCartesian.x;
+            northeastCornerCartesian.x = 0.0;
+            westNormal = negativeUnitY;
+            eastNormal = Cartesian3.UNIT_Y;
+            southNormal = negativeUnitZ;
+            northNormal = Cartesian3.UNIT_Z;
+            maximumHeight = 0.0;
+        }
+
+        var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
+        var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
+        var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
+
+        var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
+        var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
+        var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
+
+        var cameraHeight;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            cameraHeight = cameraCartographicPosition.height;
+        } else {
+            cameraHeight = cameraCartesianPosition.x;
+        }
+        var distanceFromTop = cameraHeight - maximumHeight;
+
+        var result = 0.0;
+
+        if (distanceToWestPlane > 0.0) {
+            result += distanceToWestPlane * distanceToWestPlane;
+        } else if (distanceToEastPlane > 0.0) {
+            result += distanceToEastPlane * distanceToEastPlane;
+        }
+
+        if (distanceToSouthPlane > 0.0) {
+            result += distanceToSouthPlane * distanceToSouthPlane;
+        } else if (distanceToNorthPlane > 0.0) {
+            result += distanceToNorthPlane * distanceToNorthPlane;
+        }
+
+        if (distanceFromTop > 0.0) {
+            result += distanceFromTop * distanceFromTop;
+        }
+
+        return Math.sqrt(result);
+    };
 
     /**
      * Releases the geometry for a given tile.
      *
      * @memberof GlobeSurfaceTileProvider
-     * @function
      *
-     * @param {Object} tile The tile instance.
+     * @param {QuadtreeTile} tile The tile instance.
      */
-    GlobeSurfaceTileProvider.prototype.releaseTile = DeveloperError.throwInstantiationError;
+    GlobeSurfaceTileProvider.prototype.releaseTile = function(tile) {
+        if (defined(tile.data)) {
+            tile.data.freeResources();
+        }
+    };
+
+    function createTileUniformMap() {
+        var uniformMap = {
+            u_zoomedOutOceanSpecularIntensity : function() {
+                return this.zoomedOutOceanSpecularIntensity;
+            },
+            u_oceanNormalMap : function() {
+                return this.oceanNormalMap;
+            },
+            u_lightingFadeDistance : function() {
+                return this.lightingFadeDistance;
+            },
+            u_center3D : function() {
+                return this.center3D;
+            },
+            u_tileRectangle : function() {
+                return this.tileRectangle;
+            },
+            u_modifiedModelView : function() {
+                return this.modifiedModelView;
+            },
+            u_dayTextures : function() {
+                return this.dayTextures;
+            },
+            u_dayTextureTranslationAndScale : function() {
+                return this.dayTextureTranslationAndScale;
+            },
+            u_dayTextureTexCoordsRectangle : function() {
+                return this.dayTextureTexCoordsRectangle;
+            },
+            u_dayTextureAlpha : function() {
+                return this.dayTextureAlpha;
+            },
+            u_dayTextureBrightness : function() {
+                return this.dayTextureBrightness;
+            },
+            u_dayTextureContrast : function() {
+                return this.dayTextureContrast;
+            },
+            u_dayTextureHue : function() {
+                return this.dayTextureHue;
+            },
+            u_dayTextureSaturation : function() {
+                return this.dayTextureSaturation;
+            },
+            u_dayTextureOneOverGamma : function() {
+                return this.dayTextureOneOverGamma;
+            },
+            u_dayIntensity : function() {
+                return this.dayIntensity;
+            },
+            u_southAndNorthLatitude : function() {
+                return this.southAndNorthLatitude;
+            },
+            u_southMercatorYLowAndHighAndOneOverHeight : function() {
+               return this.southMercatorYLowAndHighAndOneOverHeight;
+            },
+            u_waterMask : function() {
+                return this.waterMask;
+            },
+            u_waterMaskTranslationAndScale : function() {
+                return this.waterMaskTranslationAndScale;
+            },
+
+            zoomedOutOceanSpecularIntensity : 0.5,
+            oceanNormalMap : undefined,
+            lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
+
+            center3D : undefined,
+            modifiedModelView : new Matrix4(),
+            tileRectangle : new Cartesian4(),
+
+            dayTextures : [],
+            dayTextureTranslationAndScale : [],
+            dayTextureTexCoordsRectangle : [],
+            dayTextureAlpha : [],
+            dayTextureBrightness : [],
+            dayTextureContrast : [],
+            dayTextureHue : [],
+            dayTextureSaturation : [],
+            dayTextureOneOverGamma : [],
+            dayIntensity : 0.0,
+
+            southAndNorthLatitude : new Cartesian2(),
+            southMercatorYLowAndHighAndOneOverHeight : new Cartesian3(),
+
+            waterMask : undefined,
+            waterMaskTranslationAndScale : new Cartesian4()
+        };
+
+        return uniformMap;
+    }
+
+    function createWireframeVertexArrayIfNecessary(context, provider, tile) {
+        var surfaceTile = tile.data;
+
+        if (defined(surfaceTile)) {
+            return;
+        }
+
+        if (defined(surfaceTile.meshForWireframePromise)) {
+            return;
+        }
+
+        surfaceTile.meshForWireframePromise = surfaceTile.terrainData.createMesh(provider._terrainProvider.tilingScheme, tile.x, tile.y, tile.level);
+        if (!defined(surfaceTile.meshForWireframePromise)) {
+            // deferrred
+            return;
+        }
+
+        var vertexArray = surfaceTile.vertexArray;
+
+        when(surfaceTile.meshForWireframePromise, function(mesh) {
+            if (surfaceTile.vertexArray === vertexArray) {
+                surfaceTile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
+            }
+            surfaceTile.meshForWireframePromise = undefined;
+        });
+    }
 
     return GlobeSurfaceTileProvider;
 });

@@ -147,6 +147,7 @@ define([
      * @function
      *
      * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.

@@ -2,11 +2,13 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError'
+        '../Core/DeveloperError',
+        './QuadtreeTileState'
     ], function(
         defined,
         defineProperties,
-        DeveloperError) {
+        DeveloperError,
+        QuadtreeTileState) {
     "use strict";
 
     var QuadtreeTile = function QuadtreeTile(description) {
@@ -29,61 +31,50 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._tilingScheme = description.tilingScheme;
+        this._x = description.x;
+        this._y = description.y;
+        this._level = description.level;
+        this._parent = description.parent;
+        this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
         this._children = undefined;
 
-        /**
-         * The tiling scheme used to tile the surface.
-         * @type {TilingScheme}
-         */
-        this.tilingScheme = description.tilingScheme;
+        // QuadtreeTileReplacementQueue gets/sets these private properties.
+        this._replacementPrevious = undefined;
+        this._replacementNext = undefined;
+
+        // The distance from the camera to this tile, updated when the tile is selected
+        // for rendering.  We can get rid of this if we have a better way to sort by
+        // distance - for example, by using the natural ordering of a quadtree.
+        // QuadtreePrimitive gets/sets this private property.
+        this._distance = 0.0;
 
         /**
-         * The x coordinate.
-         * @type {Number}
+         * Gets or sets the current state of the tile in the tile load pipeline.
+         * @type {QuadtreeTileState}
+         * @default {@link QuadtreeTileState.START}
          */
-        this.x = description.x;
+        this.state = QuadtreeTileState.START;
 
         /**
-         * The y coordinate.
-         * @type {Number}
+         * Gets or sets a value indicating whether or not the tile is currently renderable.
+         * @type {Boolean}
+         * @default false
          */
-        this.y = description.y;
+        this.renderable = false;
 
         /**
-         * The level-of-detail, where zero is the coarsest, least-detailed.
-         * @type {Number}
+         * Gets or set a value indicating whether or not the tile was entire upsampled from its
+         * parent tile.  If all four children of a parent tile were upsampled from the parent,
+         * we will render the parent instead of the children even if the LOD indicates that
+         * the children would be preferable.
+         * @type {Boolean}
+         * @default false
          */
-        this.level = description.level;
+        this.upsampledFromParent = false;
 
         /**
-         * The parent of this tile in a tiling scheme.
-         * @type {QuadtreeTile}
-         */
-        this.parent = description.parent;
-
-        /**
-         * The cartographic rectangle of the tile, with north, south, east and
-         * west properties in radians.
-         * @type {Rectangle}
-         */
-        this.rectangle = this.tilingScheme.tileXYToRectangle(this.x, this.y, this.level);
-
-        /**
-         * The previous tile in the {@link TileReplacementQueue}.
-         * @type {QuadtreeTile}
-         * @default undefined
-         */
-        this.replacementPrevious = undefined;
-
-        /**
-         * The next tile in the {@link TileReplacementQueue}.
-         * @type {QuadtreeTile}
-         * @default undefined
-         */
-        this.replacementNext = undefined;
-
-        /**
-         * Additional data associated with this tile.  The exact content is specific to the
+         * Gets or sets the additional data associated with this tile.  The exact content is specific to the
          * {@link QuadtreeTileProvider}.
          * @type {Object}
          * @default undefined
@@ -92,6 +83,67 @@ define([
     };
 
     defineProperties(QuadtreeTile.prototype, {
+        /**
+         * Gets the tiling scheme used to tile the surface.
+         * @type {TilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets the tile X coordinate.
+         * @type {Number}
+         */
+        x : {
+            get : function() {
+                return this._x;
+            }
+        },
+
+        /**
+         * Gets the tile Y coordinate.
+         * @type {Number}
+         */
+        y : {
+            get : function() {
+                return this._y;
+            }
+        },
+
+        /**
+         * Gets the level-of-detail, where zero is the coarsest, least-detailed.
+         * @type {Number}
+         */
+        level : {
+            get : function() {
+                return this._level;
+            }
+        },
+
+        /**
+         * Gest the parent tile of this tile.
+         * @type {QuadtreeTile}
+         */
+        parent : {
+            get : function() {
+                return this._parent;
+            }
+        },
+
+        /**
+         * Gets the cartographic rectangle of the tile, with north, south, east and
+         * west properties in radians.
+         * @type {Rectangle}
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        },
+
         /**
          * An array of tiles that would be at the next level of the tile tree.
          * @memberof Tile.prototype
@@ -133,8 +185,24 @@ define([
 
                 return this._children;
             }
+        },
+
+        needsLoading : {
+            get : function() {
+                return this.state.value < QuadtreeTileState.READY.value;
+            }
         }
     });
+
+    QuadtreeTile.prototype.freeResources = function() {
+        this.state = QuadtreeTileState.START;
+        this.renderable = false;
+        this.upsampledFromParent = false;
+
+        if (defined(this.data.freeResources)) {
+            this.data.freeResources();
+        }
+    };
 
     return QuadtreeTile;
 });

@@ -6,10 +6,10 @@ define(['../Core/Enumeration'], function(Enumeration) {
      * @private
      */
     var QuadtreeTileState = {
-        FAILED : new Enumeration(0, 'FAILED'),
+        START : new Enumeration(0, 'START'),
         LOADING : new Enumeration(1, 'LOADING'),
         READY : new Enumeration(2, 'READY'),
-        UPSAMPLED_FROM_PARENT : new Enumeration(3, 'UPSAMPLED_FROM_PARENT')
+        FAILED : new Enumeration(3, 'FAILED')
     };
 
     return QuadtreeTileState;

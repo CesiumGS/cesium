@@ -33,8 +33,10 @@ define([
         '../Renderer/Pass',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
+        './GlobeSurfaceTileProvider',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
+        './QuadtreePrimitive',
         './SceneMode',
         './TerrainProvider',
         '../Shaders/GlobeFS',
@@ -78,8 +80,10 @@ define([
         Pass,
         GlobeSurface,
         GlobeSurfaceShaderSet,
+        GlobeSurfaceTileProvider,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
+        QuadtreePrimitive,
         SceneMode,
         TerrainProvider,
         GlobeFS,
@@ -113,14 +117,22 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
-        this._surface = new GlobeSurface({
+        /*this._surface = new GlobeSurface({
             terrainProvider : terrainProvider,
             imageryLayerCollection : imageryLayerCollection
+        });*/
+
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
+
+        this._surface = new QuadtreePrimitive({
+            tileProvider : new GlobeSurfaceTileProvider({
+                terrainProvider : terrainProvider,
+                imageryLayers : imageryLayerCollection,
+                surfaceShaderSet : this._surfaceShaderSet
+            })
         });
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
-
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -382,7 +394,7 @@ define([
     var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
     function fillPoles(globe, context, frameState) {
-        var terrainProvider = globe._surface._terrainProvider;
+        var terrainProvider = globe._surface._tileProvider._terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -647,8 +659,8 @@ define([
                 });
         }
 
-        if (this._surface._terrainProvider.ready &&
-            this._surface._terrainProvider.hasWaterMask() &&
+        if (this._surface._tileProvider.ready &&
+            this._surface._tileProvider._terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -664,12 +676,11 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
-        var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface._tileProvider.ready && this._surface._tileProvider._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
-        if (!defined(this._surfaceShaderSet) ||
-            !defined(this._northPoleCommand.shaderProgram) ||
+        if (!defined(this._northPoleCommand.shaderProgram) ||
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
             projectionChanged ||
@@ -776,13 +787,15 @@ define([
             this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
             this._surface._tileCacheSize = this.tileCacheSize;
             this._surface.terrainProvider = this.terrainProvider;
-            this._surface.update(context,
-                    frameState,
-                    commandList,
-                    this._drawUniforms,
-                    this._surfaceShaderSet,
-                    this._rsColor,
-                    this._projection);
+//            this._surface.update(context,
+//                    frameState,
+//                    commandList,
+//                    this._drawUniforms,
+//                    this._surfaceShaderSet,
+//                    this._rsColor,
+//                    this._projection);
+
+            this._surface.update(context, frameState, commandList);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {

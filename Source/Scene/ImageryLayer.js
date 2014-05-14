@@ -381,6 +381,8 @@ define([
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
     ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
+        var surfaceTile = tile.data;
+
         if (defined(this._minimumTerrainLevel) && tile.level < this._minimumTerrainLevel) {
             return false;
         }
@@ -391,7 +393,7 @@ define([
         var imageryProvider = this._imageryProvider;
 
         if (!defined(insertionPoint)) {
-            insertionPoint = tile.imagery.length;
+            insertionPoint = surfaceTile.imagery.length;
         }
 
         if (!imageryProvider.ready) {
@@ -399,7 +401,7 @@ define([
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
             this._skeletonPlaceholder.loadingImagery.addReference();
-            tile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
+            surfaceTile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
             return true;
         }
 
@@ -548,7 +550,7 @@ define([
 
                 var texCoordsRectangle = new Cartesian4(minU, minV, maxU, maxV);
                 var imagery = this.getImageryFromCache(i, j, imageryLevel, imageryRectangle);
-                tile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle));
+                surfaceTile.imagery.splice(insertionPoint, 0, new TileImagery(imagery, texCoordsRectangle));
                 ++insertionPoint;
             }
         }
