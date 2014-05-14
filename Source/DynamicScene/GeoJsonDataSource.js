@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/createGuid',
+        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/defined',
@@ -22,6 +23,7 @@ define([
         '../ThirdParty/topojson'
     ], function(
         createGuid,
+        Cartesian3,
         Cartographic,
         Color,
         defined,
@@ -534,8 +536,7 @@ define([
     };
 
     function defaultCrsFunction(coordinates) {
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
     }
 
     /**

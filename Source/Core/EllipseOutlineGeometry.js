@@ -156,10 +156,8 @@ define([
      * @see EllipseOutlineGeometry#createGeometry
      *
      * @example
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
      * var ellipse = new Cesium.EllipseOutlineGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
      *   rotation : Cesium.Math.toRadians(60.0)
