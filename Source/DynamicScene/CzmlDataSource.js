@@ -888,7 +888,7 @@ define(['../Core/Cartesian2',
                     tmp = vertexPositionsData.cartographicDegrees;
                     if (defined(tmp)) {
                         for (i = 0, len = tmp.length; i < len; i += 3) {
-                            values.push(Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2], scratchCartographic)));
+                            values.push(Cartesian3.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                         }
                         vertexPositionsData.array = values;
                     }
