@@ -8,8 +8,7 @@ define([
         './Matrix3',
         './QuadraticRealPolynomial',
         './QuarticRealPolynomial'
-    ],
-    function(
+    ], function(
         Cartesian3,
         Cartographic,
         defined,

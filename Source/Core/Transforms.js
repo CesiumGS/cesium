@@ -16,8 +16,7 @@ define([
         './Matrix3',
         './Matrix4',
         './TimeConstants'
-    ],
-    function(
+    ], function(
         when,
         Cartesian2,
         Cartesian3,

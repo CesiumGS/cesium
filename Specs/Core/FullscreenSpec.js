@@ -2,7 +2,7 @@
 defineSuite([
         'Core/FeatureDetection',
         'Core/Fullscreen'
-    ],function(
+    ], function(
         FeatureDetection,
         Fullscreen) {
     "use strict";

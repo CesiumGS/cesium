@@ -4,8 +4,7 @@ define([
         './DeveloperError',
         './Math',
         './QuadraticRealPolynomial'
-    ],
-    function(
+    ], function(
         CubicRealPolynomial,
         DeveloperError,
         CesiumMath,

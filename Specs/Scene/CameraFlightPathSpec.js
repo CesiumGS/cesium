@@ -11,7 +11,7 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createScene',
         'Specs/destroyScene'
-    ], function (
+    ], function(
         Cartesian3,
         Cartographic,
         Ellipsoid,

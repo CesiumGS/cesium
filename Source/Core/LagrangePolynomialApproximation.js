@@ -1,7 +1,7 @@
 /*global define*/
 define([
         './defined'
-    ],function(
+    ], function(
         defined) {
     "use strict";
 

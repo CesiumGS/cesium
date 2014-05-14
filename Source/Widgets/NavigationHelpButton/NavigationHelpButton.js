@@ -8,7 +8,7 @@ define([
         '../../ThirdParty/knockout',
         '../getElement',
         './NavigationHelpButtonViewModel'
-    ], function (
+    ], function(
         buildModuleUrl,
         defined,
         defineProperties,

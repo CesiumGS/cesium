@@ -2,8 +2,7 @@
 define([
         '../../Core/Color',
         '../../Core/defined'
-    ],
-        function(
+    ], function(
         Color,
         defined) {
     "use strict";

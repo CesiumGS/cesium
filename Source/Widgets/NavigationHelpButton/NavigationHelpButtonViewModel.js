@@ -7,7 +7,7 @@ define([
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout',
         '../createCommand'
-    ], function (
+    ], function(
         Cartesian3,
         defaultValue,
         defined,

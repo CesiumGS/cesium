@@ -4,8 +4,7 @@ defineSuite([
         'Core/Math',
         'Core/TimeConstants',
         'Core/TimeStandard'
-    ],
-function(
+    ], function(
         JulianDate,
         CesiumMath,
         TimeConstants,
