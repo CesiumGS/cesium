@@ -125,7 +125,7 @@ option:disabled {
     background:linear-gradient(to bottom, #dedede 5%, #f9f9f9 100%);
 }
 
-.sandcastle-button:active {
+.sandcastle-button:not(select):active {
     -webkit-transform: translateY(1px);
     -moz-transform: translateY(1px);
     -ms-transform: translateY(1px);

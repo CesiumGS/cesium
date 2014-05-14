@@ -3,7 +3,6 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
-        '../../Core/DefaultProxy',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
@@ -11,12 +10,11 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Event',
-        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/CentralBody',
+        '../../Scene/Globe',
         '../../Scene/Credit',
         '../../Scene/Moon',
         '../../Scene/Scene',
@@ -29,7 +27,6 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
-        DefaultProxy,
         defaultValue,
         defined,
         defineProperties,
@@ -37,12 +34,11 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
-        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        CentralBody,
+        Globe,
         Credit,
         Moon,
         Scene,
@@ -121,7 +117,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : new Cesium.OpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : 'http://cesiumjs.org/smallterrain',
+     *         url : '//cesiumjs.org/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -156,10 +152,13 @@ define([
         this._element = widgetNode;
 
         try {
-            var svgNS = "http://www.w3.org/2000/svg";
-            var zoomDetector = document.createElementNS(svgNS, 'svg');
-            zoomDetector.style.display = 'none';
-            widgetNode.appendChild(zoomDetector);
+            if (defined(document.createElementNS)) {
+                var svgNS = "http://www.w3.org/2000/svg";
+                var zoomDetector = document.createElementNS(svgNS, 'svg');
+                zoomDetector.style.display = 'none';
+                widgetNode.appendChild(zoomDetector);
+                this._zoomDetector = zoomDetector;
+            }
 
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
@@ -183,8 +182,8 @@ define([
             var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesiumjs.org/');
             creditDisplay.addDefaultCredit(cesiumCredit);
 
-            var centralBody = new CentralBody(ellipsoid);
-            scene.primitives.centralBody = centralBody;
+            var globe = new Globe(ellipsoid);
+            scene.globe = globe;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {
@@ -214,21 +213,20 @@ define([
             }
 
             if (imageryProvider !== false) {
-                centralBody.imageryLayers.addImageryProvider(imageryProvider);
+                scene.imageryLayers.addImageryProvider(imageryProvider);
             }
 
             //Set the terrain provider if one is provided.
             if (defined(options.terrainProvider)) {
-                centralBody.terrainProvider = options.terrainProvider;
+                scene.terrainProvider = options.terrainProvider;
             }
 
             this._container = container;
             this._canvas = canvas;
-            this._zoomDetector = zoomDetector;
             this._canvasWidth = 0;
             this._canvasHeight = 0;
             this._scene = scene;
-            this._centralBody = centralBody;
+            this._globe = globe;
             this._clock = defaultValue(options.clock, new Clock());
             this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
             this._useDefaultRenderLoop = undefined;
@@ -240,10 +238,10 @@ define([
 
             if (options.sceneMode) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
-                    this._scene.morphTo2D();
+                    this._scene.morphTo2D(0);
                 }
                 if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                    this._scene.morphToColumbusView();
+                    this._scene.morphToColumbusView(0);
                 }
             }
 
@@ -302,18 +300,6 @@ define([
         scene : {
             get : function() {
                 return this._scene;
-            }
-        },
-
-        /**
-         * Gets the primary central body.
-         * @memberof CesiumWidget.prototype
-         *
-         * @type {CentralBody}
-         */
-        centralBody : {
-            get : function() {
-                return this._centralBody;
             }
         },
 
@@ -403,7 +389,7 @@ define([
 
         var errorHeader = document.createElement('div');
         errorHeader.className = 'cesium-widget-errorPanel-header';
-        errorHeader.textContent = title;
+        errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
 
         var resizeCallback;
@@ -415,11 +401,13 @@ define([
                 errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
             };
             resizeCallback();
-            window.addEventListener('resize', resizeCallback, false);
+            if (defined(window.addEventListener)) {
+                window.addEventListener('resize', resizeCallback, false);
+            }
 
             var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.textContent = error;
+            errorMessage.appendChild(document.createTextNode(error));
             errorPanelScroller.appendChild(errorMessage);
         }
 
@@ -428,11 +416,11 @@ define([
         content.appendChild(buttonPanel);
 
         var okButton = document.createElement('button');
-        okButton.type = 'button';
+        okButton.setAttribute('type', 'button');
         okButton.className = 'cesium-button';
-        okButton.textContent = 'OK';
+        okButton.appendChild(document.createTextNode('OK'));
         okButton.onclick = function() {
-            if (defined(resizeCallback)) {
+            if (defined(resizeCallback) && defined(window.removeEventListener)) {
                 window.removeEventListener('resize', resizeCallback, false);
             }
             element.removeChild(overlay);

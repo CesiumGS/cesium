@@ -8,7 +8,6 @@ define([
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
-        '../../ThirdParty/when',
         '../getElement'
     ], function(
         defaultValue,
@@ -19,7 +18,6 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
-        when,
         getElement) {
     "use strict";
 
@@ -157,12 +155,12 @@ define([
 
             var files = event.dataTransfer.files;
             var length = files.length;
-            for ( var i = 0; i < length; i++) {
-                var f = files[i];
+            for (var i = 0; i < length; i++) {
+                var file = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f.name);
-                reader.onerror = createDropErrorCallback(viewer, f.name);
-                reader.readAsText(f);
+                reader.onload = createOnLoadCallback(viewer, file);
+                reader.onerror = createDropErrorCallback(viewer, file);
+                reader.readAsText(file);
             }
         }
 
@@ -200,43 +198,40 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
-    function endsWith(str, suffix) {
-        var strLength = str.length;
-        var suffixLength = suffix.length;
-        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
-    }
-
-    function createOnLoadCallback(viewer, source) {
-        var DataSource;
-        var sourceUpperCase = source.toUpperCase();
-        if (endsWith(sourceUpperCase, ".CZML")) {
-            DataSource = CzmlDataSource;
-        } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
-        endsWith(sourceUpperCase, ".JSON") || //
-        endsWith(sourceUpperCase, ".TOPOJSON")) {
-            DataSource = GeoJsonDataSource;
-        } else {
-            viewer.dropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-            return undefined;
-        }
-
+    function createOnLoadCallback(viewer, file) {
         return function(evt) {
-            var dataSource = new DataSource();
+            var fileName = file.name;
             try {
-                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
-                    viewer.dataSources.add(dataSource);
-                }, function(error) {
-                    viewer.dropError.raiseEvent(viewer, source, error);
-                });
+                var dataSource;
+                var loadPromise;
+
+                if (/\.czml$/i.test(fileName)) {
+                    dataSource = new CzmlDataSource(fileName);
+                    dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
+                    dataSource = new GeoJsonDataSource(fileName);
+                    loadPromise = dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else {
+                    viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
+                    return;
+                }
+
+                viewer.dataSources.add(dataSource);
+
+                if (defined(loadPromise)) {
+                    loadPromise.otherwise(function(error) {
+                        viewer.dropError.raiseEvent(viewer, fileName, error);
+                    });
+                }
             } catch (error) {
-                viewer.dropError.raiseEvent(viewer, source, error);
+                viewer.dropError.raiseEvent(viewer, fileName, error);
             }
         };
     }
 
-    function createDropErrorCallback(viewer, name) {
+    function createDropErrorCallback(viewer, file) {
         return function(evt) {
-            viewer.dropError.raiseEvent(viewer, name, evt.target.error);
+            viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
         };
     }
 

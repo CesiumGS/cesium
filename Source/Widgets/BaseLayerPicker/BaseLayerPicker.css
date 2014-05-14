@@ -28,7 +28,7 @@
     position: absolute;
     top: auto;
     right: 0;
-    width: 240px;
+    width: 320px;
     max-height: 500px;
     margin-top: 5px;
     background-color: rgba(38, 38, 38, 0.75);
@@ -38,6 +38,21 @@
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+}
+
+.cesium-baseLayerPicker-sectionTitle {
+    display: block;
+    font-family: sans-serif;
+    font-size: 16pt;
+    text-align: left;
+    color: #edffff;
+}
+
+.cesium-baseLayerPicker-choices {
+    display: block;
+    position: relative;
+    top: auto;
+    right: 0;
 }
 
 .cesium-baseLayerPicker-item {

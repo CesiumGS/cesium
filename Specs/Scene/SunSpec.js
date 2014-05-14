@@ -33,7 +33,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.uniformState;
+        var us = scene._context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
@@ -42,7 +42,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('draws in Columbus view', function() {
@@ -52,7 +52,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.uniformState;
+        var us = scene._context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionColumbusView;
@@ -61,14 +61,14 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
         var sun = new Sun();
         sun.show = false;
 
-        var context = scene.context;
+        var context = scene._context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.uniformState;
@@ -89,7 +89,7 @@ defineSuite([
     it('does not render in 2D', function() {
         var sun = new Sun();
 
-        var context = scene.context;
+        var context = scene._context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.mode = SceneMode.SCENE2D;
@@ -101,8 +101,8 @@ defineSuite([
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
-
-        var command = sun.update(context, frameState);
+        scene._frameState = frameState;
+        var command = sun.update(scene);
         expect(command).not.toBeDefined();
 
         sun.destroy();
@@ -111,7 +111,7 @@ defineSuite([
     it('does not render without a render pass', function() {
         var sun = new Sun();
 
-        var context = scene.context;
+        var context = scene._context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         frameState.passes.render = false;
@@ -123,8 +123,8 @@ defineSuite([
         frameState.camera.lookAt(sunPosition, cameraPosition, Cartesian3.UNIT_Z);
 
         us.update(context, frameState);
-
-        var command = sun.update(context, frameState);
+        scene._frameState = frameState;
+        var command = sun.update(scene);
         expect(command).not.toBeDefined();
 
         sun.destroy();
@@ -144,7 +144,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
 
-        var us = scene.context.uniformState;
+        var us = scene._context.uniformState;
         var camera = scene.camera;
 
         var sunPosition = us.sunPositionWC;
@@ -153,7 +153,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('isDestroyed', function() {

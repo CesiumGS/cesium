@@ -27,7 +27,7 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var extent;
+    var rectangle;
     var rectangularSensor;
 
     function addAlphaAnimation(primitive, scene) {
@@ -40,25 +40,21 @@ require(['Cesium'], function(Cesium) {
         scene.animations.addOffsetIncrement(primitive.material);
     }
 
-    function resetExtentPropeties(extent) {
-        extent.material.uniforms.time = 1.0;
-        extent.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+    function resetRectanglePropeties(rectangle) {
+        rectangle.material.uniforms.time = 1.0;
+        rectangle.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.centralBody.ellipsoid;
         var scene = widget.scene;
+        var ellipsoid = scene.globe.ellipsoid;
         var primitives = scene.primitives;
 
-        extent = new Cesium.ExtentPrimitive({
-            extent : new Cesium.Extent(
-                        Cesium.Math.toRadians(-120.0),
-                        Cesium.Math.toRadians(20.0),
-                        Cesium.Math.toRadians(-80.0),
-                        Cesium.Math.toRadians(50.0)),
+        rectangle = new Cesium.RectanglePrimitive({
+            rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -80.0, 50.0),
             material : Cesium.Material.fromType('Color')
         });
-        primitives.add(extent);
+        primitives.add(rectangle);
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
@@ -87,8 +83,8 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
         scene.animations.removeAll();
-        resetExtentPropeties(extent);
-        addAlphaAnimation(extent, scene);
+        resetRectanglePropeties(rectangle);
+        addAlphaAnimation(rectangle, scene);
         Sandcastle.highlight(addAlphaAnimation);
     });
 

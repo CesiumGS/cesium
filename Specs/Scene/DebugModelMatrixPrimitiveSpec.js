@@ -67,12 +67,12 @@ defineSuite([
     it('renders', function() {
         var p = scene.primitives.add(new DebugModelMatrixPrimitive());
         scene.render();
-        expect(scene.context.readPixels()).not.toEqual([0, 0, 0, 255]);
+        expect(scene._context.readPixels()).not.toEqual([0, 0, 0, 255]);
 
         // Update and render again
         p.length = 100.0;
         scene.render();
-        expect(scene.context.readPixels()).not.toEqual([0, 0, 0, 255]);
+        expect(scene._context.readPixels()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render when show is false', function() {
@@ -80,7 +80,7 @@ defineSuite([
             show : false
         }));
         scene.render();
-        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene._context.readPixels()).toEqual([0, 0, 0, 255]);
     });
 
     it('is picked', function() {
