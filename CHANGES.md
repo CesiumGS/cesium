@@ -8,6 +8,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
+  * Removed `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
