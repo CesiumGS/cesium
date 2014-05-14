@@ -1006,7 +1006,8 @@ define([
         var billboardsToUpdate = billboardCollection._billboardsToUpdate;
         var modelMatrix = billboardCollection._modelMatrix;
 
-        if (billboardCollection._mode !== mode ||
+        if (billboardCollection._createVertexArray ||
+            billboardCollection._mode !== mode ||
             billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
             !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
