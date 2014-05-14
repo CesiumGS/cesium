@@ -11,6 +11,7 @@ defineSuite([
          'Core/defaultValue',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
+         'Renderer/DrawCommand',
          'Scene/FrameState',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode'
@@ -26,6 +27,7 @@ defineSuite([
          defaultValue,
          BufferUsage,
          ClearCommand,
+         DrawCommand,
          FrameState,
          OrthographicFrustum,
          SceneMode) {
@@ -79,12 +81,13 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             modelMatrix : modelMatrix
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();

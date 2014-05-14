@@ -9,7 +9,8 @@ defineSuite([
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
+         'Renderer/ClearCommand',
+         'Renderer/DrawCommand'
      ], 'Renderer/BuiltinFunctions', function(
          createContext,
          destroyContext,
@@ -20,7 +21,8 @@ defineSuite([
          Cartesian3,
          EncodedCartesian3,
          BufferUsage,
-         ClearCommand) {
+         ClearCommand,
+         DrawCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,12 +49,13 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             uniformMap : uniformMap
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();

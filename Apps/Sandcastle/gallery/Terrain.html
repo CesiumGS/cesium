@@ -107,7 +107,10 @@ require(['Cesium'], function(Cesium) {
                 billboards = new Cesium.BillboardCollection();
 
                 Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                    var textureAtlas = scene.createTextureAtlas({images : [image]});
+                    var textureAtlas = new Cesium.TextureAtlas({
+                        scene : scene,
+                        images : [image]
+                    });
                     billboards.textureAtlas = textureAtlas;
                 });
             } else {

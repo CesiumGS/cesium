@@ -377,7 +377,6 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#view
          * @see czm_view
          * @see Camera#inverseViewMatrix
          */
@@ -394,7 +393,6 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#inverseView
          * @see czm_inverseView
          * @see Camera#viewMatrix
          */

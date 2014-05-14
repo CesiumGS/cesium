@@ -13,14 +13,13 @@ define([
         '../Core/Math',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Core/Intersect',
-        '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
+        './Pass',
+        './BlendingState',
         './Material',
         './SceneMode',
         './Polyline',
@@ -41,14 +40,13 @@ define([
         CesiumMath,
         ComponentDatatype,
         IndexDatatype,
-        PrimitiveType,
         BoundingSphere,
         Intersect,
-        BlendingState,
         BufferUsage,
         DrawCommand,
         createShaderSource,
         Pass,
+        BlendingState,
         Material,
         SceneMode,
         Polyline,
@@ -279,8 +277,8 @@ define([
             this._createVertexArray = true;
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
-                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.release();
+                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
+                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.destroy();
             }
             polyline._destroy();
             return true;
@@ -512,8 +510,9 @@ define([
                             var translucent = currentMaterial.isTranslucent();
 
                             if (commandIndex >= commandsLength) {
-                                command = new DrawCommand();
-                                command.owner = polylineCollection;
+                                command = new DrawCommand({
+                                    owner : polylineCollection
+                                });
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -523,7 +522,6 @@ define([
 
                             command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
-                            command.primitiveType = PrimitiveType.TRIANGLES;
                             command.shaderProgram = sp;
                             command.vertexArray = va.va;
                             command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
@@ -579,8 +577,9 @@ define([
 
                 if (defined(currentId) && count > 0) {
                     if (commandIndex >= commandsLength) {
-                        command = new DrawCommand();
-                        command.owner = polylineCollection;
+                        command = new DrawCommand({
+                            owner : polylineCollection
+                        });
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
@@ -590,7 +589,6 @@ define([
 
                     command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
-                    command.primitiveType = PrimitiveType.TRIANGLES;
                     command.shaderProgram = sp;
                     command.vertexArray = va.va;
                     command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
@@ -993,7 +991,7 @@ define([
             if (defined(polylines[i])) {
                 var bucket = polylines[i]._bucket;
                 if (defined(bucket)) {
-                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
                 }
             }
         }
@@ -1057,8 +1055,8 @@ define([
         var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
-        this.shaderProgram = context.shaderCache.getShaderProgram(vsSource, fsSource, attributeLocations);
-        this.pickShaderProgram = context.shaderCache.getShaderProgram(vsSource, fsPick, attributeLocations);
+        this.shaderProgram = context.createShaderProgram(vsSource, fsSource, attributeLocations);
+        this.pickShaderProgram = context.createShaderProgram(vsSource, fsPick, attributeLocations);
     };
 
     function intersectsIDL(polyline) {

@@ -126,6 +126,7 @@ defineSuite([
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
         expect(primitive.vertexCacheOptimize).toEqual(false);
+        expect(primitive.interleave).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.allowPicking).toEqual(true);
@@ -375,7 +376,7 @@ defineSuite([
         scene.camera.viewRectangle(rectangle1);
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
         expect(pixels[2]).toBeGreaterThanOrEqualTo(0);

@@ -192,6 +192,8 @@ define([
     /**
      * Creates a vertex array for wireframe rendering of a terrain tile.
      *
+     * @private
+     *
      * @param {Context} context The context in which to create the vertex array.
      * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
      *                      will share vertex buffers with this existing one.

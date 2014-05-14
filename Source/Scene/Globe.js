@@ -27,10 +27,10 @@ define([
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
+        './Pass',
+        './DepthFunction',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './EllipsoidTerrainProvider',
@@ -72,10 +72,10 @@ define([
         Transforms,
         BufferUsage,
         ClearCommand,
-        DepthFunction,
         DrawCommand,
         createShaderSource,
         Pass,
+        DepthFunction,
         GlobeSurface,
         GlobeSurfaceShaderSet,
         EllipsoidTerrainProvider,
@@ -125,26 +125,25 @@ define([
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        var clearDepthCommand = new ClearCommand();
-        clearDepthCommand.depth = 1.0;
-        clearDepthCommand.stencil = 0;
-        clearDepthCommand.owner = this;
-        this._clearDepthCommand = clearDepthCommand;
+        this._clearDepthCommand = new ClearCommand({
+            depth : 1.0,
+            stencil : 0,
+            owner : this
+        });
 
-        this._depthCommand = new DrawCommand();
-        this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
-        this._depthCommand.pass = Pass.OPAQUE;
-        this._depthCommand.owner = this;
-
-        this._northPoleCommand = new DrawCommand();
-        this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._northPoleCommand.pass = Pass.OPAQUE;
-        this._northPoleCommand.owner = this;
-        this._southPoleCommand = new DrawCommand();
-        this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand.pass = Pass.OPAQUE;
-        this._southPoleCommand.owner = this;
+        this._depthCommand = new DrawCommand({
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._northPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._southPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
@@ -637,10 +636,8 @@ define([
             this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(depthQuad);
         }
 
-        var shaderCache = context.shaderCache;
-
         if (!defined(this._depthCommand.shaderProgram)) {
-            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+            this._depthCommand.shaderProgram = context.createShaderProgram(
                 GlobeVSDepth,
                 GlobeFSDepth, {
                     position : 0
@@ -730,7 +727,7 @@ define([
             });
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+            var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
                 GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
@@ -843,10 +840,10 @@ define([
 
         this._surfaceShaderSet = this._surfaceShaderSet && this._surfaceShaderSet.destroy();
 
-        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
+        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.destroy();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
 
-        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.release();
+        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.destroy();
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();
