@@ -491,7 +491,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @param {Billboard} billboard The billboard to check for.
+     * @param {Billboard} [billboard] The billboard to check for.
      *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
