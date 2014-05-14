@@ -119,7 +119,7 @@ forEachFile('sourcefiles', function(relativePath, file) {
 
     contents = result[1] +
                outputNames +
-               result[4] +
+               result[4].replace(/^[,\s]+/, ', ').trim() +
                outputIdentifiers +
                ') {' +
                result[6];
