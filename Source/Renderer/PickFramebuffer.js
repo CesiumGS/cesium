@@ -24,10 +24,6 @@ define([
         // Override per-command states
         var passState = new PassState(context);
         passState.blendingEnabled = false;
-        passState.scissorTest = {
-            enabled : true,
-            rectangle : new BoundingRectangle()
-        };
 
         this._context = context;
         this._fb = undefined;
@@ -38,10 +34,8 @@ define([
 
     PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
         var context = this._context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
+        var width = screenSpaceRectangle.width;
+        var height = screenSpaceRectangle.height;
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
         if ((!defined(this._fb)) || (this._width !== width) || (this._height !== height)) {
@@ -55,7 +49,9 @@ define([
                     height : height
                 })],
                 depthRenderbuffer : context.createRenderbuffer({
-                    format : RenderbufferFormat.DEPTH_COMPONENT16
+                    format : RenderbufferFormat.DEPTH_COMPONENT16,
+                    width : width,
+                    height : height
                 })
             });
             this._passState.framebuffer = this._fb;
@@ -72,8 +68,8 @@ define([
 
         var context = this._context;
         var pixels = context.readPixels({
-            x : screenSpaceRectangle.x,
-            y : screenSpaceRectangle.y,
+            x : 0,
+            y : 0,
             width : width,
             height : height,
             framebuffer : this._fb

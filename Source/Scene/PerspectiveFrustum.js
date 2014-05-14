@@ -63,6 +63,42 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        /**
+         * Gets or sets the offset of the frustum from the left plane, expressed as a fraction of the total screen width.  Any value other than 0.0
+         * creates an off-center frustum.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.leftOffset = 0.0;
+        this._leftOffset = 0.0;
+
+        /**
+         * Gets or sets the offset of the frustum from the right plane, expressed as a fraction of the total screen width.  Any value other than 0.0
+         * creates an off-center frustum.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.rightOffset = 0.0;
+        this._rightOffset = 0.0;
+
+        /**
+         * Gets or sets the offset of the frustum from the top plane, expressed as a fraction of the total screen height.  Any value other than 0.0
+         * creates an off-center frustum.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.topOffset = 0.0;
+        this._topOffset = 0.0;
+
+        /**
+         * Gets or sets the offset of the frustum from the bottom plane, expressed as a fraction of the total screen height.  Any value other than 0.0
+         * creates an off-center frustum.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.bottomOffset = 0.0;
+        this._bottomOffset = 0.0;
     };
 
     function update(frustum) {
@@ -75,7 +111,9 @@ define([
         var f = frustum._offCenterFrustum;
 
         if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
+                frustum.near !== frustum._near || frustum.far !== frustum._far ||
+                frustum.leftOffset !== frustum._leftOffset || frustum.rightOffset !== frustum._rightOffset ||
+                frustum.topOffset !== frustum._topOffset || frustum.bottomOffset !== frustum._bottomOffset) {
             //>>includeStart('debug', pragmas.debug);
             if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
                 throw new DeveloperError('fovy must be in the range [0, PI).');
@@ -94,6 +132,10 @@ define([
             frustum._aspectRatio = frustum.aspectRatio;
             frustum._near = frustum.near;
             frustum._far = frustum.far;
+            frustum._leftOffset = frustum.leftOffset;
+            frustum._rightOffset = frustum.rightOffset;
+            frustum._topOffset = frustum.topOffset;
+            frustum._bottomOffset = frustum.bottomOffset;
 
             f.top = frustum.near * Math.tan(0.5 * frustum.fovy);
             f.bottom = -f.top;
@@ -101,6 +143,14 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            // now apply offsets
+            var dx = f.right - f.left;
+            f.left += dx * frustum.leftOffset;
+            f.right += dx * frustum.rightOffset;
+            var dy = f.top - f.bottom;
+            f.top += dy * frustum.topOffset;
+            f.bottom += dy * frustum.bottomOffset;
         }
     }
 
@@ -133,6 +183,28 @@ define([
             }
         }
     });
+
+    /**
+     * Configures the frustum to be an offset in a larger frustum.  This is an advanced feature that is
+     * primarily useful when rendering to multi-window setups or specialized hardware.  It can also be used
+     * to render a subset of a window.  For example, to render a single pixel for picking.
+     *
+     * @memberof PerspectiveFrustum
+     *
+     * @param {Number} fullWidth The full width of the larger window.
+     * @param {Number} fullHeight The full height of the larger window.
+     * @param {Number} x The X coordinate of the lower-left corner of the viewed portion of the larger window.
+     * @param {Number} y The Y coordinate of the lower-left corner of the viewed portion of the larger window.
+     * @param {Number} width The width of the viewed portion.
+     * @param {Number} height The height of the viewed portion.
+     */
+    PerspectiveFrustum.prototype.configureViewOffset = function(fullWidth, fullHeight, x, y, width, height) {
+        this.aspectRatio = fullWidth / fullHeight;
+        this.leftOffset = x / fullWidth;
+        this.rightOffset = -(fullWidth - (x + width)) / fullWidth;
+        this.bottomOffset = y / fullHeight;
+        this.topOffset = -(fullHeight - (y + height)) / fullHeight;
+    };
 
     /**
      * Creates a culling volume for this frustum.
@@ -216,6 +288,9 @@ define([
         result._aspectRatio = undefined;
         result._near = undefined;
         result._far = undefined;
+
+        result._xOffset = this._xOffset;
+        result._yOffset = this._yOffset;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 

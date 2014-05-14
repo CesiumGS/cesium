@@ -1304,40 +1304,17 @@ define([
         return ortho.computeCullingVolume(origin, camera.directionWC, camera.upWC);
     }
 
-    var perspPickingFrustum = new PerspectiveOffCenterFrustum();
+    var perspPickingFrustum = new PerspectiveFrustum();
 
     function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
         var camera = scene._camera;
         var frustum = camera.frustum;
-        var near = frustum.near;
 
         var drawingBufferWidth = scene.drawingBufferWidth;
         var drawingBufferHeight = scene.drawingBufferHeight;
 
-        var tanPhi = Math.tan(frustum.fovy * 0.5);
-        var tanTheta = frustum.aspectRatio * tanPhi;
-
-        var x = (2.0 / drawingBufferWidth) * drawingBufferPosition.x - 1.0;
-        var y = (2.0 / drawingBufferHeight) * (drawingBufferHeight - drawingBufferPosition.y) - 1.0;
-
-        var xDir = x * near * tanTheta;
-        var yDir = y * near * tanPhi;
-
-        scratchBufferDimensions.x = drawingBufferWidth;
-        scratchBufferDimensions.y = drawingBufferHeight;
-
-        var pixelSize = frustum.getPixelSize(scratchBufferDimensions, undefined, scratchPixelSize);
-        var pickWidth = pixelSize.x * width * 0.5;
-        var pickHeight = pixelSize.y * height * 0.5;
-
-        var offCenter = perspPickingFrustum;
-        offCenter.top = yDir + pickHeight;
-        offCenter.bottom = yDir - pickHeight;
-        offCenter.right = xDir + pickWidth;
-        offCenter.left = xDir - pickWidth;
-        offCenter.near = near;
-        offCenter.far = frustum.far;
-
+        var offCenter = frustum.clone(perspPickingFrustum);
+        offCenter.configureViewOffset(drawingBufferWidth, drawingBufferHeight, drawingBufferPosition.x - width * 0.5, drawingBufferPosition.y - height * 0.5, width, height);
         return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
@@ -1355,6 +1332,7 @@ define([
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
     var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
     var scratchPosition = new Cartesian2();
+    var scratchFrustum = new PerspectiveFrustum();
 
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
@@ -1391,18 +1369,26 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.passes.pick = true;
 
+        scratchRectangle.x = drawingBufferPosition.x - (rectangleWidth - 1.0) * 0.5;
+        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - (rectangleHeight - 1.0) * 0.5;
+
+        var originalFrustum = frameState.camera.frustum;
+        var newFrustum = originalFrustum.clone(scratchFrustum);
+        newFrustum.configureViewOffset(this.drawingBufferWidth, this.drawingBufferHeight, scratchRectangle.x, scratchRectangle.y, scratchRectangle.width, scratchRectangle.height);
+        frameState.camera.frustum = newFrustum;
+
         us.update(context, frameState);
 
         this._commandList.length = 0;
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
 
-        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
-
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero, true);
         var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
+
+        frameState.camera.frustum = originalFrustum;
+
         callAfterRenderFunctions(frameState);
         return object;
     };
