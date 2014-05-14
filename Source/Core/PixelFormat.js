@@ -3,7 +3,7 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * The format of a pixel, i.e., the number of components it has and what they represent.
      *
      * @exports PixelFormat
      */
