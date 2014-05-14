@@ -1352,6 +1352,23 @@ define([
             getValue : function(uniformState) {
                 return uniformState.temeToPseudoFixedMatrix;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
+         *
+         * @alias czm_resolutionScale
+         * @glslUniform
+         *
+         * @example
+         * uniform float czm_resolutionScale;
+         */
+        czm_resolutionScale : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLRenderingContext.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.resolutionScale;
+            }
         })
     };
 

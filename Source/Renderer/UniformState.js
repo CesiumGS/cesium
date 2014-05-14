@@ -143,6 +143,7 @@ define([
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
+        this._resolutionScale = 1.0;
     };
 
     defineProperties(UniformState.prototype, {
@@ -707,9 +708,15 @@ define([
             }
         },
 
-        highResolutionSnapScale : {
+        /**
+         * Gets the scaling factor for transforming from the canvas
+         * pixel space to canvas coordinate space.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        resolutionScale : {
             get : function() {
-                return 1.0;
+                return this._resolutionScale;
             }
         }
     });
@@ -820,6 +827,9 @@ define([
     UniformState.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.scene2D.projection;
+
+        var canvas = context._canvas;
+        this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
 
