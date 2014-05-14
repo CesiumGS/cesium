@@ -1354,7 +1354,7 @@ define([
      *
      * @memberof Context
      *
-     * @returns {CubeMap} DOC_TBA.
+     * @returns {CubeMap} The newly created cube map.
      *
      * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
      * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.

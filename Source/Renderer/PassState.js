@@ -45,7 +45,7 @@ define(function() {
          * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
          * </p>
          *
-         * @type DOC_TBA
+         * @type {Object}
          * @default undefined
          */
         this.scissorTest = undefined;
