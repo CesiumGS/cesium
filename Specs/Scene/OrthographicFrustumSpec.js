@@ -33,51 +33,51 @@ defineSuite([
         frustum.left = frustum.right + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('bottom greater than top throws an exception', function() {
         frustum.bottom = frustum.top + 1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('out of range near plane throws an exception', function() {
         frustum.near = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         frustum.far = 3.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('negative far plane throws an exception', function() {
         frustum.far = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no position throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no direction throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeCullingVolume with no up throws an exception', function() {
         expect(function() {
             return frustum.computeCullingVolume(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get frustum left plane', function() {
@@ -125,19 +125,19 @@ defineSuite([
     it('get pixel size throws without canvas dimensions', function() {
         expect(function() {
             return frustum.getPixelSize();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel size throws without canvas width less than or equal to zero', function() {
         expect(function() {
             return frustum.getPixelSize(new Cartesian2(0.0, 1.0));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel size throws without canvas height less than or equal to zero', function() {
         expect(function() {
             return frustum.getPixelSize(new Cartesian2(1.0, 0.0));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('get pixel size', function() {
@@ -150,7 +150,7 @@ defineSuite([
         var frustum = new OrthographicFrustum();
         expect(function() {
             return frustum.projectionMatrix;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clone', function() {

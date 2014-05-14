@@ -85,13 +85,13 @@ defineSuite([
                 mapStyle : BingMapsStyle.AERIAL
             });
         }
-        expect(constructWithoutServer).toThrow();
+        expect(constructWithoutServer).toThrowDeveloperError();
     });
 
-    it('can provide a root tile', function() {
+    it('returns valid value for hasAlphaChannel', function() {
         var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -127,31 +127,79 @@ defineSuite([
             mapStyle : mapStyle
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getKey()).toBeDefined();
-        expect(provider.getMapStyle()).toEqual(mapStyle);
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
+    it('can provide a root tile', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.COLLINS_BART;
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
+
+        jsonp.loadAndExecuteScript = function(url, functionName) {
+            expect(url.indexOf(metadataUrl) === 0).toEqual(true);
+            setTimeout(function() {
+                window[functionName]({
+                    "authenticationResultCode" : "ValidCredentials",
+                    "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
+                    "copyright" : "Copyright © 2012 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
+                    "resourceSets" : [{
+                        "estimatedTotal" : 1,
+                        "resources" : [{
+                            "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
+                            "imageHeight" : 256,
+                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                            "imageUrlSubdomains" : ["t0"],
+                            "imageWidth" : 256,
+                            "imageryProviders" : null,
+                            "vintageEnd" : null,
+                            "vintageStart" : null,
+                            "zoomMax" : 21,
+                            "zoomMin" : 1
+                        }]
+                    }],
+                    "statusCode" : 200,
+                    "statusDescription" : "OK",
+                    "traceId" : "c9cf8c74a8b24644974288c92e448972|EWRM003311|02.00.171.2600|"
+                });
+            }, 1);
+        };
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        expect(provider.url).toEqual(url);
+        expect(provider.key).toBeDefined();
+        expect(provider.mapStyle).toEqual(mapStyle);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
 
         runs(function() {
-            expect(provider.getTileWidth()).toEqual(256);
-            expect(provider.getTileHeight()).toEqual(256);
-            expect(provider.getMaximumLevel()).toEqual(20);
-            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
-            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
+            expect(provider.tileWidth).toEqual(256);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(20);
+            expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
         });
 
         waitsFor(function() {
-            return defined(provider.getCredit());
+            return defined(provider.credit);
         }, 'logo to become ready');
 
         runs(function() {
-            expect(provider.getCredit()).toBeInstanceOf(Object);
+            expect(provider.credit).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
@@ -162,7 +210,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
 
                 // Just return any old image.
@@ -186,7 +234,7 @@ defineSuite([
     it('routes requests through a proxy if one is specified', function() {
         var url = 'http://foo.bar.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
@@ -224,11 +272,11 @@ defineSuite([
             proxy : proxy
         });
 
-        expect(provider.getUrl()).toEqual(url);
-        expect(provider.getProxy()).toEqual(proxy);
+        expect(provider.url).toEqual(url);
+        expect(provider.proxy).toEqual(proxy);
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var tile000Image;
@@ -243,7 +291,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
 
                 // Just return any old image.
@@ -271,17 +319,17 @@ defineSuite([
         });
 
         var errorEventRaised = false;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.message.indexOf(url) >= 0).toEqual(true);
             errorEventRaised = true;
         });
 
         waitsFor(function() {
-            return provider.isReady() || errorEventRaised;
+            return provider.ready || errorEventRaised;
         }, 'imagery provider to become ready or raise error event');
 
         runs(function() {
-            expect(provider.isReady()).toEqual(false);
+            expect(provider.ready).toEqual(false);
             expect(errorEventRaised).toEqual(true);
         });
     });
@@ -323,7 +371,7 @@ defineSuite([
         var layer = new ImageryLayer(provider);
 
         var tries = 0;
-        provider.getErrorEvent().addEventListener(function(error) {
+        provider.errorEvent.addEventListener(function(error) {
             expect(error.timesRetried).toEqual(tries);
             ++tries;
             if (tries < 3) {
@@ -342,7 +390,7 @@ defineSuite([
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             // Succeed after 2 tries
             if (tries === 2) {
                 // valid URL
@@ -350,11 +398,11 @@ defineSuite([
             }
 
             // invalid URL
-            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred);
+            return loadWithXhr.defaultLoad(url, responseType, method, data, headers, deferred, overrideMimeType);
         };
 
         waitsFor(function() {
-            return provider.isReady();
+            return provider.ready;
         }, 'imagery provider to become ready');
 
         var imagery;

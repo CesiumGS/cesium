@@ -25,8 +25,6 @@ define([
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
      * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom of an extruded circle.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
@@ -34,25 +32,26 @@ define([
      *
      * @example
      * // Create a circle.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var circle = new CircleOutlineGeometry({
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var circle = new Cesium.CircleOutlineGeometry({
      *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   radius : 100000.0
      * });
-     * var geometry = CircleOutlineGeometry.createGeometry(circle);
+     * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
      */
     var CircleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-
         if (radius <= 0.0) {
             throw new DeveloperError('radius must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
             center : options.center,

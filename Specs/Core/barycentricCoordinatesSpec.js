@@ -53,24 +53,24 @@ defineSuite([
     it('throws without point', function() {
         expect(function() {
             barycentricCoordinates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p0', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p1', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p2', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3(), new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

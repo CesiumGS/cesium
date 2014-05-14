@@ -18,7 +18,7 @@ define([
      * @see Event
      *
      * @example
-     * var helper = new EventHelper();
+     * var helper = new Cesium.EventHelper();
      *
      * helper.add(someObject.event, listener1, this);
      * helper.add(otherObject.event, listener2, this);
@@ -42,14 +42,13 @@ define([
      * @returns {Function} A function that will remove this event listener when invoked.
      *
      * @see Event#addEventListener
-     *
-     * @exception {DeveloperError} event is required and must be a function.
-     * @exception {DeveloperError} listener is required and must be a function.
      */
     EventHelper.prototype.add = function(event, listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(event)) {
             throw new DeveloperError('event is required');
         }
+        //>>includeEnd('debug');
 
         var removalFunction = event.addEventListener(listener, scope);
         this._removalFunctions.push(removalFunction);

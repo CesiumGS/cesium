@@ -19,7 +19,7 @@ define([
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
-     * and {@link ExtentGeometry}, which supports all materials like {@link MaterialAppearance}
+     * and {@link RectangleGeometry}, which supports all materials like {@link MaterialAppearance}
      * with {@link MaterialAppearance.MaterialSupport.ALL}.  However, this appearance requires
      * fewer vertex attributes since the fragment shader can procedurally compute <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.
@@ -28,7 +28,7 @@ define([
      * @constructor
      *
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
-     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.faceForward=options.aboveGround] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link EllipsoidSurfaceAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.aboveGround=false] When <code>true</code>, the geometry is expected to be on the ellipsoid's surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
@@ -37,15 +37,15 @@ define([
      * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
      *
      * @example
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new PolygonGeometry({
-     *       vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.PolygonGeometry({
+     *       vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT,
      *       // ...
      *     })
      *   }),
-     *   appearance : new EllipsoidSurfaceAppearance({
-     *     material : Material.fromType('Stripe')
+     *   appearance : new Cesium.EllipsoidSurfaceAppearance({
+     *     material : Cesium.Material.fromType('Stripe')
      *   })
      * });
      *
@@ -137,9 +137,9 @@ define([
          *
          * @readonly
          *
-         * @default false
+         * @default true
          */
-        this.faceForward = defaultValue(options.faceForward, false);
+        this.faceForward = defaultValue(options.faceForward, aboveGround);
 
         /**
          * When <code>true</code>, the geometry is expected to appear translucent so

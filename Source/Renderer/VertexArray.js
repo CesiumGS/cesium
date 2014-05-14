@@ -2,12 +2,14 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         ComponentDatatype) {
@@ -16,17 +18,15 @@ define([
     function addAttribute(attributes, attribute, index) {
         var hasVertexBuffer = defined(attribute.vertexBuffer);
         var hasValue = defined(attribute.value);
+        var componentsPerAttribute = attribute.value ? attribute.value.length : attribute.componentsPerAttribute;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!hasVertexBuffer && !hasValue) {
             throw new DeveloperError('attribute must have a vertexBuffer or a value.');
         }
-
         if (hasVertexBuffer && hasValue) {
             throw new DeveloperError('attribute cannot have both a vertexBuffer and a value.  It must have either a vertexBuffer property defining per-vertex data or a value property defining data for all vertices.');
         }
-
-        var componentsPerAttribute = attribute.value ? attribute.value.length : attribute.componentsPerAttribute;
-
         if ((componentsPerAttribute !== 1) &&
             (componentsPerAttribute !== 2) &&
             (componentsPerAttribute !== 3) &&
@@ -37,15 +37,14 @@ define([
 
             throw new DeveloperError('attribute.componentsPerAttribute must be in the range [1, 4].');
         }
-
         if (defined(attribute.componentDatatype) && !ComponentDatatype.validate(attribute.componentDatatype)) {
             throw new DeveloperError('attribute must have a valid componentDatatype or not specify it.');
         }
-
         if (defined(attribute.strideInBytes) && (attribute.strideInBytes > 255)) {
             // WebGL limit.  Not in GL ES.
             throw new DeveloperError('attribute must have a strideInBytes less than or equal to 255 or not specify it.');
         }
+        //>>includeEnd('debug');
 
         // Shallow copy the attribute; we do not want to copy the vertex buffer.
         var attr = {
@@ -123,15 +122,15 @@ define([
      *
      * @internalConstructor
      *
-     * @exception {DeveloperError} attributes is required.
-     *
      * @see {@link Context#createVertexArray}
      * @see {@link Context#createVertexArrayFromGeometry}
      */
     var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
+        //>>includeStart('debug', pragmas.debug
         if (!defined(attributes)) {
             throw new DeveloperError('attributes is required.');
         }
+        //>>includeEnd('debug');
 
         var i;
         var vaAttributes = [];
@@ -147,7 +146,7 @@ define([
             if (defined(attribute.vertexBuffer)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
                 var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
-                numberOfVertices = attribute.vertexBuffer.getSizeInBytes() / bytes;
+                numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
                 break;
             }
         }
@@ -186,6 +185,30 @@ define([
         this._indexBuffer = indexBuffer;
     };
 
+    defineProperties(VertexArray.prototype, {
+        /**
+        * DOC_TBA
+        * @memberof VertexArray.prototype
+        * @type {Number}
+        */
+        numberOfAttributes : {
+            get : function() {
+                return this._attributes.length;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof VertexArray.prototype
+         * @type {Buffer}
+         */
+        indexBuffer : {
+            get : function() {
+                return this._indexBuffer;
+            }
+        }
+    });
+
     /**
      * DOC_TBA
      *
@@ -193,38 +216,16 @@ define([
      *
      * @memberof VertexArray
      *
-     * @exception {DeveloperError} index is required.
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getAttribute = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._attributes[index];
-    };
-
-    /**
-    * DOC_TBA
-    *
-    * @memberof VertexArray
-    *
-    * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-    */
-    VertexArray.prototype.getNumberOfAttributes = function() {
-        return this._attributes.length;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @returns {Buffer} DOC_TBA.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.getIndexBuffer = function() {
-        return this._indexBuffer;
     };
 
     VertexArray.prototype._bind = function() {
@@ -298,7 +299,7 @@ define([
      * // Destroying the vertex array implicitly calls destroy for each of its vertex
      * // buffers and its index buffer.
      * var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
-     *     BufferUsage.STATIC_DRAW);
+     *     Cesium.BufferUsage.STATIC_DRAW);
      * var vertexArray = context.createVertexArray({
      *     vertexBuffer : vertexBuffer,
      *     componentsPerAttribute : 3
@@ -311,13 +312,13 @@ define([
         var attributes = this._attributes;
         for ( var i = 0; i < attributes.length; ++i) {
             var vertexBuffer = attributes[i].vertexBuffer;
-            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.getVertexArrayDestroyable()) {
+            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.vertexArrayDestroyable) {
                 vertexBuffer.destroy();
             }
         }
 
         var indexBuffer = this._indexBuffer;
-        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
+        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.vertexArrayDestroyable) {
             indexBuffer.destroy();
         }
 

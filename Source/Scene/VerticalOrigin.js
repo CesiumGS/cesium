@@ -9,7 +9,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      *
      * @exports VerticalOrigin
      *
-     * @see Billboard#setVerticalOrigin
+     * @see Billboard#verticalOrigin
      */
     var VerticalOrigin = {
         /**

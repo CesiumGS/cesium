@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/Cartesian3',
+define(['../Core/Cartesian3',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -17,14 +16,9 @@ define([
         Transforms) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
-     * The interface for all position {@link Property} objects. Position properties
-     * represent a world location as a {@link Cartesian3} with an associated
-     * {@link ReferenceFrame}.
+     * The interface for all {@link Property} objects that define a world
+     * location as a {@link Cartesian3} with an associated {@link ReferenceFrame}.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias PositionProperty
@@ -35,31 +29,50 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = throwInstantiationError;
+    var PositionProperty = function() {
+        DeveloperError.throwInstantiationError();
+    };
 
     defineProperties(PositionProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof PositionProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof PositionProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : DeveloperError.throwInstantiationError
+        },
         /**
          * Gets the reference frame that the position is defined in.
          * @memberof PositionProperty.prototype
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
-            get : throwInstantiationError
+            get : DeveloperError.throwInstantiationError
         }
     });
 
     /**
-     * Gets the value of the property at the provided time.
+     * Gets the value of the property at the provided time in the fixed frame.
      * @memberof PositionProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
-    PositionProperty.prototype.getValue = throwInstantiationError;
+    PositionProperty.prototype.getValue = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
@@ -70,11 +83,8 @@ define([
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} referenceFrame is required.
      */
-    PositionProperty.prototype.getValueInReferenceFrame = throwInstantiationError;
+    PositionProperty.prototype.getValueInReferenceFrame = DeveloperError.throwInstantiationError;
 
     /**
      * Compares this property to the provided property and returns
@@ -84,7 +94,7 @@ define([
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
-    PositionProperty.prototype.equals = throwInstantiationError;
+    PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
     var scratchMatrix3 = new Matrix3();
 
@@ -92,6 +102,10 @@ define([
      * @private
      */
     PositionProperty.convertToReferenceFrame = function(time, value, inputFrame, outputFrame, result) {
+        if (!defined(value)) {
+            return value;
+        }
+
         if (inputFrame === outputFrame) {
             return Cartesian3.clone(value, result);
         }

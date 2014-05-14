@@ -28,21 +28,19 @@ define([
      * in the direction of the normal; if negative, the origin is in the half-space
      * opposite to the normal; if zero, the plane passes through the origin.
      *
-     * @exception {DeveloperError} normal is required.
-     * @exception {DeveloperError} distance is required.
-     *
      * @example
      * // The plane x=0
-     * var plane = new Plane(Cartesian3.UNIT_X, 0.0);
+     * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
      */
     var Plane = function(normal, distance) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(normal))  {
             throw new DeveloperError('normal is required.');
         }
-
         if (!defined(distance)) {
             throw new DeveloperError('distance is required.');
         }
+        //>>includeEnd('debug');
 
         /**
          * The plane's normal.
@@ -72,22 +70,20 @@ define([
      * @param {Plane} [result] The object onto which to store the result.
      * @returns {Plane} A new plane instance or the modified result parameter.
      *
-     * @exception {DeveloperError} point is required.
-     * @exception {DeveloperError} normal is required.
-     *
      * @example
-     * var point = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+     * var point = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 40.0));
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
-     * var tangentPlane = Plane.fromPointNormal(point, normal);
+     * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
      */
     Plane.fromPointNormal = function(point, normal, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
-
         if (!defined(normal)) {
             throw new DeveloperError('normal is required.');
         }
+        //>>includeEnd('debug');
 
         var distance = -Cartesian3.dot(normal, point);
 
@@ -111,38 +107,18 @@ define([
      * @param {Plane} plane The plane.
      * @param {Cartesian3} point The point.
      * @returns {Number} The signed shortest distance of the point to the plane.
-     *
-     * @exception {DeveloperError} plane is required.
-     * @exception {DeveloperError} point is required.
      */
     Plane.getPointDistance = function(plane, point) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
-
         if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
+        //>>includeEnd('debug');
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
-    };
-
-
-    /**
-     * Computes the signed shortest distance of a point to this plane.
-     * The sign of the distance determines which side of this plane the point
-     * is on.  If the distance is positive, the point is in the half-space
-     * in the direction of the normal; if negative, the point is in the half-space
-     * opposite to the normal; if zero, this plane passes through the point.
-     * @memberof Plane
-     *
-     * @param {Cartesian3} point The point.
-     * @returns {Number} The signed shortest distance of the point to this plane.
-     *
-     * @exception {DeveloperError} point is required.
-     */
-    Plane.prototype.getPointDistance = function(point) {
-        return Plane.getPointDistance(this, point);
     };
 
     return Plane;

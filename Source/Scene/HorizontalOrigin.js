@@ -9,7 +9,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      *
      * @exports HorizontalOrigin
      *
-     * @see Billboard#setHorizontalOrigin
+     * @see Billboard#horizontalOrigin
      */
     var HorizontalOrigin = {
         /**

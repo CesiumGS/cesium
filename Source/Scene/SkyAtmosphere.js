@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Cartesian3',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
@@ -19,6 +20,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Cartesian3,
         EllipsoidGeometry,
         destroyObject,
@@ -49,7 +51,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
      *
      * @example
-     * scene.skyAtmosphere = new SkyAtmosphere();
+     * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
      * @see Scene.skyAtmosphere
      */
@@ -72,8 +74,8 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.getRadii(), 1.025));
-        var innerRadius = ellipsoid.getMaximumRadius();
+        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025));
+        var innerRadius = ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
         var that = this;
@@ -106,16 +108,18 @@ define([
         };
     };
 
-    /**
-     * Gets the ellipsoid the atmosphere is drawn around.
-     *
-     * @memberof SkyAtmosphere
-     *
-     * @returns {Ellipsoid}
-     */
-    SkyAtmosphere.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(SkyAtmosphere.prototype, {
+        /**
+         * Gets the ellipsoid the atmosphere is drawn around.
+         * @memberof SkyAtmosphere.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        }
+    });
 
     /**
      * @private
@@ -139,13 +143,13 @@ define([
 
         if (!defined(command.vertexArray)) {
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : Cartesian3.multiplyByScalar(this._ellipsoid.getRadii(), 1.025),
+                radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025),
                 slicePartitions : 256,
                 stackPartitions : 256
             }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
+                attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;
@@ -157,7 +161,7 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var shaderCache = context.getShaderCache();
+            var shaderCache = context.shaderCache;
             var vs = createShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]

@@ -2,17 +2,19 @@
 defineSuite([
          'Widgets/Viewer/viewerDynamicObjectMixin',
          'Core/Cartesian3',
+         'DynamicScene/ConstantPositionProperty',
+         'DynamicScene/ConstantProperty',
          'DynamicScene/DynamicObject',
          'Scene/CameraFlightPath',
-         'DynamicScene/ConstantProperty',
          'Widgets/Viewer/Viewer',
          'Specs/MockDataSource'
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
+         ConstantPositionProperty,
+         ConstantProperty,
          DynamicObject,
          CameraFlightPath,
-         ConstantProperty,
          Viewer,
          MockDataSource) {
     "use strict";
@@ -35,10 +37,11 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('adds trackedObject property', function() {
+    it('adds properties', function() {
         viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
         expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
+        expect(viewer.hasOwnProperty('selectedObject')).toEqual(true);
     });
 
     it('can get and set trackedObject', function() {
@@ -53,6 +56,27 @@ defineSuite([
 
         viewer.trackedObject = undefined;
         expect(viewer.trackedObject).toBeUndefined();
+    });
+
+    it('can get and set selectedObject', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dataSource = new MockDataSource();
+        viewer.dataSources.add(dataSource);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantPositionProperty(new Cartesian3(123456, 123456, 123456));
+
+        dataSource.dynamicObjects.add(dynamicObject);
+
+        viewer.selectedObject = dynamicObject;
+        expect(viewer.selectedObject).toBe(dynamicObject);
+
+        viewer.selectedObject = undefined;
+        expect(viewer.selectedObject).toBeUndefined();
+
+        viewer.destroy();
     });
 
     it('home button resets tracked object', function() {
@@ -77,44 +101,23 @@ defineSuite([
     it('throws with undefined viewer', function() {
         expect(function() {
             viewerDynamicObjectMixin(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('throws if dropTarget property already added by another mixin.', function() {
+    it('throws if trackedObject property already added by another mixin.', function() {
         viewer = new Viewer(container);
         viewer.trackedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('adds objectTracked event', function() {
+    it('throws if selectedObject property already added by another mixin.', function() {
         viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.hasOwnProperty('objectTracked')).toEqual(true);
-    });
-
-    it('objectTracked is raised by trackObject', function() {
-        viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-
-        var dynamicObject = new DynamicObject();
-        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-
-        var spyListener = jasmine.createSpy('listener');
-        viewer.objectTracked.addEventListener(spyListener);
-
-        viewer.trackedObject = dynamicObject;
-
-        waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, dynamicObject);
-
-            viewer.objectTracked.removeEventListener(spyListener);
-        });
+        viewer.selectedObject = true;
+        expect(function() {
+            viewer.extend(viewerDynamicObjectMixin);
+        }).toThrowDeveloperError();
     });
 
     it('returns to home when a tracked object is removed', function() {
@@ -126,7 +129,7 @@ defineSuite([
 
         var beforeDynamicObject = new DynamicObject();
         beforeDynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        preMixinDataSource.dynamicObjectCollection.add(beforeDynamicObject);
+        preMixinDataSource.dynamicObjects.add(beforeDynamicObject);
 
         viewer.extend(viewerDynamicObjectMixin);
 
@@ -136,7 +139,7 @@ defineSuite([
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
-        postMixinDataSource.dynamicObjectCollection.add(dynamicObject);
+        postMixinDataSource.dynamicObjects.add(dynamicObject);
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
@@ -146,7 +149,7 @@ defineSuite([
             value : jasmine.createSpy('command')
         });
 
-        postMixinDataSource.dynamicObjectCollection.remove(dynamicObject);
+        postMixinDataSource.dynamicObjects.remove(dynamicObject);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
 
@@ -154,7 +157,7 @@ defineSuite([
         viewer.homeButton.viewModel.command.reset();
 
         viewer.trackedObject = beforeDynamicObject;
-        preMixinDataSource.dynamicObjectCollection.remove(beforeDynamicObject);
+        preMixinDataSource.dynamicObjects.remove(beforeDynamicObject);
 
         expect(viewer.homeButton.viewModel.command).toHaveBeenCalled();
     });
@@ -172,12 +175,12 @@ defineSuite([
         var postMixinDataSource = new MockDataSource();
         viewer.dataSources.add(postMixinDataSource);
 
-        var preMixinListenerCount = preMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length;
-        var postMixinListenerCount = postMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length;
+        var preMixinListenerCount = preMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
+        var postMixinListenerCount = postMixinDataSource.dynamicObjects.collectionChanged._listeners.length;
 
         viewer = viewer.destroy();
 
-        expect(preMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
-        expect(postMixinDataSource.dynamicObjectCollection.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
+        expect(preMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(preMixinListenerCount);
+        expect(postMixinDataSource.dynamicObjects.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');

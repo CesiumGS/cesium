@@ -6,7 +6,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      * Indicates a GLSL uniform's datatype.
      *
      * @exports UniformDatatype
-     * @see Uniform.getDatatype
+     * @see Uniform.datatype
      */
     var UniformDatatype = {
         /**
@@ -17,9 +17,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x1406
          */
         FLOAT : new Enumeration(0x1406, 'FLOAT', {
-            getGLSL : function() {
-                return 'float';
-            }
+            glsl : 'float'
         }),
 
         /**
@@ -30,9 +28,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B50
          */
        FLOAT_VEC2 : new Enumeration(0x8B50, 'FLOAT_VEC2', {
-            getGLSL : function() {
-                return 'vec2';
-            }
+            glsl : 'vec2'
         }),
 
         /**
@@ -43,9 +39,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B51
          */
         FLOAT_VEC3 : new Enumeration(0x8B51, 'FLOAT_VEC3', {
-            getGLSL : function() {
-                return 'vec3';
-            }
+            glsl : 'vec3'
         }),
 
         /**
@@ -56,9 +50,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B52
          */
         FLOAT_VEC4 : new Enumeration(0x8B52, 'FLOAT_VEC4', {
-            getGLSL : function() {
-                return 'vec4';
-            }
+            glsl : 'vec4'
         }),
 
         /**
@@ -69,9 +61,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x1404
          */
         INT : new Enumeration(0x1404, 'INT', {
-            getGLSL : function() {
-                return 'int';
-            }
+            glsl : 'int'
         }),
 
         /**
@@ -82,9 +72,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B53
          */
         INT_VEC2 : new Enumeration(0x8B53, 'INT_VEC2', {
-            getGLSL : function() {
-                return 'ivec2';
-            }
+            glsl : 'ivec2'
         }),
 
         /**
@@ -95,9 +83,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B54
          */
         INT_VEC3 : new Enumeration(0x8B54, 'INT_VEC3', {
-            getGLSL : function() {
-                return 'ivec3';
-            }
+            glsl : 'ivec3'
         }),
 
         /**
@@ -108,9 +94,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B55
          */
         INT_VEC4 : new Enumeration(0x8B55, 'INT_VEC4', {
-            getGLSL : function() {
-                return 'ivec4';
-            }
+            glsl : 'ivec4'
         }),
 
         /**
@@ -121,9 +105,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B56
          */
         BOOL : new Enumeration(0x8B56, 'BOOL', {
-            getGLSL : function() {
-                return 'bool';
-            }
+            glsl : 'bool'
         }),
 
         /**
@@ -134,9 +116,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B57
          */
         BOOL_VEC2 : new Enumeration(0x8B57, 'BOOL_VEC2', {
-            getGLSL : function() {
-                return 'bvec2';
-            }
+            glsl : 'bvec2'
         }),
 
         /**
@@ -147,9 +127,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B58
          */
         BOOL_VEC3 : new Enumeration(0x8B58, 'BOOL_VEC3', {
-            getGLSL : function() {
-                return 'bvec3';
-            }
+            glsl : 'bvec3'
         }),
 
         /**
@@ -160,9 +138,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B59
          */
         BOOL_VEC4 : new Enumeration(0x8B59, 'BOOL_VEC4', {
-            getGLSL : function() {
-                return 'bvec4';
-            }
+            glsl : 'bvec4'
         }),
 
         /**
@@ -173,9 +149,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B5A
          */
         FLOAT_MAT2 : new Enumeration(0x8B5A, 'FLOAT_MAT2', {
-            getGLSL : function() {
-                return 'mat2';
-            }
+            glsl : 'mat2'
         }),
 
         /**
@@ -186,9 +160,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B5B
          */
         FLOAT_MAT3 : new Enumeration(0x8B5B, 'FLOAT_MAT3', {
-            getGLSL : function() {
-                return 'mat3';
-            }
+            glsl :'mat3'
         }),
 
         /**
@@ -199,9 +171,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B5C
          */
         FLOAT_MAT4 : new Enumeration(0x8B5C, 'FLOAT_MAT4', {
-            getGLSL : function() {
-                return 'mat4';
-            }
+            glsl : 'mat4'
         }),
 
         /**
@@ -212,9 +182,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B5E
          */
         SAMPLER_2D : new Enumeration(0x8B5E, 'SAMPLER_2D', {
-            getGLSL : function() {
-                return 'sampler2D';
-            }
+            glsl : 'sampler2D'
         }),
 
         /**
@@ -225,9 +193,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @default 0x8B60
          */
         SAMPLER_CUBE : new Enumeration(0x8B60, 'SAMPLER_CUBE', {
-            getGLSL : function() {
-                return 'samplerCube';
-            }
+            glsl : 'samplerCube'
         })
     };
 

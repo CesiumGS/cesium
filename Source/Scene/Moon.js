@@ -40,7 +40,7 @@ define([
      * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
      * @example
-     * scene.moon = new Moon();
+     * scene.moon = new Cesium.Moon();
      */
     var Moon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -80,11 +80,12 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, true);
 
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
-            radii : this.ellipsoid.getRadii(),
+            radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
             onlySunLighting : this.onlySunLighting,
             _owner : this
         });
+        this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
     };

@@ -1,20 +1,16 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './Intersect',
-        './Matrix3',
-        './BoundingRectangle'
+        './Matrix3'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        Intersect,
-        Matrix3,
-        BoundingRectangle) {
+        Matrix3) {
     "use strict";
 
     /**
@@ -30,11 +26,11 @@ define([
      *
      * @example
      * // Create an ObjectOrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
-     * var rotation = Matrix3.clone(Matrix3.IDENTITY);
-     * var translation = new Cartesian3(1,0,0);
-     * var scale = new Cartesian3(0,5,0);
+     * var rotation = Cesium.Matrix3.clone(Cesium.Matrix3.IDENTITY);
+     * var translation = new Cesium.Cartesian3(1,0,0);
+     * var scale = new Cesium.Cartesian3(0,5,0);
      *
-     * var oobb = new ObjectOrientedBoundingBox(rotation, translation, scale);
+     * var oobb = new Cesium.ObjectOrientedBoundingBox(rotation, translation, scale);
      *
      * @see ObjectOrientedBoundingBox.fromPoints
      * @see ObjectOrientedBoundingBox.fromBoundingRectangle
@@ -66,7 +62,6 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
     var scratchCartesian5 = new Cartesian3();
-    var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
     var scratchEigenResult = {
         unitary : new Matrix3(),
@@ -85,7 +80,7 @@ define([
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = ObjectOrientedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
+     * var box = Cesium.ObjectOrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
      */
     ObjectOrientedBoundingBox.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -180,16 +175,16 @@ define([
      * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
      * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
-     * @exception {DeveloperError} boundingRectangle is required.
-     *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
-     * var box = ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
+     * var box = Cesium.ObjectOrientedBoundingBox.fromBoundingRectangle(boundingRectangle, 0.0);
      */
     ObjectOrientedBoundingBox.fromBoundingRectangle = function(boundingRectangle, rotation, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(boundingRectangle)) {
             throw new DeveloperError('boundingRectangle is required');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = new ObjectOrientedBoundingBox();
@@ -282,17 +277,16 @@ define([
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
      * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        //>>includeEnd('debug');
 
         var leftTransformTransposed = Matrix3.transpose(left.rotation, scratchIntersectMatrix1);
         var B = Matrix3.multiply(leftTransformTransposed, right.rotation, scratchIntersectMatrix2);
@@ -374,7 +368,7 @@ define([
                  (defined(right)) &&
                  Cartesian3.equals(left.transformedPosition, right.transformedPosition) &&
                  Matrix3.equals(left.transformMatrix, right.transformMatrix) &&
-                 Cartesian3.equals(left.extent, right.extent));
+                 Cartesian3.equals(left.rectangle, right.rectangle));
     };
 
     /**

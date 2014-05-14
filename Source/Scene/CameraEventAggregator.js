@@ -1,24 +1,22 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defined',
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Math',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/Cartesian2',
         '../Core/KeyboardEventModifier',
         './CameraEventType'
     ], function(
+        Cartesian2,
         defined,
-        defaultValue,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         CesiumMath,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        Cartesian2,
         KeyboardEventModifier,
         CameraEventType) {
     "use strict";
@@ -111,7 +109,7 @@ define([
         update[key] = true;
 
         var movement = aggregator._movement[key];
-        if(!defined(movement)) {
+        if (!defined(movement)) {
             movement = aggregator._movement[key] = {};
         }
 
@@ -245,14 +243,14 @@ define([
      *
      * @param {HTMLCanvasElement} canvas DOC_TBA
      *
-     * @exception {DeveloperError} canvas is required.
-     *
      * @see ScreenSpaceEventHandler
      */
     var CameraEventAggregator = function(canvas) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
+        //>>includeEnd('debug');
 
         this._eventHandler = new ScreenSpaceEventHandler(canvas);
 
@@ -294,13 +292,13 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Boolean} Returns <code>true</code> if a mouse button down or touch has started and has been moved; otherwise, <code>false</code>
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isMoving = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return !this._update[key];
@@ -313,13 +311,13 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Object} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code>.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getMovement = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         var movement = this._movement[key];
@@ -333,13 +331,13 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Object|undefined} An object with two {@link Cartesian2} properties: <code>startPosition</code> and <code>endPosition</code> or <code>undefined</code>.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getLastMovement = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         var lastMovement = this._lastMovement[key];
@@ -357,26 +355,30 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Boolean} Whether the mouse button is down or a touch has started.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.isButtonDown = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._isDown[key];
     };
 
     /**
-     * Gets whether any mouse button is down or a touch has started.
+     * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
      * @memberof CameraEventAggregator
      *
-     * @returns {Boolean} Whether any mouse button is down or a touch has started.
+     * @returns {Boolean} Whether any mouse button is down, a touch has started, or the wheel has been moved.
      */
     CameraEventAggregator.prototype.anyButtonDown = function() {
-        return this._buttonsDown > 0;
+        var wheelMoved = !this._update[getKey(CameraEventType.WHEEL)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.SHIFT)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.CTRL)] ||
+                        !this._update[getKey(CameraEventType.WHEEL, KeyboardEventModifier.ALT)];
+        return this._buttonsDown > 0 || wheelMoved;
     };
 
     /**
@@ -386,13 +388,13 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Date} The time the button was pressed or the touch was started.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonPressTime = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._pressTime[key];
@@ -405,13 +407,13 @@ define([
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
      * @returns {Date} The time the button was released or the touch was ended.
-     *
-     * @exception {DeveloperError} type is required.
      */
     CameraEventAggregator.prototype.getButtonReleaseTime = function(type, modifier) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var key = getKey(type, modifier);
         return this._releaseTime[key];
