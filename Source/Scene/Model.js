@@ -217,8 +217,7 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
@@ -477,8 +476,7 @@ define([
      * }));
      *
      * // Example 2. Create model and provide all properties and events
-     * var origin = ellipsoid.cartographicToCartesian(
-     *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({

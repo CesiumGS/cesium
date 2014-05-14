@@ -190,12 +190,12 @@ define([
      *
      * @example
      * var volume = new Cesium.PolylineVolumeGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
-     *     ]),
-     *     shapePositions : Cesium.Shapes.compute2DCircle(100000.0)
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+     *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0
+     *   ]),
+     *   shapePositions : Cesium.Shapes.compute2DCircle(100000.0)
      * });
      */
     var PolylineVolumeGeometry = function(options) {

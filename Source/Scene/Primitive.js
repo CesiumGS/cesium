@@ -96,7 +96,7 @@ define([
      *   geometry : new Cesium.EllipseGeometry({
      *       vertexFormat : Cesium.VertexFormat.POSITION_AND_ST,
      *       ellipsoid : ellipsoid,
-     *       center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100, 20)),
+     *       center : Cesium.Cartesian3.fromDegrees(-100.0, 20.0),
      *       semiMinorAxis : 500000.0,
      *       semiMajorAxis : 1000000.0,
      *       rotation : Cesium.Math.PI_OVER_FOUR
@@ -132,7 +132,7 @@ define([
      *     radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
+     *     Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
      *   id : 'ellipsoid',
      *   attribute : {
      *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
@@ -152,7 +152,7 @@ define([
      *         radii : new Cesium.Cartesian3(500000.0, 500000.0, 1000000.0)
      *       })),
      *       modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *         ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
+     *         Cesium.Cartesian3.fromDegrees(-95.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 500000.0)),
      *       id : 'ellipsoid',
      *       attribute : {
      *         color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
@@ -208,8 +208,7 @@ define([
          * @default Matrix4.IDENTITY
          *
          * @example
-         * var origin = ellipsoid.cartographicToCartesian(
-         *   Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see czm_model
