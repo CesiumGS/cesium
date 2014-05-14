@@ -66,11 +66,7 @@ define(function() {
         LUMINANCE_ALPHA : 0x190A,
 
         /**
-         * Returns true if the pixel format is a valid enumeration value.
-         *
-         * @param {PixelFormat} pixelFormat The pixel format to test.
-         *
-         * @returns {Boolean} Returns true if the pixel format is a valid enumeration value; otherwise, false.
+         * @private
          */
         validate : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||
@@ -83,11 +79,7 @@ define(function() {
         },
 
         /**
-         * Returns true if the pixel format is a color format.
-         *
-         * @param {PixelFormat} pixelFormat The pixel format to test.
-         *
-         * @returns {Boolean} Returns true if the pixel format is a color format; otherwise false.
+         * @private
          */
         isColorFormat : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.ALPHA) ||
@@ -98,11 +90,7 @@ define(function() {
         },
 
         /**
-         * Returns true if the pixel format is a depth format.
-         *
-         * @param {PixelFormat} pixelFormat The pixel format to test.
-         *
-         * @returns {Boolean} Returns true if the pixel format is a depth format; otherwise false.
+         * @private
          */
         isDepthFormat : function(pixelFormat) {
             return ((pixelFormat === PixelFormat.DEPTH_COMPONENT) ||

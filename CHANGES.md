@@ -9,7 +9,7 @@ Beta Releases
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
-  * Removed `Tipsify`, `FrustumCommands`, and all `Renderer` types (except noted below) from the public Cesium API.  These are still available but are not part of the official API and are likely to change in future versions.    
+  * Removed `PolylinePipeline`, `PolygonPipeline`, `Tipsify`, `FrustumCommands`, and all `Renderer` types (except noted below) from the public Cesium API.  These are still available but are not part of the official API and may change in future versions.  `Renderer` types in particular are likely to change.    
   * For AMD users only: moved `PixelFormat` from `Renderer` to `Core`.  Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.

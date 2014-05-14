@@ -148,7 +148,6 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-
     var CreditDisplay = function(container, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {

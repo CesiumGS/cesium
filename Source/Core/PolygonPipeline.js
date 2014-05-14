@@ -776,14 +776,10 @@ define([
     var scaleToGeodeticHeightP = new Cartesian3();
 
     /**
-     * DOC_TBA
-     *
-     * @exports PolygonPipeline
+     * @private
      */
     var PolygonPipeline = {
         /**
-         * DOC_TBA
-         *
          * Cleans up a simple polygon by removing duplicate adjacent positions and making
          * the first position not equal the last position.
          *
@@ -816,8 +812,6 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
@@ -844,9 +838,7 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
-         * @returns {WindingOrder} DOC_TBA
+         * @returns {WindingOrder} The winding order.
          *
          * @exception {DeveloperError} At least three positions are required.
          */

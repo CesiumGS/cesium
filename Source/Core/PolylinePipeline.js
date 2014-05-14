@@ -28,9 +28,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @exports PolylinePipeline
+     * @private
      */
     var PolylinePipeline = {};
 
@@ -315,7 +313,7 @@ define([
             newPositions = new Array(positions.length);
         }
 
-        if (height === 0) {
+        if (height === 0.0) {
             for (i = 0; i < length; i += 3) {
                 p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
                 newPositions[i] = p.x;
