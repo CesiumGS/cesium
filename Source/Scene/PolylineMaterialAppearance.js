@@ -3,22 +3,22 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/VertexFormat',
-        './Material',
-        './Appearance',
         '../Renderer/createShaderSource',
         '../Shaders/Appearances/PolylineMaterialAppearanceVS',
+        '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
-        '../Shaders/PolylineCommon'
+        './Appearance',
+        './Material'
     ], function(
         defaultValue,
         defined,
         VertexFormat,
-        Material,
-        Appearance,
         createShaderSource,
         PolylineMaterialAppearanceVS,
+        PolylineCommon,
         PolylineFS,
-        PolylineCommon) {
+        Appearance,
+        Material) {
     "use strict";
 
     /**

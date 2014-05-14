@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/BoundingRectangle',
         '../Core/RuntimeError',
         '../Core/WindingOrder'
     ], function(
+        BoundingRectangle,
         Color,
         defaultValue,
         defined,
         DeveloperError,
-        BoundingRectangle,
         RuntimeError,
         WindingOrder) {
     "use strict";

@@ -2,19 +2,19 @@
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './InfoBoxViewModel',
-        '../../ThirdParty/knockout'
+        './InfoBoxViewModel'
     ], function(
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
+        knockout,
         getElement,
-        InfoBoxViewModel,
-        knockout) {
+        InfoBoxViewModel) {
     "use strict";
 
     /**

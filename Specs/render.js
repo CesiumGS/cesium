@@ -5,12 +5,12 @@ define([
         'Core/Intersect',
         'Scene/Pass',
         'Scene/SceneMode'
-     ], function(
-         defaultValue,
-         defined,
-         Intersect,
-         Pass,
-         SceneMode) {
+    ], function(
+        defaultValue,
+        defined,
+        Intersect,
+        Pass,
+        SceneMode) {
     "use strict";
 
     function executeCommands(context, frameState, commands) {

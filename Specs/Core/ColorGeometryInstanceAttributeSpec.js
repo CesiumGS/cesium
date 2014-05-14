@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ColorGeometryInstanceAttribute',
-         'Core/Color',
-         'Core/ComponentDatatype'
-     ], function(
-         ColorGeometryInstanceAttribute,
-         Color,
-         ComponentDatatype) {
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/Color',
+        'Core/ComponentDatatype'
+    ], function(
+        ColorGeometryInstanceAttribute,
+        Color,
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

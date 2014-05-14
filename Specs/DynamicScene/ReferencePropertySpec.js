@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/ReferenceProperty',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/Iso8601'
-            ], function(
-              ReferenceProperty,
-              DynamicObjectCollection,
-              DynamicObject,
-              JulianDate,
-              TimeInterval,
-              Iso8601) {
+        'DynamicScene/ReferenceProperty',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicObjectCollection'
+    ], function(
+        ReferenceProperty,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
+        DynamicObject,
+        DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

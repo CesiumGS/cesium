@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Core/Clock',
-         'Core/ScreenSpaceEventHandler',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/Scene',
-         'Scene/SceneMode',
-         'Scene/SkyBox',
-         'Scene/TileCoordinatesImageryProvider',
-         'Specs/EventHelper'
-     ], function(
-         CesiumWidget,
-         Clock,
-         ScreenSpaceEventHandler,
-         EllipsoidTerrainProvider,
-         Scene,
-         SceneMode,
-         SkyBox,
-         TileCoordinatesImageryProvider,
-         EventHelper) {
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Core/Clock',
+        'Core/ScreenSpaceEventHandler',
+        'Scene/EllipsoidTerrainProvider',
+        'Scene/Scene',
+        'Scene/SceneMode',
+        'Scene/SkyBox',
+        'Scene/TileCoordinatesImageryProvider',
+        'Specs/EventHelper'
+    ], function(
+        CesiumWidget,
+        Clock,
+        ScreenSpaceEventHandler,
+        EllipsoidTerrainProvider,
+        Scene,
+        SceneMode,
+        SkyBox,
+        TileCoordinatesImageryProvider,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

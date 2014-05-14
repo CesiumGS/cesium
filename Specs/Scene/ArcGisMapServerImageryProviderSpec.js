@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ArcGisMapServerImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'Core/DefaultProxy',
-         'Scene/DiscardMissingTileImagePolicy',
-         'Scene/GeographicTilingScheme',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         ArcGisMapServerImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         loadWithXhr,
-         DefaultProxy,
-         DiscardMissingTileImagePolicy,
-         GeographicTilingScheme,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/ArcGisMapServerImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/GeographicTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Scene/WebMercatorTilingScheme',
+        'ThirdParty/when'
+    ], function(
+        ArcGisMapServerImageryProvider,
+        DefaultProxy,
+        defined,
+        jsonp,
+        loadImage,
+        loadWithXhr,
+        DiscardMissingTileImagePolicy,
+        GeographicTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        WebMercatorTilingScheme,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

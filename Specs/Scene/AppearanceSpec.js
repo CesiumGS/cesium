@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Appearance',
-         'Scene/Material',
-         'Scene/BlendingState',
-         'Scene/CullFace'
-     ], function(
-         Appearance,
-         Material,
-         BlendingState,
-         CullFace) {
+        'Scene/Appearance',
+        'Scene/BlendingState',
+        'Scene/CullFace',
+        'Scene/Material'
+    ], function(
+        Appearance,
+        BlendingState,
+        CullFace,
+        Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 

@@ -5,16 +5,16 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
-        './ScreenSpaceEventType',
-        './KeyboardEventModifier'
+        './KeyboardEventModifier',
+        './ScreenSpaceEventType'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         destroyObject,
         DeveloperError,
-        ScreenSpaceEventType,
-        KeyboardEventModifier) {
+        KeyboardEventModifier,
+        ScreenSpaceEventType) {
     "use strict";
 
     /**

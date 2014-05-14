@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './HorizontalOrigin',
         './Label',
         './LabelStyle',
-        './HorizontalOrigin',
-        './VerticalOrigin',
-        './TextureAtlas'
+        './TextureAtlas',
+        './VerticalOrigin'
     ], function(
-        defaultValue,
-        defineProperties,
-        DeveloperError,
-        defined,
-        destroyObject,
         Cartesian2,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        HorizontalOrigin,
         Label,
         LabelStyle,
-        HorizontalOrigin,
-        VerticalOrigin,
-        TextureAtlas) {
+        TextureAtlas,
+        VerticalOrigin) {
     "use strict";
 
     // A glyph represents a single character in a particular label.  It may or may

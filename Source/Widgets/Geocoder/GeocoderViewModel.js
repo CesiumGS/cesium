@@ -6,15 +6,15 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Rectangle',
         '../../Core/jsonp',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
-        '../createCommand',
         '../../ThirdParty/knockout',
-        '../../ThirdParty/when'
+        '../../ThirdParty/when',
+        '../createCommand'
     ], function(
         BingMapsApi,
         defaultValue,
@@ -22,15 +22,15 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         jsonp,
         Matrix4,
+        Rectangle,
         CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
-        createCommand,
         knockout,
-        when) {
+        when,
+        createCommand) {
     "use strict";
 
     /**

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/DrawCommand',
-         'Core/PrimitiveType',
-         'Scene/Pass'
-     ], function(
-         DrawCommand,
-         PrimitiveType,
-         Pass) {
+        'Renderer/DrawCommand',
+        'Core/PrimitiveType',
+        'Scene/Pass'
+    ], function(
+        DrawCommand,
+        PrimitiveType,
+        Pass) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

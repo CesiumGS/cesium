@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -21,11 +21,11 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,

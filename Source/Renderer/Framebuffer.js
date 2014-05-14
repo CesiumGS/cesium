@@ -3,15 +3,15 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/PixelFormat'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         PixelFormat) {
     "use strict";
 

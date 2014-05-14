@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/isCrossOriginUrl',
-             'ThirdParty/Uri'
-         ], function(
-             isCrossOriginUrl,
-             Uri) {
+        'Core/isCrossOriginUrl',
+        'ThirdParty/Uri'
+    ], function(
+        isCrossOriginUrl,
+        Uri) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

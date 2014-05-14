@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/ComponentDatatype',
-        '../Renderer/BufferUsage',
-        '../Core/IndexDatatype'
+        '../Core/IndexDatatype',
+        '../Renderer/BufferUsage'
     ], function(
+        ComponentDatatype,
         defined,
         defineProperties,
         DeveloperError,
-        ComponentDatatype,
-        BufferUsage,
-        IndexDatatype) {
+        IndexDatatype,
+        BufferUsage) {
     "use strict";
 
     /**

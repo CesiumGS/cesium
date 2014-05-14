@@ -7,8 +7,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
-        './Rectangle',
         './Math',
+        './Rectangle',
         './Visibility'
     ], function(
         BoundingSphere,
@@ -18,8 +18,8 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         CesiumMath,
+        Rectangle,
         Visibility) {
     "use strict";
 

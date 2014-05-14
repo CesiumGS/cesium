@@ -1,17 +1,18 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/PositionPropertyArray',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/SampledPositionProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/ReferenceFrame'
-     ], function(
-             PositionPropertyArray,
-             ConstantPositionProperty,
-             SampledPositionProperty,
-             Cartesian3,
-             JulianDate,
-             ReferenceFrame) {
+defineSuite([
+        'DynamicScene/PositionPropertyArray',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/ReferenceFrame',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/SampledPositionProperty'
+    ], function(
+        PositionPropertyArray,
+        Cartesian3,
+        JulianDate,
+        ReferenceFrame,
+        ConstantPositionProperty,
+        SampledPositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

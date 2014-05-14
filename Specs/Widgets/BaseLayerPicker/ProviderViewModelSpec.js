@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/BaseLayerPicker/ProviderViewModel',
-         'Widgets/createCommand',
-         'ThirdParty/knockout'
-     ], function(
-         ProviderViewModel,
-         createCommand,
-         knockout) {
+        'Widgets/BaseLayerPicker/ProviderViewModel',
+        'ThirdParty/knockout',
+        'Widgets/createCommand'
+    ], function(
+        ProviderViewModel,
+        knockout,
+        createCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

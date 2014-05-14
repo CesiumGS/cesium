@@ -6,14 +6,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Rectangle',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
         '../../Scene/Camera',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         Cartesian3,
         defaultValue,
@@ -21,14 +21,14 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         Matrix4,
+        Rectangle,
         Camera,
         CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     function viewHome(scene, ellipsoid, duration) {

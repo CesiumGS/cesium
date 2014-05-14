@@ -2,27 +2,27 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/RuntimeError',
-        '../Core/destroyObject',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        './AutomaticUniforms',
-        '../Shaders/Builtin/CzmBuiltins'
+        '../Core/RuntimeError',
+        '../Shaders/Builtin/CzmBuiltins',
+        './AutomaticUniforms'
     ], function(
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         FeatureDetection,
-        RuntimeError,
-        destroyObject,
         Matrix2,
         Matrix3,
         Matrix4,
-        AutomaticUniforms,
-        CzmBuiltins) {
+        RuntimeError,
+        CzmBuiltins,
+        AutomaticUniforms) {
     "use strict";
     /*global console*/
 

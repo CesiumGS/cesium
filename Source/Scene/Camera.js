@@ -16,9 +16,9 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
+        '../ThirdParty/Tween',
         './PerspectiveFrustum',
-        './SceneMode',
-        '../ThirdParty/Tween'
+        './SceneMode'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -36,9 +36,9 @@ define([
         Quaternion,
         Ray,
         Transforms,
+        Tween,
         PerspectiveFrustum,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**

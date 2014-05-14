@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/HeightmapTessellator',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/Math',
-         'Core/WebMercatorProjection'
-     ], function(
-         HeightmapTessellator,
-         Cartesian2,
-         Cartesian3,
-         Ellipsoid,
-         Rectangle,
-         CesiumMath,
-         WebMercatorProjection) {
+        'Core/HeightmapTessellator',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection'
+    ], function(
+        HeightmapTessellator,
+        Cartesian2,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

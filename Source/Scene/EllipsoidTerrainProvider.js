@@ -5,18 +5,18 @@ define([
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Event',
+        './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './TerrainProvider',
-        './GeographicTilingScheme'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         Ellipsoid,
         Event,
+        GeographicTilingScheme,
         HeightmapTerrainData,
-        TerrainProvider,
-        GeographicTilingScheme) {
+        TerrainProvider) {
     "use strict";
 
     /**

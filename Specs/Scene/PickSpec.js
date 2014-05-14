@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/RectanglePrimitive',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/createCamera',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/Math',
-         'Core/Matrix4',
-         'Scene/OrthographicFrustum',
-         'Scene/PerspectiveFrustum',
-         'Scene/SceneMode'
-     ], 'Scene/Pick', function(
-         RectanglePrimitive,
-         createScene,
-         destroyScene,
-         createCamera,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         Rectangle,
-         CesiumMath,
-         Matrix4,
-         OrthographicFrustum,
-         PerspectiveFrustum,
-         SceneMode) {
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Scene/OrthographicFrustum',
+        'Scene/PerspectiveFrustum',
+        'Scene/RectanglePrimitive',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], 'Scene/Pick', function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        OrthographicFrustum,
+        PerspectiveFrustum,
+        RectanglePrimitive,
+        SceneMode,
+        createCamera,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

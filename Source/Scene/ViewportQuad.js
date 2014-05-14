@@ -1,26 +1,26 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Core/destroyObject',
-        '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/BoundingRectangle',
-        './Material',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Renderer/createShaderSource',
-        './Pass',
+        '../Shaders/ViewportQuadFS',
         './BlendingState',
-        '../Shaders/ViewportQuadFS'
+        './Material',
+        './Pass'
     ], function(
-        Color,
-        destroyObject,
-        defined,
-        DeveloperError,
         BoundingRectangle,
-        Material,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
         createShaderSource,
-        Pass,
+        ViewportQuadFS,
         BlendingState,
-        ViewportQuadFS) {
+        Material,
+        Pass) {
     "use strict";
 
     /**

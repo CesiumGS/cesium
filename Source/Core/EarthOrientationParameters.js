@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './binarySearch',
         './defaultValue',
         './defined',
         './EarthOrientationParametersSample',
         './freezeObject',
-        './loadJson',
         './JulianDate',
         './LeapSecond',
+        './loadJson',
         './RuntimeError',
         './TimeConstants',
-        './TimeStandard',
-        '../ThirdParty/when'
+        './TimeStandard'
     ], function(
+        when,
         binarySearch,
         defaultValue,
         defined,
         EarthOrientationParametersSample,
         freezeObject,
-        loadJson,
         JulianDate,
         LeapSecond,
+        loadJson,
         RuntimeError,
         TimeConstants,
-        TimeStandard,
-        when) {
+        TimeStandard) {
     "use strict";
 
     /**

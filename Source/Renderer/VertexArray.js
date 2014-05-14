@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/ComponentDatatype'
+        '../Core/DeveloperError'
     ], function(
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        ComponentDatatype) {
+        DeveloperError) {
     "use strict";
 
     function addAttribute(attributes, attribute, index) {

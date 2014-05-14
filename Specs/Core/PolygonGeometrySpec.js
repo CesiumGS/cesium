@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolygonGeometry',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/VertexFormat'
-     ], function(
-         PolygonGeometry,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         VertexFormat) {
+        'Core/PolygonGeometry',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/VertexFormat'
+    ], function(
+        PolygonGeometry,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

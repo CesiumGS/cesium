@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../ThirdParty/measureText',
+        './Color',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        './Color',
-        '../ThirdParty/measureText'
+        './DeveloperError'
     ], function(
+        measureText,
+        Color,
         defaultValue,
         defined,
-        DeveloperError,
-        Color,
-        measureText) {
+        DeveloperError) {
     "use strict";
 
     /**

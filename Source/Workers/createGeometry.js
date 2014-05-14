@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        'require',
-        './createTaskProcessorWorker',
         '../Core/defined',
-        '../Scene/PrimitivePipeline'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker',
+        'require'
     ], function(
-        require,
-        createTaskProcessorWorker,
         defined,
-        PrimitivePipeline) {
+        PrimitivePipeline,
+        createTaskProcessorWorker,
+        require) {
     "use strict";
 
     var moduleCache = {};

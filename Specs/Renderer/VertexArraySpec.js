@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage',
-         'Renderer/DrawCommand'
-     ], 'Renderer/VertexArray', function(
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         PrimitiveType,
-         BufferUsage,
-         DrawCommand) {
+        'Core/ComponentDatatype',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/VertexArray', function(
+        ComponentDatatype,
+        PrimitiveType,
+        BufferUsage,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

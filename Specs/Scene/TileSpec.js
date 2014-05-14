@@ -1,30 +1,30 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Tile',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/defined',
-         'Core/Rectangle',
-         'Core/Math',
-         'Scene/CesiumTerrainProvider',
-         'Scene/ImageryLayerCollection',
-         'Scene/TerrainState',
-         'Scene/TileState',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         Tile,
-         createContext,
-         destroyContext,
-         defined,
-         Rectangle,
-         CesiumMath,
-         CesiumTerrainProvider,
-         ImageryLayerCollection,
-         TerrainState,
-         TileState,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/Tile',
+        'Core/defined',
+        'Core/Math',
+        'Core/Rectangle',
+        'Scene/CesiumTerrainProvider',
+        'Scene/ImageryLayerCollection',
+        'Scene/TerrainState',
+        'Scene/TileState',
+        'Scene/WebMercatorTilingScheme',
+        'Specs/createContext',
+        'Specs/destroyContext',
+        'ThirdParty/when'
+    ], function(
+        Tile,
+        defined,
+        CesiumMath,
+        Rectangle,
+        CesiumTerrainProvider,
+        ImageryLayerCollection,
+        TerrainState,
+        TileState,
+        WebMercatorTilingScheme,
+        createContext,
+        destroyContext,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

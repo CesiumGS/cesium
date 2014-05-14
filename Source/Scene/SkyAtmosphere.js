@@ -1,40 +1,40 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Cartesian3',
-        '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
-        '../Core/GeometryPipeline',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidGeometry',
+        '../Core/GeometryPipeline',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/DrawCommand',
+        '../Shaders/SkyAtmosphereFS',
+        '../Shaders/SkyAtmosphereVS',
         './BlendingState',
         './CullFace',
-        './SceneMode',
-        '../Shaders/SkyAtmosphereVS',
-        '../Shaders/SkyAtmosphereFS'
+        './SceneMode'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian3,
-        EllipsoidGeometry,
         destroyObject,
-        GeometryPipeline,
         Ellipsoid,
+        EllipsoidGeometry,
+        GeometryPipeline,
         VertexFormat,
         BufferUsage,
-        DrawCommand,
         createShaderSource,
+        DrawCommand,
+        SkyAtmosphereFS,
+        SkyAtmosphereVS,
         BlendingState,
         CullFace,
-        SceneMode,
-        SkyAtmosphereVS,
-        SkyAtmosphereFS) {
+        SceneMode) {
     "use strict";
 
     /**
