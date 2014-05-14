@@ -5,10 +5,11 @@
  * MIT license
  */
 
-define(['./weakmap', 'exports'], function(weakmap, exports) {
-
-(function(global, undefined) {
+define(function() {
     'use strict';
+
+    var OBSERVABLES_PROPERTY = '__knockoutObservables';
+    var SUBSCRIBABLE_PROPERTY = '__knockoutSubscribable';
 
     // Model tracking
     // --------------
@@ -49,6 +50,10 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
         propertyNames = propertyNames || Object.getOwnPropertyNames(obj);
 
         propertyNames.forEach(function(propertyName) {
+            // Skip storage properties
+            if (propertyName === OBSERVABLES_PROPERTY || propertyName === SUBSCRIBABLE_PROPERTY) {
+                return;
+            }
             // Skip properties that are already tracked
             if (propertyName in allObservablesForObject) {
                 return;
@@ -77,21 +82,15 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
         return obj;
     }
 
-    // Lazily created by `getAllObservablesForObject` below. Has to be created lazily because the
-    // WeakMap factory isn't available until the module has finished loading (may be async).
-    var objectToObservableMap;
-
     // Gets or creates the hidden internal key-value collection of observables corresponding to
     // properties on the model object.
     function getAllObservablesForObject(obj, createIfNotDefined) {
-        if (!objectToObservableMap) {
-            objectToObservableMap = weakMapFactory();
-        }
-
-        var result = objectToObservableMap.get(obj);
+        var result = obj[OBSERVABLES_PROPERTY];
         if (!result && createIfNotDefined) {
             result = {};
-            objectToObservableMap.set(obj, result);
+            Object.defineProperty(obj, OBSERVABLES_PROPERTY, {
+                value : result
+            });
         }
         return result;
     }
@@ -181,20 +180,14 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
         return subscribable.subscribe(observable);
     }
 
-    // Lazily created by `getSubscribableForArray` below. Has to be created lazily because the
-    // WeakMap factory isn't available until the module has finished loading (may be async).
-    var arraySubscribablesMap;
-
     // Gets or creates a subscribable that fires after each array mutation
     function getSubscribableForArray(ko, arrayInstance) {
-        if (!arraySubscribablesMap) {
-            arraySubscribablesMap = weakMapFactory();
-        }
-
-        var subscribable = arraySubscribablesMap.get(arrayInstance);
+        var subscribable = arrayInstance[SUBSCRIBABLE_PROPERTY];
         if (!subscribable) {
             subscribable = new ko.subscribable();
-            arraySubscribablesMap.set(arrayInstance, subscribable);
+            Object.defineProperty(arrayInstance, SUBSCRIBABLE_PROPERTY, {
+                value : subscribable
+            });
 
             var notificationPauseSignal = {};
             wrapStandardArrayMutators(arrayInstance, subscribable, notificationPauseSignal);
@@ -279,18 +272,6 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
         }
     }
 
-    // Module initialisation
-    // ---------------------
-    //
-    // When this script is first evaluated, it works out what kind of module loading scenario
-    // it is in (Node.js or a browser `<script>` tag), stashes a reference to its dependencies
-    // (currently that's just the WeakMap shim), and then finally attaches itself to whichever
-    // instance of Knockout.js it can find.
-
-    // A function that returns a new ES6-compatible WeakMap instance (using ES5 shim if needed).
-    // Instantiated by prepareExports, accounting for which module loader is being used.
-    var weakMapFactory;
-
     // Extends a Knockout instance with Knockout-ES5 functionality
     function attachToKo(ko) {
         ko.track = track;
@@ -299,27 +280,7 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
         ko.defineProperty = defineComputedProperty;
     }
 
-    // Determines which module loading scenario we're in, grabs dependencies, and attaches to KO
-    function prepareExports() {
-        if (typeof module !== 'undefined') {
-            // Node.js case - load KO and WeakMap modules synchronously
-            var ko = require('knockout'),
-                WM = require('weakmap');
-            attachToKo(ko);
-            weakMapFactory = function() { return new WM(); };
-            module.exports = ko;
-        } else if ('ko' in global) {
-            // Non-module case - attach to the global instance, and assume a global WeakMap constructor
-            attachToKo(global.ko);
-            weakMapFactory = function() { return new global.WeakMap(); };
-        } else if (typeof weakmap !== 'undefined') {
-            weakMapFactory = function() { return new weakmap.WeakMap(); };
-            exports.attachToKo = attachToKo;
-        }
-    }
-
-    prepareExports();
-
-})(this);
-
+    return {
+        attachToKo : attachToKo
+    };
 });

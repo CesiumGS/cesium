@@ -3,23 +3,22 @@ define([
         './binarySearch',
         './defaultValue',
         './defined',
+        './EarthOrientationParametersSample',
         './freezeObject',
         './loadJson',
-        './EarthOrientationParametersSample',
         './JulianDate',
         './LeapSecond',
         './RuntimeError',
         './TimeConstants',
         './TimeStandard',
         '../ThirdParty/when'
-    ],
-    function(
+    ], function(
         binarySearch,
         defaultValue,
         defined,
+        EarthOrientationParametersSample,
         freezeObject,
         loadJson,
-        EarthOrientationParametersSample,
         JulianDate,
         LeapSecond,
         RuntimeError,
@@ -63,8 +62,8 @@ define([
      *
      * @example
      * // Loading the EOP data
-     * var eop = new EarthOrientationParameters({ url : 'Data/EOP.json' });
-     * Transforms.earthOrientationParameters = eop;
+     * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
+     * Cesium.Transforms.earthOrientationParameters = eop;
      */
     var EarthOrientationParameters = function EarthOrientationParameters(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
@@ -292,7 +291,7 @@ define([
                 if (taiMinusUtc !== lastTaiMinusUtc && defined(lastTaiMinusUtc)) {
                     // We crossed a leap second boundary, so add the leap second
                     // if it does not already exist.
-                    var leapSeconds = LeapSecond.getLeapSeconds();
+                    var leapSeconds = LeapSecond._leapSeconds;
                     var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
                     if (leapSecondIndex < 0) {
                         var leapSecond = new LeapSecond(date, taiMinusUtc);

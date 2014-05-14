@@ -54,7 +54,7 @@ defineSuite([
         }];
         var va = context.createVertexArray(attributes);
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
@@ -87,7 +87,7 @@ defineSuite([
         }];
 
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(2);
+        expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
         va = va.destroy();
@@ -113,7 +113,7 @@ defineSuite([
         }];
 
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(2);
+        expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
         va = va.destroy();
@@ -127,7 +127,7 @@ defineSuite([
             componentsPerAttribute : 3
         }]);
 
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).enabled).toEqual(true);
         expect(va.getAttribute(0).vertexBuffer).toEqual(positionBuffer);
@@ -148,7 +148,7 @@ defineSuite([
             componentsPerAttribute : 3
         }];
         var va = context.createVertexArray(attributes);
-        expect(va.getNumberOfAttributes()).toEqual(1);
+        expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).enabled).toEqual(true);
 
         va.getAttribute(0).enabled = false;
@@ -332,7 +332,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (provides both vertexBuffer and value)', function() {
@@ -346,7 +346,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create with duplicate indices', function() {
@@ -364,7 +364,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (componentsPerAttribute missing)', function() {
@@ -376,7 +376,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (componentsPerAttribute < 1)', function() {
@@ -386,7 +386,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (componentsPerAttribute > 4)', function() {
@@ -396,7 +396,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (value.length < 1)', function() {
@@ -406,7 +406,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (value.length > 4)', function() {
@@ -416,7 +416,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (componentDatatype)', function() {
@@ -430,7 +430,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to create (strideInBytes)', function() {
@@ -444,7 +444,7 @@ defineSuite([
 
         expect(function() {
             return context.createVertexArray(attributes);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to get attribute', function() {
@@ -456,7 +456,7 @@ defineSuite([
 
         expect(function() {
             return va.getAttribute();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {
@@ -469,6 +469,6 @@ defineSuite([
 
         expect(function() {
             va.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

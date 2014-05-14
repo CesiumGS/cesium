@@ -32,46 +32,46 @@ defineSuite([
 
     it('default constructor creates zero Ellipsoid', function() {
         var ellipsoid = new Ellipsoid();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getMinimumRadius()).toEqual(0.0);
-        expect(ellipsoid.getMaximumRadius()).toEqual(0.0);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiToTheFourth).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.minimumRadius).toEqual(0.0);
+        expect(ellipsoid.maximumRadius).toEqual(0.0);
     });
 
     it('fromCartesian3 creates zero Ellipsoid with no parameters', function() {
         var ellipsoid = Ellipsoid.fromCartesian3();
-        expect(ellipsoid.getRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadii()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(Cartesian3.ZERO);
-        expect(ellipsoid.getMinimumRadius()).toEqual(0.0);
-        expect(ellipsoid.getMaximumRadius()).toEqual(0.0);
+        expect(ellipsoid.radii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.radiiToTheFourth).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadii).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(Cartesian3.ZERO);
+        expect(ellipsoid.minimumRadius).toEqual(0.0);
+        expect(ellipsoid.maximumRadius).toEqual(0.0);
     });
 
     it('constructor computes correct values', function() {
         var ellipsoid = new Ellipsoid(radii.x, radii.y, radii.z);
-        expect(ellipsoid.getRadii()).toEqual(radii);
-        expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
-        expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(oneOverRadiiSquared);
-        expect(ellipsoid.getMinimumRadius()).toEqual(minimumRadius);
-        expect(ellipsoid.getMaximumRadius()).toEqual(maximumRadius);
+        expect(ellipsoid.radii).toEqual(radii);
+        expect(ellipsoid.radiiSquared).toEqual(radiiSquared);
+        expect(ellipsoid.radiiToTheFourth).toEqual(radiiToTheFourth);
+        expect(ellipsoid.oneOverRadii).toEqual(oneOverRadii);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(oneOverRadiiSquared);
+        expect(ellipsoid.minimumRadius).toEqual(minimumRadius);
+        expect(ellipsoid.maximumRadius).toEqual(maximumRadius);
     });
 
     it('fromCartesian3 computes correct values', function() {
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        expect(ellipsoid.getRadii()).toEqual(radii);
-        expect(ellipsoid.getRadiiSquared()).toEqual(radiiSquared);
-        expect(ellipsoid.getRadiiToTheFourth()).toEqual(radiiToTheFourth);
-        expect(ellipsoid.getOneOverRadii()).toEqual(oneOverRadii);
-        expect(ellipsoid.getOneOverRadiiSquared()).toEqual(oneOverRadiiSquared);
-        expect(ellipsoid.getMinimumRadius()).toEqual(minimumRadius);
-        expect(ellipsoid.getMaximumRadius()).toEqual(maximumRadius);
+        expect(ellipsoid.radii).toEqual(radii);
+        expect(ellipsoid.radiiSquared).toEqual(radiiSquared);
+        expect(ellipsoid.radiiToTheFourth).toEqual(radiiToTheFourth);
+        expect(ellipsoid.oneOverRadii).toEqual(oneOverRadii);
+        expect(ellipsoid.oneOverRadiiSquared).toEqual(oneOverRadiiSquared);
+        expect(ellipsoid.minimumRadius).toEqual(minimumRadius);
+        expect(ellipsoid.maximumRadius).toEqual(maximumRadius);
     });
 
     it('geodeticSurfaceNormalCartographic works without a result parameter', function() {
@@ -331,19 +331,19 @@ defineSuite([
     it('constructor throws if x less than 0', function() {
         expect(function() {
             return new Ellipsoid(-1, 0, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if y less than 0', function() {
         expect(function() {
             return new Ellipsoid(0, -1, 0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if z less than 0', function() {
         expect(function() {
             return new Ellipsoid(0, 0, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('expect Ellipsoid.geocentricSurfaceNormal is be Cartesian3.normalize', function() {
@@ -353,49 +353,49 @@ defineSuite([
     it('geodeticSurfaceNormalCartographic throws with no cartographic', function() {
         expect(function() {
             Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('geodeticSurfaceNormal throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.geodeticSurfaceNormal(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartographicToCartesian throws with no cartographic', function() {
         expect(function() {
             Ellipsoid.WGS84.cartographicToCartesian(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartographicArrayToCartesianArray throws with no cartographics', function() {
         expect(function() {
             Ellipsoid.WGS84.cartographicArrayToCartesianArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartesianToCartographic throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.cartesianToCartographic(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('cartesianArrayToCartographicArray throws with no cartesians', function() {
         expect(function() {
             Ellipsoid.WGS84.cartesianArrayToCartographicArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeodeticSurface throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.scaleToGeodeticSurface(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('scaleToGeocentricSurface throws with no cartesian', function() {
         expect(function() {
             Ellipsoid.WGS84.scaleToGeocentricSurface(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('clone copies any object with the proper structure', function() {

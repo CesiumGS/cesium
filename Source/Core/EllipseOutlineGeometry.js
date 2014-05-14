@@ -134,7 +134,6 @@ define([
     }
 
     /**
-     *
      * A description of the outline of an ellipse on an ellipsoid.
      *
      * @alias EllipseOutlineGeometry
@@ -150,9 +149,6 @@ define([
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} semiMajorAxis is required.
-     * @exception {DeveloperError} semiMinorAxis is required.
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
@@ -160,15 +156,15 @@ define([
      * @see EllipseOutlineGeometry#createGeometry
      *
      * @example
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var ellipse = new EllipseOutlineGeometry({
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var ellipse = new Cesium.EllipseOutlineGeometry({
      *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   rotation : CesiumMath.toRadians(60.0)
+     *   rotation : Cesium.Math.toRadians(60.0)
      * });
-     * var geometry = EllipseOutlineGeometry.createGeometry(ellipse);
+     * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
      */
     var EllipseOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -181,29 +177,26 @@ define([
         var extrudedHeight = options.extrudedHeight;
         var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(center)) {
             throw new DeveloperError('center is required.');
         }
-
         if (!defined(semiMajorAxis)) {
             throw new DeveloperError('semiMajorAxis is required.');
         }
-
         if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
-
         if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
-
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
-
         if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;

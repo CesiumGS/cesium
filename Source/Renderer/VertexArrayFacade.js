@@ -24,29 +24,25 @@ define([
      *
      * @constructor
      *
-     * @exception {DeveloperError} context is required.
-     * @exception {DeveloperError} At least one attribute is required.
      * @exception {DeveloperError} Attribute must have a componentsPerAttribute.
      * @exception {DeveloperError} Attribute must have a valid componentDatatype or not specify it.
      * @exception {DeveloperError} Attribute must have a valid usage or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      */
     var VertexArrayFacade = function(context, attributes, sizeInVertices) {
+        //>>includeStart('debug', pragmas.debug);
         if (!context) {
             throw new DeveloperError('context is required.');
         }
-
         if (!attributes || (attributes.length === 0)) {
             throw new DeveloperError('At least one attribute is required.');
         }
+        //>>includeEnd('debug');
 
         var attrs = VertexArrayFacade._verifyAttributes(attributes);
-
         sizeInVertices = sizeInVertices || 0;
-
         var attributesByPurposeAndUsage = {};
         var precreatedAttributes = [];
-
         var attributesByUsage;
         var attributesForUsage;
         var purpose;
@@ -449,12 +445,12 @@ define([
             var vertexBuffer = buffer.vertexBuffer;
             var vertexBufferSizeInBytes = vertexArrayFacade._size * buffer.vertexSizeInBytes;
             var vertexBufferDefined = defined(vertexBuffer);
-            if (!vertexBufferDefined || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
+            if (!vertexBufferDefined || (vertexBuffer.sizeInBytes < vertexBufferSizeInBytes)) {
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
                 buffer.vertexBuffer = vertexArrayFacade._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
-                buffer.vertexBuffer.setVertexArrayDestroyable(false);
+                buffer.vertexBuffer.vertexArrayDestroyable = false;
 
                 return true; // Created new vertex buffer
             }
@@ -489,16 +485,16 @@ define([
      * @memberof VertexArrayFacade
      */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
+        //>>includeStart('debug', pragmas.debug);
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
             throw new DeveloperError('offsetInVertices must be greater than or equal to zero and less than the vertex array size.');
         }
-
         if (offsetInVertices + lengthInVertices > this._size) {
             throw new DeveloperError('offsetInVertices + lengthInVertices cannot exceed the vertex array size.');
         }
+        //>>includeEnd('debug');
 
         var allBuffers = this._allBuffers;
-
         for (var i = 0, len = allBuffers.length; i < len; ++i) {
             subCommit(allBuffers[i], offsetInVertices, lengthInVertices);
         }

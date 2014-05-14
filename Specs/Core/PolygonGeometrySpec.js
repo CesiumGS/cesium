@@ -23,19 +23,19 @@ defineSuite([
     it('throws without hierarchy', function() {
         expect(function() {
             return new PolygonGeometry();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without positions', function() {
         expect(function() {
             return PolygonGeometry.fromPositions();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with less than three positions', function() {
         expect(function() {
             return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({ positions : [new Cartesian3()] }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with polygon hierarchy with less than three positions', function() {
@@ -47,7 +47,7 @@ defineSuite([
 
         expect(function() {
             return PolygonGeometry.createGeometry(new PolygonGeometry({ polygonHierarchy : hierarchy }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate positions', function() {
@@ -62,7 +62,7 @@ defineSuite([
                 ],
                 ellipsoid : ellipsoid
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate positions extruded', function() {
@@ -78,7 +78,7 @@ defineSuite([
                 ellipsoid : ellipsoid,
                 extrudedHeight: 2
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws due to duplicate hierarchy positions', function() {
@@ -103,7 +103,7 @@ defineSuite([
                 polygonHierarchy : hierarchy,
                 ellipsoid : ellipsoid
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {
@@ -282,9 +282,34 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        var bs = BoundingSphere.fromPoints(positions);
+        var bs = BoundingSphere.fromVertices(p.attributes.position.values);
         expect(p.boundingSphere.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON9);
         expect(p.boundingSphere.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON9);
+    });
+
+    it('computes correct bounding sphere at height >>> 0', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var height = 40000000.0;
+        var positions = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-108.0, 1.0),
+            Cartographic.fromDegrees(-108.0, -1.0),
+            Cartographic.fromDegrees(-106.0, -1.0),
+            Cartographic.fromDegrees(-106.0, 1.0)
+        ]);
+
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITIONS_ONLY,
+            positions : positions,
+            height : height
+        }));
+
+        var bs = BoundingSphere.fromPoints(ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-108.0, 1.0, height),
+            Cartographic.fromDegrees(-108.0, -1.0, height),
+            Cartographic.fromDegrees(-106.0, -1.0, height),
+            Cartographic.fromDegrees(-106.0, 1.0, height)
+        ]));
+        expect(Math.abs(p.boundingSphere.radius - bs.radius)).toBeLessThan(100.0);
     });
 
     it('computes positions extruded', function() {

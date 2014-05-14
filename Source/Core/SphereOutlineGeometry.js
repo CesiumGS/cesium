@@ -25,12 +25,12 @@ define([
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
      * @example
-     * var sphere = new SphereOutlineGeometry({
+     * var sphere = new Cesium.SphereOutlineGeometry({
      *   radius : 100.0,
      *   stackPartitions : 6,
      *   slicePartitions: 5
      * });
-     * var geometry = SphereOutlineGeometry.createGeometry(sphere);
+     * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
      */
     var SphereOutlineGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);

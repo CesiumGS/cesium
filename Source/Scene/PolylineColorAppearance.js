@@ -32,21 +32,21 @@ define([
      *
      * @example
      * // A solid white line segment
-     * var primitive = new Primitive({
-     *   geometryInstances : new GeometryInstance({
-     *     geometry : new PolylineGeometry({
+     * var primitive = new Cesium.Primitive({
+     *   geometryInstances : new Cesium.GeometryInstance({
+     *     geometry : new Cesium.PolylineGeometry({
      *       positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(0.0, 0.0),
-     *         Cartographic.fromDegrees(5.0, 0.0)
+     *         Cesium.Cartographic.fromDegrees(0.0, 0.0),
+     *         Cesium.Cartographic.fromDegrees(5.0, 0.0)
      *       ]),
      *       width : 10.0,
-     *       vertexFormat : PolylineColorApperance.VERTEX_FORMAT
+     *       vertexFormat : Cesium.PolylineColorApperance.VERTEX_FORMAT
      *     }),
      *     attributes : {
-     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 1.0, 1.0))
+     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 1.0, 1.0))
      *     }
      *   }),
-     *   appearance : new PolylineColorAppearance({
+     *   appearance : new Cesium.PolylineColorAppearance({
      *     translucent : false
      *   })
      * }));

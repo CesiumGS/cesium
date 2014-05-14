@@ -49,7 +49,7 @@ define([
         SceneMode) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0,
         normal : 1
     };
@@ -66,7 +66,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._pickId = undefined;
-        this._pickIdThis = defaultValue(options._pickIdThis, this);
+        this._pickPrimitive = defaultValue(options._pickPrimitive, this);
 
         this._frontFaceColorCommand = new DrawCommand();
         this._backFaceColorCommand = new DrawCommand();
@@ -96,7 +96,7 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the globe.
          *
          * @type {Boolean}
          *
@@ -139,8 +139,8 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883));
-         * sensor.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
+         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -178,10 +178,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * sensor.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * sensor.material = Material.fromType(Material.StripeType);
+         * sensor.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -190,7 +190,7 @@ define([
         this._translucent = undefined;
 
         /**
-         * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
+         * The color of the polyline where the sensor outline intersects the globe.  The default is {@link Color.WHITE}.
          *
          * @type {Color}
          * @default {@link Color.WHITE}
@@ -200,7 +200,7 @@ define([
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         /**
-         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         * The approximate pixel width of the polyline where the sensor outline intersects the globe.  The default is 5.0.
          *
          * @type {Number}
          * @default 5.0
@@ -338,14 +338,14 @@ define([
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
-            index : attributeIndices.position,
+            index : attributeLocations.position,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : attributeIndices.normal,
+            index : attributeLocations.normal,
             vertexBuffer : vertexBuffer,
             componentsPerAttribute : 3,
             componentDatatype : ComponentDatatype.FLOAT,
@@ -370,13 +370,14 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (this.radius < 0.0) {
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
-
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
 
@@ -496,14 +497,16 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
-                var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
+                var fsSource = createShaderSource({
+                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
+                });
 
-                frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
-                frontFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                frontFaceColorCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                        frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
+                frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
                 backFaceColorCommand.shaderProgram = frontFaceColorCommand.shaderProgram;
-                backFaceColorCommand.uniformMap = combine([this._uniforms, this._material._uniforms], false, false);
+                backFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
                 backFaceColorCommand.uniformMap.u_normalDirection = function() {
                     return -1.0;
                 };
@@ -523,7 +526,7 @@ define([
                 this._id = this.id;
                 this._pickId = this._pickId && this._pickId.destroy();
                 this._pickId = context.createPickId({
-                    primitive : this._pickIdThis,
+                    primitive : this._pickPrimitive,
                     id : this.id
                 });
             }
@@ -535,15 +538,16 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
-                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);
+                pickCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                    pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
-                pickCommand.uniformMap = combine([this._uniforms, this._material._uniforms, {
+                var uniforms = {
                     czm_pickColor : function() {
                         return that._pickId.color;
                     }
-                }], false, false);
+                };
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._material._uniforms), uniforms);
             }
 
             pickCommand.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;

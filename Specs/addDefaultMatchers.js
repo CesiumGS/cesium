@@ -137,7 +137,7 @@ define([
                 }
 
                 return function() {
-                    return true;
+                    return this.isNot ? false : true;
                 };
             }())
         };

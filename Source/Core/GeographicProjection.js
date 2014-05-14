@@ -2,12 +2,14 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './Cartesian3',
         './Cartographic',
         './Ellipsoid'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Cartesian3,
         Cartographic,
         Ellipsoid) {
@@ -15,7 +17,7 @@ define([
 
     /**
      * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
-     * them by the {@link Ellipsoid#getMaximumRadius}.  This projection
+     * them by the {@link Ellipsoid#maximumRadius}.  This projection
      * is commonly known as geographic, equirectangular, equidistant cylindrical, or plate carrée.  It
      * is also known as EPSG:4326.
      *
@@ -29,20 +31,22 @@ define([
      */
     var GeographicProjection = function(ellipsoid) {
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        this._semimajorAxis = this._ellipsoid.getMaximumRadius();
+        this._semimajorAxis = this._ellipsoid.maximumRadius;
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
     };
 
-    /**
-     * Gets the {@link Ellipsoid}.
-     *
-     * @memberof GeographicProjection
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    GeographicProjection.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+    defineProperties(GeographicProjection.prototype, {
+        /**
+         * Gets the {@link Ellipsoid}.
+         * @memberof GeographicProjection.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        }
+    });
 
     /**
      * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters.

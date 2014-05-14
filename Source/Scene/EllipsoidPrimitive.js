@@ -43,7 +43,7 @@ define([
         EllipsoidFS) {
     "use strict";
 
-    var attributeIndices = {
+    var attributeLocations = {
         position : 0
     };
 
@@ -66,19 +66,19 @@ define([
      *
      * @example
      * // 1. Create a sphere using the ellipsoid primitive
-     * primitives.add(new EllipsoidPrimitive({
+     * primitives.add(new Cesium.EllipsoidPrimitive({
      *   center : ellipsoid.cartographicToCartesian(
-     *     Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
-     *   radii : new Cartesian3(500000.0, 500000.0, 500000.0)
+     *     Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+     *   radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * }));
      *
      * @example
      * // 2. Create a tall ellipsoid in an east-north-up reference frame
-     * var e = new EllipsoidPrimitive();
-     * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(
+     * var e = new Cesium.EllipsoidPrimitive();
+     * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(
      *   ellipsoid.cartographicToCartesian(
-     *     Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
-     * e.radii = new Cartesian3(100000.0, 100000.0, 200000.0);
+     *     Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0)));
+     * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
      * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
@@ -112,7 +112,7 @@ define([
          *
          * @example
          * // A sphere with a radius of 2.0
-         * e.radii = new Cartesian3(2.0, 2.0, 2.0);
+         * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
@@ -134,8 +134,8 @@ define([
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
-         * e.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *   Cesium.Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
@@ -164,10 +164,10 @@ define([
          *
          * @example
          * // 1. Change the color of the default material to yellow
-         * e.material.uniforms.color = new Color(1.0, 1.0, 0.0, 1.0);
+         * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
-         * e.material = Material.fromType(Material.StripeType);
+         * e.material = Cesium.Material.fromType(Material.StripeType);
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
@@ -190,7 +190,7 @@ define([
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
-         * Draws the bounding sphere for each {@see DrawCommand} in the primitive.
+         * Draws the bounding sphere for each {@link DrawCommand} in the primitive.
          * </p>
          *
          * @type {Boolean}
@@ -249,7 +249,7 @@ define([
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry: geometry,
-            attributeIndices: attributeIndices,
+            attributeLocations: attributeLocations,
             bufferUsage: BufferUsage.STATIC_DRAW
         });
 
@@ -270,15 +270,21 @@ define([
             return;
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
+        //>>includeEnd('debug');
 
         var translucent = this.material.isTranslucent();
         var translucencyChanged = this._translucent !== translucent;
 
         if (!defined(this._rs) || translucencyChanged) {
             this._translucent = translucent;
+
+            // If this render state is ever updated to use a non-default
+            // depth range, the hard-coded values in EllipsoidVS.glsl need
+            // to be updated as well.
 
             this._rs = context.createRenderState({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
@@ -293,7 +299,7 @@ define([
                 // Do not write depth since the depth for the bounding box is
                 // wrong; it is not the true depth of the ray casted ellipsoid.
                 // Only write depth when EXT_frag_depth is supported.
-                depthMask : !translucent && context.getFragmentDepth(),
+                depthMask : !translucent && context.fragmentDepth,
                 blending : translucent ? BlendingState.ALPHA_BLEND : undefined
             });
         }
@@ -345,18 +351,18 @@ define([
             var colorFS = createShaderSource({
                 defines : [
                     this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
-                    (!translucent && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                    (!translucent && context.fragmentDepth) ? 'WRITE_DEPTH' : ''
                 ],
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
+            this._sp = context.shaderCache.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
             colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
-            colorCommand.uniformMap = combine([this._uniforms, this.material._uniforms], false, false);
+            colorCommand.uniformMap = combine(this._uniforms, this.material._uniforms);
             colorCommand.executeInClosestFrustum = translucent;
             colorCommand.owner = defaultValue(this._owner, this);
         }
@@ -389,19 +395,19 @@ define([
                 var pickFS = createShaderSource({
                     defines : [
                         this.onlySunLighting ? 'ONLY_SUN_LIGHTING' : '',
-                        (!translucent && context.getFragmentDepth()) ? 'WRITE_DEPTH' : ''
+                        (!translucent && context.fragmentDepth) ? 'WRITE_DEPTH' : ''
                     ],
                     sources : [this.material.shaderSource, EllipsoidFS],
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
+                this._pickSP = context.shaderCache.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
                 pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = combine([this._uniforms, this._pickUniforms, this.material._uniforms], false, false);
+                pickCommand.uniformMap = combine(combine(this._uniforms, this._pickUniforms), this.material._uniforms);
                 pickCommand.executeInClosestFrustum = translucent;
                 pickCommand.owner = defaultValue(this._owner, this);
             }

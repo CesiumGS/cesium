@@ -5,7 +5,8 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
-         'Core/Extent',
+         'Core/Rectangle',
+         'Core/Matrix4',
          'Scene/OrthographicFrustum',
          'Scene/SceneMode',
          'Specs/createScene',
@@ -16,7 +17,8 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
-         Extent,
+         Rectangle,
+         Matrix4,
          OrthographicFrustum,
          SceneMode,
          createScene,
@@ -29,7 +31,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        frameState = scene.getFrameState();
+        frameState = scene.frameState;
     });
 
     afterEach(function() {
@@ -56,13 +58,13 @@ defineSuite([
             CameraFlightPath.createAnimation(undefined, {
                 destination : new Cartesian3(1e9, 1e9, 1e9)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws without a destination', function() {
         expect(function() {
             CameraFlightPath.createAnimation(scene, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws with just up and no direction', function() {
@@ -71,7 +73,7 @@ defineSuite([
                 destination : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Z
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation throws with just direction and no up', function() {
@@ -80,7 +82,7 @@ defineSuite([
                 destination : Cartesian3.ZERO,
                 direction : Cartesian3.UNIT_X
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with cartographic throws without a scene', function() {
@@ -88,27 +90,27 @@ defineSuite([
             CameraFlightPath.createAnimationCartographic(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with cartographic throws without a destination', function() {
         expect(function() {
             CameraFlightPath.createAnimationCartographic(scene, {});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('create animation with extent throws without a scene', function() {
+    it('create animation with rectangle throws without a scene', function() {
         expect(function() {
-            CameraFlightPath.createAnimationExtent(undefined, {
+            CameraFlightPath.createAnimationRectangle(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
         }).toThrow();
     });
 
-    it('create animation with extent throws without a destination', function() {
+    it('create animation with rectangle throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimationExtent(scene, {});
-        }).toThrow();
+            CameraFlightPath.createAnimationRectangle(scene, {});
+        }).toThrowDeveloperError();
     });
 
     it('creates an animation', function() {
@@ -163,8 +165,8 @@ defineSuite([
         expect(flight.easingFunction).toBeDefined();
     });
 
-    it('creates an animation with extent', function() {
-        var destination = new Extent(-1, -1, 1, 1);
+    it('creates an animation with rectangle', function() {
+        var destination = new Rectangle(-1, -1, 1, 1);
         var duration = 5000.0;
         var onComplete = function() {
             return true;
@@ -173,7 +175,7 @@ defineSuite([
             return true;
         };
 
-        var flight = CameraFlightPath.createAnimationExtent(scene, {
+        var flight = CameraFlightPath.createAnimationRectangle(scene, {
             destination : destination,
             duration : duration,
             onComplete : onComplete,
@@ -196,7 +198,7 @@ defineSuite([
             CameraFlightPath.createAnimation(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createAnimationCartographic throws if mode is morphing', function() {
@@ -206,17 +208,17 @@ defineSuite([
             CameraFlightPath.createAnimationCartographic(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('createAnimationExtent throws if mode is morphing', function() {
+    it('createAnimationRectangle throws if mode is morphing', function() {
         expect(function() {
             frameState.mode = SceneMode.MORPHING;
-            var destination = new Extent(-1, -1, 1, 1);
-            CameraFlightPath.createAnimationExtent(scene, {
+            var destination = new Rectangle(-1, -1, 1, 1);
+            CameraFlightPath.createAnimationRectangle(scene, {
                 destination : destination
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates an animation in 3d', function() {
@@ -257,7 +259,7 @@ defineSuite([
         var startUp = Cartesian3.clone(camera.up);
 
         var endPosition = Cartesian3.negate(startPosition);
-        var endCartographic = frameState.scene2D.projection.getEllipsoid().cartesianToCartographic(endPosition);
+        var endCartographic = frameState.scene2D.projection.ellipsoid.cartesianToCartographic(endPosition);
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
@@ -280,23 +282,23 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-    it('creates an animation in 3d with extent', function() {
+    it('creates an animation in 3d with rectangle', function() {
         var camera = frameState.camera;
 
-        var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
+        var startPosition = frameState.scene2D.projection.ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         var startDirection = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
 
         var endPosition = Cartesian3.negate(startPosition);
-        var endCartographic = frameState.scene2D.projection.getEllipsoid().cartesianToCartographic(endPosition);
-        var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
+        var endCartographic = frameState.scene2D.projection.ellipsoid.cartesianToCartographic(endPosition);
+        var rectangle = new Rectangle(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(scene, {
-            destination : extent,
+        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+            destination : rectangle,
             direction : endDirection,
             up : endUp,
             duration : duration
@@ -321,6 +323,10 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startPosition = Cartesian3.clone(camera.position);
         var startDirection = Cartesian3.clone(camera.direction);
@@ -357,6 +363,10 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startPosition = Cartesian3.clone(camera.position);
         var startDirection = Cartesian3.clone(camera.direction);
@@ -386,29 +396,33 @@ defineSuite([
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
     });
 
-    it('creates an animation in Columbus view with extent', function() {
+    it('creates an animation in Columbus view with rectangle', function() {
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         var camera = frameState.camera;
-        camera.controller._mode = SceneMode.COLUMBUS_VIEW;
+        camera._mode = SceneMode.COLUMBUS_VIEW;
 
-        var startPosition = frameState.scene2D.projection.getEllipsoid().cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
+        var startPosition = frameState.scene2D.projection.ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, 0, 20));
         camera.position = startPosition;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startDirection = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
 
         var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 20.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
-        var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
+        var rectangle = new Rectangle(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(scene, {
-            destination : extent,
+        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+            destination : rectangle,
             direction : endDirection,
             up : endUp,
             duration : duration
@@ -434,6 +448,10 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
@@ -476,6 +494,10 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
@@ -510,16 +532,20 @@ defineSuite([
         expect(camera.frustum.right - camera.frustum.left).toEqual(endPosition.z);
     });
 
-    it('creates an animation in 2D with extent', function() {
+    it('creates an animation in 2D with rectangle', function() {
         frameState.mode = SceneMode.SCENE2D;
         var camera = frameState.camera;
-        camera.controller._mode = SceneMode.SCENE2D;
+        camera._mode = SceneMode.SCENE2D;
 
         camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                0.0, 0.0, 0.0, 1.0);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
@@ -528,13 +554,13 @@ defineSuite([
 
         var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 0.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
-        var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
+        var rectangle = new Rectangle(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
         var duration = 5000.0;
-        var flight = CameraFlightPath.createAnimationExtent(scene, {
-            destination : extent,
+        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+            destination : rectangle,
             direction : endDirection,
             up : endUp,
             duration : duration

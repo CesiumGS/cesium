@@ -32,12 +32,10 @@ define([
      * if not specified.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
-     * @exception {DeveloperError} url is required.
-     *
      * @example
-     * loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
-     *     //Do something with the JSON object
-     * }, function() {
+     * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
+     *     // Do something with the JSON object
+     * }, function(error) {
      *     // an error occurred
      * });
      *
@@ -46,9 +44,11 @@ define([
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadJson = function loadJson(url, headers) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(headers)) {
             headers = defaultHeaders;

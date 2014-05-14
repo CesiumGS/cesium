@@ -44,7 +44,7 @@ define([
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
      *
      * @example
-     * primitives.add(new DebugModelMatrixPrimitive({
+     * primitives.add(new Cesium.DebugModelMatrixPrimitive({
      *   modelMatrix : primitive.modelMatrix,  // primitive to debug
      *   length : 100000.0,
      *   width : 10.0
@@ -153,7 +153,8 @@ define([
                 }),
                 appearance : new PolylineColorAppearance(),
                 asynchronous : false,
-                allow3DOnly : Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY)  // Workaround projecting (0, 0, 0)
+                // Workaround projecting (0, 0, 0)
+                allow3DOnly : (this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)
             });
         }
 

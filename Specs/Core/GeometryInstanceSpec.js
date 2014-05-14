@@ -64,7 +64,7 @@ defineSuite([
     it('constructor throws without geometry', function() {
         expect(function() {
             return new GeometryInstance();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

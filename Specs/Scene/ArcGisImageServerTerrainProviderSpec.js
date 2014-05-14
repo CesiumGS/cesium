@@ -35,12 +35,12 @@ defineSuite([
     it('constructor throws if url is not provided', function() {
         expect(function() {
             return new ArcGisImageServerTerrainProvider();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new ArcGisImageServerTerrainProvider({
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('uses geographic tiling scheme by default', function() {
@@ -48,7 +48,7 @@ defineSuite([
             url : 'made/up/url'
         });
 
-        var tilingScheme = provider.getTilingScheme();
+        var tilingScheme = provider.tilingScheme;
         expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
     });
 
@@ -63,15 +63,15 @@ defineSuite([
             tilingScheme : tilingScheme
         });
 
-        expect(provider.getTilingScheme()).toBe(tilingScheme);
+        expect(provider.tilingScheme).toBe(tilingScheme);
     });
 
     it('has error event', function() {
         var provider = new ArcGisImageServerTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getErrorEvent()).toBeDefined();
-        expect(provider.getErrorEvent()).toBe(provider.getErrorEvent());
+        expect(provider.errorEvent).toBeDefined();
+        expect(provider.errorEvent).toBe(provider.errorEvent);
     });
 
     it('returns reasonable geometric error for various levels', function() {
@@ -88,7 +88,7 @@ defineSuite([
         var provider = new ArcGisImageServerTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getCredit()).toBeUndefined();
+        expect(provider.credit).toBeUndefined();
     });
 
     it('logo is defined if credit is provided', function() {
@@ -96,7 +96,7 @@ defineSuite([
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
-        expect(provider.getCredit()).toBeDefined();
+        expect(provider.credit).toBeDefined();
     });
 
     it('does not have a water mask', function() {
@@ -110,11 +110,11 @@ defineSuite([
         var provider = new ArcGisImageServerTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.isReady()).toBe(true);
+        expect(provider.ready).toBe(true);
     });
 
     describe('requestTileGeometry', function() {
-        it('requests expanded extent to account for center versus edge', function() {
+        it('requests expanded rectangle to account for center versus edge', function() {
             var baseUrl = 'made/up/url';
 
             loadImage.createImage = function(url, crossOrigin, deferred) {

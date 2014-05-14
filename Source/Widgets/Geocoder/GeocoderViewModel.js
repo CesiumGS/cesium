@@ -1,16 +1,15 @@
 /*global define*/
 define([
         '../../Core/BingMapsApi',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Extent',
+        '../../Core/Rectangle',
         '../../Core/jsonp',
-        '../../Core/Matrix3',
         '../../Core/Matrix4',
+        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../createCommand',
@@ -18,16 +17,15 @@ define([
         '../../ThirdParty/when'
     ], function(
         BingMapsApi,
-        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Extent,
+        Rectangle,
         jsonp,
-        Matrix3,
         Matrix4,
+        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         createCommand,
@@ -41,7 +39,7 @@ define([
      * @constructor
      *
      * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -51,15 +49,15 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
-     *
-     * @exception {DeveloperError} scene is required.
      */
     var GeocoderViewModel = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
-        this._url = defaultValue(description.url, 'http://dev.virtualearth.net/');
+        this._url = defaultValue(description.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
@@ -109,9 +107,12 @@ define([
                 return this._searchText;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof value !== 'string') {
                     throw new DeveloperError('value must be a valid string.');
                 }
+                //>>includeEnd('debug');
+
                 this._searchText = value;
             }
         });
@@ -129,9 +130,12 @@ define([
                 return this._flightDuration;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
                 if (value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
+                //>>includeEnd('debug');
+
                 this._flightDuration = value;
             }
         });
@@ -199,6 +203,11 @@ define([
         }
     });
 
+    var transform2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, 1.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 1.0);
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -243,47 +252,28 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var extent = Extent.fromDegrees(west, south, east, north);
+            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-            var position = viewModel._scene.getCamera().controller.getExtentCameraCoordinates(extent);
+            var camera = viewModel._scene.camera;
+            var position = camera.getRectangleCameraCoordinates(rectangle);
             if (!defined(position)) {
                 // This can happen during a scene mode transition.
                 return;
             }
 
-            var up;
-            var direction;
-            if (viewModel._scene.mode === SceneMode.SCENE3D) {
-                up = Cartesian3.UNIT_Z;
-                direction = Cartesian3.negate(viewModel._ellipsoid.geodeticSurfaceNormal(position));
-            } else {
-                up = Cartesian3.UNIT_Y;
-                direction = Cartesian3.negate(Cartesian3.UNIT_Z);
-            }
-
             var description = {
                 destination : position,
                 duration : viewModel._flightDuration,
-                up : up,
-                direction : direction
+                onComplete : function() {
+                    var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
+                    screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
+                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
+                },
+                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
             };
 
-            var camera = viewModel._scene.getCamera();
-            if (!Matrix4.equals(camera.transform, Matrix4.IDENTITY)) {
-                var transform = Matrix4.inverseTransformation(camera.transform);
-                Matrix4.multiplyByPoint(camera.transform, camera.position, camera.position);
-
-                var rotation = Matrix4.getRotation(camera.transform);
-                Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
-                Matrix3.multiplyByVector(rotation, camera.up, camera.up);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-
-                camera.transform = Matrix4.IDENTITY;
-                viewModel._scene.getScreenSpaceCameraController().setEllipsoid(viewModel._ellipsoid);
-            }
-
             var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
-            viewModel._scene.getAnimations().add(flight);
+            viewModel._scene.animations.add(flight);
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

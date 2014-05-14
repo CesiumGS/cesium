@@ -60,6 +60,6 @@ defineSuite([
         var target = new DynamicPolyline();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

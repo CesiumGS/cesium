@@ -33,7 +33,7 @@ defineSuite([
     it('toValue throws without a color', function() {
         expect(function() {
             ShowGeometryInstanceAttribute.toValue();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });
