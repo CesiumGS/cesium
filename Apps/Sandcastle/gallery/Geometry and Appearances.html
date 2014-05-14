@@ -958,6 +958,15 @@ require(['Cesium'], function(Cesium) {
         }
     });
 
+    function computeCircle(radius) {
+        var positions = [];
+        for (var i = 0; i < 360; i++) {
+            var radians = Cesium.Math.toRadians(i);
+            positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+        }
+        return positions;
+    }
+
     var tubeGeometry = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
             polylinePositions : Cesium.Cartesian3.fromDegreesArray([
@@ -966,7 +975,7 @@ require(['Cesium'], function(Cesium) {
                 -112.0, 18.0
             ]),
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            shapePositions : Cesium.Shapes.compute2DCircle(40000.0)
+            shapePositions : computeCircle(40000.0)
         }),
         attributes : {
             color : solidWhite
