@@ -1365,7 +1365,7 @@ define([
          */
         czm_resolutionScale : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT,
+            datatype : WebGLRenderingContext.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.resolutionScale;
             }
