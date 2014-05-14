@@ -6,7 +6,6 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
-         'Core/Shapes',
          'Core/VertexFormat'
      ], function(
          PolygonGeometry,
@@ -15,7 +14,6 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          CesiumMath,
-         Shapes,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

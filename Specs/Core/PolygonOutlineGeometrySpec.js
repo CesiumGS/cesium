@@ -5,16 +5,14 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Shapes'
+         'Core/Math'
      ], function(
          PolygonOutlineGeometry,
          BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         CesiumMath,
-         Shapes) {
+         CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
