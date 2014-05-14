@@ -13,14 +13,14 @@ defineSuite([
          'Core/Math',
          'Core/Matrix4',
          'Core/GeometryPipeline',
-         'Core/PrimitiveType',
-         'Renderer/BlendingState',
          'Renderer/BufferUsage',
          'Renderer/DrawCommand',
-         'Renderer/Pass',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
-         'Scene/BillboardCollection'
+         'Scene/Pass',
+         'Scene/BlendingState',
+         'Scene/BillboardCollection',
+         'Scene/TextureAtlas'
      ], 'Scene/Multifrustum', function(
          createScene,
          destroyScene,
@@ -35,14 +35,14 @@ defineSuite([
          CesiumMath,
          Matrix4,
          GeometryPipeline,
-         PrimitiveType,
-         BlendingState,
          BufferUsage,
          DrawCommand,
-         Pass,
          TextureMinificationFilter,
          TextureMagnificationFilter,
-         BillboardCollection) {
+         Pass,
+         BlendingState,
+         BillboardCollection,
+         TextureAtlas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -57,7 +57,7 @@ defineSuite([
 
     beforeEach(function() {
         scene = createScene();
-        context = scene._context;
+        context = scene.context;
         primitives = scene.primitives;
 
         var camera = scene.camera;
@@ -95,7 +95,8 @@ defineSuite([
     var billboard2;
 
     function createBillboards() {
-        atlas = context.createTextureAtlas({
+        atlas = new TextureAtlas({
+            scene : scene,
             images : [greenImage, blueImage, whiteImage],
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
@@ -252,29 +253,27 @@ defineSuite([
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
                 this._rs = context.createRenderState({
                     blending : BlendingState.ALPHA_BLEND
                 });
             }
 
-            var command = new DrawCommand();
-            command.primitiveType = PrimitiveType.TRIANGLES;
-            command.renderState = this._rs;
-            command.shaderProgram = this._sp;
-            command.vertexArray = this._va;
-            command.uniformMap = this._um;
-            command.modelMatrix = this._modelMatrix;
-            command.executeInClosestFrustum = closestFrustum;
-            command.boundingVolume = bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined;
-            command.pass = Pass.OPAQUE;
-
-            commandList.push(command);
+            commandList.push(new DrawCommand({
+                renderState : this._rs,
+                shaderProgram : this._sp,
+                vertexArray : this._va,
+                uniformMap : this._um,
+                modelMatrix : this._modelMatrix,
+                executeInClosestFrustum : closestFrustum,
+                boundingVolume : bounded ? new BoundingSphere(Cartesian3.clone(Cartesian3.ZERO), 500000.0) : undefined,
+                pass : Pass.OPAQUE
+            }));
         };
 
         Primitive.prototype.destroy = function() {
             this._va = this._va && this._va.destroy();
-            this._sp = this._sp && this._sp.release();
+            this._sp = this._sp && this._sp.destroy();
             return destroyObject(this);
         };
 

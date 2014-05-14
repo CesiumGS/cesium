@@ -27,31 +27,31 @@ define([
      * @alias Geocoder
      * @constructor
      *
-     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
-     * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
-     * @param {String} [description.key] The Bing Maps key for your application, which can be
+     * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+     * @param {Scene} options.scene The Scene instance to use.
+     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
-     * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
+     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
      */
-    var Geocoder = function(description) {
+    var Geocoder = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.container)) {
-            throw new DeveloperError('description.container is required.');
+        if (!defined(options) || !defined(options.container)) {
+            throw new DeveloperError('options.container is required.');
         }
-        if (!defined(description.scene)) {
-            throw new DeveloperError('description.scene is required.');
+        if (!defined(options.scene)) {
+            throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        var container = getElement(description.container);
-        var viewModel = new GeocoderViewModel(description);
+        var container = getElement(options.container);
+        var viewModel = new GeocoderViewModel(options);
 
         viewModel._startSearchPath = startSearchPath;
         viewModel._stopSearchPath = stopSearchPath;

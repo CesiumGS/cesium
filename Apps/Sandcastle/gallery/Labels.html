@@ -97,7 +97,8 @@ require(['Cesium'], function(Cesium) {
         image.onload = function() {
             var labels = new Cesium.LabelCollection();
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.createTextureAtlas({
+            var textureAtlas = new Cesium.TextureAtlas({
+                scene : scene,
                 image : image
             });
             billboards.textureAtlas = textureAtlas;

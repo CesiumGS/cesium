@@ -12,7 +12,8 @@ define([
         './Label',
         './LabelStyle',
         './HorizontalOrigin',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        './TextureAtlas'
     ], function(
         defaultValue,
         defineProperties,
@@ -26,7 +27,8 @@ define([
         Label,
         LabelStyle,
         HorizontalOrigin,
-        VerticalOrigin) {
+        VerticalOrigin,
+        TextureAtlas) {
     "use strict";
 
     // A glyph represents a single character in a particular label.  It may or may
@@ -388,7 +390,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @param {Object}[description] A template describing the label's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the label's properties as shown in Example 1.
      *
      * @returns {Label} The label that was added to the collection.
      *
@@ -427,8 +429,8 @@ define([
      *   font : '24px Helvetica',
      * });
      */
-    LabelCollection.prototype.add = function(description) {
-        var label = new Label(description, this);
+    LabelCollection.prototype.add = function(options) {
+        var label = new Label(options, this);
 
         this._labels.push(label);
         this._labelsToUpdate.push(label);
@@ -565,7 +567,11 @@ define([
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
         if (!defined(this._textureAtlas)) {
-            this._textureAtlas = context.createTextureAtlas();
+            this._textureAtlas = new TextureAtlas({
+                scene : {
+                    context : context
+                }
+            });
             billboardCollection.textureAtlas = this._textureAtlas;
         }
 
