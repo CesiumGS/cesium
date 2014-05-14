@@ -129,15 +129,15 @@ define([
      * @param {Context} Specifies the context where the filter is being applied.
      */
     CustomPostProcess.prototype.update = function(context) {
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var that = this;
 
         // Setup the framebuffer if not defined, and the colortexture.
         if (!defined(this.framebuffer) ||
-                this.framebuffer.getColorTexture(0).getWidth() !== width ||
-                this.framebuffer.getColorTexture(0).getHeight() !== height ) {
+                this.framebuffer.getColorTexture(0).width !== width ||
+                this.framebuffer.getColorTexture(0).height !== height ) {
 //            this.freeResources();
 
             var colorTexture = context.createTexture2D({
@@ -148,7 +148,7 @@ define([
             var depthTexture;
             var depthRenderbuffer;
 
-            if (context.getDepthTexture()) {
+            if (context.depthTexture) {
                 depthTexture = context.createTexture2D({
                     width : width,
                     height : height,
@@ -172,8 +172,8 @@ define([
             this._colorTexture = colorTexture;
             this._depthTexture = depthTexture;
             this._depthRenderbuffer = depthRenderbuffer;
-            this._colorStep.x = 1.0 / colorTexture.getWidth();
-            this._colorStep.y = 1.0 / colorTexture.getHeight();
+            this._colorStep.x = 1.0 / colorTexture.width;
+            this._colorStep.y = 1.0 / colorTexture.height;
         }
 
         // Setup the filter command.
@@ -182,7 +182,7 @@ define([
             filterCommand.owner = this;
             filterCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
             filterCommand.vertexArray = getVertexArray(context);
-            filterCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, this.postProcessFilter, attributeIndices);
+            filterCommand.shaderProgram = context.shaderCache.getShaderProgram(ViewportQuadVS, this.postProcessFilter, attributeIndices);
             filterCommand.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
