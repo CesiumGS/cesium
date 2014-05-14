@@ -3,11 +3,9 @@ defineSuite([
          'Widgets/CesiumWidget/CesiumWidget',
          'Core/Clock',
          'Core/ScreenSpaceEventHandler',
-         'Scene/CentralBody',
          'Scene/EllipsoidTerrainProvider',
          'Scene/Scene',
          'Scene/SceneMode',
-         'Scene/SceneTransitioner',
          'Scene/SkyBox',
          'Scene/TileCoordinatesImageryProvider',
          'Specs/EventHelper'
@@ -15,11 +13,9 @@ defineSuite([
          CesiumWidget,
          Clock,
          ScreenSpaceEventHandler,
-         CentralBody,
          EllipsoidTerrainProvider,
          Scene,
          SceneMode,
-         SceneTransitioner,
          SkyBox,
          TileCoordinatesImageryProvider,
          EventHelper) {
@@ -52,9 +48,7 @@ defineSuite([
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
         expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
-        expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);
-        expect(widget.sceneTransitioner).toBeInstanceOf(SceneTransitioner);
         expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
         widget.destroy();
@@ -77,6 +71,7 @@ defineSuite([
         widget = new CesiumWidget(container, {
             sceneMode : SceneMode.SCENE2D
         });
+        widget.scene.completeMorph();
         expect(widget.scene.mode).toBe(SceneMode.SCENE2D);
     });
 
@@ -84,6 +79,7 @@ defineSuite([
         widget = new CesiumWidget(container, {
             sceneMode : SceneMode.COLUMBUS_VIEW
         });
+        widget.scene.completeMorph();
         expect(widget.scene.mode).toBe(SceneMode.COLUMBUS_VIEW);
     });
 
@@ -99,17 +95,17 @@ defineSuite([
             imageryProvider : new TileCoordinatesImageryProvider()
         };
         widget = new CesiumWidget(container, options);
-        var imageryLayers = widget.centralBody.getImageryLayers();
-        expect(imageryLayers.getLength()).toEqual(1);
-        expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
+        var imageryLayers = widget.scene.imageryLayers;
+        expect(imageryLayers.length).toEqual(1);
+        expect(imageryLayers.get(0).imageryProvider).toBe(options.imageryProvider);
     });
 
     it('does not create an ImageryProvider if option is false', function() {
         widget = new CesiumWidget(container, {
             imageryProvider : false
         });
-        var imageryLayers = widget.centralBody.getImageryLayers();
-        expect(imageryLayers.getLength()).toEqual(0);
+        var imageryLayers = widget.scene.imageryLayers;
+        expect(imageryLayers.length).toEqual(0);
     });
 
     it('sets expected options terrainProvider', function() {
@@ -117,7 +113,7 @@ defineSuite([
             terrainProvider : new EllipsoidTerrainProvider()
         };
         widget = new CesiumWidget(container, options);
-        expect(widget.centralBody.terrainProvider).toBe(options.terrainProvider);
+        expect(widget.scene.terrainProvider).toBe(options.terrainProvider);
     });
 
     it('sets expected options skyBox', function() {
@@ -155,7 +151,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene.getContext();
+        var context = widget.scene._context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -170,13 +166,13 @@ defineSuite([
     it('throws if no container provided', function() {
         expect(function() {
             return new CesiumWidget(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raises onRenderLoopError and stops the render loop when render throws', function() {

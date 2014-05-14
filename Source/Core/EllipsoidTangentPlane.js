@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Transforms',
         './AxisAlignedBoundingBox',
@@ -15,6 +16,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Transforms,
         AxisAlignedBoundingBox,
@@ -37,29 +39,57 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} origin The point on the surface of the ellipsoid where the tangent plane touches.
      *
-     * @exception {DeveloperError} origin is required.
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
     var EllipsoidTangentPlane = function(origin, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
+        //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
         origin = ellipsoid.scaleToGeodeticSurface(origin);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin must not be at the center of the ellipsoid.');
         }
+        //>>includeEnd('debug');
+
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
-        this._origin = Cartesian3.clone(origin);
+        this._origin = origin;
         this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0));
         this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1));
 
         var normal = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 2));
         this._plane = Plane.fromPointNormal(origin, normal);
     };
+
+    defineProperties(EllipsoidTangentPlane.prototype, {
+        /**
+         * Gets the ellipsoid.
+         * @memberof EllipsoidTangentPlane.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the origin.
+         * @memberof EllipsoidTangentPlane.prototype
+         * @type {Cartesian3}
+         */
+        origin : {
+            get : function() {
+                return this._origin;
+            }
+        }
+    });
 
     var tmp = new AxisAlignedBoundingBox();
     /**
@@ -69,32 +99,16 @@ define([
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesians The list of positions surrounding the center point.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.fromPoints = function(cartesians, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         var box = AxisAlignedBoundingBox.fromPoints(cartesians, tmp);
         return new EllipsoidTangentPlane(box.center, ellipsoid);
-    };
-
-    /**
-     * @memberof EllipsoidTangentPlane
-     * @returns {Ellipsoid} Gets the ellipsoid.
-     */
-    EllipsoidTangentPlane.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
-
-    /**
-     * @memberof EllipsoidTangentPlane
-     * @returns {Cartesian3} Gets the origin.
-     */
-    EllipsoidTangentPlane.prototype.getOrigin = function() {
-        return this._origin;
     };
 
     var projectPointOntoPlaneRay = new Ray();
@@ -107,13 +121,13 @@ define([
      * @param {Cartesian3} cartesian The point to project.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        //>>includeEnd('debug');
 
         var ray = projectPointOntoPlaneRay;
         ray.origin = cartesian;
@@ -147,13 +161,13 @@ define([
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian2 instances onto which to store results.
      * @returns {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         if (!defined(result)) {
             result = [];
@@ -181,13 +195,13 @@ define([
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian3 instances onto which to store results.
      * @returns {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
-     *
-     * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
+        //>>includeEnd('debug');
 
         var length = cartesians.length;
         if (!defined(result)) {

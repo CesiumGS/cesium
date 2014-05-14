@@ -83,41 +83,41 @@ define([
          * exact circle.
          * <br /><br />
          * An outlined circle is rendered by passing the result of this function call to
-         * {@link Polyline#setPositions}.  A filled circle is rendered by passing
-         * the result to {@link Polygon#setPositions}.
+         * {@link Polyline#positions}.  A filled circle is rendered by passing
+         * the result to {@link Polygon#positions}.
          *
          * @param {Ellipsoid} ellipsoid The ellipsoid the circle will be on.
          * @param {Cartesian3} center The circle's center point in the fixed frame.
          * @param {Number} radius The radius in meters.
          * @param {Number} [granularity] The angular distance between points on the circle.
          *
-         * @exception {DeveloperError} ellipsoid, center, and radius are required.
          * @exception {DeveloperError} radius must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *
-         * @see Polyline#setPositions
-         * @see Polygon#setPositions
+         * @see Polyline#positions
+         * @see Polygon#positions
          *
          * @example
          * // Create a polyline of a circle
-         * var polyline = new Polyline();
-         * polyline.setPositions(Shapes.computeCircleBoundary(
+         * var polyline = new Cesium.Polyline();
+         * polyline.positions = Cesium.Shapes.computeCircleBoundary(
          *   ellipsoid, ellipsoid.cartographicToCartesian(
-         *     Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0));
+         *     Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 0.0)), 100000.0);
          */
         computeCircleBoundary : function(ellipsoid, center, radius, granularity) {
+            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(ellipsoid) || !defined(center) || !defined(radius)) {
                 throw new DeveloperError('ellipsoid, center, and radius are required.');
             }
-
             if (radius <= 0.0) {
                 throw new DeveloperError('radius must be greater than zero.');
             }
-
-            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }
+            //>>includeEnd('debug');
 
             return this.computeEllipseBoundary(ellipsoid, center, radius, radius, 0, granularity);
         },
@@ -130,8 +130,8 @@ define([
          * exact circle.
          * <br /><br />
          * An outlined ellipse is rendered by passing the result of this function call to
-         * {@link Polyline#setPositions}.  A filled ellipse is rendered by passing
-         * the result to {@link Polygon#setPositions}.
+         * {@link Polyline#positions}.  A filled ellipse is rendered by passing
+         * the result to {@link Polygon#positions}.
          *
          * @param {Ellipsoid} ellipsoid The ellipsoid the ellipse will be on.
          * @param {Cartesian3} center The ellipse's center point in the fixed frame.
@@ -140,37 +140,36 @@ define([
          * @param {Number} [rotation] The angle from north (clockwise) in radians. The default is zero.
          * @param {Number} [granularity] The angular distance between points on the circle.
          *
-         * @exception {DeveloperError} ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.
          * @exception {DeveloperError} Semi-major and semi-minor axes must be greater than zero.
          * @exception {DeveloperError} granularity must be greater than zero.
          *
-         * @see Polyline#setPositions
-         * @see Polygon#setPositions
+         * @see Polyline#positions
+         * @see Polygon#positions
          *
          * @returns The set of points that form the ellipse's boundary.
          *
          * @example
          * // Create a filled ellipse.
-         * var polygon = new Polygon();
-         * polygon.setPositions(Shapes.computeEllipseBoundary(
+         * var polygon = new Cesium.Polygon();
+         * polygon.positions = Cesium.Shapes.computeEllipseBoundary(
          *   ellipsoid, ellipsoid.cartographicToCartesian(
-         *      Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Math.toRadians(60)));
+         *      Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)), 500000.0, 300000.0, Cesium.Math.toRadians(60));
          */
         computeEllipseBoundary : function(ellipsoid, center, semiMajorAxis, semiMinorAxis, rotation, granularity) {
-            if (!defined(ellipsoid) || !defined(center) || !defined(semiMajorAxis) || !defined(semiMinorAxis)) {
-                throw new DeveloperError('ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.');
-            }
-
-            if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
-                throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
-            }
-
             rotation = defaultValue(rotation, 0.0);
             granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
 
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(ellipsoid) || !defined(center) || !defined(semiMajorAxis) || !defined(semiMinorAxis)) {
+                throw new DeveloperError('ellipsoid, center, semiMajorAxis, and semiMinorAxis are required.');
+            }
+            if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
+                throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
+            }
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }
+            //>>includeEnd('debug');
 
             if (semiMajorAxis < semiMinorAxis) {
                var t = semiMajorAxis;
@@ -240,7 +239,7 @@ define([
          * @returns The set of points that form the ellipse's boundary.
          *
          * @example
-         * var circle = Shapes.compute2DCircle(100000.0);
+         * var circle = Cesium.Shapes.compute2DCircle(100000.0);
          */
         compute2DCircle : function(radius, granularity) {
             radius = defaultValue(radius, 1.0);

@@ -2,34 +2,34 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/loadImage',
-        '../Core/getImagePixels',
-        '../Core/throttleRequestByServer',
-        '../Core/writeTextToCanvas',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getImagePixels',
+        '../Core/loadImage',
+        '../Core/Math',
+        '../Core/throttleRequestByServer',
         './Credit',
-        './TerrainProvider',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
+        './TerrainProvider',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
-        loadImage,
-        getImagePixels,
-        throttleRequestByServer,
-        writeTextToCanvas,
+        defineProperties,
         DeveloperError,
-        CesiumMath,
         Ellipsoid,
         Event,
+        getImagePixels,
+        loadImage,
+        CesiumMath,
+        throttleRequestByServer,
         Credit,
-        TerrainProvider,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        TerrainProvider,
         when) {
     "use strict";
 
@@ -55,16 +55,18 @@ define([
      *
      * @example
      * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-     *   url : 'http://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+     *   url : '//elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
      *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
-     * centralBody.terrainProvider = terrainProvider;
+     * scene.terrainProvider = terrainProvider;
      */
     var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
+        //>>includeEnd('debug');
 
         this._url = description.url;
         this._token = description.token;
@@ -77,18 +79,18 @@ define([
         }
 
         this._heightmapWidth = 65;
-        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.getEllipsoid(), this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+        this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._proxy = description.proxy;
 
         this._terrainDataStructure = {
-                heightScale : 1.0 / 1000.0,
-                heightOffset : -1000.0,
-                elementsPerHeight : 3,
-                stride : 4,
-                elementMultiplier : 256.0,
-                isBigEndian : true
-            };
+            heightScale : 1.0 / 1000.0,
+            heightOffset : -1000.0,
+            elementsPerHeight : 3,
+            stride : 4,
+            elementMultiplier : 256.0,
+            isBigEndian : true
+        };
 
         this._errorEvent = new Event();
 
@@ -99,9 +101,59 @@ define([
         this._credit = credit;
     };
 
+    defineProperties(ArcGisImageServerTerrainProvider.prototype, {
+        /**
+         * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
+         * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
+         * are passed an instance of {@link TileProviderError}.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Event}
+         */
+        errorEvent : {
+            get : function() {
+                return this._errorEvent;
+            }
+        },
+
+        /**
+         * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+         * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
+        },
+
+        /**
+         * Gets the tiling scheme used by this provider.  This function should
+         * not be called before {@link ArcGisImageServerTerrainProvider#ready} returns true.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {GeographicTilingScheme}
+         */
+        tilingScheme : {
+            get : function() {
+                return this._tilingScheme;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider is ready for use.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return true;
+            }
+        }
+    });
+
     /**
      * Requests the geometry for a given tile.  This function should not be called before
-     * {@link ArcGisImageServerTerrainProvider#isReady} returns true.  The result includes terrain
+     * {@link ArcGisImageServerTerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
      *
      * @memberof ArcGisImageServerTerrainProvider
@@ -114,21 +166,21 @@ define([
      *          pending and the request will be retried later.
      */
     ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
-        var extent = this._tilingScheme.tileXYToExtent(x, y, level);
+        var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
 
         // Each pixel in the heightmap represents the height at the center of that
-        // pixel.  So expand the extent by half a sample spacing in each direction
-        // so that the first height is on the edge of the extent we need rather than
-        // half a sample spacing into the extent.
-        var xSpacing = (extent.east - extent.west) / (this._heightmapWidth - 1);
-        var ySpacing = (extent.north - extent.south) / (this._heightmapWidth - 1);
+        // pixel.  So expand the rectangle by half a sample spacing in each direction
+        // so that the first height is on the edge of the rectangle we need rather than
+        // half a sample spacing into the rectangle.
+        var xSpacing = (rectangle.east - rectangle.west) / (this._heightmapWidth - 1);
+        var ySpacing = (rectangle.north - rectangle.south) / (this._heightmapWidth - 1);
 
-        extent.west -= xSpacing * 0.5;
-        extent.east += xSpacing * 0.5;
-        extent.south -= ySpacing * 0.5;
-        extent.north += ySpacing * 0.5;
+        rectangle.west -= xSpacing * 0.5;
+        rectangle.east += xSpacing * 0.5;
+        rectangle.south -= ySpacing * 0.5;
+        rectangle.north += ySpacing * 0.5;
 
-        var bbox = CesiumMath.toDegrees(extent.west) + '%2C' + CesiumMath.toDegrees(extent.south) + '%2C' + CesiumMath.toDegrees(extent.east) + '%2C' + CesiumMath.toDegrees(extent.north);
+        var bbox = CesiumMath.toDegrees(rectangle.west) + '%2C' + CesiumMath.toDegrees(rectangle.south) + '%2C' + CesiumMath.toDegrees(rectangle.east) + '%2C' + CesiumMath.toDegrees(rectangle.north);
 
         var url = this._url + '/exportImage?interpolation=RSP_BilinearInterpolation&format=tiff&f=image&size=' + this._heightmapWidth + '%2C' + this._heightmapWidth + '&bboxSR=4326&imageSR=4326&bbox=' + bbox;
         if (this._token) {
@@ -158,19 +210,6 @@ define([
     };
 
     /**
-     * Gets an event that is raised when the terrain provider encounters an asynchronous error.  By subscribing
-     * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
-     * are passed an instance of {@link TileProviderError}.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Event} The event.
-     */
-    ArcGisImageServerTerrainProvider.prototype.getErrorEvent = function() {
-        return this._errorEvent;
-    };
-
-    /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
      * @memberof ArcGisImageServerTerrainProvider
@@ -180,34 +219,6 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Credit} The credit, or undefined if no credit exists
-     */
-    ArcGisImageServerTerrainProvider.prototype.getCredit = function() {
-        return this._credit;
-    };
-
-    /**
-     * Gets the tiling scheme used by this provider.  This function should
-     * not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {GeographicTilingScheme} The tiling scheme.
-     * @see WebMercatorTilingScheme
-     * @see GeographicTilingScheme
-     *
-     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the terrain provider is ready.
-     */
-    ArcGisImageServerTerrainProvider.prototype.getTilingScheme = function() {
-        return this._tilingScheme;
     };
 
     /**
@@ -221,17 +232,6 @@ define([
      */
     ArcGisImageServerTerrainProvider.prototype.hasWaterMask = function() {
         return false;
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider is ready for use.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
-     * @returns {Boolean} True if the provider is ready to use; otherwise, false.
-     */
-    ArcGisImageServerTerrainProvider.prototype.isReady = function() {
-        return true;
     };
 
     return ArcGisImageServerTerrainProvider;

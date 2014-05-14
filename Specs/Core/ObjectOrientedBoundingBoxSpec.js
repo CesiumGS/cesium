@@ -150,7 +150,7 @@ defineSuite([
     it('fromBoundingRectangle throws without rectangle', function() {
         expect(function() {
             ObjectOrientedBoundingBox.fromBoundingRectangle();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromBoundingRectangle sets the transformation matrix to identity without rotation', function() {
@@ -183,13 +183,13 @@ defineSuite([
     it('intersect throws without left box', function() {
         expect(function() {
             ObjectOrientedBoundingBox.intersect();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('intersect throws without right box', function() {
         expect(function() {
             ObjectOrientedBoundingBox.intersect(new ObjectOrientedBoundingBox());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('does not intersect (1)', function() {

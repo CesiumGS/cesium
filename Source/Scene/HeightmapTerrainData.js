@@ -2,7 +2,9 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
         '../Core/HeightmapTessellator',
         '../Core/Math',
         '../Core/TaskProcessor',
@@ -13,7 +15,9 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
+        Rectangle,
         HeightmapTessellator,
         CesiumMath,
         TaskProcessor,
@@ -70,14 +74,15 @@ define([
      *                  otherwise, false.
      *
      * @see TerrainData
+     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = HeightmapTessellator.DEFAULT_STRUCTURE;
-     * var terrainData = new HeightmapTerrainData({
+     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
+     * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
@@ -87,6 +92,7 @@ define([
      * });
      */
     var HeightmapTerrainData = function HeightmapTerrainData(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.buffer)) {
             throw new DeveloperError('description.buffer is required.');
         }
@@ -96,6 +102,7 @@ define([
         if (!defined(description.height)) {
             throw new DeveloperError('description.height is required.');
         }
+        //>>includeEnd('debug');
 
         this._buffer = description.buffer;
         this._width = description.width;
@@ -120,6 +127,22 @@ define([
         this._waterMask = description.waterMask;
     };
 
+    defineProperties(HeightmapTerrainData.prototype, {
+        /**
+         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+         * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
+         * @memberof HeightmapTerrainData.prototype
+         * @type {Uint8Array|Image|Canvas}
+         */
+        waterMask : {
+            get : function() {
+                return this._waterMask;
+            }
+        }
+    });
+
+
     var taskProcessor = new TaskProcessor('createVerticesFromHeightmap');
 
     /**
@@ -136,6 +159,7 @@ define([
      *          be retried later.
      */
     HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
@@ -148,13 +172,14 @@ define([
         if (!defined(level)) {
             throw new DeveloperError('level is required.');
         }
+        //>>includeEnd('debug');
 
-        var ellipsoid = tilingScheme.getEllipsoid();
-        var nativeExtent = tilingScheme.tileXYToNativeExtent(x, y, level);
-        var extent = tilingScheme.tileXYToExtent(x, y, level);
+        var ellipsoid = tilingScheme.ellipsoid;
+        var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
 
         // Compute the center of the tile for RTC rendering.
-        var center = ellipsoid.cartographicToCartesian(extent.getCenter());
+        var center = ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle));
 
         var structure = this._structure;
 
@@ -166,8 +191,8 @@ define([
             structure : structure,
             width : this._width,
             height : this._height,
-            nativeExtent : nativeExtent,
-            extent : extent,
+            nativeRectangle : nativeRectangle,
+            rectangle : rectangle,
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
@@ -196,14 +221,14 @@ define([
      *
      * @memberof HeightmapTerrainData
      *
-     * @param {Extent} extent The extent covered by this terrain data.
+     * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
      * @returns {Number} The terrain height at the specified position.  If the position
-     *          is outside the extent, this method will extrapolate the height, which is likely to be wildly
-     *          incorrect for positions far outside the extent.
+     *          is outside the rectangle, this method will extrapolate the height, which is likely to be wildly
+     *          incorrect for positions far outside the rectangle.
      */
-    HeightmapTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
+    HeightmapTerrainData.prototype.interpolateHeight = function(rectangle, longitude, latitude) {
         var width = this._width;
         var height = this._height;
 
@@ -216,9 +241,9 @@ define([
             var elementMultiplier = structure.elementMultiplier;
             var isBigEndian = structure.isBigEndian;
 
-            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
+            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
         } else {
-            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+            heightSample = interpolateHeight(this._buffer, rectangle, width, height, longitude, latitude);
         }
 
         return heightSample * structure.heightScale + structure.heightOffset;
@@ -243,6 +268,7 @@ define([
      *          deferred.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
@@ -264,11 +290,11 @@ define([
         if (!defined(descendantLevel)) {
             throw new DeveloperError('descendantLevel is required.');
         }
-
         var levelDifference = descendantLevel - thisLevel;
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
         }
+        //>>includeEnd('debug');
 
         var result;
 
@@ -300,6 +326,7 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     HeightmapTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(thisX)) {
             throw new DeveloperError('thisX is required.');
         }
@@ -312,6 +339,7 @@ define([
         if (!defined(childY)) {
             throw new DeveloperError('childY is required.');
         }
+        //>>includeEnd('debug');
 
         var bitNumber = 2; // northwest child
         if (childX !== thisX * 2) {
@@ -322,19 +350,6 @@ define([
         }
 
         return (this._childTileMask & (1 << bitNumber)) !== 0;
-    };
-
-    /**
-     * Gets the water mask included in this terrain data, if any.  A water mask is a rectangular
-     * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
-     * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
-     *
-     *  @memberof HeightmapTerrainData
-     *
-     *  @returns {Uint8Array|Image|Canvas} The water mask, or undefined if no water mask is associated with this terrain data.
-     */
-    HeightmapTerrainData.prototype.getWaterMask = function() {
-        return this._waterMask;
     };
 
     /**
@@ -433,9 +448,9 @@ define([
         var sourceHeights = terrainData._buffer;
         var heights = new sourceHeights.constructor(width * height * stride);
 
-        // PERFORMANCE_IDEA: don't recompute these extents - the caller already knows them.
-        var sourceExtent = tilingScheme.tileXYToExtent(thisX, thisY, thisLevel);
-        var destinationExtent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
+        // PERFORMANCE_IDEA: don't recompute these rectangles - the caller already knows them.
+        var sourceRectangle = tilingScheme.tileXYToRectangle(thisX, thisY, thisLevel);
+        var destinationRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
         var i, j, latitude, longitude;
 
@@ -447,19 +462,19 @@ define([
             var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
 
             for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
+                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
                 for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
-                    var heightSample = interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceExtent, width, height, longitude, latitude);
+                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
+                    var heightSample = interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude);
                     setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
                 }
             }
         } else {
             for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationExtent.north, destinationExtent.south, j / (height - 1));
+                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
                 for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationExtent.west, destinationExtent.east, i / (width - 1));
-                    heights[j * width + i] = interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude);
+                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
+                    heights[j * width + i] = interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude);
                 }
             }
         }
@@ -474,9 +489,9 @@ define([
         });
     }
 
-    function interpolateHeight(sourceHeights, sourceExtent, width, height, longitude, latitude) {
-        var fromWest = (longitude - sourceExtent.west) * (width - 1) / (sourceExtent.east - sourceExtent.west);
-        var fromSouth = (latitude - sourceExtent.south) * (height - 1) / (sourceExtent.north - sourceExtent.south);
+    function interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude) {
+        var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
+        var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
         var westInteger = fromWest | 0;
         var eastInteger = westInteger + 1;
@@ -506,9 +521,9 @@ define([
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceExtent, width, height, longitude, latitude) {
-        var fromWest = (longitude - sourceExtent.west) * (width - 1) / (sourceExtent.east - sourceExtent.west);
-        var fromSouth = (latitude - sourceExtent.south) * (height - 1) / (sourceExtent.north - sourceExtent.south);
+    function interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude) {
+        var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
+        var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
         var westInteger = fromWest | 0;
         var eastInteger = westInteger + 1;

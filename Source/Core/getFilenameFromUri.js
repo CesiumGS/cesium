@@ -15,16 +15,16 @@ define(['./defined',
      * @param {String} uri The Uri.
      * @returns {String} The last segment of the Uri.
      *
-     * @exception {DeveloperError} uri is required.
-     *
      * @example
      * //fileName will be"simple.czml";
-     * var fileName = getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
+     * var fileName = Cesium.getFilenameFromUri('/Gallery/simple.czml?value=true&example=false');
      */
     var getFilenameFromUri = function(uri) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');
         }
+        //>>includeEnd('debug');
 
         var uriObject = new Uri(uri);
         uriObject.normalize();

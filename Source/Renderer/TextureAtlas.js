@@ -5,6 +5,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './PixelFormat'
@@ -14,6 +15,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         PixelFormat) {
@@ -49,27 +51,26 @@ define([
      *
      * @internalConstructor
      *
-     * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
      */
     var TextureAtlas = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-
         var context = description.context;
+        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
+        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
-
-        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
         }
-
-        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
         if (initialSize.x < 1 || initialSize.y < 1) {
             throw new DeveloperError('initialSize must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         this._context = context;
         this._pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
@@ -97,13 +98,78 @@ define([
         }
     };
 
+    defineProperties(TextureAtlas.prototype, {
+        /**
+         * The amount of spacing between adjacent images in pixels.
+         * @memberof TextureAtlas.prototype
+         * @type {Number}
+         */
+        borderWidthInPixels : {
+            get : function() {
+                return this._borderWidthInPixels;
+            }
+        },
+
+        /**
+         * An array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
+         * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
+         * The coordinates are in the order that the corresponding images were added to the atlas.
+         * @memberof TextureAtlas.prototype
+         * @type {Array}
+         */
+        textureCoordinates : {
+            get : function() {
+                return this._textureCoordinates;
+            }
+        },
+
+        /**
+         * The texture that all of the images are being written to.
+         * @memberof TextureAtlas.prototype
+         * @type {Texture}
+         */
+        texture: {
+            get : function() {
+                return this._texture;
+            }
+        },
+
+        /**
+         * The number of images in the texture atlas. This value increases
+         * every time addImage or addImages is called.
+         * Texture coordinates are subject to change if the texture atlas resizes, so it is
+         * important to check {@link TextureAtlas#getGUID} before using old values.
+         * @memberof TextureAtlas.prototype
+         * @type {Number}
+         */
+        numberOfImages : {
+            get : function() {
+                return this._textureCoordinates.length;
+            }
+        },
+
+        /**
+         * The atlas' globally unique identifier (GUID).
+         * The GUID changes whenever the texture atlas is modified.
+         * Classes that use a texture atlas should check if the GUID
+         * has changed before processing the atlas data.
+         * @memberof TextureAtlas.prototype
+         * @type {String}
+         */
+        guid : {
+            get : function() {
+                return this._guid;
+            }
+        }
+    });
+
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
-        var numImages = textureAtlas.getNumberOfImages();
+        var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
         if (numImages > 0) {
-            var oldAtlasWidth = textureAtlas._texture.getWidth();
-            var oldAtlasHeight = textureAtlas._texture.getHeight();
+            var oldAtlasWidth = textureAtlas._texture.width;
+            var oldAtlasHeight = textureAtlas._texture.height;
             var atlasWidth = scalingFactor * (oldAtlasWidth + image.width + textureAtlas._borderWidthInPixels);
             var atlasHeight = scalingFactor * (oldAtlasHeight + image.height + textureAtlas._borderWidthInPixels);
             var widthRatio = oldAtlasWidth / atlasWidth;
@@ -218,19 +284,20 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     function addImage(textureAtlas, image, index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(image)) {
             throw new DeveloperError('image is required.');
         }
+        //>>includeEnd('debug');
 
         var node = findNode(textureAtlas, textureAtlas._root, image);
-
         // Found a node that can hold the image.
         if (defined(node)) {
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture
-            var atlasWidth = textureAtlas._texture.getWidth();
-            var atlasHeight = textureAtlas._texture.getHeight();
+            var atlasWidth = textureAtlas._texture.width;
+            var atlasHeight = textureAtlas._texture.height;
             var nodeWidth = node.topRight.x - node.bottomLeft.x;
             var nodeHeight = node.topRight.y - node.bottomLeft.y;
             textureAtlas._textureCoordinates[index] = new BoundingRectangle(
@@ -258,13 +325,10 @@ define([
      *
      * @returns {Number} The index of the newly added image.
      *
-     * @exception {DeveloperError} image is required.
-     *
      * @see TextureAtlas#addImages
-     *
      */
     TextureAtlas.prototype.addImage = function(image) {
-        var index = this.getNumberOfImages();
+        var index = this.numberOfImages;
         addImage(this, image, index);
 
         this._guid = createGuid();
@@ -284,22 +348,20 @@ define([
      *
      * @returns {Number} The first index of the newly added images.
      *
-     * @exception {DeveloperError} images is required and must have length greater than zero.
-     *
      * @see TextureAtlas#addImage
-     *
      */
     TextureAtlas.prototype.addImages = function(images) {
-        // Check if image array is valid.
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(images) || (images.length < 1)) {
             throw new DeveloperError('images is required and must have length greater than zero.');
         }
+        //>>includeEnd('debug');
 
         // Store images in containers that have an index.
         var i;
         var annotatedImages = [];
         var numberOfImages = images.length;
-        var oldNumberOfImages = this.getNumberOfImages();
+        var oldNumberOfImages = this.numberOfImages;
         for (i = 0; i < numberOfImages; ++i) {
             annotatedImages.push({
                 image : images[i],
@@ -334,15 +396,13 @@ define([
      * @param {Array} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
-     *
-     * @exception {DeveloperError} image is required.
      */
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
         var index = this.addImage(image);
 
-        var atlasWidth = this._texture.getWidth();
-        var atlasHeight = this._texture.getHeight();
-        var numImages = this.getNumberOfImages();
+        var atlasWidth = this._texture.width;
+        var atlasHeight = this._texture.height;
+        var numImages = this.numberOfImages;
         var numSubRegions = subRegions.length;
 
         var baseRegion = this._textureCoordinates[index];
@@ -359,71 +419,6 @@ define([
         this._guid = createGuid();
 
         return numImages;
-    };
-
-    /**
-     * Returns the amount of spacing between adjacent images in pixels.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Number} The border width in pixels.
-     */
-    TextureAtlas.prototype.getBorderWidthInPixels = function() {
-        return this._borderWidthInPixels;
-    };
-
-    /**
-     * Returns an array of {@link BoundingRectangle} texture coordinate regions for all the images in the texture atlas.
-     * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
-     * The coordinates are in the order that the corresponding images were added to the atlas.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Array} The texture coordinates.
-     *
-     * @see BoundingRectangle
-     */
-    TextureAtlas.prototype.getTextureCoordinates = function() {
-        return this._textureCoordinates;
-    };
-
-    /**
-     * Returns the texture that all of the images are being written to.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {@link Texture} The texture used by the texture atlas.
-     */
-    TextureAtlas.prototype.getTexture = function() {
-        return this._texture;
-    };
-
-    /**
-     * Returns the number of images in the texture atlas. This value increases
-     * every time addImage or addImages is called.
-     * Texture coordinates are subject to change if the texture atlas resizes, so it is
-     * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {Number} The number of images in the texture atlas.
-     */
-    TextureAtlas.prototype.getNumberOfImages = function() {
-        return this._textureCoordinates.length;
-    };
-
-    /**
-     * Returns the atlas' globally unique identifier (GUID).
-     * The GUID changes whenever the texture atlas is modified.
-     * Classes that use a texture atlas should check if the GUID
-     * has changed before processing the atlas data.
-     *
-     * @memberof TextureAtlas
-     *
-     * @returns {String} The globally unique identifier (GUID).
-     */
-    TextureAtlas.prototype.getGUID = function() {
-        return this._guid;
     };
 
     /**

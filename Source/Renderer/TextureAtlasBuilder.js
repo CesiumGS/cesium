@@ -29,9 +29,12 @@ define([
      * @see TextureAtlas
      */
     var TextureAtlasBuilder  = function(textureAtlas) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(textureAtlas)) {
             throw new DeveloperError('textureAtlas is required.');
         }
+        //>>includeEnd('debug');
+
         this.textureAtlas = textureAtlas;
         this._idHash = {};
     };
@@ -46,18 +49,16 @@ define([
      *
      * @param {String} url The url of the image to add to the atlas.
      * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
-     *
-     * @exception {DeveloperError} url is required.
-     * @exception {DeveloperError} textureAvailableCallback is required.
      */
     TextureAtlasBuilder.prototype.addTextureFromUrl = function(url, textureAvailableCallback) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
-
         if (!defined(textureAvailableCallback)) {
             throw new DeveloperError('textureAvailableCallback is required.');
         }
+        //>>includeEnd('debug');
 
         this.addTextureFromFunction(url, function(id, callback) {
             loadImage(id).then(callback);
@@ -85,23 +86,19 @@ define([
      * retrieve and second, a function to call when the image is ready.  The function takes the image as its
      * only parameter.
      * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
-     *
-     * @exception {DeveloperError} id is required.
-     * @exception {DeveloperError} getImageCallback is required.
-     * @exception {DeveloperError} textureAvailableCallback is required.
      */
     TextureAtlasBuilder.prototype.addTextureFromFunction = function(id, getImageCallback, textureAvailableCallback) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-
         if (!defined(getImageCallback)) {
             throw new DeveloperError('getImageCallback is required.');
         }
-
         if (!defined(textureAvailableCallback)) {
             throw new DeveloperError('textureAvailableCallback is required.');
         }
+        //>>includeEnd('debug');
 
         var sourceHolder = this._idHash[id];
         if (defined(sourceHolder)) {

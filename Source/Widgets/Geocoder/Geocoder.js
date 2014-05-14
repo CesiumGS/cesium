@@ -29,7 +29,7 @@ define([
      *
      * @param {Element|String} description.container The DOM element or ID that will contain the widget.
      * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='http://dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [description.key] The Bing Maps key for your application, which can be
      *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -39,20 +39,18 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
      * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
-     *
-     * @exception {DeveloperError} description.container is required.
-     * @exception {DeveloperError} description.scene is required.
      */
     var Geocoder = function(description) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(description) || !defined(description.container)) {
             throw new DeveloperError('description.container is required.');
         }
         if (!defined(description.scene)) {
             throw new DeveloperError('description.scene is required.');
         }
+        //>>includeEnd('debug');
 
         var container = getElement(description.container);
-
         var viewModel = new GeocoderViewModel(description);
 
         viewModel._startSearchPath = startSearchPath;

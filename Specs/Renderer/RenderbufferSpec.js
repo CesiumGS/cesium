@@ -32,17 +32,17 @@ defineSuite([
             height : 32
         });
 
-        expect(renderbuffer.getFormat()).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
-        expect(renderbuffer.getWidth()).toEqual(64);
-        expect(renderbuffer.getHeight()).toEqual(32);
+        expect(renderbuffer.format).toEqual(RenderbufferFormat.DEPTH_COMPONENT16);
+        expect(renderbuffer.width).toEqual(64);
+        expect(renderbuffer.height).toEqual(32);
     });
 
     it('creates with defaults', function() {
         renderbuffer = context.createRenderbuffer();
 
-        expect(renderbuffer.getFormat()).toEqual(RenderbufferFormat.RGBA4);
-        expect(renderbuffer.getWidth()).toEqual(context.getCanvas().clientWidth);
-        expect(renderbuffer.getHeight()).toEqual(context.getCanvas().clientHeight);
+        expect(renderbuffer.format).toEqual(RenderbufferFormat.RGBA4);
+        expect(renderbuffer.width).toEqual(context.canvas.clientWidth);
+        expect(renderbuffer.height).toEqual(context.canvas.clientHeight);
     });
 
     it('destroys', function() {
@@ -71,7 +71,7 @@ defineSuite([
     it('fails to create (large width)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
-                width : context.getMaximumRenderbufferSize() + 1
+                width : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });
@@ -87,7 +87,7 @@ defineSuite([
     it('fails to create (large height)', function() {
         expect(function() {
             renderbuffer = context.createRenderbuffer({
-                height : context.getMaximumRenderbufferSize() + 1
+                height : context.maximumRenderbufferSize + 1
             });
         }).toThrowDeveloperError();
     });

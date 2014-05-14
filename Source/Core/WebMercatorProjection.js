@@ -2,6 +2,7 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './Cartesian3',
         './Cartographic',
         './Math',
@@ -9,6 +10,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Cartesian3,
         Cartographic,
         CesiumMath,
@@ -30,9 +32,22 @@ define([
      */
     var WebMercatorProjection = function(ellipsoid) {
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        this._semimajorAxis = this._ellipsoid.getMaximumRadius();
+        this._semimajorAxis = this._ellipsoid.maximumRadius;
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
     };
+
+    defineProperties(WebMercatorProjection.prototype, {
+        /**
+         * Gets the {@link Ellipsoid}.
+         * @memberof WebMercatorProjection.prototype
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        }
+    });
 
     /**
      * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
@@ -74,7 +89,7 @@ define([
      * to cut it off sooner because it grows exponentially with increasing latitude.
      * The logic behind this particular cutoff value, which is the one used by
      * Google Maps, Bing Maps, and Esri, is that it makes the projection
-     * square.  That is, the extent is equal in the X and Y directions.
+     * square.  That is, the rectangle is equal in the X and Y directions.
      *
      * The constant value is computed by calling:
      *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
@@ -84,17 +99,6 @@ define([
      * @type {Number}
      */
     WebMercatorProjection.MaximumLatitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI);
-
-    /**
-     * Gets the {@link Ellipsoid}.
-     *
-     * @memberof WebMercatorProjection
-     *
-     * @returns {Ellipsoid} The ellipsoid.
-     */
-    WebMercatorProjection.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
 
     /**
      * Converts geodetic ellipsoid coordinates, in radians, to the equivalent Web Mercator
