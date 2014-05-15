@@ -1205,8 +1205,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     * @memberof Scene
+     * @private
      */
     Scene.prototype.initializeFrame = function() {
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
@@ -1277,8 +1276,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     * @memberof Scene
+     * @private
      */
     Scene.prototype.render = function(time) {
         try {
@@ -1549,16 +1547,39 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
      * @memberof Scene
+     *
+     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see Scene#destroy
      */
     Scene.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
      * @memberof Scene
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see Scene#isDestroyed
+     *
+     * @example
+     * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
         this._animations.removeAll();
