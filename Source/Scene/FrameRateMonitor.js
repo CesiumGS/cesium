@@ -93,6 +93,7 @@ define([
         this._warmupPeriodEndTime = 0.0;
         this._frameRateIsLow = false;
         this._lastFramesPerSecond = undefined;
+        this._pauseCount = 0;
 
         var that = this;
         this._preRenderRemoveListener = this._scene.preRender.addEventListener(function(scene, time) {
@@ -212,10 +213,63 @@ define([
         }
     });
 
+    /**
+     * Pauses monitoring of the frame rate.  To resume monitoring, {@link FrameRateMonitor#unpause}
+     * must be called once for each time this function is called.
+     * @memberof FrameRateMonitor
+     */
+    FrameRateMonitor.prototype.pause = function() {
+        ++this._pauseCount;
+        if (this._pauseCount === 1) {
+            this._frameTimes.length = 0;
+            this._lastFramesPerSecond = undefined;
+        }
+    };
+
+    /**
+     * Resumes monitoring of the frame rate.  If {@link FrameRateMonitor#pause} was called
+     * multiple times, this function must be called the same number of times in order to
+     * actually resume monitoring.
+     * @memberof FrameRateMonitor
+     */
+    FrameRateMonitor.prototype.unpause = function() {
+        --this._pauseCount;
+        if (this._pauseCount <= 0) {
+            this._pauseCount = 0;
+            this._needsQuietPeriod = true;
+        }
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof FrameRateMonitor
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see FrameRateMonitor#destroy
+     */
     FrameRateMonitor.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Unsubscribes this instance from all events it is listening to.
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof FrameRateMonitor
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see FrameRateMonitor#isDestroyed
+     */
     FrameRateMonitor.prototype.destroy = function() {
         this._preRenderRemoveListener();
 
@@ -227,7 +281,7 @@ define([
     };
 
     function update(monitor, time) {
-        if (defined(monitor._hiddenPropertyName) && document[monitor._hiddenPropertyName]) {
+        if (monitor._pauseCount > 0) {
             return;
         }
 
@@ -270,10 +324,9 @@ define([
 
     function visibilityChanged(monitor) {
         if (document[monitor._hiddenPropertyName]) {
-            monitor._frameTimes.length = 0;
-            monitor._lastFramesPerSecond = undefined;
+            monitor.pause();
         } else {
-            monitor._needsQuietPeriod = true;
+            monitor.unpause();
         }
     }
 

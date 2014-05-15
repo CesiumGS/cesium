@@ -112,6 +112,84 @@ defineSuite([
         expect(spyListener).toHaveBeenCalled();
     });
 
+    it('does not monitor frame rate while paused', function() {
+        monitor = new FrameRateMonitor({
+            scene : scene,
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        monitor.lowFrameRate.addEventListener(spyListener);
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        spinWait(2);
+
+        // Rendering again records our first sample.
+        scene.render();
+
+        monitor.pause();
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        spinWait(2);
+
+        // Record our second sample.  The monitor would notice that our frame rate is too low,
+        // but it's paused.
+        scene.render();
+
+        monitor.unpause();
+
+        scene.render();
+
+        expect(spyListener).not.toHaveBeenCalled();
+    });
+
+    it('pausing multiple times requires unpausing multiple times', function() {
+        monitor = new FrameRateMonitor({
+            scene : scene,
+            quietPeriod : 1,
+            warmupPeriod : 1,
+            samplingWindow : 1,
+            minimumFrameRateDuringWarmup : 1000,
+            minimumFrameRateAfterWarmup : 1000
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        monitor.lowFrameRate.addEventListener(spyListener);
+
+        monitor.pause();
+        monitor.pause();
+        monitor.unpause();
+
+        // Rendering once starts the quiet period
+        scene.render();
+
+        // Wait until we're well past the end of the quiet period.
+        spinWait(2);
+
+        // Rendering again records our first sample.
+        scene.render();
+
+        // Wait well over a millisecond, which is the maximum frame time allowed by this instance.
+        spinWait(2);
+
+        // Record our second sample.  The monitor would notice that our frame rate is too low,
+        // but it's paused.
+        scene.render();
+
+        monitor.unpause();
+
+        scene.render();
+
+        expect(spyListener).not.toHaveBeenCalled();
+    });
+
     it('does not report a low frame rate during the quiet period', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
