@@ -7,7 +7,7 @@ define([
         '../Core/freezeObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Extent',
+        '../Core/Rectangle',
         './Credit',
         './ImageryProvider',
         './GeographicTilingScheme'
@@ -19,7 +19,7 @@ define([
         freezeObject,
         DeveloperError,
         Event,
-        Extent,
+        Rectangle,
         Credit,
         ImageryProvider,
         GeographicTilingScheme) {
@@ -34,7 +34,7 @@ define([
      * @param {String} description.url The URL of the WMS service.
      * @param {String} description.layers The layers to include, separated by commas.
      * @param {Object} [description.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
+     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [description.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
      * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
@@ -53,7 +53,7 @@ define([
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
-     *     url: 'http://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+     *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
@@ -92,9 +92,9 @@ define([
         this._tileHeight = 256;
         this._maximumLevel = description.maximumLevel; // undefined means no limit
 
-        var extent = defaultValue(description.extent, Extent.MAX_VALUE);
+        var rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = new GeographicTilingScheme({
-            extent : extent
+            rectangle : rectangle
         });
 
         var credit = description.credit;
@@ -135,8 +135,8 @@ define([
         }
 
         if (!defined(parameters.bbox)) {
-            var nativeExtent = imageryProvider._tilingScheme.tileXYToNativeExtent(x, y, level);
-            var bbox = nativeExtent.west + ',' + nativeExtent.south + ',' + nativeExtent.east + ',' + nativeExtent.north;
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
             url += 'bbox=' + bbox + '&';
         }
 
@@ -282,20 +282,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
          * @memberof WebMapServiceImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -352,6 +352,20 @@ define([
         credit : {
             get : function() {
                 return this._credit;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
             }
         }
     });

@@ -32,7 +32,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -51,7 +51,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -81,7 +81,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -115,7 +115,7 @@ require(['Cesium'], function(Cesium) {
             // references an image in the texture atlas.
 
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 images : images
             });
             billboards.textureAtlas = textureAtlas;
@@ -147,7 +147,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -167,7 +167,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -191,7 +191,7 @@ require(['Cesium'], function(Cesium) {
                         ],
                         function(images) {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 images : images
             });
             billboards.textureAtlas = textureAtlas;
@@ -239,7 +239,7 @@ require(['Cesium'], function(Cesium) {
         context2D.fill();
 
         var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = scene.context.createTextureAtlas({
+        var textureAtlas = scene.createTextureAtlas({
             image : canvas
         });
         billboards.textureAtlas = textureAtlas;
@@ -272,7 +272,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 borderWidthInPixels : 0
             });
 
@@ -371,7 +371,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({
+            var textureAtlas = scene.createTextureAtlas({
                 image : image
             });
             billboards.textureAtlas = textureAtlas;
@@ -405,8 +405,8 @@ require(['Cesium'], function(Cesium) {
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.ellipsoid;
     var scene = widget.scene;
+    var ellipsoid = scene.globe.ellipsoid;
     var primitives = scene.primitives;
 
     addBillboard(scene, ellipsoid);

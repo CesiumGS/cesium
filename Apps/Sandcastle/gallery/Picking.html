@@ -36,7 +36,7 @@ require(['Cesium'], function(Cesium) {
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.context.createTextureAtlas({image : image});
+            var textureAtlas = scene.createTextureAtlas({image : image});
             billboards.textureAtlas = textureAtlas;
             billboard = billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
@@ -316,32 +316,32 @@ require(['Cesium'], function(Cesium) {
 
     }
 
-    function drawExtent(scene, ellipsoid) {
-        Sandcastle.declare(drawExtent);    // For highlighting in Sandcastle.
+    function drawRectangle(scene, ellipsoid) {
+        Sandcastle.declare(drawRectangle);    // For highlighting in Sandcastle.
 
-        var DrawExtentHelper = function(scene, handler) {
+        var DrawRectangleHelper = function(scene, handler) {
             this._canvas = scene.canvas;
             this._scene = scene;
-            this._ellipsoid = scene.primitives.centralBody.ellipsoid;
+            this._ellipsoid = scene.globe.ellipsoid;
             this._finishHandler = handler;
             this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
-            this._extentPrimitive = new Cesium.ExtentPrimitive();
-            this._extentPrimitive.asynchronous = false;
-            this._scene.primitives.add(this._extentPrimitive);
+            this._rectanglePrimitive = new Cesium.RectanglePrimitive();
+            this._rectanglePrimitive.asynchronous = false;
+            this._scene.primitives.add(this._rectanglePrimitive);
         };
 
-        DrawExtentHelper.prototype.enableInput = function() {
+        DrawRectangleHelper.prototype.enableInput = function() {
             var controller = this._scene.screenSpaceCameraController;
             controller.enableInputs = true;
         };
 
-        DrawExtentHelper.prototype.disableInput = function() {
+        DrawRectangleHelper.prototype.disableInput = function() {
             var controller = this._scene.screenSpaceCameraController;
             controller.enableInputs = false;
         };
 
-        DrawExtentHelper.prototype.getExtent = function(mn, mx) {
-            var e = new Cesium.Extent();
+        DrawRectangleHelper.prototype.getRectangle = function(mn, mx) {
+            var e = new Cesium.Rectangle();
 
             // Re-order so west < east and south < north
             e.west = Math.min(mn.longitude, mx.longitude);
@@ -363,18 +363,18 @@ require(['Cesium'], function(Cesium) {
             return e;
         };
 
-        DrawExtentHelper.prototype.setPolyPts = function(mn, mx) {
-            this._extentPrimitive.extent = this.getExtent(mn, mx);
+        DrawRectangleHelper.prototype.setPolyPts = function(mn, mx) {
+            this._rectanglePrimitive.rectangle = this.getRectangle(mn, mx);
         };
 
-        DrawExtentHelper.prototype.setToDegrees = function(w, s, e, n) {
+        DrawRectangleHelper.prototype.setToDegrees = function(w, s, e, n) {
             var toRad = Cesium.Math.toRadians;
             var mn = new Cesium.Cartographic(toRad(w), toRad(s));
             var mx = new Cesium.Cartographic(toRad(e), toRad(n));
             this.setPolyPts(mn, mx);
         };
 
-        DrawExtentHelper.prototype.handleRegionStop = function(movement) {
+        DrawRectangleHelper.prototype.handleRegionStop = function(movement) {
             this.enableInput();
             var cartesian = this._scene.camera.pickEllipsoid(movement.position,
                     this._ellipsoid);
@@ -383,10 +383,10 @@ require(['Cesium'], function(Cesium) {
             }
             this._mouseHandler.destroy();
 
-            this._finishHandler(this.getExtent(this._click1, this._click2));
+            this._finishHandler(this.getRectangle(this._click1, this._click2));
         };
 
-        DrawExtentHelper.prototype.handleRegionInter = function(movement) {
+        DrawRectangleHelper.prototype.handleRegionInter = function(movement) {
             var cartesian = this._scene.camera.pickEllipsoid(movement.endPosition,
                     this._ellipsoid);
             if (cartesian) {
@@ -395,7 +395,7 @@ require(['Cesium'], function(Cesium) {
             }
         };
 
-        DrawExtentHelper.prototype.handleRegionStart = function(movement) {
+        DrawRectangleHelper.prototype.handleRegionStart = function(movement) {
             var cartesian = this._scene.camera.pickEllipsoid(movement.position,
                     this._ellipsoid);
             if (cartesian) {
@@ -410,7 +410,7 @@ require(['Cesium'], function(Cesium) {
             }
         };
 
-        DrawExtentHelper.prototype.start = function() {
+        DrawRectangleHelper.prototype.start = function() {
             this.disableInput();
 
             var that = this;
@@ -434,17 +434,17 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
                 Cesium.Math.toDegrees(e.north).toFixed(2) + ')';
             label.scale = 0.7;
-            label.position = widget.centralBody.ellipsoid.cartographicToCartesian(Cesium.Extent.getCenter(e));
+            label.position = widget.scene.globe.ellipsoid.cartographicToCartesian(Cesium.Rectangle.getCenter(e));
             label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
         };
-        var drawExtentHelper = new DrawExtentHelper(scene, myHandler);
-        drawExtentHelper.start();
+        var drawRectangleHelper = new DrawRectangleHelper(scene, myHandler);
+        drawRectangleHelper.start();
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var ellipsoid = widget.centralBody.ellipsoid;
     var scene = widget.scene;
+    var ellipsoid = scene.globe.ellipsoid;
 
     pickCartographicPosition(scene, ellipsoid);
 
@@ -484,10 +484,10 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(multiPickPrimitives);
     });
 
-    Sandcastle.addToolbarButton('Drag to Draw Extent', function() {
+    Sandcastle.addToolbarButton('Drag to Draw Rectangle', function() {
         cleanup();
-        drawExtent(scene, ellipsoid);
-        Sandcastle.highlight(drawExtent);
+        drawRectangle(scene, ellipsoid);
+        Sandcastle.highlight(drawRectangle);
     });
 
     Sandcastle.finishedLoading();

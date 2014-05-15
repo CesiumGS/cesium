@@ -319,7 +319,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.context.readPixels();
+        var pixels = scene._context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -401,7 +401,9 @@ defineSuite([
         var commandList = [];
         polygon.update(context, frameState, commandList);
         var boundingVolume = commandList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.positions));
+        var sphere = BoundingSphere.fromPoints(polygon.positions);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON1);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     });
 
     function test2DBoundingSphereFromPositions(testMode) {

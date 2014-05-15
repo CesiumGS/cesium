@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Fly to a specified location or view a geographic extent.">
+    <meta name="description" content="Fly to a specified location or view a geographic rectangle.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -54,55 +54,55 @@ require(['Cesium'], function(Cesium) {
         navigator.geolocation.getCurrentPosition(fly);
     }
 
-    function viewAnExtent(scene) {
-        Sandcastle.declare(viewAnExtent); // For highlighting in Sandcastle.
-        var west = Cesium.Math.toRadians(-77.0);
-        var south = Cesium.Math.toRadians(38.0);
-        var east = Cesium.Math.toRadians(-72.0);
-        var north = Cesium.Math.toRadians(42.0);
+    function viewAnRectangle(scene) {
+        Sandcastle.declare(viewAnRectangle); // For highlighting in Sandcastle.
+        var west = -77.0;
+        var south = 38.0;
+        var east = -72.0;
+        var north = 42.0;
 
-        var extent = new Cesium.Extent(west, south, east, north);
-        scene.camera.viewExtent(extent, ellipsoid);
+        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
+        scene.camera.viewRectangle(rectangle, ellipsoid);
 
-        // Show the extent.  Not required; just for show.
+        // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions : ellipsoid.cartographicArrayToCartesianArray(
                     [
-                     new Cesium.Cartographic(west, south),
-                     new Cesium.Cartographic(west, north),
-                     new Cesium.Cartographic(east, north),
-                     new Cesium.Cartographic(east, south),
-                     new Cesium.Cartographic(west, south)
+                     Cesium.Cartographic.fromDegrees(west, south),
+                     Cesium.Cartographic.fromDegrees(west, north),
+                     Cesium.Cartographic.fromDegrees(east, north),
+                     Cesium.Cartographic.fromDegrees(east, south),
+                     Cesium.Cartographic.fromDegrees(west, south)
                     ])
         });
         scene.primitives.add(polylines);
     }
 
-    function flyToExtent(scene) {
-        Sandcastle.declare(flyToExtent); // For highlighting in Sandcastle.
-        var west = Cesium.Math.toRadians(-90.0);
-        var south = Cesium.Math.toRadians(38.0);
-        var east = Cesium.Math.toRadians(-87.0);
-        var north = Cesium.Math.toRadians(40.0);
+    function flyToRectangle(scene) {
+        Sandcastle.declare(flyToRectangle); // For highlighting in Sandcastle.
+        var west = -90.0;
+        var south = 38.0;
+        var east = -87.0;
+        var north = 40.0;
 
-        var extent = new Cesium.Extent(west, south, east, north);
+        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
 
-        var flight = Cesium.CameraFlightPath.createAnimationExtent(scene, {
-            destination : extent
+        var flight = Cesium.CameraFlightPath.createAnimationRectangle(scene, {
+            destination : rectangle
         });
         scene.animations.add(flight);
 
-        // Show the extent.  Not required; just for show.
+        // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions : ellipsoid.cartographicArrayToCartesianArray(
                     [
-                     new Cesium.Cartographic(west, south),
-                     new Cesium.Cartographic(west, north),
-                     new Cesium.Cartographic(east, north),
-                     new Cesium.Cartographic(east, south),
-                     new Cesium.Cartographic(west, south)
+                     Cesium.Cartographic.fromDegrees(west, south),
+                     Cesium.Cartographic.fromDegrees(west, north),
+                     Cesium.Cartographic.fromDegrees(east, north),
+                     Cesium.Cartographic.fromDegrees(east, south),
+                     Cesium.Cartographic.fromDegrees(west, south)
                     ])
         });
         scene.primitives.add(polylines);
@@ -200,16 +200,16 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(flyToMyLocation);
     });
 
-    Sandcastle.addToolbarButton('Fly to Extent', function() {
+    Sandcastle.addToolbarButton('Fly to Rectangle', function() {
         reset(scene);
-        flyToExtent(scene);
-        Sandcastle.highlight(flyToExtent);
+        flyToRectangle(scene);
+        Sandcastle.highlight(flyToRectangle);
     });
 
-    Sandcastle.addToolbarButton('View an Extent', function() {
+    Sandcastle.addToolbarButton('View a Rectangle', function() {
         reset(scene);
-        viewAnExtent(scene);
-        Sandcastle.highlight(viewAnExtent);
+        viewAnRectangle(scene);
+        Sandcastle.highlight(viewAnRectangle);
     });
 
     Sandcastle.addToolbarButton('Set camera reference frame', function() {

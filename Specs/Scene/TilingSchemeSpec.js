@@ -79,10 +79,10 @@ defineSuite([
             var southwest = tiles[2];
             var southeast = tiles[3];
 
-            expect(northeast.extent.west).toBeGreaterThan(northwest.extent.west);
-            expect(southeast.extent.west).toBeGreaterThan(southwest.extent.west);
-            expect(northeast.extent.south).toBeGreaterThan(southeast.extent.south);
-            expect(northwest.extent.south).toBeGreaterThan(southwest.extent.south);
+            expect(northeast.rectangle.west).toBeGreaterThan(northwest.rectangle.west);
+            expect(southeast.rectangle.west).toBeGreaterThan(southwest.rectangle.west);
+            expect(northeast.rectangle.south).toBeGreaterThan(southeast.rectangle.south);
+            expect(northwest.rectangle.south).toBeGreaterThan(southwest.rectangle.south);
         });
     });
 });

@@ -11,12 +11,12 @@ define([
         Camera) {
     "use strict";
 
-    function createCamera(context, eye, target, up, near, far) {
+    function createCamera(scene, eye, target, up, near, far) {
         eye = defaultValue(eye, new Cartesian3(-1.0, 0.0, 0.0));
         target = defaultValue(target, Cartesian3.ZERO);
         up = defaultValue(up, Cartesian3.UNIT_Z);
 
-        var camera = new Camera(context);
+        var camera = new Camera(scene);
         camera.lookAt(eye, target, up);
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
