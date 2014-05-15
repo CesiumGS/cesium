@@ -108,6 +108,7 @@ defineSuite([
         // Record our second sample.  The monitor should notice that our frame rate is too low.
         scene.render();
 
+        expect(monitor.lastFramesPerSecond).toBeLessThan(1000);
         expect(spyListener).toHaveBeenCalled();
     });
 
@@ -167,6 +168,7 @@ defineSuite([
         // Record our second sample.  The monitor should notice that our frame rate is too low.
         scene.render();
 
+        expect(monitor.lastFramesPerSecond).toBeLessThan(10);
         expect(lowListener).toHaveBeenCalled();
 
         // Render as fast as possible for a samplingWindow, quietPeriod, and warmupPeriod.
@@ -176,6 +178,7 @@ defineSuite([
         }
 
         // The nominalFrameRate event should have been raised.
+        expect(monitor.lastFramesPerSecond).toBeGreaterThanOrEqualTo(10);
         expect(nominalListener).toHaveBeenCalled();
     });
 }, 'WebGL');

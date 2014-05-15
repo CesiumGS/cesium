@@ -92,6 +92,7 @@ define([
         this._quietPeriodEndTime = 0.0;
         this._warmupPeriodEndTime = 0.0;
         this._frameRateIsLow = false;
+        this._lastFramesPerSecond = undefined;
 
         var that = this;
         this._preRenderRemoveListener = this._scene.preRender.addEventListener(function(scene, time) {
@@ -101,7 +102,7 @@ define([
         this._hiddenPropertyName = defined(document.hidden) ? 'hidden' :
                                    defined(document.mozHidden) ? 'mozHidden' :
                                    defined(document.msHidden) ? 'msHidden' :
-                                   defined(document.webkitHidden) ? 'webkitHidden' : 'hiddenNotSupported';
+                                   defined(document.webkitHidden) ? 'webkitHidden' : undefined;
 
         var visibilityChangeEventName = defined(document.hidden) ? 'visibilitychange' :
             defined(document.mozHidden) ? 'mozvisibilitychange' :
@@ -112,11 +113,14 @@ define([
             visibilityChanged(that);
         }
 
-        document.addEventListener(visibilityChangeEventName, this._visibilityChangeListener, false);
+        this._visibilityChangeRemoveListener = undefined;
+        if (defined(visibilityChangeEventName)) {
+            document.addEventListener(visibilityChangeEventName, visibilityChangeListener, false);
 
-        this._visibilityChangeRemoveListener = function() {
-            document.removeEventListener(visibilityChangeEventName, visibilityChangeListener, false);
-        };
+            this._visibilityChangeRemoveListener = function() {
+                document.removeEventListener(visibilityChangeEventName, visibilityChangeListener, false);
+            };
+        }
     };
 
     /**
@@ -193,6 +197,18 @@ define([
             get : function() {
                 return this._nominalFrameRate;
             }
+        },
+
+        /**
+         * Gets the most recently computed average frames-per-second over the last <code>samplingWindow</code>.
+         * This property may be undefined if the frame rate has not been computed.
+         * @memberof FrameRateMonitor.prototype
+         * @type {Number}
+         */
+        lastFramesPerSecond : {
+            get : function() {
+                return this._lastFramesPerSecond;
+            }
         }
     });
 
@@ -202,61 +218,63 @@ define([
 
     FrameRateMonitor.prototype.destroy = function() {
         this._preRenderRemoveListener();
-        this._visibilityChangeRemoveListener();
+
+        if (defined(this._visibilityChangeRemoveListener)) {
+            this._visibilityChangeRemoveListener();
+        }
 
         return destroyObject(this);
     };
 
-    function update(viewModel, time) {
-        if (!shouldDoPerformanceTracking(viewModel)) {
+    function update(monitor, time) {
+        if (defined(monitor._hiddenPropertyName) && document[monitor._hiddenPropertyName]) {
             return;
         }
 
         var timeStamp = getTimestamp();
 
-        if (viewModel._needsQuietPeriod) {
-            viewModel._needsQuietPeriod = false;
-            viewModel._frameTimes.length = 0;
-            viewModel._quietPeriodEndTime = timeStamp + viewModel.quietPeriod;
-            viewModel._warmupPeriodEndTime = viewModel._quietPeriodEndTime + viewModel.warmupPeriod + viewModel.samplingWindow;
-        } else if (timeStamp >= viewModel._quietPeriodEndTime) {
-            viewModel._frameTimes.push(timeStamp);
+        if (monitor._needsQuietPeriod) {
+            monitor._needsQuietPeriod = false;
+            monitor._frameTimes.length = 0;
+            monitor._quietPeriodEndTime = timeStamp + monitor.quietPeriod;
+            monitor._warmupPeriodEndTime = monitor._quietPeriodEndTime + monitor.warmupPeriod + monitor.samplingWindow;
+        } else if (timeStamp >= monitor._quietPeriodEndTime) {
+            monitor._frameTimes.push(timeStamp);
 
-            var beginningOfWindow = timeStamp - viewModel.samplingWindow;
+            var beginningOfWindow = timeStamp - monitor.samplingWindow;
 
-            if (viewModel._frameTimes.length >= 2 && viewModel._frameTimes[0] <= beginningOfWindow) {
-                while (viewModel._frameTimes.length >= 2 && viewModel._frameTimes[1] < beginningOfWindow) {
-                    viewModel._frameTimes.shift();
+            if (monitor._frameTimes.length >= 2 && monitor._frameTimes[0] <= beginningOfWindow) {
+                while (monitor._frameTimes.length >= 2 && monitor._frameTimes[1] < beginningOfWindow) {
+                    monitor._frameTimes.shift();
                 }
 
-                var averageTimeBetweenFrames = (timeStamp - viewModel._frameTimes[0]) / (viewModel._frameTimes.length - 1);
+                var averageTimeBetweenFrames = (timeStamp - monitor._frameTimes[0]) / (monitor._frameTimes.length - 1);
 
-                var maximumFrameTime = 1000.0 / (timeStamp > viewModel._warmupPeriodEndTime ? viewModel.minimumFrameRateAfterWarmup : viewModel.minimumFrameRateDuringWarmup);
+                monitor._lastFramesPerSecond = 1000.0 / averageTimeBetweenFrames;
+
+                var maximumFrameTime = 1000.0 / (timeStamp > monitor._warmupPeriodEndTime ? monitor.minimumFrameRateAfterWarmup : monitor.minimumFrameRateDuringWarmup);
                 if (averageTimeBetweenFrames > maximumFrameTime) {
-                    if (!viewModel._frameRateIsLow) {
-                        viewModel._frameRateIsLow = true;
-                        viewModel._needsQuietPeriod = true;
-                        viewModel.lowFrameRate.raiseEvent(viewModel.scene, 1000.0 / averageTimeBetweenFrames);
+                    if (!monitor._frameRateIsLow) {
+                        monitor._frameRateIsLow = true;
+                        monitor._needsQuietPeriod = true;
+                        monitor.lowFrameRate.raiseEvent(monitor.scene, monitor._lastFramesPerSecond);
                     }
-                } else if (viewModel._frameRateIsLow) {
-                    viewModel._frameRateIsLow = false;
-                    viewModel._needsQuietPeriod = true;
-                    viewModel.nominalFrameRate.raiseEvent(viewModel.scene, 1000.0 / averageTimeBetweenFrames);
+                } else if (monitor._frameRateIsLow) {
+                    monitor._frameRateIsLow = false;
+                    monitor._needsQuietPeriod = true;
+                    monitor.nominalFrameRate.raiseEvent(monitor.scene, monitor._lastFramesPerSecond);
                 }
             }
         }
     }
 
-    function visibilityChanged(viewModel) {
-        if (document[viewModel._hiddenPropertyName]) {
-            viewModel._frameTimes.length = 0;
+    function visibilityChanged(monitor) {
+        if (document[monitor._hiddenPropertyName]) {
+            monitor._frameTimes.length = 0;
+            monitor._lastFramesPerSecond = undefined;
         } else {
-            viewModel._needsQuietPeriod = true;
+            monitor._needsQuietPeriod = true;
         }
-    }
-
-    function shouldDoPerformanceTracking(viewModel) {
-        return !viewModel.lowFrameRateMessageDismissed && !document[viewModel._hiddenPropertyName];
     }
 
     return FrameRateMonitor;
