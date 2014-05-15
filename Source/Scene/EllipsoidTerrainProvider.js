@@ -5,18 +5,18 @@ define([
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Event',
+        './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './TerrainProvider',
-        './GeographicTilingScheme'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         Ellipsoid,
         Event,
+        GeographicTilingScheme,
         HeightmapTerrainData,
-        TerrainProvider,
-        GeographicTilingScheme) {
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -26,22 +26,22 @@ define([
      * @alias EllipsoidTerrainProvider
      * @constructor
      *
-     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
+     * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the ellipsoidal
      * surface is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
      * is used.
-     * @param {Ellipsoid} [description.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
      * this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
      * parameter is specified, the WGS84 ellipsoid is used.
      *
      * @see TerrainProvider
      */
-    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(description) {
-        description = defaultValue(description, {});
+    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(options) {
+        options = defaultValue(options, {});
 
-        this._tilingScheme = description.tilingScheme;
+        this._tilingScheme = options.tilingScheme;
         if (!defined(this._tilingScheme)) {
             this._tilingScheme = new GeographicTilingScheme({
-                ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84)
+                ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84)
             });
         }
 

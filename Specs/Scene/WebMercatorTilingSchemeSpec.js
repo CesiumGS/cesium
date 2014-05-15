@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/WebMercatorTilingScheme',
-         'Core/Cartesian2',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/Math',
-         'Core/Cartographic',
-         'Core/WebMercatorProjection',
-         'Scene/Tile',
-         'Scene/TilingScheme'
-     ], function(
-         WebMercatorTilingScheme,
-         Cartesian2,
-         Ellipsoid,
-         Rectangle,
-         CesiumMath,
-         Cartographic,
-         WebMercatorProjection,
-         Tile,
-         TilingScheme) {
+        'Scene/WebMercatorTilingScheme',
+        'Core/Cartesian2',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Scene/Tile',
+        'Scene/TilingScheme'
+    ], function(
+        WebMercatorTilingScheme,
+        Cartesian2,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection,
+        Tile,
+        TilingScheme) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 

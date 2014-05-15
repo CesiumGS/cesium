@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',

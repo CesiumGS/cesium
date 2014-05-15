@@ -1,12 +1,12 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
-        './defined',
-        '../ThirdParty/when'
+        './defined'
     ], function(
+        when,
         defaultValue,
-        defined,
-        when) {
+        defined) {
     "use strict";
 
     var maximumRequestsPerServer = 6;

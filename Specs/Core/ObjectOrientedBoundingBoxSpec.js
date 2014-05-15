@@ -1,22 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ObjectOrientedBoundingBox',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Math',
-         'Core/Matrix3',
-         'Core/Quaternion',
-         'Core/Intersect',
-         'Core/BoundingRectangle'
-     ], function(
-         ObjectOrientedBoundingBox,
-         Cartesian3,
-         Cartesian4,
-         CesiumMath,
-         Matrix3,
-         Quaternion,
-         Intersect,
-         BoundingRectangle) {
+        'Core/ObjectOrientedBoundingBox',
+        'Core/BoundingRectangle',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Quaternion'
+    ], function(
+        ObjectOrientedBoundingBox,
+        BoundingRectangle,
+        Cartesian3,
+        CesiumMath,
+        Matrix3,
+        Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

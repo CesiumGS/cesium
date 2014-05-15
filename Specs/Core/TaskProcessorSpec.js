@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/TaskProcessor',
-        'Core/FeatureDetection',
         'require',
         'Specs/waitsForPromise'
     ], function(
         TaskProcessor,
-        FeatureDetection,
         require,
         waitsForPromise) {
     "use strict";

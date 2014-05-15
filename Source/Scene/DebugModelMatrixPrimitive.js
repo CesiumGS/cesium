@@ -1,26 +1,26 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
-        '../Core/Matrix4',
-        '../Core/Color',
         '../Core/destroyObject',
         '../Core/GeometryInstance',
+        '../Core/Matrix4',
         '../Core/PolylineGeometry',
-        './Primitive',
-        './PolylineColorAppearance'
+        './PolylineColorAppearance',
+        './Primitive'
     ], function(
+        Cartesian3,
+        Color,
         defaultValue,
         defined,
-        Cartesian3,
-        Matrix4,
-        Color,
         destroyObject,
         GeometryInstance,
+        Matrix4,
         PolylineGeometry,
-        Primitive,
-        PolylineColorAppearance) {
+        PolylineColorAppearance,
+        Primitive) {
     "use strict";
 
     /**

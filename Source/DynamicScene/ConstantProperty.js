@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defineProperties',
+define([
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/Event',

@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Occluder',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/Visibility',
-         'Core/Math',
-         'Core/Ellipsoid',
-         'Core/Rectangle'
-     ], function(
-         Occluder,
-         Cartesian3,
-         BoundingSphere,
-         Visibility,
-         CesiumMath,
-         Ellipsoid,
-         Rectangle) {
+        'Core/Occluder',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/Visibility'
+    ], function(
+        Occluder,
+        BoundingSphere,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        Visibility) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

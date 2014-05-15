@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/PrimitivePipeline',
-         'Core/BoundingSphere',
-         'Core/BoxGeometry',
-         'Core/Cartesian3',
-         'Core/ComponentDatatype',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryAttributes',
-         'Core/PrimitiveType'
-     ], function(
-         PrimitivePipeline,
-         BoundingSphere,
-         BoxGeometry,
-         Cartesian3,
-         ComponentDatatype,
-         Geometry,
-         GeometryAttribute,
-         GeometryAttributes,
-         PrimitiveType) {
+        'Scene/PrimitivePipeline',
+        'Core/BoundingSphere',
+        'Core/BoxGeometry',
+        'Core/Cartesian3',
+        'Core/ComponentDatatype',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryAttributes',
+        'Core/PrimitiveType'
+    ], function(
+        PrimitivePipeline,
+        BoundingSphere,
+        BoxGeometry,
+        Cartesian3,
+        ComponentDatatype,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
+        PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

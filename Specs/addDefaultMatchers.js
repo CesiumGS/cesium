@@ -1,12 +1,12 @@
 /*global define*/
 define([
+        './equals',
         'Core/defined',
-        'Core/DeveloperError',
-        './equals'
+        'Core/DeveloperError'
     ], function(
+        equals,
         defined,
-        DeveloperError,
-        equals) {
+        DeveloperError) {
     "use strict";
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {

@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        './freezeObject',
+        './Cartographic',
         './defaultValue',
         './defined',
-        './Ellipsoid',
-        './Cartographic',
         './DeveloperError',
+        './Ellipsoid',
+        './freezeObject',
         './Math'
     ], function(
-        freezeObject,
+        Cartographic,
         defaultValue,
         defined,
-        Ellipsoid,
-        Cartographic,
         DeveloperError,
+        Ellipsoid,
+        freezeObject,
         CesiumMath) {
     "use strict";
 

@@ -3,16 +3,16 @@ define([
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Renderer/BlendingState',
-        '../Renderer/CullFace',
-        '../Renderer/createShaderSource'
+        '../Renderer/createShaderSource',
+        './BlendingState',
+        './CullFace'
     ], function(
         clone,
         defaultValue,
         defined,
+        createShaderSource,
         BlendingState,
-        CullFace,
-        createShaderSource) {
+        CullFace) {
     "use strict";
 
     /**

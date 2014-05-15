@@ -10,11 +10,11 @@ define([
         '../Core/loadImage',
         '../Core/Math',
         '../Core/throttleRequestByServer',
+        '../ThirdParty/when',
         './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './TerrainProvider',
-        '../ThirdParty/when'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
@@ -26,11 +26,11 @@ define([
         loadImage,
         CesiumMath,
         throttleRequestByServer,
+        when,
         Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        TerrainProvider,
-        when) {
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -40,16 +40,16 @@ define([
      * @alias ArcGisImageServerTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the ArcGIS ImageServer service.
-     * @param {String} [description.token] The authorization token to use to connect to the service.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the terrain
+     * @param {String} options.url The URL of the ArcGIS ImageServer service.
+     * @param {String} [options.token] The authorization token to use to connect to the service.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {TilingScheme} [options.tilingScheme] The tiling scheme specifying how the terrain
      *                       is broken into tiles.  If this parameter is not provided, a {@link GeographicTilingScheme}
      *                       is used.
-     * @param {Ellipsoid} [description.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
      *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
      *                    If neither parameter is specified, the WGS84 ellipsoid is used.
-     * @param {Credit|String} [description.credit] The credit, which will is displayed on the canvas.
+     * @param {Credit|String} [options.credit] The credit, which will is displayed on the canvas.
      *
      * @see TerrainProvider
      *
@@ -61,27 +61,27 @@ define([
      * });
      * scene.terrainProvider = terrainProvider;
      */
-    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(description) {
+    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+        if (!defined(options) || !defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = description.url;
-        this._token = description.token;
+        this._url = options.url;
+        this._token = options.token;
 
-        this._tilingScheme = description.tilingScheme;
+        this._tilingScheme = options.tilingScheme;
         if (!defined(this._tilingScheme)) {
             this._tilingScheme = new GeographicTilingScheme({
-                ellipsoid : defaultValue(description.ellipsoid, Ellipsoid.WGS84)
+                ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84)
             });
         }
 
         this._heightmapWidth = 65;
         this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
-        this._proxy = description.proxy;
+        this._proxy = options.proxy;
 
         this._terrainDataStructure = {
             heightScale : 1.0 / 1000.0,
@@ -94,7 +94,7 @@ define([
 
         this._errorEvent = new Event();
 
-        var credit = description.credit;
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }

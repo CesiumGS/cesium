@@ -1,24 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/TextureAtlasBuilder',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/PixelFormat'
-     ], function(
-         TextureAtlasBuilder,
-         createContext,
-         destroyContext,
-         PrimitiveType,
-         BufferUsage,
-         ClearCommand,
-         PixelFormat) {
+        'Scene/TextureAtlasBuilder',
+        'Core/PixelFormat',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Scene/TextureAtlas',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        TextureAtlasBuilder,
+        PixelFormat,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        TextureAtlas,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var context;
+    var scene;
     var atlas;
     var greenImage;
     var tallGreenImage;
@@ -29,11 +33,11 @@ defineSuite([
     var whiteImage;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
     });
 
     afterAll(function() {
-        destroyContext(context);
+        destroyScene(scene);
     });
 
     afterEach(function() {
@@ -68,6 +72,7 @@ defineSuite([
     });
 
     var draw = function(texture, textureCoordinate, expectedColorArray) {
+        var context = scene.context;
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs =
             'uniform sampler2D u_texture;' +
@@ -90,11 +95,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
 
         sp = sp.destroy();
         va = va.destroy();
@@ -103,7 +109,11 @@ defineSuite([
     };
 
     it('creates a two image atlas using addTextureFromUrl, and addTextureFromFunction', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         var greenIndex = -1;
@@ -145,7 +155,11 @@ defineSuite([
     });
 
     it('addTextureFromUrl throws without url', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         expect(function() {
@@ -155,7 +169,11 @@ defineSuite([
     });
 
     it('addTextureFromUrl throws without callback', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         expect(function() {
@@ -164,7 +182,11 @@ defineSuite([
     });
 
     it('addTextureFromFunction throws without url', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         expect(function() {
@@ -175,7 +197,11 @@ defineSuite([
     });
 
     it('addTextureFromFunction throws without create callback', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         expect(function() {
@@ -185,7 +211,11 @@ defineSuite([
     });
 
     it('addTextureFromFunction throws without ready callback', function() {
-        atlas = context.createTextureAtlas(undefined, PixelFormat.RGBA, 0);
+        atlas = new TextureAtlas({
+            scene : scene,
+            pixelFormat : PixelFormat.RGBA,
+            borderWidthInPixels : 0
+        });
         var atlasBuilder = new TextureAtlasBuilder(atlas);
 
         expect(function() {

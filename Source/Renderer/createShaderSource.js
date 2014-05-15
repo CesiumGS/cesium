@@ -44,6 +44,8 @@ define([
      *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
      *   pickColorQualifier : 'uniform'
      * });
+     *
+     * @private
      */
     function createShaderSource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

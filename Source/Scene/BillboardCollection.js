@@ -1,56 +1,54 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/destroyObject',
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/EncodedCartesian3',
-        '../Core/Matrix4',
+        '../Core/Color',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/EncodedCartesian3',
         '../Core/IndexDatatype',
-        '../Core/PrimitiveType',
-        '../Core/BoundingSphere',
-        '../Renderer/BlendingState',
+        '../Core/Matrix4',
         '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/VertexArrayFacade',
         '../Renderer/createShaderSource',
-        './SceneMode',
-        './Billboard',
-        './HorizontalOrigin',
+        '../Renderer/DrawCommand',
+        '../Renderer/VertexArrayFacade',
+        '../Shaders/BillboardCollectionFS',
         '../Shaders/BillboardCollectionVS',
-        '../Shaders/BillboardCollectionFS'
+        './Billboard',
+        './BlendingState',
+        './HorizontalOrigin',
+        './Pass',
+        './SceneMode'
     ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Color,
-        defaultValue,
-        destroyObject,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
-        EncodedCartesian3,
-        Matrix4,
+        Color,
         ComponentDatatype,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        EncodedCartesian3,
         IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
-        BlendingState,
+        Matrix4,
         BufferUsage,
-        DrawCommand,
-        Pass,
-        VertexArrayFacade,
         createShaderSource,
-        SceneMode,
-        Billboard,
-        HorizontalOrigin,
+        DrawCommand,
+        VertexArrayFacade,
+        BillboardCollectionFS,
         BillboardCollectionVS,
-        BillboardCollectionFS) {
+        Billboard,
+        BlendingState,
+        HorizontalOrigin,
+        Pass,
+        SceneMode) {
     "use strict";
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
@@ -128,7 +126,10 @@ define([
      * @example
      * // Create a billboard collection with two billboards
      * var billboards = new Cesium.BillboardCollection();
-     * var atlas = scene.createTextureAtlas({images : images});
+     * var atlas = new TextureAtlas({
+     *   scene : scene,
+     *   images : images
+     * });
      * billboards.textureAtlas = atlas;
      * billboards.add({
      *   position : { x : 1.0, y : 2.0, z : 3.0 },
@@ -205,7 +206,7 @@ define([
          * @see czm_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 0.0) }); // center
          * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0) }); // east
@@ -284,7 +285,10 @@ define([
          * // added to the collection.
          * var billboards = new Cesium.BillboardCollection();
          * var images = [image0, image1];
-         * var atlas = scene.createTextureAtlas({images : images});
+         * var atlas = new TextureAtlas({
+         *   scene : scene,
+         *   images : images
+         * });
          * billboards.textureAtlas = atlas;
          * billboards.add({
          *   // ...
@@ -322,7 +326,10 @@ define([
          * // Set destroyTextureAtlas
          * // Destroy a billboard collection but not its texture atlas.
          *
-         * var atlas = scene.createTextureAtlas({images : images});
+         * var atlas = new TextureAtlas({
+         *   scene : scene,
+         *   images : images
+         * });
          * billboards.textureAtlas = atlas;
          * billboards.destroyTextureAtlas = false;
          * billboards = billboards.destroy();
@@ -1006,7 +1013,8 @@ define([
         var billboardsToUpdate = billboardCollection._billboardsToUpdate;
         var modelMatrix = billboardCollection._modelMatrix;
 
-        if (billboardCollection._mode !== mode ||
+        if (billboardCollection._createVertexArray ||
+            billboardCollection._mode !== mode ||
             billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
             !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
@@ -1240,7 +1248,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistance) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistance)) {
-                this._sp = context.shaderCache.replaceShaderProgram(
+                this._sp = context.replaceShaderProgram(
                     this._sp,
                     createShaderSource({
                         defines : [this._shaderRotation ? 'ROTATION' : '',
@@ -1264,19 +1272,19 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = colorList[j];
                 if (!defined(command)) {
-                    command = colorList[j] = new DrawCommand();
+                    command = colorList[j] = new DrawCommand({
+                        pass : Pass.OPAQUE,
+                        owner : this
+                    });
                 }
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.primitiveType = PrimitiveType.TRIANGLES;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._sp;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
-                command.pass = Pass.OPAQUE;
-                command.owner = this;
                 command.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
                 commandList.push(command);
@@ -1292,7 +1300,7 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick) ||
                     (this._shaderTranslucencyByDistance && !this._compiledShaderTranslucencyByDistancePick) ||
                     (this._shaderPixelOffsetScaleByDistance && !this._compiledShaderPixelOffsetScaleByDistancePick)) {
-                this._spPick = context.shaderCache.replaceShaderProgram(
+                this._spPick = context.replaceShaderProgram(
                     this._spPick,
                     createShaderSource({
                         defines : ['RENDER_FOR_PICK',
@@ -1320,19 +1328,19 @@ define([
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
                 if (!defined(command)) {
-                    command = pickList[j] = new DrawCommand();
+                    command = pickList[j] = new DrawCommand({
+                        pass : Pass.OPAQUE,
+                        owner : this
+                    });
                 }
 
                 command.boundingVolume = boundingVolume;
                 command.modelMatrix = modelMatrix;
-                command.primitiveType = PrimitiveType.TRIANGLES;
                 command.count = va[j].indicesCount;
                 command.shaderProgram = this._spPick;
                 command.uniformMap = this._uniforms;
                 command.vertexArray = va[j].va;
                 command.renderState = this._rs;
-                command.pass = Pass.OPAQUE;
-                command.owner = this;
 
                 commandList.push(command);
             }
@@ -1376,8 +1384,8 @@ define([
      */
     BillboardCollection.prototype.destroy = function() {
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
-        this._sp = this._sp && this._sp.release();
-        this._spPick = this._spPick && this._spPick.release();
+        this._sp = this._sp && this._sp.destroy();
+        this._spPick = this._spPick && this._spPick.destroy();
         this._vaf = this._vaf && this._vaf.destroy();
         this._destroyBillboards();
 

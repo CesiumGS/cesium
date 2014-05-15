@@ -10,23 +10,23 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
-        '../Core/Rectangle',
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/Rectangle',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        '../ThirdParty/when',
         './ImageryLayer',
         './ImageryState',
+        './Pass',
         './SceneMode',
         './TerrainProvider',
         './TileReplacementQueue',
-        './TileState',
-        '../ThirdParty/when'
+        './TileState'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -38,23 +38,23 @@ define([
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
-        Rectangle,
         FeatureDetection,
         getTimestamp,
         Intersect,
         Matrix4,
         PrimitiveType,
         Queue,
+        Rectangle,
         WebMercatorProjection,
         DrawCommand,
-        Pass,
+        when,
         ImageryLayer,
         ImageryState,
+        Pass,
         SceneMode,
         TerrainProvider,
         TileReplacementQueue,
-        TileState,
-        when) {
+        TileState) {
     "use strict";
 
     /**
@@ -896,10 +896,10 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (!defined(command)) {
-                        command = new DrawCommand();
-                        command.owner = tile;
-                        command.cull = false;
-                        command.boundingVolume = new BoundingSphere();
+                        command = new DrawCommand({
+                            cull : false,
+                            boundingVolume : new BoundingSphere()
+                        });
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
                     }

@@ -2,16 +2,14 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../Core/Event',
+        '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
         '../../Scene/QuadtreePrimitive',
+        '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
@@ -28,21 +26,18 @@ define([
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
         destroyObject,
-        Event,
+        DeveloperError,
         EventHelper,
-        formatError,
-        requestAnimationFrame,
         DataSourceCollection,
         DataSourceDisplay,
         QuadtreePrimitive,
+        knockout,
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
@@ -59,8 +54,7 @@ define([
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -101,7 +95,7 @@ define([
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -685,6 +679,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget.useDefaultRenderLoop = value;
+            }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._cesiumWidget.resolutionScale;
+            },
+            set : function(value) {
+                this._cesiumWidget.resolutionScale = value;
             }
         },
 

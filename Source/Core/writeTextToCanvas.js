@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../ThirdParty/measureText',
+        './Color',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        './Color',
-        '../ThirdParty/measureText'
+        './DeveloperError'
     ], function(
+        measureText,
+        Color,
         defaultValue,
         defined,
-        DeveloperError,
-        Color,
-        measureText) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -18,19 +18,19 @@ define([
      * If text is blank, returns undefined.
      *
      * @param {String} text The text to write.
-     * @param {String} [description.font='10px sans-serif'] The CSS font to use.
-     * @param {String} [description.textBaseline='bottom'] The baseline of the text.
-     * @param {Boolean} [description.fill=true] Whether to fill the text.
-     * @param {Boolean} [description.stroke=false] Whether to stroke the text.
-     * @param {Color} [description.fillColor=Color.WHITE] The fill color.
-     * @param {Color} [description.strokeColor=Color.BLACK] The stroke color.
-     * @param {Color} [description.strokeWidth=1] The stroke width.
+     * @param {String} [options.font='10px sans-serif'] The CSS font to use.
+     * @param {String} [options.textBaseline='bottom'] The baseline of the text.
+     * @param {Boolean} [options.fill=true] Whether to fill the text.
+     * @param {Boolean} [options.stroke=false] Whether to stroke the text.
+     * @param {Color} [options.fillColor=Color.WHITE] The fill color.
+     * @param {Color} [options.strokeColor=Color.BLACK] The stroke color.
+     * @param {Color} [options.strokeWidth=1] The stroke width.
      *
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
      */
-    var writeTextToCanvas = function(text, description) {
+    var writeTextToCanvas = function(text, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(text)) {
             throw new DeveloperError('text is required.');
@@ -40,8 +40,8 @@ define([
             return undefined;
         }
 
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var font = defaultValue(description.font, '10px sans-serif');
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var font = defaultValue(options.font, '10px sans-serif');
 
         var canvas = document.createElement('canvas');
         canvas.width = canvas.height = 1;
@@ -52,16 +52,16 @@ define([
 
         // textBaseline needs to be set before the measureText call. It won't work otherwise.
         // It's magic.
-        context2D.textBaseline = defaultValue(description.textBaseline, 'bottom');
+        context2D.textBaseline = defaultValue(options.textBaseline, 'bottom');
 
         // in order for measureText to calculate style, the canvas has to be
         // (temporarily) added to the DOM.
         canvas.style.visibility = 'hidden';
         document.body.appendChild(canvas);
 
-        var stroke = defaultValue(description.stroke, false);
-        var fill = defaultValue(description.fill, true);
-        var strokeWidth = defaultValue(description.strokeWidth, 1) * 2;
+        var stroke = defaultValue(options.stroke, false);
+        var fill = defaultValue(options.fill, true);
+        var strokeWidth = defaultValue(options.strokeWidth, 1) * 2;
 
         context2D.lineWidth = strokeWidth;
         var dimensions = measureText(context2D, text, stroke, fill);
@@ -79,14 +79,14 @@ define([
         context2D.font = font;
 
         if (stroke) {
-            var strokeColor = defaultValue(description.strokeColor, Color.BLACK);
+            var strokeColor = defaultValue(options.strokeColor, Color.BLACK);
             context2D.strokeStyle = strokeColor.toCssColorString();
             context2D.lineWidth = strokeWidth;
             context2D.strokeText(text, 0, y);
         }
 
         if (fill) {
-            var fillColor = defaultValue(description.fillColor, Color.WHITE);
+            var fillColor = defaultValue(options.fillColor, Color.WHITE);
             context2D.fillStyle = fillColor.toCssColorString();
             context2D.fillText(text, 0, y);
         }

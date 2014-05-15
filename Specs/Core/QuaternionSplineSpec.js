@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/QuaternionSpline',
-         'Core/Cartesian3',
-         'Core/Math',
-         'Core/Quaternion'
-     ], function(
-         QuaternionSpline,
-         Cartesian3,
-         CesiumMath,
-         Quaternion) {
+        'Core/QuaternionSpline',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/Quaternion'
+    ], function(
+        QuaternionSpline,
+        Cartesian3,
+        CesiumMath,
+        Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

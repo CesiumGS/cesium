@@ -1,25 +1,25 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian2',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
         '../Core/GeographicProjection',
+        '../Core/Math',
+        '../Core/Rectangle',
         './TilingScheme'
     ], function(
+        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        CesiumMath,
-        Cartesian2,
         Ellipsoid,
-        Rectangle,
         GeographicProjection,
+        CesiumMath,
+        Rectangle,
         TilingScheme) {
     "use strict";
 
@@ -31,22 +31,22 @@ define([
      * @alias GeographicTilingScheme
      * @constructor
      *
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
-     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.
-     * @param {Number} [description.numberOfLevelZeroTilesX=2] The number of tiles in the X direction at level zero of
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.
+     * @param {Number} [options.numberOfLevelZeroTilesX=2] The number of tiles in the X direction at level zero of
      * the tile tree.
-     * @param {Number} [description.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
+     * @param {Number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      * the tile tree.
      */
-    var GeographicTilingScheme = function GeographicTilingScheme(description) {
-        description = defaultValue(description, {});
+    var GeographicTilingScheme = function GeographicTilingScheme(options) {
+        options = defaultValue(options, {});
 
-        this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        this._rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._projection = new GeographicProjection(this._ellipsoid);
-        this._numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 2);
-        this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
+        this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 2);
+        this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
     };
 
 

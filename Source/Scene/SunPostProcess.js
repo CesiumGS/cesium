@@ -9,11 +9,11 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/PixelFormat',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
@@ -29,11 +29,11 @@ define([
         destroyObject,
         CesiumMath,
         Matrix4,
+        PixelFormat,
         Transforms,
         ClearCommand,
         PassState,
         PixelDatatype,
-        PixelFormat,
         RenderbufferFormat,
         AdditiveBlend,
         BrightPass,
@@ -111,11 +111,12 @@ define([
         var that = this;
 
         if (!defined(this._downSampleCommand)) {
-            this._clearFBO1Command = new ClearCommand();
-            this._clearFBO1Command.color = new Color();
-
-            this._clearFBO2Command = new ClearCommand();
-            this._clearFBO2Command.color = new Color();
+            this._clearFBO1Command = new ClearCommand({
+                color : new Color()
+            });
+            this._clearFBO2Command = new ClearCommand({
+                color : new Color()
+            });
 
             var rs;
             var uniformMap = {};
@@ -373,12 +374,12 @@ define([
         this._fbo = this._fbo && this._fbo.destroy();
         this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
         this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
-        this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.shaderProgram.release();
-        this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.shaderProgram.release();
-        this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.shaderProgram.release();
-        this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.shaderProgram.release();
-        this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.shaderProgram.release();
-        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.shaderProgram.release();
+        this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.shaderProgram.destroy();
+        this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.shaderProgram.destroy();
+        this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.shaderProgram.destroy();
+        this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.shaderProgram.destroy();
+        this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.shaderProgram.destroy();
+        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.shaderProgram.destroy();
         return destroyObject(this);
     };
 

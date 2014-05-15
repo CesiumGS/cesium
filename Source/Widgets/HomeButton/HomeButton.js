@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './HomeButtonViewModel',
-        '../../ThirdParty/knockout'
+        './HomeButtonViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        HomeButtonViewModel,
-        knockout) {
+        HomeButtonViewModel) {
     "use strict";
 
     /**

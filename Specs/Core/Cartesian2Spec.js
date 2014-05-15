@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Cartesian2',
-             'Core/Math',
-             'Specs/createPackableSpecs'
-            ], function(
-              Cartesian2,
-              CesiumMath,
-              createPackableSpecs) {
+        'Core/Cartesian2',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        Cartesian2,
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

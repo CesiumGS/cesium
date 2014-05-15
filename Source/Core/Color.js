@@ -2,16 +2,16 @@
 define([
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
         './FeatureDetection',
+        './freezeObject',
         './Math'
     ], function(
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
         FeatureDetection,
+        freezeObject,
         CesiumMath) {
     "use strict";
 

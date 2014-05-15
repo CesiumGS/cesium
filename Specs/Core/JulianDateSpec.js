@@ -1,12 +1,14 @@
 /*global defineSuite*/
-defineSuite(['Core/JulianDate',
-             'Core/TimeStandard',
-             'Core/TimeConstants',
-             'Core/Math'],
-function(JulianDate,
-         TimeStandard,
-         TimeConstants,
-         CesiumMath) {
+defineSuite([
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/TimeConstants',
+        'Core/TimeStandard'
+    ], function(
+        JulianDate,
+        CesiumMath,
+        TimeConstants,
+        TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
