@@ -218,8 +218,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
-            creditContainer : bottomContainer,
-            creditCssClass : 'cesium-viewer-credits'
+            creditContainer : bottomContainer
         });
 
         var dataSourceCollection = new DataSourceCollection();
