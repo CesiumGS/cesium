@@ -113,7 +113,7 @@ require(['Cesium'], function(Cesium) {
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
+        controller.globe = Cesium.Ellipsoid.UNIT_SPHERE;
         controller.enableTilt = false;
 
         // Zoom in
@@ -175,7 +175,7 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Cartesian3.UNIT_Z);
 
         var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = ellipsoid;
+        controller.globe = scene.globe;
         controller.enableTilt = true;
     }
 

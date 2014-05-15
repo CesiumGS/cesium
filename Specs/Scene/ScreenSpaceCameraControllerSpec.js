@@ -70,14 +70,14 @@ defineSuite([
     });
 
     it('get/set ellipsoid', function() {
-        expect(controller.ellipsoid).toEqual(Ellipsoid.WGS84);
-        controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
-        expect(controller.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
+        expect(controller.globe).toEqual(Ellipsoid.WGS84);
+        controller.globe = Ellipsoid.UNIT_SPHERE;
+        expect(controller.globe).toEqual(Ellipsoid.UNIT_SPHERE);
     });
 
     function updateController(frameState) {
         camera.update(frameState.mode, frameState.scene2D);
-        controller.update(frameState.mode);
+        controller.update(frameState);
     }
 
     function setUp2D() {
@@ -546,7 +546,7 @@ defineSuite([
         expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
     });
 
-    it('rotates in Columus view locked mode', function() {
+    it('rotates in Columbus view locked mode', function() {
         var frameState = setUpCV();
         controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
 

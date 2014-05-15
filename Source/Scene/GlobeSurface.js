@@ -13,6 +13,7 @@ define([
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
+        '../Core/IntersectionTests',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
@@ -41,6 +42,7 @@ define([
         FeatureDetection,
         getTimestamp,
         Intersect,
+        IntersectionTests,
         Matrix4,
         PrimitiveType,
         Queue,
@@ -253,6 +255,82 @@ define([
         } else {
             this._onLayerRemoved(layer, index);
         }
+    };
+
+    function createComparePickTileFunction(rayOrigin) {
+        return function(a, b) {
+            var aDist = BoundingSphere.distanceSquaredTo(a.pickBoundingSphere, rayOrigin);
+            var bDist = BoundingSphere.distanceSquaredTo(b.pickBoundingSphere, rayOrigin);
+
+            return aDist - bDist;
+        };
+    }
+
+    var scratchSphereIntersections = [];
+    var scratchSphereIntersectionResult = {
+        start : 0.0,
+        stop : 0.0
+    };
+
+    /**
+     * Find an intersection between a ray and the globe surface.
+     * @memberof GlobeSurface
+     *
+     * @param {Ray} ray The ray to test for intersection.
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The intersection of <code>undefined</code> if none was found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = surface.pick(ray, scene.frameState);
+     */
+    GlobeSurface.prototype.pick = function(ray, frameState, result) {
+        var sphereIntersections = scratchSphereIntersections;
+        sphereIntersections.length = 0;
+
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        var length = tilesToRenderByTextureCount.length;
+
+        var tile;
+        var i;
+
+        for (i = 0; i < length; ++i) {
+            var tileSet = tilesToRenderByTextureCount[i];
+            if (!defined(tileSet)) {
+                continue;
+            }
+            for (var j = 0; j < tileSet.length; ++j) {
+                tile = tileSet[j];
+
+                var boundingVolume = tile.pickBoundingSphere;
+                if (frameState.mode !== SceneMode.SCENE3D) {
+                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                    Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+                } else {
+                    BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
+                }
+
+                var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+                if (defined(boundingSphereIntersection)) {
+                    sphereIntersections.push(tile);
+                }
+            }
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+
+        var intersection;
+        length = sphereIntersections.length;
+        for (i = 0; i < length; ++i) {
+            intersection = sphereIntersections[i].pick(ray, frameState, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
     };
 
     /**

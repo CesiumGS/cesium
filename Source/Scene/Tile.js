@@ -4,9 +4,11 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/IntersectionTests',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
@@ -14,6 +16,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         './ImageryState',
+        './SceneMode',
         './TerrainState',
         './TileState',
         './TileTerrain'
@@ -22,9 +25,11 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        IntersectionTests,
         PixelFormat,
         Rectangle,
         PixelDatatype,
@@ -32,6 +37,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         ImageryState,
+        SceneMode,
         TerrainState,
         TileState,
         TileTerrain) {
@@ -222,6 +228,9 @@ define([
 
         this.loadedTerrain = undefined;
         this.upsampledTerrain = undefined;
+
+        this.pickBoundingSphere = new BoundingSphere();
+        this.pickTerrain = undefined;
     };
 
     defineProperties(Tile.prototype, {
@@ -269,6 +278,58 @@ define([
         }
     });
 
+    function getPosition(tile, frameState, vertices, index, result) {
+        Cartesian3.unpack(vertices, index * 6, result);
+        Cartesian3.add(tile.center, result, result);
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            var projection = frameState.scene2D.projection;
+            var ellipsoid = projection.ellipsoid;
+            var positionCart = ellipsoid.cartesianToCartographic(result);
+            projection.project(positionCart, result);
+            Cartesian3.fromElements(result.z, result.x, result.y, result);
+        }
+
+        return result;
+    }
+
+    var scratchV0 = new Cartesian3();
+    var scratchV1 = new Cartesian3();
+    var scratchV2 = new Cartesian3();
+
+    Tile.prototype.pick = function(ray, frameState, result) {
+        var terrain = this.pickTerrain;
+        if (!defined(terrain)) {
+            return undefined;
+        }
+
+        var mesh = terrain.mesh;
+        if (!defined(mesh)) {
+            return undefined;
+        }
+
+        var vertices = mesh.vertices;
+        var indices = mesh.indices;
+
+        var length = indices.length;
+        for (var i = 0; i < length; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var v0 = getPosition(this, frameState, vertices, i0, scratchV0);
+            var v1 = getPosition(this, frameState, vertices, i1, scratchV1);
+            var v2 = getPosition(this, frameState, vertices, i2, scratchV2);
+
+            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
+            if (defined(intersection)) {
+                return intersection;
+            }
+        }
+
+        return undefined;
+    };
+
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
             --this.waterMaskTexture.referenceCount;
@@ -290,6 +351,11 @@ define([
         if (defined(this.upsampledTerrain)) {
             this.upsampledTerrain.freeResources();
             this.upsampledTerrain = undefined;
+        }
+
+        if (defined(this.pickTerrain)) {
+            this.pickTerrain.freeResources();
+            this.pickTerrain = undefined;
         }
 
         var i, len;
@@ -511,6 +577,7 @@ define([
                 loaded.publishToTile(tile);
 
                 // No further loading or upsampling is necessary.
+                tile.pickTerrain = defaultValue(tile.loadedTerrain, tile.upsampledTerrain);
                 tile.loadedTerrain = undefined;
                 tile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -546,6 +613,7 @@ define([
                 upsampled.publishToTile(tile);
 
                 // No further upsampling is necessary.  We need to continue loading, though.
+                tile.pickTerrain = tile.upsampledTerrain;
                 tile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,

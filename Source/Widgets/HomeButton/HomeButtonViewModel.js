@@ -5,7 +5,6 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/Ellipsoid',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Scene/Camera',
@@ -20,7 +19,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         Matrix4,
         Rectangle,
         Camera,
@@ -31,11 +29,11 @@ define([
         createCommand) {
     "use strict";
 
-    function viewHome(scene, ellipsoid, duration) {
+    function viewHome(scene, duration) {
         var mode = scene.mode;
         var controller = scene.screenSpaceCameraController;
 
-        controller.ellipsoid = ellipsoid;
+        controller.globe = scene.globe;
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
         if (defined(scene) && mode === SceneMode.MORPHING) {
@@ -67,7 +65,7 @@ define([
             flight = CameraFlightPath.createAnimation(scene, options);
             scene.animations.add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            var maxRadii = ellipsoid.maximumRadius;
+            var maxRadii = scene.globe.ellipsoid.maximumRadius;
             var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
             var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
             var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
@@ -95,26 +93,23 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
      * @param {Number} [duration=1500] The duration of the camera flight in milliseconds
      */
-    var HomeButtonViewModel = function(scene, ellipsoid, duration) {
+    var HomeButtonViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         duration = defaultValue(duration, 1500);
 
         this._scene = scene;
-        this._ellipsoid = ellipsoid;
         this._duration = duration;
 
         var that = this;
         this._command = createCommand(function() {
-            viewHome(that._scene, that._ellipsoid, that._duration);
+            viewHome(that._scene, that._duration);
         });
 
         /**
@@ -137,18 +132,6 @@ define([
         scene : {
             get : function() {
                 return this._scene;
-            }
-        },
-
-        /**
-         * Gets the ellipsoid to be viewed when in home position.
-         * @memberof HomeButtonViewModel.prototype
-         *
-         * @type {Ellipsoid}
-         */
-        ellipsoid : {
-            get : function() {
-                return this._ellipsoid;
             }
         },
 

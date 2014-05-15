@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/HomeButton/HomeButton',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         HomeButton,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";
@@ -25,18 +23,15 @@ defineSuite([
         var homeButton = new HomeButton(document.body, scene);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
         expect(homeButton.isDestroyed()).toEqual(false);
         homeButton.destroy();
         expect(homeButton.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
-        var ellipsoid = new Ellipsoid();
-        var homeButton = new HomeButton(document.body, scene, ellipsoid);
+        var homeButton = new HomeButton(document.body, scene);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.ellipsoid).toBe(ellipsoid);
         homeButton.destroy();
     });
 
