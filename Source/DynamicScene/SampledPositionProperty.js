@@ -36,15 +36,12 @@ define([
     };
 
     PositionVelocity.unpack = function(array, startingIndex, result) {
-        var position = Cartesian3.unpack(array, startingIndex, result.position);
-        var velocity = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, result.velocity);
-
         if (!defined(result)) {
-            return new PositionVelocity(position, velocity);
+            result = new PositionVelocity();
         }
 
-        result.position = position;
-        result.velocity = velocity;
+        result.position = Cartesian3.unpack(array, startingIndex, result.position);
+        result.velocity = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, result.velocity);
         return result;
     };
 
