@@ -3,14 +3,12 @@ defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         SelectionIndicatorViewModel,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";

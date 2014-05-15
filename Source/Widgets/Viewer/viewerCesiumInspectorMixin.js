@@ -10,7 +10,6 @@ define([
         DeveloperError,
         CesiumInspector) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.

@@ -11,9 +11,7 @@ defineSuite([
         'DynamicScene/ColorMaterialProperty',
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicCone',
-        'DynamicScene/DynamicObject',
         'DynamicScene/DynamicObjectCollection',
-        'Scene/Scene',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -28,9 +26,7 @@ defineSuite([
         ColorMaterialProperty,
         ConstantProperty,
         DynamicCone,
-        DynamicObject,
         DynamicObjectCollection,
-        Scene,
         createScene,
         destroyScene) {
     "use strict";

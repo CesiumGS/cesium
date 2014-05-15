@@ -1,13 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/PropertyArray',
-        'Core/Cartesian3',
         'Core/JulianDate',
         'DynamicScene/ConstantProperty',
         'DynamicScene/SampledProperty'
     ], function(
         PropertyArray,
-        Cartesian3,
         JulianDate,
         ConstantProperty,
         SampledProperty) {

@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicPolygon',
-        'Core/Color',
         'DynamicScene/ColorMaterialProperty',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicPolygon,
-        Color,
         ColorMaterialProperty,
         ConstantProperty) {
     "use strict";

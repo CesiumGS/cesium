@@ -7,8 +7,7 @@ defineSuite([
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
-        'Specs/destroyContext',
-        'ThirdParty/when'
+        'Specs/destroyContext'
     ], function(
         SkyBox,
         Cartesian3,
@@ -17,8 +16,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState,
-        destroyContext,
-        when) {
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -15,8 +15,7 @@ defineSuite([
         'Scene/CameraEventType',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
-        'Specs/MockCanvas',
-        'ThirdParty/Tween'
+        'Specs/MockCanvas'
     ], function(
         ScreenSpaceCameraController,
         Cartesian2,
@@ -33,8 +32,7 @@ defineSuite([
         CameraEventType,
         OrthographicFrustum,
         SceneMode,
-        MockCanvas,
-        Tween) {
+        MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

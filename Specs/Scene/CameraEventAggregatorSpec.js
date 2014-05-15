@@ -3,14 +3,12 @@ defineSuite([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',
         'Core/KeyboardEventModifier',
-        'Core/ScreenSpaceEventType',
         'Scene/CameraEventType',
         'Specs/MockCanvas'
     ], function(
         CameraEventAggregator,
         Cartesian2,
         KeyboardEventModifier,
-        ScreenSpaceEventType,
         CameraEventType,
         MockCanvas) {
     "use strict";

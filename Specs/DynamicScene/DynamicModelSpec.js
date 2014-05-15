@@ -1,15 +1,9 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicModel',
-        'Core/Cartesian3',
-        'Core/Color',
-        'DynamicScene/ColorMaterialProperty',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicModel,
-        Cartesian3,
-        Color,
-        ColorMaterialProperty,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
