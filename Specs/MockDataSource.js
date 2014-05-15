@@ -1,5 +1,6 @@
 /*global define*/
-define(['Core/Event',
+define([
+        'Core/Event',
         'DynamicScene/DynamicObjectCollection'
     ], function(
         Event,

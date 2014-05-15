@@ -1,28 +1,28 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
-        '../Scene/VerticalOrigin',
         '../Scene/TextureAtlas',
-        '../Scene/TextureAtlasBuilder'
+        '../Scene/TextureAtlasBuilder',
+        '../Scene/VerticalOrigin'
     ], function(
-        DeveloperError,
-        defined,
-        destroyObject,
-        Color,
         Cartesian2,
         Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
         BillboardCollection,
         HorizontalOrigin,
-        VerticalOrigin,
         TextureAtlas,
-        TextureAtlasBuilder) {
+        TextureAtlasBuilder,
+        VerticalOrigin) {
     "use strict";
 
     function textureReady(dynamicObject, billboardCollection, textureValue) {

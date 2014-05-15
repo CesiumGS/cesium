@@ -1,24 +1,24 @@
 /*global define*/
 define([
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/Matrix4',
-        './Primitive',
-        './PerInstanceColorAppearance'
+        './PerInstanceColorAppearance',
+        './Primitive'
     ], function(
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         DeveloperError,
-        ColorGeometryInstanceAttribute,
         GeometryInstance,
         GeometryPipeline,
         Matrix4,
-        Primitive,
-        PerInstanceColorAppearance) {
+        PerInstanceColorAppearance,
+        Primitive) {
     "use strict";
 
     /**

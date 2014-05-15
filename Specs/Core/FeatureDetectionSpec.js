@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/FeatureDetection'
-         ], function(
-             FeatureDetection) {
+        'Core/FeatureDetection'
+    ], function(
+        FeatureDetection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

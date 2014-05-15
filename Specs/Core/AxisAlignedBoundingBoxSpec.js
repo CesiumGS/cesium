@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/AxisAlignedBoundingBox',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Intersect'
-     ], function(
-         AxisAlignedBoundingBox,
-         Cartesian3,
-         Cartesian4,
-         Intersect) {
+        'Core/AxisAlignedBoundingBox',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Intersect'
+    ], function(
+        AxisAlignedBoundingBox,
+        Cartesian3,
+        Cartesian4,
+        Intersect) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

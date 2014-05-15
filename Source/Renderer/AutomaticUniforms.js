@@ -3,7 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/defineProperties',
         '../Core/Matrix4'
-    ],function(
+    ], function(
         Cartesian3,
         defineProperties,
         Matrix4) {

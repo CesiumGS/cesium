@@ -2,15 +2,16 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
+        '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
@@ -27,20 +28,20 @@ define([
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event,
         EventHelper,
         formatError,
         requestAnimationFrame,
         DataSourceCollection,
         DataSourceDisplay,
+        knockout,
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
@@ -57,8 +58,7 @@ define([
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {

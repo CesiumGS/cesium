@@ -8,8 +8,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
-        './Material',
-        './CustomSensorVolume'
+        './CustomSensorVolume',
+        './Material'
     ], function(
         clone,
         Color,
@@ -19,8 +19,8 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
-        Material,
-        CustomSensorVolume) {
+        CustomSensorVolume,
+        Material) {
     "use strict";
 
     /**

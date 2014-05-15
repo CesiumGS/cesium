@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Sun',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/Cartesian3',
-         'Scene/SceneMode'
-     ], function(
-         Sun,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         Cartesian3,
-         SceneMode) {
+        'Scene/Sun',
+        'Core/Cartesian3',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Sun,
+        Cartesian3,
+        SceneMode,
+        createCamera,
+        createFrameState,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

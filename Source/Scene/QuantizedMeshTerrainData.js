@@ -9,8 +9,8 @@ define([
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/TaskProcessor',
-        './TerrainMesh',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './TerrainMesh'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -21,8 +21,8 @@ define([
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        TerrainMesh,
-        when) {
+        when,
+        TerrainMesh) {
     "use strict";
 
     /**

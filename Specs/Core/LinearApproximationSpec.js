@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/LinearApproximation'
-            ], function(
-             LinearApproximation) {
+        'Core/LinearApproximation'
+    ], function(
+        LinearApproximation) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/Math',
+        './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap',
-        './CubeMapFace'
+        './TextureWrap'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
-        defaultValue,
+        DeveloperError,
         CesiumMath,
+        CubeMapFace,
         MipmapHint,
         PixelDatatype,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap,
-        CubeMapFace) {
+        TextureWrap) {
     "use strict";
 
     /**

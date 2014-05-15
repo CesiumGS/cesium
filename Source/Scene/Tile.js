@@ -7,16 +7,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Rectangle',
         '../Core/PixelFormat',
-        './ImageryState',
-        './TerrainState',
-        './TileState',
-        './TileTerrain',
+        '../Core/Rectangle',
         '../Renderer/PixelDatatype',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        '../Renderer/TextureWrap',
+        './ImageryState',
+        './TerrainState',
+        './TileState',
+        './TileTerrain'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -25,16 +25,16 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Rectangle,
         PixelFormat,
-        ImageryState,
-        TerrainState,
-        TileState,
-        TileTerrain,
+        Rectangle,
         PixelDatatype,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
+        TextureWrap,
+        ImageryState,
+        TerrainState,
+        TileState,
+        TileTerrain) {
     "use strict";
 
     /**

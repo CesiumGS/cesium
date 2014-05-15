@@ -1,25 +1,25 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian2',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
         '../Core/GeographicProjection',
+        '../Core/Math',
+        '../Core/Rectangle',
         './TilingScheme'
     ], function(
+        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        CesiumMath,
-        Cartesian2,
         Ellipsoid,
-        Rectangle,
         GeographicProjection,
+        CesiumMath,
+        Rectangle,
         TilingScheme) {
     "use strict";
 

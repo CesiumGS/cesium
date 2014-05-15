@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/NavigationHelpButton/NavigationHelpButton',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/EventHelper'
-     ], function(
-         NavigationHelpButton,
-         Ellipsoid,
-         createScene,
-         destroyScene,
-         EventHelper) {
+        'Widgets/NavigationHelpButton/NavigationHelpButton',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene',
+        'Specs/EventHelper'
+    ], function(
+        NavigationHelpButton,
+        Ellipsoid,
+        createScene,
+        destroyScene,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

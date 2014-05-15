@@ -1,22 +1,22 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './NavigationHelpButtonViewModel',
-        '../../ThirdParty/knockout'
-], function (
+        './NavigationHelpButtonViewModel'
+    ], function(
         buildModuleUrl,
-        defineProperties,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        NavigationHelpButtonViewModel,
-        knockout) {
+        NavigationHelpButtonViewModel) {
     "use strict";
 
     /**

@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './BaseLayerPickerViewModel',
-        '../../ThirdParty/knockout'
+        './BaseLayerPickerViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        BaseLayerPickerViewModel,
-        knockout) {
+        BaseLayerPickerViewModel) {
     "use strict";
 
     /**

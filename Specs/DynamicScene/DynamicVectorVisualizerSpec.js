@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicVectorVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/DynamicVector',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-                    DynamicVectorVisualizer,
-                    createScene,
-                    destroyScene,
-                    ConstantProperty,
-                    ConstantPositionProperty,
-                    DynamicEllipse,
-                    DynamicVector,
-                    DynamicObjectCollection,
-                    DynamicObject,
-                    JulianDate,
-                    Cartesian2,
-                    Cartesian3,
-                    Color,
-                    Scene) {
+        'DynamicScene/DynamicVectorVisualizer',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicEllipse',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicObjectCollection',
+        'DynamicScene/DynamicVector',
+        'Scene/Scene',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicVectorVisualizer,
+        Cartesian2,
+        Cartesian3,
+        Color,
+        JulianDate,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicEllipse,
+        DynamicObject,
+        DynamicObjectCollection,
+        DynamicVector,
+        Scene,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

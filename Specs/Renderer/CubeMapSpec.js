@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Cartesian3',
-         'Core/PrimitiveType',
-         'Core/Color',
-         'Core/PixelFormat',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand',
-         'Renderer/PixelDatatype',
-         'Renderer/TextureWrap',
-         'Renderer/TextureMinificationFilter',
-         'Renderer/TextureMagnificationFilter'
-     ], 'Renderer/CubeMap', function(
-         createContext,
-         destroyContext,
-         Cartesian3,
-         PrimitiveType,
-         Color,
-         PixelFormat,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand,
-         PixelDatatype,
-         TextureWrap,
-         TextureMinificationFilter,
-         TextureMagnificationFilter) {
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/PixelFormat',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Renderer/PixelDatatype',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
+        'Renderer/TextureWrap',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/CubeMap', function(
+        Cartesian3,
+        Color,
+        PixelFormat,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        PixelDatatype,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

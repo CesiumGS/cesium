@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './Color',
         './ComponentDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError'
     ], function(
-        defaultValue,
-        defined,
         Color,
         ComponentDatatype,
+        defaultValue,
+        defined,
         DeveloperError) {
     "use strict";
 

@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/loadCubeMap',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage',
-         'Renderer/DrawCommand',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'ThirdParty/when'
-     ], function(
-         loadCubeMap,
-         Cartesian3,
-         defined,
-         PrimitiveType,
-         BufferUsage,
-         DrawCommand,
-         createContext,
-         destroyContext,
-         when) {
+        'Renderer/loadCubeMap',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext',
+        'ThirdParty/when'
+    ], function(
+        loadCubeMap,
+        Cartesian3,
+        defined,
+        PrimitiveType,
+        BufferUsage,
+        DrawCommand,
+        createContext,
+        destroyContext,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

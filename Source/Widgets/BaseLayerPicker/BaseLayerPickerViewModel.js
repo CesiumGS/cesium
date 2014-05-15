@@ -6,8 +6,8 @@ define([
         '../../Core/DeveloperError',
         '../../Core/isArray',
         '../../Scene/EllipsoidTerrainProvider',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defined,
@@ -15,8 +15,8 @@ define([
         DeveloperError,
         isArray,
         EllipsoidTerrainProvider,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

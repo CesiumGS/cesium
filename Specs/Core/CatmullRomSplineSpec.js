@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CatmullRomSpline',
-         'Core/Cartesian3',
-         'Core/HermiteSpline',
-         'Core/Math'
-     ], function(
-         CatmullRomSpline,
-         Cartesian3,
-         HermiteSpline,
-         CesiumMath) {
+        'Core/CatmullRomSpline',
+        'Core/Cartesian3',
+        'Core/HermiteSpline',
+        'Core/Math'
+    ], function(
+        CatmullRomSpline,
+        Cartesian3,
+        HermiteSpline,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/Color',
         '../getElement',
         '../subscribeAndEvaluate'
     ], function(
+        Color,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        Color,
         getElement,
         subscribeAndEvaluate) {
     "use strict";

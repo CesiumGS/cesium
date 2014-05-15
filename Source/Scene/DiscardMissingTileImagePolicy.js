@@ -2,16 +2,16 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/loadImageViaBlob',
-        '../Core/getImagePixels',
         '../Core/DeveloperError',
+        '../Core/getImagePixels',
+        '../Core/loadImageViaBlob',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
-        loadImageViaBlob,
-        getImagePixels,
         DeveloperError,
+        getImagePixels,
+        loadImageViaBlob,
         when) {
     "use strict";
 

@@ -1,26 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/IndexDatatype',
-         'Core/PrimitiveType',
-         'Core/WindingOrder',
-         'Core/BoundingRectangle',
-         'Core/Color',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand'
-     ], 'Renderer/Draw', function(
-         createContext,
-         destroyContext,
-         IndexDatatype,
-         PrimitiveType,
-         WindingOrder,
-         BoundingRectangle,
-         Color,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand) {
+        'Core/BoundingRectangle',
+        'Core/Color',
+        'Core/IndexDatatype',
+        'Core/PrimitiveType',
+        'Core/WindingOrder',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Draw', function(
+        BoundingRectangle,
+        Color,
+        IndexDatatype,
+        PrimitiveType,
+        WindingOrder,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 

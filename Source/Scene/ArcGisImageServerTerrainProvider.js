@@ -10,11 +10,11 @@ define([
         '../Core/loadImage',
         '../Core/Math',
         '../Core/throttleRequestByServer',
+        '../ThirdParty/when',
         './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        './TerrainProvider',
-        '../ThirdParty/when'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
@@ -26,11 +26,11 @@ define([
         loadImage,
         CesiumMath,
         throttleRequestByServer,
+        when,
         Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        TerrainProvider,
-        when) {
+        TerrainProvider) {
     "use strict";
 
     /**

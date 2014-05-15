@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defineProperties',
-        '../Core/Color',
         '../Core/Event',
         './GeographicTilingScheme'
     ], function(
+        Color,
         defaultValue,
         defineProperties,
-        Color,
         Event,
         GeographicTilingScheme) {
     "use strict";

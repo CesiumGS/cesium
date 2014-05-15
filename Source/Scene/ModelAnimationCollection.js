@@ -1,28 +1,28 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Event',
         '../Core/JulianDate',
+        '../Core/Math',
+        './ModelAnimation',
         './ModelAnimationLoop',
-        './ModelAnimationState',
-        './ModelAnimation'
+        './ModelAnimationState'
     ], function(
         clone,
+        defaultValue,
         defined,
         defineProperties,
-        defaultValue,
         DeveloperError,
-        CesiumMath,
         Event,
         JulianDate,
+        CesiumMath,
+        ModelAnimation,
         ModelAnimationLoop,
-        ModelAnimationState,
-        ModelAnimation) {
+        ModelAnimationState) {
     "use strict";
 
     /**

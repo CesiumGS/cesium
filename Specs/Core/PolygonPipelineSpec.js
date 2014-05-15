@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolygonPipeline',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/WindingOrder',
-         'Core/Math'
-     ], function(
-         PolygonPipeline,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         WindingOrder,
-         CesiumMath) {
+        'Core/PolygonPipeline',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/WindingOrder'
+    ], function(
+        PolygonPipeline,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

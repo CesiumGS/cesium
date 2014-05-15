@@ -1,25 +1,25 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Cartographic',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Matrix4',
-        '../Core/BoundingRectangle',
+        '../Core/Cartographic',
+        '../Core/defined',
+        '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Matrix4',
         './SceneMode'
     ], function(
-        defined,
-        DeveloperError,
-        Cartographic,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Matrix4,
-        BoundingRectangle,
+        Cartographic,
+        defined,
+        DeveloperError,
         CesiumMath,
+        Matrix4,
         SceneMode) {
     "use strict";
 

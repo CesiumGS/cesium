@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadArrayBuffer',
-             'Core/RequestErrorEvent'
-            ], function(
-             loadArrayBuffer,
-             RequestErrorEvent) {
+        'Core/loadArrayBuffer',
+        'Core/RequestErrorEvent'
+    ], function(
+        loadArrayBuffer,
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

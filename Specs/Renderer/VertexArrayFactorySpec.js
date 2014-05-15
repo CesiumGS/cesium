@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryPipeline',
-         'Core/PrimitiveType',
-         'Core/IndexDatatype',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand'
-     ], 'Renderer/VertexArrayFactory', function(
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         Geometry,
-         GeometryAttribute,
-         GeometryPipeline,
-         PrimitiveType,
-         IndexDatatype,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand) {
+        'Core/ComponentDatatype',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryPipeline',
+        'Core/IndexDatatype',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/VertexArrayFactory', function(
+        ComponentDatatype,
+        Geometry,
+        GeometryAttribute,
+        GeometryPipeline,
+        IndexDatatype,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

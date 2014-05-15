@@ -3,14 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './FeatureDetection',
-        './Enumeration'
+        './Enumeration',
+        './FeatureDetection'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        FeatureDetection,
-        Enumeration) {
+        Enumeration,
+        FeatureDetection) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function

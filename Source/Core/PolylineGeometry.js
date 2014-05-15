@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
         './BoundingSphere',
         './Cartesian3',
-        './PolylinePipeline',
-        './VertexFormat',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color'
+        './IndexDatatype',
+        './PolylinePipeline',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
         BoundingSphere,
         Cartesian3,
-        PolylinePipeline,
-        VertexFormat,
+        Color,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color) {
+        IndexDatatype,
+        PolylinePipeline,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
     /**

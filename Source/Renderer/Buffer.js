@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defineProperties',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Core/DeveloperError'
     ], function(
-        DeveloperError,
         defaultValue,
         defineProperties,
-        destroyObject) {
+        destroyObject,
+        DeveloperError) {
     "use strict";
 
     /**

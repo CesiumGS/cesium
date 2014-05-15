@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Tipsify'
-     ], function(
-         Tipsify) {
+        'Core/Tipsify'
+    ], function(
+        Tipsify) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

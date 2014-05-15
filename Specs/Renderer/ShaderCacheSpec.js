@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/ShaderCache',
-         'Specs/createContext',
-         'Specs/destroyContext'
-     ], function(
-         ShaderCache,
-         createContext,
-         destroyContext) {
+        'Renderer/ShaderCache',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        ShaderCache,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,29 +1,29 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/NearFarScalar',
         './Billboard',
-        './LabelStyle',
         './HorizontalOrigin',
+        './LabelStyle',
         './VerticalOrigin'
     ], function(
-        defaultValue,
-        DeveloperError,
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         NearFarScalar,
         Billboard,
-        LabelStyle,
         HorizontalOrigin,
+        LabelStyle,
         VerticalOrigin) {
     "use strict";
 

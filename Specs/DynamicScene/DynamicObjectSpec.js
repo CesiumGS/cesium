@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicObject',
-             'DynamicScene/ConstantProperty',
-             'Core/JulianDate',
-             'Core/Cartesian3',
-             'Core/Quaternion',
-             'Core/Iso8601',
-             'Core/TimeInterval'
-            ], function(
-              DynamicObject,
-              ConstantProperty,
-              JulianDate,
-              Cartesian3,
-              Quaternion,
-              Iso8601,
-              TimeInterval) {
+        'DynamicScene/DynamicObject',
+        'Core/Cartesian3',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/Quaternion',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicObject,
+        Cartesian3,
+        Iso8601,
+        JulianDate,
+        Quaternion,
+        TimeInterval,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

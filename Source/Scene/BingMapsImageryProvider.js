@@ -1,40 +1,40 @@
 /*global define*/
 define([
+        '../Core/BingMapsApi',
+        '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/jsonp',
-        '../Core/BingMapsApi',
-        '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Rectangle',
+        '../Core/jsonp',
         '../Core/Math',
+        '../Core/Rectangle',
+        '../ThirdParty/when',
         './BingMapsStyle',
+        './Credit',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './TileProviderError',
-        './WebMercatorTilingScheme',
-        './Credit',
-        '../ThirdParty/when'
+        './WebMercatorTilingScheme'
     ], function(
+        BingMapsApi,
+        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
-        jsonp,
-        BingMapsApi,
-        Cartesian2,
         DeveloperError,
         Event,
-        Rectangle,
+        jsonp,
         CesiumMath,
+        Rectangle,
+        when,
         BingMapsStyle,
+        Credit,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
         TileProviderError,
-        WebMercatorTilingScheme,
-        Credit,
-        when) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     /**

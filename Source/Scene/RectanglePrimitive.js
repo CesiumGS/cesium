@@ -1,32 +1,32 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Color',
         '../Core/destroyObject',
-        '../Core/Math',
-        '../Core/Rectangle',
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/Math',
+        '../Core/Rectangle',
         '../Core/RectangleGeometry',
         './EllipsoidSurfaceAppearance',
-        './Primitive',
-        './Material'
+        './Material',
+        './Primitive'
     ], function(
-        DeveloperError,
+        Color,
         defaultValue,
         defined,
-        Color,
         destroyObject,
-        CesiumMath,
-        Rectangle,
+        DeveloperError,
         Ellipsoid,
         GeometryInstance,
+        CesiumMath,
+        Rectangle,
         RectangleGeometry,
         EllipsoidSurfaceAppearance,
-        Primitive,
-        Material) {
+        Material,
+        Primitive) {
     "use strict";
 
     /**

@@ -1,9 +1,10 @@
 /*global define*/
-define(['../Core/WallOutlineGeometry',
-        '../Core/Ellipsoid'
+define([
+        '../Core/Ellipsoid',
+        '../Core/WallOutlineGeometry'
     ], function(
-        WallOutlineGeometry,
-        Ellipsoid) {
+        Ellipsoid,
+        WallOutlineGeometry) {
     "use strict";
 
     function createWallOutlineGeometry(wallGeometry) {

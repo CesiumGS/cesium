@@ -6,9 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
+        './Credit',
         './ImageryProvider',
-        './WebMercatorTilingScheme',
-        './Credit'
+        './WebMercatorTilingScheme'
     ], function(
         defaultValue,
         defined,
@@ -16,9 +16,9 @@ define([
         DeveloperError,
         Event,
         Rectangle,
+        Credit,
         ImageryProvider,
-        WebMercatorTilingScheme,
-        Credit) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
