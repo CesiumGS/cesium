@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color',
-        './Cartesian3'
+        './IndexDatatype',
+        './PrimitiveType'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color,
-        Cartesian3) {
+        IndexDatatype,
+        PrimitiveType) {
     "use strict";
 
     /**

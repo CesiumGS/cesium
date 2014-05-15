@@ -1,17 +1,17 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './defineProperties',
-        './Cartesian3',
-        './Cartographic',
         './Ellipsoid'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian3,
-        Cartographic,
         Ellipsoid) {
     "use strict";
 

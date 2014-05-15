@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../ThirdParty/mersenne-twister',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        '../ThirdParty/mersenne-twister'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError,
-         MersenneTwister) {
+        './DeveloperError'
+    ], function(
+        MersenneTwister,
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**

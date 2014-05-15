@@ -8,8 +8,8 @@ define([
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         Color,
         defined,
@@ -19,8 +19,8 @@ define([
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     function frustumStatsToString(stats) {

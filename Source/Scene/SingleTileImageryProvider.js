@@ -3,26 +3,26 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/loadImage',
         '../Core/Rectangle',
+        '../ThirdParty/when',
         './Credit',
         './GeographicTilingScheme',
-        './TileProviderError',
-        '../ThirdParty/when'
+        './TileProviderError'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        loadImage,
         DeveloperError,
         Event,
+        loadImage,
         Rectangle,
+        when,
         Credit,
         GeographicTilingScheme,
-        TileProviderError,
-        when) {
+        TileProviderError) {
     "use strict";
 
     /**

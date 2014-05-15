@@ -5,7 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './Credit'
-    ], function (
+    ], function(
         defaultValue,
         defined,
         destroyObject,

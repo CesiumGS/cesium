@@ -1,19 +1,19 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
-        './Cartesian3',
         './Ellipsoid',
+        './freezeObject',
         './Math'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
-        Cartesian3,
         Ellipsoid,
+        freezeObject,
         CesiumMath) {
     "use strict";
 

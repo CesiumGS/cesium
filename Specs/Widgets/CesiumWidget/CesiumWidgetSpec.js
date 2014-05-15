@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Core/Clock',
-         'Core/ScreenSpaceEventHandler',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/Scene',
-         'Scene/SceneMode',
-         'Scene/SkyBox',
-         'Scene/TileCoordinatesImageryProvider',
-         'Specs/EventHelper'
-     ], function(
-         CesiumWidget,
-         Clock,
-         ScreenSpaceEventHandler,
-         EllipsoidTerrainProvider,
-         Scene,
-         SceneMode,
-         SkyBox,
-         TileCoordinatesImageryProvider,
-         EventHelper) {
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Core/Clock',
+        'Core/ScreenSpaceEventHandler',
+        'Scene/EllipsoidTerrainProvider',
+        'Scene/Scene',
+        'Scene/SceneMode',
+        'Scene/SkyBox',
+        'Scene/TileCoordinatesImageryProvider',
+        'Specs/EventHelper'
+    ], function(
+        CesiumWidget,
+        Clock,
+        ScreenSpaceEventHandler,
+        EllipsoidTerrainProvider,
+        Scene,
+        SceneMode,
+        SkyBox,
+        TileCoordinatesImageryProvider,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -180,6 +180,19 @@ defineSuite([
         widget = new CesiumWidget(container);
         expect(function() {
             widget.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        widget = new CesiumWidget(container);
+        widget.resolutionScale = 0.5;
+        expect(widget.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.resolutionScale = -1;
         }).toThrowDeveloperError();
     });
 

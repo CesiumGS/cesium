@@ -1,24 +1,24 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
-        '../../Core/defined',
         '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Scene/SceneMode',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
-        defineProperties,
-        defined,
         defaultValue,
+        defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EventHelper,
         SceneMode,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

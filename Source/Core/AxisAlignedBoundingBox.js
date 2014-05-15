@@ -1,15 +1,15 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
         './Intersect'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
         Intersect) {
     "use strict";
 

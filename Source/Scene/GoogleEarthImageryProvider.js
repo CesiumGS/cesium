@@ -3,32 +3,32 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadText',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/Event',
+        '../Core/loadText',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
+        '../ThirdParty/when',
+        './Credit',
+        './GeographicTilingScheme',
         './ImageryProvider',
         './TileProviderError',
-        './WebMercatorTilingScheme',
-        './GeographicTilingScheme',
-        './Credit',
-        '../ThirdParty/when'
+        './WebMercatorTilingScheme'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        loadText,
         DeveloperError,
-        RuntimeError,
         Event,
+        loadText,
         Rectangle,
+        RuntimeError,
+        when,
+        Credit,
+        GeographicTilingScheme,
         ImageryProvider,
         TileProviderError,
-        WebMercatorTilingScheme,
-        GeographicTilingScheme,
-        Credit,
-        when) {
+        WebMercatorTilingScheme) {
     "use strict";
 
     /**

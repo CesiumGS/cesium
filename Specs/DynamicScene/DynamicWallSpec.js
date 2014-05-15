@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicWall',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Color',
-             'Specs/testDefinitionChanged',
-             'Specs/testMaterialDefinitionChanged'
-         ], function(
-             DynamicWall,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Color,
-             testDefinitionChanged,
-             testMaterialDefinitionChanged) {
+        'DynamicScene/DynamicWall',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty',
+        'Specs/testDefinitionChanged',
+        'Specs/testMaterialDefinitionChanged'
+    ], function(
+        DynamicWall,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty,
+        testDefinitionChanged,
+        testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

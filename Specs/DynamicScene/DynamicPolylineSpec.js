@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPolyline',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ColorMaterialProperty'
-            ], function(
-              DynamicPolyline,
-              ConstantProperty,
-              ColorMaterialProperty) {
+        'DynamicScene/DynamicPolyline',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicPolyline,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,12 +1,12 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './loadBlob',
-        './loadImage',
-        '../ThirdParty/when'
+        './loadImage'
     ], function(
+        when,
         loadBlob,
-        loadImage,
-        when) {
+        loadImage) {
     "use strict";
 
     var dataUriRegex = /^data:/;

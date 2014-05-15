@@ -1,23 +1,23 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
         '../Core/PixelFormat',
-        '../Renderer/createShaderSource',
         '../Renderer/ClearCommand',
+        '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
-        defined,
-        destroyObject,
         Cartesian2,
         Color,
+        defined,
+        destroyObject,
         PixelFormat,
-        createShaderSource,
         ClearCommand,
+        createShaderSource,
         PixelDatatype,
         RenderbufferFormat,
         FXAAFS) {

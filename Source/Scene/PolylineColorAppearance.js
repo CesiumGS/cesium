@@ -2,19 +2,19 @@
 define([
         '../Core/defaultValue',
         '../Core/VertexFormat',
-        './Appearance',
         '../Renderer/createShaderSource',
-        '../Shaders/Appearances/PolylineColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
-        '../Shaders/PolylineCommon'
+        '../Shaders/Appearances/PolylineColorAppearanceVS',
+        '../Shaders/PolylineCommon',
+        './Appearance'
     ], function(
         defaultValue,
         VertexFormat,
-        Appearance,
         createShaderSource,
-        PolylineColorAppearanceVS,
         PerInstanceFlatColorAppearanceFS,
-        PolylineCommon) {
+        PolylineColorAppearanceVS,
+        PolylineCommon,
+        Appearance) {
     "use strict";
 
     /**

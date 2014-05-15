@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Matrix2',
-         'Core/Cartesian2',
-         'Core/Math'
-     ], function(
-         Matrix2,
-         Cartesian2,
-         CesiumMath) {
+        'Core/Matrix2',
+        'Core/Cartesian2',
+        'Core/Math'
+    ], function(
+        Matrix2,
+        Cartesian2,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

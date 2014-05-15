@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TextureAtlas',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/PrimitiveType',
-         'Core/Cartesian2',
-         'Core/PixelFormat',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand'
-     ], function(
-         TextureAtlas,
-         createScene,
-         destroyScene,
-         PrimitiveType,
-         Cartesian2,
-         PixelFormat,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand) {
+        'Scene/TextureAtlas',
+        'Core/Cartesian2',
+        'Core/PixelFormat',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        TextureAtlas,
+        Cartesian2,
+        PixelFormat,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './buildModuleUrl',
         './defaultValue',
         './defined',
         './Iau2006XysSample',
         './JulianDate',
         './loadJson',
-        './TimeStandard',
-        '../ThirdParty/when'
+        './TimeStandard'
     ], function(
+        when,
         buildModuleUrl,
         defaultValue,
         defined,
         Iau2006XysSample,
         JulianDate,
         loadJson,
-        TimeStandard,
-        when) {
+        TimeStandard) {
     "use strict";
 
     /**

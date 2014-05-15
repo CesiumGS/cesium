@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoxOutlineGeometry',
-         'Core/Cartesian3'
-     ], function(
-         BoxOutlineGeometry,
-         Cartesian3) {
+        'Core/BoxOutlineGeometry',
+        'Core/Cartesian3'
+    ], function(
+        BoxOutlineGeometry,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

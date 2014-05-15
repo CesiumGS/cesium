@@ -1,30 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Moon',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Matrix3',
-         'Core/Simon1994PlanetaryPositions',
-         'Core/Transforms',
-         'Scene/SceneMode'
-     ], function(
-         Moon,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         Cartesian3,
-         defined,
-         Ellipsoid,
-         Matrix3,
-         Simon1994PlanetaryPositions,
-         Transforms,
-         SceneMode) {
+        'Scene/Moon',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/Matrix3',
+        'Core/Simon1994PlanetaryPositions',
+        'Core/Transforms',
+        'Specs/createCamera',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Moon,
+        Cartesian3,
+        defined,
+        Ellipsoid,
+        Matrix3,
+        Simon1994PlanetaryPositions,
+        Transforms,
+        createCamera,
+        createFrameState,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

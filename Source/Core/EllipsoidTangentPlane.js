@@ -1,32 +1,32 @@
 /*global define*/
 define([
+        './AxisAlignedBoundingBox',
+        './Cartesian2',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Transforms',
-        './AxisAlignedBoundingBox',
-        './IntersectionTests',
-        './Cartesian2',
-        './Cartesian3',
         './Ellipsoid',
+        './IntersectionTests',
         './Matrix4',
+        './Plane',
         './Ray',
-        './Plane'
+        './Transforms'
     ], function(
+        AxisAlignedBoundingBox,
+        Cartesian2,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Transforms,
-        AxisAlignedBoundingBox,
-        IntersectionTests,
-        Cartesian2,
-        Cartesian3,
         Ellipsoid,
+        IntersectionTests,
         Matrix4,
+        Plane,
         Ray,
-        Plane) {
+        Transforms) {
     "use strict";
 
     /**

@@ -4,25 +4,25 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/freezeObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/freezeObject',
         '../Core/Rectangle',
         './Credit',
-        './ImageryProvider',
-        './GeographicTilingScheme'
+        './GeographicTilingScheme',
+        './ImageryProvider'
     ], function(
         clone,
         defaultValue,
         defined,
         defineProperties,
-        freezeObject,
         DeveloperError,
         Event,
+        freezeObject,
         Rectangle,
         Credit,
-        ImageryProvider,
-        GeographicTilingScheme) {
+        GeographicTilingScheme,
+        ImageryProvider) {
     "use strict";
 
     /**

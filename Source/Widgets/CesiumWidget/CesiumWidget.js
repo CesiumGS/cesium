@@ -9,14 +9,13 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Event',
         '../../Core/formatError',
         '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/Globe',
         '../../Scene/Credit',
+        '../../Scene/Globe',
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
@@ -34,14 +33,13 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        Event,
         formatError,
         getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        Globe,
         Credit,
+        Globe,
         Moon,
         Scene,
         SceneMode,
@@ -159,14 +157,6 @@ define([
         this._element = widgetNode;
 
         try {
-            if (defined(document.createElementNS)) {
-                var svgNS = "http://www.w3.org/2000/svg";
-                var zoomDetector = document.createElementNS(svgNS, 'svg');
-                zoomDetector.style.display = 'none';
-                widgetNode.appendChild(zoomDetector);
-                this._zoomDetector = zoomDetector;
-            }
-
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
                 return false;
@@ -241,6 +231,8 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+            this._resolutionScale = 1.0;
+            this._forceResize = false;
             this._lastFrameTime = undefined;
             this._targetFrameRate = undefined;
 
@@ -394,6 +386,31 @@ define([
                     }
                 }
             }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._resolutionScale;
+            },
+            set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('resolutionScale must be greater than 0.');
+                }
+                this._resolutionScale = value;
+                this._forceResize = true;
+            }
         }
     });
 
@@ -490,22 +507,12 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
+        this._forceResize = false;
 
-        var zoomFactor;
-        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
-            // prefer devicePixelRatio if available.
-            zoomFactor = window.devicePixelRatio;
-        } else if (this._zoomDetector.currentScale !== 1) {
-            // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
-            // our SVG's currentScale property does.
-            zoomFactor = this._zoomDetector.currentScale;
-        } else {
-            // otherwise we don't know.
-            zoomFactor = 1;
-        }
+        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * this._resolutionScale;
 
         this._canvasWidth = width;
         this._canvasHeight = height;

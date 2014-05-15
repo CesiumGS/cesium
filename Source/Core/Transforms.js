@@ -1,39 +1,38 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
+        './Cartesian2',
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './EarthOrientationParameters',
+        './EarthOrientationParametersSample',
+        './Ellipsoid',
         './Iau2006XysData',
         './Iau2006XysSample',
         './Math',
         './Matrix3',
         './Matrix4',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './TimeConstants',
-        './Ellipsoid',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        '../ThirdParty/when'
-    ],
-    function(
+        './TimeConstants'
+    ], function(
+        when,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
+        EarthOrientationParameters,
+        EarthOrientationParametersSample,
+        Ellipsoid,
         Iau2006XysData,
         Iau2006XysSample,
         CesiumMath,
         Matrix3,
         Matrix4,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        TimeConstants,
-        Ellipsoid,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        when) {
+        TimeConstants) {
     "use strict";
 
     /**

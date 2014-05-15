@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Color',
-         'Core/BoundingRectangle',
-         'Renderer/ClearCommand'
-     ], 'Renderer/Clear', function(
-         createContext,
-         destroyContext,
-         Color,
-         BoundingRectangle,
-         ClearCommand) {
+        'Core/BoundingRectangle',
+        'Core/Color',
+        'Renderer/ClearCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Clear', function(
+        BoundingRectangle,
+        Color,
+        ClearCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

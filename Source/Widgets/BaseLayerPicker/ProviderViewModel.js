@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
-        defineProperties,
         defined,
+        defineProperties,
         DeveloperError,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/ShaderProgram',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Matrix2',
-         'Core/Matrix3',
-         'Core/Matrix4',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand'
-     ], function(
-         ShaderProgram,
-         createContext,
-         destroyContext,
-         Cartesian2,
-         Cartesian3,
-         Cartesian4,
-         Matrix2,
-         Matrix3,
-         Matrix4,
-         PrimitiveType,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand) {
+        'Renderer/ShaderProgram',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Matrix2',
+        'Core/Matrix3',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        ShaderProgram,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Matrix2,
+        Matrix3,
+        Matrix4,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 

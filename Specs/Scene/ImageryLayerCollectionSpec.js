@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ImageryLayerCollection',
-         'Scene/ImageryLayer'
-     ], function(
-         ImageryLayerCollection,
-         ImageryLayer) {
+        'Scene/ImageryLayerCollection',
+        'Scene/ImageryLayer'
+    ], function(
+        ImageryLayerCollection,
+        ImageryLayer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

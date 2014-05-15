@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Rectangle',
-        '../Core/Cartesian2',
         '../Core/WebMercatorProjection',
         './TilingScheme'
     ], function(
+        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         Ellipsoid,
         Rectangle,
-        Cartesian2,
         WebMercatorProjection,
         TilingScheme) {
     "use strict";

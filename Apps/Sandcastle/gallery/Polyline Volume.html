@@ -51,6 +51,15 @@ require(['Cesium'], function(Cesium) {
         ];
     }
 
+    function computeCircle(radius) {
+        var positions = [];
+        for (var i = 0; i < 360; i++) {
+            var radians = Cesium.Math.toRadians(i);
+            positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+        }
+        return positions;
+    }
+
     // Red tube
     var redTube = new Cesium.GeometryInstance({
         geometry : new Cesium.PolylineVolumeGeometry({
@@ -60,7 +69,7 @@ require(['Cesium'], function(Cesium) {
                 -89.0, 36.0
             ]),
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-            shapePositions : Cesium.Shapes.compute2DCircle(60000),
+            shapePositions : computeCircle(60000.0),
             cornerType : Cesium.CornerType.ROUNDED
         }),
         attributes : {

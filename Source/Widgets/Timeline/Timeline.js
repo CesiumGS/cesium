@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        '../../Core/DeveloperError',
         '../../Core/ClockRange',
         '../../Core/defined',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Core/JulianDate',
         '../getElement',
-        './TimelineTrack',
-        './TimelineHighlightRange'
+        './TimelineHighlightRange',
+        './TimelineTrack'
     ], function(
-        DeveloperError,
         ClockRange,
         defined,
         destroyObject,
+        DeveloperError,
         JulianDate,
         getElement,
-        TimelineTrack,
-        TimelineHighlightRange) {
+        TimelineHighlightRange,
+        TimelineTrack) {
     "use strict";
 
     var timelineWheelDelta = 1e12;

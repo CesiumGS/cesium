@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/isLeapYear'], function(isLeapYear) {
+defineSuite([
+        'Core/isLeapYear'
+    ], function(
+        isLeapYear) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

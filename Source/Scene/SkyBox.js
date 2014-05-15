@@ -1,38 +1,38 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Matrix4',
         '../Core/GeometryPipeline',
+        '../Core/Matrix4',
         '../Core/VertexFormat',
-        '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        './BlendingState',
-        './SceneMode',
+        '../Renderer/loadCubeMap',
+        '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
-        '../Shaders/SkyBoxFS'
+        './BlendingState',
+        './SceneMode'
     ], function(
-        defaultValue,
         BoxGeometry,
         Cartesian3,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
-        Matrix4,
         GeometryPipeline,
+        Matrix4,
         VertexFormat,
-        loadCubeMap,
         BufferUsage,
         DrawCommand,
-        BlendingState,
-        SceneMode,
+        loadCubeMap,
+        SkyBoxFS,
         SkyBoxVS,
-        SkyBoxFS) {
+        BlendingState,
+        SceneMode) {
     "use strict";
 
     /**

@@ -1,26 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/PrimitiveType',
-         'Core/Color',
-         'Core/PixelFormat',
-         'Renderer/PixelDatatype',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DrawCommand',
-         'Renderer/RenderbufferFormat'
-     ], 'Renderer/Framebuffer', function(
-         createContext,
-         destroyContext,
-         PrimitiveType,
-         Color,
-         PixelFormat,
-         PixelDatatype,
-         BufferUsage,
-         ClearCommand,
-         DrawCommand,
-         RenderbufferFormat) {
+        'Core/Color',
+        'Core/PixelFormat',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Renderer/PixelDatatype',
+        'Renderer/RenderbufferFormat',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Framebuffer', function(
+        Color,
+        PixelFormat,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        PixelDatatype,
+        RenderbufferFormat,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 

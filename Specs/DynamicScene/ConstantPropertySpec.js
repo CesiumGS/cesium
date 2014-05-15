@@ -1,11 +1,12 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/ConstantProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate'
-     ], function(
-             ConstantProperty,
-             Cartesian3,
-             JulianDate) {
+defineSuite([
+        'DynamicScene/ConstantProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate'
+    ], function(
+        ConstantProperty,
+        Cartesian3,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

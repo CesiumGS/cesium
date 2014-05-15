@@ -1,21 +1,22 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/GridMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/SampledProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Cartesian2',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-     ], function(
-             GridMaterialProperty,
-             ConstantProperty,
-             SampledProperty,
-             TimeIntervalCollectionProperty,
-             Cartesian2,
-             Color,
-             JulianDate,
-             TimeInterval) {
+defineSuite([
+        'DynamicScene/GridMaterialProperty',
+        'Core/Cartesian2',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/SampledProperty',
+        'DynamicScene/TimeIntervalCollectionProperty'
+    ], function(
+        GridMaterialProperty,
+        Cartesian2,
+        Color,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty,
+        SampledProperty,
+        TimeIntervalCollectionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

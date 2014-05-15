@@ -4,27 +4,27 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Rectangle',
         '../Core/HeightmapTessellator',
         '../Core/Math',
+        '../Core/Rectangle',
         '../Core/TaskProcessor',
+        '../ThirdParty/when',
         './GeographicTilingScheme',
         './TerrainMesh',
-        './TerrainProvider',
-        '../ThirdParty/when'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Rectangle,
         HeightmapTessellator,
         CesiumMath,
+        Rectangle,
         TaskProcessor,
+        when,
         GeographicTilingScheme,
         TerrainMesh,
-        TerrainProvider,
-        when) {
+        TerrainProvider) {
     "use strict";
 
     /**

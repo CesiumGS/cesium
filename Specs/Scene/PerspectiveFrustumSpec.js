@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/PerspectiveFrustum',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Matrix4',
-         'Core/Math'
-     ], function(
-         PerspectiveFrustum,
-         Cartesian2,
-         Cartesian3,
-         Cartesian4,
-         Matrix4,
-         CesiumMath) {
+        'Scene/PerspectiveFrustum',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix4'
+    ], function(
+        PerspectiveFrustum,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix4) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

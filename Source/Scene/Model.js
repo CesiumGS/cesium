@@ -5,9 +5,9 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -28,7 +28,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        './Pass',
+        '../ThirdParty/gltfDefaults',
         './BlendingState',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -36,17 +36,17 @@ define([
         './ModelMesh',
         './ModelNode',
         './ModelTypes',
-        './SceneMode',
-        '../ThirdParty/gltfDefaults'
+        './Pass',
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         combine,
+        defaultValue,
         defined,
         defineProperties,
-        defaultValue,
         destroyObject,
         DeveloperError,
         Event,
@@ -67,7 +67,7 @@ define([
         DrawCommand,
         TextureMinificationFilter,
         TextureWrap,
-        Pass,
+        gltfDefaults,
         BlendingState,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -75,8 +75,8 @@ define([
         ModelMesh,
         ModelNode,
         ModelTypes,
-        SceneMode,
-        gltfDefaults) {
+        Pass,
+        SceneMode) {
     "use strict";
     /*global WebGLRenderingContext*/
 

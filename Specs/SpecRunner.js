@@ -199,7 +199,12 @@ var afterAll;
             }
         });
 
-        require(['Cesium', 'Stubs/paths'], function(BuiltCesium, paths) {
+        require([
+        'Cesium',
+        'Stubs/paths'
+    ], function(
+        BuiltCesium,
+        paths) {
             paths.Specs = '../../Specs';
 
             require.config({

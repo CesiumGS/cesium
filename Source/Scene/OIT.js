@@ -1,11 +1,11 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Color',
         '../Core/PixelFormat',
-        '../Renderer/createShaderSource',
         '../Renderer/ClearCommand',
+        '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Scene/BlendEquation',
@@ -13,12 +13,12 @@ define([
         '../Shaders/AdjustTranslucentFS',
         '../Shaders/CompositeOITFS'
     ], function(
+        Color,
         defined,
         destroyObject,
-        Color,
         PixelFormat,
-        createShaderSource,
         ClearCommand,
+        createShaderSource,
         PixelDatatype,
         RenderState,
         BlendEquation,

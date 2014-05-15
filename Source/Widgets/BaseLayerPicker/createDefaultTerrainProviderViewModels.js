@@ -1,16 +1,14 @@
 /*global define*/
 define([
-        '../BaseLayerPicker/ProviderViewModel',
         '../../Core/buildModuleUrl',
-        '../../Scene/ArcGisImageServerTerrainProvider',
         '../../Scene/CesiumTerrainProvider',
-        '../../Scene/EllipsoidTerrainProvider'
+        '../../Scene/EllipsoidTerrainProvider',
+        '../BaseLayerPicker/ProviderViewModel'
     ], function(
-        ProviderViewModel,
         buildModuleUrl,
-        ArcGisImageServerTerrainProvider,
         CesiumTerrainProvider,
-        EllipsoidTerrainProvider) {
+        EllipsoidTerrainProvider,
+        ProviderViewModel) {
     "use strict";
 
     /**
