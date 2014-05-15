@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Color',
-        '../Core/BoundingRectangle',
         './PassState',
         './RenderbufferFormat'
     ], function(
+        BoundingRectangle,
+        Color,
         defaultValue,
         defined,
         destroyObject,
-        Color,
-        BoundingRectangle,
         PassState,
         RenderbufferFormat) {
     "use strict";

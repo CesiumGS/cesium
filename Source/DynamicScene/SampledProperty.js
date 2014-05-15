@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/binarySearch',
+define([
+        '../Core/binarySearch',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,7 +8,7 @@ define(['../Core/binarySearch',
         '../Core/Event',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
-       ], function(
+    ], function(
         binarySearch,
         defaultValue,
         defined,

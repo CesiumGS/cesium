@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicEllipsoid',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Cartesian3',
-             'Core/Color'
-         ], function(
-             DynamicEllipsoid,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Cartesian3,
-             Color) {
+        'DynamicScene/DynamicEllipsoid',
+        'Core/Cartesian3',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicEllipsoid,
+        Cartesian3,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

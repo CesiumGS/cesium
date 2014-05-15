@@ -5,40 +5,40 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadArrayBuffer',
-        '../Core/loadJson',
-        '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/loadArrayBuffer',
+        '../Core/loadJson',
         '../Core/RuntimeError',
+        '../Core/throttleRequestByServer',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './QuantizedMeshTerrainData',
         './TerrainProvider',
-        './TileProviderError',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when'
+        './TileProviderError'
     ], function(
         BoundingSphere,
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
-        loadArrayBuffer,
-        loadJson,
-        throttleRequestByServer,
         DeveloperError,
         Event,
+        loadArrayBuffer,
+        loadJson,
         RuntimeError,
+        throttleRequestByServer,
+        Uri,
+        when,
         Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
         QuantizedMeshTerrainData,
         TerrainProvider,
-        TileProviderError,
-        Uri,
-        when) {
+        TileProviderError) {
     "use strict";
 
     /**
@@ -49,24 +49,24 @@ define([
      * @alias CesiumTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the Cesium terrain server.
-     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {String} options.url The URL of the Cesium terrain server.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
-    var CesiumTerrainProvider = function CesiumTerrainProvider(description) {
+    var CesiumTerrainProvider = function CesiumTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug)
-        if (!defined(description) || !defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+        if (!defined(options) || !defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = description.url;
+        this._url = options.url;
         if (this._url.length === 0 || this._url[this._url.length - 1] !== '/') {
             this._url = this._url + '/';
         }
-        this._proxy = description.proxy;
+        this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -81,7 +81,7 @@ define([
 
         this._errorEvent = new Event();
 
-        var credit = description.credit;
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }

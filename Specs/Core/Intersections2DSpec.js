@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Intersections2D',
-             'Core/Math'
-            ], function(
-              Intersections2D,
-              CesiumMath) {
+        'Core/Intersections2D',
+        'Core/Math'
+    ], function(
+        Intersections2D,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

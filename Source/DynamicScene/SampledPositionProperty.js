@@ -1,25 +1,26 @@
 /*global define*/
-define(['./PositionProperty',
-        './Property',
-        './SampledProperty',
+define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/ReferenceFrame'
-       ], function(
-        PositionProperty,
-        Property,
-        SampledProperty,
+        '../Core/ReferenceFrame',
+        './PositionProperty',
+        './Property',
+        './SampledProperty'
+    ], function(
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ReferenceFrame) {
+        ReferenceFrame,
+        PositionProperty,
+        Property,
+        SampledProperty) {
     "use strict";
 
     /**

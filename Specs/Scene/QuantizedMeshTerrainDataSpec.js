@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/QuantizedMeshTerrainData',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/TerrainData',
-         'Scene/TerrainMesh',
-         'ThirdParty/when'
-     ], function(
-         QuantizedMeshTerrainData,
-         BoundingSphere,
-         Cartesian3,
-         defined,
-         CesiumMath,
-         GeographicTilingScheme,
-         TerrainData,
-         TerrainMesh,
-         when) {
+        'Scene/QuantizedMeshTerrainData',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Math',
+        'Scene/GeographicTilingScheme',
+        'Scene/TerrainData',
+        'Scene/TerrainMesh',
+        'ThirdParty/when'
+    ], function(
+        QuantizedMeshTerrainData,
+        BoundingSphere,
+        Cartesian3,
+        defined,
+        CesiumMath,
+        GeographicTilingScheme,
+        TerrainData,
+        TerrainMesh,
+        when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

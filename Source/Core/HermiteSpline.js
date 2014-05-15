@@ -1,23 +1,23 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './Matrix4',
-        './Cartesian4',
-        './Spline',
         './LinearSpline',
+        './Matrix4',
+        './Spline',
         './TridiagonalSystemSolver'
     ], function(
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        Matrix4,
-        Cartesian4,
-        Spline,
         LinearSpline,
+        Matrix4,
+        Spline,
         TridiagonalSystemSolver) {
     "use strict";
 

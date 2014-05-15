@@ -2,8 +2,7 @@
 define([
         './DeveloperError',
         './Math'
-    ],
-    function(
+    ], function(
         DeveloperError,
         CesiumMath) {
     "use strict";

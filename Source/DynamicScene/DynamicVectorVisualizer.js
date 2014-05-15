@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Scene/Material',
         '../Scene/PolylineCollection'
-       ], function(
-         DeveloperError,
-         defined,
-         destroyObject,
-         Cartesian3,
-         Color,
-         Material,
-         PolylineCollection) {
+    ], function(
+        Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
+        Material,
+        PolylineCollection) {
     "use strict";
 
     /**

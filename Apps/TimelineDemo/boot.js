@@ -21,22 +21,22 @@ require({
         location : 'Apps/TimelineDemo'
     }]
 }, [
-    'dojo/parser',
-    'dojo/dom-class',
-    'dojo/_base/window',
-    'dojo/date/stamp',
-    'dijit/form/Button',
-    'dijit/Calendar',
-    'dijit/form/TimeTextBox',
-    'dijit/form/ComboButton',
-    'dijit/Menu',
-    'dijit/MenuItem',
-    'TimelineDemo/TimelineDemo',
-    'dojo/domReady!'
-], function(
-    parser,
-    domClass,
-    win) {
+        'dojo/_base/window',
+        'dojo/dom-class',
+        'dojo/parser',
+        'dojo/date/stamp',
+        'dijit/form/Button',
+        'dijit/Calendar',
+        'dijit/form/TimeTextBox',
+        'dijit/form/ComboButton',
+        'dijit/Menu',
+        'dijit/MenuItem',
+        'TimelineDemo/TimelineDemo',
+        'dojo/domReady!'
+    ], function(
+        win,
+        domClass,
+        parser) {
     "use strict";
 
     parser.parse();

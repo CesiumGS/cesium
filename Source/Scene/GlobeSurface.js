@@ -10,23 +10,23 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
-        '../Core/Rectangle',
         '../Core/FeatureDetection',
         '../Core/getTimestamp',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/Rectangle',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        '../ThirdParty/when',
         './ImageryLayer',
         './ImageryState',
+        './Pass',
         './SceneMode',
         './TerrainProvider',
         './TileReplacementQueue',
-        './TileState',
-        '../ThirdParty/when'
+        './TileState'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -38,23 +38,23 @@ define([
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
-        Rectangle,
         FeatureDetection,
         getTimestamp,
         Intersect,
         Matrix4,
         PrimitiveType,
         Queue,
+        Rectangle,
         WebMercatorProjection,
         DrawCommand,
-        Pass,
+        when,
         ImageryLayer,
         ImageryState,
+        Pass,
         SceneMode,
         TerrainProvider,
         TileReplacementQueue,
-        TileState,
-        when) {
+        TileState) {
     "use strict";
 
     /**
@@ -387,7 +387,7 @@ define([
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             surface._tileReplacementQueue.markTileRendered(tile);
-            if (tile.state !== TileState.READY) {
+            if (tile.state.value < TileState.READY.value) {
                 queueTileLoad(surface, tile);
             }
             if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
@@ -432,8 +432,8 @@ define([
                     }
                 }
             } else {
-                ++debug.tilesWaitingForChildren;
-                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                // SSE is not good enough but either all children are upsampled (so there's no point in refining) or they're not all loaded yet.
+                // So render the current tile.
                 addTileToRenderList(surface, tile);
             }
         }
@@ -616,20 +616,28 @@ define([
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
         var allRenderable = true;
+        var allUpsampledOnly = true;
 
         var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
+
             surface._tileReplacementQueue.markTileRendered(child);
-            if (child.state !== TileState.READY) {
+
+            allUpsampledOnly = allUpsampledOnly && child.state === TileState.UPSAMPLED_ONLY;
+            allRenderable = allRenderable && child.isRenderable;
+
+            if (child.state.value < TileState.READY.value) {
                 queueTileLoad(surface, child);
-            }
-            if (!child.isRenderable) {
-                allRenderable = false;
             }
         }
 
-        return allRenderable;
+        if (!allRenderable) {
+            ++surface._debug.tilesWaitingForChildren;
+        }
+
+        // If all children are upsampled from this tile, we just render this tile instead of its children.
+        return allRenderable && !allUpsampledOnly;
     }
 
     function queueTileLoad(surface, tile) {
@@ -888,10 +896,10 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (!defined(command)) {
-                        command = new DrawCommand();
-                        command.owner = tile;
-                        command.cull = false;
-                        command.boundingVolume = new BoundingSphere();
+                        command = new DrawCommand({
+                            cull : false,
+                            boundingVolume : new BoundingSphere()
+                        });
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
                     }

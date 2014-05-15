@@ -15,7 +15,7 @@ define([
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
      */
-    var TileDiscardPolicy = function(description) {
+    var TileDiscardPolicy = function(options) {
         DeveloperError.throwInstantiationError();
     };
 

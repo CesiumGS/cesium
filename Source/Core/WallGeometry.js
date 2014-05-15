@@ -1,32 +1,32 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
         './Math',
         './PrimitiveType',
         './VertexFormat',
         './WallGeometryLibrary'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
         CesiumMath,
         PrimitiveType,
         VertexFormat,
@@ -65,17 +65,15 @@ define([
      * @see WallGeometry#fromConstantHeight
      *
      * @example
-     * var positions = [
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     * ];
-     *
      * // create a wall that spans from ground level to 10000 meters
      * var wall = new Cesium.WallGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
+     *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+     *     19.0, 47.0, 10000.0,
+     *     19.0, 48.0, 10000.0,
+     *     20.0, 48.0, 10000.0,
+     *     20.0, 47.0, 10000.0,
+     *     19.0, 47.0, 10000.0
+     *   ])
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
@@ -128,19 +126,17 @@ define([
      * @see WallGeometry#createGeometry
      *
      * @example
-     * var positions = [
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     * ];
-     *
      * // create a wall that spans from 10000 meters to 20000 meters
      * var wall = Cesium.WallGeometry.fromConstantHeights({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
-     *     minimumHeight : 20000.0,
-     *     maximumHeight : 10000.0
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     19.0, 47.0,
+     *     19.0, 48.0,
+     *     20.0, 48.0,
+     *     20.0, 47.0,
+     *     19.0, 47.0,
+     *   ]),
+     *   minimumHeight : 20000.0,
+     *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */

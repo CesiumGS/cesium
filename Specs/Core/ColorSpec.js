@@ -1,13 +1,14 @@
 /*global defineSuite*/
-defineSuite(['Core/Color',
-             'Core/Cartesian4',
-             'Core/Math',
-             'Specs/createPackableSpecs'
-            ], function(
-              Color,
-              Cartesian4,
-              CesiumMath,
-              createPackableSpecs) {
+defineSuite([
+        'Core/Color',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        Color,
+        Cartesian4,
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

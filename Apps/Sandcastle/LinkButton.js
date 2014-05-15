@@ -1,17 +1,17 @@
 /*global define*/
 define([
-        'dojo/_base/declare',
-        'dojo/dom-class', // domClass.toggle
-        'dijit/_WidgetBase',
         'dijit/_CssStateMixin',
         'dijit/_TemplatedMixin',
+        'dijit/_WidgetBase',
+        'dojo/_base/declare',
+        'dojo/dom-class',
         'dojo/text!./templates/LinkButton.html'
-    ], function (
-        declare,
-        domClass,
-        _WidgetBase,
+    ], function(
         _CssStateMixin,
         _TemplatedMixin,
+        _WidgetBase,
+        declare,
+        domClass,
         template) {
     "use strict";
 

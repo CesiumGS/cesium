@@ -1,5 +1,6 @@
 /*global define*/
-define(['../../Core/BoundingSphere',
+define([
+        '../../Core/BoundingSphere',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/DeveloperError',
@@ -7,10 +8,10 @@ define(['../../Core/BoundingSphere',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObject',
-        '../../Scene/SceneMode',
-        '../subscribeAndEvaluate',
         '../../DynamicScene/DynamicObjectView',
-        '../../ThirdParty/knockout'
+        '../../Scene/SceneMode',
+        '../../ThirdParty/knockout',
+        '../subscribeAndEvaluate'
     ], function(
         BoundingSphere,
         defaultValue,
@@ -20,10 +21,10 @@ define(['../../Core/BoundingSphere',
         ScreenSpaceEventType,
         wrapFunction,
         DynamicObject,
-        SceneMode,
-        subscribeAndEvaluate,
         DynamicObjectView,
-        knockout) {
+        SceneMode,
+        knockout,
+        subscribeAndEvaluate) {
     "use strict";
 
     /**

@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        '../BaseLayerPicker/ProviderViewModel',
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisImageServerTerrainProvider',
         '../../Scene/CesiumTerrainProvider',
-        '../../Scene/EllipsoidTerrainProvider'
+        '../../Scene/EllipsoidTerrainProvider',
+        '../BaseLayerPicker/ProviderViewModel'
     ], function(
-        ProviderViewModel,
         buildModuleUrl,
         ArcGisImageServerTerrainProvider,
         CesiumTerrainProvider,
-        EllipsoidTerrainProvider) {
+        EllipsoidTerrainProvider,
+        ProviderViewModel) {
     "use strict";
 
     /**
@@ -41,7 +41,7 @@ define([
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'Small Terrain heightmaps and water mask',
+            name : 'Small Terrain heightmaps with water',
             iconUrl : buildModuleUrl('Widgets/Images/TerrainProviders/STK.png'),
             tooltip : 'Medium-resolution, heightmap-based terrain for the entire globe. This tileset also includes a water mask. Free for use on the Internet.\nhttp://www.agi.com',
             creationFunction : function() {

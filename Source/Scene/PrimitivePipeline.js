@@ -3,8 +3,8 @@ define([
         '../Core/BoundingSphere',
         '../Core/Color',
         '../Core/ComponentDatatype',
-        '../Core/defined',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
@@ -19,8 +19,8 @@ define([
         BoundingSphere,
         Color,
         ComponentDatatype,
-        defined,
         defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
@@ -442,7 +442,7 @@ define([
             var geometry = items[i];
             var attributes = geometry.attributes;
 
-            count += 3 + BoundingSphere.packedLength + geometry.indices.length;
+            count += 3 + BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -499,9 +499,13 @@ define([
                 count += attribute.values.length;
             }
 
-            packedData[count++] = geometry.indices.length;
-            packedData.set(geometry.indices, count);
-            count += geometry.indices.length;
+            var indicesLength = defined(geometry.indices) ? geometry.indices.length : 0;
+            packedData[count++] = indicesLength;
+
+            if (indicesLength > 0) {
+                packedData.set(geometry.indices, count);
+                count += indicesLength;
+            }
         }
 
         transferableObjects.push(packedData.buffer);
@@ -555,11 +559,15 @@ define([
                 });
             }
 
-            var numberOfVertices = values.length / componentsPerAttribute;
+            var indices;
             length = packedGeometry[packedGeometryIndex++];
-            var indices = IndexDatatype.createTypedArray(numberOfVertices, length);
-            for (i = 0; i < length; i++) {
-                indices[i] = packedGeometry[packedGeometryIndex++];
+
+            if (length > 0) {
+                var numberOfVertices = values.length / componentsPerAttribute;
+                indices = IndexDatatype.createTypedArray(numberOfVertices, length);
+                for (i = 0; i < length; i++) {
+                    indices[i] = packedGeometry[packedGeometryIndex++];
+                }
             }
 
             result[resultIndex++] = new Geometry({

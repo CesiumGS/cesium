@@ -1,26 +1,28 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
-        '../Scene/VerticalOrigin',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlas',
+        '../Scene/TextureAtlasBuilder',
+        '../Scene/VerticalOrigin'
     ], function(
-        DeveloperError,
-        defined,
-        destroyObject,
-        Color,
         Cartesian2,
         Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
         BillboardCollection,
         HorizontalOrigin,
-        VerticalOrigin,
-        TextureAtlasBuilder) {
+        TextureAtlas,
+        TextureAtlasBuilder,
+        VerticalOrigin) {
     "use strict";
 
     function textureReady(dynamicObject, billboardCollection, textureValue) {
@@ -58,7 +60,9 @@ define([
         //>>includeEnd('debug');
 
         var billboardCollection = new BillboardCollection();
-        var atlas = scene.createTextureAtlas();
+        var atlas = new TextureAtlas({
+            scene : scene
+        });
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicBillboardVisualizer.prototype._onObjectsRemoved, this);

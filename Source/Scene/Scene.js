@@ -1,115 +1,156 @@
 /*global define*/
 define([
-        '../Core/Math',
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/GeographicProjection',
         '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/Occluder',
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Intersect',
-        '../Core/Interval',
-        '../Core/Matrix4',
-        '../Core/JulianDate',
         '../Core/EllipsoidGeometry',
+        '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
+        '../Core/Intersect',
+        '../Core/Interval',
+        '../Core/JulianDate',
+        '../Core/Math',
+        '../Core/Matrix4',
         '../Core/mergeSort',
-        '../Renderer/Context',
+        '../Core/Occluder',
+        '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
+        '../Renderer/Context',
         '../Renderer/PassState',
-        '../Renderer/Pass',
-        './Camera',
-        './ScreenSpaceCameraController',
-        './CompositePrimitive',
-        './CullingVolume',
         './AnimationCollection',
+        './Camera',
+        './CompositePrimitive',
+        './CreditDisplay',
+        './CullingVolume',
+        './FrameState',
+        './FrustumCommands',
+        './FXAA',
+        './OIT',
+        './OrthographicFrustum',
+        './Pass',
+        './PerformanceDisplay',
+        './PerInstanceColorAppearance',
+        './PerspectiveFrustum',
+        './PerspectiveOffCenterFrustum',
+        './Primitive',
         './SceneMode',
         './SceneTransforms',
         './SceneTransitioner',
-        './FrameState',
-        './OrthographicFrustum',
-        './PerspectiveFrustum',
-        './PerspectiveOffCenterFrustum',
-        './FrustumCommands',
-        './PerformanceDisplay',
-        './Primitive',
-        './PerInstanceColorAppearance',
-        './SunPostProcess',
-        './CreditDisplay',
-        './OIT',
-        './FXAA'
+        './ScreenSpaceCameraController',
+        './SunPostProcess'
     ], function(
-        CesiumMath,
+        BoundingRectangle,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
         Color,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        GeographicProjection,
         Ellipsoid,
-        Event,
-        Occluder,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Intersect,
-        Interval,
-        Matrix4,
-        JulianDate,
         EllipsoidGeometry,
+        Event,
+        GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
-        ColorGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
+        Intersect,
+        Interval,
+        JulianDate,
+        CesiumMath,
+        Matrix4,
         mergeSort,
-        Context,
+        Occluder,
+        ShowGeometryInstanceAttribute,
         ClearCommand,
+        Context,
         PassState,
-        Pass,
-        Camera,
-        ScreenSpaceCameraController,
-        CompositePrimitive,
-        CullingVolume,
         AnimationCollection,
+        Camera,
+        CompositePrimitive,
+        CreditDisplay,
+        CullingVolume,
+        FrameState,
+        FrustumCommands,
+        FXAA,
+        OIT,
+        OrthographicFrustum,
+        Pass,
+        PerformanceDisplay,
+        PerInstanceColorAppearance,
+        PerspectiveFrustum,
+        PerspectiveOffCenterFrustum,
+        Primitive,
         SceneMode,
         SceneTransforms,
         SceneTransitioner,
-        FrameState,
-        OrthographicFrustum,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
-        FrustumCommands,
-        PerformanceDisplay,
-        Primitive,
-        PerInstanceColorAppearance,
-        SunPostProcess,
-        CreditDisplay,
-        OIT,
-        FXAA) {
+        ScreenSpaceCameraController,
+        SunPostProcess) {
     "use strict";
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
+     * <p>
+     * <em><code>contextOptions</code> parameter details:</em>
+     * </p>
+     * <p>
+     * The default values are:
+     * <code>
+     * {
+     *   webgl : {
+     *     alpha : false,
+     *     depth : true,
+     *     stencil : false,
+     *     antialias : true,
+     *     premultipliedAlpha : true,
+     *     preserveDrawingBuffer : false
+     *     failIfMajorPerformanceCaveat : true
+     *   },
+     *   allowTextureFilterAnisotropic : true
+     * }
+     * </code>
+     * </p>
+     * <p>
+     * The <code>webgl</code> property corresponds to the <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
+     * object used to create the WebGL context.
+     * </p>
+     * <p>
+     * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
+     * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
+     * <code>options.webgl.alpha</code> to true.
+     * </p>
+     * <p>
+     * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
+     * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
+     * which is not appropriate for almost any Cesium app.
+     * </p>
+     * <p>
+     * The other <code>options.webgl</code> properties match the WebGL defaults for <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>.
+     * </p>
+     * <p>
+     * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
+     * WebGL extension is supported.  Setting this to false will improve performance, but hurt visual quality, especially for horizon views.
+     * </p>
      *
      * @alias Scene
      * @constructor
      *
      * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties.  See details above.
      * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
@@ -158,16 +199,31 @@ define([
 
         this._fxaa = new FXAA();
 
-        this._clearColorCommand = new ClearCommand();
-        this._clearColorCommand.color = new Color();
-        this._clearColorCommand.owner = this;
-
-        var depthClearCommand = new ClearCommand();
-        depthClearCommand.depth = 1.0;
-        depthClearCommand.owner = this;
-        this._depthClearCommand = depthClearCommand;
+        this._clearColorCommand = new ClearCommand({
+            color : new Color(),
+            owner : this
+        });
+        this._depthClearCommand = new ClearCommand({
+            depth : 1.0,
+            owner : this
+        });
 
         this._transitioner = new SceneTransitioner(this);
+
+        this._renderError = new Event();
+        this._preRender = new Event();
+        this._postRender = new Event();
+
+        /**
+         * Exceptions occurring in <code>render</code> are always caught in order to raise the
+         * <code>renderError</code> event.  If this property is true, the error is rethrown
+         * after the event is raised.  If this property is false, the <code>render</code> function
+         * returns normally after raising the event.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.rethrowRenderErrors = false;
 
         /**
          * Determines whether or not to instantly complete the
@@ -390,7 +446,6 @@ define([
         this.fxaa = false;
 
         this._performanceDisplay = undefined;
-
         this._debugSphere = undefined;
 
         // initial guess at frustums.
@@ -530,7 +585,7 @@ define([
          * @memberof Scene.prototype
          * @type {ImageryLayerCollection}
          */
-        imageryLayers: {
+        imageryLayers : {
             get : function() {
                 return this.globe.imageryLayers;
             }
@@ -541,12 +596,59 @@ define([
          * @memberof Scene.prototype
          * @type {TerrainProvider}
          */
-        terrainProvider: {
+        terrainProvider : {
             get : function() {
                 return this.globe.terrainProvider;
             },
             set : function(terrainProvider) {
                 this.globe.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
+         * The Scene instance and the thrown error are the only two parameters passed to the event handler.
+         * By default, errors are not rethrown after this event is raised, but that can be changed by setting
+         * the <code>rethrowRenderErrors</code> property.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        renderError : {
+            get : function() {
+                return this._renderError;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        preRender : {
+            get : function() {
+                return this._preRender;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
+         * @memberof Scene.prototype
+         * @type {Event}
+         */
+        postRender : {
+            get : function() {
+                return this._postRender;
+            }
+        },
+
+        /**
+         * @private
+         */
+        context : {
+            get : function() {
+                return this._context;
             }
         }
     });
@@ -759,7 +861,7 @@ define([
     }
 
     function createDebugFragmentShaderProgram(command, scene, shaderProgram) {
-        var context = scene._context;
+        var context = scene.context;
         var sp = defaultValue(shaderProgram, command.shaderProgram);
         var fragmentShaderSource = sp.fragmentShaderSource;
         var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_Debug_main()');
@@ -790,15 +892,15 @@ define([
 
         var source = renamedFS + '\n' + newMain;
         var attributeLocations = getAttributeLocations(sp);
-        return context.shaderCache.getShaderProgram(sp.vertexShaderSource, source, attributeLocations);
+        return context.createShaderProgram(sp.vertexShaderSource, source, attributeLocations);
     }
 
     function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
         if (defined(command.shaderProgram) || defined(shaderProgram)) {
             // Replace shader for frustum visualization
             var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene._context, passState, renderState, sp);
-            sp.release();
+            command.execute(scene.context, passState, renderState, sp);
+            sp.destroy();
         }
     }
 
@@ -904,7 +1006,7 @@ define([
     }
 
     function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands) {
-        var context = scene._context;
+        var context = scene.context;
 
         mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
@@ -921,7 +1023,7 @@ define([
     function executeCommands(scene, passState, clearColor, picking) {
         var frameState = scene._frameState;
         var camera = scene._camera;
-        var context = scene._context;
+        var context = scene.context;
         var us = context.uniformState;
 
         var frustum;
@@ -936,7 +1038,7 @@ define([
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
             if (scene.sunBloom) {
                 scene._sunPostProcess = new SunPostProcess();
-            } else {
+            } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
             }
 
@@ -1068,7 +1170,7 @@ define([
     }
 
     function executeOverlayCommands(scene, passState) {
-        var context = scene._context;
+        var context = scene.context;
         var commandList = scene._overlayCommandList;
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1077,7 +1179,7 @@ define([
     }
 
     function updatePrimitives(scene) {
-        var context = scene._context;
+        var context = scene.context;
         var frameState = scene._frameState;
         var commandList = scene._commandList;
 
@@ -1103,25 +1205,6 @@ define([
     }
 
     /**
-     * Creates a new texture atlas.
-     *
-     * @memberof Scene
-     *
-     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [options.images=undefined] Array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} [options.image=undefined] Single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @returns {TextureAtlas} The new texture atlas.
-     *
-     * @see TextureAtlas
-     */
-    Scene.prototype.createTextureAtlas = function(options) {
-        return this._context.createTextureAtlas(options);
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */
@@ -1137,60 +1220,76 @@ define([
         this._screenSpaceCameraController.update(this.mode);
     };
 
+    function render(scene, time) {
+        if (!defined(time)) {
+            time = new JulianDate();
+        }
+
+        scene._preRender.raiseEvent(scene, time);
+
+        var us = scene.context.uniformState;
+        var frameState = scene._frameState;
+
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+        updateFrameState(scene, frameNumber, time);
+        frameState.passes.render = true;
+        frameState.creditDisplay.beginFrame();
+
+        var context = scene.context;
+        us.update(context, frameState);
+
+        scene._commandList.length = 0;
+        scene._overlayCommandList.length = 0;
+
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+
+        var passState = scene._passState;
+
+        executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+        executeOverlayCommands(scene, passState);
+
+        frameState.creditDisplay.endFrame();
+
+        if (scene.debugShowFramesPerSecond) {
+            if (!defined(scene._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.style.position = 'absolute';
+                performanceContainer.style.top = '10px';
+                performanceContainer.style.left = '10px';
+                var container = scene._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                scene._performanceDisplay = performanceDisplay;
+                scene._performanceContainer = performanceContainer;
+            }
+
+            scene._performanceDisplay.update();
+        } else if (defined(scene._performanceDisplay)) {
+            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
+            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
+        }
+
+        context.endFrame();
+        callAfterRenderFunctions(frameState);
+
+        scene._postRender.raiseEvent(scene, time);
+    }
+
     /**
      * DOC_TBA
      * @memberof Scene
      */
     Scene.prototype.render = function(time) {
-        if (!defined(time)) {
-            time = new JulianDate();
-        }
+        try {
+            render(this, time);
+        } catch (error) {
+            this._renderError.raiseEvent(this, error);
 
-        var us = this._context.uniformState;
-        var frameState = this._frameState;
-
-        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-        updateFrameState(this, frameNumber, time);
-        frameState.passes.render = true;
-        frameState.creditDisplay.beginFrame();
-
-        var context = this._context;
-        us.update(context, frameState);
-
-        this._commandList.length = 0;
-        this._overlayCommandList.length = 0;
-
-        updatePrimitives(this);
-        createPotentiallyVisibleSet(this);
-
-        var passState = this._passState;
-
-        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
-        executeOverlayCommands(this, passState);
-
-        frameState.creditDisplay.endFrame();
-
-        if (this.debugShowFramesPerSecond) {
-            if (!defined(this._performanceDisplay)) {
-                var performanceContainer = document.createElement('div');
-                performanceContainer.style.position = 'absolute';
-                performanceContainer.style.top = '10px';
-                performanceContainer.style.left = '10px';
-                var container = this._canvas.parentNode;
-                container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                this._performanceDisplay = performanceDisplay;
-                this._performanceContainer = performanceContainer;
+            if (this.rethrowRenderErrors) {
+                throw error;
             }
-
-            this._performanceDisplay.update();
-        } else if (defined(this._performanceDisplay)) {
-            this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
-            this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
-
-        context.endFrame();
-        callAfterRenderFunctions(frameState);
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();

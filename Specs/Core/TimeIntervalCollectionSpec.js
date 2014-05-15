@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/TimeIntervalCollection',
-         'Core/JulianDate',
-         'Core/TimeInterval'
-     ], function(
-         TimeIntervalCollection,
-         JulianDate,
-         TimeInterval) {
+        'Core/TimeIntervalCollection',
+        'Core/JulianDate',
+        'Core/TimeInterval'
+    ], function(
+        TimeIntervalCollection,
+        JulianDate,
+        TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

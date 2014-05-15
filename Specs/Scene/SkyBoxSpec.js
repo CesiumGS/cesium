@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/SkyBox',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Core/Cartesian3',
-         'Renderer/ClearCommand',
-         'Scene/SceneMode',
-         'ThirdParty/when'
-     ], function(
-         SkyBox,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         Cartesian3,
-         ClearCommand,
-         SceneMode,
-         when) {
+        'Scene/SkyBox',
+        'Core/Cartesian3',
+        'Renderer/ClearCommand',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'ThirdParty/when'
+    ], function(
+        SkyBox,
+        Cartesian3,
+        ClearCommand,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

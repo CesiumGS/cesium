@@ -1,13 +1,13 @@
 /*global define*/
 define([
+        './ComponentDatatype',
         './defaultValue',
         './defined',
-        './ComponentDatatype',
         './DeveloperError'
     ], function(
+        ComponentDatatype,
         defaultValue,
         defined,
-        ComponentDatatype,
         DeveloperError) {
     "use strict";
 
@@ -26,7 +26,7 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)

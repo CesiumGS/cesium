@@ -2,8 +2,8 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
+        '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
@@ -12,8 +12,8 @@ define([
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
+        DeveloperError,
         Event,
         wrapFunction,
         CzmlDataSource,

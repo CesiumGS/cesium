@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        './Cartesian2',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartographic',
-        './Rectangle',
         './GeographicProjection',
-        './Intersect'
+        './Intersect',
+        './Rectangle'
     ], function(
+        Cartesian2,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartographic,
-        Rectangle,
         GeographicProjection,
-        Intersect) {
+        Intersect,
+        Rectangle) {
     "use strict";
 
     /**

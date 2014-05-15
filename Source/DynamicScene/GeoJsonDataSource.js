@@ -1,46 +1,48 @@
 /*global define*/
 define([
-        '../Core/createGuid',
+        '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/getFilenameFromUri',
-        '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getFilenameFromUri',
         '../Core/loadJson',
+        '../Core/RuntimeError',
+        '../ThirdParty/topojson',
+        '../ThirdParty/when',
+        './ColorMaterialProperty',
         './ConstantProperty',
         './DynamicObject',
-        './DynamicPoint',
-        './DynamicPolyline',
-        './DynamicPolygon',
-        './ColorMaterialProperty',
         './DynamicObjectCollection',
-        '../ThirdParty/when',
-        '../ThirdParty/topojson'
+        './DynamicPoint',
+        './DynamicPolygon',
+        './DynamicPolyline'
     ], function(
-        createGuid,
+        Cartesian3,
         Cartographic,
         Color,
+        createGuid,
         defined,
         defineProperties,
         DeveloperError,
-        getFilenameFromUri,
-        RuntimeError,
         Ellipsoid,
         Event,
+        getFilenameFromUri,
         loadJson,
+        RuntimeError,
+        topojson,
+        when,
+        ColorMaterialProperty,
         ConstantProperty,
         DynamicObject,
-        DynamicPoint,
-        DynamicPolyline,
-        DynamicPolygon,
-        ColorMaterialProperty,
         DynamicObjectCollection,
-        when,
-        topojson) {
+        DynamicPoint,
+        DynamicPolygon,
+        DynamicPolyline) {
     "use strict";
 
     function describe(properties, nameProperty) {
@@ -534,8 +536,7 @@ define([
     };
 
     function defaultCrsFunction(coordinates) {
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
     }
 
     /**

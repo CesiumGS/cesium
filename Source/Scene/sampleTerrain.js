@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defined',
+        '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
-        DeveloperError,
         defined,
+        DeveloperError,
         when) {
     "use strict";
 

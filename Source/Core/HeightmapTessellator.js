@@ -1,19 +1,19 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
-        './Cartesian3',
         './Ellipsoid',
+        './freezeObject',
         './Math'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
-        Cartesian3,
         Ellipsoid,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -45,46 +45,46 @@ define([
      *
      * @memberof HeightmapTessellator
      *
-     * @param {Array|Float32Array} description.vertices The array to use to store computed vertices.
-     *                             If description.skirtHeight is 0.0, the array should have
-     *                             description.width * description.height * 6 elements.  If
-     *                             description.skirtHeight is greater than 0.0, the array should
-     *                             have (description.width + 2) * (description.height * 2) * 6
+     * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
+     *                             If options.skirtHeight is 0.0, the array should have
+     *                             options.width * options.height * 6 elements.  If
+     *                             options.skirtHeight is greater than 0.0, the array should
+     *                             have (options.width + 2) * (options.height * 2) * 6
      *                             elements.
-     * @param {TypedArray} description.heightmap The heightmap to tessellate.
-     * @param {Number} description.width The width of the heightmap, in height samples.
-     * @param {Number} description.height The height of the heightmap, in height samples.
-     * @param {Number} description.skirtHeight The height of skirts to drape at the edges of the heightmap.
-     * @param {Rectangle} description.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
+     * @param {TypedArray} options.heightmap The heightmap to tessellate.
+     * @param {Number} options.width The width of the heightmap, in height samples.
+     * @param {Number} options.height The height of the heightmap, in height samples.
+     * @param {Number} options.skirtHeight The height of skirts to drape at the edges of the heightmap.
+     * @param {Rectangle} options.nativeRectangle An rectangle in the native coordinates of the heightmap's projection.  For
      *                 a heightmap with a geographic projection, this is degrees.  For the web mercator
      *                 projection, this is meters.
-     * @param {Rectangle} [description.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
+     * @param {Rectangle} [options.rectangle] The rectangle covered by the heightmap, in geodetic coordinates with north, south, east and
      *                 west properties in radians.  Either rectangle or nativeRectangle must be provided.  If both
      *                 are provided, they're assumed to be consistent.
-     * @param {Boolean} [description.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
+     * @param {Boolean} [options.isGeographic=true] True if the heightmap uses a {@link GeographicProjection}, or false if it uses
      *                  a {@link WebMercatorProjection}.
-     * @param {Cartesian3} [description.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
-     * @param {Object} [description.structure] An object describing the structure of the height data.
-     * @param {Number} [description.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
+     * @param {Cartesian3} [options.relativetoCenter=Cartesian3.ZERO] The positions will be computed as <code>Cartesian3.subtract(worldPosition, relativeToCenter)</code>.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to which the heightmap applies.
+     * @param {Object} [options.structure] An object describing the structure of the height data.
+     * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
      *                 height after multiplying by the scale.
-     * @param {Number} [description.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
+     * @param {Number} [options.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
      *                 height in meters.  The offset is added after the height sample is multiplied by the
      *                 heightScale.
-     * @param {Number} [description.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
+     * @param {Number} [options.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
      *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
      *                 it is greater than 1, that number of elements together form the height sample, which is
      *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
-     * @param {Number} [description.structure.stride=1] The number of elements to skip to get from the first element of
+     * @param {Number} [options.structure.stride=1] The number of elements to skip to get from the first element of
      *                 one height to the first element of the next height.
-     * @param {Number} [description.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
+     * @param {Number} [options.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
      *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
      *                 is 256, the height is computed as follows:
      *                 `height = buffer[index] + buffer[index + 1] * 256 + buffer[index + 2] * 256 * 256 + buffer[index + 3] * 256 * 256 * 256`
      *                 This is assuming that the isBigEndian property is false.  If it is true, the order of the
      *                 elements is reversed.
-     * @param {Boolean} [description.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
+     * @param {Boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
      *
@@ -92,7 +92,7 @@ define([
      * var width = 5;
      * var height = 5;
      * var vertices = new Float32Array(width * height * 6);
-     * var description = ;
+     * var options = ;
      * Cesium.HeightmapTessellator.computeVertices({
      *     vertices : vertices,
      *     heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
@@ -107,22 +107,22 @@ define([
      *     }
      * });
      */
-    HeightmapTessellator.computeVertices = function(description) {
+    HeightmapTessellator.computeVertices = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.heightmap)) {
-            throw new DeveloperError('description.heightmap is required.');
+        if (!defined(options) || !defined(options.heightmap)) {
+            throw new DeveloperError('options.heightmap is required.');
         }
-        if (!defined(description.width) || !defined(description.height)) {
-            throw new DeveloperError('description.width and description.height are required.');
+        if (!defined(options.width) || !defined(options.height)) {
+            throw new DeveloperError('options.width and options.height are required.');
         }
-        if (!defined(description.vertices)) {
-            throw new DeveloperError('description.vertices is required.');
+        if (!defined(options.vertices)) {
+            throw new DeveloperError('options.vertices is required.');
         }
-        if (!defined(description.nativeRectangle)) {
-            throw new DeveloperError('description.nativeRectangle is required.');
+        if (!defined(options.nativeRectangle)) {
+            throw new DeveloperError('options.nativeRectangle is required.');
         }
-        if (!defined(description.skirtHeight)) {
-            throw new DeveloperError('description.skirtHeight is required.');
+        if (!defined(options.skirtHeight)) {
+            throw new DeveloperError('options.skirtHeight is required.');
         }
         //>>includeEnd('debug');
 
@@ -139,25 +139,25 @@ define([
         var piOverTwo = CesiumMath.PI_OVER_TWO;
         var toRadians = CesiumMath.toRadians;
 
-        var vertices = description.vertices;
-        var heightmap = description.heightmap;
-        var width = description.width;
-        var height = description.height;
-        var skirtHeight = description.skirtHeight;
+        var vertices = options.vertices;
+        var heightmap = options.heightmap;
+        var width = options.width;
+        var height = options.height;
+        var skirtHeight = options.skirtHeight;
 
-        var isGeographic = defaultValue(description.isGeographic, true);
-        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        var isGeographic = defaultValue(options.isGeographic, true);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         var oneOverGlobeSemimajorAxis = 1.0 / ellipsoid.maximumRadius;
 
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         var geographicWest;
         var geographicSouth;
         var geographicEast;
         var geographicNorth;
 
-        var rectangle = description.rectangle;
+        var rectangle = options.rectangle;
         if (!defined(rectangle)) {
             if (isGeographic) {
                 geographicWest = toRadians(nativeRectangle.west);
@@ -177,9 +177,9 @@ define([
             geographicNorth = rectangle.north;
         }
 
-        var relativeToCenter = defaultValue(description.relativeToCenter, Cartesian3.ZERO);
+        var relativeToCenter = defaultValue(options.relativeToCenter, Cartesian3.ZERO);
 
-        var structure = defaultValue(description.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
+        var structure = defaultValue(options.structure, HeightmapTessellator.DEFAULT_STRUCTURE);
         var heightScale = defaultValue(structure.heightScale, HeightmapTessellator.DEFAULT_STRUCTURE.heightScale);
         var heightOffset = defaultValue(structure.heightOffset, HeightmapTessellator.DEFAULT_STRUCTURE.heightOffset);
         var elementsPerHeight = defaultValue(structure.elementsPerHeight, HeightmapTessellator.DEFAULT_STRUCTURE.elementsPerHeight);

@@ -1,19 +1,19 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Cartesian3',
-        './BoundingSphere',
         './Rectangle'
     ], function(
+        BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Cartesian3,
-        BoundingSphere,
         Rectangle) {
     "use strict";
 

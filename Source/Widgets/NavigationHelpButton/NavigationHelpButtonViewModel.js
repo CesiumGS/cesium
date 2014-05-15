@@ -5,16 +5,16 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../../ThirdParty/knockout'
-], function (
+        '../../ThirdParty/knockout',
+        '../createCommand'
+    ], function(
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

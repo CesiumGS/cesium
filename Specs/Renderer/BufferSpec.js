@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Matrix4',
-         'Core/IndexDatatype',
-         'Renderer/BufferUsage'
-     ], 'Renderer/Buffer', function(
-         createContext,
-         destroyContext,
-         Matrix4,
-         IndexDatatype,
-         BufferUsage) {
+        'Core/IndexDatatype',
+        'Core/Matrix4',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Buffer', function(
+        IndexDatatype,
+        Matrix4,
+        BufferUsage,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

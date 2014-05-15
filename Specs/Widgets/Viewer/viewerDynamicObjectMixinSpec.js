@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/viewerDynamicObjectMixin',
-         'Core/Cartesian3',
-         'DynamicScene/ConstantPositionProperty',
-         'DynamicScene/ConstantProperty',
-         'DynamicScene/DynamicObject',
-         'Scene/CameraFlightPath',
-         'Widgets/Viewer/Viewer',
-         'Specs/MockDataSource'
-     ], function(
-         viewerDynamicObjectMixin,
-         Cartesian3,
-         ConstantPositionProperty,
-         ConstantProperty,
-         DynamicObject,
-         CameraFlightPath,
-         Viewer,
-         MockDataSource) {
+        'Widgets/Viewer/viewerDynamicObjectMixin',
+        'Core/Cartesian3',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicObject',
+        'Scene/CameraFlightPath',
+        'Specs/MockDataSource',
+        'Widgets/Viewer/Viewer'
+    ], function(
+        viewerDynamicObjectMixin,
+        Cartesian3,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicObject,
+        CameraFlightPath,
+        MockDataSource,
+        Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

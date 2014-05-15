@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        './defined',
         './Cartesian3',
         './CornerType',
+        './defined',
+        './Math',
+        './Matrix3',
         './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
-        './Matrix3',
-        './Quaternion',
-        './Math'
+        './Quaternion'
     ], function(
-        defined,
         Cartesian3,
         CornerType,
+        defined,
+        CesiumMath,
+        Matrix3,
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
-        Matrix3,
-        Quaternion,
-        CesiumMath) {
+        Quaternion) {
     "use strict";
 
     /**

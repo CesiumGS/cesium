@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/ConstantProperty',
-             'Core/Color'
-            ], function(
-                    DynamicEllipse,
-              ConstantProperty,
-              Color) {
+        'DynamicScene/DynamicEllipse',
+        'Core/Color',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicEllipse,
+        Color,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

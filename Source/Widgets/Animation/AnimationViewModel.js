@@ -1,26 +1,26 @@
 /*global define*/
 define([
         '../../Core/binarySearch',
-        '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/ClockStep',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../ToggleButtonViewModel',
+        '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
-        '../../ThirdParty/knockout'
+        '../createCommand',
+        '../ToggleButtonViewModel'
     ], function(
         binarySearch,
-        ClockStep,
         ClockRange,
+        ClockStep,
         defined,
         defineProperties,
         DeveloperError,
-        createCommand,
-        ToggleButtonViewModel,
+        knockout,
         sprintf,
-        knockout) {
+        createCommand,
+        ToggleButtonViewModel) {
     "use strict";
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
