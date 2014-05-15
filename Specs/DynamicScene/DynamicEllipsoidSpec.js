@@ -2,13 +2,11 @@
 defineSuite([
         'DynamicScene/DynamicEllipsoid',
         'Core/Cartesian3',
-        'Core/Color',
         'DynamicScene/ColorMaterialProperty',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicEllipsoid,
         Cartesian3,
-        Color,
         ColorMaterialProperty,
         ConstantProperty) {
     "use strict";

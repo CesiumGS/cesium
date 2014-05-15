@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicator',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         SelectionIndicator,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";

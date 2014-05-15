@@ -1,32 +1,24 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicVectorVisualizer',
-        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
         'DynamicScene/ConstantPositionProperty',
         'DynamicScene/ConstantProperty',
-        'DynamicScene/DynamicEllipse',
-        'DynamicScene/DynamicObject',
         'DynamicScene/DynamicObjectCollection',
         'DynamicScene/DynamicVector',
-        'Scene/Scene',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         DynamicVectorVisualizer,
-        Cartesian2,
         Cartesian3,
         Color,
         JulianDate,
         ConstantPositionProperty,
         ConstantProperty,
-        DynamicEllipse,
-        DynamicObject,
         DynamicObjectCollection,
         DynamicVector,
-        Scene,
         createScene,
         destroyScene) {
     "use strict";

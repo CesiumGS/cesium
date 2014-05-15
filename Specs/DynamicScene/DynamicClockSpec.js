@@ -3,16 +3,12 @@ defineSuite([
         'DynamicScene/DynamicClock',
         'Core/ClockRange',
         'Core/ClockStep',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DynamicScene/DynamicObject'
+        'Core/JulianDate'
     ], function(
         DynamicClock,
         ClockRange,
         ClockStep,
-        JulianDate,
-        TimeInterval,
-        DynamicObject) {
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
