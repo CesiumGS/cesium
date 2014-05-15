@@ -5,16 +5,14 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/CornerType',
-        'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Ellipsoid'
     ], function(
         PolylineVolumeOutlineGeometry,
         Cartesian2,
         Cartesian3,
         Cartographic,
         CornerType,
-        Ellipsoid,
-        CesiumMath) {
+        Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

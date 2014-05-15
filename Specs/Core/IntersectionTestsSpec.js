@@ -2,7 +2,6 @@
 defineSuite([
         'Core/IntersectionTests',
         'Core/Cartesian3',
-        'Core/defined',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Plane',
@@ -10,7 +9,6 @@ defineSuite([
     ], function(
         IntersectionTests,
         Cartesian3,
-        defined,
         Ellipsoid,
         CesiumMath,
         Plane,

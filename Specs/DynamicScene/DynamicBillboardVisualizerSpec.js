@@ -9,11 +9,9 @@ defineSuite([
         'Core/NearFarScalar',
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicBillboard',
-        'DynamicScene/DynamicObject',
         'DynamicScene/DynamicObjectCollection',
         'Scene/BillboardCollection',
         'Scene/HorizontalOrigin',
-        'Scene/Scene',
         'Scene/VerticalOrigin',
         'Specs/createScene',
         'Specs/destroyScene'
@@ -27,11 +25,9 @@ defineSuite([
         NearFarScalar,
         ConstantProperty,
         DynamicBillboard,
-        DynamicObject,
         DynamicObjectCollection,
         BillboardCollection,
         HorizontalOrigin,
-        Scene,
         VerticalOrigin,
         createScene,
         destroyScene) {

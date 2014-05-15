@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/Iau2006XysData',
-        'Core/defined',
-        'Core/loadText'
+        'Core/defined'
     ], function(
         Iau2006XysData,
-        defined,
-        loadText) {
+        defined) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

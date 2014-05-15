@@ -2,7 +2,6 @@
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Matrix4',
@@ -11,13 +10,11 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/RectanglePrimitive',
         'Scene/SceneMode',
-        'Specs/createCamera',
         'Specs/createScene',
         'Specs/destroyScene'
     ], 'Scene/Pick', function(
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         Matrix4,
@@ -26,7 +23,6 @@ defineSuite([
         PerspectiveFrustum,
         RectanglePrimitive,
         SceneMode,
-        createCamera,
         createScene,
         destroyScene) {
     "use strict";

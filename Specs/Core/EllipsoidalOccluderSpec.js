@@ -6,10 +6,8 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/IntersectionTests',
         'Core/Math',
-        'Core/Occluder',
         'Core/Ray',
-        'Core/Rectangle',
-        'Core/Visibility'
+        'Core/Rectangle'
     ], function(
         EllipsoidalOccluder,
         BoundingSphere,
@@ -17,10 +15,8 @@ defineSuite([
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
-        Occluder,
         Ray,
-        Rectangle,
-        Visibility) {
+        Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

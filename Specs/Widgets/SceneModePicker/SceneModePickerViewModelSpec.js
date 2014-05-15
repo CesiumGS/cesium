@@ -2,7 +2,6 @@
 defineSuite([
         'Widgets/SceneModePicker/SceneModePickerViewModel',
         'Core/Ellipsoid',
-        'Core/Event',
         'Scene/Globe',
         'Scene/SceneMode',
         'Specs/createScene',
@@ -10,7 +9,6 @@ defineSuite([
     ], function(
         SceneModePickerViewModel,
         Ellipsoid,
-        Event,
         Globe,
         SceneMode,
         createScene,

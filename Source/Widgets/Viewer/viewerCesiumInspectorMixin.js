@@ -3,16 +3,13 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/requestAnimationFrame',
         '../CesiumInspector/CesiumInspector'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        requestAnimationFrame,
         CesiumInspector) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.

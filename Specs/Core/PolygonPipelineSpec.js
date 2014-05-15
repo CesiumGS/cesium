@@ -5,7 +5,6 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
-        'Core/Math',
         'Core/WindingOrder'
     ], function(
         PolygonPipeline,
@@ -13,7 +12,6 @@ defineSuite([
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        CesiumMath,
         WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

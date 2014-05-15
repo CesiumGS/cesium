@@ -1,13 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Core/IndexDatatype',
-        'Core/Matrix4',
         'Renderer/BufferUsage',
         'Specs/createContext',
         'Specs/destroyContext'
     ], 'Renderer/Buffer', function(
         IndexDatatype,
-        Matrix4,
         BufferUsage,
         createContext,
         destroyContext) {

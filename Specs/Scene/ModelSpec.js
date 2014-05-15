@@ -1,14 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Model',
-        'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Cartographic',
         'Core/defaultValue',
         'Core/Ellipsoid',
-        'Core/Event',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix4',
@@ -19,14 +17,12 @@ defineSuite([
         'Specs/destroyScene'
     ], function(
         Model,
-        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         defaultValue,
         Ellipsoid,
-        Event,
         JulianDate,
         CesiumMath,
         Matrix4,
