@@ -254,8 +254,8 @@ require(['Cesium'], function(Cesium) {
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
-    function layerCompositePrimitive(scene) {
-        Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
+    function layerPrimitiveCollection(scene) {
+        Sandcastle.declare(layerPrimitiveCollection);    // For highlighting in Sandcastle.
         addOverlappingPolygons(scene);
 
         var primitives = scene.primitives;
@@ -351,8 +351,8 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('Layer Primitives', function() {
         cleanup();
-        layerCompositePrimitive(scene);
-        Sandcastle.highlight(layerCompositePrimitive);
+        layerPrimitiveCollection(scene);
+        Sandcastle.highlight(layerPrimitiveCollection);
     });
 
     Sandcastle.addToolbarButton('Drill-Down Picking', function() {

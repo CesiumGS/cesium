@@ -15,37 +15,37 @@ define([
 
     /**
      * A collection of primitives.  This is most often used with {@link Scene#primitives},
-     * but <code>CompositePrimitive</code> is also a primitive itself so collections can
+     * but <code>PrimitiveCollection</code> is also a primitive itself so collections can
      * be added to collections forming a hierarchy.
      *
-     * @alias CompositePrimitive
+     * @alias PrimitiveCollection
      * @constructor
      *
      * @example
      * var billboards = new Cesium.BillboardCollection();
      * var labels = new Cesium.LabelCollection();
      *
-     * var collection = new Cesium.CompositePrimitive();
+     * var collection = new Cesium.PrimitiveCollection();
      * collection.add(billboards);
      *
      * scene.primitives.add(collection);  // Add collection
      * scene.primitives.add(labels);      // Add regular primitive
      */
-    var CompositePrimitive = function() {
+    var PrimitiveCollection = function() {
         this._primitives = [];
         this._guid = createGuid();
 
         /**
          * Determines if primitives in the collection are destroyed when they are removed by
-         * {@link CompositePrimitive#destroy} or  {@link CompositePrimitive#remove} or implicitly
-         * by {@link CompositePrimitive#removeAll}.
+         * {@link PrimitiveCollection#destroy} or  {@link PrimitiveCollection#remove} or implicitly
+         * by {@link PrimitiveCollection#removeAll}.
          *
          * @type {Boolean}
          * @default true
          *
          * @example
          * // Example 1. Primitives are destroyed by default.
-         * var primitives = new Cesium.CompositePrimitive();
+         * var primitives = new Cesium.PrimitiveCollection();
          * var labels = primitives.add(new Cesium.LabelCollection());
          * primitives = primitives.destroy();
          * var b = labels.isDestroyed(); // true
@@ -53,7 +53,7 @@ define([
          * //////////////////////////////////////////////////////////////////
          *
          * // Example 2. Do not destroy primitives in a collection.
-         * var primitives = new Cesium.CompositePrimitive();
+         * var primitives = new Cesium.PrimitiveCollection();
          * primitives.destroyPrimitives = false;
          * var labels = primitives.add(new Cesium.LabelCollection());
          * primitives = primitives.destroy();
@@ -71,11 +71,11 @@ define([
         this.show = true;
     };
 
-    defineProperties(CompositePrimitive.prototype, {
+    defineProperties(PrimitiveCollection.prototype, {
         /**
          * Gets the number of primitives in the collection.
          *
-         * @memberof CompositePrimitive.prototype
+         * @memberof PrimitiveCollection.prototype
          *
          * @type {Number}
          * @readonly
@@ -90,7 +90,7 @@ define([
     /**
      * Adds a primitive to the collection.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} primitive The primitive to add.
      * @returns {Object} The primitive added to the collection.
@@ -100,7 +100,7 @@ define([
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      */
-    CompositePrimitive.prototype.add = function(primitive) {
+    PrimitiveCollection.prototype.add = function(primitive) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(primitive)) {
             throw new DeveloperError('primitive is required.');
@@ -121,20 +121,20 @@ define([
     /**
      * Removes a primitive from the collection.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to remove.
      * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#destroyPrimitives
+     * @see PrimitiveCollection#destroyPrimitives
      *
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
      */
-    CompositePrimitive.prototype.remove = function(primitive) {
+    PrimitiveCollection.prototype.remove = function(primitive) {
         // PERFORMANCE_IDEA:  We can obviously make this a lot faster.
         if (this.contains(primitive)) {
             var index = this._primitives.indexOf(primitive);
@@ -158,13 +158,13 @@ define([
     /**
      * Removes all primitives in the collection.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#destroyPrimitives
+     * @see PrimitiveCollection#destroyPrimitives
      */
-    CompositePrimitive.prototype.removeAll = function() {
+    PrimitiveCollection.prototype.removeAll = function() {
         if (this.destroyPrimitives) {
             var primitives = this._primitives;
             var length = primitives.length;
@@ -178,16 +178,16 @@ define([
     /**
      * Determines if this collection contains a primitive.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to check for.
      * @returns {Boolean} <code>true</code> if the primitive is in the collection; <code>false</code> if the primitive is <code>undefined</code> or was not found in the collection.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#get
+     * @see PrimitiveCollection#get
      */
-    CompositePrimitive.prototype.contains = function(primitive) {
+    PrimitiveCollection.prototype.contains = function(primitive) {
         return !!(defined(primitive) &&
                   primitive._external &&
                   primitive._external._composites &&
@@ -208,18 +208,18 @@ define([
      * Raises a primitive "up one" in the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive up one.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to raise.
      *
      * @exception {DeveloperError} primitive is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#raiseToTop
-     * @see CompositePrimitive#lower
-     * @see CompositePrimitive#lowerToBottom
+     * @see PrimitiveCollection#raiseToTop
+     * @see PrimitiveCollection#lower
+     * @see PrimitiveCollection#lowerToBottom
      */
-    CompositePrimitive.prototype.raise = function(primitive) {
+    PrimitiveCollection.prototype.raise = function(primitive) {
         if (defined(primitive)) {
             var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
@@ -236,18 +236,18 @@ define([
      * Raises a primitive to the "top" of the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive to the top.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to raise the top.
      *
      * @exception {DeveloperError} primitive is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#raise
-     * @see CompositePrimitive#lower
-     * @see CompositePrimitive#lowerToBottom
+     * @see PrimitiveCollection#raise
+     * @see PrimitiveCollection#lower
+     * @see PrimitiveCollection#lowerToBottom
      */
-    CompositePrimitive.prototype.raiseToTop = function(primitive) {
+    PrimitiveCollection.prototype.raiseToTop = function(primitive) {
         if (defined(primitive)) {
             var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
@@ -264,18 +264,18 @@ define([
      * Lowers a primitive "down one" in the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive down one.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to lower.
      *
      * @exception {DeveloperError} primitive is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#lowerToBottom
-     * @see CompositePrimitive#raise
-     * @see CompositePrimitive#raiseToTop
+     * @see PrimitiveCollection#lowerToBottom
+     * @see PrimitiveCollection#raise
+     * @see PrimitiveCollection#raiseToTop
      */
-    CompositePrimitive.prototype.lower = function(primitive) {
+    PrimitiveCollection.prototype.lower = function(primitive) {
         if (defined(primitive)) {
             var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
@@ -292,18 +292,18 @@ define([
      * Lowers a primitive to the "bottom" of the collection.  If all primitives in the collection are drawn
      * on the globe surface, this visually moves the primitive to the bottom.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Object} [primitive] The primitive to lower to the bottom.
      *
      * @exception {DeveloperError} primitive is not in this collection.
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#lower
-     * @see CompositePrimitive#raise
-     * @see CompositePrimitive#raiseToTop
+     * @see PrimitiveCollection#lower
+     * @see PrimitiveCollection#raise
+     * @see PrimitiveCollection#raiseToTop
      */
-    CompositePrimitive.prototype.lowerToBottom = function(primitive) {
+    PrimitiveCollection.prototype.lowerToBottom = function(primitive) {
         if (defined(primitive)) {
             var index = getPrimitiveIndex(this, primitive);
             var primitives = this._primitives;
@@ -319,14 +319,14 @@ define([
     /**
      * Returns the primitive in the collection at the specified index.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @param {Number} index The zero-based index of the primitive to return.
      * @returns {Object} The primitive at the <code>index</code>.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#length
+     * @see PrimitiveCollection#length
      *
      * @example
      * // Toggle the show property of every primitive in the collection.
@@ -337,7 +337,7 @@ define([
      *   p.show = !p.show;
      * }
      */
-    CompositePrimitive.prototype.get = function(index) {
+    PrimitiveCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
@@ -350,7 +350,7 @@ define([
     /**
      * @private
      */
-    CompositePrimitive.prototype.update = function(context, frameState, commandList) {
+    PrimitiveCollection.prototype.update = function(context, frameState, commandList) {
         if (!this.show) {
             return;
         }
@@ -368,13 +368,13 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
-     * @see CompositePrimitive#destroy
+     * @see PrimitiveCollection#destroy
      */
-    CompositePrimitive.prototype.isDestroyed = function() {
+    PrimitiveCollection.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -390,21 +390,21 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof CompositePrimitive
+     * @memberof PrimitiveCollection
      *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CompositePrimitive#isDestroyed
+     * @see PrimitiveCollection#isDestroyed
      *
      * @example
      * primitives = primitives && primitives.destroy();
      */
-    CompositePrimitive.prototype.destroy = function() {
+    PrimitiveCollection.prototype.destroy = function() {
         this.removeAll();
         return destroyObject(this);
     };
 
-    return CompositePrimitive;
+    return PrimitiveCollection;
 });

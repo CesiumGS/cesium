@@ -30,7 +30,6 @@ define([
         '../Renderer/PassState',
         './AnimationCollection',
         './Camera',
-        './CompositePrimitive',
         './CreditDisplay',
         './CullingVolume',
         './FrameState',
@@ -44,6 +43,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './Primitive',
+        './PrimitiveCollection',
         './SceneMode',
         './SceneTransforms',
         './SceneTransitioner',
@@ -80,7 +80,6 @@ define([
         PassState,
         AnimationCollection,
         Camera,
-        CompositePrimitive,
         CreditDisplay,
         CullingVolume,
         FrameState,
@@ -94,6 +93,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         Primitive,
+        PrimitiveCollection,
         SceneMode,
         SceneTransforms,
         SceneTransitioner,
@@ -179,7 +179,7 @@ define([
         this._canvas = canvas;
         this._context = context;
         this._globe = undefined;
-        this._primitives = new CompositePrimitive();
+        this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
@@ -526,7 +526,7 @@ define([
         /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
-         * @type {CompositePrimitive}
+         * @type {PrimitiveCollection}
          */
         primitives : {
             get : function() {
