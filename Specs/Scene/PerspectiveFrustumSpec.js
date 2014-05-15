@@ -176,4 +176,46 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+
+    it('configureViewOffset sets clipping planes appropriately', function() {
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = Math.PI / 3;
+        frustum.aspectRatio = 1.0;
+        frustum.near = 1.0;
+        frustum.far = 10.0;
+        var forceUpdate = frustum.projectionMatrix;
+
+        expect(frustum._offCenterFrustum.right).toEqualEpsilon(Math.tan(0.5 * frustum.fovy), CesiumMath.EPSILON15);
+        expect(frustum._offCenterFrustum.left).toEqualEpsilon(-Math.tan(0.5 * frustum.fovy), CesiumMath.EPSILON15);
+        expect(frustum._offCenterFrustum.top).toEqualEpsilon(Math.tan(0.5 * frustum.fovy), CesiumMath.EPSILON15);
+        expect(frustum._offCenterFrustum.bottom).toEqualEpsilon(-Math.tan(0.5 * frustum.fovy), CesiumMath.EPSILON15);
+
+        var nearPlaneWidth = frustum._offCenterFrustum.right - frustum._offCenterFrustum.left;
+        var nearPlaneHeight = frustum._offCenterFrustum.top - frustum._offCenterFrustum.bottom;
+
+        var cloned = frustum.clone();
+        cloned.configureViewOffset(100, 100, 0, 0, 1, 1);
+        forceUpdate = cloned.projectionMatrix;
+
+        expect(cloned._offCenterFrustum.left).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.right).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneWidth * (1 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.bottom).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.top).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneHeight * (1 / 100), CesiumMath.EPSILON15);
+
+        cloned.configureViewOffset(100, 100, 1, 1, 1, 1);
+        forceUpdate = cloned.projectionMatrix;
+
+        expect(cloned._offCenterFrustum.left).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneWidth * (1 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.right).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneWidth * (2 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.bottom).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneHeight * (1 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.top).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneHeight * (2 / 100), CesiumMath.EPSILON15);
+
+        cloned.configureViewOffset(100, 100, 99, 99, 1, 1);
+        forceUpdate = cloned.projectionMatrix;
+
+        expect(cloned._offCenterFrustum.left).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneWidth * (99 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.right).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneWidth * (100 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.bottom).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneHeight * (99 / 100), CesiumMath.EPSILON15);
+        expect(cloned._offCenterFrustum.top).toEqualEpsilon(-Math.tan(0.5 * cloned.fovy) + nearPlaneHeight * (100 / 100), CesiumMath.EPSILON15);
+    });
 });

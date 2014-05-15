@@ -1343,9 +1343,10 @@ define([
         var drawingBufferWidth = scene.drawingBufferWidth;
         var drawingBufferHeight = scene.drawingBufferHeight;
 
-        var offCenter = frustum.clone(perspPickingFrustum);
-        offCenter.configureViewOffset(drawingBufferWidth, drawingBufferHeight, drawingBufferPosition.x - width * 0.5, drawingBufferPosition.y - height * 0.5, width, height);
-        return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+//        var offCenter = frustum.clone(perspPickingFrustum);
+//        offCenter.configureViewOffset(drawingBufferWidth, drawingBufferHeight, drawingBufferPosition.x - width * 0.5, drawingBufferPosition.y - height * 0.5, width, height);
+//        return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+        return frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
     function getPickCullingVolume(scene, drawingBufferPosition, width, height) {

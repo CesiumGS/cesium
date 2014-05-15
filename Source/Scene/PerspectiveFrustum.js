@@ -282,15 +282,20 @@ define([
         result.aspectRatio = this.aspectRatio;
         result.near = this.near;
         result.far = this.far;
+        result.leftOffset = this.leftOffset;
+        result.rightOffset = this.rightOffset;
+        result.topOffset = this.topOffset;
+        result.bottomOffset = this.bottomOffset;
 
         // force update of clone to compute matrices
         result._fovy = undefined;
         result._aspectRatio = undefined;
         result._near = undefined;
         result._far = undefined;
-
-        result._xOffset = this._xOffset;
-        result._yOffset = this._yOffset;
+        result._leftOffset = undefined;
+        result._rightOffset = undefined;
+        result._topOffset = undefined;
+        result._bottomOffset = undefined;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 
@@ -318,6 +323,10 @@ define([
                 this.aspectRatio === other.aspectRatio &&
                 this.near === other.near &&
                 this.far === other.far &&
+                this.leftOffset === other.leftOffset &&
+                this.rightOffset === other.rightOffset &&
+                this.topOffset === other.topOffset &&
+                this.bottomOffset === other.bottomOffset &&
                 this._offCenterFrustum.equals(other._offCenterFrustum));
     };
 
