@@ -1,16 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage'
-     ], 'Renderer/VertexArray', function(
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         PrimitiveType,
-         BufferUsage) {
+        'Core/ComponentDatatype',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/VertexArray', function(
+        ComponentDatatype,
+        PrimitiveType,
+        BufferUsage,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -191,12 +193,13 @@ defineSuite([
             value : [0.5]
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             count : 1
         });
+        command.execute(context);
 
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -229,12 +232,13 @@ defineSuite([
             value : [0.25, 0.75]
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             count : 1
         });
+        command.execute(context);
 
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -267,12 +271,13 @@ defineSuite([
             value : [0.25, 0.5, 0.75]
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             count : 1
         });
+        command.execute(context);
 
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
@@ -305,12 +310,13 @@ defineSuite([
             value : [0.2, 0.4, 0.6, 0.8]
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             count : 1
         });
+        command.execute(context);
 
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 

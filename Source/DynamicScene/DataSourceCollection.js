@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Event'
     ], function(
-        DeveloperError,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event) {
     "use strict";
 

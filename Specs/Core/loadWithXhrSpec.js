@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadWithXhr',
-             'Core/loadImage',
-             'Specs/waitsForPromise'
-         ], function(
-             loadWithXhr,
-             loadImage,
-             waitsForPromise) {
+        'Core/loadWithXhr',
+        'Core/loadImage',
+        'Specs/waitsForPromise'
+    ], function(
+        loadWithXhr,
+        loadImage,
+        waitsForPromise) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

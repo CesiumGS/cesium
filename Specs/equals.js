@@ -1,5 +1,8 @@
 /*global define*/
-define(['Core/FeatureDetection'], function(FeatureDetection) {
+define([
+        'Core/FeatureDetection'
+    ], function(
+        FeatureDetection) {
     "use strict";
     /*global CanvasPixelArray*/
 

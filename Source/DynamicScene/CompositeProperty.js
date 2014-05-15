@@ -1,19 +1,20 @@
 /*global define*/
-define(['./Property',
+define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/EventHelper',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './Property'
     ], function(
-        Property,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         EventHelper,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        Property) {
     "use strict";
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {

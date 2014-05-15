@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Spline',
-        './Cartesian3'
+        './Spline'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
-        Spline,
-        Cartesian3) {
+        Spline) {
     "use strict";
 
     /**

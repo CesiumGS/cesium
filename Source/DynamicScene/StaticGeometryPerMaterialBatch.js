@@ -1,17 +1,16 @@
 /*global define*/
-define(['../Core/defined',
+define([
         '../Core/AssociativeArray',
+        '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
-        '../Scene/Material',
         '../Scene/PrimitiveState',
         './MaterialProperty'
     ], function(
-        defined,
         AssociativeArray,
+        defined,
         ShowGeometryInstanceAttribute,
         Primitive,
-        Material,
         PrimitiveState,
         MaterialProperty) {
     "use strict";

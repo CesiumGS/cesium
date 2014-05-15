@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Math',
         './ImageryLayer'
     ], function(
-        DeveloperError,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event,
         CesiumMath,
         ImageryLayer) {

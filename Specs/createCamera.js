@@ -1,13 +1,13 @@
 /*global define*/
 define([
-        'Core/Math',
         'Core/Cartesian3',
         'Core/defaultValue',
+        'Core/Math',
         'Scene/Camera'
     ], function(
-        CesiumMath,
         Cartesian3,
         defaultValue,
+        CesiumMath,
         Camera) {
     "use strict";
 

@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
-        'Core/defaultValue',
         'Core/JulianDate',
         'Scene/Camera',
         'Scene/CreditDisplay',
         'Scene/FrameState'
     ], function(
+        defaultValue,
         Ellipsoid,
         GeographicProjection,
-        defaultValue,
         JulianDate,
         Camera,
         CreditDisplay,

@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Cartesian3',
-             'Core/Cartographic',
-             'Core/Ellipsoid',
-             'Core/Math',
-             'Specs/createPackableSpecs'
-            ], function(
-              Cartesian3,
-              Cartographic,
-              Ellipsoid,
-              CesiumMath,
-              createPackableSpecs) {
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

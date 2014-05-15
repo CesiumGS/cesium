@@ -1,29 +1,29 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/NearFarScalar',
         './Billboard',
-        './LabelStyle',
         './HorizontalOrigin',
+        './LabelStyle',
         './VerticalOrigin'
     ], function(
-        defaultValue,
-        DeveloperError,
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         NearFarScalar,
         Billboard,
-        LabelStyle,
         HorizontalOrigin,
+        LabelStyle,
         VerticalOrigin) {
     "use strict";
 
@@ -604,8 +604,7 @@ define([
      *
      * @memberof Label
      *
-     * @param {Context} context The context.
-     * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
+     * @param {Scene} scene The scene the label is in.
      *
      * @returns {Cartesian2} The screen-space position of the label.
      *

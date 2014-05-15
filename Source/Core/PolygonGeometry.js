@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './defaultValue',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
+        './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
@@ -26,12 +26,12 @@ define([
         './VertexFormat',
         './WindingOrder'
     ], function(
-        defaultValue,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,

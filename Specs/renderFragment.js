@@ -3,12 +3,14 @@ define([
         'Core/defaultValue',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
-        'Renderer/ClearCommand'
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand'
     ], function(
         defaultValue,
         PrimitiveType,
         BufferUsage,
-        ClearCommand) {
+        ClearCommand,
+        DrawCommand) {
     "use strict";
     /*global expect*/
 
@@ -34,12 +36,13 @@ define([
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         }
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
+        command.execute(context);
 
         sp = sp.destroy();
         va = va.destroy();

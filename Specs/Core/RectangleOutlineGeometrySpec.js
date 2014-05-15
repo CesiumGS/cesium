@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/RectangleOutlineGeometry',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/GeographicProjection',
-         'Core/Math',
-         'Core/Matrix2'
-     ], function(
-         RectangleOutlineGeometry,
-         Cartesian3,
-         Ellipsoid,
-         Rectangle,
-         GeographicProjection,
-         CesiumMath,
-         Matrix2) {
+        'Core/RectangleOutlineGeometry',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/GeographicProjection',
+        'Core/Math',
+        'Core/Matrix2',
+        'Core/Rectangle'
+    ], function(
+        RectangleOutlineGeometry,
+        Cartesian3,
+        Ellipsoid,
+        GeographicProjection,
+        CesiumMath,
+        Matrix2,
+        Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

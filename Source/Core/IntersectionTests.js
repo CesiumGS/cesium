@@ -1,20 +1,19 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defined',
         './DeveloperError',
         './Math',
-        './Cartesian3',
-        './Cartographic',
         './Matrix3',
         './QuadraticRealPolynomial',
         './QuarticRealPolynomial'
-    ],
-    function(
+    ], function(
+        Cartesian3,
+        Cartographic,
         defined,
         DeveloperError,
         CesiumMath,
-        Cartesian3,
-        Cartographic,
         Matrix3,
         QuadraticRealPolynomial,
         QuarticRealPolynomial) {

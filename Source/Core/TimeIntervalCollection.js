@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        './binarySearch',
         './defined',
         './defineProperties',
         './DeveloperError',
         './Event',
-        './binarySearch',
-        './TimeInterval',
-        './JulianDate'
+        './JulianDate',
+        './TimeInterval'
     ], function(
+        binarySearch,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        binarySearch,
-        TimeInterval,
-        JulianDate) {
+        JulianDate,
+        TimeInterval) {
     "use strict";
 
     function compareIntervalStartTimes(left, right) {

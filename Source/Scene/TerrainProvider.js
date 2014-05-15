@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/ComponentDatatype',
-        '../Renderer/BufferUsage',
-        '../Core/IndexDatatype'
+        '../Core/IndexDatatype',
+        '../Renderer/BufferUsage'
     ], function(
+        ComponentDatatype,
         defined,
         defineProperties,
         DeveloperError,
-        ComponentDatatype,
-        BufferUsage,
-        IndexDatatype) {
+        IndexDatatype,
+        BufferUsage) {
     "use strict";
 
     /**
@@ -191,6 +191,8 @@ define([
 
     /**
      * Creates a vertex array for wireframe rendering of a terrain tile.
+     *
+     * @private
      *
      * @param {Context} context The context in which to create the vertex array.
      * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array

@@ -2,19 +2,19 @@
 define([
         '../Core/defaultValue',
         '../Core/VertexFormat',
-        './Appearance',
-        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS',
+        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
+        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
-        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS'
+        './Appearance'
     ], function(
         defaultValue,
         VertexFormat,
-        Appearance,
-        PerInstanceColorAppearanceVS,
         PerInstanceColorAppearanceFS,
+        PerInstanceColorAppearanceVS,
+        PerInstanceFlatColorAppearanceFS,
         PerInstanceFlatColorAppearanceVS,
-        PerInstanceFlatColorAppearanceFS) {
+        Appearance) {
     "use strict";
 
     /**

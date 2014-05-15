@@ -1,17 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumInspector/CesiumInspector',
-         'Scene/Globe',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         CesiumInspector,
-         Globe,
-         Ellipsoid,
-         createScene,
-         destroyScene
-     ) {
+        'Widgets/CesiumInspector/CesiumInspector',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        CesiumInspector,
+        Ellipsoid,
+        Globe,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

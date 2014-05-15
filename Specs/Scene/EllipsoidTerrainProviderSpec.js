@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidTerrainProvider',
-         'Specs/createContext',
-         'Specs/destroyContext'
-     ], function(
-         EllipsoidTerrainProvider,
-         createContext,
-         destroyContext) {
+        'Scene/EllipsoidTerrainProvider',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        EllipsoidTerrainProvider,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
