@@ -8,11 +8,9 @@ defineSuite([
         'DynamicScene/CompositePositionProperty',
         'DynamicScene/CompositeProperty',
         'DynamicScene/ConstantProperty',
-        'DynamicScene/CzmlDataSource',
         'DynamicScene/DynamicBillboard',
         'DynamicScene/DynamicObject',
-        'DynamicScene/DynamicObjectCollection',
-        'Scene/HorizontalOrigin'
+        'DynamicScene/DynamicObjectCollection'
     ], function(
         CompositeDynamicObjectCollection,
         Iso8601,
@@ -22,11 +20,9 @@ defineSuite([
         CompositePositionProperty,
         CompositeProperty,
         ConstantProperty,
-        CzmlDataSource,
         DynamicBillboard,
         DynamicObject,
-        DynamicObjectCollection,
-        HorizontalOrigin) {
+        DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

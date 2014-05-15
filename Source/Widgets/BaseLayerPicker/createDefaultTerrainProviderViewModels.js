@@ -1,13 +1,11 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Scene/ArcGisImageServerTerrainProvider',
         '../../Scene/CesiumTerrainProvider',
         '../../Scene/EllipsoidTerrainProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
-        ArcGisImageServerTerrainProvider,
         CesiumTerrainProvider,
         EllipsoidTerrainProvider,
         ProviderViewModel) {

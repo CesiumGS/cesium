@@ -2,7 +2,6 @@
 defineSuite([
         'DynamicScene/DataSourceDisplay',
         'Core/Iso8601',
-        'Core/JulianDate',
         'DynamicScene/DataSourceCollection',
         'Specs/createScene',
         'Specs/destroyScene',
@@ -10,7 +9,6 @@ defineSuite([
     ], function(
         DataSourceDisplay,
         Iso8601,
-        JulianDate,
         DataSourceCollection,
         createScene,
         destroyScene,

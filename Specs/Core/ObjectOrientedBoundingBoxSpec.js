@@ -3,8 +3,6 @@ defineSuite([
         'Core/ObjectOrientedBoundingBox',
         'Core/BoundingRectangle',
         'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
         'Core/Quaternion'
@@ -12,8 +10,6 @@ defineSuite([
         ObjectOrientedBoundingBox,
         BoundingRectangle,
         Cartesian3,
-        Cartesian4,
-        Intersect,
         CesiumMath,
         Matrix3,
         Quaternion) {

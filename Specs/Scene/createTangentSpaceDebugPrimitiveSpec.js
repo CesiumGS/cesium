@@ -2,7 +2,6 @@
 defineSuite([
         'Scene/createTangentSpaceDebugPrimitive',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
         'Core/EllipsoidGeometry',
         'Core/Matrix4',
         'Core/PrimitiveType',
@@ -10,7 +9,6 @@ defineSuite([
     ], function(
         createTangentSpaceDebugPrimitive,
         Cartesian3,
-        Ellipsoid,
         EllipsoidGeometry,
         Matrix4,
         PrimitiveType,

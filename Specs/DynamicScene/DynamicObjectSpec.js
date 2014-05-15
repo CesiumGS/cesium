@@ -1,18 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/DynamicObject',
-        'Core/Cartesian3',
-        'Core/Iso8601',
         'Core/JulianDate',
-        'Core/Quaternion',
         'Core/TimeInterval',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicObject,
-        Cartesian3,
-        Iso8601,
         JulianDate,
-        Quaternion,
         TimeInterval,
         ConstantProperty) {
     "use strict";

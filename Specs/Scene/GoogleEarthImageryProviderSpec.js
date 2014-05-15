@@ -3,7 +3,6 @@ defineSuite([
         'Scene/GoogleEarthImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
@@ -12,14 +11,12 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/NeverTileDiscardPolicy',
         'Scene/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         GoogleEarthImageryProvider,
         DefaultProxy,
         defined,
-        FeatureDetection,
         loadImage,
         loadWithXhr,
         Rectangle,
@@ -28,7 +25,6 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        NeverTileDiscardPolicy,
         WebMercatorTilingScheme,
         when) {
     "use strict";

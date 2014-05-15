@@ -1,12 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/Math',
-        'Core/Cartesian3',
-        'Core/Cartographic'
+        'Core/Math'
     ], function(
-        CesiumMath,
-        Cartesian3,
-        Cartographic) {
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

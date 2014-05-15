@@ -3,7 +3,6 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/jsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
@@ -13,14 +12,12 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/NeverTileDiscardPolicy',
         'Scene/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         BingMapsImageryProvider,
         DefaultProxy,
         defined,
-        FeatureDetection,
         jsonp,
         loadImage,
         loadWithXhr,
@@ -30,7 +27,6 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        NeverTileDiscardPolicy,
         WebMercatorTilingScheme,
         when) {
     "use strict";
