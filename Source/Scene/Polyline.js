@@ -1,25 +1,25 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/BoundingSphere',
-        '../Core/Color',
-        '../Core/PolylinePipeline',
         '../Core/Matrix4',
-        '../Core/Cartesian3',
+        '../Core/PolylinePipeline',
         './Material'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        BoundingSphere,
-        Color,
-        PolylinePipeline,
         Matrix4,
-        Cartesian3,
+        PolylinePipeline,
         Material) {
     "use strict";
 

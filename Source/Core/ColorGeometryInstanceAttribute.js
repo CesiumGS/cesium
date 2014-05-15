@@ -1,15 +1,15 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './Color',
         './ComponentDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError'
     ], function(
-        defaultValue,
-        defined,
         Color,
         ComponentDatatype,
+        defaultValue,
+        defined,
         DeveloperError) {
     "use strict";
 
@@ -30,7 +30,7 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-0.0, 0.0))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)

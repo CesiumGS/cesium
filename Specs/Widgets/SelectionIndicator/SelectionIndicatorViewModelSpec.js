@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         SelectionIndicatorViewModel,
-         Cartesian2,
-         Cartesian3,
-         Ellipsoid,
-         createScene,
-         destroyScene) {
+        'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        SelectionIndicatorViewModel,
+        Cartesian2,
+        Cartesian3,
+        Ellipsoid,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

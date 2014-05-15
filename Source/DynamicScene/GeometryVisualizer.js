@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/AssociativeArray',
+define([
+        '../Core/AssociativeArray',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',

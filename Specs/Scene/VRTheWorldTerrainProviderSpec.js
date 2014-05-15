@@ -1,26 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/VRTheWorldTerrainProvider',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'Core/DefaultProxy',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/HeightmapTerrainData',
-         'Scene/TerrainProvider',
-         'ThirdParty/when'
-     ], function(
-         VRTheWorldTerrainProvider,
-         defined,
-         loadImage,
-         loadWithXhr,
-         DefaultProxy,
-         CesiumMath,
-         GeographicTilingScheme,
-         HeightmapTerrainData,
-         TerrainProvider,
-         when) {
+        'Scene/VRTheWorldTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Scene/GeographicTilingScheme',
+        'Scene/HeightmapTerrainData',
+        'Scene/TerrainProvider',
+        'ThirdParty/when'
+    ], function(
+        VRTheWorldTerrainProvider,
+        DefaultProxy,
+        defined,
+        loadImage,
+        loadWithXhr,
+        CesiumMath,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        TerrainProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

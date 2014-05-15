@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicModelVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/DynamicModel',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-            DynamicModelVisualizer,
-            createScene,
-            destroyScene,
-            ConstantProperty,
-            ConstantPositionProperty,
-            DynamicEllipse,
-            DynamicModel,
-            DynamicObjectCollection,
-            DynamicObject,
-            JulianDate,
-            Cartesian2,
-            Cartesian3,
-            Color,
-            Scene) {
+        'DynamicScene/DynamicModelVisualizer',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicEllipse',
+        'DynamicScene/DynamicModel',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicObjectCollection',
+        'Scene/Scene',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicModelVisualizer,
+        Cartesian2,
+        Cartesian3,
+        Color,
+        JulianDate,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicEllipse,
+        DynamicModel,
+        DynamicObject,
+        DynamicObjectCollection,
+        Scene,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -2,13 +2,13 @@
 define([
         './clone',
         './defined',
-        './loadText',
-        './DeveloperError'
+        './DeveloperError',
+        './loadText'
     ], function(
         clone,
         defined,
-        loadText,
-        DeveloperError) {
+        DeveloperError,
+        loadText) {
     "use strict";
 
     var defaultHeaders = {

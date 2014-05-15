@@ -2,16 +2,16 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
         defined,
         defineProperties,
+        DeveloperError,
         loadImage,
         loadImageViaBlob,
-        DeveloperError,
         throttleRequestByServer) {
     "use strict";
 

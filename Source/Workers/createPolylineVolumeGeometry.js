@@ -1,9 +1,10 @@
 /*global define*/
-define(['../Core/PolylineVolumeGeometry',
-        '../Core/Ellipsoid'
+define([
+        '../Core/Ellipsoid',
+        '../Core/PolylineVolumeGeometry'
     ], function(
-        PolylineVolumeGeometry,
-        Ellipsoid) {
+        Ellipsoid,
+        PolylineVolumeGeometry) {
     "use strict";
 
     function createPolylineVolumeGeometry(polylineVolumeGeometry) {

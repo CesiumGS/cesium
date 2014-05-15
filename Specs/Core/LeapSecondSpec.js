@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/LeapSecond',
-         'Core/JulianDate',
-         'Core/TimeStandard',
-         'Core/binarySearch'
-     ], function(
-         LeapSecond,
-         JulianDate,
-         TimeStandard,
-         binarySearch) {
+        'Core/LeapSecond',
+        'Core/binarySearch',
+        'Core/JulianDate',
+        'Core/TimeStandard'
+    ], function(
+        LeapSecond,
+        binarySearch,
+        JulianDate,
+        TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

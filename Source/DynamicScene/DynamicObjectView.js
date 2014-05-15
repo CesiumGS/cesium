@@ -1,36 +1,36 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/Quaternion',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Ellipsoid',
+        '../Core/Quaternion',
         '../Core/Transforms',
         '../Scene/CameraColumbusViewMode',
         '../Scene/SceneMode'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError,
-         CesiumMath,
-         Cartesian2,
-         Cartesian3,
-         Cartesian4,
-         Cartographic,
-         Quaternion,
-         Matrix3,
-         Matrix4,
-         Ellipsoid,
-         Transforms,
-         CameraColumbusViewMode,
-         SceneMode) {
+    ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Ellipsoid,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
+        Quaternion,
+        Transforms,
+        CameraColumbusViewMode,
+        SceneMode) {
     "use strict";
 
     function update2D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid, projection) {

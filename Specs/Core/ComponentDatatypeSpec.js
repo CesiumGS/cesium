@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/ComponentDatatype'], function(ComponentDatatype) {
+defineSuite([
+        'Core/ComponentDatatype'
+    ], function(
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/DebugAppearance',
-         'Scene/Appearance',
-         'Scene/Primitive',
-         'Core/RectangleGeometry',
-         'Core/Rectangle',
-         'Core/GeometryInstance',
-         'Core/GeometryInstanceAttribute',
-         'Core/ComponentDatatype',
-         'Core/VertexFormat',
-         'Renderer/ClearCommand',
-         'Specs/render',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState'
-     ], function(
-         DebugAppearance,
-         Appearance,
-         Primitive,
-         RectangleGeometry,
-         Rectangle,
-         GeometryInstance,
-         GeometryInstanceAttribute,
-         ComponentDatatype,
-         VertexFormat,
-         ClearCommand,
-         render,
-         createContext,
-         destroyContext,
-         createFrameState) {
+        'Scene/DebugAppearance',
+        'Core/ComponentDatatype',
+        'Core/GeometryInstance',
+        'Core/GeometryInstanceAttribute',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/VertexFormat',
+        'Renderer/ClearCommand',
+        'Scene/Appearance',
+        'Scene/Primitive',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/render'
+    ], function(
+        DebugAppearance,
+        ComponentDatatype,
+        GeometryInstance,
+        GeometryInstanceAttribute,
+        Rectangle,
+        RectangleGeometry,
+        VertexFormat,
+        ClearCommand,
+        Appearance,
+        Primitive,
+        createContext,
+        createFrameState,
+        destroyContext,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

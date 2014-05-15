@@ -1,26 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ArcGisImageServerTerrainProvider',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/HeightmapTerrainData',
-         'Scene/TerrainProvider',
-         'ThirdParty/when'
-     ], function(
-         ArcGisImageServerTerrainProvider,
-         defined,
-         loadImage,
-         DefaultProxy,
-         Ellipsoid,
-         CesiumMath,
-         GeographicTilingScheme,
-         HeightmapTerrainData,
-         TerrainProvider,
-         when) {
+        'Scene/ArcGisImageServerTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/loadImage',
+        'Core/Math',
+        'Scene/GeographicTilingScheme',
+        'Scene/HeightmapTerrainData',
+        'Scene/TerrainProvider',
+        'ThirdParty/when'
+    ], function(
+        ArcGisImageServerTerrainProvider,
+        DefaultProxy,
+        defined,
+        Ellipsoid,
+        loadImage,
+        CesiumMath,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        TerrainProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

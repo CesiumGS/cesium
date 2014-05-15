@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/DiscardMissingTileImagePolicy',
-         'Core/Cartesian2',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'ThirdParty/when'
-     ], function(
-         DiscardMissingTileImagePolicy,
-         Cartesian2,
-         defined,
-         loadImage,
-         loadWithXhr,
-         when) {
+        'Scene/DiscardMissingTileImagePolicy',
+        'Core/Cartesian2',
+        'Core/defined',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'ThirdParty/when'
+    ], function(
+        DiscardMissingTileImagePolicy,
+        Cartesian2,
+        defined,
+        loadImage,
+        loadWithXhr,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

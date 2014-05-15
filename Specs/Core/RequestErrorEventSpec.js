@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/RequestErrorEvent'], function(RequestErrorEvent) {
+defineSuite([
+        'Core/RequestErrorEvent'
+    ], function(
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

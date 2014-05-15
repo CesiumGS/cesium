@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Clock',
+define([
+        '../Core/Clock',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',

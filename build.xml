@@ -237,6 +237,10 @@
 		<element name="sourcefiles" type="resources" />
 	</scriptdef>
 
+	<scriptdef name="sortRequires" language="javascript" src="${tasksDirectory}/sortRequires.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<element name="sourcefiles" type="fileset" />
+	</scriptdef>
+
 	<target name="jsHint" depends="build" description="Runs JSHint on the entire source tree.">
 		<runJsHint jshintpath="${jsHintPath}" jshintoptionspath="${jsHintOptionsPath}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
 			<sourcefiles dir="${basedir}">
@@ -256,6 +260,34 @@
 			</sourcefiles>
 		</runJsHint>
 		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
+
+	<target name="sortRequires" description="Sorts the list of requires in all source files">
+		<sortRequires>
+			<sourcefiles dir="${basedir}">
+				<include name="Source/**/*.js" />
+				<exclude name="Source/Shaders/**" />
+				<exclude name="Source/ThirdParty/**" />
+				<exclude name="Source/Workers/cesiumWorkerBootstrapper.js" />
+				<exclude name="Source/copyrightHeader.js" />
+				<exclude name="Source/Workers/transferTypedArrayTest.js" />
+
+				<include name="Apps/**/*.js" />
+				<exclude name="Apps/Sandcastle/ThirdParty/**" />
+				<exclude name="Apps/server.js" />
+
+				<include name="Specs/**/*.js" />
+				<exclude name="Specs/SpecList.js" />
+
+				<exclude name="Apps\Sandcastle\Sandcastle-client.js" />
+				<exclude name="Apps\Sandcastle\Sandcastle-header.js" />
+				<exclude name="Apps\Sandcastle\Sandcastle-warn.js" />
+				<exclude name="Apps\Sandcastle\gallery\gallery-index.js" />
+				<exclude name="Apps\Sandcastle\jsHintOptions.js" />
+
+				<exclude name="**/*.profile.js" />
+			</sourcefiles>
+		</sortRequires>
 	</target>
 
 	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">

@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/EllipsoidGeometry'], function(EllipsoidGeometry) {
+define([
+        '../Core/EllipsoidGeometry'
+    ], function(
+        EllipsoidGeometry) {
     "use strict";
 
     return EllipsoidGeometry.createGeometry;

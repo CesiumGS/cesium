@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/viewerDragDropMixin',
-         'Core/defined',
-         'Core/TimeInterval',
-         'Specs/EventHelper',
-         'Widgets/Viewer/Viewer'
-     ], function(
-         viewerDragDropMixin,
-         defined,
-         TimeInterval,
-         EventHelper,
-         Viewer) {
+        'Widgets/Viewer/viewerDragDropMixin',
+        'Core/defined',
+        'Core/TimeInterval',
+        'Specs/EventHelper',
+        'Widgets/Viewer/Viewer'
+    ], function(
+        viewerDragDropMixin,
+        defined,
+        TimeInterval,
+        EventHelper,
+        Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

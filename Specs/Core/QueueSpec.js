@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/Queue'], function(Queue) {
+defineSuite([
+        'Core/Queue'
+    ], function(
+        Queue) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

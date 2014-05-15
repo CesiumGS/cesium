@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        '../ThirdParty/when'
+        './DeveloperError'
     ], function(
+        when,
         defaultValue,
         defined,
-        DeveloperError,
-        when) {
+        DeveloperError) {
     "use strict";
 
     function pushQueryParameter(array, name, value) {
