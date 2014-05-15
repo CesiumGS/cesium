@@ -100,6 +100,16 @@ defineSuite([
         return polygon;
     }
 
+    it('constructs with options', function() {
+        var collection = new PrimitiveCollection({
+            show : false,
+            destroyPrimitives : false
+        });
+        expect(collection.show).toEqual(false);
+        expect(collection.destroyPrimitives).toEqual(false);
+        collection.destroy();
+    });
+
     it('gets default show', function() {
         expect(primitives.show).toEqual(true);
     });
@@ -202,7 +212,7 @@ defineSuite([
         primitives.add(p);
         primitives.destroyPrimitives = false;
 
-        var otherPrimitives = new PrimitiveCollection(context);
+        var otherPrimitives = new PrimitiveCollection();
         otherPrimitives.add(p);
         otherPrimitives.destroyPrimitives = false;
 
@@ -230,7 +240,7 @@ defineSuite([
         var p = createLabels();
         primitives.add(p);
 
-        var otherPrimitives = new PrimitiveCollection(context);
+        var otherPrimitives = new PrimitiveCollection();
 
         expect(otherPrimitives.contains(p)).toEqual(false);
         expect(otherPrimitives.remove(p)).toEqual(false);
@@ -260,7 +270,7 @@ defineSuite([
     });
 
     it('renders a primitive in more than one composite', function() {
-        var otherPrimitives = new PrimitiveCollection(context);
+        var otherPrimitives = new PrimitiveCollection();
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError'
     ], function(
         createGuid,
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
@@ -21,6 +23,9 @@ define([
      * @alias PrimitiveCollection
      * @constructor
      *
+     * @param {Boolean} [options.show=true] Determines if the primitives in the collection will be shown.
+     * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
+     *
      * @example
      * var billboards = new Cesium.BillboardCollection();
      * var labels = new Cesium.LabelCollection();
@@ -31,9 +36,19 @@ define([
      * scene.primitives.add(collection);  // Add collection
      * scene.primitives.add(labels);      // Add regular primitive
      */
-    var PrimitiveCollection = function() {
+    var PrimitiveCollection = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._primitives = [];
         this._guid = createGuid();
+
+        /**
+         * Determines if primitives in this collection will be shown.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.show = defaultValue(options.show, true);
 
         /**
          * Determines if primitives in the collection are destroyed when they are removed by
@@ -60,15 +75,7 @@ define([
          * var b = labels.isDestroyed(); // false
          * labels = labels.destroy();    // explicitly destroy
          */
-        this.destroyPrimitives = true;
-
-        /**
-         * Determines if primitives in this collection will be shown.
-         *
-         * @type {Boolean}
-         * @default true
-         */
-        this.show = true;
+        this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
     };
 
     defineProperties(PrimitiveCollection.prototype, {
