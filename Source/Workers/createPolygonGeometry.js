@@ -1,9 +1,10 @@
 /*global define*/
-define(['../Core/PolygonGeometry',
-        '../Core/Ellipsoid'
+define([
+        '../Core/Ellipsoid',
+        '../Core/PolygonGeometry'
     ], function(
-        PolygonGeometry,
-        Ellipsoid) {
+        Ellipsoid,
+        PolygonGeometry) {
     "use strict";
 
     function createPolygonGeometry(polygonGeometry) {

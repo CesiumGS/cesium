@@ -1,19 +1,19 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/GeoJsonDataSource',
-        'DynamicScene/DynamicObjectCollection',
-        'Core/Cartographic',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Event',
+        'DynamicScene/DynamicObjectCollection',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
-        DynamicObjectCollection,
-        Cartographic,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         Event,
+        DynamicObjectCollection,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

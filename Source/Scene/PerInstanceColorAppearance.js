@@ -2,19 +2,19 @@
 define([
         '../Core/defaultValue',
         '../Core/VertexFormat',
-        './Appearance',
-        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS',
+        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
+        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
-        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS'
+        './Appearance'
     ], function(
         defaultValue,
         VertexFormat,
-        Appearance,
-        PerInstanceColorAppearanceVS,
         PerInstanceColorAppearanceFS,
+        PerInstanceColorAppearanceVS,
+        PerInstanceFlatColorAppearanceFS,
         PerInstanceFlatColorAppearanceVS,
-        PerInstanceFlatColorAppearanceFS) {
+        Appearance) {
     "use strict";
 
     /**
@@ -38,9 +38,9 @@ define([
      * var primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
      *     geometry : new Cesium.SimplePolylineGeometry({
-     *       positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(0.0, 0.0),
-     *         Cesium.Cartographic.fromDegrees(5.0, 0.0)
+     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     *         0.0, 0.0,
+     *         5.0, 0.0
      *       ])
      *     }),
      *     attributes : {

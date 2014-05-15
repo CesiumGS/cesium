@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/GridImageryProvider',
-         'Scene/GeographicTilingScheme',
-         'Scene/ImageryProvider',
-         'Scene/WebMercatorTilingScheme',
-         'Core/defined',
-         'ThirdParty/when'
-     ], function(
-         GridImageryProvider,
-         GeographicTilingScheme,
-         ImageryProvider,
-         WebMercatorTilingScheme,
-         defined,
-         when) {
+        'Scene/GridImageryProvider',
+        'Core/defined',
+        'Scene/GeographicTilingScheme',
+        'Scene/ImageryProvider',
+        'Scene/WebMercatorTilingScheme',
+        'ThirdParty/when'
+    ], function(
+        GridImageryProvider,
+        defined,
+        GeographicTilingScheme,
+        ImageryProvider,
+        WebMercatorTilingScheme,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

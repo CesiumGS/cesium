@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadBlob',
-             'Core/RequestErrorEvent'
-            ], function(
-             loadBlob,
-             RequestErrorEvent) {
+        'Core/loadBlob',
+        'Core/RequestErrorEvent'
+    ], function(
+        loadBlob,
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

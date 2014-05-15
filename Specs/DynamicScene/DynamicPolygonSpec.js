@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPolygon',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Color'
-         ], function(
-             DynamicPolygon,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Color) {
+        'DynamicScene/DynamicPolygon',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicPolygon,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

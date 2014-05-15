@@ -1,34 +1,34 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Color',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/NearFarScalar',
         '../Core/Matrix4',
+        '../Core/NearFarScalar',
         './HorizontalOrigin',
-        './VerticalOrigin',
         './SceneMode',
-        './SceneTransforms'
+        './SceneTransforms',
+        './VerticalOrigin'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Color,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        NearFarScalar,
         Matrix4,
+        NearFarScalar,
         HorizontalOrigin,
-        VerticalOrigin,
         SceneMode,
-        SceneTransforms) {
+        SceneTransforms,
+        VerticalOrigin) {
     "use strict";
 
     /**
@@ -742,7 +742,7 @@ define([
         var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
-        var po = Cartesian2.multiplyByScalar(pixelOffset, scene._context.uniformState.highResolutionSnapScale, scratchCartesian2);
+        var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 

@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DataSourceDisplay',
-         'Core/Iso8601',
-         'Core/JulianDate',
-         'DynamicScene/DataSourceCollection',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/MockDataSource'
-     ], function(
-         DataSourceDisplay,
-         Iso8601,
-         JulianDate,
-         DataSourceCollection,
-         createScene,
-         destroyScene,
-         MockDataSource) {
+        'DynamicScene/DataSourceDisplay',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'DynamicScene/DataSourceCollection',
+        'Specs/createScene',
+        'Specs/destroyScene',
+        'Specs/MockDataSource'
+    ], function(
+        DataSourceDisplay,
+        Iso8601,
+        JulianDate,
+        DataSourceCollection,
+        createScene,
+        destroyScene,
+        MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

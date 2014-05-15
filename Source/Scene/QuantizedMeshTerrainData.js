@@ -9,8 +9,8 @@ define([
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/TaskProcessor',
-        './TerrainMesh',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './TerrainMesh'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -21,8 +21,8 @@ define([
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        TerrainMesh,
-        when) {
+        when,
+        TerrainMesh) {
     "use strict";
 
     /**
@@ -35,24 +35,24 @@ define([
      * @alias QuantizedMeshTerrainData
      * @constructor
      *
-     * @param {Uint16Array} description.quantizedVertices The buffer containing the quantized mesh.
-     * @param {Uint16Array} description.indices The indices specifying how the quantized vertices are linked
+     * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
+     * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
-     * @param {Number} description.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
-     * @param {Number} description.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
-     * @param {BoundingSphere} description.boundingSphere A sphere bounding all of the vertices in the mesh.
-     * @param {Cartesian3} description.horizonOcclusionPoint The horizon occlusion point of the mesh.  If this point
+     * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
+     * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
+     * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.
+     * @param {Cartesian3} options.horizonOcclusionPoint The horizon occlusion point of the mesh.  If this point
      *                      is below the horizon, the entire tile is assumed to be below the horizon as well.
      *                      The point is expressed in ellipsoid-scaled coordinates.
-     * @param {Number[]} description.westIndices The indices of the vertices on the western edge of the tile.
-     * @param {Number[]} description.southIndices The indices of the vertices on the southern edge of the tile.
-     * @param {Number[]} description.eastIndices The indices of the vertices on the eastern edge of the tile.
-     * @param {Number[]} description.northIndices The indices of the vertices on the northern edge of the tile.
-     * @param {Number} description.westSkirtHeight The height of the skirt to add on the western edge of the tile.
-     * @param {Number} description.southSkirtHeight The height of the skirt to add on the southern edge of the tile.
-     * @param {Number} description.eastSkirtHeight The height of the skirt to add on the eastern edge of the tile.
-     * @param {Number} description.northSkirtHeight The height of the skirt to add on the northern edge of the tile.
-     * @param {Number} [description.childTileMask=15] A bit mask indicating which of this tile's four children exist.
+     * @param {Number[]} options.westIndices The indices of the vertices on the western edge of the tile.
+     * @param {Number[]} options.southIndices The indices of the vertices on the southern edge of the tile.
+     * @param {Number[]} options.eastIndices The indices of the vertices on the eastern edge of the tile.
+     * @param {Number[]} options.northIndices The indices of the vertices on the northern edge of the tile.
+     * @param {Number} options.westSkirtHeight The height of the skirt to add on the western edge of the tile.
+     * @param {Number} options.southSkirtHeight The height of the skirt to add on the southern edge of the tile.
+     * @param {Number} options.eastSkirtHeight The height of the skirt to add on the eastern edge of the tile.
+     * @param {Number} options.northSkirtHeight The height of the skirt to add on the northern edge of the tile.
+     * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
      *                 instead upsampled from the parent.  The bit values are as follows:
@@ -63,7 +63,7 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
-     * @param {Boolean} [description.createdByUpsampling=false] True if this instance was created by upsampling another instance;
+     * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
      * @see TerrainData
@@ -94,61 +94,61 @@ define([
      *     northSkirtHeight : 1.0
      * });
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(description) {
+    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
-        if (!defined(description) || !defined(description.quantizedVertices)) {
-            throw new DeveloperError('description.quantizedVertices is required.');
+        if (!defined(options) || !defined(options.quantizedVertices)) {
+            throw new DeveloperError('options.quantizedVertices is required.');
         }
-        if (!defined(description.indices)) {
-            throw new DeveloperError('description.indices is required.');
+        if (!defined(options.indices)) {
+            throw new DeveloperError('options.indices is required.');
         }
-        if (!defined(description.minimumHeight)) {
-            throw new DeveloperError('description.minimumHeight is required.');
+        if (!defined(options.minimumHeight)) {
+            throw new DeveloperError('options.minimumHeight is required.');
         }
-        if (!defined(description.maximumHeight)) {
-            throw new DeveloperError('description.maximumHeight is required.');
+        if (!defined(options.maximumHeight)) {
+            throw new DeveloperError('options.maximumHeight is required.');
         }
-        if (!defined(description.maximumHeight)) {
-            throw new DeveloperError('description.maximumHeight is required.');
+        if (!defined(options.maximumHeight)) {
+            throw new DeveloperError('options.maximumHeight is required.');
         }
-        if (!defined(description.boundingSphere)) {
-            throw new DeveloperError('description.boundingSphere is required.');
+        if (!defined(options.boundingSphere)) {
+            throw new DeveloperError('options.boundingSphere is required.');
         }
-        if (!defined(description.horizonOcclusionPoint)) {
-            throw new DeveloperError('description.horizonOcclusionPoint is required.');
+        if (!defined(options.horizonOcclusionPoint)) {
+            throw new DeveloperError('options.horizonOcclusionPoint is required.');
         }
-        if (!defined(description.westIndices)) {
-            throw new DeveloperError('description.westIndices is required.');
+        if (!defined(options.westIndices)) {
+            throw new DeveloperError('options.westIndices is required.');
         }
-        if (!defined(description.southIndices)) {
-            throw new DeveloperError('description.southIndices is required.');
+        if (!defined(options.southIndices)) {
+            throw new DeveloperError('options.southIndices is required.');
         }
-        if (!defined(description.eastIndices)) {
-            throw new DeveloperError('description.eastIndices is required.');
+        if (!defined(options.eastIndices)) {
+            throw new DeveloperError('options.eastIndices is required.');
         }
-        if (!defined(description.northIndices)) {
-            throw new DeveloperError('description.northIndices is required.');
+        if (!defined(options.northIndices)) {
+            throw new DeveloperError('options.northIndices is required.');
         }
-        if (!defined(description.westSkirtHeight)) {
-            throw new DeveloperError('description.westSkirtHeight is required.');
+        if (!defined(options.westSkirtHeight)) {
+            throw new DeveloperError('options.westSkirtHeight is required.');
         }
-        if (!defined(description.southSkirtHeight)) {
-            throw new DeveloperError('description.southSkirtHeight is required.');
+        if (!defined(options.southSkirtHeight)) {
+            throw new DeveloperError('options.southSkirtHeight is required.');
         }
-        if (!defined(description.eastSkirtHeight)) {
-            throw new DeveloperError('description.eastSkirtHeight is required.');
+        if (!defined(options.eastSkirtHeight)) {
+            throw new DeveloperError('options.eastSkirtHeight is required.');
         }
-        if (!defined(description.northSkirtHeight)) {
-            throw new DeveloperError('description.northSkirtHeight is required.');
+        if (!defined(options.northSkirtHeight)) {
+            throw new DeveloperError('options.northSkirtHeight is required.');
         }
         //>>includeEnd('debug');
 
-        this._quantizedVertices = description.quantizedVertices;
-        this._indices = description.indices;
-        this._minimumHeight = description.minimumHeight;
-        this._maximumHeight = description.maximumHeight;
-        this._boundingSphere = description.boundingSphere;
-        this._horizonOcclusionPoint = description.horizonOcclusionPoint;
+        this._quantizedVertices = options.quantizedVertices;
+        this._indices = options.indices;
+        this._minimumHeight = options.minimumHeight;
+        this._maximumHeight = options.maximumHeight;
+        this._boundingSphere = options.boundingSphere;
+        this._horizonOcclusionPoint = options.horizonOcclusionPoint;
 
         var vertexCount = this._quantizedVertices.length / 3;
         var uValues = this._uValues = this._quantizedVertices.subarray(0, vertexCount);
@@ -164,20 +164,20 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        this._westIndices = sortIndicesIfNecessary(description.westIndices, sortByV);
-        this._southIndices = sortIndicesIfNecessary(description.southIndices, sortByU);
-        this._eastIndices = sortIndicesIfNecessary(description.eastIndices, sortByV);
-        this._northIndices = sortIndicesIfNecessary(description.northIndices, sortByU);
+        this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV);
+        this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU);
+        this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV);
+        this._northIndices = sortIndicesIfNecessary(options.northIndices, sortByU);
 
-        this._westSkirtHeight = description.westSkirtHeight;
-        this._southSkirtHeight = description.southSkirtHeight;
-        this._eastSkirtHeight = description.eastSkirtHeight;
-        this._northSkirtHeight = description.northSkirtHeight;
+        this._westSkirtHeight = options.westSkirtHeight;
+        this._southSkirtHeight = options.southSkirtHeight;
+        this._eastSkirtHeight = options.eastSkirtHeight;
+        this._northSkirtHeight = options.northSkirtHeight;
 
-        this._childTileMask = defaultValue(description.childTileMask, 15);
+        this._childTileMask = defaultValue(options.childTileMask, 15);
 
-        this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
-        this._waterMask = description.waterMask;
+        this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+        this._waterMask = options.waterMask;
     };
 
     defineProperties(QuantizedMeshTerrainData.prototype, {

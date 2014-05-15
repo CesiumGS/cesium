@@ -2,14 +2,13 @@
 define([
         '../Core/Cartesian3',
         '../Core/defineProperties',
-        '../Core/Matrix4',
-        './UniformDatatype'
-    ],function(
+        '../Core/Matrix4'
+    ], function(
         Cartesian3,
         defineProperties,
-        Matrix4,
-        UniformDatatype) {
+        Matrix4) {
     "use strict";
+    /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
 
@@ -32,8 +31,32 @@ define([
         }
     });
 
+    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
+    if (typeof WebGLRenderingContext === 'undefined') {
+        return {};
+    }
+
+    var datatypeToGlsl = {};
+    datatypeToGlsl[WebGLRenderingContext.FLOAT] = 'float';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC2] = 'vec2';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC3] = 'vec3';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC4] = 'vec4';
+    datatypeToGlsl[WebGLRenderingContext.INT] = 'int';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC2] = 'ivec2';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC3] = 'ivec3';
+    datatypeToGlsl[WebGLRenderingContext.INT_VEC4] = 'ivec4';
+    datatypeToGlsl[WebGLRenderingContext.BOOL] = 'bool';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC2] = 'bvec2';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC3] = 'bvec3';
+    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC4] = 'bvec4';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT2] = 'mat2';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT3] = 'mat3';
+    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT4] = 'mat4';
+    datatypeToGlsl[WebGLRenderingContext.SAMPLER_2D] = 'sampler2D';
+    datatypeToGlsl[WebGLRenderingContext.SAMPLER_CUBE] = 'samplerCube';
+
     AutomaticUniform.prototype.getDeclaration = function(name) {
-        var declaration = 'uniform ' + this._datatype.glsl + ' ' + name;
+        var declaration = 'uniform ' + datatypeToGlsl[this._datatype] + ' ' + name;
 
         var size = this._size;
         if (size === 1) {
@@ -45,6 +68,9 @@ define([
         return declaration;
     };
 
+    /**
+     * @private
+     */
     var AutomaticUniforms = {
         /**
          * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
@@ -66,7 +92,7 @@ define([
          */
         czm_viewport : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC4,
+            datatype : WebGLRenderingContext.FLOAT_VEC4,
             getValue : function(uniformState) {
                 return uniformState.viewportCartesian4;
             }
@@ -101,7 +127,7 @@ define([
          */
         czm_viewportOrthographic : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewportOrthographic;
             }
@@ -143,7 +169,7 @@ define([
          */
         czm_viewportTransformation : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewportTransformation;
             }
@@ -170,7 +196,7 @@ define([
          */
         czm_model : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.model;
             }
@@ -196,7 +222,7 @@ define([
          */
         czm_inverseModel : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModel;
             }
@@ -225,7 +251,7 @@ define([
          */
         czm_view : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.view;
             }
@@ -253,7 +279,7 @@ define([
          */
         czm_view3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.view3D;
             }
@@ -280,7 +306,7 @@ define([
          */
         czm_viewRotation : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.viewRotation;
             }
@@ -308,7 +334,7 @@ define([
          */
         czm_viewRotation3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.viewRotation3D;
             }
@@ -334,7 +360,7 @@ define([
          */
         czm_inverseView : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseView;
             }
@@ -362,7 +388,7 @@ define([
          */
         czm_inverseView3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseView3D;
             }
@@ -389,7 +415,7 @@ define([
          */
         czm_inverseViewRotation : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseViewRotation;
             }
@@ -417,7 +443,7 @@ define([
          */
         czm_inverseViewRotation3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseViewRotation3D;
             }
@@ -445,7 +471,7 @@ define([
          */
         czm_projection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.projection;
             }
@@ -471,7 +497,7 @@ define([
          */
         czm_inverseProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseProjection;
             }
@@ -482,7 +508,7 @@ define([
          */
         czm_inverseProjectionOIT : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseProjectionOIT;
             }
@@ -511,7 +537,7 @@ define([
          */
         czm_infiniteProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.infiniteProjection;
             }
@@ -545,7 +571,7 @@ define([
          */
         czm_modelView : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelView;
             }
@@ -579,7 +605,7 @@ define([
          */
         czm_modelView3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelView3D;
             }
@@ -613,7 +639,7 @@ define([
          */
         czm_modelViewRelativeToEye : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewRelativeToEye;
             }
@@ -638,7 +664,7 @@ define([
          */
         czm_inverseModelView : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelView;
             }
@@ -667,7 +693,7 @@ define([
          */
         czm_inverseModelView3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelView3D;
             }
@@ -699,7 +725,7 @@ define([
          */
         czm_viewProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewProjection;
             }
@@ -725,7 +751,7 @@ define([
          */
         czm_inverseViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseViewProjection;
             }
@@ -760,7 +786,7 @@ define([
          */
         czm_modelViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewProjection;
             }
@@ -786,7 +812,7 @@ define([
          */
         czm_inverseModelViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelViewProjection;
             }
@@ -821,7 +847,7 @@ define([
          */
         czm_modelViewProjectionRelativeToEye : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewProjectionRelativeToEye;
             }
@@ -855,7 +881,7 @@ define([
          */
         czm_modelViewInfiniteProjection : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT4,
+            datatype : WebGLRenderingContext.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewInfiniteProjection;
             }
@@ -884,7 +910,7 @@ define([
          */
         czm_normal : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.normal;
             }
@@ -916,7 +942,7 @@ define([
          */
         czm_normal3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.normal3D;
             }
@@ -944,7 +970,7 @@ define([
          */
         czm_inverseNormal : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseNormal;
             }
@@ -974,7 +1000,7 @@ define([
          */
         czm_inverseNormal3D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseNormal3D;
             }
@@ -991,7 +1017,7 @@ define([
          */
         czm_eyeHeight2D : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC2,
+            datatype : WebGLRenderingContext.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.eyeHeight2D;
             }
@@ -1017,7 +1043,7 @@ define([
          */
         czm_entireFrustum : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC2,
+            datatype : WebGLRenderingContext.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.entireFrustum;
             }
@@ -1043,7 +1069,7 @@ define([
          */
         czm_currentFrustum : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC2,
+            datatype : WebGLRenderingContext.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.currentFrustum;
             }
@@ -1065,7 +1091,7 @@ define([
          */
         czm_sunPositionWC : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunPositionWC;
             }
@@ -1086,7 +1112,7 @@ define([
          */
         czm_sunPositionColumbusView : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunPositionColumbusView;
             }
@@ -1112,7 +1138,7 @@ define([
          */
         czm_sunDirectionEC : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunDirectionEC;
             }
@@ -1135,7 +1161,7 @@ define([
          */
         czm_sunDirectionWC : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunDirectionWC;
             }
@@ -1160,7 +1186,7 @@ define([
          */
         czm_moonDirectionEC : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.moonDirectionEC;
             }
@@ -1184,7 +1210,7 @@ define([
          */
         czm_encodedCameraPositionMCHigh : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.encodedCameraPositionMCHigh;
             }
@@ -1208,7 +1234,7 @@ define([
          */
         czm_encodedCameraPositionMCLow : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.encodedCameraPositionMCLow;
             }
@@ -1226,7 +1252,7 @@ define([
          */
         czm_viewerPositionWC : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_VEC3,
+            datatype : WebGLRenderingContext.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return Matrix4.getTranslation(uniformState.inverseView, viewerPositionWCScratch);
             }
@@ -1245,7 +1271,7 @@ define([
          */
         czm_frameNumber : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT,
+            datatype : WebGLRenderingContext.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.frameNumber;
             }
@@ -1267,7 +1293,7 @@ define([
          */
         czm_morphTime : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT,
+            datatype : WebGLRenderingContext.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.morphTime;
             }
@@ -1297,7 +1323,7 @@ define([
          */
         czm_sceneMode : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT,
+            datatype : WebGLRenderingContext.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.mode.value;
             }
@@ -1322,9 +1348,26 @@ define([
          */
         czm_temeToPseudoFixed : new AutomaticUniform({
             size : 1,
-            datatype : UniformDatatype.FLOAT_MAT3,
+            datatype : WebGLRenderingContext.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.temeToPseudoFixedMatrix;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
+         *
+         * @alias czm_resolutionScale
+         * @glslUniform
+         *
+         * @example
+         * uniform float czm_resolutionScale;
+         */
+        czm_resolutionScale : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLRenderingContext.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.resolutionScale;
             }
         })
     };

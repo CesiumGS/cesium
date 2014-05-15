@@ -1,24 +1,25 @@
 /*global define*/
-define(['../Core/AssociativeArray',
+define([
+        '../Core/AssociativeArray',
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/TimeInterval',
-        '../Core/Iso8601',
         '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/Iso8601',
         '../Core/RuntimeError',
+        '../Core/TimeInterval',
         './DynamicObject'
     ], function(
         AssociativeArray,
         createGuid,
         defined,
         defineProperties,
-        Event,
-        TimeInterval,
-        Iso8601,
         DeveloperError,
+        Event,
+        Iso8601,
         RuntimeError,
+        TimeInterval,
         DynamicObject) {
     "use strict";
 

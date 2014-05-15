@@ -30,9 +30,8 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = scene.globe.ellipsoid;
     
-    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var center = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var radius = 200000.0;
     
     // Outline of red circle
@@ -77,7 +76,7 @@ require(['Cesium'], function(Cesium) {
     }));
     
     // Outline of green extruded circle
-    center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 40.0));
+    center = Cesium.Cartesian3.fromDegrees(-95.0, 40.0);
     radius = 100000.0;
     var height = 100000.0;
     var extrudedHeight = 350000.0;

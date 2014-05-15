@@ -1,40 +1,40 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Cartesian3',
-        '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
-        '../Core/GeometryPipeline',
-        '../Core/PrimitiveType',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidGeometry',
+        '../Core/GeometryPipeline',
+        '../Core/VertexFormat',
         '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
         '../Renderer/createShaderSource',
-        '../Scene/SceneMode',
+        '../Renderer/DrawCommand',
+        '../Shaders/SkyAtmosphereFS',
         '../Shaders/SkyAtmosphereVS',
-        '../Shaders/SkyAtmosphereFS'
+        './BlendingState',
+        './CullFace',
+        './SceneMode'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian3,
-        EllipsoidGeometry,
         destroyObject,
-        GeometryPipeline,
-        PrimitiveType,
         Ellipsoid,
+        EllipsoidGeometry,
+        GeometryPipeline,
+        VertexFormat,
         BufferUsage,
-        DrawCommand,
-        CullFace,
-        BlendingState,
         createShaderSource,
-        SceneMode,
+        DrawCommand,
+        SkyAtmosphereFS,
         SkyAtmosphereVS,
-        SkyAtmosphereFS) {
+        BlendingState,
+        CullFace,
+        SceneMode) {
     "use strict";
 
     /**
@@ -67,8 +67,9 @@ define([
         this.show = true;
 
         this._ellipsoid = ellipsoid;
-        this._command = new DrawCommand();
-        this._command.owner = this;
+        this._command = new DrawCommand({
+            owner : this
+        });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
@@ -145,14 +146,14 @@ define([
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025),
                 slicePartitions : 256,
-                stackPartitions : 256
+                stackPartitions : 256,
+                vertexFormat : VertexFormat.POSITION_ONLY
             }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
                 attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
-            command.primitiveType = PrimitiveType.TRIANGLES;
             command.renderState = context.createRenderState({
                 cull : {
                     enabled : true,
@@ -161,18 +162,17 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var shaderCache = context.shaderCache;
             var vs = createShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromSpace = context.createShaderProgram(vs, SkyAtmosphereFS);
 
             vs = createShaderSource({
                 defines : ['SKY_FROM_ATMOSPHERE'],
                 sources : [SkyAtmosphereVS]
             });
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
+            this._spSkyFromAtmosphere = context.createShaderProgram(vs, SkyAtmosphereFS);
         }
 
         var cameraPosition = frameState.camera.positionWC;
@@ -229,8 +229,8 @@ define([
     SkyAtmosphere.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.release();
-        this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.release();
+        this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
+        this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
         return destroyObject(this);
     };
 

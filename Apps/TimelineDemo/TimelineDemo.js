@@ -1,31 +1,32 @@
 /*global document,window,define*/
-define(['dojo',
-        'dijit/dijit',
+define([
         'Core/Clock',
         'Core/ClockRange',
         'Core/Color',
         'Core/defined',
         'Core/JulianDate',
-        'Core/TimeInterval',
         'Core/requestAnimationFrame',
+        'Core/TimeInterval',
+        'dijit/dijit',
+        'dojo',
         'Widgets/Animation/Animation',
-        'Widgets/ClockViewModel',
         'Widgets/Animation/AnimationViewModel',
+        'Widgets/ClockViewModel',
         'Widgets/Timeline/Timeline'
     ], function(
-         dojo,
-         dijit,
-         Clock,
-         ClockRange,
-         Color,
-         defined,
-         JulianDate,
-         TimeInterval,
-         requestAnimationFrame,
-         Animation,
-         ClockViewModel,
-         AnimationViewModel,
-         Timeline) {
+        Clock,
+        ClockRange,
+        Color,
+        defined,
+        JulianDate,
+        requestAnimationFrame,
+        TimeInterval,
+        dijit,
+        dojo,
+        Animation,
+        AnimationViewModel,
+        ClockViewModel,
+        Timeline) {
     "use strict";
 
     var startDatePart, endDatePart, startTimePart, endTimePart;

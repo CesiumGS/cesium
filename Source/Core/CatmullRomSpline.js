@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './HermiteSpline',
         './Matrix4',
-        './Cartesian3',
-        './Cartesian4',
-        './Spline',
-        './HermiteSpline'
+        './Spline'
     ], function(
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
+        HermiteSpline,
         Matrix4,
-        Cartesian3,
-        Cartesian4,
-        Spline,
-        HermiteSpline) {
+        Spline) {
     "use strict";
 
     var scratchTimeVec = new Cartesian4();

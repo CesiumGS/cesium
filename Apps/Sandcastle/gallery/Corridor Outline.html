@@ -30,13 +30,12 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = scene.globe.ellipsoid;
     
     var width = 200000.0;
-    var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-100.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-105.0, 35.0)
+    var positions = Cesium.Cartesian3.fromDegreesArray([
+        -100.0, 40.0,
+        -105.0, 40.0,
+        -105.0, 35.0
     ]);
     
     // Outline of red corridor
@@ -65,10 +64,10 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Outline of blue corridor
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-90.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-95.0, 35.0)
+    positions = Cesium.Cartesian3.fromDegreesArray([
+        -90.0, 40.0,
+        -95.0, 40.0,
+        -95.0, 35.0
     ]);
     var extrudedHeight = 100000.0;
     

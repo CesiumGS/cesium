@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/SceneTransforms',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         SceneTransforms,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         createScene,
-         destroyScene) {
+        'Scene/SceneTransforms',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        SceneTransforms,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -5,9 +5,9 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -23,30 +23,30 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
-        '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../ThirdParty/gltfDefaults',
+        './BlendingState',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
         './ModelMesh',
         './ModelNode',
         './ModelTypes',
-        './SceneMode',
-        '../ThirdParty/gltfDefaults'
+        './Pass',
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         combine,
+        defaultValue,
         defined,
         defineProperties,
-        defaultValue,
         destroyObject,
         DeveloperError,
         Event,
@@ -62,21 +62,21 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
-        BlendingState,
         BufferUsage,
         createShaderSource,
         DrawCommand,
-        Pass,
         TextureMinificationFilter,
         TextureWrap,
+        gltfDefaults,
+        BlendingState,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
         ModelMesh,
         ModelNode,
         ModelTypes,
-        SceneMode,
-        gltfDefaults) {
+        Pass,
+        SceneMode) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -217,8 +217,7 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
@@ -477,8 +476,7 @@ define([
      * }));
      *
      * // Example 2. Create model and provide all properties and events
-     * var origin = ellipsoid.cartographicToCartesian(
-     *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
@@ -942,7 +940,7 @@ define([
         var vs = shaders[program.vertexShader];
         var fs = shaders[program.fragmentShader];
 
-        model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+        model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -950,7 +948,7 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
-            model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
         }
     }
 
@@ -1730,19 +1728,20 @@ define([
                     mesh : runtimeMeshes[mesh.name]
                 };
 
-                var command = new DrawCommand();
-                command.boundingVolume = new BoundingSphere(); // updated in update()
-                command.modelMatrix = new Matrix4();           // computed in update()
-                command.primitiveType = primitive.primitive;
-                command.vertexArray = vertexArray;
-                command.count = count;
-                command.offset = offset;
-                command.shaderProgram = rendererPrograms[instanceProgram.program];
-                command.uniformMap = uniformMap;
-                command.renderState = rs;
-                command.owner = owner;
-                command.debugShowBoundingVolume = debugShowBoundingVolume;
-                command.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                var command = new DrawCommand({
+                    boundingVolume : new BoundingSphere(), // updated in update()
+                    modelMatrix : new Matrix4(),           // computed in update()
+                    primitiveType : primitive.primitive,
+                    vertexArray : vertexArray,
+                    count : count,
+                    offset : offset,
+                    shaderProgram : rendererPrograms[instanceProgram.program],
+                    uniformMap : uniformMap,
+                    renderState : rs,
+                    owner : owner,
+                    debugShowBoundingVolume : debugShowBoundingVolume,
+                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                });
                 commands.push(command);
 
                 var pickCommand;
@@ -1756,18 +1755,19 @@ define([
                             czm_pickColor : createPickColorFunction(pickId.color)
                         });
 
-                    pickCommand = new DrawCommand();
-                    pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand.modelMatrix = new Matrix4();           // computed in update()
-                    pickCommand.primitiveType = primitive.primitive;
-                    pickCommand.vertexArray = vertexArray;
-                    pickCommand.count = count;
-                    pickCommand.offset = offset;
-                    pickCommand.shaderProgram = rendererPickPrograms[instanceProgram.program];
-                    pickCommand.uniformMap = pickUniformMap;
-                    pickCommand.renderState = rs;
-                    pickCommand.owner = owner;
-                    pickCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    pickCommand = new DrawCommand({
+                        boundingVolume : new BoundingSphere(), // updated in update()
+                        modelMatrix : new Matrix4(),           // computed in update()
+                        primitiveType : primitive.primitive,
+                        vertexArray : vertexArray,
+                        count : count,
+                        offset : offset,
+                        shaderProgram : rendererPickPrograms[instanceProgram.program],
+                        uniformMap : pickUniformMap,
+                        renderState : rs,
+                        owner : owner,
+                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    });
                     pickCommands.push(pickCommand);
                 }
 
@@ -2203,7 +2203,7 @@ define([
     function release(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                property[name].release();
+                property[name].destroy();
             }
         }
     }

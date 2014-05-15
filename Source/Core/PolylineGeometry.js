@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
         './BoundingSphere',
         './Cartesian3',
-        './PolylinePipeline',
-        './VertexFormat',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color'
+        './IndexDatatype',
+        './PolylinePipeline',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
         BoundingSphere,
         Cartesian3,
-        PolylinePipeline,
-        VertexFormat,
+        Color,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color) {
+        IndexDatatype,
+        PolylinePipeline,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -53,10 +53,10 @@ define([
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.PolylineGeometry({
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *     Cesium.Cartographic.fromDegrees(0.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 5.0)
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     0.0, 0.0,
+     *     5.0, 0.0,
+     *     5.0, 5.0
      *   ]),
      *   width : 10.0
      * });

@@ -3,18 +3,18 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/VertexFormat',
-        './Material',
-        './Appearance',
+        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
+        './Appearance',
+        './Material'
     ], function(
         defaultValue,
         defined,
         VertexFormat,
-        Material,
-        Appearance,
+        EllipsoidSurfaceAppearanceFS,
         EllipsoidSurfaceAppearanceVS,
-        EllipsoidSurfaceAppearanceFS) {
+        Appearance,
+        Material) {
     "use strict";
 
     /**

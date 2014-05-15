@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/VertexArrayFacade',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Renderer/BufferUsage'
-     ], function(
-         VertexArrayFacade,
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         BufferUsage) {
+        'Renderer/VertexArrayFacade',
+        'Core/ComponentDatatype',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        VertexArrayFacade,
+        ComponentDatatype,
+        BufferUsage,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

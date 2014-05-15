@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/ImageMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Cartesian2',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-     ], function(
-             ImageMaterialProperty,
-             ConstantProperty,
-             TimeIntervalCollectionProperty,
-             Cartesian2,
-             JulianDate,
-             TimeInterval) {
+        'DynamicScene/ImageMaterialProperty',
+        'Core/Cartesian2',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/TimeIntervalCollectionProperty'
+    ], function(
+        ImageMaterialProperty,
+        Cartesian2,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty,
+        TimeIntervalCollectionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

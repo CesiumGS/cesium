@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/HeightmapTerrainData',
-         'Scene/GeographicTilingScheme',
-         'Scene/TerrainData',
-         'Core/defined',
-         'ThirdParty/when'
-     ], function(
-         HeightmapTerrainData,
-         GeographicTilingScheme,
-         TerrainData,
-         defined,
-         when) {
+        'Scene/HeightmapTerrainData',
+        'Core/defined',
+        'Scene/GeographicTilingScheme',
+        'Scene/TerrainData',
+        'ThirdParty/when'
+    ], function(
+        HeightmapTerrainData,
+        defined,
+        GeographicTilingScheme,
+        TerrainData,
+        when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CorridorOutlineGeometry',
-         'Core/CornerType',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-         CorridorOutlineGeometry,
-         CornerType,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/CorridorOutlineGeometry',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/CornerType',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        CorridorOutlineGeometry,
+        Cartesian3,
+        Cartographic,
+        CornerType,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

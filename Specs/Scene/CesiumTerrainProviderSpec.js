@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CesiumTerrainProvider',
-         'Core/loadWithXhr',
-         'Core/defined',
-         'Core/DefaultProxy',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/HeightmapTerrainData',
-         'Scene/QuantizedMeshTerrainData',
-         'Scene/TerrainProvider',
-         'ThirdParty/when'
-     ], function(
-         CesiumTerrainProvider,
-         loadWithXhr,
-         defined,
-         DefaultProxy,
-         Ellipsoid,
-         CesiumMath,
-         GeographicTilingScheme,
-         HeightmapTerrainData,
-         QuantizedMeshTerrainData,
-         TerrainProvider,
-         when) {
+        'Scene/CesiumTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Scene/GeographicTilingScheme',
+        'Scene/HeightmapTerrainData',
+        'Scene/QuantizedMeshTerrainData',
+        'Scene/TerrainProvider',
+        'ThirdParty/when'
+    ], function(
+        CesiumTerrainProvider,
+        DefaultProxy,
+        defined,
+        Ellipsoid,
+        loadWithXhr,
+        CesiumMath,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        QuantizedMeshTerrainData,
+        TerrainProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
+        './ComponentDatatype',
         './defaultValue',
         './DeveloperError',
-        './Cartesian3',
-        './Math',
         './Ellipsoid',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './IndexDatatype',
+        './Math',
+        './PrimitiveType'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        ComponentDatatype,
         defaultValue,
         DeveloperError,
-        Cartesian3,
-        CesiumMath,
         Ellipsoid,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        IndexDatatype,
+        CesiumMath,
+        PrimitiveType) {
     "use strict";
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);

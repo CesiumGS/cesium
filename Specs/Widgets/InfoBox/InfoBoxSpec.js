@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/InfoBox/InfoBox',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         InfoBox,
-         Ellipsoid,
-         createScene,
-         destroyScene) {
+        'Widgets/InfoBox/InfoBox',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        InfoBox,
+        Ellipsoid,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

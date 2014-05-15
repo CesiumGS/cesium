@@ -4,27 +4,27 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Rectangle',
         '../Core/HeightmapTessellator',
         '../Core/Math',
+        '../Core/Rectangle',
         '../Core/TaskProcessor',
+        '../ThirdParty/when',
         './GeographicTilingScheme',
         './TerrainMesh',
-        './TerrainProvider',
-        '../ThirdParty/when'
+        './TerrainProvider'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Rectangle,
         HeightmapTessellator,
         CesiumMath,
+        Rectangle,
         TaskProcessor,
+        when,
         GeographicTilingScheme,
         TerrainMesh,
-        TerrainProvider,
-        when) {
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -34,10 +34,10 @@ define([
      * @alias HeightmapTerrainData
      * @constructor
      *
-     * @param {TypedArray} description.buffer The buffer containing height data.
-     * @param {Number} description.width The width (longitude direction) of the heightmap, in samples.
-     * @param {Number} description.height The height (latitude direction) of the heightmap, in samples.
-     * @param {Number} [description.childTileMask=15] A bit mask indicating which of this tile's four children exist.
+     * @param {TypedArray} options.buffer The buffer containing height data.
+     * @param {Number} options.width The width (longitude direction) of the heightmap, in samples.
+     * @param {Number} options.height The height (latitude direction) of the heightmap, in samples.
+     * @param {Number} [options.childTileMask=15] A bit mask indicating which of this tile's four children exist.
      *                 If a child's bit is set, geometry will be requested for that tile as well when it
      *                 is needed.  If the bit is cleared, the child tile is not requested and geometry is
      *                 instead upsampled from the parent.  The bit values are as follows:
@@ -48,29 +48,29 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
-     * @param {Object} [description.structure] An object describing the structure of the height data.
-     * @param {Number} [description.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
+     * @param {Object} [options.structure] An object describing the structure of the height data.
+     * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
      *                 height after multiplying by the scale.
-     * @param {Number} [description.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
+     * @param {Number} [options.structure.heightOffset=0.0] The offset to add to the scaled height to obtain the final
      *                 height in meters.  The offset is added after the height sample is multiplied by the
      *                 heightScale.
-     * @param {Number} [description.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
+     * @param {Number} [options.structure.elementsPerHeight=1] The number of elements in the buffer that make up a single height
      *                 sample.  This is usually 1, indicating that each element is a separate height sample.  If
      *                 it is greater than 1, that number of elements together form the height sample, which is
      *                 computed according to the structure.elementMultiplier and structure.isBigEndian properties.
-     * @param {Number} [description.structure.stride=1] The number of elements to skip to get from the first element of
+     * @param {Number} [options.structure.stride=1] The number of elements to skip to get from the first element of
      *                 one height to the first element of the next height.
-     * @param {Number} [description.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
+     * @param {Number} [options.structure.elementMultiplier=256.0] The multiplier used to compute the height value when the
      *                 stride property is greater than 1.  For example, if the stride is 4 and the strideMultiplier
      *                 is 256, the height is computed as follows:
      *                 `height = buffer[index] + buffer[index + 1] * 256 + buffer[index + 2] * 256 * 256 + buffer[index + 3] * 256 * 256 * 256`
      *                 This is assuming that the isBigEndian property is false.  If it is true, the order of the
      *                 elements is reversed.
-     * @param {Boolean} [description.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
+     * @param {Boolean} [options.structure.isBigEndian=false] Indicates endianness of the elements in the buffer when the
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
-     * @param {Boolean} [description.createdByUpsampling=false] True if this instance was created by upsampling another instance;
+     * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
      * @see TerrainData
@@ -91,26 +91,26 @@ define([
      *   waterMask : waterMask
      * });
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(description) {
+    var HeightmapTerrainData = function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.buffer)) {
-            throw new DeveloperError('description.buffer is required.');
+        if (!defined(options) || !defined(options.buffer)) {
+            throw new DeveloperError('options.buffer is required.');
         }
-        if (!defined(description.width)) {
-            throw new DeveloperError('description.width is required.');
+        if (!defined(options.width)) {
+            throw new DeveloperError('options.width is required.');
         }
-        if (!defined(description.height)) {
-            throw new DeveloperError('description.height is required.');
+        if (!defined(options.height)) {
+            throw new DeveloperError('options.height is required.');
         }
         //>>includeEnd('debug');
 
-        this._buffer = description.buffer;
-        this._width = description.width;
-        this._height = description.height;
-        this._childTileMask = defaultValue(description.childTileMask, 15);
+        this._buffer = options.buffer;
+        this._width = options.width;
+        this._height = options.height;
+        this._childTileMask = defaultValue(options.childTileMask, 15);
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
-        var structure = description.structure;
+        var structure = options.structure;
         if (!defined(structure)) {
             structure = defaultStructure;
         } else if (structure !== defaultStructure) {
@@ -123,8 +123,8 @@ define([
         }
 
         this._structure = structure;
-        this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
-        this._waterMask = description.waterMask;
+        this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
+        this._waterMask = options.waterMask;
     };
 
     defineProperties(HeightmapTerrainData.prototype, {

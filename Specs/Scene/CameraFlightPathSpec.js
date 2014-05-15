@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CameraFlightPath',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Rectangle',
-         'Core/Matrix4',
-         'Scene/OrthographicFrustum',
-         'Scene/SceneMode',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function (
-         CameraFlightPath,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         Rectangle,
-         Matrix4,
-         OrthographicFrustum,
-         SceneMode,
-         createScene,
-         destroyScene) {
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Scene/CameraFlightPath',
+        'Scene/OrthographicFrustum',
+        'Scene/SceneMode',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        CameraFlightPath,
+        OrthographicFrustum,
+        SceneMode,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

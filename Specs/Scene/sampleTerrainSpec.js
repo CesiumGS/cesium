@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'Scene/sampleTerrain',
-             'Core/Cartographic',
-             'Scene/CesiumTerrainProvider',
-             'ThirdParty/when'
-            ], function(
-             sampleTerrain,
-             Cartographic,
-             CesiumTerrainProvider,
-             when) {
+        'Scene/sampleTerrain',
+        'Core/Cartographic',
+        'Scene/CesiumTerrainProvider',
+        'ThirdParty/when'
+    ], function(
+        sampleTerrain,
+        Cartographic,
+        CesiumTerrainProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
