@@ -1,22 +1,22 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './NavigationHelpButtonViewModel',
-        '../../ThirdParty/knockout'
-], function (
+        './NavigationHelpButtonViewModel'
+    ], function(
         buildModuleUrl,
-        defineProperties,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        NavigationHelpButtonViewModel,
-        knockout) {
+        NavigationHelpButtonViewModel) {
     "use strict";
 
     /**
@@ -26,8 +26,8 @@ define([
      * @alias NavigationHelpButton
      * @constructor
      *
-     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
-     * @param {Boolean} [description.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
+     * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+     * @param {Boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -39,18 +39,18 @@ define([
      *     container : 'navigationHelpButtonContainer'
      * });
      */
-    var NavigationHelpButton = function (description) {
+    var NavigationHelpButton = function (options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.container)) {
-            throw new DeveloperError('description.container is required.');
+        if (!defined(options) || !defined(options.container)) {
+            throw new DeveloperError('options.container is required.');
         }
         //>>includeEnd('debug');
 
-        var container = getElement(description.container);
+        var container = getElement(options.container);
 
         var viewModel = new NavigationHelpButtonViewModel();
 
-        if (description.instructionsInitiallyVisible) {
+        if (options.instructionsInitiallyVisible) {
             viewModel.showInstructions = true;
         }
 

@@ -6,14 +6,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Rectangle',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
         '../../Scene/Camera',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         Cartesian3,
         defaultValue,
@@ -21,14 +21,14 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         Matrix4,
+        Rectangle,
         Camera,
         CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     function viewHome(scene, ellipsoid, duration) {
@@ -42,10 +42,10 @@ define([
             scene.completeMorph();
         }
         var flight;
-        var description;
+        var options;
 
         if (mode === SceneMode.SCENE2D) {
-            description = {
+            options = {
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
                 endReferenceFrame : new Matrix4(0, 0, 1, 0,
@@ -53,18 +53,18 @@ define([
                                                 0, 1, 0, 0,
                                                 0, 0, 0, 1)
             };
-            flight = CameraFlightPath.createAnimationRectangle(scene, description);
+            flight = CameraFlightPath.createAnimationRectangle(scene, options);
             scene.animations.add(flight);
         } else if (mode === SceneMode.SCENE3D) {
             var defaultCamera = new Camera(scene);
-            description = {
+            options = {
                 destination : defaultCamera.position,
                 duration : duration,
                 up : defaultCamera.up,
                 direction : defaultCamera.direction,
                 endReferenceFrame : Matrix4.IDENTITY
             };
-            flight = CameraFlightPath.createAnimation(scene, description);
+            flight = CameraFlightPath.createAnimation(scene, options);
             scene.animations.add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             var maxRadii = ellipsoid.maximumRadius;
@@ -73,7 +73,7 @@ define([
             var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
             var up = Cartesian3.cross(right, direction);
 
-            description = {
+            options = {
                 destination : position,
                 duration : duration,
                 up : up,
@@ -84,7 +84,7 @@ define([
                                                 0, 0, 0, 1)
             };
 
-            flight = CameraFlightPath.createAnimation(scene, description);
+            flight = CameraFlightPath.createAnimation(scene, options);
             scene.animations.add(flight);
         }
     }

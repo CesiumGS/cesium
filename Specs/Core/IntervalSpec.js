@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/Interval'], function(Interval) {
+defineSuite([
+        'Core/Interval'
+    ], function(
+        Interval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

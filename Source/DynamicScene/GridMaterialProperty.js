@@ -1,11 +1,12 @@
 /*global define*/
-define(['../Core/Cartesian2',
+define([
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
@@ -13,8 +14,8 @@ define(['../Core/Cartesian2',
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 

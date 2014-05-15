@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TilingScheme',
-         'Scene/GeographicTilingScheme'
-     ], function(
-         TilingScheme,
-         GeographicTilingScheme) {
+        'Scene/TilingScheme',
+        'Scene/GeographicTilingScheme'
+    ], function(
+        TilingScheme,
+        GeographicTilingScheme) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

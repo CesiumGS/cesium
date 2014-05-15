@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        '../Core/Event',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/loadImage'
-       ], function(
-         Event,
-         defined,
-         DeveloperError,
-         loadImage) {
+    ], function(
+        defined,
+        DeveloperError,
+        Event,
+        loadImage) {
     "use strict";
 
     function SourceHolder() {

@@ -3,7 +3,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError'
-    ], function (
+    ], function(
         defined,
         defineProperties,
         DeveloperError) {

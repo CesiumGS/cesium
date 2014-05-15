@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CylinderGeometry',
-         'Core/VertexFormat'
-     ], function(
-         CylinderGeometry,
-         VertexFormat) {
+        'Core/CylinderGeometry',
+        'Core/VertexFormat'
+    ], function(
+        CylinderGeometry,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

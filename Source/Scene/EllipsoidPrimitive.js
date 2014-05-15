@@ -1,46 +1,46 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
+        '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/combine',
+        '../Core/defaultValue',
         '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/BoundingSphere',
-        '../Core/PrimitiveType',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
+        '../Core/VertexFormat',
         '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
-        './Material',
-        './SceneMode',
+        '../Renderer/DrawCommand',
+        '../Shaders/EllipsoidFS',
         '../Shaders/EllipsoidVS',
-        '../Shaders/EllipsoidFS'
+        './BlendingState',
+        './CullFace',
+        './Material',
+        './Pass',
+        './SceneMode'
     ], function(
-        defaultValue,
+        BoundingSphere,
         BoxGeometry,
         Cartesian3,
         combine,
+        defaultValue,
         defined,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
         Matrix4,
-        BoundingSphere,
-        PrimitiveType,
-        CullFace,
-        BlendingState,
+        VertexFormat,
         BufferUsage,
-        DrawCommand,
         createShaderSource,
-        Pass,
-        Material,
-        SceneMode,
+        DrawCommand,
+        EllipsoidFS,
         EllipsoidVS,
-        EllipsoidFS) {
+        BlendingState,
+        CullFace,
+        Material,
+        Pass,
+        SceneMode) {
     "use strict";
 
     var attributeLocations = {
@@ -202,8 +202,6 @@ define([
         this.onlySunLighting = defaultValue(options.onlySunLighting, false);
         this._onlySunLighting = false;
 
-        this._owner = options._owner;
-
         this._sp = undefined;
         this._rs = undefined;
         this._va = undefined;
@@ -211,10 +209,12 @@ define([
         this._pickSP = undefined;
         this._pickId = undefined;
 
-        this._colorCommand = new DrawCommand();
-        this._colorCommand.owner = this;
-        this._pickCommand = new DrawCommand();
-        this._pickCommand.owner = this;
+        this._colorCommand = new DrawCommand({
+            owner : defaultValue(options._owner, this)
+        });
+        this._pickCommand = new DrawCommand({
+            owner : defaultValue(options._owner, this)
+        });
 
         var that = this;
         this._uniforms = {
@@ -241,13 +241,15 @@ define([
         }
 
         var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
-            dimensions : new Cartesian3(2.0, 2.0, 2.0)
+            dimensions : new Cartesian3(2.0, 2.0, 2.0),
+            vertexFormat : VertexFormat.POSITION_ONLY
         }));
 
         vertexArray = context.createVertexArrayFromGeometry({
-            geometry: geometry,
-            attributeLocations: attributeLocations,
-            bufferUsage: BufferUsage.STATIC_DRAW
+            geometry : geometry,
+            attributeLocations : attributeLocations,
+            bufferUsage : BufferUsage.STATIC_DRAW,
+            interleave : true
         });
 
         context.cache.ellipsoidPrimitive_vertexArray = vertexArray;
@@ -353,15 +355,13 @@ define([
                 sources : [this.material.shaderSource, EllipsoidFS] }
             );
 
-            this._sp = context.shaderCache.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
+            this._sp = context.replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeLocations);
 
-            colorCommand.primitiveType = PrimitiveType.TRIANGLES;
             colorCommand.vertexArray = this._va;
             colorCommand.renderState = this._rs;
             colorCommand.shaderProgram = this._sp;
             colorCommand.uniformMap = combine(this._uniforms, this.material._uniforms);
             colorCommand.executeInClosestFrustum = translucent;
-            colorCommand.owner = defaultValue(this._owner, this);
         }
 
         var passes = frameState.passes;
@@ -398,15 +398,13 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                this._pickSP = context.shaderCache.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
+                this._pickSP = context.replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeLocations);
 
-                pickCommand.primitiveType = PrimitiveType.TRIANGLES;
                 pickCommand.vertexArray = this._va;
                 pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = combine(combine(this._uniforms, this._pickUniforms), this.material._uniforms);
                 pickCommand.executeInClosestFrustum = translucent;
-                pickCommand.owner = defaultValue(this._owner, this);
             }
 
             pickCommand.boundingVolume = this._boundingSphere;
@@ -453,8 +451,8 @@ define([
      * e = e && e.destroy();
      */
     EllipsoidPrimitive.prototype.destroy = function() {
-        this._sp = this._sp && this._sp.release();
-        this._pickSP = this._pickSP && this._pickSP.release();
+        this._sp = this._sp && this._sp.destroy();
+        this._pickSP = this._pickSP && this._pickSP.destroy();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/GeometryInstanceAttribute',
-         'Core/ComponentDatatype'
-     ], function(
-         GeometryInstanceAttribute,
-         ComponentDatatype) {
+        'Core/GeometryInstanceAttribute',
+        'Core/ComponentDatatype'
+    ], function(
+        GeometryInstanceAttribute,
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

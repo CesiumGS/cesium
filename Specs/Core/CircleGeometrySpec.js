@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CircleGeometry',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/VertexFormat'
-     ], function(
-         CircleGeometry,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         VertexFormat) {
+        'Core/CircleGeometry',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/VertexFormat'
+    ], function(
+        CircleGeometry,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

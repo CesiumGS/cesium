@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/SimplePolylineGeometry',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/PrimitiveType',
-         'Core/Color'
-     ], function(
-         SimplePolylineGeometry,
-         Cartesian3,
-         BoundingSphere,
-         PrimitiveType,
-         Color) {
+        'Core/SimplePolylineGeometry',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/PrimitiveType'
+    ], function(
+        SimplePolylineGeometry,
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

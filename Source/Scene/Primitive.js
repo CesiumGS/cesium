@@ -8,25 +8,24 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/isArray',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
         '../Core/GeometryInstance',
         '../Core/GeometryInstanceAttribute',
+        '../Core/isArray',
         '../Core/Matrix4',
         '../Core/subdivideArray',
         '../Core/TaskProcessor',
         '../Renderer/BufferUsage',
         '../Renderer/createShaderSource',
-        '../Renderer/CullFace',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/VertexLayout',
+        '../ThirdParty/when',
+        './CullFace',
+        './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode',
-        '../ThirdParty/when'
+        './SceneMode'
     ], function(
         BoundingSphere,
         clone,
@@ -36,25 +35,24 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        isArray,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
         GeometryInstanceAttribute,
+        isArray,
         Matrix4,
         subdivideArray,
         TaskProcessor,
         BufferUsage,
         createShaderSource,
-        CullFace,
         DrawCommand,
+        when,
+        CullFace,
         Pass,
-        VertexLayout,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode,
-        when) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -85,6 +83,7 @@ define([
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+     * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
@@ -227,50 +226,11 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        /**
-         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
-
-        /**
-         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
-
-        /**
-         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         *
-         * @readonly
-         */
-        this.allow3DOnly = defaultValue(options.allow3DOnly, false);
-
-        /**
-         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.allowPicking = defaultValue(options.allowPicking, true);
-
+        this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, false);
+        this._interleave = defaultValue(options.interleave, false);
+        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
+        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
+        this._allowPicking = defaultValue(options.allowPicking, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
@@ -320,6 +280,86 @@ define([
     };
 
     defineProperties(Primitive.prototype, {
+        /**
+         * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
+         *
+         * @memberof Primitive.prototype
+         * @readonly
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        vertexCacheOptimize : {
+            get : function() {
+                return this._vertexCacheOptimize;
+            }
+        },
+
+        /**
+         * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
+         *
+         * @memberof Primitive.prototype
+         * @readonly
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        interleave : {
+            get : function() {
+                return this._interleave;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        releaseGeometryInstances : {
+            get : function() {
+                return this._releaseGeometryInstances;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each geometry instance will only be rendered in 3D to save GPU memory.
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        allow3DOnly : {
+            get : function() {
+                return this._allow3DOnly;
+            }
+        },
+
+        /**
+         * When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.         *
+         *
+         * @memberof Primitive.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        allowPicking : {
+            get : function() {
+                return this._allowPicking;
+            }
+        },
+
         /**
          * Determines if the geometry instances will be created and batched on a web worker.
          *
@@ -704,7 +744,7 @@ define([
                     geometry : geometry,
                     attributeLocations : attributeLocations,
                     bufferUsage : BufferUsage.STATIC_DRAW,
-                    vertexLayout : VertexLayout.INTERLEAVED,
+                    interleave : this._interleave,
                     vertexArrayAttributes : attributes
                 }));
             }
@@ -802,19 +842,18 @@ define([
         }
 
         if (createSP) {
-            var shaderCache = context.shaderCache;
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
+            this._sp = context.replaceShaderProgram(this._sp, vs, fs, attributeLocations);
             validateShaderMatching(this._sp, attributeLocations);
 
             if (allowPicking) {
                 var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
+                this._pickSP = context.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, attributeLocations);
             } else {
-                this._pickSP = shaderCache.getShaderProgram(vs, fs, attributeLocations);
+                this._pickSP = context.createShaderProgram(vs, fs, attributeLocations);
             }
 
             validateShaderMatching(this._pickSP, attributeLocations);
@@ -837,10 +876,11 @@ define([
                 if (twoPasses) {
                     colorCommand = colorCommands[i];
                     if (!defined(colorCommand)) {
-                        colorCommand = colorCommands[i] = new DrawCommand();
+                        colorCommand = colorCommands[i] = new DrawCommand({
+                            owner : this,
+                            primitiveType : this._primitiveType
+                        });
                     }
-                    colorCommand.owner = this;
-                    colorCommand.primitiveType = this._primitiveType;
                     colorCommand.vertexArray = this._va[vaIndex];
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
@@ -852,10 +892,11 @@ define([
 
                 colorCommand = colorCommands[i];
                 if (!defined(colorCommand)) {
-                    colorCommand = colorCommands[i] = new DrawCommand();
+                    colorCommand = colorCommands[i] = new DrawCommand({
+                        owner : this,
+                        primitiveType : this._primitiveType
+                    });
                 }
-                colorCommand.owner = this;
-                colorCommand.primitiveType = this._primitiveType;
                 colorCommand.vertexArray = this._va[vaIndex];
                 colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
@@ -864,10 +905,11 @@ define([
 
                 pickCommand = pickCommands[m];
                 if (!defined(pickCommand)) {
-                    pickCommand = pickCommands[m] = new DrawCommand();
+                    pickCommand = pickCommands[m] = new DrawCommand({
+                        owner : this,
+                        primitiveType : this._primitiveType
+                    });
                 }
-                pickCommand.owner = this;
-                pickCommand.primitiveType = this._primitiveType;
                 pickCommand.vertexArray = this._va[vaIndex];
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
@@ -1083,8 +1125,8 @@ define([
         var length;
         var i;
 
-        this._sp = this._sp && this._sp.release();
-        this._pickSP = this._pickSP && this._pickSP.release();
+        this._sp = this._sp && this._sp.destroy();
+        this._pickSP = this._pickSP && this._pickSP.destroy();
 
         var va = this._va;
         length = va.length;

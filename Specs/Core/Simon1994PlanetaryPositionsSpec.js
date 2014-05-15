@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Simon1994PlanetaryPositions',
-         'Core/defined',
-         'Core/JulianDate',
-         'Core/TimeStandard',
-         'Core/Math',
-         'Core/Matrix3',
-         'Core/Transforms'
-     ], function(
-         PlanetaryPositions,
-         defined,
-         JulianDate,
-         TimeStandard,
-         CesiumMath,
-         Matrix3,
-         Transforms) {
+        'Core/Simon1994PlanetaryPositions',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/TimeStandard',
+        'Core/Transforms'
+    ], function(
+        PlanetaryPositions,
+        defined,
+        JulianDate,
+        CesiumMath,
+        Matrix3,
+        TimeStandard,
+        Transforms) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

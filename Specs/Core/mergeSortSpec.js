@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/mergeSort',
-         'Core/BoundingSphere',
-         'Core/Cartesian3'
-     ], function(
-         mergeSort,
-         BoundingSphere,
-         Cartesian3) {
+        'Core/mergeSort',
+        'Core/BoundingSphere',
+        'Core/Cartesian3'
+    ], function(
+        mergeSort,
+        BoundingSphere,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

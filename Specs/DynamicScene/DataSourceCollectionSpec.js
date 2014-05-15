@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DataSourceCollection',
-         'Specs/MockDataSource'
-     ], function(
-         DataSourceCollection,
-         MockDataSource) {
+        'DynamicScene/DataSourceCollection',
+        'Specs/MockDataSource'
+    ], function(
+        DataSourceCollection,
+        MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

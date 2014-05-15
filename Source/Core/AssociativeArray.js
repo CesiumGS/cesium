@@ -1,5 +1,6 @@
 /*global define*/
-define(['./defined',
+define([
+        './defined',
         './defineProperties',
         './DeveloperError'
     ], function(

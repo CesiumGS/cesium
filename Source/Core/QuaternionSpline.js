@@ -3,14 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Spline',
-        './Quaternion'
+        './Quaternion',
+        './Spline'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        Spline,
-        Quaternion) {
+        Quaternion,
+        Spline) {
     "use strict";
 
     function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {

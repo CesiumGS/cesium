@@ -16,9 +16,9 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
+        '../ThirdParty/Tween',
         './PerspectiveFrustum',
-        './SceneMode',
-        '../ThirdParty/Tween'
+        './SceneMode'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -36,9 +36,9 @@ define([
         Quaternion,
         Ray,
         Transforms,
+        Tween,
         PerspectiveFrustum,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -377,7 +377,6 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#view
          * @see czm_view
          * @see Camera#inverseViewMatrix
          */
@@ -394,7 +393,6 @@ define([
          *
          * @type {Matrix4}
          *
-         * @see UniformState#inverseView
          * @see czm_inverseView
          * @see Camera#viewMatrix
          */
