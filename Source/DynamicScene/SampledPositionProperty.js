@@ -30,34 +30,21 @@ define([
 
     PositionVelocity.packedLength = Cartesian3.packedLength * 2;
 
-    /**
-     * Stores the provided instance into the provided array.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} value The value to pack.
-     * @param {Array} array The array to pack into.
-     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     */
     PositionVelocity.pack = function(value, array, startingIndex) {
         Cartesian3.pack(value.position, array, startingIndex);
         Cartesian3.pack(value.velocity, array, startingIndex + Cartesian3.packedLength);
     };
 
-    /**
-     * Retrieves an instance from a packed array.
-     * @memberof Cartesian3
-     *
-     * @param {Array} array The packed array.
-     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {Cartesian3} [result] The object into which to store the result.
-     */
     PositionVelocity.unpack = function(array, startingIndex, result) {
+        var position = Cartesian3.unpack(array, startingIndex, result.position);
+        var velocity = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, result.velocity);
+
         if (!defined(result)) {
-            result = new PositionVelocity();
+            return new PositionVelocity(position, velocity);
         }
 
-        result.position = Cartesian3.unpack(array, startingIndex, result.position);
-        result.velocity = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, result.velocity);
+        result.position = position;
+        result.velocity = velocity;
         return result;
     };
 
@@ -68,6 +55,7 @@ define([
      * @constructor
      *
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
+     * @param {Boolean} [hasVelocity=false] The reference frame in which the position is defined.
      */
     var SampledPositionProperty = function(referenceFrame, hasVelocity) {
         this._hasVelocity = defaultValue(hasVelocity, false);
@@ -119,7 +107,7 @@ define([
          * Gets the degree of interpolation to perform when retrieving a value.
          * @memberof SampledPositionProperty.prototype
          *
-         * @type {Object}
+         * @type {Number}
          * @default 1
          */
         interpolationDegree : {
@@ -138,11 +126,23 @@ define([
             get : function() {
                 return this._property.interpolationAlgorithm;
             }
+        },
+        /**
+         * Gets whether or not this property contains velocity information.
+         * @memberof SampledPositionProperty.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        hasVelocity : {
+            get : function() {
+                return this._hasVelocity;
+            }
         }
     });
 
     /**
-     * Gets the value of the property at the provided time.
+     * Gets the position at the provided time.
      * @memberof SampledPositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -154,7 +154,7 @@ define([
     };
 
     /**
-     * Gets the value of the property at the provided time and in the provided reference frame.
+     * Gets the position at the provided time and in the provided reference frame.
      * @memberof SampledPositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -199,10 +199,14 @@ define([
      * @memberof SampledPositionProperty
      *
      * @param {JulianDate} time The sample time.
-     * @param {Cartesian3} value The value at the provided time.
+     * @param {Cartesian3} position The position at the provided time.
+     * @param {Cartesian3} [velocity] The velocity at the provided time. This value is required when an instance contains velocity information.
      */
     SampledPositionProperty.prototype.addSample = function(time, position, velocity) {
         if (this._hasVelocity) {
+            if (!defined(velocity)) {
+                throw new DeveloperError('velocity is required.');
+            }
             this._property.addSample(time, new PositionVelocity(position, velocity));
         } else {
             this._property.addSample(time, position);
@@ -210,22 +214,35 @@ define([
     };
 
     /**
-     * Adds an array of samples
+     * Adds multiple samples via parallel arrays.
      * @memberof SampledPositionProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Cartesian3[]} positions The array of Cartesian3 position instances, where each value corresponds to the provided times index.
+     * @param {Cartesian3[]} [velocities] The array of Cartesian3 velocity instances, where each value corresponds to the provided times index. This value is required when an instance contains velocity information.
      *
-     * @exception {DeveloperError} times and values must be the same length..
+     * @exception {DeveloperError} All arrays must be the same length.
      */
     SampledPositionProperty.prototype.addSamples = function(times, positions, velocities) {
         if (this._hasVelocity) {
+            if (!defined(velocities)) {
+                throw new DeveloperError('velocities is required.');
+            }
+
+            if (times.length !== positions.length || times.length !== velocities.length) {
+                throw new DeveloperError('All arrays must be the same length.');
+            }
+
             var values = [];
             for (var i = 0; i < positions.length; i++) {
                 values.push(new PositionVelocity(positions[i], velocities[i]));
             }
             this._property.addSamples(times, values);
         } else {
+            if (times.length !== positions.length) {
+                throw new DeveloperError('All arrays must be the same length.');
+            }
+
             this._property.addSamples(times, positions);
         }
     };
@@ -234,7 +251,7 @@ define([
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledPositionProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
