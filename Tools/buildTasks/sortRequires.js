@@ -9,6 +9,7 @@ load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile
 var window = window || {};
 
 var jsFileRegex = /\.js$/i;
+var noModulesRegex = /[\s\S]*?define\(function\(\)/;
 var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)\]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
 var splitRegex = /,\s*/;
 
@@ -28,7 +29,9 @@ forEachFile('sourcefiles', function(relativePath, file) {
     var contents = readFileContents(file);
     var result = requiresRegex.exec(contents);
     if (result === null) {
-        self.log(relativePath + ' does not have the expected syntax.');
+        if(!noModulesRegex.test(contents)){
+            self.log(relativePath + ' does not have the expected syntax.');
+        }
         return;
     }
 
