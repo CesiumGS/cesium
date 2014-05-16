@@ -314,7 +314,7 @@ define([
      * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @see CorridorOutlineGeometry#createGeometry
+     * @see CorridorOutlineGeometry.createGeometry
      *
      * @example
      * var corridor = new Cesium.CorridorOutlineGeometry({

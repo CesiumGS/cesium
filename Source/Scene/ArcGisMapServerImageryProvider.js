@@ -63,8 +63,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({

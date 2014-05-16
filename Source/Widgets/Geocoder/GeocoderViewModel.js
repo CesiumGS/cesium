@@ -41,7 +41,7 @@ define([
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps

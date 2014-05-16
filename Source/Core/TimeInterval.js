@@ -98,7 +98,7 @@ define([
      * @see TimeInterval
      * @see TimeIntervalCollection
      * @see JulianDate
-     * @see <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 on Wikipedia</a>.
+     * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      *
      * @example
      * // Construct an open Timeinterval with a Cartesian data payload.

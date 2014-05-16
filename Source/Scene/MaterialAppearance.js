@@ -58,7 +58,7 @@ define([
      *   })
      * });
      *
-     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -75,7 +75,7 @@ define([
          *
          * @default Material.ColorType
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 

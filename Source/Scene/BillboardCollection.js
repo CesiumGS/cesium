@@ -140,7 +140,7 @@ define([
      *   imageIndex : 1
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -46,7 +46,7 @@ define([
          * Gets or sets whether or not fullscreen functionality should be enabled.  This property is observable.
          *
          * @type {Boolean}
-         * @see Fullscreen.isFullscreenEnabled
+         * @see Fullscreen.enabled
          */
         this.isFullscreenEnabled = undefined;
         knockout.defineProperty(this, 'isFullscreenEnabled', {

@@ -494,7 +494,7 @@ define([
      *
      * @returns {Number} The factorial of the provided number or undefined if the number is less than 0.
      *
-     * @see <a href='http://en.wikipedia.org/wiki/Factorial'>Factorial on Wikipedia</a>.
+     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      *
      * @example
      * //Compute 7!, which is equal to 5040
@@ -653,8 +653,8 @@ define([
      *
      * @returns A random number in the range of [0.0, 1.0).
      *
-     * @see CesiumMath#setRandomNumberSeed
-     * @see http://en.wikipedia.org/wiki/Mersenne_twister
+     * @see CesiumMath.setRandomNumberSeed
+     * @see {@link http://en.wikipedia.org/wiki/Mersenne_twister|Mersenne twister on Wikipedia}
      */
     CesiumMath.nextRandomNumber = function() {
         return randomNumberGenerator.random();

@@ -38,7 +38,7 @@ define([
      *        Google Earth Enterprise Server.
      *
      *        By default the Google Earth Enterprise server does not set the
-     *        <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a> headers. You can either
+     *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
      *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
      *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
      *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
@@ -85,7 +85,7 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({

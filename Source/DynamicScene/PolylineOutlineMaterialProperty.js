@@ -86,7 +86,7 @@ define([
      * @memberof PolylineOutlineMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     PolylineOutlineMaterialProperty.prototype.getType = function(time) {
         return 'PolylineOutline';

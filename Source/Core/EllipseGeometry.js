@@ -586,7 +586,7 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseGeometry#createGeometry
+     * @see EllipseGeometry.createGeometry
      *
      * @example
      * // Create an ellipse.

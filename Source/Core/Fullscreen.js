@@ -22,7 +22,7 @@ define([
      *
      * @exports Fullscreen
      *
-     * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
+     * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
      */
     var Fullscreen = {};
 

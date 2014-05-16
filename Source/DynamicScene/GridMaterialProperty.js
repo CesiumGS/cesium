@@ -110,7 +110,7 @@ define([
      * @memberof GridMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     GridMaterialProperty.prototype.getType = function(time) {
         return 'Grid';

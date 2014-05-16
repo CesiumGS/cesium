@@ -23,7 +23,7 @@ define([
      * A {@link PositionProperty} whose value is an array whose items are the computed value
      * of other PositionProperty instances.
      *
-     * @alias PositionProperty
+     * @alias PositionPropertyArray
      * @constructor
      *
      * @param {Array} [value] An array of Property instances.
