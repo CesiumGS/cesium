@@ -1,36 +1,36 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/getImagePixels',
-        '../Core/loadImage',
-        '../Core/Math',
-        '../Core/throttleRequestByServer',
         '../ThirdParty/when',
         './Credit',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Ellipsoid',
+        './Event',
         './GeographicTilingScheme',
+        './getImagePixels',
         './HeightmapTerrainData',
-        './TerrainProvider'
+        './loadImage',
+        './Math',
+        './TerrainProvider',
+        './throttleRequestByServer'
     ], function(
+        when,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
         Event,
+        GeographicTilingScheme,
         getImagePixels,
+        HeightmapTerrainData,
         loadImage,
         CesiumMath,
-        throttleRequestByServer,
-        when,
-        Credit,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
-        TerrainProvider) {
+        TerrainProvider,
+        throttleRequestByServer) {
     "use strict";
 
     /**

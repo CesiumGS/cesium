@@ -13,6 +13,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidTerrainProvider',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
         '../Core/Geometry',
@@ -24,6 +25,7 @@ define([
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -37,13 +39,12 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        './EllipsoidTerrainProvider',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './ImageryLayerCollection',
         './Pass',
         './SceneMode',
-        './TerrainProvider'
+        './terrainAttributeLocations'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -58,6 +59,7 @@ define([
         defineProperties,
         destroyObject,
         Ellipsoid,
+        EllipsoidTerrainProvider,
         FeatureDetection,
         GeographicProjection,
         Geometry,
@@ -69,6 +71,7 @@ define([
         Occluder,
         PrimitiveType,
         Rectangle,
+        TerrainProvider,
         Transforms,
         BufferUsage,
         ClearCommand,
@@ -82,13 +85,12 @@ define([
         GlobeVSPole,
         when,
         DepthFunction,
-        EllipsoidTerrainProvider,
         GlobeSurface,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         Pass,
         SceneMode,
-        TerrainProvider) {
+        terrainAttributeLocations) {
     "use strict";
 
     /**
@@ -120,7 +122,7 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet(terrainAttributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -728,7 +730,7 @@ define([
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
+                GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;

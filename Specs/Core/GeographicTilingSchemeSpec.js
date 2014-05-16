@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/GeographicProjection',
         'Core/Math',
         'Core/Rectangle',
-        'Scene/TilingScheme'
+        'Core/TilingScheme'
     ], function(
         GeographicTilingScheme,
         Cartesian2,

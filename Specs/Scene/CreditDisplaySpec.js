@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/CreditDisplay',
-        'Scene/Credit'
+        'Core/Credit'
     ], function(
         CreditDisplay,
         Credit) {

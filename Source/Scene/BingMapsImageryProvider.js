@@ -2,6 +2,7 @@
 define([
         '../Core/BingMapsApi',
         '../Core/Cartesian2',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,16 +11,16 @@ define([
         '../Core/jsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './Credit',
         './DiscardMissingTileImagePolicy',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        './ImageryProvider'
     ], function(
         BingMapsApi,
         Cartesian2,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -28,13 +29,12 @@ define([
         jsonp,
         CesiumMath,
         Rectangle,
+        TileProviderError,
+        WebMercatorTilingScheme,
         when,
         BingMapsStyle,
-        Credit,
         DiscardMissingTileImagePolicy,
-        ImageryProvider,
-        TileProviderError,
-        WebMercatorTilingScheme) {
+        ImageryProvider) {
     "use strict";
 
     /**

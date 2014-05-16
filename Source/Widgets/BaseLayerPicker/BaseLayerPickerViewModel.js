@@ -4,8 +4,8 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EllipsoidTerrainProvider',
         '../../Core/isArray',
-        '../../Scene/EllipsoidTerrainProvider',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(
@@ -13,8 +13,8 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        isArray,
         EllipsoidTerrainProvider,
+        isArray,
         knockout,
         createCommand) {
     "use strict";
