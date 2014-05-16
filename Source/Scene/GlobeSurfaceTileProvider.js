@@ -100,19 +100,6 @@ define([
             get : function() {
                 return this._errorEvent;
             }
-        },
-
-        /**
-         * Gets the credit to display when this geometry provider is active.  Typically this is used to credit
-         * the source of the geometry. This function should
-         * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
-         * @memberof GlobeSurfaceTileProvider.prototype
-         * @type {Credit}
-         */
-        credit : {
-            get : function() {
-                return undefined;
-            }
         }
     });
 
@@ -126,21 +113,6 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._terrainProvider.getLevelMaximumGeometricError(level);
-    };
-
-    /**
-     * Gets the credits to be displayed when a given tile is displayed.
-     * @memberof GlobeSurfaceTileProvider
-     * @function
-     *
-     * @param {QuadtreeTile} tile The tile instance.
-     *
-     * @returns {Credit[]} The credits to be displayed when the tile is displayed.
-     *
-     * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the geometry provider is ready.
-     */
-    GlobeSurfaceTileProvider.prototype.getTileCredits = function(tile) {
-        // TODO
     };
 
     /**
