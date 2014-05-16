@@ -94,7 +94,8 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
+     * and imagery layers ({@link Globe#imageryLayers}).  Access the globe using {@link Scene#globe}.
      *
      * @alias Globe
      * @constructor
