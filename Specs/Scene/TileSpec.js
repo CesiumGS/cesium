@@ -4,11 +4,11 @@ defineSuite([
         'Core/defined',
         'Core/Math',
         'Core/Rectangle',
-        'Scene/CesiumTerrainProvider',
+        'Core/CesiumTerrainProvider',
         'Scene/ImageryLayerCollection',
         'Scene/TerrainState',
         'Scene/TileState',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'Specs/createContext',
         'Specs/destroyContext',
         'ThirdParty/when'

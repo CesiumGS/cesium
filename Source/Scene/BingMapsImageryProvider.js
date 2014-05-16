@@ -12,11 +12,11 @@ define([
         '../Core/Rectangle',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './Credit',
+        '../Core/Credit',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme'
     ], function(
         BingMapsApi,
         Cartesian2,

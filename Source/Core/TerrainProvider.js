@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/IndexDatatype',
+        './ComponentDatatype',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './IndexDatatype',
         '../Renderer/BufferUsage'
     ], function(
         ComponentDatatype,

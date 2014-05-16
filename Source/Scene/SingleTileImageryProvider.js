@@ -8,9 +8,9 @@ define([
         '../Core/loadImage',
         '../Core/Rectangle',
         '../ThirdParty/when',
-        './Credit',
-        './GeographicTilingScheme',
-        './TileProviderError'
+        '../Core/Credit',
+        '../Core/GeographicTilingScheme',
+        '../Core/TileProviderError'
     ], function(
         defaultValue,
         defined,

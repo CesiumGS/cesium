@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/Rectangle',
-        '../Core/WebMercatorProjection',
+        './Cartesian2',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Ellipsoid',
+        './Rectangle',
+        './WebMercatorProjection',
         './TilingScheme'
     ], function(
         Cartesian2,

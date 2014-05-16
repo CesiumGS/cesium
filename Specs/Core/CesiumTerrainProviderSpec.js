@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/CesiumTerrainProvider',
+        'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/loadWithXhr',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/HeightmapTerrainData',
-        'Scene/QuantizedMeshTerrainData',
-        'Scene/TerrainProvider',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/QuantizedMeshTerrainData',
+        'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,

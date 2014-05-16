@@ -8,8 +8,8 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/Rectangle',
-        './Credit',
-        './GeographicTilingScheme',
+        '../Core/Credit',
+        '../Core/GeographicTilingScheme',
         './ImageryProvider'
     ], function(
         clone,

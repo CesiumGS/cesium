@@ -6,7 +6,7 @@ defineSuite([
         'Core/jsonp',
         'Core/loadImage',
         'Core/Rectangle',
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',

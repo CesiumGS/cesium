@@ -6,12 +6,12 @@ defineSuite([
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         GoogleEarthImageryProvider,

@@ -5,9 +5,9 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../ThirdParty/when',
-        './TerrainProvider',
+        '../Core/TerrainProvider',
         './TerrainState',
-        './TileProviderError'
+        '../Core/TileProviderError'
     ], function(
         BoundingSphere,
         Cartesian3,

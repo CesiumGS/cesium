@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/TilingScheme',
-        'Scene/GeographicTilingScheme'
+        'Core/TilingScheme',
+        'Core/GeographicTilingScheme'
     ], function(
         TilingScheme,
         GeographicTilingScheme) {

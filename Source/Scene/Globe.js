@@ -37,13 +37,13 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        './EllipsoidTerrainProvider',
+        '../Core/EllipsoidTerrainProvider',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './ImageryLayerCollection',
         './Pass',
         './SceneMode',
-        './TerrainProvider'
+        '../Core/TerrainProvider'
     ], function(
         BoundingRectangle,
         BoundingSphere,

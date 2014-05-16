@@ -7,7 +7,7 @@ defineSuite([
         'DynamicScene/DataSourceCollection',
         'DynamicScene/DataSourceDisplay',
         'DynamicScene/DynamicClock',
-        'Scene/EllipsoidTerrainProvider',
+        'Core/EllipsoidTerrainProvider',
         'Scene/SceneMode',
         'Specs/EventHelper',
         'Specs/MockDataSource',

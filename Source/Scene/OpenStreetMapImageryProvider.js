@@ -6,9 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
-        './Credit',
+        '../Core/Credit',
         './ImageryProvider',
-        './WebMercatorTilingScheme'
+        '../Core/WebMercatorTilingScheme'
     ], function(
         defaultValue,
         defined,

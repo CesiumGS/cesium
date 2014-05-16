@@ -4,7 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Event',
-        './GeographicTilingScheme'
+        '../Core/GeographicTilingScheme'
     ], function(
         Color,
         defaultValue,

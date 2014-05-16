@@ -14,7 +14,7 @@ define([
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/Credit',
+        '../../Core/Credit',
         '../../Scene/Globe',
         '../../Scene/Moon',
         '../../Scene/Scene',

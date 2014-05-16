@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/GeographicProjection',
-        '../Core/Math',
-        '../Core/Rectangle',
+        './Cartesian2',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Ellipsoid',
+        './GeographicProjection',
+        './Math',
+        './Rectangle',
         './TilingScheme'
     ], function(
         Cartesian2,

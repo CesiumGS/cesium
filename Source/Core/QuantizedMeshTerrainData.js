@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Intersections2D',
-        '../Core/Math',
-        '../Core/TaskProcessor',
+        './BoundingSphere',
+        './Cartesian3',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Intersections2D',
+        './Math',
+        './TaskProcessor',
         '../ThirdParty/when',
         './TerrainMesh'
     ], function(

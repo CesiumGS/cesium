@@ -8,7 +8,7 @@ defineSuite([
         'Scene/Material',
         'Scene/RectanglePrimitive',
         'Scene/Tile',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(

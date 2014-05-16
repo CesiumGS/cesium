@@ -26,12 +26,12 @@ define([
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
-        './GeographicTilingScheme',
+        '../Core/GeographicTilingScheme',
         './Imagery',
         './ImageryState',
-        './TerrainProvider',
+        '../Core/TerrainProvider',
         './TileImagery',
-        './TileProviderError'
+        '../Core/TileProviderError'
     ], function(
         BoundingRectangle,
         Cartesian2,

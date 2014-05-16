@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/QuantizedMeshTerrainData',
+        'Core/QuantizedMeshTerrainData',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/defined',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/TerrainData',
-        'Scene/TerrainMesh',
+        'Core/GeographicTilingScheme',
+        'Core/TerrainData',
+        'Core/TerrainMesh',
         'ThirdParty/when'
     ], function(
         QuantizedMeshTerrainData,

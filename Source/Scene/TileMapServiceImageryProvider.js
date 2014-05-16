@@ -8,10 +8,10 @@ define([
         '../Core/Event',
         '../Core/loadXML',
         '../Core/Rectangle',
-        './Credit',
-        './GeographicTilingScheme',
+        '../Core/Credit',
+        '../Core/GeographicTilingScheme',
         './ImageryProvider',
-        './WebMercatorTilingScheme'
+        '../Core/WebMercatorTilingScheme'
     ], function(
         Cartographic,
         defaultValue,

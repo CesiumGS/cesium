@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/VRTheWorldTerrainProvider',
+        'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/HeightmapTerrainData',
-        'Scene/TerrainProvider',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
         VRTheWorldTerrainProvider,

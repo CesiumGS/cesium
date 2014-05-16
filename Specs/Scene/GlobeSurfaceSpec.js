@@ -7,7 +7,7 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
-        'Scene/EllipsoidTerrainProvider',
+        'Core/EllipsoidTerrainProvider',
         'Scene/Globe',
         'Scene/ImageryLayerCollection',
         'Scene/OrthographicFrustum',

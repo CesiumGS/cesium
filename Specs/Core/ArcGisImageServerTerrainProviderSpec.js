@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/ArcGisImageServerTerrainProvider',
+        'Core/ArcGisImageServerTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/loadImage',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/HeightmapTerrainData',
-        'Scene/TerrainProvider',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
         ArcGisImageServerTerrainProvider,

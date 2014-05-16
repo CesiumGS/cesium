@@ -4,7 +4,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        './Credit'
+        '../Core/Credit'
     ], function(
         defaultValue,
         defined,

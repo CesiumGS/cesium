@@ -7,12 +7,12 @@ defineSuite([
         'Core/loadImage',
         'Core/loadWithXhr',
         'Scene/DiscardMissingTileImagePolicy',
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         ArcGisMapServerImageryProvider,

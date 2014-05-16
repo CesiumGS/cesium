@@ -9,11 +9,11 @@ define([
         '../Core/Rectangle',
         '../Core/RuntimeError',
         '../ThirdParty/when',
-        './Credit',
-        './GeographicTilingScheme',
+        '../Core/Credit',
+        '../Core/GeographicTilingScheme',
         './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme'
     ], function(
         defaultValue,
         defined,

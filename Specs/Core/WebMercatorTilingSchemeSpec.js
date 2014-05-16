@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/Ellipsoid',
@@ -8,7 +8,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Scene/Tile',
-        'Scene/TilingScheme'
+        'Core/TilingScheme'
     ], function(
         WebMercatorTilingScheme,
         Cartesian2,

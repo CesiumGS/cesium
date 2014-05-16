@@ -8,12 +8,12 @@ define([
         '../Core/Event',
         '../Core/jsonp',
         '../ThirdParty/when',
-        './Credit',
+        '../Core/Credit',
         './DiscardMissingTileImagePolicy',
-        './GeographicTilingScheme',
+        '../Core/GeographicTilingScheme',
         './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme'
     ], function(
         Cartesian2,
         defaultValue,

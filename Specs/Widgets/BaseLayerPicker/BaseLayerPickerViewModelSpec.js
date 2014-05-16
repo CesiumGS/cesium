@@ -1,7 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
-        'Scene/EllipsoidTerrainProvider',
+        'Core/EllipsoidTerrainProvider',
         'Scene/ImageryLayerCollection',
         'Widgets/BaseLayerPicker/ProviderViewModel'
     ], function(

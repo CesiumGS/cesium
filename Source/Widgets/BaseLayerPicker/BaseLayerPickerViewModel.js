@@ -5,7 +5,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/isArray',
-        '../../Scene/EllipsoidTerrainProvider',
+        '../../Core/EllipsoidTerrainProvider',
         '../../ThirdParty/knockout',
         '../createCommand'
     ], function(

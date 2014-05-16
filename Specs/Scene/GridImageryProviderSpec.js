@@ -2,9 +2,9 @@
 defineSuite([
         'Scene/GridImageryProvider',
         'Core/defined',
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Scene/ImageryProvider',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         GridImageryProvider,

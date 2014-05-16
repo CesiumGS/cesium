@@ -13,7 +13,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         TileMapServiceImageryProvider,

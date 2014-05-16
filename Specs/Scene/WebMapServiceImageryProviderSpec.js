@@ -7,7 +7,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/Rectangle',
-        'Scene/GeographicTilingScheme',
+        'Core/GeographicTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',

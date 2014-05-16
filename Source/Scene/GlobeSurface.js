@@ -24,7 +24,7 @@ define([
         './ImageryState',
         './Pass',
         './SceneMode',
-        './TerrainProvider',
+        '../Core/TerrainProvider',
         './TileReplacementQueue',
         './TileState'
     ], function(

@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/DeveloperError',
+        './defined',
+        './DeveloperError',
         '../ThirdParty/when'
     ], function(
         defined,

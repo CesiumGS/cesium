@@ -6,7 +6,7 @@ defineSuite([
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Scene/BingMapsImageryProvider',
-        'Scene/EllipsoidTerrainProvider',
+        'Core/EllipsoidTerrainProvider',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
