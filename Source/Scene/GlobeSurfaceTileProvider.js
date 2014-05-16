@@ -230,6 +230,17 @@ define([
      * @param {Command[]} commandList The list of rendering commands.  This method should add additional commands to this list.
      */
     GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
+        if (!defined(this._renderState)) {
+            this._renderState = context.createRenderState({ // Write color and depth
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : true
+                }
+            });
+        }
+
         var surfaceTile = tile.data;
 
         var viewMatrix = frameState.camera.viewMatrix;

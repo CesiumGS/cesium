@@ -61,7 +61,7 @@ define([
 
         this._occluders = {
                 ellipsoid : new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO)
-        }
+        };
     };
 
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
