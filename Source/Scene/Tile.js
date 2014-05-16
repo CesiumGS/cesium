@@ -224,6 +224,40 @@ define([
         this.upsampledTerrain = undefined;
     };
 
+    /**
+     * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
+     *
+     * @memberof Tile
+     *
+     * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
+     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
+     * tile in the northwest corner and followed by the tile (if any) to its east.
+     */
+    Tile.createLevelZeroTiles = function(tilingScheme) {
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+
+        var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+        var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+
+        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+
+        var index = 0;
+        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+                result[index++] = new Tile({
+                    tilingScheme : tilingScheme,
+                    x : x,
+                    y : y,
+                    level : 0
+                });
+            }
+        }
+
+        return result;
+    };
+
     defineProperties(Tile.prototype, {
         /**
          * An array of tiles that would be at the next level of the tile tree.

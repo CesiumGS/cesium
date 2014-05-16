@@ -1,17 +1,18 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Intersections2D',
-        '../Core/Math',
-        '../Core/TaskProcessor',
         '../ThirdParty/when',
+        './BoundingSphere',
+        './Cartesian3',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Intersections2D',
+        './Math',
+        './TaskProcessor',
         './TerrainMesh'
     ], function(
+        when,
         BoundingSphere,
         Cartesian3,
         defaultValue,
@@ -21,7 +22,6 @@ define([
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        when,
         TerrainMesh) {
     "use strict";
 

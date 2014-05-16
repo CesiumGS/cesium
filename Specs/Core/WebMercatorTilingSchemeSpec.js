@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/WebMercatorTilingScheme',
+        'Core/WebMercatorTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Rectangle',
+        'Core/TilingScheme',
         'Core/WebMercatorProjection',
-        'Scene/Tile',
-        'Scene/TilingScheme'
+        'Scene/Tile'
     ], function(
         WebMercatorTilingScheme,
         Cartesian2,
@@ -16,9 +16,9 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         Rectangle,
+        TilingScheme,
         WebMercatorProjection,
-        Tile,
-        TilingScheme) {
+        Tile) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
@@ -276,49 +276,6 @@ defineSuite([
             var returnedResult = tilingScheme.positionToTileXY(centerOfNortheasternChild, 1, resultParameter);
             expect(resultParameter).toEqual(returnedResult);
             expect(resultParameter).toEqual(new Cartesian2(1, 0));
-        });
-    });
-
-    describe('createLevelZeroTiles', function() {
-        function expectArrayToContainTiles(tilesArray, tilingScheme) {
-            for (var i = 0; i < tilesArray; ++i) {
-                var tile = tilesArray[i];
-                expect(tile).toBeInstanceOf(Tile);
-                expect(tile.tilingScheme).toEqual(tilingScheme);
-            }
-        }
-
-        it('creates a single root tile', function() {
-            tilingScheme = new WebMercatorTilingScheme({
-                numberOfLevelZeroTilesX : 1,
-                numberOfLevelZeroTilesY : 1
-            });
-
-            var tiles = tilingScheme.createLevelZeroTiles();
-            expect(tiles.length).toEqual(1);
-            expectArrayToContainTiles(tiles, tilingScheme);
-        });
-
-        it('creates four root tiles', function() {
-            tilingScheme = new WebMercatorTilingScheme({
-                numberOfLevelZeroTilesX : 2,
-                numberOfLevelZeroTilesY : 2
-            });
-
-            var tiles = tilingScheme.createLevelZeroTiles();
-            expect(tiles.length).toEqual(4);
-            expectArrayToContainTiles(tiles, tilingScheme);
-        });
-
-        it('creates two root tiles', function() {
-            tilingScheme = new WebMercatorTilingScheme({
-                numberOfLevelZeroTilesX : 2,
-                numberOfLevelZeroTilesY : 1
-            });
-
-            var tiles = tilingScheme.createLevelZeroTiles();
-            expect(tiles.length).toEqual(2);
-            expectArrayToContainTiles(tiles, tilingScheme);
         });
     });
 });

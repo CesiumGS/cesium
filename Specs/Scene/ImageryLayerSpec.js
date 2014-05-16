@@ -1,34 +1,36 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayer',
+        'Core/EllipsoidTerrainProvider',
         'Core/jsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Scene/BingMapsImageryProvider',
-        'Scene/EllipsoidTerrainProvider',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
         'Scene/NeverTileDiscardPolicy',
         'Scene/SingleTileImageryProvider',
+        'Scene/Tile',
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/destroyContext'
     ], function(
         ImageryLayer,
+        EllipsoidTerrainProvider,
         jsonp,
         loadImage,
         loadWithXhr,
         Rectangle,
         BingMapsImageryProvider,
-        EllipsoidTerrainProvider,
         Imagery,
         ImageryLayerCollection,
         ImageryState,
         NeverTileDiscardPolicy,
         SingleTileImageryProvider,
+        Tile,
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
@@ -216,7 +218,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var tiles = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -260,7 +262,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var tiles = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -308,7 +310,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var level0 = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             var level1 = level0[0].children;
             var level2 = level1[0].children;
             var level3 = level2[0].children;

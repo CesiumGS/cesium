@@ -1,13 +1,13 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/Rectangle',
-        '../Core/WebMercatorProjection',
-        './TilingScheme'
+        './Cartesian2',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Ellipsoid',
+        './Rectangle',
+        './TilingScheme',
+        './WebMercatorProjection'
     ], function(
         Cartesian2,
         defaultValue,
@@ -15,8 +15,8 @@ define([
         defineProperties,
         Ellipsoid,
         Rectangle,
-        WebMercatorProjection,
-        TilingScheme) {
+        TilingScheme,
+        WebMercatorProjection) {
     "use strict";
 
     /**
@@ -123,18 +123,6 @@ define([
      */
     WebMercatorTilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesY << level;
-    };
-
-    /**
-     * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
-     *
-     * @memberof WebMercatorTilingScheme
-     *
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
-     */
-    WebMercatorTilingScheme.prototype.createLevelZeroTiles = function() {
-        return TilingScheme.createRectangleOfLevelZeroTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
     };
 
     /**
