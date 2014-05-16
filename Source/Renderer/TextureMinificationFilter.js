@@ -12,6 +12,7 @@ define(function() {
         LINEAR_MIPMAP_NEAREST : 0x2701,
         NEAREST_MIPMAP_LINEAR : 0x2702,
         LINEAR_MIPMAP_LINEAR : 0x2703,
+
         validate : function(textureMinificationFilter) {
             return ((textureMinificationFilter === TextureMinificationFilter.NEAREST) ||
                     (textureMinificationFilter === TextureMinificationFilter.LINEAR) ||

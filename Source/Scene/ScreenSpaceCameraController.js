@@ -52,7 +52,7 @@ define([
      * @alias ScreenSpaceCameraController
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas The canvas to listen for events.
+     * @param {Canvas} canvas The canvas to listen for events.
      * @param {Camera} camera The camera.
      */
     var ScreenSpaceCameraController = function(canvas, camera) {

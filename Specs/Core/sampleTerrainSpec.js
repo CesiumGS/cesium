@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/sampleTerrain',
+        'Core/sampleTerrain',
         'Core/Cartographic',
-        'Scene/CesiumTerrainProvider',
+        'Core/CesiumTerrainProvider',
         'ThirdParty/when'
     ], function(
         sampleTerrain,

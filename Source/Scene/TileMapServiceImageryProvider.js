@@ -1,30 +1,30 @@
 /*global define*/
 define([
         '../Core/Cartographic',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
         '../Core/loadXML',
         '../Core/Rectangle',
-        './Credit',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './WebMercatorTilingScheme'
+        '../Core/WebMercatorTilingScheme',
+        './ImageryProvider'
     ], function(
         Cartographic,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        GeographicTilingScheme,
         loadXML,
         Rectangle,
-        Credit,
-        GeographicTilingScheme,
-        ImageryProvider,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        ImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;

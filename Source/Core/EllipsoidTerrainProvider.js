@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/Event',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Ellipsoid',
+        './Event',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './TerrainProvider'

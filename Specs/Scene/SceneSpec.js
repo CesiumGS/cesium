@@ -10,10 +10,10 @@ defineSuite([
         'Renderer/PixelDatatype',
         'Scene/AnimationCollection',
         'Scene/Camera',
-        'Scene/CompositePrimitive',
         'Scene/FrameState',
         'Scene/Globe',
         'Scene/Pass',
+        'Scene/PrimitiveCollection',
         'Scene/RectanglePrimitive',
         'Scene/ScreenSpaceCameraController',
         'Specs/createScene',
@@ -31,10 +31,10 @@ defineSuite([
         PixelDatatype,
         AnimationCollection,
         Camera,
-        CompositePrimitive,
         FrameState,
         Globe,
         Pass,
+        PrimitiveCollection,
         RectanglePrimitive,
         ScreenSpaceCameraController,
         createScene,
@@ -64,7 +64,7 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
-        expect(scene.primitives).toBeInstanceOf(CompositePrimitive);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
         expect(scene.frameState).toBeInstanceOf(FrameState);
