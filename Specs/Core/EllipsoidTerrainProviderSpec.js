@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/EllipsoidTerrainProvider',
+        'Core/EllipsoidTerrainProvider',
         'Specs/createContext',
         'Specs/destroyContext'
     ], function(

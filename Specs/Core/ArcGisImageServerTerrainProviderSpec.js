@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/ArcGisImageServerTerrainProvider',
+        'Core/ArcGisImageServerTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
         'Core/loadImage',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/HeightmapTerrainData',
-        'Scene/TerrainProvider',
+        'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
         ArcGisImageServerTerrainProvider,
         DefaultProxy,
         defined,
         Ellipsoid,
-        loadImage,
-        CesiumMath,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        loadImage,
+        CesiumMath,
         TerrainProvider,
         when) {
     "use strict";

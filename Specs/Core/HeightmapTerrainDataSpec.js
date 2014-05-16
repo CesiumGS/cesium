@@ -1,9 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/HeightmapTerrainData',
+        'Core/HeightmapTerrainData',
         'Core/defined',
-        'Scene/GeographicTilingScheme',
-        'Scene/TerrainData',
+        'Core/GeographicTilingScheme',
+        'Core/TerrainData',
         'ThirdParty/when'
     ], function(
         HeightmapTerrainData,
