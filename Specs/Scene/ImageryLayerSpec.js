@@ -12,6 +12,7 @@ defineSuite([
         'Scene/ImageryState',
         'Scene/NeverTileDiscardPolicy',
         'Scene/SingleTileImageryProvider',
+        'Scene/Tile',
         'Scene/TileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
@@ -29,6 +30,7 @@ defineSuite([
         ImageryState,
         NeverTileDiscardPolicy,
         SingleTileImageryProvider,
+        Tile,
         TileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
@@ -216,7 +218,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var tiles = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -260,7 +262,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var tiles = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var tiles = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             layer._createTileImagerySkeletons(tiles[0], terrainProvider);
             layer._createTileImagerySkeletons(tiles[1], terrainProvider);
 
@@ -308,7 +310,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            var level0 = terrainProvider.tilingScheme.createLevelZeroTiles();
+            var level0 = Tile.createLevelZeroTiles(terrainProvider.tilingScheme);
             var level1 = level0[0].children;
             var level2 = level1[0].children;
             var level3 = level2[0].children;

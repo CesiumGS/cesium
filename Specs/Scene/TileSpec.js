@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Tile',
         'Core/CesiumTerrainProvider',
         'Core/defined',
+        'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
@@ -16,6 +17,7 @@ defineSuite([
         Tile,
         CesiumTerrainProvider,
         defined,
+        GeographicTilingScheme,
         CesiumMath,
         Rectangle,
         WebMercatorTilingScheme,
@@ -139,6 +141,72 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    describe('createLevelZeroTiles', function() {
+        var tilingScheme1x1;
+        var tilingScheme2x2;
+        var tilingScheme2x1;
+        var tilingScheme1x2;
+
+        beforeEach(function() {
+            tilingScheme1x1 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
+            });
+            tilingScheme2x2 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
+            });
+            tilingScheme2x1 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 1
+            });
+            tilingScheme1x2 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 2
+            });
+        });
+
+        it('requires tilingScheme', function() {
+            expect(function() {
+                return Tile.createLevelZeroTiles(undefined);
+            }).toThrow();
+        });
+
+        it('creates expected number of tiles', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme1x1);
+            expect(tiles.length).toBe(1);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            expect(tiles.length).toBe(4);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme2x1);
+            expect(tiles.length).toBe(2);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme1x2);
+            expect(tiles.length).toBe(2);
+        });
+
+        it('created tiles are associated with specified tiling scheme', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            for (var i = 0; i < tiles.length; ++i) {
+                expect(tiles[i].tilingScheme).toBe(tilingScheme2x2);
+            }
+        });
+
+        it('created tiles are ordered from the northwest and proceeding east and then south', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            var northwest = tiles[0];
+            var northeast = tiles[1];
+            var southwest = tiles[2];
+            var southeast = tiles[3];
+
+            expect(northeast.rectangle.west).toBeGreaterThan(northwest.rectangle.west);
+            expect(southeast.rectangle.west).toBeGreaterThan(southwest.rectangle.west);
+            expect(northeast.rectangle.south).toBeGreaterThan(southeast.rectangle.south);
+            expect(northwest.rectangle.south).toBeGreaterThan(southwest.rectangle.south);
+        });
+    });
+
     describe('processStateMachine', function() {
         var context;
         var alwaysDeferTerrainProvider;
@@ -192,7 +260,7 @@ defineSuite([
             tilingScheme = new WebMercatorTilingScheme();
             alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
             alwaysFailTerrainProvider.tilingScheme = tilingScheme;
-            rootTiles = tilingScheme.createLevelZeroTiles();
+            rootTiles = Tile.createLevelZeroTiles(tilingScheme);
             rootTile = rootTiles[0];
             imageryLayerCollection = new ImageryLayerCollection();
 
