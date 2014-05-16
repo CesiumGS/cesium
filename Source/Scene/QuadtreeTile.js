@@ -233,8 +233,15 @@ define([
         this.renderable = false;
         this.upsampledFromParent = false;
 
-        if (defined(this.data.freeResources)) {
+        if (defined(this.data) && defined(this.data.freeResources)) {
             this.data.freeResources();
+        }
+
+        if (defined(this._children)) {
+            for (var i = 0, len = this._children.length; i < len; ++i) {
+                this._children[i].freeResources();
+            }
+            this._children = undefined;
         }
     };
 

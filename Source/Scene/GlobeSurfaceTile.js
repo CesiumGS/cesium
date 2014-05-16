@@ -149,13 +149,6 @@ define([
         }
         this.imagery.length = 0;
 
-        if (defined(this._children)) {
-            for (i = 0, len = this._children.length; i < len; ++i) {
-                this._children[i].freeResources();
-            }
-            this._children = undefined;
-        }
-
         this.freeVertexArray();
     };
 
