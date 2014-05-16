@@ -1,8 +1,8 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Scene/CesiumTerrainProvider',
-        '../../Scene/EllipsoidTerrainProvider',
+        '../../Core/CesiumTerrainProvider',
+        '../../Core/EllipsoidTerrainProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,

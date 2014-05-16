@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/VRTheWorldTerrainProvider',
+        'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Math',
-        'Scene/GeographicTilingScheme',
-        'Scene/HeightmapTerrainData',
-        'Scene/TerrainProvider',
+        'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
         VRTheWorldTerrainProvider,
         DefaultProxy,
         defined,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
         loadImage,
         loadWithXhr,
         CesiumMath,
-        GeographicTilingScheme,
-        HeightmapTerrainData,
         TerrainProvider,
         when) {
     "use strict";

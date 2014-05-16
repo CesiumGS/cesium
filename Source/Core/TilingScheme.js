@@ -1,16 +1,12 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        './QuadtreeTile',
-        './Tile'
+        './defined',
+        './defineProperties',
+        './DeveloperError'
     ], function(
         defined,
         defineProperties,
-        DeveloperError,
-        QuadtreeTile,
-        Tile) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -81,16 +77,6 @@ define([
     TilingScheme.prototype.getNumberOfYTilesAtLevel = DeveloperError.throwInstantiationError;
 
     /**
-     * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
-     * @memberof TilingScheme
-     * @function
-     *
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner and followed by the tile (if any) to its east.
-     */
-    TilingScheme.prototype.createLevelZeroTiles = DeveloperError.throwInstantiationError;
-
-    /**
      * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      * @memberof TilingScheme
@@ -152,75 +138,6 @@ define([
      *          if 'result' is undefined.
      */
     TilingScheme.prototype.positionToTileXY = DeveloperError.throwInstantiationError;
-
-    /**
-     * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
-     *
-     * @memberof TilingScheme
-     *
-     * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
-     * @param {Number} numberOfLevelZeroTilesX The number of tiles in the X direction at level zero of
-     *        the tile tree.
-     * @param {Number} numberOfLevelZeroTilesY The number of tiles in the Y direction at level zero of
-     *        the tile tree.
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner and followed by the tile (if any) to its east.
-     */
-    TilingScheme.createRectangleOfLevelZeroTiles = function(tilingScheme, numberOfLevelZeroTilesX, numberOfLevelZeroTilesY) {
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(numberOfLevelZeroTilesX)) {
-            throw new DeveloperError('numberOfLevelZeroTilesX is required.');
-        }
-        if (!defined(numberOfLevelZeroTilesY)) {
-            throw new DeveloperError('numberOfLevelZeroTilesY is required.');
-        }
-
-        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-        var index = 0;
-        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-                result[index++] = new Tile({
-                    tilingScheme : tilingScheme,
-                    x : x,
-                    y : y,
-                    level : 0
-                });
-            }
-        }
-
-        return result;
-    };
-
-    TilingScheme.createRectangleOfLevelZeroQuadtreeTiles = function(tilingScheme, numberOfLevelZeroTilesX, numberOfLevelZeroTilesY) {
-        if (!defined(tilingScheme)) {
-            throw new DeveloperError('tilingScheme is required.');
-        }
-        if (!defined(numberOfLevelZeroTilesX)) {
-            throw new DeveloperError('numberOfLevelZeroTilesX is required.');
-        }
-        if (!defined(numberOfLevelZeroTilesY)) {
-            throw new DeveloperError('numberOfLevelZeroTilesY is required.');
-        }
-
-        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
-
-        var index = 0;
-        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
-            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
-                result[index++] = new QuadtreeTile({
-                    tilingScheme : tilingScheme,
-                    x : x,
-                    y : y,
-                    level : 0
-                });
-            }
-        }
-
-        return result;
-    };
 
     return TilingScheme;
 });

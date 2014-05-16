@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/GeographicProjection',
-        '../Core/Math',
-        '../Core/Rectangle',
+        './Cartesian2',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './Ellipsoid',
+        './GeographicProjection',
+        './Math',
+        './Rectangle',
         './TilingScheme'
     ], function(
         Cartesian2,
@@ -107,22 +107,6 @@ define([
      */
     GeographicTilingScheme.prototype.getNumberOfYTilesAtLevel = function(level) {
         return this._numberOfLevelZeroTilesY << level;
-    };
-
-    /**
-     * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
-     */
-    GeographicTilingScheme.prototype.createLevelZeroTiles = function() {
-        return TilingScheme.createRectangleOfLevelZeroTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
-    };
-
-    GeographicTilingScheme.prototype.createLevelZeroQuadtreeTiles = function() {
-        return TilingScheme.createRectangleOfLevelZeroQuadtreeTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
     };
 
     /**

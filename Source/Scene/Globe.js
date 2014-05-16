@@ -13,6 +13,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidTerrainProvider',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
         '../Core/Geometry',
@@ -24,6 +25,7 @@ define([
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -37,7 +39,6 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        './EllipsoidTerrainProvider',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
@@ -45,7 +46,7 @@ define([
         './Pass',
         './QuadtreePrimitive',
         './SceneMode',
-        './TerrainProvider'
+        './terrainAttributeLocations'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -60,6 +61,7 @@ define([
         defineProperties,
         destroyObject,
         Ellipsoid,
+        EllipsoidTerrainProvider,
         FeatureDetection,
         GeographicProjection,
         Geometry,
@@ -71,6 +73,7 @@ define([
         Occluder,
         PrimitiveType,
         Rectangle,
+        TerrainProvider,
         Transforms,
         BufferUsage,
         ClearCommand,
@@ -84,7 +87,6 @@ define([
         GlobeVSPole,
         when,
         DepthFunction,
-        EllipsoidTerrainProvider,
         GlobeSurface,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
@@ -92,7 +94,7 @@ define([
         Pass,
         QuadtreePrimitive,
         SceneMode,
-        TerrainProvider) {
+        terrainAttributeLocations) {
     "use strict";
 
     /**
@@ -739,7 +741,7 @@ define([
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
+                GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;

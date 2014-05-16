@@ -1,34 +1,34 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
-        './Credit',
         './DiscardMissingTileImagePolicy',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        './ImageryProvider'
     ], function(
         Cartesian2,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
-        when,
-        Credit,
-        DiscardMissingTileImagePolicy,
         GeographicTilingScheme,
-        ImageryProvider,
+        jsonp,
         TileProviderError,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        when,
+        DiscardMissingTileImagePolicy,
+        ImageryProvider) {
     "use strict";
 
     /**
