@@ -386,8 +386,7 @@ require(['Cesium'], function(Cesium) {
         primitive.material = material;
     }
 
-    function createButtons(widget) {
-        var scene = widget.scene;
+    function createButtons(scene) {
         var primitives = scene.primitives;
 
         function toggleRectangleVisibility() {
@@ -611,8 +610,7 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function createPrimitives(widget) {
-        var scene = widget.scene;
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
 
         rectangle = new Cesium.RectanglePrimitive({
@@ -641,10 +639,11 @@ require(['Cesium'], function(Cesium) {
         primitives.add(polylines);
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
-    createPrimitives(widget);
-    createButtons(widget);
+    createPrimitives(scene);
+    createButtons(scene);
 
     Sandcastle.finishedLoading();
 });
