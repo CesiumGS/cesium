@@ -81,24 +81,28 @@ define([
         color : createDynamicPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
         cellAlpha : createDynamicPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
         lineCount : createDynamicPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
         lineThickness : createDynamicPropertyDescriptor('lineThickness'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(0.0, 0.0))
          */

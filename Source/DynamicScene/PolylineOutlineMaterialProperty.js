@@ -75,6 +75,7 @@ define([
         outlineColor : createDynamicPropertyDescriptor('outlineColor'),
         /**
          * Gets or sets the numberic property which determines the polyline's outline width.
+         * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0)
          */
