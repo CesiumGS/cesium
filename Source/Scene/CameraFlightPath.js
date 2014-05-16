@@ -376,6 +376,10 @@ define([
         return update;
     }
 
+    var dirScratch = new Cartesian3();
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
+
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be given in world coordinates.
@@ -396,9 +400,6 @@ define([
      *
      * @see Scene#animations
      */
-    var dirScratch = new Cartesian3();
-    var rightScratch = new Cartesian3();
-    var upScratch = new Cartesian3();
     CameraFlightPath.createAnimation = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;

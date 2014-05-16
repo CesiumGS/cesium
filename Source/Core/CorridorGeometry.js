@@ -635,7 +635,7 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @see CorridorGeometry#createGeometry
+     * @see CorridorGeometry.createGeometry
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({

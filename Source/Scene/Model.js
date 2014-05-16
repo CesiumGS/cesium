@@ -2184,7 +2184,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Model#destroy
      */
@@ -2218,7 +2218,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

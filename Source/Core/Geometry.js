@@ -48,7 +48,7 @@ define([
      *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html">Geometry and Appearances Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      *
      * @see PolygonGeometry
      * @see RectangleGeometry

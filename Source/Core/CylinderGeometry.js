@@ -58,7 +58,7 @@ define([
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
-     * @see CylinderGeometry#createGeometry
+     * @see CylinderGeometry.createGeometry
      *
      * @example
      * // create cylinder geometry

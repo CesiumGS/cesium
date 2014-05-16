@@ -148,6 +148,7 @@ define([
 
     defineProperties(UniformState.prototype, {
         /**
+         * @memberof UniformState.prototype
          * @type {BoundingRectangle}
          */
         viewport : {
@@ -194,6 +195,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         model : {
@@ -226,6 +228,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModel : {
@@ -258,6 +261,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         view : {
@@ -300,6 +304,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         viewRotation3D : {
@@ -310,6 +315,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseView : {
@@ -337,6 +343,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         inverseViewRotation : {
@@ -358,7 +365,8 @@ define([
         },
 
         /**
-         * @teyp {Matrix4}
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
          */
         projection : {
             get : function() {
@@ -367,6 +375,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseProjection : {
@@ -387,6 +396,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         infiniteProjection : {
@@ -396,6 +406,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelView : {
@@ -431,6 +442,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModelView : {
@@ -455,6 +467,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         viewProjection : {
@@ -465,6 +478,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseViewProjection : {
@@ -475,6 +489,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelViewProjection : {
@@ -486,6 +501,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModelViewProjection : {
@@ -509,6 +525,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelViewInfiniteProjection : {

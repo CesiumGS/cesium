@@ -45,7 +45,7 @@ define([
      *
      * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
@@ -75,8 +75,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
@@ -496,7 +496,7 @@ define([
      * @param {Number} y The tile's y coordinate.
      * @param {Number} level The tile's zoom level.
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
      * @see BingMapsImageryProvider#quadKeyToTileXY
      */
     BingMapsImageryProvider.tileXYToQuadKey = function(x, y, level) {
@@ -526,7 +526,7 @@ define([
      *
      * @param {String} quadkey The tile's quad key
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
      * @see BingMapsImageryProvider#tileXYToQuadKey
      */
     BingMapsImageryProvider.quadKeyToTileXY = function(quadkey) {

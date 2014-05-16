@@ -159,7 +159,7 @@ define([
      * @param {Number} [alpha=1.0] The alpha component 0...1
      * @returns {Color} The color object.
      *
-     * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
      */
     Color.fromHsl = function(hue, saturation, lightness, alpha) {
         hue = defaultValue(hue, 0.0) % 1.0;
@@ -324,7 +324,7 @@ define([
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
      *
-     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -546,7 +546,7 @@ define([
      * @memberof Color
      *
      * @returns {String} The CSS equivalent of this color.
-     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
      */
     Color.prototype.toCssColorString = function() {
         var red = Color.floatToByte(this.red);

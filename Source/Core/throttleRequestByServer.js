@@ -36,7 +36,7 @@ define([
      * @returns {Promise} Either undefined, meaning the request would exceed the maximum
      * number of parallel requests, or a Promise that returns the requested data.
      *
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // throttle requests for an image
