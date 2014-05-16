@@ -25,6 +25,7 @@ define([
         './ImageryState',
         './Pass',
         './SceneMode',
+        './Tile',
         './TileReplacementQueue',
         './TileState'
     ], function(
@@ -53,6 +54,7 @@ define([
         ImageryState,
         Pass,
         SceneMode,
+        Tile,
         TileReplacementQueue,
         TileState) {
     "use strict";
@@ -366,7 +368,7 @@ define([
         if (!defined(surface._levelZeroTiles)) {
             if (surface._terrainProvider.ready) {
                 var terrainTilingScheme = surface._terrainProvider.tilingScheme;
-                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+                surface._levelZeroTiles = Tile.createLevelZeroTiles(terrainTilingScheme);
             } else {
                 // Nothing to do until the terrain provider is ready.
                 return;

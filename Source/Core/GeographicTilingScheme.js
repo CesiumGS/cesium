@@ -110,18 +110,6 @@ define([
     };
 
     /**
-     * Creates the tile or tiles at level of detail zero, the coarsest, least detailed level.
-     *
-     * @memberof GeographicTilingScheme
-     *
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
-     * tile in the northwest corner of the globe and followed by the tile (if any) to its east.
-     */
-    GeographicTilingScheme.prototype.createLevelZeroTiles = function() {
-        return TilingScheme.createRectangleOfLevelZeroTiles(this, this._numberOfLevelZeroTilesX, this._numberOfLevelZeroTilesY);
-    };
-
-    /**
      * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
      *
