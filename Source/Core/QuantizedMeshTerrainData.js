@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './BoundingSphere',
         './Cartesian3',
         './defaultValue',
@@ -9,9 +10,9 @@ define([
         './Intersections2D',
         './Math',
         './TaskProcessor',
-        '../ThirdParty/when',
         './TerrainMesh'
     ], function(
+        when,
         BoundingSphere,
         Cartesian3,
         defaultValue,
@@ -21,7 +22,6 @@ define([
         Intersections2D,
         CesiumMath,
         TaskProcessor,
-        when,
         TerrainMesh) {
     "use strict";
 

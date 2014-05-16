@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../Scene/Tile',
         './defined',
         './defineProperties',
-        './DeveloperError',
-        '../Scene/Tile'
+        './DeveloperError'
     ], function(
+        Tile,
         defined,
         defineProperties,
-        DeveloperError,
-        Tile) {
+        DeveloperError) {
     "use strict";
 
     /**

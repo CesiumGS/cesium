@@ -17,6 +17,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
         '../ThirdParty/when',
@@ -24,7 +25,6 @@ define([
         './ImageryState',
         './Pass',
         './SceneMode',
-        '../Core/TerrainProvider',
         './TileReplacementQueue',
         './TileState'
     ], function(
@@ -45,6 +45,7 @@ define([
         PrimitiveType,
         Queue,
         Rectangle,
+        TerrainProvider,
         WebMercatorProjection,
         DrawCommand,
         when,
@@ -52,7 +53,6 @@ define([
         ImageryState,
         Pass,
         SceneMode,
-        TerrainProvider,
         TileReplacementQueue,
         TileState) {
     "use strict";

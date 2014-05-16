@@ -13,6 +13,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Core/EllipsoidTerrainProvider',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
         '../Core/Geometry',
@@ -24,6 +25,7 @@ define([
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
@@ -37,13 +39,11 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        '../Core/EllipsoidTerrainProvider',
         './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './ImageryLayerCollection',
         './Pass',
-        './SceneMode',
-        '../Core/TerrainProvider'
+        './SceneMode'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -58,6 +58,7 @@ define([
         defineProperties,
         destroyObject,
         Ellipsoid,
+        EllipsoidTerrainProvider,
         FeatureDetection,
         GeographicProjection,
         Geometry,
@@ -69,6 +70,7 @@ define([
         Occluder,
         PrimitiveType,
         Rectangle,
+        TerrainProvider,
         Transforms,
         BufferUsage,
         ClearCommand,
@@ -82,13 +84,11 @@ define([
         GlobeVSPole,
         when,
         DepthFunction,
-        EllipsoidTerrainProvider,
         GlobeSurface,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         Pass,
-        SceneMode,
-        TerrainProvider) {
+        SceneMode) {
     "use strict";
 
     /**

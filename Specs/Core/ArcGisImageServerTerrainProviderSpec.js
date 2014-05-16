@@ -4,10 +4,10 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defined',
         'Core/Ellipsoid',
-        'Core/loadImage',
-        'Core/Math',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
+        'Core/loadImage',
+        'Core/Math',
         'Core/TerrainProvider',
         'ThirdParty/when'
     ], function(
@@ -15,10 +15,10 @@ defineSuite([
         DefaultProxy,
         defined,
         Ellipsoid,
-        loadImage,
-        CesiumMath,
         GeographicTilingScheme,
         HeightmapTerrainData,
+        loadImage,
+        CesiumMath,
         TerrainProvider,
         when) {
     "use strict";

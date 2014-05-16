@@ -3,15 +3,15 @@ defineSuite([
         'Scene/TileCoordinatesImageryProvider',
         'Core/defined',
         'Core/GeographicTilingScheme',
-        'Scene/ImageryProvider',
         'Core/WebMercatorTilingScheme',
+        'Scene/ImageryProvider',
         'ThirdParty/when'
     ], function(
         TileCoordinatesImageryProvider,
         defined,
         GeographicTilingScheme,
-        ImageryProvider,
         WebMercatorTilingScheme,
+        ImageryProvider,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

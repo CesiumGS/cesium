@@ -1,27 +1,27 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Tile',
+        'Core/CesiumTerrainProvider',
         'Core/defined',
         'Core/Math',
         'Core/Rectangle',
-        'Core/CesiumTerrainProvider',
+        'Core/WebMercatorTilingScheme',
         'Scene/ImageryLayerCollection',
         'Scene/TerrainState',
         'Scene/TileState',
-        'Core/WebMercatorTilingScheme',
         'Specs/createContext',
         'Specs/destroyContext',
         'ThirdParty/when'
     ], function(
         Tile,
+        CesiumTerrainProvider,
         defined,
         CesiumMath,
         Rectangle,
-        CesiumTerrainProvider,
+        WebMercatorTilingScheme,
         ImageryLayerCollection,
         TerrainState,
         TileState,
-        WebMercatorTilingScheme,
         createContext,
         destroyContext,
         when) {

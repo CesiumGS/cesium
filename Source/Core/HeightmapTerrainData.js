@@ -1,28 +1,28 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
+        './GeographicTilingScheme',
         './HeightmapTessellator',
         './Math',
         './Rectangle',
         './TaskProcessor',
-        '../ThirdParty/when',
-        './GeographicTilingScheme',
         './TerrainMesh',
         './TerrainProvider'
     ], function(
+        when,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        GeographicTilingScheme,
         HeightmapTessellator,
         CesiumMath,
         Rectangle,
         TaskProcessor,
-        when,
-        GeographicTilingScheme,
         TerrainMesh,
         TerrainProvider) {
     "use strict";

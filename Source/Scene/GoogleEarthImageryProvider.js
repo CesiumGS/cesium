@@ -1,34 +1,34 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
         '../Core/loadText',
         '../Core/Rectangle',
         '../Core/RuntimeError',
-        '../ThirdParty/when',
-        '../Core/Credit',
-        '../Core/GeographicTilingScheme',
-        './ImageryProvider',
         '../Core/TileProviderError',
-        '../Core/WebMercatorTilingScheme'
+        '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        GeographicTilingScheme,
         loadText,
         Rectangle,
         RuntimeError,
-        when,
-        Credit,
-        GeographicTilingScheme,
-        ImageryProvider,
         TileProviderError,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        when,
+        ImageryProvider) {
     "use strict";
 
     /**

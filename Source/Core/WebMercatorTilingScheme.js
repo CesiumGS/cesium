@@ -6,8 +6,8 @@ define([
         './defineProperties',
         './Ellipsoid',
         './Rectangle',
-        './WebMercatorProjection',
-        './TilingScheme'
+        './TilingScheme',
+        './WebMercatorProjection'
     ], function(
         Cartesian2,
         defaultValue,
@@ -15,8 +15,8 @@ define([
         defineProperties,
         Ellipsoid,
         Rectangle,
-        WebMercatorProjection,
-        TilingScheme) {
+        TilingScheme,
+        WebMercatorProjection) {
     "use strict";
 
     /**

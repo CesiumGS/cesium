@@ -9,11 +9,11 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Core/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         TileMapServiceImageryProvider,
@@ -25,11 +25,11 @@ defineSuite([
         CesiumMath,
         Rectangle,
         WebMercatorProjection,
+        WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

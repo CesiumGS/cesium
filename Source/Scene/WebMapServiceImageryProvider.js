@@ -1,27 +1,27 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/freezeObject',
-        '../Core/Rectangle',
-        '../Core/Credit',
         '../Core/GeographicTilingScheme',
+        '../Core/Rectangle',
         './ImageryProvider'
     ], function(
         clone,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         freezeObject,
-        Rectangle,
-        Credit,
         GeographicTilingScheme,
+        Rectangle,
         ImageryProvider) {
     "use strict";
 

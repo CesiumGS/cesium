@@ -4,19 +4,19 @@ define([
         '../Core/Cartesian3',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../ThirdParty/when',
         '../Core/TerrainProvider',
-        './TerrainState',
-        '../Core/TileProviderError'
+        '../Core/TileProviderError',
+        '../ThirdParty/when',
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian3,
         defined,
         DeveloperError,
-        when,
         TerrainProvider,
-        TerrainState,
-        TileProviderError) {
+        TileProviderError,
+        when,
+        TerrainState) {
     "use strict";
 
     /**

@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Credit'
+        '../Core/DeveloperError'
     ], function(
+        Credit,
         defaultValue,
         defined,
         destroyObject,
-        DeveloperError,
-        Credit) {
+        DeveloperError) {
     "use strict";
 
     function displayTextCredit(credit, container, delimiter) {

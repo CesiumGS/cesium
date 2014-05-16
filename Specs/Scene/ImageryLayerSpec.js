@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/ImageryLayer',
+        'Core/EllipsoidTerrainProvider',
         'Core/jsonp',
         'Core/loadImage',
         'Core/loadWithXhr',
         'Core/Rectangle',
         'Scene/BingMapsImageryProvider',
-        'Core/EllipsoidTerrainProvider',
         'Scene/Imagery',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
@@ -18,12 +18,12 @@ defineSuite([
         'Specs/destroyContext'
     ], function(
         ImageryLayer,
+        EllipsoidTerrainProvider,
         jsonp,
         loadImage,
         loadWithXhr,
         Rectangle,
         BingMapsImageryProvider,
-        EllipsoidTerrainProvider,
         Imagery,
         ImageryLayerCollection,
         ImageryState,

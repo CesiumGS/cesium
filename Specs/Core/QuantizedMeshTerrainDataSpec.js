@@ -4,8 +4,8 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/defined',
-        'Core/Math',
         'Core/GeographicTilingScheme',
+        'Core/Math',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
@@ -14,8 +14,8 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         defined,
-        CesiumMath,
         GeographicTilingScheme,
+        CesiumMath,
         TerrainData,
         TerrainMesh,
         when) {
