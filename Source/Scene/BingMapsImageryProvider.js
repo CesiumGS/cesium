@@ -45,7 +45,7 @@ define([
      *
      * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at {@link https://www.bingmapsportal.com/|https://www.bingmapsportal.com/}.
+     *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
