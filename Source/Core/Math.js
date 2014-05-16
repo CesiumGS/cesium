@@ -392,8 +392,13 @@ define([
      * Converts degrees to radians.
      * @param {Number} degrees The angle to convert in degrees.
      * @returns {Number} The corresponding angle in radians.
+     *
+     * @exception {DeveloperError} Parameter missing, please provide degrees.
      */
     CesiumMath.toRadians = function(degrees) {
+        if(degrees === null){
+            throw new DeveloperError('Parameter missing, please provide degrees.');
+        }
         return degrees * CesiumMath.RADIANS_PER_DEGREE;
     };
 
@@ -401,8 +406,13 @@ define([
      * Converts radians to degrees.
      * @param {Number} radians The angle to convert in radians.
      * @returns {Number} The corresponding angle in degrees.
+     *
+     * @exception {DeveloperError} Parameter missing, please provide degrees.
      */
     CesiumMath.toDegrees = function(radians) {
+        if(radians === null){
+            throw new DeveloperError('Parameter missing, please provide radians.');
+        }
         return radians * CesiumMath.DEGREES_PER_RADIAN;
     };
 
@@ -416,8 +426,13 @@ define([
      * @example
      * // Convert 270 degrees to -90 degrees longitude
      * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
+     *
+     * @exception {DeveloperError} Parameter missing, please provide angle.
      */
     CesiumMath.convertLongitudeRange = function(angle) {
+        if(angle === null){
+            throw new DeveloperError('Parameter missing, please provide angle.');
+        }
         var twoPi = CesiumMath.TWO_PI;
 
         var simplified = angle - Math.floor(angle / twoPi) * twoPi;
@@ -436,8 +451,13 @@ define([
      * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
+     *
+     * @exception {DeveloperError} Parameter missing, please provide angle.
      */
     CesiumMath.negativePiToPi = function(x) {
+        if(x === null){
+            throw new DeveloperError('Parameter missing, please provide angle.');
+        }
         var epsilon10 = CesiumMath.EPSILON10;
         var pi = CesiumMath.PI;
         var two_pi = CesiumMath.TWO_PI;
@@ -457,8 +477,13 @@ define([
      * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
+     *
+     * @exception {DeveloperError} Parameter missing, please provide angle.
      */
     CesiumMath.zeroToTwoPi = function(x) {
+        if(x === null){
+            throw new DeveloperError('Parameter missing, please provide angle.');
+        }
         var value = x % CesiumMath.TWO_PI;
         // We do a second modules here if we add 2Pi to ensure that we don't have any numerical issues with very
         // small negative values.
@@ -479,6 +504,9 @@ define([
      * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
+        if(left === null || right === null){
+            throw new DeveloperError('At least one operand is missing, please provide both right and left operands');
+        }
         epsilon = defaultValue(epsilon, 0.0);
         return Math.abs(left - right) <= epsilon;
     };
@@ -534,9 +562,13 @@ define([
      * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
      * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
      *
+     * @exception {DeveloperError} Number to be incremented is required.
      * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
+        if(n === null){
+            throw new DeveloperError('Number to be incremented is required');
+        }
         minimumValue = defaultValue(minimumValue, 0.0);
 
         //>>includeStart('debug', pragmas.debug);
@@ -620,8 +652,21 @@ define([
      * @param {Number} min The minimum value.
      * @param {Number} max The maximum value.
      * @returns The value clamped so that min <= value <= max.
+     *
+     * @exception {DeveloperError} Value to constrain is required.
+     * @exception {DeveloperError} Minimum value is missing.
+     * @exception {DeveloperError} Maximum value is missing.
      */
     CesiumMath.clamp = function(value, min, max) {
+        if(value === null){
+            throw new DeveloperError('Value to constrain is required');
+        }
+        if(min === null){
+            throw new DeveloperError('Minimum value is missing.');
+        }
+        if(max === null){
+            throw new DeveloperError('Maximum value is missing.');
+        }
         return value < min ? min : value > max ? max : value;
     };
 
