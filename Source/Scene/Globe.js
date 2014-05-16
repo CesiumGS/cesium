@@ -43,7 +43,8 @@ define([
         './GlobeSurfaceShaderSet',
         './ImageryLayerCollection',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './terrainAttributeLocations'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -88,7 +89,8 @@ define([
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         Pass,
-        SceneMode) {
+        SceneMode,
+        terrainAttributeLocations) {
     "use strict";
 
     /**
@@ -120,7 +122,7 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet(terrainAttributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
@@ -728,7 +730,7 @@ define([
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
+                GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
