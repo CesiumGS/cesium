@@ -10,8 +10,8 @@ define([
         '../Core/TileProviderError',
         '../Renderer/BufferUsage',
         '../ThirdParty/when',
-        './TerrainState',
-        './terrainAttributeLocations'
+        './terrainAttributeLocations',
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -23,8 +23,8 @@ define([
         TileProviderError,
         BufferUsage,
         when,
-        TerrainState,
-        terrainAttributeLocations) {
+        terrainAttributeLocations,
+        TerrainState) {
     "use strict";
 
     /**
