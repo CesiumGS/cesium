@@ -2,12 +2,14 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Quaternion',
         './Spline'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Quaternion,
         Spline) {
@@ -106,30 +108,57 @@ define([
 
         var innerQuadrangles = computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle);
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Quaternion} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * An array of {@link Quaternion} inner qradrangles for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.innerQuadrangles = innerQuadrangles;
+        this._times = times;
+        this._points = points;
+        this._innerQuadrangles = innerQuadrangles;
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
+
+    defineProperties(QuaternionSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Quaternion} control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * An array of {@link Quaternion} inner quadrangles for the control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        innerQuadrangles : {
+            get : function() {
+                return this._innerQuadrangles;
+            }
+        }
+    });
 
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
