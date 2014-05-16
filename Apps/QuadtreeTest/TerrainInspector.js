@@ -1,16 +1,16 @@
 /*global require,document*/
 require([
-    'Cesium',
-    'dojo/dom-construct',
-    'dijit/TitlePane',
-    'dijit/form/Button',
-    'dijit/form/CheckBox'
-], function(
-    Cesium,
-    domConstruct,
-    TitlePane,
-    Button,
-    CheckBox) {
+        'Cesium',
+        'dijit/form/Button',
+        'dijit/form/CheckBox',
+        'dijit/TitlePane',
+        'dojo/dom-construct'
+    ], function(
+        Cesium,
+        Button,
+        CheckBox,
+        TitlePane,
+        domConstruct) {
     "use strict";
 
     var viewer = new Cesium.Viewer('cesiumContainer');

@@ -7,16 +7,16 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeometryInstance',
+        '../Core/Intersect',
         '../Core/Rectangle',
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
-        '../Core/GeometryInstance',
-        '../Core/Intersect',
         './GeographicTilingScheme',
         './PerInstanceColorAppearance',
         './Primitive',
-        './TerrainProvider',
-        './QuadtreeTileState'
+        './QuadtreeTileState',
+        './TerrainProvider'
     ], function(
         Cartesian3,
         Color,
@@ -25,16 +25,16 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GeometryInstance,
+        Intersect,
         Rectangle,
         RectangleGeometry,
         RectangleOutlineGeometry,
-        GeometryInstance,
-        Intersect,
         GeographicTilingScheme,
         PerInstanceColorAppearance,
         Primitive,
-        TerrainProvider,
-        QuadtreeTileState) {
+        QuadtreeTileState,
+        TerrainProvider) {
     "use strict";
 
     /**

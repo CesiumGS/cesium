@@ -7,6 +7,7 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
+        './QuadtreeTile',
         './QuadtreeTileState',
         './SceneMode',
         './TileReplacementQueue'
@@ -18,6 +19,7 @@ define([
         EllipsoidalOccluder,
         getTimestamp,
         Queue,
+        QuadtreeTile,
         QuadtreeTileState,
         SceneMode,
         TileReplacementQueue) {
@@ -104,7 +106,7 @@ define([
         if (!defined(primitive._levelZeroTiles)) {
             if (primitive._tileProvider.ready) {
                 var terrainTilingScheme = primitive._tileProvider.tilingScheme;
-                primitive._levelZeroTiles = terrainTilingScheme.createLevelZeroQuadtreeTiles();
+                primitive._levelZeroTiles = QuadtreeTile.createLevelZeroTiles(terrainTilingScheme);
             } else {
                 // Nothing to do until the provider is ready.
                 return;

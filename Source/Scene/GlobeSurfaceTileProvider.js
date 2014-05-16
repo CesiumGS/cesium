@@ -13,16 +13,16 @@ define([
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        '../Scene/Pass',
+        '../ThirdParty/when',
         './GlobeSurfaceTile',
         './ImageryLayer',
         './ImageryState',
         './QuadtreeTileState',
-        './SceneMode',
-        './TerrainProvider',
-        '../ThirdParty/when'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -37,16 +37,16 @@ define([
         Matrix4,
         PrimitiveType,
         Rectangle,
+        TerrainProvider,
         WebMercatorProjection,
         DrawCommand,
         Pass,
+        when,
         GlobeSurfaceTile,
         ImageryLayer,
         ImageryState,
         QuadtreeTileState,
-        SceneMode,
-        TerrainProvider,
-        when) {
+        SceneMode) {
     "use strict";
 
     /**

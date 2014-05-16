@@ -7,17 +7,17 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/PixelFormat',
         '../Core/Rectangle',
+        '../Renderer/PixelDatatype',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './ImageryState',
         './QuadtreeTileState',
         './TerrainState',
         './TileState',
-        './TileTerrain',
-        '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        './TileTerrain'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -26,17 +26,17 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        PixelFormat,
         Rectangle,
+        PixelDatatype,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         ImageryState,
         QuadtreeTileState,
         TerrainState,
         TileState,
-        TileTerrain,
-        PixelDatatype,
-        PixelFormat,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
+        TileTerrain) {
     "use strict";
 
     var GlobeSurfaceTile = function() {
