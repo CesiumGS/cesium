@@ -61,8 +61,15 @@ define([
      *
      * @alias GlobeSurfaceTileProvider
      * @constructor
+     *
+     * @private
      */
     var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
+        this.lightingFadeOutDistance = 6500000.0;
+        this.lightingFadeInDistance = 9000000.0;
+        this.oceanNormalMap = undefined;
+        this.zoomedOutOceanSpecularIntensity = 0.5;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -77,6 +84,10 @@ define([
         this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
 
         this._layerOrderChanged = false;
+
+        this._drawCommands = [];
+        this._uniformMaps = [];
+        this._usedDrawCommands = 0;
 
         this._debug = {
             wireframe : false,
@@ -190,6 +201,8 @@ define([
                 tile.data.imagery.sort(sortTileImageryByLayerIndex);
             });
         }
+
+        this._usedDrawCommands = 0;
     };
 
     GlobeSurfaceTileProvider.prototype.endFrame = function(frameState) {
@@ -291,7 +304,7 @@ define([
      * @param {QuadtreeTile} tile The tile instance.
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {Command[]} commandList The list of rendering commands.  This method should add additional commands to this list.
+     * @param {DrawCommand[]} commandList The list of rendering commands.  This method should add additional commands to this list.
      */
     GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
         if (!defined(this._renderState)) {
@@ -375,24 +388,35 @@ define([
         do {
             var numberOfDayTextures = 0;
 
-            //++tileCommandIndex;
-            // TODO: pool commands and uniform maps.
-            //var command = tileCommands[tileCommandIndex];
-            //if (!defined(command)) {
-                var command = new DrawCommand();
+            var command;
+            var uniformMap;
+
+            if (this._drawCommands.length <= this._usedDrawCommands) {
+                command = new DrawCommand();
                 command.owner = tile;
                 command.cull = false;
                 command.boundingVolume = new BoundingSphere();
-                //tileCommands[tileCommandIndex] = command;
-                //tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
-            //}
+
+                uniformMap = createTileUniformMap();
+
+                this._drawCommands.push(command);
+                this._uniformMaps.push(uniformMap);
+            } else {
+                command = this._drawCommands[this._usedDrawCommands];
+                uniformMap = this._uniformMaps[this._usedDrawCommands];
+            }
+
             command.owner = tile;
+
+            ++this._usedDrawCommands;
 
             // TODO
             //command.debugShowBoundingVolume = (tile === this._debug.boundingSphereTile);
 
-            //var uniformMap = tileCommandUniformMaps[tileCommandIndex];
-            var uniformMap = createTileUniformMap();
+            uniformMap.oceanNormalMap = this.oceanNormalMap;
+            uniformMap.lightingFadeDistance.x = this.lightingFadeOutDistance;
+            uniformMap.lightingFadeDistance.y = this.lightingFadeInDistance;
+            uniformMap.zoomedOutOceanSpecularIntensity = this.zoomedOutOceanSpecularIntensity;
 
             uniformMap.center3D = surfaceTile.center;
 

@@ -781,15 +781,16 @@ define([
                 this._zoomedOutOceanSpecularIntensity = 0.0;
             }
 
-            this._lightingFadeDistance.x = this.lightingFadeOutDistance;
-            this._lightingFadeDistance.y = this.lightingFadeInDistance;
-
             var surface = this._surface;
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
             surface.tileCacheSize = this.tileCacheSize;
 
             var tileProvider = surface.tileProvider;
             tileProvider.terrainProvider = this.terrainProvider;
+            tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
+            tileProvider.lightingFadeInDistance = this.lightingFadeInDistance;
+            tileProvider.zoomedOutOceanSpecularIntensity = this._zoomedOutOceanSpecularIntensity;
+            tileProvider.oceanNormalMap = this._oceanNormalMap;
 
             this._surface.update(context, frameState, commandList);
 

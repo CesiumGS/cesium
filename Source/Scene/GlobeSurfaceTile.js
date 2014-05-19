@@ -474,7 +474,8 @@ define([
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
                 if (childTile.state !== QuadtreeTileState.START) {
-                    if (defined(childTile.terrainData) && !childTile.terrainData.wasCreatedByUpsampling()) {
+                    var childSurfaceTile = childTile.data;
+                    if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
                         continue;
                     }
@@ -482,10 +483,10 @@ define([
                     // Restart the upsampling process, no matter its current state.
                     // We create a new instance rather than just restarting the existing one
                     // because there could be an asynchronous operation pending on the existing one.
-                    if (defined(childTile.upsampledTerrain)) {
-                        childTile.upsampledTerrain.freeResources();
+                    if (defined(childSurfaceTile.upsampledTerrain)) {
+                        childSurfaceTile.upsampledTerrain.freeResources();
                     }
-                    childTile.upsampledTerrain = new TileTerrain({
+                    childSurfaceTile.upsampledTerrain = new TileTerrain({
                         data : surfaceTile.terrainData,
                         x : tile.x,
                         y : tile.y,
@@ -494,9 +495,9 @@ define([
 
                     if (surfaceTile.terrainData.isChildAvailable(tile.x, tile.y, childTile.x, childTile.y)) {
                         // Data is available for the child now.  It might have been before, too.
-                        if (!defined(childTile.loadedTerrain)) {
+                        if (!defined(childSurfaceTile.loadedTerrain)) {
                             // No load process is in progress, so start one.
-                            childTile.loadedTerrain = new TileTerrain();
+                            childSurfaceTile.loadedTerrain = new TileTerrain();
                         }
                     }
 
