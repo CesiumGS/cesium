@@ -18,7 +18,7 @@ define([
      *
      * @exports Iso8601
      *
-     * @see <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 on Wikipedia</a>.
+     * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      * @see JulianDate
      * @see TimeInterval
      */

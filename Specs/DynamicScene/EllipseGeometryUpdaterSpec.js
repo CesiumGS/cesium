@@ -17,7 +17,7 @@ defineSuite([
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/SampledProperty',
         'DynamicScene/TimeIntervalCollectionProperty',
-        'Scene/CompositePrimitive'
+        'Scene/PrimitiveCollection'
     ], function(
         EllipseGeometryUpdater,
         Cartesian3,
@@ -36,7 +36,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
-        CompositePrimitive) {
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -386,7 +386,7 @@ defineSuite([
         dynamicObject.ellipse = ellipse;
 
         var updater = new EllipseGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -464,7 +464,7 @@ defineSuite([
         var dynamicObject = createBasicEllipse();
         var updater = new EllipseGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -484,7 +484,7 @@ defineSuite([
         dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
         dynamicObject.ellipse.semiMajorAxis.addSample(time, 4);
         var updater = new EllipseGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

@@ -163,6 +163,8 @@ define([
     defineProperties(InfoBoxViewModel.prototype, {
         /**
          * Gets an {@link Event} that is fired when the user clicks the camera icon.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Event}
          */
         cameraClicked : {
             get : function() {
@@ -171,6 +173,8 @@ define([
         },
         /**
          * Gets an {@link Event} that is fired when the user closes the info box.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Event}
          */
         closeClicked : {
             get : function() {
@@ -179,6 +183,8 @@ define([
         },
         /**
          * Gets the HTML sanitization function to use for the selection description.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Function}
          */
         sanitizer : {
             get : function() {

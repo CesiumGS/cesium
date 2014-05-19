@@ -153,7 +153,7 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseOutlineGeometry#createGeometry
+     * @see EllipseOutlineGeometry.createGeometry
      *
      * @example
      * var ellipse = new Cesium.EllipseOutlineGeometry({

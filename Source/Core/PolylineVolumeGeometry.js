@@ -231,6 +231,8 @@ define([
         this._workerName = 'createPolylineVolumeGeometry';
     };
 
+    var brScratch = new BoundingRectangle();
+
     /**
      * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      * @memberof PolylineVolumeGeometry
@@ -242,7 +244,6 @@ define([
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
      * @exception {DeveloperError} Count of unique shape positions must be at least 3.
      */
-    var brScratch = new BoundingRectangle();
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
         var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);

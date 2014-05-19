@@ -23,7 +23,7 @@ define([
      * @alias AnimationCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
      */
     var AnimationCollection = function() {
         this._tweens = [];

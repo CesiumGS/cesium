@@ -28,7 +28,7 @@ define([
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
      * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
-     * <a href='http://wiki.openstreetmap.org/wiki/Tile_usage_policy'>Tile Usage Policy</a>.
+     * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
      * @alias OpenStreetMapImageryProvider
      * @constructor
@@ -47,8 +47,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // OpenStreetMap tile provider

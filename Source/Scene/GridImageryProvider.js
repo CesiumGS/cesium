@@ -178,6 +178,7 @@ define([
         /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
+         * @memberof GridImageryProvider.prototype
          * @type {Credit}
          */
         credit : {

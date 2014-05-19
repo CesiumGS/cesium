@@ -39,7 +39,7 @@ define([
 
     /**
      * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
-     * <a href="http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html" target="_blank">Accurate Atmospheric Scattering</a>
+     * {@link http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
      * in GPU Gems 2.
      * <p>
      * This is only supported in 3D.  atmosphere is faded out when morphing to 2D or Columbus view.

@@ -30,7 +30,6 @@ define([
         '../Renderer/PassState',
         './AnimationCollection',
         './Camera',
-        './CompositePrimitive',
         './CreditDisplay',
         './CullingVolume',
         './FrameState',
@@ -44,6 +43,7 @@ define([
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './Primitive',
+        './PrimitiveCollection',
         './SceneMode',
         './SceneTransforms',
         './SceneTransitioner',
@@ -80,7 +80,6 @@ define([
         PassState,
         AnimationCollection,
         Camera,
-        CompositePrimitive,
         CreditDisplay,
         CullingVolume,
         FrameState,
@@ -94,6 +93,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         Primitive,
+        PrimitiveCollection,
         SceneMode,
         SceneTransforms,
         SceneTransitioner,
@@ -125,7 +125,7 @@ define([
      * </code>
      * </p>
      * <p>
-     * The <code>webgl</code> property corresponds to the <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
+     * The <code>webgl</code> property corresponds to the {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      * object used to create the WebGL context.
      * </p>
      * <p>
@@ -139,7 +139,7 @@ define([
      * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
-     * The other <code>options.webgl</code> properties match the WebGL defaults for <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>.
+     * The other <code>options.webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
      * </p>
      * <p>
      * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
@@ -149,12 +149,12 @@ define([
      * @alias Scene
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
+     * @param {Canvas} canvas The HTML canvas element to create the scene for.
      * @param {Object} [contextOptions=undefined] Context and WebGL creation properties.  See details above.
-     * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
+     * @param {Element} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
-     * @see <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
+     * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      *
      * @example
      * // Create scene without anisotropic texture filtering
@@ -179,7 +179,7 @@ define([
         this._canvas = canvas;
         this._context = context;
         this._globe = undefined;
-        this._primitives = new CompositePrimitive();
+        this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
         this._camera = new Camera(this);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
@@ -475,7 +475,7 @@ define([
          * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
          * @type {Number}
-         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth'>drawingBufferWidth</a>
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferHeight : {
             get : function() {
@@ -487,7 +487,7 @@ define([
          * The drawingBufferHeight of the underlying GL context.
          * @memberof Scene.prototype
          * @type {Number}
-         * @see <a href='https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight'>drawingBufferHeight</a>
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferWidth : {
             get : function() {
@@ -499,7 +499,7 @@ define([
          * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
          * @memberof Scene.prototype
          * @type {Number}
-         * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml'>glGet</a> with <code>ALIASED_LINE_WIDTH_RANGE</code>.
+         * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
             get : function() {
@@ -526,7 +526,7 @@ define([
         /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
-         * @type {CompositePrimitive}
+         * @type {PrimitiveCollection}
          */
         primitives : {
             get : function() {
@@ -1205,8 +1205,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     * @memberof Scene
+     * @private
      */
     Scene.prototype.initializeFrame = function() {
         // Destroy released shaders once every 120 frames to avoid thrashing the cache
@@ -1277,8 +1276,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     * @memberof Scene
+     * @private
      */
     Scene.prototype.render = function(time) {
         try {
@@ -1549,16 +1547,39 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
      * @memberof Scene
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see Scene#destroy
      */
     Scene.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
      * @memberof Scene
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see Scene#isDestroyed
+     *
+     * @example
+     * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
         this._animations.removeAll();
