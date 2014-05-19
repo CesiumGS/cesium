@@ -9,12 +9,15 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/FeatureDetection',
+        '../Core/GeometryPipeline',
         '../Core/Intersect',
+        '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
+        '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Scene/Pass',
         '../ThirdParty/when',
@@ -33,12 +36,15 @@ define([
         DeveloperError,
         Event,
         FeatureDetection,
+        GeometryPipeline,
         Intersect,
+        IndexDatatype,
         Matrix4,
         PrimitiveType,
         Rectangle,
         TerrainProvider,
         WebMercatorProjection,
+        BufferUsage,
         DrawCommand,
         Pass,
         when,
@@ -57,15 +63,41 @@ define([
      * @constructor
      */
     var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
+        this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
         this._renderState = undefined;
 
         this._errorEvent = new Event();
+
+        this._debug = {
+            wireframe : false,
+            boundingSphereTile : undefined
+        };
     };
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
+        /**
+         * Gets or sets the {@link QuadtreePrimitive} for which this provider is
+         * providing tiles.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {QuadtreePrimitive}
+         */
+        quadtree : {
+            get : function() {
+                return this._quadtree;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+
+                this._quadtree = value;
+            }
+        },
+
         /**
          * Gets a value indicating whether or not the provider is ready for use.
          * @memberof GlobeSurfaceTileProvider.prototype
@@ -99,6 +131,29 @@ define([
         errorEvent : {
             get : function() {
                 return this._errorEvent;
+            }
+        },
+
+        terrainProvider : {
+            get : function() {
+                return this._terrainProvider;
+            },
+            set : function(terrainProvider) {
+                if (this._terrainProvider === terrainProvider) {
+                    return;
+                }
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(terrainProvider)) {
+                    throw new DeveloperError('terrainProvider is required.');
+                }
+                //>>includeEnd('debug');
+
+                this._terrainProvider = terrainProvider;
+
+                if (defined(this._quadtree)) {
+                    this._quadtree.invalidateAllTiles();
+                }
             }
         }
     });
@@ -407,13 +462,13 @@ define([
             command.pass = Pass.OPAQUE;
 
             // TODO
-//            if (this._debug.wireframe) {
-//                createWireframeVertexArrayIfNecessary(context, this, tile);
-//                if (defined(surfaceTile.wireframeVertexArray)) {
-//                    command.vertexArray = surfaceTile.wireframeVertexArray;
-//                    command.primitiveType = PrimitiveType.LINES;
-//                }
-//            }
+            if (this._debug.wireframe) {
+                createWireframeVertexArrayIfNecessary(context, this, tile);
+                if (defined(surfaceTile.wireframeVertexArray)) {
+                    command.vertexArray = surfaceTile.wireframeVertexArray;
+                    command.primitiveType = PrimitiveType.LINES;
+                }
+            }
 
             var boundingVolume = command.boundingVolume;
 
@@ -621,7 +676,7 @@ define([
     function createWireframeVertexArrayIfNecessary(context, provider, tile) {
         var surfaceTile = tile.data;
 
-        if (defined(surfaceTile)) {
+        if (defined(surfaceTile.wireframeVertexArray)) {
             return;
         }
 
@@ -639,10 +694,34 @@ define([
 
         when(surfaceTile.meshForWireframePromise, function(mesh) {
             if (surfaceTile.vertexArray === vertexArray) {
-                surfaceTile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
+                surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
             }
             surfaceTile.meshForWireframePromise = undefined;
         });
+    }
+
+    /**
+     * Creates a vertex array for wireframe rendering of a terrain tile.
+     *
+     * @private
+     *
+     * @param {Context} context The context in which to create the vertex array.
+     * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
+     *                      will share vertex buffers with this existing one.
+     * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
+     * @returns {VertexArray} The vertex array for wireframe rendering.
+     */
+    function createWireframeVertexArray(context, vertexArray, terrainMesh) {
+        var geometry = {
+            indices : terrainMesh.indices,
+            primitiveType : PrimitiveType.TRIANGLES
+        };
+
+        GeometryPipeline.toWireframe(geometry);
+
+        var wireframeIndices = geometry.indices;
+        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
     return GlobeSurfaceTileProvider;

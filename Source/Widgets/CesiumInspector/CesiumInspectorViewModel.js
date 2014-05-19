@@ -329,7 +329,7 @@ define([
         });
 
         this._showWireframe = createCommand(function() {
-            globe._surface._debug.wireframe = that.wireframe;
+            globe._surface.tileProvider._debug.wireframe = that.wireframe;
             return true;
         });
 

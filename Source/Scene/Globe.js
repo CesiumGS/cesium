@@ -784,16 +784,12 @@ define([
             this._lightingFadeDistance.x = this.lightingFadeOutDistance;
             this._lightingFadeDistance.y = this.lightingFadeInDistance;
 
-            this._surface._maximumScreenSpaceError = this.maximumScreenSpaceError;
-            this._surface._tileCacheSize = this.tileCacheSize;
-            this._surface.terrainProvider = this.terrainProvider;
-//            this._surface.update(context,
-//                    frameState,
-//                    commandList,
-//                    this._drawUniforms,
-//                    this._surfaceShaderSet,
-//                    this._rsColor,
-//                    this._projection);
+            var surface = this._surface;
+            surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
+            surface.tileCacheSize = this.tileCacheSize;
+
+            var tileProvider = surface.tileProvider;
+            tileProvider.terrainProvider = this.terrainProvider;
 
             this._surface.update(context, frameState, commandList);
 

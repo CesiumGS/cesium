@@ -4,6 +4,8 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
@@ -16,6 +18,8 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        defineProperties,
+        DeveloperError,
         EllipsoidalOccluder,
         getTimestamp,
         Queue,
@@ -26,12 +30,17 @@ define([
     "use strict";
 
     var QuadtreePrimitive = function QuadtreePrimitive(description) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(description) || !defined(description.tileProvider)) {
+            throw new DeveloperError('description.tileProvider is required.');
+        }
+        //>>includeEnd('debug');
+
         this._tileProvider = description.tileProvider;
+        this._tileProvider.quadtree = this;
 
         this._debug = {
                 enableDebugOutput : false,
-                wireframe : false,
-                boundingSphereTile : undefined,
 
                 maxDepth : 0,
                 tilesVisited : 0,
@@ -62,6 +71,37 @@ define([
         this._occluders = {
                 ellipsoid : new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO)
         };
+    };
+
+    defineProperties(QuadtreePrimitive.prototype, {
+        /**
+         * Gets the provider of {@link QuadtreeTile} instances for this quadtree.
+         * @type {QuadtreeTile}
+         * @memberof QuadtreePrimitive.prototype
+         */
+        tileProvider : {
+            get : function() {
+                return this._tileProvider;
+            }
+        }
+    });
+
+    QuadtreePrimitive.prototype.invalidateAllTiles = function() {
+        // Clear the replacement queue
+        var replacementQueue = this._tileReplacementQueue;
+        replacementQueue.head = undefined;
+        replacementQueue.tail = undefined;
+        replacementQueue.count = 0;
+
+        // Free and recreate the level zero tiles.
+        var levelZeroTiles = this._levelZeroTiles;
+        if (defined(levelZeroTiles)) {
+            for (var i = 0; i < levelZeroTiles.length; ++i) {
+                levelZeroTiles[i].freeResources();
+            }
+        }
+
+        this._levelZeroTiles = undefined;
     };
 
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
@@ -96,11 +136,6 @@ define([
 
         primitive._tileLoadQueue.length = 0;
         primitive._tileReplacementQueue.markStartOfRenderFrame();
-
-        var tileProvider = primitive._tileProvider;
-        var tilingScheme = tileProvider.tilingScheme;
-        var yTiles = tilingScheme.getNumberOfYTilesAtLevel(0);
-        var xTiles = tilingScheme.getNumberOfXTilesAtLevel(0);
 
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
