@@ -104,10 +104,22 @@ define([
         this._levelZeroTiles = undefined;
     };
 
+    QuadtreePrimitive.prototype.forEachLoadedTile = function(tileFunction) {
+        var tile = this._tileReplacementQueue.head;
+        while (defined(tile)) {
+            tileFunction(tile);
+            tile = tile.replacementNext;
+        }
+    };
+
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
+        this._tileProvider.beginFrame(frameState);
+
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
+
+        this._tileProvider.endFrame(frameState);
     };
 
     var scratchCameraPositionCartographic = new Cartographic();

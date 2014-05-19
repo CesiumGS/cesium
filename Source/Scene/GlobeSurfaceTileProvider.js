@@ -71,6 +71,13 @@ define([
 
         this._errorEvent = new Event();
 
+        this._imageryLayers.layerAdded.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerAdded, this);
+        this._imageryLayers.layerRemoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerRemoved, this);
+        this._imageryLayers.layerMoved.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerMoved, this);
+        this._imageryLayers.layerShownOrHidden.addEventListener(GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden, this);
+
+        this._layerOrderChanged = false;
+
         this._debug = {
             wireframe : false,
             boundingSphereTile : undefined
@@ -157,6 +164,36 @@ define([
             }
         }
     });
+
+    GlobeSurfaceTileProvider.prototype.beginFrame = function(frameState) {
+        function sortTileImageryByLayerIndex(a, b) {
+            var aImagery = a.loadingImagery;
+            if (!defined(aImagery)) {
+                aImagery = a.readyImagery;
+            }
+
+            var bImagery = b.loadingImagery;
+            if (!defined(bImagery)) {
+                bImagery = b.readyImagery;
+            }
+
+            return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
+        }
+
+        this._imageryLayers._update();
+
+        if (this._layerOrderChanged) {
+            this._layerOrderChanged = false;
+
+            // Sort the TileImagery instances in each tile by the layer index.
+            this._quadtree.forEachLoadedTile(function(tile) {
+                tile.data.imagery.sort(sortTileImageryByLayerIndex);
+            });
+        }
+    };
+
+    GlobeSurfaceTileProvider.prototype.endFrame = function(frameState) {
+    };
 
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
@@ -568,16 +605,66 @@ define([
         return Math.sqrt(result);
     };
 
-    /**
-     * Releases the geometry for a given tile.
-     *
-     * @memberof GlobeSurfaceTileProvider
-     *
-     * @param {QuadtreeTile} tile The tile instance.
-     */
-    GlobeSurfaceTileProvider.prototype.releaseTile = function(tile) {
-        if (defined(tile.data)) {
-            tile.data.freeResources();
+    GlobeSurfaceTileProvider.prototype._onLayerAdded = function(layer, index) {
+        if (layer.show) {
+            var terrainProvider = this._terrainProvider;
+
+            // create TileImagerys for this layer for all previously loaded tiles
+            this._quadtree.forEachLoadedTile(function(tile) {
+                if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
+                    tile.state = QuadtreeTileState.LOADING;
+                }
+            });
+
+            this._layerOrderChanged = true;
+        }
+    };
+
+    GlobeSurfaceTileProvider.prototype._onLayerRemoved = function(layer, index) {
+        // destroy TileImagerys for this layer for all previously loaded tiles
+        this._quadtree.forEachLoadedTile(function(tile) {
+            var tileImageryCollection = tile.data.imagery;
+
+            var startIndex = -1;
+            var numDestroyed = 0;
+            for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
+                var tileImagery = tileImageryCollection[i];
+                var imagery = tileImagery.loadingImagery;
+                if (!defined(imagery)) {
+                    imagery = tileImagery.readyImagery;
+                }
+                if (imagery.imageryLayer === layer) {
+                    if (startIndex === -1) {
+                        startIndex = i;
+                    }
+
+                    tileImagery.freeResources();
+                    ++numDestroyed;
+                } else if (startIndex !== -1) {
+                    // iterated past the section of TileImagerys belonging to this layer, no need to continue.
+                    break;
+                }
+            }
+
+            if (startIndex !== -1) {
+                tileImageryCollection.splice(startIndex, numDestroyed);
+            }
+            // If the base layer has been removed, mark the tile as non-renderable.
+            if (layer.isBaseLayer()) {
+                tile.isRenderable = false;
+            }
+        });
+    };
+
+    GlobeSurfaceTileProvider.prototype._onLayerMoved = function(layer, newIndex, oldIndex) {
+        this._layerOrderChanged = true;
+    };
+
+    GlobeSurfaceTileProvider.prototype._onLayerShownOrHidden = function(layer, index, show) {
+        if (show) {
+            this._onLayerAdded(layer, index);
+        } else {
+            this._onLayerRemoved(layer, index);
         }
     };
 

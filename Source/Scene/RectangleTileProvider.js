@@ -12,11 +12,11 @@ define([
         '../Core/Rectangle',
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
-        './GeographicTilingScheme',
+        '../Core/GeographicTilingScheme',
         './PerInstanceColorAppearance',
         './Primitive',
         './QuadtreeTileState',
-        './TerrainProvider'
+        '../Core/TerrainProvider'
     ], function(
         Cartesian3,
         Color,
