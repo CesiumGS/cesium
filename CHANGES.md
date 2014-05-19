@@ -6,7 +6,7 @@ Beta Releases
 
 ### b29 - 2014-06-02
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
   * Removed `Shapes.compute2DCircle`, `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
