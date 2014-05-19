@@ -85,6 +85,7 @@ define([
 
         this._layerOrderChanged = false;
 
+        this._tilesToRenderByTextureCount = [];
         this._drawCommands = [];
         this._uniformMaps = [];
         this._usedDrawCommands = 0;
@@ -176,7 +177,7 @@ define([
         }
     });
 
-    GlobeSurfaceTileProvider.prototype.beginFrame = function(frameState) {
+    GlobeSurfaceTileProvider.prototype.beginFrame = function(context, frameState, commandList) {
         function sortTileImageryByLayerIndex(a, b) {
             var aImagery = a.loadingImagery;
             if (!defined(aImagery)) {
@@ -202,10 +203,30 @@ define([
             });
         }
 
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (defined(tiles)) {
+                tiles.length = 0;
+            }
+        }
+
         this._usedDrawCommands = 0;
     };
 
-    GlobeSurfaceTileProvider.prototype.endFrame = function(frameState) {
+    GlobeSurfaceTileProvider.prototype.endFrame = function(context, frameState, commandList) {
+        // And the tile render commands to the command list, sorted by texture count.
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
+            var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
+            if (!defined(tilesToRender)) {
+                continue;
+            }
+
+            for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
+                commandList.push(tilesToRender[tileIndex]);
+            }
+        }
     };
 
     /**
@@ -410,8 +431,7 @@ define([
 
             ++this._usedDrawCommands;
 
-            // TODO
-            //command.debugShowBoundingVolume = (tile === this._debug.boundingSphereTile);
+            command.debugShowBoundingVolume = (tile === this._debug.boundingSphereTile);
 
             uniformMap.oceanNormalMap = this.oceanNormalMap;
             uniformMap.lightingFadeDistance.x = this.lightingFadeOutDistance;
@@ -513,14 +533,17 @@ define([
             uniformMap.waterMask = surfaceTile.waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            commandList.push(command);
-
             command.shaderProgram = this._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
             command.renderState = this._renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.OPAQUE;
+
+            if (!defined(this._tilesToRenderByTextureCount[numberOfDayTextures])) {
+                this._tilesToRenderByTextureCount[numberOfDayTextures] = [];
+            }
+            this._tilesToRenderByTextureCount[numberOfDayTextures].push(command);
 
             // TODO
             if (this._debug.wireframe) {
