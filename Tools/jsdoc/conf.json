@@ -1,0 +1,22 @@
+{
+    "tags": {
+        "allowUnknownTags": false
+    },
+    "source": {
+        "include": ["Source"],
+        "exclude": ["Source/ThirdParty", "Source/Workers/cesiumWorkerBootstrapper.js"],
+        "includePattern": ".+\\.js(doc)?$",
+        "excludePattern": "(^|\\/|\\\\)_"
+    },
+    "plugins": ["cesiumTags"],
+    "templates": {
+        "cleverLinks": true,
+        "cesium_template": {
+            "outputSourceFiles": false
+        }
+    },
+    "opts": {
+        "destination": "Build/DocumentationNew",
+        "recurse": true
+    }
+}
