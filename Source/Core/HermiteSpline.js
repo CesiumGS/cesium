@@ -4,6 +4,7 @@ define([
         './Cartesian4',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './LinearSpline',
         './Matrix4',
@@ -14,6 +15,7 @@ define([
         Cartesian4,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         LinearSpline,
         Matrix4,
@@ -199,36 +201,71 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * An array of {@link Cartesian3} incoming tangents at each control point.
-         * @type {Array}
-         * @readonly
-         */
-        this.inTangents = inTangents;
-
-        /**
-         * An array of {@link Cartesian3} outgoing tangents at each control point.
-         * @type {Array}
-         * @readonly
-         */
-        this.outTangents = outTangents;
+        this._times = times;
+        this._points = points;
+        this._inTangents = inTangents;
+        this._outTangents = outTangents;
 
         this._lastTimeIndex = 0;
     };
+
+    defineProperties(HermiteSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} incoming tangents at each control point.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        inTangents : {
+            get : function() {
+                return this._inTangents;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} outgoing tangents at each control point.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        outTangents : {
+            get : function() {
+                return this._outTangents;
+            }
+        }
+    });
 
     /**
      * Creates a spline where the tangents at each control point are the same.
@@ -368,7 +405,7 @@ define([
      * @param {Array} options.times The array of control point times.
      * @param {Array} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
-     * @para, {Cartesian3} options.lastTangent The incoming tangent of the last control point.
+     * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
