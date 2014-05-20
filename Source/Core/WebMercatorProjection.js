@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './DeveloperError',
         './Ellipsoid',
         './Math'
     ], function(
@@ -13,6 +14,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Ellipsoid,
         CesiumMath) {
     "use strict";
@@ -135,12 +137,18 @@ define([
      *
      * @memberof WebMercatorProjection
      *
-     * @param {Cartesian2} cartesian The web mercator coordinates in meters.
-     * @param {Cartographic} [result] The instance to which to copy the result, or undefined if a
+     * @param {Cartesian3} cartesian The web mercator Cartesian position to unrproject with height (z) in meters.
+     * @param {Cartographic} [result=undefined] The instance to which to copy the result, or undefined if a
      *        new instance should be created.
      * @returns {Cartographic} The equivalent cartographic coordinates.
      */
     WebMercatorProjection.prototype.unproject = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);

@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
+        './DeveloperError',
         './Ellipsoid'
     ], function(
         Cartesian3,
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Ellipsoid) {
     "use strict";
 
@@ -86,14 +88,20 @@ define([
      *
      * @memberof GeographicProjection
      *
-     * @param {Cartesian3} cartesian The coordinate to unproject.
-     * @param {Cartographic} [result] An instance into which to copy the result.  If this parameter is
+     * @param {Cartesian3} cartesian The Cartesian position to unproject with height (z) in meters.
+     * @param {Cartographic} [result=undefined] An instance into which to copy the result.  If this parameter is
      *        undefined, a new instance is created and returned.
      * @returns {Cartographic} The unprojected coordinates.  If the result parameter is not undefined, the
      *          coordinates are copied there and that instance is returned.  Otherwise, a new instance is
      *          created and returned.
      */
     GeographicProjection.prototype.unproject = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = cartesian.y * oneOverEarthSemimajorAxis;
