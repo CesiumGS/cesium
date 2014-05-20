@@ -56,11 +56,15 @@ define([
     "use strict";
 
     /**
-     * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  This type describes an
-     * interface and is not intended to be instantiated directly.
+     * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
+     * with {@link QuadtreePrimitive}.
      *
      * @alias GlobeSurfaceTileProvider
      * @constructor
+     *
+     * @param {TerrainProvider} options.terrainProvider The terrain provider that describes the surface geometry.
+     * @param {ImageryLayerCollection} option.imageryLayers The collection of imagery layers describing the shading of the surface.
+     * @param {GlobeSurfaceShaderSet} options.surfaceShaderSet The set of shaders used to render the surface.
      *
      * @private
      */
@@ -99,7 +103,8 @@ define([
     defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
          * Gets or sets the {@link QuadtreePrimitive} for which this provider is
-         * providing tiles.
+         * providing tiles.  This property may be undefined if the provider is not yet associated
+         * with a {@link QuadtreePrimitive}.
          * @memberof GlobeSurfaceTileProvider.prototype
          * @type {QuadtreePrimitive}
          */
@@ -153,6 +158,11 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the terrain provider that describes the surface geometry.
+         * @memberof GlobeSurfaceTileProvider.prototype
+         * @type {TerrainProvider}
+         */
         terrainProvider : {
             get : function() {
                 return this._terrainProvider;
@@ -177,6 +187,16 @@ define([
         }
     });
 
+    /**
+     * Called before any calls to {@link GlobeSurfaceTileProvider#renderTile} in the current render frame.
+     * @memberof GlobeSurfaceTileProvider
+     * @function
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
+     *        commands into this array.
+     */
     GlobeSurfaceTileProvider.prototype.beginFrame = function(context, frameState, commandList) {
         function sortTileImageryByLayerIndex(a, b) {
             var aImagery = a.loadingImagery;
@@ -214,6 +234,16 @@ define([
         this._usedDrawCommands = 0;
     };
 
+    /**
+     * Called after all calls to {@link GlobeSurfaceTileProvider#renderTile} in the current render frame.
+     * @memberof GlobeSurfaceTileProvider
+     * @function
+     *
+     * @param {Context} context The rendering context.
+     * @param {FrameState} frameState The frame state.
+     * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
+     *        commands into this array.
+     */
     GlobeSurfaceTileProvider.prototype.endFrame = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
             this._renderState = context.createRenderState({ // Write color and depth

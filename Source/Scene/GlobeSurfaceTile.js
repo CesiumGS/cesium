@@ -16,7 +16,6 @@ define([
         './ImageryState',
         './QuadtreeTileState',
         './TerrainState',
-        './TileState',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -35,10 +34,17 @@ define([
         ImageryState,
         QuadtreeTileState,
         TerrainState,
-        TileState,
         TileTerrain) {
     "use strict";
 
+    /**
+     * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
+     * encapsulates state transition logic for loading tiles.
+     *
+     * @constructor
+     * @alias GlobeSurfaceTile
+     * @private
+     */
     var GlobeSurfaceTile = function() {
         /**
          * The {@link TileImagery} attached to this tile.
