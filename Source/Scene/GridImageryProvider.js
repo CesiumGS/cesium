@@ -193,6 +193,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof GridImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

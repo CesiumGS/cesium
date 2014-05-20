@@ -405,7 +405,7 @@ define([
      * @param {Array} options.times The array of control point times.
      * @param {Array} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
-     * @para, {Cartesian3} options.lastTangent The incoming tangent of the last control point.
+     * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
