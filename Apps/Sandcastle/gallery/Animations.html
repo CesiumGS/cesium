@@ -45,8 +45,7 @@ require(['Cesium'], function(Cesium) {
         rectangle.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
 
-    function createPrimitives(widget) {
-        var scene = widget.scene;
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
 
         rectangle = new Cesium.RectanglePrimitive({
@@ -74,10 +73,10 @@ require(['Cesium'], function(Cesium) {
         primitives.add(sensors);
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
-    createPrimitives(widget);
+    createPrimitives(scene);
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
         scene.animations.removeAll();
