@@ -39,7 +39,6 @@ define([
         '../Shaders/GlobeVSPole',
         '../ThirdParty/when',
         './DepthFunction',
-        './GlobeSurface',
         './GlobeSurfaceShaderSet',
         './GlobeSurfaceTileProvider',
         './ImageryLayerCollection',
@@ -87,7 +86,6 @@ define([
         GlobeVSPole,
         when,
         DepthFunction,
-        GlobeSurface,
         GlobeSurfaceShaderSet,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
@@ -120,10 +118,6 @@ define([
 
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
-        /*this._surface = new GlobeSurface({
-            terrainProvider : terrainProvider,
-            imageryLayerCollection : imageryLayerCollection
-        });*/
 
         this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
 
@@ -396,7 +390,7 @@ define([
     var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
     function fillPoles(globe, context, frameState) {
-        var terrainProvider = globe._surface._tileProvider._terrainProvider;
+        var terrainProvider = globe._surface.tileProvider.terrainProvider;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
@@ -659,8 +653,8 @@ define([
                 });
         }
 
-        if (this._surface._tileProvider.ready &&
-            this._surface._tileProvider._terrainProvider.hasWaterMask() &&
+        if (this._surface.tileProvider.ready &&
+            this._surface.tileProvider.terrainProvider.hasWaterMask() &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -676,7 +670,7 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var projectionChanged = this._projection !== projection;
-        var hasWaterMask = this._surface._tileProvider.ready && this._surface._tileProvider._terrainProvider.hasWaterMask();
+        var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
