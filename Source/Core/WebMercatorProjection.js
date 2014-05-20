@@ -138,7 +138,7 @@ define([
      * @memberof WebMercatorProjection
      *
      * @param {Cartesian3} cartesian The web mercator Cartesian position to unrproject with height (z) in meters.
-     * @param {Cartographic} [result=undefined] The instance to which to copy the result, or undefined if a
+     * @param {Cartographic} [result] The instance to which to copy the result, or undefined if a
      *        new instance should be created.
      * @returns {Cartographic} The equivalent cartographic coordinates.
      */
