@@ -3,12 +3,14 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Spline'
     ], function(
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Spline) {
     "use strict";
@@ -65,22 +67,41 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
+        this._times = times;
+        this._points = points;
 
         this._lastTimeIndex = 0;
     };
+
+    defineProperties(LinearSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof LinearSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         *
+         * @memberof LinearSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        }
+    });
 
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter

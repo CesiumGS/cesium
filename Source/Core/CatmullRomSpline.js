@@ -4,6 +4,7 @@ define([
         './Cartesian4',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './HermiteSpline',
         './Matrix4',
@@ -13,6 +14,7 @@ define([
         Cartesian4,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         HermiteSpline,
         Matrix4,
@@ -174,37 +176,72 @@ define([
             }
         }
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * The tangent at the first control point.
-         * @type {Cartesian3}
-         * @readonly
-         */
-        this.firstTangent = Cartesian3.clone(firstTangent);
-
-        /**
-         * The tangent at the last control point.
-         * @type {Cartesian3}
-         * @readonly
-         */
-        this.lastTangent = Cartesian3.clone(lastTangent);
+        this._times = times;
+        this._points = points;
+        this._firstTangent = Cartesian3.clone(firstTangent);
+        this._lastTangent = Cartesian3.clone(lastTangent);
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
+
+    defineProperties(CatmullRomSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Array}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * The tangent at the first control point.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Cartesian3}
+         * @readonly
+         */
+        firstTangent : {
+            get : function() {
+                return this._firstTangent;
+            }
+        },
+
+        /**
+         * The tangent at the last control point.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Cartesian3}
+         * @readonly
+         */
+        lastTangent : {
+            get : function() {
+                return this._lastTangent;
+            }
+        }
+    });
 
     /**
      * @private
