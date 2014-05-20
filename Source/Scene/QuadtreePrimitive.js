@@ -9,6 +9,7 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
+        './QuadtreeOccluders',
         './QuadtreeTile',
         './QuadtreeTileState',
         './SceneMode',
@@ -23,6 +24,7 @@ define([
         EllipsoidalOccluder,
         getTimestamp,
         Queue,
+        QuadtreeOccluders,
         QuadtreeTile,
         QuadtreeTileState,
         SceneMode,
@@ -66,11 +68,29 @@ define([
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
         this._levelZeroTilesReady = false;
-        this._maximumScreenSpaceError = 2;
 
-        this._occluders = {
-                ellipsoid : new EllipsoidalOccluder(ellipsoid, Cartesian3.ZERO)
-        };
+        /**
+         * Gets or sets the maximum screen-space error, in pixels, that is allowed.
+         * A higher maximum error will render fewer tiles and improve performance, while a lower
+         * value will improve visual quality.
+         * @type {Number}
+         * @default 2
+         */
+        this.maximumScreenSpaceError = 2;
+
+        /**
+         * Gets or sets the maximum number of tiles that will be retained in the tile cache.
+         * Note that tiles will never be unloaded if they were used for rendering the last
+         * frame, so the actual number of resident tiles may be higher.  The value of
+         * this property will not affect visual quality.
+         * @type {Number}
+         * @default 100
+         */
+        this.tileCacheSize = 100;
+
+        this._occluders = new QuadtreeOccluders({
+            ellipsoid : ellipsoid
+        });
     };
 
     defineProperties(QuadtreePrimitive.prototype, {
@@ -204,7 +224,7 @@ define([
             // This one doesn't load children unless we refine to them.
             // We may want to revisit this in the future.
 
-            if (screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) < primitive._maximumScreenSpaceError) {
+            if (screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile)) {
@@ -326,7 +346,7 @@ define([
 
         // Remove any tiles that were not used this frame beyond the number
         // we're allowed to keep.
-        primitive._tileReplacementQueue.trimTiles(primitive._tileCacheSize);
+        primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
         var startTime = getTimestamp();
         var timeSlice = primitive._loadQueueTimeSlice;

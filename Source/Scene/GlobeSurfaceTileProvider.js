@@ -322,10 +322,10 @@ define([
      *
      * @memberof GlobeSurfaceTileProvider
      *
-     * @param {QuadtreeTile} tile The tile instance.
+     * @param {Object} tile The tile instance.
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {DrawCommand[]} commandList The list of rendering commands.  This method should add additional commands to this list.
+     * @param {DrawCommand[]} commandList The list of rendering commands.  This method may add additional commands to this list.
      */
     GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
         if (!defined(this._renderState)) {
