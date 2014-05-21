@@ -1,6 +1,6 @@
 /**
  * A built-in GLSL vec2 constant for defining the depth range.
- * This is a work-around to a bug where IE11 does not implement gl_DepthRange.
+ * This is a workaround to a bug where IE11 does not implement gl_DepthRange.
  *
  * @alias czm_depthRange
  * @glslConstant
