@@ -79,7 +79,7 @@ define([
          *
          * @memberof LinearSpline.prototype
          *
-         * @type {Array}
+         * @type {Number[]}
          * @readonly
          */
         times : {
@@ -93,7 +93,7 @@ define([
          *
          * @memberof LinearSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         points : {

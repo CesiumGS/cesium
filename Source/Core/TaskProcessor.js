@@ -176,7 +176,7 @@ define([
      * finished.
      *
      * @param {*} parameters Any input data that will be posted to the worker.
-     * @param {Array} [transferableObjects] An array of objects contained in parameters that should be
+     * @param {Object[]} [transferableObjects] An array of objects contained in parameters that should be
      *                                      transferred to the worker instead of copied.
      * @returns {Promise} Either a promise that will resolve to the result when available, or undefined
      *                    if there are too many active tasks,

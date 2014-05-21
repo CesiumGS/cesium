@@ -135,7 +135,7 @@ define([
 
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type {Array}
+         * @type {TileImagery[]}
          * @default []
          */
         this.imagery = [];
@@ -262,7 +262,7 @@ define([
         /**
          * An array of tiles that would be at the next level of the tile tree.
          * @memberof Tile.prototype
-         * @type {Array}
+         * @type {Tile[]}
          */
         children : {
             get : function() {

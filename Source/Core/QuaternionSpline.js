@@ -122,7 +122,7 @@ define([
          *
          * @memberof QuaternionSpline.prototype
          *
-         * @type {Array}
+         * @type {Number[]}
          * @readonly
          */
         times : {
@@ -136,7 +136,7 @@ define([
          *
          * @memberof QuaternionSpline.prototype
          *
-         * @type {Array}
+         * @type {Quaternion[]}
          * @readonly
          */
         points : {
@@ -150,7 +150,7 @@ define([
          *
          * @memberof QuaternionSpline.prototype
          *
-         * @type {Array}
+         * @type {Quaternion[]}
          * @readonly
          */
         innerQuadrangles : {

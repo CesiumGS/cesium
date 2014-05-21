@@ -131,7 +131,7 @@ define([
         /**
          * Gets and sets the positions of the polyline.
          * @memberof Polyline.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polyline.positions = ellipsoid.cartographicArrayToCartesianArray([
          *     new Cesium.Cartographic(...),

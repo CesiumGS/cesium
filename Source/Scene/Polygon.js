@@ -209,7 +209,7 @@ define([
         /**
          * Gets and sets positions that define the boundary of the polygon.
          * @memberof Polygon.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polygon.positions = [
          *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),

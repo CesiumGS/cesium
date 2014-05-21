@@ -215,7 +215,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Number[]}
          * @readonly
          */
         times : {
@@ -229,7 +229,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         points : {
@@ -243,7 +243,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         inTangents : {
@@ -257,7 +257,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         outTangents : {

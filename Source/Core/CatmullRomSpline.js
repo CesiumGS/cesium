@@ -191,7 +191,7 @@ define([
          *
          * @memberof CatmullRomSpline.prototype
          *
-         * @type {Array}
+         * @type {Number[]}
          * @readonly
          */
         times : {
@@ -205,7 +205,7 @@ define([
          *
          * @memberof CatmullRomSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         points : {

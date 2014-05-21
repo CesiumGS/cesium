@@ -114,7 +114,7 @@ define([
          * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
          * The coordinates are in the order that the corresponding images were added to the atlas.
          * @memberof TextureAtlas.prototype
-         * @type {Array}
+         * @type {BoundingRectangle[]}
          */
         textureCoordinates : {
             get : function() {
