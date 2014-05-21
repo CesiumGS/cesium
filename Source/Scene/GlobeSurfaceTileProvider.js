@@ -19,6 +19,8 @@ define([
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Scene/BlendingState',
+        '../Scene/DepthFunction',
         '../Scene/Pass',
         '../ThirdParty/when',
         './GlobeSurfaceTile',
@@ -46,6 +48,8 @@ define([
         WebMercatorProjection,
         BufferUsage,
         DrawCommand,
+        BlendingState,
+        DepthFunction,
         Pass,
         when,
         GlobeSurfaceTile,
@@ -266,6 +270,19 @@ define([
                 depthTest : {
                     enabled : true
                 }
+            });
+        }
+
+        if (!defined(this._blendRenderState)) {
+            this._blendRenderState = context.createRenderState({ // Write color and depth
+                cull : {
+                    enabled : true
+                },
+                depthTest : {
+                    enabled : true,
+                    func : DepthFunction.LESS_OR_EQUAL
+                },
+                blending : BlendingState.ALPHA_BLEND
             });
         }
 
@@ -586,6 +603,9 @@ define([
 
     function createTileUniformMap() {
         var uniformMap = {
+            u_initialColor : function() {
+                return this.initialColor;
+            },
             u_zoomedOutOceanSpecularIntensity : function() {
                 return this.zoomedOutOceanSpecularIntensity;
             },
@@ -647,6 +667,7 @@ define([
                 return this.waterMaskTranslationAndScale;
             },
 
+            initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
             zoomedOutOceanSpecularIntensity : 0.5,
             oceanNormalMap : undefined,
             lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
@@ -727,11 +748,21 @@ define([
         return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
+    var firstPassInitialColor = new Cartesian4(0.0, 0.0, 0.5, 1.0);
+    var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
+
     function addDrawCommandsForTile(tileProvider, tile, context, frameState, commandList) {
         var surfaceTile = tile.data;
 
         var viewMatrix = frameState.camera.viewMatrix;
+
         var maxTextures = context.maximumTextureImageUnits;
+        if (defined(tileProvider.oceanNormalMap)) {
+            --maxTextures;
+        }
+        if (defined(surfaceTile.waterMaskTexture)) {
+            --maxTextures;
+        }
 
         var rtc = surfaceTile.center;
 
@@ -795,6 +826,12 @@ define([
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
 
+        var firstPassRenderState = tileProvider._renderState;
+        var otherPassesRenderState = tileProvider._blendRenderState;
+        var renderState = firstPassRenderState;
+
+        var initialColor = firstPassInitialColor;
+
         do {
             var numberOfDayTextures = 0;
 
@@ -822,6 +859,7 @@ define([
 
             command.debugShowBoundingVolume = (tile === tileProvider._debug.boundingSphereTile);
 
+            Cartesian4.clone(initialColor, uniformMap.initialColor);
             uniformMap.oceanNormalMap = tileProvider.oceanNormalMap;
             uniformMap.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
             uniformMap.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
@@ -923,7 +961,7 @@ define([
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
-            command.renderState = tileProvider._renderState;
+            command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
             command.uniformMap = uniformMap;
@@ -952,6 +990,8 @@ define([
 
             commandList.push(command);
 
+            renderState = otherPassesRenderState;
+            initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
     }
 

@@ -76,9 +76,9 @@ define([
                 (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 this.baseFragmentShaderString + '\n' +
-                'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
+                'vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
-                '    vec3 color = initialColor;\n';
+                '    vec4 color = initialColor;\n';
 
             for (var i = 0; i < textureCount; ++i) {
                 fs +=
