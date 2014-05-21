@@ -120,6 +120,17 @@ define([
             if (defined(source.arrayBufferView)) {
                 // Source: typed array
                 gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+            } else if (defined(source.framebuffer)) {
+                // Source: framebuffer
+                if (source.framebuffer !== context.defaultFramebuffer) {
+                    source.framebuffer._bind();
+                }
+
+                gl.copyTexImage2D(textureTarget, 0, pixelFormat, source.xOffset, source.yOffset, width, height, 0);
+
+                if (source.framebuffer !== context.defaultFramebuffer) {
+                    source.framebuffer._unBind();
+                }
             } else {
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
                 gl.texImage2D(textureTarget, 0, pixelFormat, pixelFormat, pixelDatatype, source);

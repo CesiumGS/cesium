@@ -328,6 +328,8 @@ define([
         RenderState.apply(gl, rs, ps);
     };
 
+    var defaultFramebufferMarker = {};
+
     defineProperties(Context.prototype, {
         id : {
             get : function() {
@@ -910,6 +912,18 @@ define([
             get : function() {
                 return this._gl.drawingBufferWidth;
             }
+        },
+
+        /**
+         * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
+         * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
+         * {@link Context.createTexture2DFromFramebuffer}.
+         * @type {Object}
+         */
+        defaultFramebuffer : {
+            get : function() {
+                return defaultFramebufferMarker;
+            }
         }
     });
 
@@ -1193,6 +1207,8 @@ define([
      * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
      * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
      * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
+     * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
+     *        parameter is not specified, the default framebuffer is used.
      *
      * @returns {Texture} A texture with contents from the framebuffer.
      *
@@ -1211,7 +1227,7 @@ define([
      * // Create a texture with the contents of the framebuffer.
      * var t = context.createTexture2DFromFramebuffer();
      */
-    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
+    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
         var gl = this._gl;
 
         pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
@@ -1249,10 +1265,15 @@ define([
         var texture = new Texture(this, {
             width : width,
             height : height,
-            pixelFormat : pixelFormat
+            pixelFormat : pixelFormat,
+            source : {
+                framebuffer : defined(framebuffer) ? framebuffer : this.defaultFramebuffer,
+                xOffset : framebufferXOffset,
+                yOffset : framebufferYOffset,
+                width : width,
+                height : height
+            }
         });
-
-        texture.copyFromFramebuffer(0, 0, framebufferXOffset, framebufferYOffset, width, height);
 
         return texture;
     };
