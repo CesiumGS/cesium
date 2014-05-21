@@ -153,7 +153,7 @@ define([
      * </p>
      *
      * @param {Cartesian3} cartesian The cartesian to encode.
-     * @param {Array} cartesianArray The array to write to.
+     * @param {Number[]} cartesianArray The array to write to.
      * @param {Number} index The index into the array to start writing.  Six elements will be written.
      *
      * @exception {DeveloperError} index must be a number greater than or equal to 0.

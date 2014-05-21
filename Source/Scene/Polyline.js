@@ -33,7 +33,7 @@ define([
      * @param {Number} [options.width=1.0] The width of the polyline in pixels.
      * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
      * @param {Material} [options.material=Material.ColorType] The material.
-     * @param {Array} [options.positions] The positions.
+     * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
      *
      * @see PolylineCollection
@@ -131,7 +131,7 @@ define([
         /**
          * Gets and sets the positions of the polyline.
          * @memberof Polyline.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polyline.positions = ellipsoid.cartographicArrayToCartesianArray([
          *     new Cesium.Cartographic(...),

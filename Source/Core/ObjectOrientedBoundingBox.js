@@ -74,7 +74,7 @@ define([
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {Array} positions List of {@link Cartesian3} points that the bounding box will enclose.
+     * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *

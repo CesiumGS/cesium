@@ -28,7 +28,7 @@ define([
     /**
      * Calculates the average cache miss ratio (ACMR) for a given set of indices.
      *
-     * @param {Array} options.indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the geometry's triangles.
      * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
@@ -106,7 +106,7 @@ define([
     /**
      * Optimizes triangles for the post-vertex shader cache.
      *
-     * @param {Array} options.indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the geometry's triangles.
      * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
@@ -115,7 +115,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @returns {Array} A list of the input indices in an optimized order.
+     * @returns {Number[]} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
