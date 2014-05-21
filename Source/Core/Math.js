@@ -394,6 +394,11 @@ define([
      * @returns {Number} The corresponding angle in radians.
      */
     CesiumMath.toRadians = function(degrees) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(degrees)) {
+            throw new DeveloperError('degrees is required.');
+        }
+        //>>includeEnd('debug');
         return degrees * CesiumMath.RADIANS_PER_DEGREE;
     };
 
@@ -403,6 +408,11 @@ define([
      * @returns {Number} The corresponding angle in degrees.
      */
     CesiumMath.toDegrees = function(radians) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(radians)) {
+            throw new DeveloperError('radians is required.');
+        }
+        //>>includeEnd('debug');
         return radians * CesiumMath.DEGREES_PER_RADIAN;
     };
 
@@ -418,6 +428,11 @@ define([
      * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
      */
     CesiumMath.convertLongitudeRange = function(angle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+        //>>includeEnd('debug');
         var twoPi = CesiumMath.TWO_PI;
 
         var simplified = angle - Math.floor(angle / twoPi) * twoPi;
@@ -438,6 +453,11 @@ define([
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
      */
     CesiumMath.negativePiToPi = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        //>>includeEnd('debug');
         var epsilon10 = CesiumMath.EPSILON10;
         var pi = CesiumMath.PI;
         var two_pi = CesiumMath.TWO_PI;
@@ -459,6 +479,11 @@ define([
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
      */
     CesiumMath.zeroToTwoPi = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        //>>includeEnd('debug');
         var value = x % CesiumMath.TWO_PI;
         // We do a second modules here if we add 2Pi to ensure that we don't have any numerical issues with very
         // small negative values.
@@ -479,6 +504,17 @@ define([
      * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required.');
+        }
+        //>>includeEnd('debug');
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(right)) {
+            throw new DeveloperError('right is required.');
+        }
+        //>>includeEnd('debug');
         epsilon = defaultValue(epsilon, 0.0);
         return Math.abs(left - right) <= epsilon;
     };
@@ -537,8 +573,13 @@ define([
      * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
-        minimumValue = defaultValue(minimumValue, 0.0);
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(n)) {
+            throw new DeveloperError('n is required.');
+        }
+        //>>includeEnd('debug');
 
+        minimumValue = defaultValue(minimumValue, 0.0);
         //>>includeStart('debug', pragmas.debug);
         if (maximumValue <= minimumValue) {
             throw new DeveloperError('Maximum value must be greater than minimum value.');
@@ -622,6 +663,17 @@ define([
      * @returns The value clamped so that min <= value <= max.
      */
     CesiumMath.clamp = function(value, min, max) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('Value to constrain is required');
+        }
+        if (!defined(min)) {
+            throw new DeveloperError('Minimum value is required.');
+        }
+        if (!defined(max)) {
+            throw new DeveloperError('Maximum value is required.');
+        }
+        //>>includeEnd('debug');
         return value < min ? min : value > max ? max : value;
     };
 
