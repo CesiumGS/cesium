@@ -95,7 +95,7 @@ define([
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.

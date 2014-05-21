@@ -212,7 +212,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @param {Object}[polyline=undefined] A template describing the polyline's properties as shown in Example 1.
+     * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
      *
      * @returns {Polyline} The polyline that was added to the collection.
      *
