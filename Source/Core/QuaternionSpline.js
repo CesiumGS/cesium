@@ -69,9 +69,9 @@ define([
      * @alias QuaternionSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Quaternion} control points.
+     * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
      * @param {Quaternion} [options.firstInnerQuadrangle] The inner quadrangle of the curve at the first control point.
      *                     If the inner quadrangle is not given, it will be estimated.
      * @param {Quaternion} [options.lastInnerQuadrangle] The inner quadrangle of the curve at the last control point.

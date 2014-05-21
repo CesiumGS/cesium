@@ -104,9 +104,9 @@ define([
      * @alias CatmullRomSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Cartesian3} control points.
+     * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
      * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
      *                     If the tangent is not given, it will be estimated.
      * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.

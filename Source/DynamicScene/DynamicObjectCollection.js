@@ -89,8 +89,8 @@ define([
      * @function
      *
      * @param {DynamicObjectCollection} collection The collection that triggered the event.
-     * @param {Array} added The array of {@link DynamicObject} instances that have been added to the collection.
-     * @param {Array} removed The array of {@link DynamicObject} instances that have been removed from the collection.
+     * @param {DynamicObject[]} added The array of {@link DynamicObject} instances that have been added to the collection.
+     * @param {DynamicObject[]} removed The array of {@link DynamicObject} instances that have been removed from the collection.
      */
     DynamicObjectCollection.collectionChangedEventCallback = undefined;
 

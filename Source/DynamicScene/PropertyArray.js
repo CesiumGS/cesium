@@ -22,7 +22,7 @@ define([
      * @alias PropertyArray
      * @constructor
      *
-     * @param {Array} [value] An array of Property instances.
+     * @param {Property[]} [value] An array of Property instances.
      */
     var PropertyArray = function(value) {
         this._value = undefined;
@@ -72,8 +72,8 @@ define([
      * @memberof PropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
-     * @param {Array} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Array} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {Property[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Property[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PropertyArray.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -110,7 +110,7 @@ define([
      * Sets the value of the property.
      * @memberof PropertyArray
      *
-     * @param {Array} value An array of Property instances.
+     * @param {Property[]} value An array of Property instances.
      */
     PropertyArray.prototype.setValue = function(value) {
         var eventHelper = this._eventHelper;

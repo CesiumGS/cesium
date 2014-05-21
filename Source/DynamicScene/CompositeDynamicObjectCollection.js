@@ -120,7 +120,7 @@ define([
      * @alias CompositeDynamicObjectCollection
      * @constructor
      *
-     * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
+     * @param {DynamicObjectCollection[]} [collections] The initial list of DynamicObjectCollection instances to merge.
      */
     var CompositeDynamicObjectCollection = function(collections) {
         this._composite = new DynamicObjectCollection();

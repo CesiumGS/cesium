@@ -916,9 +916,9 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in degrees.
      * @memberof Cartesian3
      *
-     * @param {Array} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
+     * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
-     * @param {Array} [result] An array of Cartesian3 objects to store the result.
+     * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
      *
      * @returns {Cartesian3[]} The array of positions.
      *
@@ -952,9 +952,9 @@ define([
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in radians.
      * @memberof Cartesian3
      *
-     * @param {Array} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
+     * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
-     * @param {Array} [result] An array of Cartesian3 objects to store the result.
+     * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
      *
      * @returns {Cartesian3[]} The array of positions.
      *

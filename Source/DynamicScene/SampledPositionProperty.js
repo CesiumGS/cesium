@@ -167,8 +167,8 @@ define([
      * Adds an array of samples
      * @memberof SampledPositionProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Cartesian3[]} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
      *
      * @exception {DeveloperError} times and values must be the same length..
      */
@@ -180,7 +180,7 @@ define([
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledPositionProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Packable[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
