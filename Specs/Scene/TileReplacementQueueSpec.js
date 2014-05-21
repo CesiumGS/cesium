@@ -3,14 +3,14 @@ defineSuite([
         'Scene/TileReplacementQueue',
         'Core/defined',
         'Scene/ImageryState',
-        'Scene/TerrainState',
-        'Scene/QuadtreeTileState'
+        'Scene/QuadtreeTileState',
+        'Scene/TerrainState'
     ], function(
         TileReplacementQueue,
         defined,
         ImageryState,
-        TerrainState,
-        QuadtreeTileState) {
+        QuadtreeTileState,
+        TerrainState) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 

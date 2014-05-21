@@ -8,8 +8,8 @@ defineSuite([
         'Scene/Globe',
         'Scene/GlobeSurfaceTile',
         'Scene/Material',
-        'Scene/RectanglePrimitive',
         'Scene/QuadtreeTile',
+        'Scene/RectanglePrimitive',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -21,8 +21,8 @@ defineSuite([
         Globe,
         GlobeSurfaceTile,
         Material,
-        RectanglePrimitive,
         QuadtreeTile,
+        RectanglePrimitive,
         createScene,
         destroyScene) {
     "use strict";

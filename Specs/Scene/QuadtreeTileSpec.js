@@ -8,8 +8,8 @@ defineSuite([
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryLayerCollection',
-        'Scene/TerrainState',
         'Scene/QuadtreeTileState',
+        'Scene/TerrainState',
         'Specs/createContext',
         'Specs/destroyContext',
         'ThirdParty/when'
@@ -22,8 +22,8 @@ defineSuite([
         Rectangle,
         WebMercatorTilingScheme,
         ImageryLayerCollection,
-        TerrainState,
         QuadtreeTileState,
+        TerrainState,
         createContext,
         destroyContext,
         when) {
