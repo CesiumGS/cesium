@@ -24,6 +24,7 @@ Beta Releases
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size. Also added `czm_resolutionScale` automatic GLSL uniform.
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
 * Added `interleave` option to `Primitive` constructor.
+* Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 
 ### b28 - 2014-05-01
 
