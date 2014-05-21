@@ -150,8 +150,8 @@ define([
      * @constructor
      *
      * @param {Canvas} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions=undefined] Context and WebGL creation properties.  See details above.
-     * @param {Element} [creditContainer=undefined] The HTML element in which the credits will be displayed.
+     * @param {Object} [contextOptions] Context and WebGL creation properties.  See details above.
+     * @param {Element} [creditContainer] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}

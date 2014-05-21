@@ -24,9 +24,9 @@ define([
      *
      * @exports createShaderSource
      *
-     * @param {String[]} [options.defines=undefined] An array of strings to combine containing GLSL identifiers to <code>#define</code>.
-     * @param {String[]} [options.sources=undefined] An array of strings to combine containing GLSL code for the shader.
-     * @param {String} [options.pickColorQualifier=undefined] The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
+     * @param {String[]} [options.defines] An array of strings to combine containing GLSL identifiers to <code>#define</code>.
+     * @param {String[]} [options.sources] An array of strings to combine containing GLSL code for the shader.
+     * @param {String} [options.pickColorQualifier] The GLSL qualifier, <code>uniform</code> or <code>varying</code>, for the input <code>czm_pickColor</code>.  When defined, a pick fragment shader is generated.
      *
      * @returns {String} The generated GLSL shader source.
      *

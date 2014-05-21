@@ -1074,8 +1074,8 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object[]} [attributes=undefined] An optional array of attributes.
-     * @param {IndexBuffer} [indexBuffer=undefined] An optional index buffer.
+     * @param {Object[]} [attributes] An optional array of attributes.
+     * @param {IndexBuffer} [indexBuffer] An optional index buffer.
      *
      * @returns {VertexArray} The vertex array, ready for use with drawing.
      *
@@ -1575,7 +1575,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} [renderState=undefined] The states defining the render state as shown in the example below.
+     * @param {Object} [renderState] The states defining the render state as shown in the example below.
      *
      * @exception {RuntimeError} renderState.lineWidth is out of range.
      * @exception {DeveloperError} Invalid renderState.frontFace.
@@ -2142,7 +2142,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Object} [options=undefined] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
+     * @param {Object} [options] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
      *
      * @exception {RuntimeError} Each attribute list must have the same number of vertices.
      * @exception {DeveloperError} The geometry must have zero or one index lists.

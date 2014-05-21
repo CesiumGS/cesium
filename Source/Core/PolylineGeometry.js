@@ -41,7 +41,7 @@ define([
      *
      * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
-     * @param {Color[]} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.

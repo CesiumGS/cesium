@@ -36,14 +36,14 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the rectangle is drawn on.
-     * @param {Rectangle} [options.rectangle=undefined] The rectangle, which defines the rectangular region to draw.
+     * @param {Rectangle} [options.rectangle] The rectangle, which defines the rectangular region to draw.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [options.height=0.0] The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
      * @param {Number} [options.rotation=0.0] The angle, in radians, relative to north that the rectangle is rotated.  Positive angles rotate counter-clockwise.
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Material} [options.material=undefined] The surface appearance of the primitive.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Material} [options.material] The surface appearance of the primitive.
+     * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.asynchronous=true] Determines if the rectangle will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
