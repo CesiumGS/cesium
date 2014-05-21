@@ -508,9 +508,7 @@ define([
         if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
-        //>>includeEnd('debug');
 
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
@@ -573,16 +571,14 @@ define([
      * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
+        minimumValue = defaultValue(minimumValue, 0.0);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(n)) {
             throw new DeveloperError('n is required.');
         }
-        //>>includeEnd('debug');
-
-        minimumValue = defaultValue(minimumValue, 0.0);
-        //>>includeStart('debug', pragmas.debug);
         if (maximumValue <= minimumValue) {
-            throw new DeveloperError('Maximum value must be greater than minimum value.');
+            throw new DeveloperError('maximumValue must be greater than minimumValue.');
         }
         //>>includeEnd('debug');
 
@@ -665,13 +661,13 @@ define([
     CesiumMath.clamp = function(value, min, max) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
-            throw new DeveloperError('Value to constrain is required');
+            throw new DeveloperError('value is required');
         }
         if (!defined(min)) {
-            throw new DeveloperError('Minimum value is required.');
+            throw new DeveloperError('min is required.');
         }
         if (!defined(max)) {
-            throw new DeveloperError('Maximum value is required.');
+            throw new DeveloperError('max is required.');
         }
         //>>includeEnd('debug');
         return value < min ? min : value > max ? max : value;
