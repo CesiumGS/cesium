@@ -396,24 +396,7 @@ define([
          */
         this.debugShowFrustums = false;
 
-        /**
-         * This property is for debugging only; it is not for production use.
-         * <p>
-         * When {@link Scene.debugShowFrustums} is <code>true</code>, this contains
-         * properties with statistics about the number of command execute per frustum.
-         * <code>totalCommands</code> is the total number of commands executed, ignoring
-         * overlap. <code>commandsInFrustums</code> is an array with the number of times
-         * commands are executed redundantly, e.g., how many commands overlap two or
-         * three frustums.
-         * </p>
-         *
-         * @type Object
-         *
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.debugFrustumStatistics = undefined;
+        this._debugFrustumStatistics = undefined;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -650,6 +633,30 @@ define([
             get : function() {
                 return this._context;
             }
+        },
+
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When {@link Scene.debugShowFrustums} is <code>true</code>, this contains
+         * properties with statistics about the number of command execute per frustum.
+         * <code>totalCommands</code> is the total number of commands executed, ignoring
+         * overlap. <code>commandsInFrustums</code> is an array with the number of times
+         * commands are executed redundantly, e.g., how many commands overlap two or
+         * three frustums.
+         * </p>
+         *
+         * @memberof Scene.prototype
+         *
+         * @type Object
+         * @readonly
+         *
+         * @default undefined
+         */
+        debugFrustumStatistics : {
+            get : function() {
+                return this._debugFrustumStatistics;
+            }
         }
     });
 
@@ -745,9 +752,9 @@ define([
         }
 
         if (scene.debugShowFrustums) {
-            var cf = scene.debugFrustumStatistics.commandsInFrustums;
+            var cf = scene._debugFrustumStatistics.commandsInFrustums;
             cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
-            ++scene.debugFrustumStatistics.totalCommands;
+            ++scene._debugFrustumStatistics.totalCommands;
         }
     }
 
@@ -765,7 +772,7 @@ define([
         var position = camera.positionWC;
 
         if (scene.debugShowFrustums) {
-            scene.debugFrustumStatistics = {
+            scene._debugFrustumStatistics = {
                 totalCommands : 0,
                 commandsInFrustums : {}
             };
