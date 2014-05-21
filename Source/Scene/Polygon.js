@@ -36,7 +36,7 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the polygon is drawn on.
-     * @param {Array} [options.positions] The cartesian positions of the polygon.
+     * @param {Cartesian3[]} [options.positions] The cartesian positions of the polygon.
      * @param {Object} [options.polygonHierarchy] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [options.height=0.0] The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
@@ -209,7 +209,7 @@ define([
         /**
          * Gets and sets positions that define the boundary of the polygon.
          * @memberof Polygon.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polygon.positions = [
          *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),

@@ -97,7 +97,7 @@ define([
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
      * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
      *
-     * @returns {Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
+     * @returns {Uint16Aray|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @example
      * this.indices = Cesium.IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);

@@ -170,32 +170,8 @@ define([
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        /**
-         * The object for the glTF JSON, including properties with default values omitted
-         * from the JSON provided to this model.
-         *
-         * @type {Object}
-         *
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.gltf = gltfDefaults(options.gltf);
-
-        /**
-         * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .json file
-         * minus the .json file, when binary, image, and shader files are
-         * in the same directory as the .json.  When this is <code>''</code>,
-         * the app's base path is used.
-         *
-         * @type {String}
-         *
-         * @default ''
-         *
-         * @readonly
-         */
-        this.basePath = defaultValue(options.basePath, '');
+        this._gltf = gltfDefaults(options.gltf);
+        this._basePath = defaultValue(options.basePath, '');
 
         /**
          * Determines if the model primitive will be shown.
@@ -367,6 +343,43 @@ define([
 
     defineProperties(Model.prototype, {
         /**
+         * The object for the glTF JSON, including properties with default values omitted
+         * from the JSON provided to this model.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Object}
+         * @readonly
+         *
+         * @default undefined
+         */
+        gltf : {
+            get : function() {
+                return this._gltf;
+            }
+        },
+
+        /**
+         * The base path that paths in the glTF JSON are relative to.  The base
+         * path is the same path as the path containing the .json file
+         * minus the .json file, when binary, image, and shader files are
+         * in the same directory as the .json.  When this is <code>''</code>,
+         * the app's base path is used.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default ''
+         */
+        basePath : {
+            get : function() {
+                return this._basePath;
+            }
+        },
+
+        /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
          * account glTF animation and skins or {@link Model#scale}.
          *
@@ -514,8 +527,8 @@ define([
         var model = new Model(options);
 
         loadText(url, options.headers).then(function(data) {
-            model.gltf = gltfDefaults(JSON.parse(data));
-            model.basePath = basePath;
+            model._gltf = gltfDefaults(JSON.parse(data));
+            model._basePath = basePath;
         });
 
         return model;

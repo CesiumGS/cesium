@@ -480,7 +480,7 @@ define([
      *
      * @param {Geometry} geometry The geometry to be split into multiple geometries.
      *
-     * @returns {Array} An array of geometries, each with indices that fit into unsigned shorts.
+     * @returns {Geometry[]} An array of geometries, each with indices that fit into unsigned shorts.
      *
      * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
@@ -885,7 +885,7 @@ define([
      * This is used by {@link Primitive} to efficiently render a large amount of static data.
      * </p>
      *
-     * @param {Array} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
+     * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
      *
      * @returns {Geometry} A single geometry created from the provided geometry instances.
      *

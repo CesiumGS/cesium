@@ -1074,7 +1074,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Array} [attributes] An optional array of attributes.
+     * @param {Object[]} [attributes] An optional array of attributes.
      * @param {IndexBuffer} [indexBuffer] An optional index buffer.
      *
      * @returns {VertexArray} The vertex array, ready for use with drawing.

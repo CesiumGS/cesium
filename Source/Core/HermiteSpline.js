@@ -134,11 +134,11 @@ define([
      * @alias HermiteSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Cartesian3} control points.
-     * @param {Array} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
-     * @param {Array} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
+     * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
+     * @param {Cartesian3[]} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
+     * @param {Cartesian3[]} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
      *
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
@@ -215,7 +215,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Number[]}
          * @readonly
          */
         times : {
@@ -229,7 +229,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         points : {
@@ -243,7 +243,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         inTangents : {
@@ -257,7 +257,7 @@ define([
          *
          * @memberof HermiteSpline.prototype
          *
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @readonly
          */
         outTangents : {
@@ -272,9 +272,9 @@ define([
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
      * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
-     * @param {Array} options.tangents The array of tangents at the control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
+     * @param {Cartesian3[]} options.tangents The array of tangents at the control points.
      * @returns {HermiteSpline} A hermite spline.
      *
      * @exception {DeveloperError} points, times and tangents are required.
@@ -339,8 +339,8 @@ define([
      * to create a curve in the class C<sup>2</sup>.
      * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points and times are required.
@@ -402,8 +402,8 @@ define([
      * to create a curve in the class C<sup>2</sup>.
      * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
      * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.

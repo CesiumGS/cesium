@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/VertexFormat',
         '../Renderer/createShaderSource',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
@@ -9,6 +10,7 @@ define([
         './Appearance'
     ], function(
         defaultValue,
+        defineProperties,
         VertexFormat,
         createShaderSource,
         PerInstanceFlatColorAppearanceFS,
@@ -71,69 +73,108 @@ define([
         this.material = undefined;
 
         /**
+         * When <code>true</code>, the geometry is expected to appear translucent so
+         * {@link PolylineColorAppearance#renderState} has alpha blending enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.translucent = translucent;
+
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._closed = closed;
+
+        // Non-derived members
+
+        this._vertexFormat = vertexFormat;
+    };
+
+    defineProperties(PolylineColorAppearance.prototype, {
+        /**
          * The GLSL source code for the vertex shader.
          *
-         * @type String
+         * @memberof PolylineColorAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
 
         /**
          * The GLSL source code for the fragment shader.
          *
-         * @type String
+         * @memberof PolylineColorAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
 
         /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
+         * The WebGL fixed-function state to use when rendering the geometry.
          * <p>
          * The render state can be explicitly defined when constructing a {@link PolylineColorAppearance}
          * instance, or it is set implicitly via {@link PolylineColorAppearance#translucent}.
          * </p>
          *
-         * @type Object
+         * @memberof PolylineColorAppearance.prototype
          *
+         * @type {Object}
          * @readonly
          */
-        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link PolylineColorAppearance#renderState} has backface culling enabled.
+         * This is always <code>false</code> for <code>PolylineColorAppearance</code>.
+         *
+         * @memberof PolylineColorAppearance.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        },
 
         /**
          * The {@link VertexFormat} that this appearance instance is compatible with.
          * A geometry can have more vertex attributes and still be compatible - at a
          * potential performance cost - but it can't have less.
          *
+         * @memberof PolylineColorAppearance.prototype
+         *
          * @type VertexFormat
-         *
-         * @readonly
-         */
-        this.vertexFormat = vertexFormat;
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link PolylineColorAppearance#renderState} has alpha blending enabled.
-         *
          * @readonly
          *
-         * @default true
+         * @default {@link PolylineColorAppearance.VERTEX_FORMAT}
          */
-        this.translucent = translucent;
-
-        /**
-         * When <code>true</code>, the geometry is expected to be closed so
-         * {@link PolylineColorAppearance#renderState} has backface culling enabled.
-         *
-         * @readonly
-         *
-         * @default false
-         */
-        this.closed = closed;
-    };
+        vertexFormat : {
+            get : function() {
+                return this._vertexFormat;
+            }
+        }
+    });
 
     /**
      * The {@link VertexFormat} that all {@link PolylineColorAppearance} instances

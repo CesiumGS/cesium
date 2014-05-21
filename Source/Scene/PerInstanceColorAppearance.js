@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/VertexFormat',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
@@ -9,6 +10,7 @@ define([
         './Appearance'
     ], function(
         defaultValue,
+        defineProperties,
         VertexFormat,
         PerInstanceColorAppearanceFS,
         PerInstanceColorAppearanceVS,
@@ -94,64 +96,125 @@ define([
         this.material = undefined;
 
         /**
+         * When <code>true</code>, the geometry is expected to appear translucent so
+         * {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.translucent = translucent;
+
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._closed = closed;
+
+        // Non-derived members
+
+        this._vertexFormat = vertexFormat;
+        this._flat = flat;
+        this._faceForward = defaultValue(options.faceForward, !closed);
+    };
+
+    defineProperties(PerInstanceColorAppearance.prototype, {
+        /**
          * The GLSL source code for the vertex shader.
          *
-         * @type String
+         * @memberof PerInstanceColorAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
 
         /**
-         * The GLSL source code for the fragment shader.  The full fragment shader
-         * source is built procedurally taking into account {@link PerInstanceColorAppearance#flat},
-         * and {@link PerInstanceColorAppearance#faceForward}.
-         * Use {@link PerInstanceColorAppearance#getFragmentShaderSource} to get the full source.
+         * The GLSL source code for the fragment shader.
          *
-         * @type String
+         * @memberof PerInstanceColorAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
 
         /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
+         * The WebGL fixed-function state to use when rendering the geometry.
          * <p>
          * The render state can be explicitly defined when constructing a {@link PerInstanceColorAppearance}
          * instance, or it is set implicitly via {@link PerInstanceColorAppearance#translucent}
          * and {@link PerInstanceColorAppearance#closed}.
          * </p>
          *
-         * @type Object
+         * @memberof PerInstanceColorAppearance.prototype
          *
+         * @type {Object}
          * @readonly
          */
-        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
 
-        // Non-derived members
+        /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
+         * @memberof PerInstanceColorAppearance.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        },
 
         /**
          * The {@link VertexFormat} that this appearance instance is compatible with.
          * A geometry can have more vertex attributes and still be compatible - at a
          * potential performance cost - but it can't have less.
          *
-         * @type VertexFormat
+         * @memberof PerInstanceColorAppearance.prototype
          *
+         * @type VertexFormat
          * @readonly
          */
-        this.vertexFormat = vertexFormat;
+        vertexFormat : {
+            get : function() {
+                return this._vertexFormat;
+            }
+        },
 
         /**
          * When <code>true</code>, flat shading is used in the fragment shader,
          * which means lighting is not taking into account.
          *
+         * @memberof PerInstanceColorAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.flat = flat;
+        flat : {
+            get : function() {
+                return this._flat;
+            }
+        },
 
         /**
          * When <code>true</code>, the fragment shader flips the surface normal
@@ -159,33 +222,19 @@ define([
          * dark spots.  This is useful when both sides of a geometry should be
          * shaded like {@link WallGeometry}.
          *
-         * @readonly
+         * @memberof PerInstanceColorAppearance.prototype
          *
-         * @default false
-         */
-        this.faceForward = defaultValue(options.faceForward, !closed);
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
-         *
+         * @type {Boolean}
          * @readonly
          *
          * @default true
          */
-        this.translucent = translucent;
-
-        /**
-         * When <code>true</code>, the geometry is expected to be closed so
-         * {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
-         * If the viewer enters the geometry, it will not be visible.
-         *
-         * @readonly
-         *
-         * @default false
-         */
-        this.closed = closed;
-    };
+        faceForward : {
+            get : function() {
+                return this._faceForward;
+            }
+        }
+    });
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
