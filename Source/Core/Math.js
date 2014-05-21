@@ -393,7 +393,6 @@ define([
      * @param {Number} degrees The angle to convert in degrees.
      * @returns {Number} The corresponding angle in radians.
      *
-     * @exception {DeveloperError} Parameter missing, please provide degrees.
      */
     CesiumMath.toRadians = function(degrees) {
         if(degrees === null){
@@ -407,7 +406,6 @@ define([
      * @param {Number} radians The angle to convert in radians.
      * @returns {Number} The corresponding angle in degrees.
      *
-     * @exception {DeveloperError} Parameter missing, please provide degrees.
      */
     CesiumMath.toDegrees = function(radians) {
         if(radians === null){
@@ -452,7 +450,6 @@ define([
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
      *
-     * @exception {DeveloperError} Parameter missing, please provide angle.
      */
     CesiumMath.negativePiToPi = function(x) {
         if(x === null){
@@ -478,7 +475,6 @@ define([
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
      *
-     * @exception {DeveloperError} Parameter missing, please provide angle.
      */
     CesiumMath.zeroToTwoPi = function(x) {
         if(x === null){
@@ -562,7 +558,6 @@ define([
      * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
      * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
      *
-     * @exception {DeveloperError} Number to be incremented is required.
      * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
@@ -653,9 +648,6 @@ define([
      * @param {Number} max The maximum value.
      * @returns The value clamped so that min <= value <= max.
      *
-     * @exception {DeveloperError} Value to constrain is required.
-     * @exception {DeveloperError} Minimum value is missing.
-     * @exception {DeveloperError} Maximum value is missing.
      */
     CesiumMath.clamp = function(value, min, max) {
         if(value === null){
