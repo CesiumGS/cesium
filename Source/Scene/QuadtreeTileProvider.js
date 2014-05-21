@@ -174,16 +174,6 @@ define([
     QuadtreeTileProvider.prototype.getDistanceToTile = DeveloperError.throwInstantiationError;
 
     /**
-     * Releases the geometry for a given tile.
-     *
-     * @memberof QuadtreeTileProvider
-     * @function
-     *
-     * @param {Object} tile The tile instance.
-     */
-    QuadtreeTileProvider.prototype.releaseTile = DeveloperError.throwInstantiationError;
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
