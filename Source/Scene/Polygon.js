@@ -36,14 +36,14 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the polygon is drawn on.
-     * @param {Array} [options.positions=undefined] The cartesian positions of the polygon.
-     * @param {Object} [options.polygonHierarchy=undefined] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
+     * @param {Array} [options.positions] The cartesian positions of the polygon.
+     * @param {Object} [options.polygonHierarchy] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [options.height=0.0] The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Material} [options.material=undefined] The surface appearance of the primitive.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Material} [options.material] The surface appearance of the primitive.
+     * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *

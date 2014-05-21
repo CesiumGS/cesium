@@ -351,7 +351,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @param {Object}[billboard=undefined] A template describing the billboard's properties as shown in Example 1.
+     * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
      *
      * @returns {Billboard} The billboard that was added to the collection.
      *
