@@ -72,8 +72,8 @@ define([
          * The number of animations in the collection.
          *
          * @memberof ModelAnimationCollection
-         * @type {Number}
          *
+         * @type {Number}
          * @readonly
          */
         length : {

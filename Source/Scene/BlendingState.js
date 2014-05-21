@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defineProperties',
         './BlendEquation',
         './BlendFunction'
     ], function(
+        defineProperties,
         BlendEquation,
         BlendFunction) {
     "use strict";
@@ -17,24 +19,11 @@ define([
      *
      * @exports BlendingState
      */
-    var BlendingState = {
-        /**
-         * Blending is disabled.
-         *
-         * @type {Object}
-         * @readonly
-         */
-        DISABLED : {
+    var BlendingState = function() {
+        this._DISABLED = {
             enabled : false
-        },
-
-        /**
-         * Blending is enabled using alpha blending, <code>source(source.alpha) + destination(1 - source.alpha)</code>.
-         *
-         * @type {Object}
-         * @readonly
-         */
-        ALPHA_BLEND : {
+        };
+        this._ALPHA_BLEND = {
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -42,15 +31,8 @@ define([
             functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
             functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
             functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-        },
-
-        /**
-         * Blending is enabled using alpha blending with premultiplied alpha, <code>source + destination(1 - source.alpha)</code>.
-         *
-         * @type {Object}
-         * @readonly
-         */
-        PRE_MULTIPLIED_ALPHA_BLEND : {
+        };
+        this._PRE_MULTIPLIED_ALPHA_BLEND = {
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -58,15 +40,8 @@ define([
             functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
             functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
-        },
-
-        /**
-         * Blending is enabled using additive blending, <code>source(source.alpha) + destination</code>.
-         *
-         * @type {Object}
-         * @readonly
-         */
-        ADDITIVE_BLEND : {
+        };
+        this._ADDITIVE_BLEND = {
             enabled : true,
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
@@ -74,8 +49,66 @@ define([
             functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
             functionDestinationRgb : BlendFunction.ONE,
             functionDestinationAlpha : BlendFunction.ONE
-        }
+        };
     };
+
+    defineProperties(BlendingState.prototype, {
+        /**
+         * Blending is disabled.
+         *
+         * @memberof BlendingState.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        DISABLED : {
+            get : function() {
+                return this._DISABLED;
+            }
+        },
+
+        /**
+         * Blending is enabled using alpha blending, <code>source(source.alpha) + destination(1 - source.alpha)</code>.
+         *
+         * @memberof BlendingState.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        ALPHA_BLEND : {
+            get : function() {
+                return this._ALPHA_BLEND;
+            }
+        },
+
+        /**
+         * Blending is enabled using alpha blending with premultiplied alpha, <code>source + destination(1 - source.alpha)</code>.
+         *
+         * @memberof BlendingState.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        PRE_MULTIPLIED_ALPHA_BLEND : {
+            get : function() {
+                return this._PRE_MULTIPLIED_ALPHA_BLEND;
+            }
+        },
+
+        /**
+         * Blending is enabled using additive blending, <code>source(source.alpha) + destination</code>.
+         *
+         * @memberof BlendingState.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        ADDITIVE_BLEND : {
+            get : function() {
+                return this._ADDITIVE_BLEND;
+            }
+        }
+    });
 
     return BlendingState;
 });

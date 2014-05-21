@@ -49,11 +49,7 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
 
-        /**
-         * @readonly
-         */
         this._frameState = undefined;
-
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
