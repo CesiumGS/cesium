@@ -455,7 +455,6 @@ define([
             return;
         }
 
-        var propertyCreated = false;
         var property = object[propertyName];
 
         var epoch;
@@ -470,11 +469,10 @@ define([
             if (!(property instanceof SampledProperty)) {
                 property = new SampledProperty(type);
                 object[propertyName] = property;
-                propertyCreated = true;
             }
             property.addSamplesPackedArray(unwrappedInterval, epoch);
             updateInterpolationSettings(packetData, property);
-            return propertyCreated;
+            return;
         }
 
         var interval;
@@ -495,7 +493,6 @@ define([
             if (!defined(property)) {
                 property = new TimeIntervalCollectionProperty();
                 object[propertyName] = property;
-                propertyCreated = true;
             }
 
             if (property instanceof TimeIntervalCollectionProperty) {
@@ -513,7 +510,6 @@ define([
                 interval.data = property;
 
                 //Create the composite.
-                propertyCreated = true;
                 property = new CompositeProperty();
                 object[propertyName] = property;
 
@@ -525,12 +521,11 @@ define([
                 property.intervals.addInterval(combinedInterval);
             }
 
-            return propertyCreated;
+            return;
         }
 
         //isSampled && hasInterval
         if (!defined(property)) {
-            propertyCreated = true;
             property = new CompositeProperty();
             object[propertyName] = property;
         }
@@ -542,7 +537,6 @@ define([
             interval.data = property;
 
             //Create the composite.
-            propertyCreated = true;
             property = new CompositeProperty();
             object[propertyName] = property;
 
@@ -561,7 +555,7 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
-        return propertyCreated;
+        return;
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri) {
@@ -578,7 +572,11 @@ define([
         }
     }
 
-    function processPositionProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
+    function checkForReference(packetData) {
+        return defined(packetData.reference);
+    }
+
+    function processPositionProperty(object, propertyName, packetData, constrainedInterval, sourceUri, dynamicObjectCollection) {
         var combinedInterval;
         var packetInterval = packetData.interval;
         if (defined(packetInterval)) {
@@ -588,6 +586,12 @@ define([
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
+        }
+
+        var isReference = checkForReference(packetData);
+        if (isReference) {
+            object[propertyName] = new ReferenceProperty(dynamicObjectCollection, packetData.reference.id, packetData.reference.path);
+            return;
         }
 
         var referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
@@ -603,7 +607,6 @@ define([
             return true;
         }
 
-        var propertyCreated = false;
         var property = object[propertyName];
 
         var epoch;
@@ -618,11 +621,10 @@ define([
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
                 property = new SampledPositionProperty(referenceFrame);
                 object[propertyName] = property;
-                propertyCreated = true;
             }
             property.addSamplesPackedArray(unwrappedInterval, epoch);
             updateInterpolationSettings(packetData, property);
-            return propertyCreated;
+            return;
         }
 
         var interval;
@@ -639,7 +641,6 @@ define([
             if (!defined(property)) {
                 property = new TimeIntervalCollectionPositionProperty(referenceFrame);
                 object[propertyName] = property;
-                propertyCreated = true;
             }
 
             if (property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
@@ -657,7 +658,6 @@ define([
                 interval.data = property;
 
                 //Create the composite.
-                propertyCreated = true;
                 property = new CompositePositionProperty(property.referenceFrame);
                 object[propertyName] = property;
 
@@ -669,12 +669,11 @@ define([
                 property.intervals.addInterval(combinedInterval);
             }
 
-            return propertyCreated;
+            return;
         }
 
         //isSampled && hasInterval
         if (!defined(property)) {
-            propertyCreated = true;
             property = new CompositePositionProperty(referenceFrame);
             object[propertyName] = property;
         } else if (!(property instanceof CompositePositionProperty)) {
@@ -684,7 +683,6 @@ define([
             interval.data = property;
 
             //Create the composite.
-            propertyCreated = true;
             property = new CompositePositionProperty(property.referenceFrame);
             object[propertyName] = property;
 
@@ -703,20 +701,19 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
-        return propertyCreated;
     }
 
-    function processPositionPacketData(object, propertyName, packetData, interval, sourceUri) {
+    function processPositionPacketData(object, propertyName, packetData, interval, sourceUri, dynamicObjectCollection) {
         if (!defined(packetData)) {
             return;
         }
 
         if (isArray(packetData)) {
             for (var i = 0, len = packetData.length; i < len; i++) {
-                processPositionProperty(object, propertyName, packetData[i], interval, sourceUri);
+                processPositionProperty(object, propertyName, packetData[i], interval, sourceUri, dynamicObjectCollection);
             }
         } else {
-            processPositionProperty(object, propertyName, packetData, interval, sourceUri);
+            processPositionProperty(object, propertyName, packetData, interval, sourceUri, dynamicObjectCollection);
         }
     }
 
@@ -828,7 +825,7 @@ define([
     function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (defined(positionData)) {
-            processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri);
+            processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri, dynamicObjectCollection);
         }
     }
 
@@ -853,7 +850,13 @@ define([
         if (defined(references)) {
             var properties = [];
             for (i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
+                var reference = references[i];
+                if (typeof reference === 'string') {
+                    //Backwards compatibility
+                    properties.push(new ReferenceProperty.fromString(dynamicObjectCollection, reference));
+                } else {
+                    properties.push(new ReferenceProperty(dynamicObjectCollection, reference.id, reference.path));
+                }
             }
 
             var iso8601Interval = vertexPositionsData.interval;
