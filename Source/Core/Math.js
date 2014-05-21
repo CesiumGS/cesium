@@ -392,7 +392,6 @@ define([
      * Converts degrees to radians.
      * @param {Number} degrees The angle to convert in degrees.
      * @returns {Number} The corresponding angle in radians.
-     *
      */
     CesiumMath.toRadians = function(degrees) {
         //>>includeStart('debug', pragmas.debug);
@@ -407,7 +406,6 @@ define([
      * Converts radians to degrees.
      * @param {Number} radians The angle to convert in radians.
      * @returns {Number} The corresponding angle in degrees.
-     *
      */
     CesiumMath.toDegrees = function(radians) {
         //>>includeStart('debug', pragmas.debug);
@@ -428,7 +426,6 @@ define([
      * @example
      * // Convert 270 degrees to -90 degrees longitude
      * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
-     *
      */
     CesiumMath.convertLongitudeRange = function(angle) {
         //>>includeStart('debug', pragmas.debug);
@@ -454,7 +451,6 @@ define([
      * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
-     *
      */
     CesiumMath.negativePiToPi = function(x) {
         //>>includeStart('debug', pragmas.debug);
@@ -481,7 +477,6 @@ define([
      * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
-     *
      */
     CesiumMath.zeroToTwoPi = function(x) {
         //>>includeStart('debug', pragmas.debug);
@@ -666,7 +661,6 @@ define([
      * @param {Number} min The minimum value.
      * @param {Number} max The maximum value.
      * @returns The value clamped so that min <= value <= max.
-     *
      */
     CesiumMath.clamp = function(value, min, max) {
         //>>includeStart('debug', pragmas.debug);
