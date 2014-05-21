@@ -281,7 +281,7 @@ define([
      * The array should not be modified directly.
      * @memberof DynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     DynamicObjectCollection.prototype.getObjects = function() {
         return this._objects.values;

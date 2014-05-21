@@ -1445,7 +1445,7 @@ define([
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
-     * @returns {Array} Array of objects, each containing 1 picked primitives.
+     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
      *

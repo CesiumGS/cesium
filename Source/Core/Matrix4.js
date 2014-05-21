@@ -984,7 +984,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to use..
      * @param {Number[]} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @example
      * //create an array from an instance of Matrix4

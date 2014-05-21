@@ -115,7 +115,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @returns {Array} A list of the input indices in an optimized order.
+     * @returns {Number[]} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
