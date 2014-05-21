@@ -158,9 +158,9 @@ define([
      * Computes the projection of the provided 3D positions onto the 2D plane.
      * @memberof EllipsoidTangentPlane
      *
-     * @param {Array} cartesians The array of points to project.
-     * @param {Array} [result] The array of Cartesian2 instances onto which to store results.
-     * @returns {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
+     * @param {Cartesian3[]} cartesians The array of points to project.
+     * @param {Cartesian2[]} [result] The array of Cartesian2 instances onto which to store results.
+     * @returns {Cartesian2[]} The modified result parameter or a new array of Cartesian2 instances if none was provided.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -192,9 +192,9 @@ define([
      * Computes the projection of the provided 2D positions onto the 3D ellipsoid.
      * @memberof EllipsoidTangentPlane
      *
-     * @param {Array} cartesians The array of points to project.
-     * @param {Array} [result] The array of Cartesian3 instances onto which to store results.
-     * @returns {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
+     * @param {Cartesian2[]} cartesians The array of points to project.
+     * @param {Cartesian3[]} [result] The array of Cartesian3 instances onto which to store results.
+     * @returns {Cartesian3[]} The modified result parameter or a new array of Cartesian3 instances if none was provided.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);

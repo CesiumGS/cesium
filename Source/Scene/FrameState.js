@@ -107,7 +107,7 @@ define([
          * directly in <code>update</code> functions.
          * </p>
          *
-         * @type {Array}
+         * @type {Function[]}
          *
          * @example
          * frameState.afterRender.push(function() {
