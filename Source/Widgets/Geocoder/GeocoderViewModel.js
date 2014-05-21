@@ -269,7 +269,8 @@ define([
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                     screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 },
-                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
+                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY,
+                convert : false
             };
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, options);
