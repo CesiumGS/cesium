@@ -192,6 +192,9 @@ define([
 
     GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
+        if (!defined(surfaceTile)) {
+            surfaceTile = tile.data = new GlobeSurfaceTile();
+        }
 
         if (tile.state === QuadtreeTileState.START) {
             prepareNewTile(tile, terrainProvider, imageryLayerCollection);
@@ -413,11 +416,11 @@ define([
     function getUpsampleTileDetails(tile) {
         // Find the nearest ancestor with loaded terrain.
         var sourceTile = tile.parent;
-        while (defined(sourceTile) && !defined(sourceTile.data.terrainData)) {
+        while (defined(sourceTile) && defined(sourceTile.data) && !defined(sourceTile.data.terrainData)) {
             sourceTile = sourceTile.parent;
         }
 
-        if (!defined(sourceTile)) {
+        if (!defined(sourceTile) || !defined(sourceTile.data)) {
             // No ancestors have loaded terrain - try again later.
             return undefined;
         }
@@ -520,7 +523,7 @@ define([
             return true;
         }
 
-        if (!defined(parent.data.terrainData)) {
+        if (!defined(parent.data) || !defined(parent.data.terrainData)) {
             // Parent tile data is not yet received or upsampled, so assume (for now) that this
             // child tile is not available.
             return false;

@@ -4,27 +4,28 @@ defineSuite([
         'Core/defined',
         'Scene/ImageryState',
         'Scene/TerrainState',
-        'Scene/TileState'
+        'Scene/QuadtreeTileState'
     ], function(
         TileReplacementQueue,
         defined,
         ImageryState,
         TerrainState,
-        TileState) {
+        QuadtreeTileState) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;
-        this.state = TileState.LOADING;
-        this.imagery = [];
+        this.state = QuadtreeTileState.LOADING;
+        this.data = {};
+        this.data.imagery = [];
         if (defined(loadedState)) {
-            this.loadedTerrain = {
+            this.data.loadedTerrain = {
                 state : loadedState
             };
         }
         if (defined(upsampledState)) {
-            this.upsampledTerrain = {
+            this.data.upsampledTerrain = {
                 state : upsampledState
             };
         }
@@ -124,7 +125,7 @@ defineSuite([
             queue.markTileRendered(two);
             queue.markTileRendered(three);
 
-            two.imagery.push({
+            two.data.imagery.push({
                 loadingImagery : {
                     state : ImageryState.TRANSITIONING
                 }

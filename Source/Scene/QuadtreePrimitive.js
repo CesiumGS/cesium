@@ -132,6 +132,13 @@ define([
         }
     };
 
+    QuadtreePrimitive.prototype.forEachRenderedTile = function(tileFunction) {
+        var tilesRendered = this._tilesToRender;
+        for (var i = 0, len = tilesRendered.length; i < len; ++i) {
+            tileFunction(tilesRendered[i]);
+        }
+    };
+
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
         this._tileProvider.beginFrame(context, frameState, commandList);
 
@@ -140,6 +147,45 @@ define([
         createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
 
         this._tileProvider.endFrame(context, frameState, commandList);
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof QuadtreePrimitive
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see QuadtreePrimitive#destroy
+     */
+    QuadtreePrimitive.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof QuadtreePrimitive
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see QuadtreePrimitive#isDestroyed
+     *
+     * @example
+     * primitive = primitive && primitive.destroy();
+     */
+    QuadtreePrimitive.prototype.destroy = function() {
+        this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
     var scratchCameraPositionCartographic = new Cartographic();

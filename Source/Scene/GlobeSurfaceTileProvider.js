@@ -69,6 +69,19 @@ define([
      * @private
      */
     var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        if (!defined(options.terrainProvider)) {
+            throw new DeveloperError('options.terrainProvider is required.');
+        } else if (!defined(options.imageryLayers)) {
+            throw new DeveloperError('options.imageryLayers is required.');
+        } else if (!defined(options.surfaceShaderSet)) {
+            throw new DeveloperError('options.surfaceShaderSet is required.');
+        }
+        //>>includeEnd('debug');
+
         this.lightingFadeOutDistance = 6500000.0;
         this.lightingFadeInDistance = 9000000.0;
         this.oceanNormalMap = undefined;
@@ -296,10 +309,6 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(context, frameState, tile) {
-        if (!defined(tile.data)) {
-            tile.data = new GlobeSurfaceTile();
-        }
-
         GlobeSurfaceTile.processStateMachine(tile, context, this._terrainProvider, this._imageryLayers);
     };
 
@@ -471,6 +480,45 @@ define([
         }
 
         return Math.sqrt(result);
+    };
+
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof GlobeSurfaceTileProvider
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see GlobeSurfaceTileProvider#destroy
+     */
+    GlobeSurfaceTileProvider.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof GlobeSurfaceTileProvider
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see GlobeSurfaceTileProvider#isDestroyed
+     *
+     * @example
+     * provider = provider && provider();
+     */
+    GlobeSurfaceTileProvider.prototype.destroy = function() {
+        this._tileProvider = this._tileProvider && this._tileProvider.destroy();
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerAdded = function(layer, index) {

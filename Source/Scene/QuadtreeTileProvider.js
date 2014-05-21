@@ -183,5 +183,40 @@ define([
      */
     QuadtreeTileProvider.prototype.releaseTile = DeveloperError.throwInstantiationError;
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @memberof QuadtreeTileProvider
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
+     *
+     * @see QuadtreeTileProvider#destroy
+     */
+    QuadtreeTileProvider.prototype.isDestroyed = DeveloperError.throwInstantiationError;
+
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof QuadtreeTileProvider
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see QuadtreeTileProvider#isDestroyed
+     *
+     * @example
+     * provider = provider && provider();
+     */
+    QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
+
     return QuadtreeTileProvider;
 });
