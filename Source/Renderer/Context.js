@@ -328,6 +328,8 @@ define([
         RenderState.apply(gl, rs, ps);
     };
 
+    var defaultFramebufferMarker = {};
+
     defineProperties(Context.prototype, {
         id : {
             get : function() {
@@ -910,6 +912,18 @@ define([
             get : function() {
                 return this._gl.drawingBufferWidth;
             }
+        },
+
+        /**
+         * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
+         * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
+         * {@link Context.createTexture2DFromFramebuffer}.
+         * @type {Object}
+         */
+        defaultFramebuffer : {
+            get : function() {
+                return defaultFramebufferMarker;
+            }
         }
     });
 
@@ -1179,99 +1193,7 @@ define([
      * @see Context#createSampler
      */
     Context.prototype.createTexture2D = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var source = options.source;
-        var width = defined(source) ? source.width : options.width;
-        var height = defined(source) ? source.height : options.height;
-        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
-        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(width) || !defined(height)) {
-            throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
-        }
-
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
-
-        if (width > this._maximumTextureSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check maximumTextureSize.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
-
-        if (height > this._maximumTextureSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + this._maximumTextureSize + ').  Check maximumTextureSize.');
-        }
-
-        if (!PixelFormat.validate(pixelFormat)) {
-            throw new DeveloperError('Invalid options.pixelFormat.');
-        }
-
-        if (!PixelDatatype.validate(pixelDatatype)) {
-            throw new DeveloperError('Invalid options.pixelDatatype.');
-        }
-
-        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
-            ((pixelDatatype !== PixelDatatype.UNSIGNED_SHORT) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT))) {
-            throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
-        }
-
-        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
-            throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
-        }
-        //>>includeEnd('debug');
-
-        if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
-            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
-        }
-
-        if (PixelFormat.isDepthFormat(pixelFormat)) {
-            //>>includeStart('debug', pragmas.debug);
-            if (defined(source)) {
-                throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
-            }
-            //>>includeEnd('debug');
-
-            if (!this.depthTexture) {
-                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check depthTexture.');
-            }
-        }
-
-        // Use premultiplied alpha for opaque textures should perform better on Chrome:
-        // http://media.tojicode.com/webglCamp4/#20
-        var preMultiplyAlpha = options.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
-        var flipY = defaultValue(options.flipY, true);
-
-        var gl = this._gl;
-        var textureTarget = gl.TEXTURE_2D;
-        var texture = gl.createTexture();
-
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(textureTarget, texture);
-
-        if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
-
-            if (defined(source.arrayBufferView)) {
-                // Source: typed array
-                gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
-            } else {
-                // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
-                gl.texImage2D(textureTarget, 0, pixelFormat, pixelFormat, pixelDatatype, source);
-            }
-        } else {
-            gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, null);
-        }
-        gl.bindTexture(textureTarget, null);
-
-        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY);
+        return new Texture(this, options);
     };
 
     /**
@@ -1285,6 +1207,8 @@ define([
      * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
      * @param {Number} [width=canvas.clientWidth] The width of the texture in texels.
      * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
+     * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
+     *        parameter is not specified, the default framebuffer is used.
      *
      * @returns {Texture} A texture with contents from the framebuffer.
      *
@@ -1303,7 +1227,7 @@ define([
      * // Create a texture with the contents of the framebuffer.
      * var t = context.createTexture2DFromFramebuffer();
      */
-    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height) {
+    Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
         var gl = this._gl;
 
         pixelFormat = defaultValue(pixelFormat, PixelFormat.RGB);
@@ -1338,15 +1262,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        var textureTarget = gl.TEXTURE_2D;
-        var texture = gl.createTexture();
+        var texture = new Texture(this, {
+            width : width,
+            height : height,
+            pixelFormat : pixelFormat,
+            source : {
+                framebuffer : defined(framebuffer) ? framebuffer : this.defaultFramebuffer,
+                xOffset : framebufferXOffset,
+                yOffset : framebufferYOffset,
+                width : width,
+                height : height
+            }
+        });
 
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(textureTarget, texture);
-        gl.copyTexImage2D(textureTarget, 0, pixelFormat, framebufferXOffset, framebufferYOffset, width, height, 0);
-        gl.bindTexture(textureTarget, null);
-
-        return new Texture(gl, this._textureFilterAnisotropic, textureTarget, texture, pixelFormat, undefined, width, height);
+        return texture;
     };
 
     /**
