@@ -23,7 +23,7 @@ define([
      *
      * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
      * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
-     * @param {Uint16Array} [options.indices] Optional index data that determines the primitives in the geometry.
+     * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
 
      *

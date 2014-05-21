@@ -180,7 +180,7 @@ define([
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledPositionProperty
      *
-     * @param {Packable[]} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {

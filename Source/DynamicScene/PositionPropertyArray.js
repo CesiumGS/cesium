@@ -89,8 +89,8 @@ define([
      * @memberof PositionPropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
-     * @param {PositionProperty[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {PositionProperty[]} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {Cartesian3[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PositionPropertyArray.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
