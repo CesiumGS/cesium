@@ -28,7 +28,7 @@ define([
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see CircleOutlineGoemetry.createGeometry
+     * @see CircleOutlineGeometry.createGeometry
      *
      * @example
      * // Create a circle.

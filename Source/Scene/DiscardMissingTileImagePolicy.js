@@ -23,7 +23,7 @@ define([
      * @constructor
      *
      * @param {String} options.missingImageUrl The URL of the known missing image.
-     * @param {Array} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
+     * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
      * @param {Boolean} [options.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the

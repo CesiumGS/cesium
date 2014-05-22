@@ -6,7 +6,7 @@ Beta Releases
 
 ### b29 - 2014-06-02
 
-* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4))
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
   * Removed `Shapes.compute2DCircle`, `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
@@ -17,6 +17,20 @@ Beta Releases
     * Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
     * Moved the following from `Scene` to `Core`: `TerrainProvider`, `ArcGisImageServerTerrainProvider`,  `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `VRTheWorldTerrainProvider`, `TerrainData`, `HeightmapTerrainData`, `QuantizedMeshTerrainData`, `TerrainMesh`, `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingScheme`, `sampleTerrain`, `TileProviderError`, `Credit`.
   * Removed `TilingScheme.createRectangleOfLevelZeroTiles`, `GeographicTilingScheme.createLevelZeroTiles` and `WebMercatorTilingScheme.createLevelZeroTiles`.
+  * Remove `CameraFlightPath.createAnimationCartographic`. Code that looked like:
+
+           var flight = CameraFlightPath.createAnimationCartographic(scene, {
+               destination : cartographic
+           });
+           scene.animations.add(flight);
+
+    should now look like:
+
+           var flight = CameraFlightPath.createAnimation(scene, {
+               destination : ellipsoid.cartographicToCartesian(cartographic)
+           });
+           scene.animations.add(flight);
+           
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
@@ -24,6 +38,7 @@ Beta Releases
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size. Also added `czm_resolutionScale` automatic GLSL uniform.
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
 * Added `interleave` option to `Primitive` constructor.
+* Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 
 ### b28 - 2014-05-01
 

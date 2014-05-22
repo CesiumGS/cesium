@@ -48,8 +48,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see OpenStreetMapImageryProvider
      *
-     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
@@ -361,6 +361,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

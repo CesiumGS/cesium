@@ -21,7 +21,7 @@ define([
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
      * an {@link Ellipsoid} and a camera position.  The ellipsoid is assumed to be located at the
      * origin of the coordinate system.  This class uses the algorithm described in the
-     * <a href="http://cesiumjs.org/2013/04/25/Horizon-culling/">Horizon Culling</a> blog post.
+     * {@link http://cesiumjs.org/2013/04/25/Horizon-culling/|Horizon Culling} blog post.
      *
      * @alias EllipsoidalOccluder
      *

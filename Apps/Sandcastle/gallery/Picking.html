@@ -96,7 +96,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function cleanup() {
-        widget.scene.primitives.removeAll();
+        viewer.scene.primitives.removeAll();
         handler = handler && handler.destroy();
     }
 
@@ -319,9 +319,8 @@ require(['Cesium'], function(Cesium) {
 
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
     pickCartographicPosition(scene);
 

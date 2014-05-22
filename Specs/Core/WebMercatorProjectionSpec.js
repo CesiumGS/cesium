@@ -150,4 +150,11 @@ defineSuite([
         var northLimit = projection.project(new Cartographic(0.0, WebMercatorProjection.MaximumLatitude));
         expect(northPole.y).toEqual(northLimit.y);
     });
+
+    it('project throws without cartesian', function() {
+        var projection = new WebMercatorProjection();
+        expect(function() {
+            return projection.unproject();
+        }).toThrowDeveloperError();
+    });
 });

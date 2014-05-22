@@ -113,7 +113,7 @@ define([
          * @alias czm_viewportOrthographic
          * @glslUniform
          *
-         * @see uniformState#viewportOrthographic
+         * @see UniformState#viewportOrthographic
          * @see czm_viewport
          * @see czm_viewportTransformation
          * @see BillboardCollection
@@ -151,7 +151,7 @@ define([
          * @alias czm_viewportTransformation
          * @glslUniform
          *
-         * @see uniformState#viewportTransformation
+         * @see UniformState#viewportTransformation
          * @see czm_viewport
          * @see czm_viewportOrthographic
          * @see czm_modelToWindowCoordinates
@@ -182,7 +182,7 @@ define([
          * @alias czm_model
          * @glslUniform
          *
-         * @see uniformState#model
+         * @see UniformState#model
          * @see czm_inverseModel
          * @see czm_modelView
          * @see czm_modelViewProjection
@@ -209,7 +209,7 @@ define([
          * @alias czm_inverseModel
          * @glslUniform
          *
-         * @see uniformState#inverseModel
+         * @see UniformState#inverseModel
          * @see czm_model
          * @see czm_inverseModelView
          *
@@ -235,7 +235,7 @@ define([
          * @alias czm_view
          * @glslUniform
          *
-         * @see uniformState#view
+         * @see UniformState#view
          * @see czm_viewRotation
          * @see czm_modelView
          * @see czm_viewProjection
@@ -267,7 +267,7 @@ define([
          * @alias czm_view3D
          * @glslUniform
          *
-         * @see uniformState#view3D
+         * @see UniformState#view3D
          * @see czm_view
          *
          * @example
@@ -292,7 +292,7 @@ define([
          * @alias czm_viewRotation
          * @glslUniform
          *
-         * @see uniformState#viewRotation
+         * @see UniformState#viewRotation
          * @see czm_view
          * @see czm_inverseView
          * @see czm_inverseViewRotation
@@ -322,7 +322,7 @@ define([
          * @alias czm_viewRotation3D
          * @glslUniform
          *
-         * @see uniformState#viewRotation3D
+         * @see UniformState#viewRotation3D
          * @see czm_viewRotation
          *
          * @example
@@ -347,7 +347,7 @@ define([
          * @alias czm_inverseView
          * @glslUniform
          *
-         * @see uniformState#inverseView
+         * @see UniformState#inverseView
          * @see czm_view
          * @see czm_inverseNormal
          *
@@ -376,7 +376,7 @@ define([
          * @alias czm_inverseView3D
          * @glslUniform
          *
-         * @see uniformState#inverseView3D
+         * @see UniformState#inverseView3D
          * @see czm_inverseView
          *
          * @example
@@ -401,7 +401,7 @@ define([
          * @alias czm_inverseViewRotation
          * @glslUniform
          *
-         * @see uniformState#inverseView
+         * @see UniformState#inverseView
          * @see czm_view
          * @see czm_viewRotation
          * @see czm_inverseViewRotation
@@ -431,7 +431,7 @@ define([
          * @alias czm_inverseViewRotation3D
          * @glslUniform
          *
-         * @see uniformState#inverseView3D
+         * @see UniformState#inverseView3D
          * @see czm_inverseViewRotation
          *
          * @example
@@ -457,7 +457,7 @@ define([
          * @alias czm_projection
          * @glslUniform
          *
-         * @see uniformState#projection
+         * @see UniformState#projection
          * @see czm_viewProjection
          * @see czm_modelViewProjection
          * @see czm_infiniteProjection
@@ -485,7 +485,7 @@ define([
          * @alias czm_inverseProjection
          * @glslUniform
          *
-         * @see uniformState#inverseProjection
+         * @see UniformState#inverseProjection
          * @see czm_projection
          *
          * @example
@@ -524,7 +524,7 @@ define([
          * @alias czm_infiniteProjection
          * @glslUniform
          *
-         * @see uniformState#infiniteProjection
+         * @see UniformState#infiniteProjection
          * @see czm_projection
          * @see czm_modelViewInfiniteProjection
          *
@@ -553,7 +553,7 @@ define([
          * @alias czm_modelView
          * @glslUniform
          *
-         * @see uniformState#modelView
+         * @see UniformState#modelView
          * @see czm_model
          * @see czm_view
          * @see czm_modelViewProjection
@@ -590,7 +590,7 @@ define([
          * @alias czm_modelView3D
          * @glslUniform
          *
-         * @see uniformState#modelView3D
+         * @see UniformState#modelView3D
          * @see czm_modelView
          *
          * @example
@@ -652,7 +652,7 @@ define([
          * @alias czm_inverseModelView
          * @glslUniform
          *
-         * @see uniformState#inverseModelView
+         * @see UniformState#inverseModelView
          * @see czm_modelView
          *
          * @example
@@ -680,7 +680,7 @@ define([
          * @alias czm_inverseModelView3D
          * @glslUniform
          *
-         * @see uniformState#inverseModelView
+         * @see UniformState#inverseModelView
          * @see czm_inverseModelView
          * @see czm_modelView3D
          *
@@ -707,7 +707,7 @@ define([
          * @alias czm_viewProjection
          * @glslUniform
          *
-         * @see uniformState#viewProjection
+         * @see UniformState#viewProjection
          * @see czm_view
          * @see czm_projection
          * @see czm_modelViewProjection
@@ -739,7 +739,7 @@ define([
          * @alias czm_inverseViewProjection
          * @glslUniform
          *
-         * @see uniformState#inverseViewProjection
+         * @see UniformState#inverseViewProjection
          * @see czm_viewProjection
          *
          * @example
@@ -765,7 +765,7 @@ define([
          * @alias czm_modelViewProjection
          * @glslUniform
          *
-         * @see uniformState#modelViewProjection
+         * @see UniformState#modelViewProjection
          * @see czm_model
          * @see czm_view
          * @see czm_projection
@@ -800,7 +800,7 @@ define([
          * @alias czm_inverseModelViewProjection
          * @glslUniform
          *
-         * @see uniformState#modelViewProjection
+         * @see UniformState#modelViewProjection
          * @see czm_modelViewProjection
          *
          * @example
@@ -863,7 +863,7 @@ define([
          * @alias czm_modelViewInfiniteProjection
          * @glslUniform
          *
-         * @see uniformState#modelViewInfiniteProjection
+         * @see UniformState#modelViewInfiniteProjection
          * @see czm_model
          * @see czm_view
          * @see czm_infiniteProjection
@@ -897,7 +897,7 @@ define([
          * @alias czm_normal
          * @glslUniform
          *
-         * @see uniformState#normal
+         * @see UniformState#normal
          * @see czm_inverseNormal
          * @see czm_modelView
          *
@@ -930,7 +930,7 @@ define([
          * @alias czm_normal3D
          * @glslUniform
          *
-         * @see uniformState#normal3D
+         * @see UniformState#normal3D
          * @see czm_normal
          *
          * @example
@@ -956,7 +956,7 @@ define([
          * @alias czm_inverseNormal
          * @glslUniform
          *
-         * @see uniformState#inverseNormal
+         * @see UniformState#inverseNormal
          * @see czm_normal
          * @see czm_modelView
          * @see czm_inverseView
@@ -988,7 +988,7 @@ define([
          * @alias czm_inverseNormal3D
          * @glslUniform
          *
-         * @see uniformState#inverseNormal3D
+         * @see UniformState#inverseNormal3D
          * @see czm_inverseNormal
          *
          * @example
@@ -1013,7 +1013,7 @@ define([
          * @alias czm_eyeHeight2D
          * @glslUniform
          *
-         * @see uniformState#eyeHeight2D
+         * @see UniformState#eyeHeight2D
          */
         czm_eyeHeight2D : new AutomaticUniform({
             size : 1,
@@ -1031,7 +1031,7 @@ define([
          * @alias czm_entireFrustum
          * @glslUniform
          *
-         * @see uniformState#entireFrustum
+         * @see UniformState#entireFrustum
          * @see czm_currentFrustum
          *
          * @example
@@ -1057,7 +1057,7 @@ define([
          * @alias czm_currentFrustum
          * @glslUniform
          *
-         * @see uniformState#currentFrustum
+         * @see UniformState#currentFrustum
          * @see czm_entireFrustum
          *
          * @example
@@ -1081,7 +1081,7 @@ define([
          * @alias czm_sunPositionWC
          * @glslUniform
          *
-         * @see uniformState#sunPositionWC
+         * @see UniformState#sunPositionWC
          * @see czm_sunPositionColumbusView
          * @see czm_sunDirectionWC
          *
@@ -1103,7 +1103,7 @@ define([
          * @alias czm_sunPositionColumbusView
          * @glslUniform
          *
-         * @see uniformState#sunPositionColumbusView
+         * @see UniformState#sunPositionColumbusView
          * @see czm_sunPositionWC
          *
          * @example
@@ -1125,7 +1125,7 @@ define([
          * @alias czm_sunDirectionEC
          * @glslUniform
          *
-         * @see uniformState#sunDirectionEC
+         * @see UniformState#sunDirectionEC
          * @see czm_moonDirectionEC
          * @see czm_sunDirectionWC
          *
@@ -1151,7 +1151,7 @@ define([
          * @alias czm_sunDirectionWC
          * @glslUniform
          *
-         * @see uniformState#sunDirectionWC
+         * @see UniformState#sunDirectionWC
          * @see czm_sunPositionWC
          * @see czm_sunDirectionEC
          *
@@ -1174,7 +1174,7 @@ define([
          * @alias czm_moonDirectionEC
          * @glslUniform
          *
-         * @see uniformState#moonDirectionEC
+         * @see UniformState#moonDirectionEC
          * @see czm_sunDirectionEC
          *
          * @example
@@ -1195,7 +1195,7 @@ define([
         /**
          * An automatic GLSL uniform representing the high bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCHigh
          * @glslUniform
@@ -1219,7 +1219,7 @@ define([
         /**
          * An automatic GLSL uniform representing the low bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCLow
          * @glslUniform
@@ -1336,7 +1336,7 @@ define([
          * @alias czm_temeToPseudoFixed
          * @glslUniform
          *
-         * @see uniformState#temeToPseudoFixedMatrix
+         * @see UniformState#temeToPseudoFixedMatrix
          * @see Transforms.computeTemeToPseudoFixedMatrix
          *
          * @example

@@ -279,9 +279,9 @@ require([
         });
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
 
-    imageryLayers = widget.scene.imageryLayers;
+    imageryLayers = viewer.scene.imageryLayers;
 
     setupLayers();
 

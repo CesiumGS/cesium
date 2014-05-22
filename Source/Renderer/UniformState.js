@@ -49,11 +49,7 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
 
-        /**
-         * @readonly
-         */
-        this.frameState = undefined;
-
+        this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
@@ -148,6 +144,17 @@ define([
 
     defineProperties(UniformState.prototype, {
         /**
+         * @memberof UniformState.prototype
+         * @type {FrameState}
+         * @readonly
+         */
+        frameState : {
+            get : function() {
+                return this._frameState;
+            }
+        },
+        /**
+         * @memberof UniformState.prototype
          * @type {BoundingRectangle}
          */
         viewport : {
@@ -194,6 +201,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         model : {
@@ -226,6 +234,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModel : {
@@ -258,6 +267,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         view : {
@@ -300,6 +310,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         viewRotation3D : {
@@ -310,6 +321,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseView : {
@@ -337,6 +349,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix3}
          */
         inverseViewRotation : {
@@ -358,7 +371,8 @@ define([
         },
 
         /**
-         * @teyp {Matrix4}
+         * @memberof UniformState.prototype
+         * @type {Matrix4}
          */
         projection : {
             get : function() {
@@ -367,6 +381,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseProjection : {
@@ -387,6 +402,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         infiniteProjection : {
@@ -396,6 +412,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelView : {
@@ -431,6 +448,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModelView : {
@@ -455,6 +473,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         viewProjection : {
@@ -465,6 +484,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseViewProjection : {
@@ -475,6 +495,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelViewProjection : {
@@ -486,6 +507,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         inverseModelViewProjection : {
@@ -509,6 +531,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @type {Matrix4}
          */
         modelViewInfiniteProjection : {
@@ -853,7 +876,7 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this.frameState = frameState;
+        this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
     };
 

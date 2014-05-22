@@ -27,7 +27,7 @@ define([
      *
      * @returns {Object} a promise that will resolve to the requested data when loaded.
      *
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a data asynchronously

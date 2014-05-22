@@ -135,7 +135,7 @@ define([
 
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type {Array}
+         * @type {TileImagery[]}
          * @default []
          */
         this.imagery = [];
@@ -230,7 +230,7 @@ define([
      * @memberof Tile
      *
      * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
+     * @returns {Tile[]} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
     Tile.createLevelZeroTiles = function(tilingScheme) {
@@ -262,7 +262,7 @@ define([
         /**
          * An array of tiles that would be at the next level of the tile tree.
          * @memberof Tile.prototype
-         * @type {Array}
+         * @type {Tile[]}
          */
         children : {
             get : function() {
