@@ -151,8 +151,8 @@ define([
         },
 
         /**
-         * Gets the tiling scheme used by the provider.  This function should
-         * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
+         * Gets the tiling scheme used by the provider.  This property should
+         * not be accessed before {@link GlobeSurfaceTileProvider#ready} returns true.
          * @memberof GlobeSurfaceTileProvider.prototype
          * @type {TilingScheme}
          */
@@ -205,7 +205,8 @@ define([
     });
 
     /**
-     * Called before any calls to {@link GlobeSurfaceTileProvider#renderTile} in the current render frame.
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#renderTile}
+     * or any other functions.
      * @memberof GlobeSurfaceTileProvider
      * @function
      *
@@ -252,7 +253,8 @@ define([
     };
 
     /**
-     * Called after all calls to {@link GlobeSurfaceTileProvider#renderTile} in the current render frame.
+     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
+     * and any other functions.
      * @memberof GlobeSurfaceTileProvider
      * @function
      *
@@ -301,12 +303,12 @@ define([
     };
 
     /**
-     * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
+     * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
      * @memberof GlobeSurfaceTileProvider
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
+     * @returns {Number} The maximum geometric error in meters.
      */
     GlobeSurfaceTileProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._terrainProvider.getLevelMaximumGeometricError(level);

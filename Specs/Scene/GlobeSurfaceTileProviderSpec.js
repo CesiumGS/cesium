@@ -13,6 +13,7 @@ defineSuite([
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/OrthographicFrustum',
+        'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
         'Scene/WebMapServiceImageryProvider',
@@ -34,6 +35,7 @@ defineSuite([
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         OrthographicFrustum,
+        QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
         WebMapServiceImageryProvider,
@@ -107,6 +109,10 @@ defineSuite([
 
     afterEach(function() {
         globe.destroy();
+    });
+
+    it('conforms to QuadtreeTileProvider interface', function() {
+        expect(GlobeSurfaceTileProvider).toConformToInterface(QuadtreeTileProvider);
     });
 
     describe('construction', function() {

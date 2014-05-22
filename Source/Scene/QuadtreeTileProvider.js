@@ -10,8 +10,9 @@ define([
     "use strict";
 
     /**
-     * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  This type describes an
-     * interface and is not intended to be instantiated directly.
+     * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be
+     * used with the {@link QuadtreePrimitive}.  This type describes an interface and is not intended to be
+     * instantiated directly.
      *
      * @alias QuadtreeTileProvider
      * @constructor
@@ -56,8 +57,8 @@ define([
         },
 
         /**
-         * Gets the tiling scheme used by the provider.  This function should
-         * not be called before {@link QuadtreeTileProvider#ready} returns true.
+         * Gets the tiling scheme used by the provider.  This property should
+         * not be accessed before {@link QuadtreeTileProvider#ready} returns true.
          * @memberof QuadtreeTileProvider.prototype
          * @type {TilingScheme}
          */
@@ -66,7 +67,7 @@ define([
         },
 
         /**
-         * Gets an event that is raised when the geometry provider encounters an asynchronous error..  By subscribing
+         * Gets an event that is raised when the geometry provider encounters an asynchronous error.  By subscribing
          * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
          * are passed an instance of {@link TileProviderError}.
          * @memberof QuadtreeTileProvider.prototype
@@ -78,7 +79,8 @@ define([
     });
 
     /**
-     * Called before any calls to {@link QuadtreeTileProvider#renderTile} in the current render frame.
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#renderTile}
+     * or any other functions.
      * @memberof QuadtreeTileProvider
      * @function
      *
@@ -90,7 +92,8 @@ define([
     QuadtreeTileProvider.prototype.beginFrame = DeveloperError.throwInstantiationError;
 
     /**
-     * Called after all calls to {@link QuadtreeTileProvider#renderTile} in the current render frame.
+     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
+     * and any other functions.
      * @memberof QuadtreeTileProvider
      * @function
      *
@@ -102,7 +105,7 @@ define([
     QuadtreeTileProvider.prototype.endFrame = DeveloperError.throwInstantiationError;
 
     /**
-     * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
+     * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link QuadtreeTileProvider#ready} returns true.
      *
      * @see {QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError}
@@ -111,7 +114,7 @@ define([
      * @function
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
-     * @returns {Number} The maximum geometric error.
+     * @returns {Number} The maximum geometric error in meters.
      */
     QuadtreeTileProvider.prototype.getLevelMaximumGeometricError = DeveloperError.throwInstantiationError;
 
