@@ -32,6 +32,7 @@ Beta Releases
            scene.animations.add(flight);
            
   * Removed `CameraColumbusViewMode` because it is no longer needed.
+  * Removed `Enumeration`
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
