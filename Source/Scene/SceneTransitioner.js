@@ -77,12 +77,12 @@ define([
         position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
         direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
         var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-        up = Cartesian3.cross(right, direction);
+        up = Cartesian3.normalize(Cartesian3.cross(right, direction));
 
         position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position);
         direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction);
         var right2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, right);
-        up2D = Cartesian3.cross(right2D, direction2D);
+        up2D = Cartesian3.normalize(Cartesian3.cross(right2D, direction2D));
 
         frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
@@ -101,7 +101,7 @@ define([
         position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.0 * maxRadii);
         direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
         right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-        up = Cartesian3.cross(right, direction);
+        up = Cartesian3.normalize(Cartesian3.cross(right, direction));
 
         this._camera3D = {
             position : position,
@@ -280,6 +280,7 @@ define([
             camera.direction = columbusViewMorph(startDir, endDir, value.time);
             camera.up = columbusViewMorph(startUp, endUp, value.time);
             camera.right = Cartesian3.cross(camera.direction, camera.up);
+            Cartesian3.normalize(camera.right, camera.right);
         };
 
         var animation = scene.animations.add({
@@ -373,6 +374,7 @@ define([
             camera.direction = columbusViewMorph(startDir, endDir, value.time);
             camera.up = columbusViewMorph(startUp, endUp, value.time);
             camera.right = Cartesian3.cross(camera.direction, camera.up);
+            Cartesian3.normalize(camera.right, camera.right);
         };
 
         duration = duration * 0.5;
@@ -502,6 +504,7 @@ define([
                 camera.direction = columbusViewMorph(startDir, endDir, value.time);
                 camera.up = columbusViewMorph(startUp, endUp, value.time);
                 camera.right = Cartesian3.cross(camera.direction, camera.up);
+                Cartesian3.normalize(camera.right, camera.right);
             };
 
             var animation = scene.animations.add({
@@ -543,6 +546,7 @@ define([
             camera.direction = columbusViewMorph(startDir, endDir, value.time);
             camera.up = columbusViewMorph(startUp, endUp, value.time);
             camera.right = Cartesian3.cross(camera.direction, camera.up);
+            Cartesian3.normalize(camera.right, camera.right);
         };
 
         var animation = scene.animations.add({
@@ -560,6 +564,7 @@ define([
                 camera.direction = endDir;
                 camera.up = endUp;
                 camera.right = Cartesian3.cross(endDir, endUp, camera.right);
+                Cartesian3.normalize(camera.right, camera.right);
             }
         });
         transitioner._currentAnimations.push(animation);
@@ -632,6 +637,7 @@ define([
             camera.direction = Cartesian3.clone(transitioner._camera3D.direction);
             camera.up = Cartesian3.clone(transitioner._camera3D.up);
             camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.normalize(camera.right, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);
@@ -654,6 +660,7 @@ define([
         Cartesian3.clone(transitioner._camera2D.direction, camera.direction);
         Cartesian3.clone(transitioner._camera2D.up, camera.up);
         Cartesian3.cross(camera.direction, camera.up, camera.right);
+        Cartesian3.normalize(camera.right, camera.right);
 
         var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
@@ -677,6 +684,7 @@ define([
             Cartesian3.clone(transitioner._cameraCV.direction, camera.direction);
             Cartesian3.clone(transitioner._cameraCV.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.normalize(camera.right, camera.right);
         }
 
         var wasMorphing = defined(transitioner._completeMorph);

@@ -41,7 +41,7 @@ require(['Cesium'], function(Cesium) {
         function fly(position) {
             var destination = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
 
-            var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene, {
+            var flight = Cesium.CameraFlightPath.createAnimation(scene, {
                 destination : destination
             });
             scene.animations.add(flight);
@@ -161,7 +161,11 @@ require(['Cesium'], function(Cesium) {
         var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
-
+        
+        var controller = scene.screenSpaceCameraController;
+        controller.ellipsoid = ellipsoid;
+        controller.enableTilt = true;
+        
         var camera = scene.camera;
         if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
             return;
@@ -173,14 +177,14 @@ require(['Cesium'], function(Cesium) {
                 Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
-
-        var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = ellipsoid;
-        controller.enableTilt = true;
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
+    
+    scene.morphComplete.addEventListener(function() {
+        reset(scene);
+    });
 
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset(scene);
