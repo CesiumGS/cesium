@@ -88,6 +88,17 @@ define([
         DOUBLE : 0x140A
     };
 
+    /**
+     * Returns the size, in bytes, of the corresponding datatype.
+     *
+     * @param {ComponentDatatype} componentDatatype The component datatype to get the size of.
+     *
+     * @returns {Number} The size in bytes.
+     *
+     * @example
+     * // Returns Int8Array.BYTES_PER_ELEMENT
+     * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
+     */
     ComponentDatatype.getSizeInBytes = function(value){
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {

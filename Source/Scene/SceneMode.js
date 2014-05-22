@@ -48,7 +48,12 @@ define(function() {
         MORPHING : 3
     };
 
-    SceneMode.getMorphTime = function(value) {
+     /**
+      * Returns the morph time for the given scene mode
+      * @param {SceneMode} value The scene mode
+      * @returns {Number} The morph time
+      */
+        SceneMode.getMorphTime = function(value) {
         if (value === SceneMode.SCENE3D) {
             return 1.0;
         } else if (value === SceneMode.MORPHING) {
