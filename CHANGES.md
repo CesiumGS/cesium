@@ -31,6 +31,7 @@ Beta Releases
            });
            scene.animations.add(flight);
            
+  * Removed `CameraColumbusViewMode` because it is no longer needed.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
@@ -39,6 +40,7 @@ Beta Releases
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
 * Added `interleave` option to `Primitive` constructor.
 * Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
+* `Camera.transform` now works consistently across scene modes.
 
 ### b28 - 2014-05-01
 
@@ -111,12 +113,6 @@ Beta Releases
 * Added `getScale` and `getMaximumScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
 * Upgraded Knockout from version 3.0.0 to 3.1.0.
 * Upgraded TopoJSON from version 1.1.4 to 1.6.8.
-
-### b28 - 2014-05-01
-
-* Breaking changes:
-  * Removed `CameraColumbusViewMode` because it is no longer needed.
-* `Camera.transform` now works consistently across scene modes.
 
 ### b27 - 2014-04-01
 

@@ -229,7 +229,7 @@ define([
     }
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
-        if (Math.abs(Cartesian2.magnitude(start) - Cartesian2.magnitude(end)) < 10000.0) {
+        if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
             return new LinearSpline({
                 points : [start, end],
                 times : [0.0, duration]
