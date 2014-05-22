@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/WindingOrder'
     ], function(
@@ -13,6 +14,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        FeatureDetection,
         RuntimeError,
         WindingOrder) {
     "use strict";
@@ -358,6 +360,17 @@ define([
         gl.stencilMask(renderState.stencilMask);
     }
 
+    var applyBlendingColor;
+    if (FeatureDetection.isInternetExplorer()) {
+        // blendColor is not supported in IE 11.0.8
+        applyBlendingColor = function() {
+        };
+    } else {
+        applyBlendingColor = function(gl, color) {
+            gl.blendColor(color.red, color.green, color.blue, color.alpha);
+        };
+    }
+
     function applyBlending(gl, renderState, passState) {
         var blending = renderState.blending;
         var enabled = (defined(passState.blendingEnabled)) ? passState.blendingEnabled : blending.enabled;
@@ -365,17 +378,9 @@ define([
         enableOrDisable(gl, gl.BLEND, enabled);
 
         if (enabled) {
-            var color = blending.color;
-            var equationRgb = blending.equationRgb;
-            var equationAlpha = blending.equationAlpha;
-            var functionSourceRgb = blending.functionSourceRgb;
-            var functionDestinationRgb = blending.functionDestinationRgb;
-            var functionSourceAlpha = blending.functionSourceAlpha;
-            var functionDestinationAlpha = blending.functionDestinationAlpha;
-
-            gl.blendColor(color.red, color.green, color.blue, color.alpha);
-            gl.blendEquationSeparate(equationRgb, equationAlpha);
-            gl.blendFuncSeparate(functionSourceRgb, functionDestinationRgb, functionSourceAlpha, functionDestinationAlpha);
+            applyBlendingColor(gl, blending.color);
+            gl.blendEquationSeparate(blending.equationRgb, blending.equationAlpha);
+            gl.blendFuncSeparate(blending.functionSourceRgb, blending.functionDestinationRgb, blending.functionSourceAlpha, blending.functionDestinationAlpha);
         }
     }
 
