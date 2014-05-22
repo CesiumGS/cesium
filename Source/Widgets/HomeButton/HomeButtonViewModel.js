@@ -81,7 +81,8 @@ define([
                 endReferenceFrame : new Matrix4(0, 0, 1, 0,
                                                 1, 0, 0, 0,
                                                 0, 1, 0, 0,
-                                                0, 0, 0, 1)
+                                                0, 0, 0, 1),
+                convert : false
             };
 
             flight = CameraFlightPath.createAnimation(scene, options);

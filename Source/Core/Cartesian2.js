@@ -114,7 +114,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Cartesian2.pack = function(value, array, startingIndex) {
@@ -138,7 +138,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Cartesian2
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian2} [result] The object into which to store the result.
      */
@@ -163,7 +163,7 @@ define([
      * Creates a Cartesian2 from two consecutive elements in an array.
      * @memberof Cartesian2
      *
-     * @param {Array} array The array whose two consecutive elements correspond to the x and y components, respectively.
+     * @param {Number[]} array The array whose two consecutive elements correspond to the x and y components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian2} [result] The object onto which to store the result.
      *

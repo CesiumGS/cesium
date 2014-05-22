@@ -34,7 +34,7 @@ define([
     /**
      * A description of the outline of a cylinder.
      *
-     * @alias CylinderGeometryOutline
+     * @alias CylinderOutlineGeometry
      * @constructor
      *
      * @param {Number} options.length The length of the cylinder.
@@ -49,7 +49,7 @@ define([
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
-     * @see CylinderOutlineGeometry#createGeometry
+     * @see CylinderOutlineGeometry.createGeometry
      *
      * @example
      * // create cylinder geometry

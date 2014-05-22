@@ -82,8 +82,6 @@ define([
      * of times the operation has been retried and will automatically retry if requested to do so by the
      * event listeners.
      *
-     * @methodof TileProviderError
-     *
      * @param {TileProviderError} previousError The error instance returned by this function the last
      *        time it was called for this error, or undefined if this is the first time this error has
      *        occurred.
@@ -133,8 +131,6 @@ define([
     /**
      * Handles success of an operation by resetting the retry count of a previous error, if any.  This way,
      * if the error occurs again in the future, the listeners will be informed that it has not yet been retried.
-     *
-     * @memberof TileProviderError
      *
      * @param {TileProviderError} previousError The previous error, or undefined if this operation has
      *        not previously resulted in an error.
