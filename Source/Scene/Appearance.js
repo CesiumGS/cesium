@@ -3,16 +3,18 @@ define([
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Renderer/BlendingState',
-        '../Renderer/CullFace',
-        '../Renderer/createShaderSource'
+        '../Core/defineProperties',
+        '../Renderer/createShaderSource',
+        './BlendingState',
+        './CullFace'
     ], function(
         clone,
         defaultValue,
         defined,
+        defineProperties,
+        createShaderSource,
         BlendingState,
-        CullFace,
-        createShaderSource) {
+        CullFace) {
     "use strict";
 
     /**
@@ -39,59 +41,86 @@ define([
          *
          * @type Material
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = options.material;
 
         /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.translucent = defaultValue(options.translucent, true);
+
+        this._vertexShaderSource = options.vertexShaderSource;
+        this._fragmentShaderSource = options.fragmentShaderSource;
+        this._renderState = options.renderState;
+        this._closed = defaultValue(options.closed, false);
+    };
+
+    defineProperties(Appearance.prototype, {
+        /**
          * The GLSL source code for the vertex shader.
          *
-         * @type String
+         * @memberof Appearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = options.vertexShaderSource;
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
 
         /**
          * The GLSL source code for the fragment shader.  The full fragment shader
          * source is built procedurally taking into account the {@link Appearance#material}.
          * Use {@link Appearance#getFragmentShaderSource} to get the full source.
          *
-         * @type String
+         * @memberof Appearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = options.fragmentShaderSource;
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
 
         /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
+         * The WebGL fixed-function state to use when rendering the geometry.
          *
-         * @type Object
+         * @memberof Appearance.prototype
          *
+         * @type {Object}
          * @readonly
          */
-        this.renderState = options.renderState;
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent.
-         *
-         * @readonly
-         *
-         * @default true
-         */
-        this.translucent = defaultValue(options.translucent, true);
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
 
         /**
          * When <code>true</code>, the geometry is expected to be closed.
          *
+         * @memberof Appearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.closed = defaultValue(options.closed, false);
-    };
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        }
+    });
 
     /**
      * Procedurally creates the full GLSL fragment shader source for this appearance

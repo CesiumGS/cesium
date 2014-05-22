@@ -1,45 +1,47 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/isArray',
+        '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
+        './CameraColumbusViewMode',
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode'
     ], function(
-        defined,
-        defineProperties,
-        destroyObject,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defined,
+        defineProperties,
+        destroyObject,
         DeveloperError,
         Ellipsoid,
-        KeyboardEventModifier,
         FAR,
         IntersectionTests,
         isArray,
+        KeyboardEventModifier,
         CesiumMath,
         Matrix4,
         Ray,
         Transforms,
         AnimationCollection,
+        CameraColumbusViewMode,
         CameraEventAggregator,
         CameraEventType,
         SceneMode) {
@@ -50,7 +52,7 @@ define([
      * @alias ScreenSpaceCameraController
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas The canvas to listen for events.
+     * @param {Canvas} canvas The canvas to listen for events.
      * @param {Camera} camera The camera.
      */
     var ScreenSpaceCameraController = function(canvas, camera) {

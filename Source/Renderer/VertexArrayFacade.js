@@ -18,16 +18,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @alias VertexArrayFacade
-     *
-     * @constructor
-     *
-     * @exception {DeveloperError} Attribute must have a componentsPerAttribute.
-     * @exception {DeveloperError} Attribute must have a valid componentDatatype or not specify it.
-     * @exception {DeveloperError} Attribute must have a valid usage or not specify it.
-     * @exception {DeveloperError} Index n is used by more than one attribute.
+     * @private
      */
     var VertexArrayFacade = function(context, attributes, sizeInVertices) {
         //>>includeStart('debug', pragmas.debug);
@@ -139,14 +130,7 @@ define([
         this._precreated = precreatedAttributes;
         this._context = context;
 
-        /**
-         * DOC_TBA
-         */
         this.writers = undefined;
-
-        /**
-         * DOC_TBA
-         */
         this.vaByPurpose = undefined;
 
         this.resize(sizeInVertices);
@@ -264,11 +248,7 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
      * Invalidates writers.  Can't render again until commit is called.
-     *
-     * @memberof VertexArrayFacade
      */
     VertexArrayFacade.prototype.resize = function(sizeInVertices) {
         this._size = sizeInVertices;
@@ -371,11 +351,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.commit = function(indexBuffer) {
         var recreateVA = false;
 
@@ -480,10 +455,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
         //>>includeStart('debug', pragmas.debug);
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
@@ -513,10 +484,6 @@ define([
         }
     }
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.endSubCommits = function() {
         var allBuffers = this._allBuffers;
 
@@ -544,18 +511,10 @@ define([
         vertexArrayFacade.vaByPurpose = undefined;
     }
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.destroy = function() {
         var allBuffers = this._allBuffers;
         for (var i = 0, len = allBuffers.length; i < len; ++i) {

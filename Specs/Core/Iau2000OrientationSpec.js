@@ -2,12 +2,10 @@
 defineSuite([
         'Core/Iau2000Orientation',
         'Core/JulianDate',
-        'Core/Math',
         'Core/TimeStandard'
     ], function(
         Iau2000Orientation,
         JulianDate,
-        CesiumMath,
         TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

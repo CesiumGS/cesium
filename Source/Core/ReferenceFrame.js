@@ -1,8 +1,8 @@
 /*global define*/
 define([
         './Enumeration'
-       ], function(
-         Enumeration) {
+    ], function(
+        Enumeration) {
     "use strict";
 
     /**

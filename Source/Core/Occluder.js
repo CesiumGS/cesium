@@ -7,8 +7,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
-        './Rectangle',
         './Math',
+        './Rectangle',
         './Visibility'
     ], function(
         BoundingSphere,
@@ -18,8 +18,8 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         CesiumMath,
+        Rectangle,
         Visibility) {
     "use strict";
 
@@ -334,7 +334,7 @@ define([
      *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
-     * @param {Array} positions List of altitude points on the horizon near the surface of the occluder.
+     * @param {Cartesian3[]} positions List of altitude points on the horizon near the surface of the occluder.
      *
      * @exception {DeveloperError} <code>positions</code> must contain at least one element.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.

@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidPrimitive',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/pick',
-         'Specs/render',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Matrix4',
-         'Renderer/ClearCommand',
-         'Scene/Material'
-     ], function(
-         EllipsoidPrimitive,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         pick,
-         render,
-         Cartesian3,
-         defined,
-         Matrix4,
-         ClearCommand,
-         Material) {
+        'Scene/EllipsoidPrimitive',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Matrix4',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        EllipsoidPrimitive,
+        Cartesian3,
+        defined,
+        Matrix4,
+        ClearCommand,
+        Material,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -146,7 +146,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

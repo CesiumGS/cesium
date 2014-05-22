@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/GeographicProjection',
-         'Core/Rectangle',
-         'Core/Intersect',
-         'Core/Interval',
-         'Core/Math',
-         'Core/Matrix4'
-     ], function(
-         BoundingSphere,
-         Cartesian3,
-         Cartesian4,
-         Cartographic,
-         Ellipsoid,
-         GeographicProjection,
-         Rectangle,
-         Intersect,
-         Interval,
-         CesiumMath,
-         Matrix4) {
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicProjection',
+        'Core/Intersect',
+        'Core/Interval',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle'
+    ], function(
+        BoundingSphere,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        Ellipsoid,
+        GeographicProjection,
+        Intersect,
+        Interval,
+        CesiumMath,
+        Matrix4,
+        Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

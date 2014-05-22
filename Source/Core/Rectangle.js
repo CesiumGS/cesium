@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        './freezeObject',
+        './Cartographic',
         './defaultValue',
         './defined',
-        './Ellipsoid',
-        './Cartographic',
         './DeveloperError',
+        './Ellipsoid',
+        './freezeObject',
         './Math'
     ], function(
-        freezeObject,
+        Cartographic,
         defaultValue,
         defined,
-        Ellipsoid,
-        Cartographic,
         DeveloperError,
+        Ellipsoid,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -27,6 +27,8 @@ define([
      * @param {Number} [south=0.0] The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
      * @param {Number} [east=0.0] The easternmost longitude, in radians, in the range [-Pi, Pi].
      * @param {Number} [north=0.0] The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+     *
+     * @see Packable
      */
     var Rectangle = function(west, south, east, north) {
         /**
@@ -100,7 +102,7 @@ define([
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
      * @memberof Rectangle
      *
-     * @param {Array} cartographics The list of Cartographic instances.
+     * @param {Cartographic[]} cartographics The list of Cartographic instances.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
@@ -132,6 +134,66 @@ define([
         result.south = minLat;
         result.east = maxLon;
         result.north = maxLat;
+        return result;
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    Rectangle.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Rectangle
+     *
+     * @param {Rectangle} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    Rectangle.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.west;
+        array[startingIndex++] = value.south;
+        array[startingIndex++] = value.east;
+        array[startingIndex] = value.north;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Rectangle
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Rectangle} [result] The object into which to store the result.
+     */
+    Rectangle.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Rectangle();
+        }
+        result.west = array[startingIndex++];
+        result.south = array[startingIndex++];
+        result.east = array[startingIndex++];
+        result.north = array[startingIndex];
         return result;
     };
 
@@ -488,8 +550,8 @@ define([
      * @param {Rectangle} rectangle The rectangle to subsample.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      * @param {Number} [surfaceHeight=0.0] The height of the rectangle above the ellipsoid.
-     * @param {Array} [result] The array of Cartesians onto which to store the result.
-     * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
+     * @param {Cartesian3[]} [result] The array of Cartesians onto which to store the result.
+     * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
     Rectangle.subsample = function(rectangle, ellipsoid, surfaceHeight, result) {
         //>>includeStart('debug', pragmas.debug);

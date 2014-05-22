@@ -2,15 +2,13 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../Core/Event',
+        '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
+        '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
@@ -23,23 +21,21 @@ define([
         '../getElement',
         '../HomeButton/HomeButton',
         '../InfoBox/InfoBox',
+        '../NavigationHelpButton/NavigationHelpButton',
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
         destroyObject,
-        Event,
+        DeveloperError,
         EventHelper,
-        formatError,
-        requestAnimationFrame,
         DataSourceCollection,
         DataSourceDisplay,
+        knockout,
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
@@ -52,50 +48,17 @@ define([
         getElement,
         HomeButton,
         InfoBox,
+        NavigationHelpButton,
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
         clock.shouldAnimate = false;
-    }
-
-    function startRenderLoop(viewer) {
-        viewer._renderLoopRunning = true;
-
-        function render() {
-            if (viewer.isDestroyed()) {
-                return;
-            }
-
-            try {
-                if (viewer._useDefaultRenderLoop) {
-                    viewer.resize();
-                    viewer.render();
-                    requestAnimationFrame(render);
-                } else {
-                    viewer._renderLoopRunning = false;
-                }
-            } catch (error) {
-                viewer._useDefaultRenderLoop = false;
-                viewer._renderLoopRunning = false;
-                viewer._renderLoopError.raiseEvent(viewer, error);
-                if (viewer._showRenderLoopErrors) {
-                    /*global console*/
-                    var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    viewer.cesiumWidget.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
-                }
-            }
-        }
-
-        requestAnimationFrame(render);
     }
 
     /**
@@ -116,18 +79,21 @@ define([
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.selectionIndicator=true] If set to false, the SelectionIndicator widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
+     * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
+     * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {Array} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {Array} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel[]} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -239,7 +205,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
-            useDefaultRenderLoop : false
+            useDefaultRenderLoop : options.useDefaultRenderLoop,
+            targetFrameRate : options.targetFrameRate,
+            showRenderLoopErrors : options.showRenderLoopErrors
         });
 
         var dataSourceCollection = new DataSourceCollection();
@@ -248,9 +216,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var clock = cesiumWidget.clock;
         var clockViewModel = new ClockViewModel(clock);
         var eventHelper = new EventHelper();
+        var that = this;
 
         eventHelper.add(clock.onTick, function(clock) {
-            dataSourceDisplay.update(clock.currentTime);
+            var isUpdated = dataSourceDisplay.update(clock.currentTime);
+            if (that._allowDataSourcesToSuspendAnimation) {
+                clockViewModel.canAnimate = isUpdated;
+            }
         });
 
         //Selection Indicator
@@ -285,14 +257,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             geocoder = new Geocoder({
                 container : geocoderContainer,
                 scene : cesiumWidget.scene,
-                ellipsoid : cesiumWidget.centralBody.ellipsoid
+                ellipsoid : cesiumWidget.scene.globe.ellipsoid
             });
         }
 
         //HomeButton
         var homeButton;
         if (!defined(options.homeButton) || options.homeButton !== false) {
-            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.centralBody.ellipsoid);
+            homeButton = new HomeButton(toolbar, cesiumWidget.scene, cesiumWidget.scene.globe.ellipsoid);
             if (defined(geocoder)) {
                 eventHelper.add(homeButton.viewModel.command.afterExecute, function() {
                     var viewModel = geocoder.viewModel;
@@ -317,7 +289,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var terrainProviderViewModels = defaultValue(options.terrainProviderViewModels, createDefaultTerrainProviderViewModels());
 
             baseLayerPicker = new BaseLayerPicker(toolbar, {
-                centralBody : cesiumWidget.centralBody,
+                globe : cesiumWidget.scene.globe,
                 imageryProviderViewModels : imageryProviderViewModels,
                 selectedImageryProviderViewModel : options.selectedImageryProviderViewModel,
                 terrainProviderViewModels : terrainProviderViewModels,
@@ -327,6 +299,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             //Grab the dropdown for resize code.
             var elements = toolbar.getElementsByClassName('cesium-baseLayerPicker-dropDown');
             this._baseLayerPickerDropDown = elements[0];
+        }
+
+        // Navigation Help Button
+        var navigationHelpButton;
+        if (!defined(options.navigationHelpButton) || options.navigationHelpButton !== false) {
+            navigationHelpButton = new NavigationHelpButton({
+                container : toolbar,
+                instructionsInitiallyVisible : defaultValue(options.navigationInstructionsInitiallyVisible, true)
+            });
         }
 
         //Animation
@@ -381,11 +362,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._dataSourceChangedListeners = {};
         this._knockoutSubscriptions = [];
         var automaticallyTrackDataSourceClocks = defaultValue(options.automaticallyTrackDataSourceClocks, true);
-        var that = this;
 
         function trackDataSourceClock(dataSource) {
             if (defined(dataSource)) {
-                var dataSourceClock = dataSource.getClock();
+                var dataSourceClock = dataSource.clock;
                 if (defined(dataSourceClock)) {
                     dataSourceClock.getValue(clock);
                     if (defined(timeline)) {
@@ -410,14 +390,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             if (automaticallyTrackDataSourceClocks) {
                 that.clockTrackedDataSource = dataSource;
             }
-            var id = dataSource.getDynamicObjectCollection().id;
-            var removalFunc = eventHelper.add(dataSource.getChangedEvent(), onDataSourceChanged);
+            var id = dataSource.dynamicObjects.id;
+            var removalFunc = eventHelper.add(dataSource.changedEvent, onDataSourceChanged);
             that._dataSourceChangedListeners[id] = removalFunc;
         };
 
         var onDataSourceRemoved = function(dataSourceCollection, dataSource) {
             var resetClock = (that.clockTrackedDataSource === dataSource);
-            var id = dataSource.getDynamicObjectCollection().id;
+            var id = dataSource.dynamicObjects.id;
             that._dataSourceChangedListeners[id]();
             that._dataSourceChangedListeners[id] = undefined;
             if (resetClock) {
@@ -452,13 +432,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
-        this._useDefaultRenderLoop = undefined;
-        this._renderLoopRunning = false;
-        this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-        this._renderLoopError = new Event();
+        this._allowDataSourcesToSuspendAnimation = true;
 
-        //Start the render loop if not explicitly disabled in options.
-        this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+        // Prior to each render, check if anything needs to be resized.
+        cesiumWidget.scene.preRender.addEventListener(function(scene, time) {
+            resizeViewer(that);
+        });
     };
 
     defineProperties(Viewer.prototype, {
@@ -608,7 +587,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the canvas.
          * @memberof Viewer.prototype
-         * @returns {Canvas} The canvas.
+         * @type {Canvas}
          */
         canvas : {
             get : function() {
@@ -619,7 +598,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the Cesium logo element.
          * @memberof Viewer.prototype
-         * @returns {Element} The logo element.
+         * @type {Element}
          */
         cesiumLogo : {
             get : function() {
@@ -630,7 +609,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the scene.
          * @memberof Viewer.prototype
-         * @returns {Scene} The scene.
+         * @type {Scene}
          */
         scene : {
             get : function() {
@@ -639,20 +618,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Gets the primary central body.
-         * @memberof Viewer.prototype
-         * @returns {CentralBody} The primary central body.
-         */
-        centralBody : {
-            get : function() {
-                return this._cesiumWidget.centralBody;
-            }
-        },
-
-        /**
          * Gets the clock.
          * @memberof Viewer.prototype
-         * @returns {Clock} the clock
+         * @type {Clock}
          */
         clock : {
             get : function() {
@@ -663,7 +631,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets the screen space event handler.
          * @memberof Viewer.prototype
-         * @returns {ScreenSpaceEventHandler}
+         * @type {ScreenSpaceEventHandler}
          */
         screenSpaceEventHandler : {
             get : function() {
@@ -672,16 +640,20 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Gets the event that will be raised when an error is encountered during the default render loop.
-         * The viewer instance and the generated exception are the only two parameters passed to the event handler.
-         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
-         * be set back to true to continue rendering after an exception.
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no effect.
          * @memberof Viewer.prototype
-         * @type {Event}
+         *
+         * @type {Number}
          */
-        renderLoopError : {
+        targetFrameRate : {
             get : function() {
-                return this._renderLoopError;
+                return this._cesiumWidget.targetFrameRate;
+            },
+            set : function(value) {
+                this._cesiumWidget.targetFrameRate = value;
             }
         },
 
@@ -691,22 +663,60 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods
-         * as part of a custom render loop.
+         * as part of a custom render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof Viewer.prototype
          *
          * @type {Boolean}
          */
         useDefaultRenderLoop : {
             get : function() {
-                return this._useDefaultRenderLoop;
+                return this._cesiumWidget.useDefaultRenderLoop;
             },
             set : function(value) {
-                if (this._useDefaultRenderLoop !== value) {
-                    this._useDefaultRenderLoop = value;
-                    if (value && !this._renderLoopRunning) {
-                        startRenderLoop(this);
-                    }
-                }
+                this._cesiumWidget.useDefaultRenderLoop = value;
+            }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._cesiumWidget.resolutionScale;
+            },
+            set : function(value) {
+                this._cesiumWidget.resolutionScale = value;
+            }
+        },
+
+        /**
+         * Gets or sets whether or not data sources can temporarily pause
+         * animation in order to avoid showing an incomplete picture to the user.
+         * For example, if asynchronous primitives are being processed in the
+         * background, the clock will not advance until the geometry is ready.
+         *
+         * @memberof Viewer.prototype
+         *
+         * @type {Boolean}
+         */
+        allowDataSourcesToSuspendAnimation : {
+            get : function() {
+                return this._allowDataSourcesToSuspendAnimation;
+            },
+            set : function(value) {
+                this._allowDataSourcesToSuspendAnimation = value;
             }
         }
     });
@@ -742,88 +752,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     Viewer.prototype.resize = function() {
         var cesiumWidget = this._cesiumWidget;
         cesiumWidget.resize();
-
-        var container = this._container;
-        var width = container.clientWidth;
-        var height = container.clientHeight;
-        if (width === this._lastWidth && height === this._lastHeight) {
-            return;
-        }
-
-        var panelMaxHeight = height - 125;
-        var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
-
-        if (defined(baseLayerPickerDropDown)) {
-            baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
-        }
-
-        if (defined(this._infoBox)) {
-            this._infoBox.viewModel.maxHeight = panelMaxHeight;
-        }
-
-        var timeline = this._timeline;
-        var timelineExists = defined(timeline);
-        var animationExists = defined(this._animation);
-        var animationContainer;
-        var resizeWidgets = !animationExists;
-        var animationWidth = 0;
-
-        if (animationExists) {
-            var lastWidth = this._lastWidth;
-            animationContainer = this._animation.container;
-            if (width > 900) {
-                if (lastWidth <= 900) {
-                    animationWidth = 169;
-                    animationContainer.style.width = '169px';
-                    animationContainer.style.height = '112px';
-                    resizeWidgets = true;
-                    this._animation.resize();
-                }
-            } else if (width >= 600) {
-                if (lastWidth < 600 || lastWidth > 900) {
-                    animationWidth = 136;
-                    animationContainer.style.width = '136px';
-                    animationContainer.style.height = '90px';
-                    resizeWidgets = true;
-                    this._animation.resize();
-                }
-            } else if (lastWidth > 600 || lastWidth === 0) {
-                animationWidth = 106;
-                animationContainer.style.width = '106px';
-                animationContainer.style.height = '70px';
-                resizeWidgets = true;
-                this._animation.resize();
-            }
-        }
-
-        if (resizeWidgets) {
-            var logoBottom = 0;
-            var logoLeft = animationWidth + 5;
-            if (timelineExists) {
-                var fullscreenButton = this._fullscreenButton;
-                var timelineContainer = timeline.container;
-                var timelineStyle = timelineContainer.style;
-
-                logoBottom = timelineContainer.clientHeight + 3;
-                timelineStyle.left = animationWidth + 'px';
-
-                if (defined(fullscreenButton)) {
-                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
-                }
-            }
-            if (timelineExists || animationExists) {
-                var creditContainer = cesiumWidget.creditContainer;
-                creditContainer.style.bottom = logoBottom + 'px';
-                creditContainer.style.left = logoLeft + 'px';
-            }
-        }
-
-        if (timelineExists) {
-            timeline.resize();
-        }
-
-        this._lastWidth = width;
-        this._lastHeight = height;
+        resizeViewer(this);
     };
 
     /**
@@ -911,6 +840,90 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         return destroyObject(this);
     };
+
+    function resizeViewer(viewer) {
+        var container = viewer._container;
+        var width = container.clientWidth;
+        var height = container.clientHeight;
+        if (width === viewer._lastWidth && height === viewer._lastHeight) {
+            return;
+        }
+
+        var panelMaxHeight = height - 125;
+        var baseLayerPickerDropDown = viewer._baseLayerPickerDropDown;
+
+        if (defined(baseLayerPickerDropDown)) {
+            baseLayerPickerDropDown.style.maxHeight = panelMaxHeight + 'px';
+        }
+
+        if (defined(viewer._infoBox)) {
+            viewer._infoBox.viewModel.maxHeight = panelMaxHeight;
+        }
+
+        var timeline = viewer._timeline;
+        var timelineExists = defined(timeline);
+        var animationExists = defined(viewer._animation);
+        var animationContainer;
+        var resizeWidgets = !animationExists;
+        var animationWidth = 0;
+
+        if (animationExists) {
+            var lastWidth = viewer._lastWidth;
+            animationContainer = viewer._animation.container;
+            if (width > 900) {
+                if (lastWidth <= 900) {
+                    animationWidth = 169;
+                    animationContainer.style.width = '169px';
+                    animationContainer.style.height = '112px';
+                    resizeWidgets = true;
+                    viewer._animation.resize();
+                }
+            } else if (width >= 600) {
+                if (lastWidth < 600 || lastWidth > 900) {
+                    animationWidth = 136;
+                    animationContainer.style.width = '136px';
+                    animationContainer.style.height = '90px';
+                    resizeWidgets = true;
+                    viewer._animation.resize();
+                }
+            } else if (lastWidth > 600 || lastWidth === 0) {
+                animationWidth = 106;
+                animationContainer.style.width = '106px';
+                animationContainer.style.height = '70px';
+                resizeWidgets = true;
+                viewer._animation.resize();
+            }
+        }
+
+        if (resizeWidgets) {
+            var logoBottom = 0;
+            var logoLeft = animationWidth + 5;
+            if (timelineExists) {
+                var fullscreenButton = viewer._fullscreenButton;
+                var timelineContainer = timeline.container;
+                var timelineStyle = timelineContainer.style;
+
+                logoBottom = timelineContainer.clientHeight + 3;
+                timelineStyle.left = animationWidth + 'px';
+
+                if (defined(fullscreenButton)) {
+                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
+                }
+            }
+            if (timelineExists || animationExists) {
+                var creditContainer = viewer._cesiumWidget.creditContainer;
+                creditContainer.style.bottom = logoBottom + 'px';
+                creditContainer.style.left = logoLeft + 'px';
+            }
+        }
+
+        if (timelineExists) {
+            timeline.resize();
+        }
+
+        viewer._lastWidth = width;
+        viewer._lastHeight = height;
+    }
 
     return Viewer;
 });

@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Matrix3',
-         'Core/Cartesian3',
-         'Core/Math',
-         'Core/Quaternion'
-     ], function(
-         Matrix3,
-         Cartesian3,
-         CesiumMath,
-         Quaternion) {
+        'Core/Matrix3',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/Quaternion'
+    ], function(
+        Matrix3,
+        Cartesian3,
+        CesiumMath,
+        Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -411,6 +411,38 @@ defineSuite([
         returnedResult = Matrix3.setRow(matrix, 2, new Cartesian3(16.0, 17.0, 18.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
+    });
+
+    it('getScale works', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var m = Matrix3.fromScale(scale);
+        expect(Matrix3.getScale(m)).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale works with a result parameter', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new Cartesian3();
+        var computedScale = Matrix3.getScale(Matrix3.fromScale(scale), result);
+
+        expect(computedScale).toBe(result);
+        expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale throws without a matrix', function() {
+        expect(function() {
+            Matrix3.getScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumScale works', function() {
+        var m = Matrix3.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+        expect(Matrix3.getMaximumScale(m)).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+    });
+
+    it('getMaximumScale throws without a matrix', function() {
+        expect(function() {
+            Matrix3.getMaximumScale();
+        }).toThrowDeveloperError();
     });
 
     it('multiply works without a result parameter', function() {

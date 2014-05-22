@@ -5,16 +5,16 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
-        './ScreenSpaceEventType',
-        './KeyboardEventModifier'
+        './KeyboardEventModifier',
+        './ScreenSpaceEventType'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         destroyObject,
         DeveloperError,
-        ScreenSpaceEventType,
-        KeyboardEventModifier) {
+        KeyboardEventModifier,
+        ScreenSpaceEventType) {
     "use strict";
 
     /**
@@ -23,7 +23,7 @@ define([
      *
      * @alias ScreenSpaceEventHandler
      *
-     * @param {DOC_TBA} element The element to add events to. Defaults to document.
+     * @param {Canvas} [element=document] The element to add events to.
      * @constructor
      */
     var ScreenSpaceEventHandler = function(element) {
@@ -170,10 +170,6 @@ define([
         var modifier = getModifier(event);
         var action;
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             screenSpaceEventHandler._leftMouseButtonDown = true;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
@@ -202,10 +198,6 @@ define([
             return;
         }
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             screenSpaceEventHandler._leftMouseButtonDown = false;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
@@ -476,10 +468,6 @@ define([
         var action;
         var pos = getPosition(screenSpaceEventHandler, event, mouseDbleClickEvent.position);
 
-        // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
-        // See: http://www.unixpapa.com/js/mouse.html
-        // This is not the case in Chrome Frame, so we are OK for now, but are there
-        // constants somewhere?
         if (event.button === 0) {
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOUBLE_CLICK, modifier);
         } else if (event.button === 1) {

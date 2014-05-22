@@ -4,20 +4,20 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/KeyboardEventModifier',
         './CameraEventType'
     ], function(
         Cartesian2,
         defined,
         destroyObject,
         DeveloperError,
+        KeyboardEventModifier,
         CesiumMath,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        KeyboardEventModifier,
         CameraEventType) {
     "use strict";
 
@@ -241,7 +241,7 @@ define([
      * @alias CameraEventAggregator
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas DOC_TBA
+     * @param {Canvas} [element=document] The element to handle events for.
      *
      * @see ScreenSpaceEventHandler
      */

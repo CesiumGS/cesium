@@ -28,14 +28,12 @@ define([
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see CircleOutlineGoemetry.createGeometry
+     * @see CircleOutlineGeometry.createGeometry
      *
      * @example
      * // Create a circle.
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
      * var circle = new Cesium.CircleOutlineGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   radius : 100000.0
      * });
      * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);

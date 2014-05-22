@@ -30,12 +30,11 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
           
     // Create a glowing polyline
     var positions = [];
     for (var i = 0; i < 10; ++i) {
-        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 36.0)));
+        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 36.0));
     }
 
     primitives.add(new Cesium.Primitive({
@@ -55,7 +54,7 @@ require(['Cesium'], function(Cesium) {
     positions = [];
     var colors = [];
     for (i = 0; i < 10; ++i) {
-        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 35.0)));
+        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 35.0));
         colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
     }
 
@@ -75,7 +74,7 @@ require(['Cesium'], function(Cesium) {
     positions = [];
     colors = [];
     for (i = 0; i < 10; ++i) {
-        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 34.0)));
+        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 34.0));
         colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
     }
 

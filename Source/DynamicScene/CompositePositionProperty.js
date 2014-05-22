@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -73,7 +74,7 @@ define(['../Core/defaultValue',
          * to use.
          * @memberof CompositePositionProperty.prototype
          *
-         * @Type {ReferenceFrame} The preferred reference frame.
+         * @type {ReferenceFrame}
          */
         referenceFrame : {
             get : function() {

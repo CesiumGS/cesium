@@ -1,15 +1,20 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define([
+        '../Core/Enumeration'
+    ], function(
+        Enumeration) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
      *
      * @exports SceneMode
+     *
+     * @see Scene#mode
      */
     var SceneMode = {
         /**
-         * DOC_TBA
+         * 2D mode.  The map is viewed top-down with an orthographic projection.
          *
          * @type {Enumeration}
          * @constant
@@ -20,7 +25,8 @@ define(['../Core/Enumeration'], function(Enumeration) {
         }),
 
         /**
-         * DOC_TBA
+         * Columbus View mode.  A 2.5D perspective view where the map is laid out
+         * flat and objects with non-zero height are drawn above it.
          *
          * @type {Enumeration}
          * @constant
@@ -31,7 +37,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         }),
 
         /**
-         * DOC_TBA
+         * 3D mode.  A traditional 3D perspective view of the globe.
          *
          * @type {Enumeration}
          * @constant
@@ -42,7 +48,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         }),
 
         /**
-         * DOC_TBA
+         * Morphing between mode, e.g., 3D to 2D.
          *
          * @type {Enumeration}
          * @constant

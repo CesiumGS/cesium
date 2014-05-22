@@ -1,23 +1,23 @@
 /*global define*/
 define([
-        './defined',
-        './Cartographic',
         './Cartesian3',
+        './Cartographic',
+        './defined',
         './DeveloperError',
         './EllipsoidTangentPlane',
+        './Math',
         './PolygonPipeline',
         './PolylinePipeline',
-        './Math',
         './WindingOrder'
     ], function(
-        defined,
-        Cartographic,
         Cartesian3,
+        Cartographic,
+        defined,
         DeveloperError,
         EllipsoidTangentPlane,
+        CesiumMath,
         PolygonPipeline,
         PolylinePipeline,
-        CesiumMath,
         WindingOrder) {
     "use strict";
 

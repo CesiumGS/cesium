@@ -1,22 +1,23 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/PolylineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/PolylineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
         '../DynamicScene/MaterialProperty',
         '../DynamicScene/Property',
-        '../Scene/PolylineMaterialAppearance',
         '../Scene/PolylineColorAppearance',
+        '../Scene/PolylineMaterialAppearance',
         '../Scene/Primitive'
     ], function(
         Color,
@@ -26,17 +27,17 @@ define(['../Core/Color',
         defineProperties,
         destroyObject,
         DeveloperError,
-        PolylineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
+        PolylineGeometry,
         ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
         Property,
-        PolylineMaterialAppearance,
         PolylineColorAppearance,
+        PolylineMaterialAppearance,
         Primitive) {
     "use strict";
 
@@ -376,7 +377,7 @@ define(['../Core/Color',
      * @memberof PolylineGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

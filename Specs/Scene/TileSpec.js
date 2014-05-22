@@ -1,41 +1,43 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Tile',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/defined',
-         'Core/Rectangle',
-         'Core/Math',
-         'Scene/CesiumTerrainProvider',
-         'Scene/ImageryLayerCollection',
-         'Scene/TerrainState',
-         'Scene/TileState',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         Tile,
-         createContext,
-         destroyContext,
-         defined,
-         Rectangle,
-         CesiumMath,
-         CesiumTerrainProvider,
-         ImageryLayerCollection,
-         TerrainState,
-         TileState,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/Tile',
+        'Core/CesiumTerrainProvider',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
+        'Scene/ImageryLayerCollection',
+        'Scene/TerrainState',
+        'Scene/TileState',
+        'Specs/createContext',
+        'Specs/destroyContext',
+        'ThirdParty/when'
+    ], function(
+        Tile,
+        CesiumTerrainProvider,
+        defined,
+        GeographicTilingScheme,
+        CesiumMath,
+        Rectangle,
+        WebMercatorTilingScheme,
+        ImageryLayerCollection,
+        TerrainState,
+        TileState,
+        createContext,
+        destroyContext,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
 
-    it('throws without a description', function() {
+    it('throws without a options', function() {
         expect(function() {
             return new Tile();
         }).toThrowDeveloperError();
     });
 
-    it('throws without description.rectangle', function() {
+    it('throws without options.rectangle', function() {
         expect(function() {
             return new Tile({
                 x : 0,
@@ -44,7 +46,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without description.level', function() {
+    it('throws without options.level', function() {
         expect(function() {
             return new Tile({
                 rectangle : new Rectangle(
@@ -139,6 +141,72 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    describe('createLevelZeroTiles', function() {
+        var tilingScheme1x1;
+        var tilingScheme2x2;
+        var tilingScheme2x1;
+        var tilingScheme1x2;
+
+        beforeEach(function() {
+            tilingScheme1x1 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 1
+            });
+            tilingScheme2x2 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 2
+            });
+            tilingScheme2x1 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 2,
+                numberOfLevelZeroTilesY : 1
+            });
+            tilingScheme1x2 = new GeographicTilingScheme({
+                numberOfLevelZeroTilesX : 1,
+                numberOfLevelZeroTilesY : 2
+            });
+        });
+
+        it('requires tilingScheme', function() {
+            expect(function() {
+                return Tile.createLevelZeroTiles(undefined);
+            }).toThrow();
+        });
+
+        it('creates expected number of tiles', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme1x1);
+            expect(tiles.length).toBe(1);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            expect(tiles.length).toBe(4);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme2x1);
+            expect(tiles.length).toBe(2);
+
+            tiles = Tile.createLevelZeroTiles(tilingScheme1x2);
+            expect(tiles.length).toBe(2);
+        });
+
+        it('created tiles are associated with specified tiling scheme', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            for (var i = 0; i < tiles.length; ++i) {
+                expect(tiles[i].tilingScheme).toBe(tilingScheme2x2);
+            }
+        });
+
+        it('created tiles are ordered from the northwest and proceeding east and then south', function() {
+            var tiles = Tile.createLevelZeroTiles(tilingScheme2x2);
+            var northwest = tiles[0];
+            var northeast = tiles[1];
+            var southwest = tiles[2];
+            var southeast = tiles[3];
+
+            expect(northeast.rectangle.west).toBeGreaterThan(northwest.rectangle.west);
+            expect(southeast.rectangle.west).toBeGreaterThan(southwest.rectangle.west);
+            expect(northeast.rectangle.south).toBeGreaterThan(southeast.rectangle.south);
+            expect(northwest.rectangle.south).toBeGreaterThan(southwest.rectangle.south);
+        });
+    });
+
     describe('processStateMachine', function() {
         var context;
         var alwaysDeferTerrainProvider;
@@ -192,7 +260,7 @@ defineSuite([
             tilingScheme = new WebMercatorTilingScheme();
             alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
             alwaysFailTerrainProvider.tilingScheme = tilingScheme;
-            rootTiles = tilingScheme.createLevelZeroTiles();
+            rootTiles = Tile.createLevelZeroTiles(tilingScheme);
             rootTile = rootTiles[0];
             imageryLayerCollection = new ImageryLayerCollection();
 
@@ -412,7 +480,7 @@ defineSuite([
 
             runs(function() {
                 expect(childTile.loadedTerrain).toBeUndefined();
-                expect(childTile.state).toBe(TileState.READY);
+                expect(childTile.state).toBe(TileState.UPSAMPLED_ONLY);
             });
         });
 
@@ -494,6 +562,22 @@ defineSuite([
                 expect(greatGrandchildTile.state).toBe(TileState.READY);
                 expect(greatGrandchildTile.loadedTerrain).toBeUndefined();
                 expect(greatGrandchildTile.upsampledTerrain).toBeUndefined();
+            });
+        });
+
+        it('entirely upsampled tile is marked as such', function() {
+            var childTile = rootTile.children[0];
+
+            waitsFor(function() {
+                rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
+                childTile.processStateMachine(context, alwaysFailTerrainProvider, imageryLayerCollection);
+                return rootTile.state.value >= TileState.READY.value &&
+                       childTile.state.value >= TileState.READY.value;
+            }, 'child tile to be in its final state');
+
+            runs(function() {
+                expect(rootTile.state).toBe(TileState.READY);
+                expect(childTile.state).toBe(TileState.UPSAMPLED_ONLY);
             });
         });
 

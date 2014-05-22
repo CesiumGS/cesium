@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/Context',
-         'Core/Color',
-         'Core/IndexDatatype',
-         'Renderer/BufferUsage',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/renderFragment'
-     ], function(
-         Context,
-         Color,
-         IndexDatatype,
-         BufferUsage,
-         createContext,
-         destroyContext,
-         renderFragment) {
+        'Renderer/Context',
+        'Core/Color',
+        'Core/IndexDatatype',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext',
+        'Specs/renderFragment'
+    ], function(
+        Context,
+        Color,
+        IndexDatatype,
+        BufferUsage,
+        createContext,
+        destroyContext,
+        renderFragment) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -236,7 +236,7 @@ defineSuite([
 
         pixel = renderFragment(context, fsDragDepth, 1.0, false);
 
-        if (context.getFragmentDepth) {
+        if (context.fragmentDepth) {
             expect(pixel).toEqual([0, 255, 0, 255]);
         } else {
             expect(pixel).toEqual([255, 0, 0, 255]);

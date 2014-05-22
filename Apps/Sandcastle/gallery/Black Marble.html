@@ -26,12 +26,13 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer', {
+    var viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider : new Cesium.TileMapServiceImageryProvider({
             url : '//cesiumjs.org/blackmarble',
             maximumLevel : 8,
             credit : 'Black Marble imagery courtesy NASA Earth Observatory'
-        })
+        }),
+        baseLayerPicker : false
     });
 
     Sandcastle.finishedLoading();

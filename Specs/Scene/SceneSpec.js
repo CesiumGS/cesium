@@ -1,52 +1,46 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/defined',
-         'Core/defaultValue',
-         'Core/Color',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/Event',
-         'Core/Rectangle',
-         'Renderer/DrawCommand',
-         'Renderer/Context',
-         'Renderer/Pass',
-         'Renderer/PassState',
-         'Renderer/PixelDatatype',
-         'Renderer/PixelFormat',
-         'Renderer/UniformState',
-         'Scene/AnimationCollection',
-         'Scene/Camera',
-         'Scene/CompositePrimitive',
-         'Scene/RectanglePrimitive',
-         'Scene/FrameState',
-         'Scene/OIT',
-         'Scene/ScreenSpaceCameraController',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], 'Scene/Scene', function(
-         defined,
-         defaultValue,
-         Color,
-         Cartesian3,
-         BoundingSphere,
-         Event,
-         Rectangle,
-         DrawCommand,
-         Context,
-         Pass,
-         PassState,
-         PixelDatatype,
-         PixelFormat,
-         UniformState,
-         AnimationCollection,
-         Camera,
-         CompositePrimitive,
-         RectanglePrimitive,
-         FrameState,
-         OIT,
-         ScreenSpaceCameraController,
-         createScene,
-         destroyScene) {
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/Ellipsoid',
+        'Core/PixelFormat',
+        'Core/Rectangle',
+        'Renderer/DrawCommand',
+        'Renderer/PixelDatatype',
+        'Scene/AnimationCollection',
+        'Scene/Camera',
+        'Scene/FrameState',
+        'Scene/Globe',
+        'Scene/Pass',
+        'Scene/PrimitiveCollection',
+        'Scene/RectanglePrimitive',
+        'Scene/ScreenSpaceCameraController',
+        'Specs/createScene',
+        'Specs/destroyScene',
+        'Specs/equals',
+        'Specs/render'
+    ], 'Scene/Scene', function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        Ellipsoid,
+        PixelFormat,
+        Rectangle,
+        DrawCommand,
+        PixelDatatype,
+        AnimationCollection,
+        Camera,
+        FrameState,
+        Globe,
+        Pass,
+        PrimitiveCollection,
+        RectanglePrimitive,
+        ScreenSpaceCameraController,
+        createScene,
+        destroyScene,
+        equals,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
@@ -70,13 +64,13 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
-        expect(scene.primitives).toBeInstanceOf(CompositePrimitive);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.animations).toBeInstanceOf(AnimationCollection);
 
-        var contextAttributes = scene._context._gl.getContextAttributes();
+        var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
         expect(contextAttributes.stencil).toEqual(false);
@@ -112,12 +106,12 @@ defineSuite([
     it('draws background color', function() {
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
     it('calls afterRender functions', function() {
@@ -146,9 +140,10 @@ defineSuite([
     }
 
     it('debugCommandFilter filters commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -163,9 +158,10 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
         scene.primitives.add(new CommandMockPrimitive(c));
@@ -177,26 +173,28 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            debugShowBoundingVolume : true,
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.debugShowBoundingVolume = true;
-        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            shaderProgram : scene.context.createShaderProgram(
+                'void main() { gl_Position = vec4(1.0); }',
+                'void main() { gl_FragColor = vec4(1.0); }')
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene._context.shaderCache.getShaderProgram(
-            'void main() { gl_Position = vec4(1.0); }',
-            'void main() { gl_FragColor = vec4(1.0); }');
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -238,7 +236,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -247,7 +245,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene._context.readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -277,7 +275,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -286,7 +284,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene._context.readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -309,7 +307,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -335,14 +333,14 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
     });
 
     it('renders with forced FXAA', function() {
-        var context = scene._context;
+        var context = scene.context;
 
         // Workaround for Firefox on Mac, which does not support RGBA + depth texture
         // attachments, which is allowed by the spec.
@@ -400,8 +398,49 @@ defineSuite([
         destroyScene(s);
     });
 
+    it('setting a central body', function() {
+        var scene = createScene();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+
+        expect(scene.globe).toBe(globe);
+
+        destroyScene(scene);
+    });
+
+    it('destroys primitive on set globe', function() {
+        var scene = createScene();
+        var globe = new Globe(Ellipsoid.UNIT_SPHERE);
+
+        scene.globe = globe;
+        expect(globe.isDestroyed()).toEqual(false);
+
+        scene.globe = null;
+        expect(globe.isDestroyed()).toEqual(true);
+
+        destroyScene(scene);
+    });
+
+    it('renders a central body', function() {
+        var s = createScene();
+
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+
+        s.initializeFrame();
+        s.render();
+
+        waitsFor(function() {
+            render(s._context, s.frameState, s.globe);
+            return !equals(this.env, s._context.readPixels(), [0, 0, 0, 0]);
+        }, 'the central body to be rendered', 5000);
+    });
+
     it('renders with multipass OIT if MRT is available', function() {
-        if (scene._context.drawBuffers) {
+        if (scene.context.drawBuffers) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = true;
@@ -422,7 +461,7 @@ defineSuite([
 
             s.initializeFrame();
             s.render();
-            var pixels = s.context.readPixels();
+            var pixels = s._context.readPixels();
             expect(pixels[0]).not.toEqual(0);
             expect(pixels[1]).toEqual(0);
             expect(pixels[2]).toEqual(0);
@@ -432,7 +471,7 @@ defineSuite([
     });
 
     it('renders with alpha blending if floating point textures are available', function() {
-        if (scene._context.floatingPointTexture) {
+        if (scene.context.floatingPointTexture) {
             var s = createScene();
             s._oit._translucentMRTSupport = false;
             s._oit._translucentMultipassSupport = false;
@@ -467,5 +506,70 @@ defineSuite([
         expect(s.isDestroyed()).toEqual(false);
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
+    });
+
+    it('raises renderError when render throws', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = 'foo';
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        s.render();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('a render error is rethrown if rethrowRenderErrors is true', function() {
+        var s = createScene();
+        s.rethrowRenderErrors = true;
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = 'foo';
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        expect(function() {
+            s.render();
+        }).toThrow();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('raises the preRender event prior to rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
+    });
+
+    it('raises the postRender event after rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.postRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
     });
 }, 'WebGL');

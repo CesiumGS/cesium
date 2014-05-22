@@ -1,28 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/SceneModePicker/SceneModePickerViewModel',
-         'Core/Event',
-         'Core/Ellipsoid',
-         'Scene/CentralBody',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Scene/SceneMode'
-     ], function(
-         SceneModePickerViewModel,
-         Event,
-         Ellipsoid,
-         CentralBody,
-         createScene,
-         destroyScene,
-         SceneMode) {
+        'Widgets/SceneModePicker/SceneModePickerViewModel',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Scene/SceneMode',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        SceneModePickerViewModel,
+        Ellipsoid,
+        Globe,
+        SceneMode,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
     beforeEach(function() {
         scene = createScene();
-        var centralBody = new CentralBody(ellipsoid);
-        scene.primitives.centralBody = centralBody;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
     });
 
     afterEach(function() {

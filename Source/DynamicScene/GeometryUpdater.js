@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defineProperties',
+define([
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
         defineProperties,
@@ -202,7 +203,7 @@ define(['../Core/defineProperties',
      * @memberof GeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

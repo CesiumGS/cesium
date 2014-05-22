@@ -1,39 +1,38 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
+        './Cartesian2',
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './EarthOrientationParameters',
+        './EarthOrientationParametersSample',
+        './Ellipsoid',
         './Iau2006XysData',
         './Iau2006XysSample',
         './Math',
         './Matrix3',
         './Matrix4',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './TimeConstants',
-        './Ellipsoid',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        '../ThirdParty/when'
-    ],
-    function(
+        './TimeConstants'
+    ], function(
+        when,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
+        EarthOrientationParameters,
+        EarthOrientationParametersSample,
+        Ellipsoid,
         Iau2006XysData,
         Iau2006XysSample,
         CesiumMath,
         Matrix3,
         Matrix4,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        TimeConstants,
-        Ellipsoid,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        when) {
+        TimeConstants) {
     "use strict";
 
     /**
@@ -270,14 +269,10 @@ define([
      *
      * @example
      * //Set the view to in the inertial frame.
-     * function updateAndRender() {
-     *     var now = new Cesium.JulianDate();
-     *     scene.initializeFrame();
-     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
-     *     scene.render();
-     *     Cesium.requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * scene.preRender.addEventListener(function(scene, time) {
+     *   var now = new Cesium.JulianDate();
+     *   scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
+     * });
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -578,9 +573,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
-     * @see UniformState#modelViewProjection
      * @see czm_modelViewProjection
-     * @see UniformState#viewportTransformation
      * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {

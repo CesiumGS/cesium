@@ -1,17 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumInspector/CesiumInspector',
-         'Scene/CentralBody',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         CesiumInspector,
-         CentralBody,
-         Ellipsoid,
-         createScene,
-         destroyScene
-     ) {
+        'Widgets/CesiumInspector/CesiumInspector',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        CesiumInspector,
+        Ellipsoid,
+        Globe,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -19,10 +18,8 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var cb = new CentralBody(ellipsoid);
-        var primitives = scene.primitives;
-        primitives.centralBody = cb;
-
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
     });
 
     afterAll(function() {

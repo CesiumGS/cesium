@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Matrix4',
-             'Core/Matrix3',
-             'Core/Cartesian3',
-             'Core/Cartesian4',
-             'Core/Quaternion',
-             'Core/Math'
-            ], function(
-              Matrix4,
-              Matrix3,
-              Cartesian3,
-              Cartesian4,
-              Quaternion,
-              CesiumMath) {
+        'Core/Matrix4',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Quaternion'
+    ], function(
+        Matrix4,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix3,
+        Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -592,6 +592,38 @@ defineSuite([
         returnedResult = Matrix4.setRow(matrix, 3, new Cartesian4(913.0, 914.0, 915.0, 916.0), result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expected);
+    });
+
+    it('getScale works', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var m = Matrix4.fromScale(scale);
+        expect(Matrix4.getScale(m)).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale works with a result parameter', function() {
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var result = new Cartesian3();
+        var computedScale = Matrix4.getScale(Matrix4.fromScale(scale), result);
+
+        expect(computedScale).toBe(result);
+        expect(computedScale).toEqualEpsilon(scale, CesiumMath.EPSILON14);
+    });
+
+    it('getScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getScale();
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumScale works', function() {
+        var m = Matrix4.fromScale(new Cartesian3(1.0, 2.0, 3.0));
+        expect(Matrix4.getMaximumScale(m)).toEqualEpsilon(3.0, CesiumMath.EPSILON14);
+    });
+
+    it('getMaximumScale throws without a matrix', function() {
+        expect(function() {
+            Matrix4.getMaximumScale();
+        }).toThrowDeveloperError();
     });
 
     it('multiply works without a result parameter', function() {

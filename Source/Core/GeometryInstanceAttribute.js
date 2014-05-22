@@ -15,10 +15,10 @@ define([
      * @alias GeometryInstanceAttribute
      * @constructor
      *
-     * @param {ComponentDatatype} [options.componentDatatype=undefined] The datatype of each component in the attribute, e.g., individual elements in values.
-     * @param {Number} [options.componentsPerAttribute=undefined] A number between 1 and 4 that defines the number of components in an attributes.
+     * @param {ComponentDatatype} [options.componentDatatype] The datatype of each component in the attribute, e.g., individual elements in values.
+     * @param {Number} [options.componentsPerAttribute] A number between 1 and 4 that defines the number of components in an attributes.
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-     * @param {Array} [options.value=undefined] The value for the attribute.
+     * @param {Number[]} [options.value] The value for the attribute.
      *
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
      *
@@ -28,15 +28,15 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-0.0, 0.0))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *       color : new Cesium.GeometryInstanceAttribute({
-     *         componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
-     *         componentsPerAttribute : 4,
-     *         normalize : true,
-     *         value : [255, 255, 0 255]
-     *       }
+     *     color : new Cesium.GeometryInstanceAttribute({
+     *       componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+     *       componentsPerAttribute : 4,
+     *       normalize : true,
+     *       value : [255, 255, 0 255]
+     *     }
      *   }
      * });
      *

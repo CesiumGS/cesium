@@ -79,6 +79,33 @@ define([
     };
 
     /**
+     * Creates a Cartesian4 instance from a {@link Color}. <code>red</code>, <code>green</code>, <code>blue</code>,
+     * and <code>alpha</code> map to <code>x</code>, <code>y</code>, <code>z</code>, and <code>w</code>, respectively.
+     * @memberof Cartesian4
+     *
+     * @param {Color} color The source color.
+     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     */
+    Cartesian4.fromColor = function(color, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Cartesian4(color.red, color.green, color.blue, color.alpha);
+        }
+
+        result.x = color.red;
+        result.y = color.green;
+        result.z = color.blue;
+        result.w = color.alpha;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian4 instance.
      * @memberof Cartesian4
      *
@@ -114,7 +141,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Cartesian4.pack = function(value, array, startingIndex) {
@@ -140,7 +167,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Cartesian4
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian4} [result] The object into which to store the result.
      */
@@ -169,7 +196,7 @@ define([
      * Creates a Cartesian4 from four consecutive elements in an array.
      * @memberof Cartesian4
      *
-     * @param {Array} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+     * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian4} [result] The object onto which to store the result.
      *

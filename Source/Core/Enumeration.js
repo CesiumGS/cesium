@@ -1,14 +1,17 @@
 /*global define*/
-define(['./defined'], function(defined) {
+define([
+        './defined'
+    ], function(
+        defined) {
     "use strict";
 
     /**
      * Constructs an enumeration that contains both a numeric value and a name.
      * This is used so the name of the enumeration is available in the debugger.
      *
-     * @param {Number} [value=undefined] The numeric value of the enumeration.
-     * @param {String} [name=undefined] The name of the enumeration for debugging purposes.
-     * @param {Object} [properties=undefined] An object containing extra properties to be added to the enumeration.
+     * @param {Number} [value] The numeric value of the enumeration.
+     * @param {String} [name] The name of the enumeration for debugging purposes.
+     * @param {Object} [properties] An object containing extra properties to be added to the enumeration.
      *
      * @alias Enumeration
      * @constructor

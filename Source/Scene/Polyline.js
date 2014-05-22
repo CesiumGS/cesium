@@ -1,25 +1,25 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/BoundingSphere',
-        '../Core/Color',
-        '../Core/PolylinePipeline',
         '../Core/Matrix4',
-        '../Core/Cartesian3',
+        '../Core/PolylinePipeline',
         './Material'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        BoundingSphere,
-        Color,
-        PolylinePipeline,
         Matrix4,
-        Cartesian3,
+        PolylinePipeline,
         Material) {
     "use strict";
 
@@ -33,12 +33,12 @@ define([
      * @param {Number} [options.width=1.0] The width of the polyline in pixels.
      * @param {Boolean} [options.loop=false] Whether a line segment will be added between the last and first line positions to make this line a loop.
      * @param {Material} [options.material=Material.ColorType] The material.
-     * @param {Array} [options.positions] The positions.
+     * @param {Cartesian3[]} [options.positions] The positions.
      * @param {Object} [options.id] The user-defined object to be returned when this polyline is picked.
      *
      * @see PolylineCollection
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      */
     var Polyline = function(options, polylineCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -131,7 +131,7 @@ define([
         /**
          * Gets and sets the positions of the polyline.
          * @memberof Polyline.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polyline.positions = ellipsoid.cartographicArrayToCartesianArray([
          *     new Cesium.Cartographic(...),
@@ -170,7 +170,7 @@ define([
 
         /**
          * Gets and sets the surface appearance of the polyline.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * @memberof Polyline.prototype
          * @type {Material}
          */

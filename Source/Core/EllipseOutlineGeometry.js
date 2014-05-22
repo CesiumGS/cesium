@@ -1,32 +1,32 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
-        './Ellipsoid',
         './EllipseGeometryLibrary',
+        './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
         './Math',
         './PrimitiveType'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
-        Ellipsoid,
         EllipseGeometryLibrary,
+        Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
         CesiumMath,
         PrimitiveType) {
     "use strict";
@@ -153,13 +153,11 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseOutlineGeometry#createGeometry
+     * @see EllipseOutlineGeometry.createGeometry
      *
      * @example
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
      * var ellipse = new Cesium.EllipseOutlineGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
      *   rotation : Cesium.Math.toRadians(60.0)

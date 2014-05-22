@@ -1,34 +1,34 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartesian4',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Color',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/NearFarScalar',
         '../Core/Matrix4',
+        '../Core/NearFarScalar',
         './HorizontalOrigin',
-        './VerticalOrigin',
         './SceneMode',
-        './SceneTransforms'
+        './SceneTransforms',
+        './VerticalOrigin'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Color,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        NearFarScalar,
         Matrix4,
+        NearFarScalar,
         HorizontalOrigin,
-        VerticalOrigin,
         SceneMode,
-        SceneTransforms) {
+        SceneTransforms,
+        VerticalOrigin) {
     "use strict";
 
     /**
@@ -60,7 +60,7 @@ define([
      *
      * @internalConstructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var Billboard = function(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -387,7 +387,7 @@ define([
          * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
          * </div>
          * @memberof Billboard.prototype
-         * @type {HorizontalOrigin} value The horizontal origin.
+         * @type {HorizontalOrigin}
          * @example
          * // Use a bottom, left origin
          * b.horizontalOrigin = Cesium.HorizontalOrigin.LEFT;
@@ -570,7 +570,7 @@ define([
          * Gets and sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
          * The default is the zero vector, which means the billboard is aligned to the screen up vector.
          * @memberof Billboard.prototype
-         * @type {Cartesian3} value The aligned axis.
+         * @type {Cartesian3}
          * @example
          * // Example 1.
          * // Have the billboard up vector point north
@@ -742,12 +742,14 @@ define([
         var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
-        var po = Cartesian2.multiplyByScalar(pixelOffset, scene._context.uniformState.highResolutionSnapScale, scratchCartesian2);
+        var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
 
         return positionWC;
     };
+
+    var scratchPixelOffset = new Cartesian2(0.0, 0.0);
 
     /**
      * Computes the screen-space position of the billboard's origin, taking into account eye and pixel offsets.
@@ -768,7 +770,6 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
      */
-    var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(scene) {
         var billboardCollection = this._billboardCollection;
 
@@ -782,11 +783,11 @@ define([
         //>>includeEnd('debug');
 
         // pixel offset for screenspace computation is the pixelOffset + screenspace translate
-        Cartesian2.clone(this._pixelOffset, tempPixelOffset);
-        Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
+        Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
+        Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, scene);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
     };
 
     /**

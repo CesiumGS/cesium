@@ -1,20 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicObject',
-             'DynamicScene/ConstantProperty',
-             'Core/JulianDate',
-             'Core/Cartesian3',
-             'Core/Quaternion',
-             'Core/Iso8601',
-             'Core/TimeInterval'
-            ], function(
-              DynamicObject,
-              ConstantProperty,
-              JulianDate,
-              Cartesian3,
-              Quaternion,
-              Iso8601,
-              TimeInterval) {
+        'DynamicScene/DynamicObject',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicObject,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -141,17 +135,33 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('addProperty throws with reserved property name.', function() {
+    it('addProperty throws with defined reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.addProperty('merge');
         }).toThrowDeveloperError();
     });
 
-    it('removeProperty throws with reserved property name.', function() {
+    it('removeProperty throws with defined reserved property name.', function() {
         var dynamicObject = new DynamicObject();
         expect(function() {
             dynamicObject.removeProperty('merge');
+        }).toThrowDeveloperError();
+    });
+
+    it('addProperty throws with undefined reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(dynamicObject.name).toBeUndefined();
+        expect(function() {
+            dynamicObject.addProperty('name');
+        }).toThrowDeveloperError();
+    });
+
+    it('removeProperty throws with undefined reserved property name.', function() {
+        var dynamicObject = new DynamicObject();
+        expect(dynamicObject.name).toBeUndefined();
+        expect(function() {
+            dynamicObject.removeProperty('name');
         }).toThrowDeveloperError();
     });
 });

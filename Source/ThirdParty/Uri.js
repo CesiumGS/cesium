@@ -1,5 +1,4 @@
 /**
- * @fileOverview
  * @license
  *
  * Grauw URI utilities

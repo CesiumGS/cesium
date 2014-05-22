@@ -1,24 +1,24 @@
 /*global define*/
 define([
-        './DeveloperError',
+        '../ThirdParty/sprintf',
         './binarySearch',
-        './defined',
         './defaultValue',
-        './TimeConstants',
-        './LeapSecond',
-        './TimeStandard',
+        './defined',
+        './DeveloperError',
         './isLeapYear',
-        '../ThirdParty/sprintf'
+        './LeapSecond',
+        './TimeConstants',
+        './TimeStandard'
     ], function(
-        DeveloperError,
+        sprintf,
         binarySearch,
-        defined,
         defaultValue,
-        TimeConstants,
-        LeapSecond,
-        TimeStandard,
+        defined,
+        DeveloperError,
         isLeapYear,
-        sprintf) {
+        LeapSecond,
+        TimeConstants,
+        TimeStandard) {
     "use strict";
 
     /**
@@ -330,8 +330,6 @@ define([
      * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
-     * @see <a href='http://www.w3schools.com/js/js_obj_date.asp'>JavaScript Date Object on w3schools</a>.
-     * @see <a href='http://www.w3schools.com/jsref/jsref_obj_date.asp'>JavaScript Date Object Reference on w3schools</a>.
      *
      * @example
      * // Construct a JulianDate specifying the UTC time standard
@@ -366,7 +364,7 @@ define([
      * @see JulianDate.fromTotalDays
      * @see JulianDate.fromDate
      * @see LeapSecond
-     * @see <a href='http://en.wikipedia.org/wiki/ISO_8601'>ISO 8601 on Wikipedia</a>.
+     * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      *
      * @example
      * // Example 1. Construct a JulianDate in UTC at April 24th, 2012 6:08PM UTC

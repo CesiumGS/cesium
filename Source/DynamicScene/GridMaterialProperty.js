@@ -1,11 +1,12 @@
 /*global define*/
-define(['../Core/Cartesian2',
+define([
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
@@ -13,8 +14,8 @@ define(['../Core/Cartesian2',
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -33,11 +34,14 @@ define(['../Core/Cartesian2',
         this._lineCountSubscription = undefined;
         this._lineThickness = undefined;
         this._lineThicknessSubscription = undefined;
+        this._lineOffset = undefined;
+        this._lineOffsetSubscription = undefined;
 
         this.color = new ConstantProperty(Color.WHITE);
         this.cellAlpha = new ConstantProperty(0.1);
         this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
         this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
+        this.lineOffset = new ConstantProperty(new Cartesian2(0.0, 0.0));
     };
 
     defineProperties(GridMaterialProperty.prototype, {
@@ -52,7 +56,8 @@ define(['../Core/Cartesian2',
                 return Property.isConstant(this._color) &&
                        Property.isConstant(this._cellAlpha) &&
                        Property.isConstant(this._lineCount) &&
-                       Property.isConstant(this._lineThickness);
+                       Property.isConstant(this._lineThickness) &&
+                       Property.isConstant(this._lineOffset);
             }
         },
         /**
@@ -76,22 +81,32 @@ define(['../Core/Cartesian2',
         color : createDynamicPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
         cellAlpha : createDynamicPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
         lineCount : createDynamicPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
-        lineThickness : createDynamicPropertyDescriptor('lineThickness')
+        lineThickness : createDynamicPropertyDescriptor('lineThickness'),
+        /**
+         * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
+         * @type {Property}
+         * @default new ConstantProperty(new Cartesian2(0.0, 0.0))
+         */
+        lineOffset : createDynamicPropertyDescriptor('lineOffset')
     });
 
     /**
@@ -99,7 +114,7 @@ define(['../Core/Cartesian2',
      * @memberof GridMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     GridMaterialProperty.prototype.getType = function(time) {
         return 'Grid';
@@ -121,6 +136,7 @@ define(['../Core/Cartesian2',
         result.cellAlpha = defined(this._cellAlpha) ? this._cellAlpha.getValue(time) : undefined;
         result.lineCount = defined(this._lineCount) ? this._lineCount.getValue(time, result.lineCount) : undefined;
         result.lineThickness = defined(this._lineThickness) ? this._lineThickness.getValue(time, result.lineThickness) : undefined;
+        result.lineOffset = defined(this._lineOffset) ? this._lineOffset.getValue(time, result.lineOffset) : undefined;
         return result;
     };
 
@@ -138,7 +154,8 @@ define(['../Core/Cartesian2',
         Property.equals(this._color, other._color) && //
         Property.equals(this._cellAlpha, other._cellAlpha) && //
         Property.equals(this._lineCount, other._lineCount) && //
-        Property.equals(this._lineThickness, other._lineThickness));
+        Property.equals(this._lineThickness, other._lineThickness) && //
+        Property.equals(this._lineOffset, other._lineOffset));
     };
 
     /**

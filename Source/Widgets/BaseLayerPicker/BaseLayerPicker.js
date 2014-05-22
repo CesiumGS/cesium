@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './BaseLayerPickerViewModel',
-        '../../ThirdParty/knockout'
+        './BaseLayerPickerViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        BaseLayerPickerViewModel,
-        knockout) {
+        BaseLayerPickerViewModel) {
     "use strict";
 
     /**
@@ -34,7 +34,7 @@ define([
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
-     * @param {CentralBody} options.centralBody The CentralBody to use.
+     * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
      * @param {ProviderViewModel[]} [options.terrainProviderViewModels=[]] The array of ProviderViewModel instances to use for terrain.
@@ -95,7 +95,7 @@ define([
      * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
      *
      * //Finally, create the baseLayerPicker widget using our view models.
-     * var layers = cesiumWidget.centralBody.imageryLayers;
+     * var layers = cesiumWidget.scene.imageryLayers;
      * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, imageryViewModels);
      *
      * //Use the first item in the list as the current selection.
@@ -130,14 +130,13 @@ attr: { src: buttonImageUrl }');
         var dropPanel = document.createElement('div');
         dropPanel.className = 'cesium-baseLayerPicker-dropDown';
         dropPanel.setAttribute('data-bind', '\
-css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
-       "cesium-baseLayerPicker-hidden" : !dropDownVisible }');
+css: { "cesium-baseLayerPicker-dropDown-visible" : dropDownVisible }');
         container.appendChild(dropPanel);
 
         var imageryTitle = document.createElement('div');
         imageryTitle.className = 'cesium-baseLayerPicker-sectionTitle';
         imageryTitle.setAttribute('data-bind', 'visible: imageryProviderViewModels.length > 0');
-        imageryTitle.innerHTML = 'Imagery<hr>';
+        imageryTitle.innerHTML = 'Imagery';
         dropPanel.appendChild(imageryTitle);
 
         var imageryChoices = document.createElement('div');
@@ -168,7 +167,7 @@ click: function($data) { $parent.selectedImagery = $data; }');
         var terrainTitle = document.createElement('div');
         terrainTitle.className = 'cesium-baseLayerPicker-sectionTitle';
         terrainTitle.setAttribute('data-bind', 'visible: terrainProviderViewModels.length > 0');
-        terrainTitle.innerHTML = 'Terrain<hr>';
+        terrainTitle.innerHTML = 'Terrain';
         dropPanel.appendChild(terrainTitle);
 
         var terrainChoices = document.createElement('div');

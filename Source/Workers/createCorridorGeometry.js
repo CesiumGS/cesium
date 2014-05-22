@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/CorridorGeometry',
+define([
+        '../Core/CorridorGeometry',
         '../Core/Ellipsoid'
     ], function(
         CorridorGeometry,

@@ -1,11 +1,14 @@
 /*global defineSuite*/
-defineSuite(['Core/Color',
-             'Core/Math',
-             'Specs/createPackableSpecs'
-            ], function(
-              Color,
-              CesiumMath,
-              createPackableSpecs) {
+defineSuite([
+        'Core/Color',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        Color,
+        Cartesian4,
+        CesiumMath,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -70,6 +73,24 @@ defineSuite(['Core/Color',
         expect(Color.floatToByte(0)).toEqual(0);
         expect(Color.floatToByte(1.0)).toEqual(255);
         expect(Color.floatToByte(127 / 255)).toEqual(127);
+    });
+
+    it('fromCartesian4 returns a color with corrrect values', function(){
+        var color = Color.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+        expect(color).toEqual(new Color(1.0, 2.0, 3.0, 4.0));
+    });
+
+    it('fromCartesian4 result param returns color with correct values', function(){
+        var color = new Color();
+        var result = Color.fromCartesian4(new Cartesian4(1.0, 2.0, 3.0, 4.0), color);
+        expect(color).toBe(result);
+        expect(color).toEqual(new Color(1.0, 2.0, 3.0, 4.0));
+    });
+
+    it('fromCartesian4 throws without a Cartesian4', function() {
+        expect(function() {
+            Color.fromCartesian4();
+        }).toThrowDeveloperError();
     });
 
     it('clone with no parameters returns a new identical copy.', function() {

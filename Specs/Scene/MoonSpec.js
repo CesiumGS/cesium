@@ -1,30 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Moon',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Matrix3',
-         'Core/Simon1994PlanetaryPositions',
-         'Core/Transforms',
-         'Scene/SceneMode'
-     ], function(
-         Moon,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         Cartesian3,
-         defined,
-         Ellipsoid,
-         Matrix3,
-         Simon1994PlanetaryPositions,
-         Transforms,
-         SceneMode) {
+        'Scene/Moon',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/Matrix3',
+        'Core/Simon1994PlanetaryPositions',
+        'Core/Transforms',
+        'Specs/createCamera',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Moon,
+        Cartesian3,
+        defined,
+        Ellipsoid,
+        Matrix3,
+        Simon1994PlanetaryPositions,
+        Transforms,
+        createCamera,
+        createFrameState,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -70,14 +68,14 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
         var moon = new Moon();
         moon.show = false;
 
-        var context = scene._context;
+        var context = scene.context;
 
         var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
         var us = context.uniformState;

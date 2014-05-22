@@ -1,24 +1,24 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Cartesian3',
-        '../Core/Matrix3',
         '../Core/Ellipsoid',
+        '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Transforms',
         '../Scene/SceneMode'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError,
-         CesiumMath,
-         Cartesian3,
-         Matrix3,
-         Ellipsoid,
-         Transforms,
-         SceneMode) {
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        DeveloperError,
+        Ellipsoid,
+        CesiumMath,
+        Matrix3,
+        Transforms,
+        SceneMode) {
     "use strict";
 
     var updateTransformMatrix3Scratch1 = new Matrix3();

@@ -27,11 +27,11 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    function createPrimitives(scene, ellipsoid) {
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
 
         var e = primitives.add(new Cesium.EllipsoidPrimitive({
-            center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.0, 40.0, 500000.0)),
+            center : Cesium.Cartesian3.fromDegrees(-75.0, 40.0, 500000.0),
             radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
             material : Cesium.Material.fromType(Cesium.Material.RimLightingType)
         }));
@@ -39,8 +39,7 @@ require(['Cesium'], function(Cesium) {
 
         var e2 = primitives.add(new Cesium.EllipsoidPrimitive({
             modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(
-                    Cesium.Cartographic.fromDegrees(-95.0, 40.0, 500000.0))),
+                Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 500000.0)),
             radii : new Cesium.Cartesian3(300000.0, 300000.0, 500000.0),
             material : Cesium.Material.fromType(Cesium.Material.StripeType)
         }));
@@ -53,7 +52,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.centralBody.ellipsoid);
+    createPrimitives(viewer.scene);
 
     Sandcastle.finishedLoading();
 });

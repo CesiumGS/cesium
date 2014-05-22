@@ -1,25 +1,25 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/HomeButton/HomeButtonViewModel',
-         'Core/Ellipsoid',
-         'Scene/CentralBody',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         HomeButtonViewModel,
-         Ellipsoid,
-         CentralBody,
-         createScene,
-         destroyScene) {
+        'Widgets/HomeButton/HomeButtonViewModel',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        HomeButtonViewModel,
+        Ellipsoid,
+        Globe,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
-    var centralBody = new CentralBody(ellipsoid);
+    var globe = new Globe(ellipsoid);
     beforeAll(function() {
         scene = createScene();
-        scene.primitives.centralBody = centralBody;
+        scene.globe = globe;
     });
 
     afterAll(function() {

@@ -1,36 +1,36 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Material',
-        'Scene/Polygon',
-        'Scene/PolylineCollection',
-        'Specs/createContext',
-        'Specs/destroyContext',
-        'Specs/createCamera',
-        'Specs/createFrameState',
-        'Specs/frameState',
-        'Specs/render',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Renderer/ClearCommand'
+        'Renderer/ClearCommand',
+        'Scene/Polygon',
+        'Scene/PolylineCollection',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/frameState',
+        'Specs/render'
     ], function(
         Material,
-        Polygon,
-        PolylineCollection,
-        createContext,
-        destroyContext,
-        createCamera,
-        createFrameState,
-        frameState,
-        render,
         Cartesian3,
         Cartographic,
         Color,
         Ellipsoid,
         CesiumMath,
-        ClearCommand) {
+        ClearCommand,
+        Polygon,
+        PolylineCollection,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext,
+        frameState,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

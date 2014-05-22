@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defineProperties',
-        '../Core/Color',
         '../Core/Event',
-        './GeographicTilingScheme'
+        '../Core/GeographicTilingScheme'
     ], function(
+        Color,
         defaultValue,
         defineProperties,
-        Color,
         Event,
         GeographicTilingScheme) {
     "use strict";
@@ -21,19 +21,19 @@ define([
      * @alias TileCoordinatesImageryProvider
      * @constructor
      *
-     * @param {TilingScheme} [description.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
-     * @param {Color} [description.color=Color.YELLOW] The color to draw the tile box and label.
-     * @param {Number} [description.tileWidth=256] The width of the tile for level-of-detail selection purposes.
-     * @param {Number} [description.tileHeight=256] The height of the tile for level-of-detail selection purposes.
+     * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+     * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
+     * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
+     * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      */
-    var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(description) {
-        description = defaultValue(description, {});
+    var TileCoordinatesImageryProvider = function TileCoordinatesImageryProvider(options) {
+        options = defaultValue(options, {});
 
-        this._tilingScheme = defaultValue(description.tilingScheme, new GeographicTilingScheme());
-        this._color = defaultValue(description.color, Color.YELLOW);
+        this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme());
+        this._color = defaultValue(options.color, Color.YELLOW);
         this._errorEvent = new Event();
-        this._tileWidth = defaultValue(description.tileWidth, 256);
-        this._tileHeight = defaultValue(description.tileHeight, 256);
+        this._tileWidth = defaultValue(options.tileWidth, 256);
+        this._tileHeight = defaultValue(options.tileHeight, 256);
     };
 
 
@@ -177,6 +177,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
          * and texture upload time.
+         * @memberof TileCoordinatesImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {
