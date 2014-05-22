@@ -62,7 +62,7 @@ define([
         /**
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.
-         * @memberof ConstantProperty.prototype
+         * @memberof ReferenceProperty.prototype
          * @type {Boolean}
          */
         isConstant : {
@@ -74,12 +74,23 @@ define([
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is changed whenever setValue is called with data different
          * than the current value.
-         * @memberof ConstantProperty.prototype
+         * @memberof ReferenceProperty.prototype
          * @type {Event}
          */
         definitionChanged : {
             get : function() {
                 return this._definitionChanged;
+            }
+        },
+        /**
+         * Gets the reference frame that the position is defined in.
+         * @memberof ReferenceProperty.prototype
+         * @Type {ReferenceFrame}
+         */
+        referenceFrame : {
+            get : function() {
+                var targetProperty = resolve(this);
+                return defined(targetProperty) ? targetProperty.referenceFrame : undefined;
             }
         }
     });
@@ -148,14 +159,21 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ReferenceProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        //>>includeEnd('debug');
-
         var targetProperty = resolve(this);
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValueInReferenceFrame(time, referenceFrame, result) : undefined;
+    };
+
+    /**
+     * Gets the {@link Material} type at the provided time.
+     * @memberof MaterialProperty
+     * @function
+     *
+     * @param {JulianDate} time The time for which to retrieve the type.
+     * @returns {String} The type of material.
+     */
+    ReferenceProperty.prototype.getType = function(time) {
+        var targetProperty = resolve(this);
+        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getType(time) : undefined;
     };
 
     /**
