@@ -31,14 +31,37 @@ define([
         TileReplacementQueue) {
     "use strict";
 
-    var QuadtreePrimitive = function QuadtreePrimitive(description) {
+    /**
+     * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
+     * a quadtree of tiles with large, low-detail tiles at the root and small, high-detail tiles at the leaves.
+     * The set of tiles to render is selected by projecting an estimate of the geometric error in a tile onto
+     * the screen to estimate screen-space error, in pixels, which must be below a user-specified threshold.
+     * The actual content of the tiles is arbitrary and is specified using a {@link QuadtreeTileProvider}.
+     *
+     * @alias QuadtreePrimitive
+     * @constructor
+     *
+     * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
+     *        the distance to individual tiles.
+     * @param {Number} [options.maximumScreenSpaceError=2] The maximum screen-space error, in pixels, that is allowed.
+     *        A higher maximum error will render fewer tiles and improve performance, while a lower
+     *        value will improve visual quality.
+     * @param {Number} [options.tileCacheSize=100] The maximum number of tiles that will be retained in the tile cache.
+     *        Note that tiles will never be unloaded if they were used for rendering the last
+     *        frame, so the actual number of resident tiles may be higher.  The value of
+     *        this property will not affect visual quality.
+     */
+    var QuadtreePrimitive = function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.tileProvider)) {
-            throw new DeveloperError('description.tileProvider is required.');
+        if (!defined(options) || !defined(options.tileProvider)) {
+            throw new DeveloperError('options.tileProvider is required.');
+        }
+        if (defined(options.tileProvider.quadtree)) {
+            throw new DeveloperError('A QuadtreeTileProvider can only be used with a single QuadtreePrimitive');
         }
         //>>includeEnd('debug');
 
-        this._tileProvider = description.tileProvider;
+        this._tileProvider = options.tileProvider;
         this._tileProvider.quadtree = this;
 
         this._debug = {
@@ -76,7 +99,7 @@ define([
          * @type {Number}
          * @default 2
          */
-        this.maximumScreenSpaceError = 2;
+        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 2);
 
         /**
          * Gets or sets the maximum number of tiles that will be retained in the tile cache.
@@ -86,7 +109,7 @@ define([
          * @type {Number}
          * @default 100
          */
-        this.tileCacheSize = 100;
+        this.tileCacheSize = defaultValue(options.tileCacheSize, 100);
 
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
@@ -106,6 +129,12 @@ define([
         }
     });
 
+    /**
+     * Invalidates and frees all the tiles in the quadtree.  The tiles must be reloaded
+     * before they can be displayed.
+     *
+     * @memberof QuadtreePrimitive
+     */
     QuadtreePrimitive.prototype.invalidateAllTiles = function() {
         // Clear the replacement queue
         var replacementQueue = this._tileReplacementQueue;
@@ -124,6 +153,13 @@ define([
         this._levelZeroTiles = undefined;
     };
 
+    /**
+     * Invokes a specified function for each {@link QuadtreeTile} that is partially
+     * or completely loaded.
+     *
+     * @param {Function} tileFunction The function to invoke for each loaded tile.  The
+     *        function is passed a reference to the tile as its only parameter.
+     */
     QuadtreePrimitive.prototype.forEachLoadedTile = function(tileFunction) {
         var tile = this._tileReplacementQueue.head;
         while (defined(tile)) {
@@ -132,6 +168,13 @@ define([
         }
     };
 
+    /**
+     * Invokes a specified function for each {@link QuadtreeTile} that was rendered
+     * in the most recent frame.
+     *
+     * @param {Function} tileFunction The function to invoke for each rendered tile.  The
+     *        function is passed a reference to the tile as its only parameter.
+     */
     QuadtreePrimitive.prototype.forEachRenderedTile = function(tileFunction) {
         var tilesRendered = this._tilesToRender;
         for (var i = 0, len = tilesRendered.length; i < len; ++i) {
@@ -139,6 +182,14 @@ define([
         }
     };
 
+    /**
+     * Updates the primitive.
+     *
+     * @param {Context} context The rendering context to use.
+     * @param {FrameState} frameState The state of the current frame.
+     * @param {DrawCommand[]} commandList The list of draw commands.  The primitive will usually add
+     *        commands to this array during the update call.
+     */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
         this._tileProvider.beginFrame(context, frameState, commandList);
 
