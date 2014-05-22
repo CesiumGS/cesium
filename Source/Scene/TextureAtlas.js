@@ -47,7 +47,7 @@ define([
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.
      * @param {Cartesian2} [options.initialSize=new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} [options.images] Optional array of {@link Image} to be added to the atlas. Same as calling <code>addImages(images)</code>.
+     * @param {Image[]} [options.images] Optional array of {@link Image} to be added to the atlas. Same as calling <code>addImages(images)</code>.
      * @param {Image} [options.image] Optional single image to be added to the atlas. Same as calling <code>addImage(image)</code>.
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
@@ -114,7 +114,7 @@ define([
          * The x and y values of the rectangle correspond to the bottom-left corner of the texture coordinate.
          * The coordinates are in the order that the corresponding images were added to the atlas.
          * @memberof TextureAtlas.prototype
-         * @type {Array}
+         * @type {BoundingRectangle[]}
          */
         textureCoordinates : {
             get : function() {
@@ -343,7 +343,7 @@ define([
      *
      * @memberof TextureAtlas
      *
-     * @param {Array} images An array of {@link Image} to be added to the texture atlas.
+     * @param {Image[]} images An array of {@link Image} to be added to the texture atlas.
      *
      * @returns {Number} The first index of the newly added images.
      *
@@ -392,7 +392,7 @@ define([
      * @memberof TextureAtlas
      *
      * @param {Image} image An image to be added to the texture atlas.
-     * @param {Array} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
+     * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
      * @returns {Number} The index of the first newly-added region.
      */

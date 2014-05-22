@@ -382,7 +382,7 @@ define([
      * @memberof Color
      *
      * @param {Color} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Color.pack = function(value, array, startingIndex) {
@@ -406,7 +406,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Color
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
      */
@@ -563,8 +563,8 @@ define([
      * that are in the range of 0 to 255.
      * @memberof Color
      *
-     * @param {Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Array} The modified result parameter or a new instance if result was undefined.
+     * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
+     * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
      */
     Color.prototype.toBytes = function(result) {
         var red = Color.floatToByte(this.red);

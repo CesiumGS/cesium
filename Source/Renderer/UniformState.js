@@ -49,11 +49,7 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
 
-        /**
-         * @readonly
-         */
-        this.frameState = undefined;
-
+        this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
 
         // Derived members
@@ -147,6 +143,16 @@ define([
     };
 
     defineProperties(UniformState.prototype, {
+        /**
+         * @memberof UniformState.prototype
+         * @type {FrameState}
+         * @readonly
+         */
+        frameState : {
+            get : function() {
+                return this._frameState;
+            }
+        },
         /**
          * @memberof UniformState.prototype
          * @type {BoundingRectangle}
@@ -870,7 +876,7 @@ define([
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
 
-        this.frameState = frameState;
+        this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
     };
 

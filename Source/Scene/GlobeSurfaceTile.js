@@ -48,7 +48,7 @@ define([
     var GlobeSurfaceTile = function() {
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type {Array}
+         * @type {TileImagery[]}
          * @default []
          */
         this.imagery = [];

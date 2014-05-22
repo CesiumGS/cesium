@@ -65,7 +65,7 @@ define([
      * Creates a Matrix2 from 4 consecutive elements in an array.
      * @memberof Matrix2
      *
-     * @param {Array} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number[]} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix2} [result] The object onto which to store the result.
      *
@@ -108,7 +108,7 @@ define([
      * @memberof Matrix2
      * @function
      *
-     * @param {Array} values The column-major order array.
+     * @param {Number[]} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
@@ -127,7 +127,7 @@ define([
      * The resulting matrix will be in column-major order.
      * @memberof Matrix2
      *
-     * @param {Array} values The row-major order array.
+     * @param {Number[]} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
@@ -259,8 +259,8 @@ define([
      * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use..
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @param {Number[]} [result] The Array onto which to store the result.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix2.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);

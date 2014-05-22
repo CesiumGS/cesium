@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
@@ -19,6 +20,7 @@ define([
     ], function(
         Cartesian2,
         Cartesian3,
+        Cartographic,
         clone,
         defaultValue,
         defined,
@@ -379,6 +381,8 @@ define([
     var dirScratch = new Cartesian3();
     var rightScratch = new Cartesian3();
     var upScratch = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var scratchDestination = new Cartesian3();
 
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
@@ -389,9 +393,11 @@ define([
      * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [onComplete] The function to execute when the animation has completed.
-     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Function} [options.onComplete] The function to execute when the animation has completed.
+     * @param {Function} [options.onCancel] The function to execute if the animation is cancelled.
+     * @param {Matrix4} [options.endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
+     *                  to be in the correct coordinate system.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
@@ -421,8 +427,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        var duration = defaultValue(options.duration, 3000.0);
+        var convert = defaultValue(options.convert, true);
+
         var frameState = scene.frameState;
+        if (convert && frameState.mode !== SceneMode.SCENE3D) {
+            var projection = frameState.scene2D.projection;
+            var ellipsoid = projection.ellipsoid;
+            ellipsoid.cartesianToCartographic(destination, scratchCartographic);
+            destination = projection.project(scratchCartographic, scratchDestination);
+        }
+
+        var duration = defaultValue(options.duration, 3000.0);
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
 
@@ -536,54 +551,6 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. All arguments should
-     * be given in world coordinates.
-     *
-     * @param {Scene} scene The scene instance to use.
-     * @param {Cartographic} options.destination The final position of the camera.
-     * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
-     * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [onComplete] The function to execute when the animation has completed.
-     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
-     *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
-     *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
-     * @see Scene#animations
-     */
-    CameraFlightPath.createAnimationCartographic = function(scene, options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var destination = options.destination;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(destination)) {
-            throw new DeveloperError('options.destination is required.');
-        }
-        //>>includeEnd('debug');
-
-        var frameState = scene.frameState;
-        var projection = frameState.scene2D.projection;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            var ellipsoid = projection.ellipsoid;
-            ellipsoid.cartographicToCartesian(destination, c3destination);
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
-            projection.project(destination, c3destination);
-        } else {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
-        }
-
-        var createAnimationoptions = clone(options);
-        createAnimationoptions.destination = c3destination;
-        return this.createAnimation(scene, createAnimationoptions);
-    };
-
-    /**
      * Creates an animation to fly the camera from it's current position to a position in which the entire rectangle will be visible. All arguments should
      * be given in world coordinates.
      *
@@ -622,6 +589,7 @@ define([
         camera.getRectangleCameraCoordinates(rectangle, c3destination);
 
         createAnimationoptions.destination = c3destination;
+        createAnimationoptions.convert = false;
         return this.createAnimation(scene, createAnimationoptions);
     };
 

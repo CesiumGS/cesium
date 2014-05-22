@@ -49,11 +49,11 @@ define([
      * @alias WallGeometry
      * @constructor
      *
-     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Array} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+     * @param {Number[]} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Array} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+     * @param {Number[]} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -115,7 +115,7 @@ define([
      *
      * @memberof WallGeometry
      *
-     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
      * @param {Number} [minimumHeight] A constant that defines the minimum height of the

@@ -2,11 +2,13 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         './Appearance'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Appearance) {
     "use strict";
@@ -109,72 +111,114 @@ define([
         this.material = undefined;
 
         /**
-         * The GLSL source code for the vertex shader.
-         *
-         * @type String
-         *
-         * @readonly
-         */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
-
-        /**
-         * The GLSL source code for the fragment shader.
-         *
-         * @type String
-         *
-         * @readonly
-         */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
-
-        /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
-         *
-         * @type Object
-         *
-         * @readonly
-         */
-        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(false, false));
-
-        // Non-derived members
-
-        /**
-         * The name of the attribute being visualized.
-         *
-         * @type String
-         *
-         * @readonly
-         */
-        this.attributeName = attributeName;
-
-        /**
-         * The GLSL datatype of the attribute being visualized.
-         *
-         * @type String
-         *
-         * @readonly
-         */
-        this.glslDatatype = glslDatatype;
-
-        /**
          * When <code>true</code>, the geometry is expected to appear translucent.
          *
-         * @readonly
+         * @type {Boolean}
          *
          * @default false
          */
         this.translucent = defaultValue(options.translucent, false);
 
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
+        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(false, false));
+        this._closed = defaultValue(options.closed, false);
+
+        // Non-derived members
+
+        this._attributeName = attributeName;
+        this._glslDatatype = glslDatatype;
+    };
+
+    defineProperties(DebugAppearance.prototype, {
+        /**
+         * The GLSL source code for the vertex shader.
+         *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
+
+        /**
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account the {@link DebugAppearance#material}.
+         * Use {@link DebugAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
+
+        /**
+         * The WebGL fixed-function state to use when rendering the geometry.
+         *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
+
         /**
          * When <code>true</code>, the geometry is expected to be closed.
          *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.closed = defaultValue(options.closed, false);
-    };
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        },
+
+        /**
+         * The name of the attribute being visualized.
+         *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        attributeName : {
+            get : function() {
+                return this._attributeName;
+            }
+        },
+
+        /**
+         * The GLSL datatype of the attribute being visualized.
+         *
+         * @memberof DebugAppearance.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        glslDatatype : {
+            get : function() {
+                return this._glslDatatype;
+            }
+        }
+    });
 
     /**
      * Returns the full GLSL fragment shader source, which for {@link DebugAppearance} is just

@@ -88,7 +88,7 @@ define([
      * @memberof QuadtreeTile
      *
      * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
-     * @returns {Array} An array containing the tiles at level of detail zero, starting with the
+     * @returns {QuadtreeTile[]} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.
      */
     QuadtreeTile.createLevelZeroTiles = function(tilingScheme) {

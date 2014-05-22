@@ -284,9 +284,9 @@ define([
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
          * @memberof Primitive.prototype
-         * @readonly
          *
          * @type {Boolean}
+         * @readonly
          *
          * @default true
          */
@@ -300,9 +300,9 @@ define([
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
          * @memberof Primitive.prototype
-         * @readonly
          *
          * @type {Boolean}
+         * @readonly
          *
          * @default false
          */
