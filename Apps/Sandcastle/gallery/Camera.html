@@ -109,7 +109,7 @@ require(['Cesium'], function(Cesium) {
 
         // View in east-north-up frame
         var camera = scene.camera;
-        camera.transform = transform;
+        Cesium.Matrix4.clone(transform, camera.transform);
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
@@ -118,14 +118,14 @@ require(['Cesium'], function(Cesium) {
 
         // Zoom in
         camera.lookAt(
-                new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
+                new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
 
         // Show reference frame.  Not required.
         var primitives = scene.primitives;
         var polylines = new Cesium.PolylineCollection();
-        polylines.modelMatrix = transform;
+        Cesium.Matrix4.clone(transform, polylines.modelMatrix);
 
         var xAxis = {
             color : Cesium.Color.RED,
@@ -161,26 +161,21 @@ require(['Cesium'], function(Cesium) {
         var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
-
-        var camera = scene.camera;
-        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
-            return;
-        }
-
-        Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY, camera.transform);
-        camera.constrainedAxis = undefined;
-        camera.lookAt(
-                Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
-
+        
         var controller = scene.screenSpaceCameraController;
         controller.ellipsoid = ellipsoid;
         controller.enableTilt = true;
+        
+        var camera = scene.camera;
+        camera.setTransform(Cesium.Matrix4.IDENTITY);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
+    
+    scene.morphComplete.addEventListener(function() {
+        reset(scene);
+    });
 
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset(scene);

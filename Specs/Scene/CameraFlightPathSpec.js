@@ -151,26 +151,6 @@ defineSuite([
         expect(flight.easingFunction).toBeDefined();
     });
 
-    it('createAnimation throws if mode is morphing', function() {
-        expect( function() {
-            frameState.mode = SceneMode.MORPHING;
-            var destination = new Cartesian3(1e9, 1e9, 1e9);
-            CameraFlightPath.createAnimation(scene, {
-                destination : destination
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('createAnimationRectangle throws if mode is morphing', function() {
-        expect(function() {
-            frameState.mode = SceneMode.MORPHING;
-            var destination = new Rectangle(-1, -1, 1, 1);
-            CameraFlightPath.createAnimationRectangle(scene, {
-                destination : destination
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('creates an animation in 3d', function() {
         var camera = frameState.camera;
 
@@ -242,10 +222,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var startPosition = Cartesian3.clone(camera.position);
         var startDirection = Cartesian3.clone(camera.direction);
@@ -286,10 +262,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var startDirection = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
@@ -329,10 +301,6 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
@@ -378,10 +346,6 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
