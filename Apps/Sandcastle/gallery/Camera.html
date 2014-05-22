@@ -118,7 +118,7 @@ require(['Cesium'], function(Cesium) {
 
         // Zoom in
         camera.lookAt(
-                new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
+                new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
 
@@ -167,16 +167,7 @@ require(['Cesium'], function(Cesium) {
         controller.enableTilt = true;
         
         var camera = scene.camera;
-        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
-            return;
-        }
-
-        Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY, camera.transform);
-        camera.constrainedAxis = undefined;
-        camera.lookAt(
-                Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
+        camera.setTransform(Cesium.Matrix4.IDENTITY);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
