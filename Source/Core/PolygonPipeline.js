@@ -350,7 +350,7 @@ define([
      *
      * @param {Number} a1i Index of first vertex.
      * @param {Number} a2i Index of second vertex.
-     * @param {Object{position: Cartesian2, index: Number}[]} pArray Array of <code>{ position, index }</code> objects representing the polygon.
+     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
      * @returns {Boolean} If true, a cut from the first vertex to the second is internal and does not cross any other sides.
      *
      * @private
@@ -367,7 +367,7 @@ define([
      *
      * @param {Number} a1i Index of first vertex.
      * @param {Number} a2i Index of second vertex.
-     * @param {Object{position: Cartesian2, index: Number}[]} pArray Array of <code>{ position, index }</code> objects representing the polygon.
+     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing the polygon.
      * @returns {Boolean} If true, the cut formed between the two vertices is internal to the angle at vertex 1
      *
      * @private
@@ -607,7 +607,7 @@ define([
      *
      * @param {Cartesian2} a1 Position of first vertex.
      * @param {Cartesian2} a2 Position of second vertex.
-     * @param {Object{position: Cartesian2, index: Number}[]} pArray Array of <code>{ position, index }</code> objects representing polygon.
+     * @param {Array} pArray Array of <code>{ position, index }</code> objects representing polygon.
      * @returns {Boolean} The segment between a1 and a2 intersect another polygon side.
      *
      * @private
@@ -703,7 +703,7 @@ define([
      * which form a clean cut through the polygon, and divides the polygon
      * then continues to "chop" the two resulting polygons.
      *
-     * @param {Object{position: Cartesian2, index: Number}[]} nodeArray Array of <code>{ position, index }</code> objects representing polygon
+     * @param {Array} nodeArray Array of <code>{ position, index }</code> objects representing polygon
      * @returns {Number[]} Index array representing triangles that fill the polygon
      *
      * @exception {DeveloperError} Invalid polygon: must have at least three vertices.
