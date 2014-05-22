@@ -369,7 +369,7 @@ define([
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
         var distance = primitive._tileProvider.getDistanceToTile(tile, frameState, cameraPosition, cameraPositionCartographic);
-        tile.distance = distance;
+        tile._distance = distance;
 
         var height = context.drawingBufferHeight;
 
@@ -460,8 +460,15 @@ define([
     }
 
     function createRenderCommandsForSelectedTiles(primitive, context, frameState, commandList) {
+        function tileDistanceSortFunction(a, b) {
+            return a._distance - b._distance;
+        }
+
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
+
+        tilesToRender.sort(tileDistanceSortFunction);
+
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             tileProvider.renderTile(tilesToRender[i], context, frameState, commandList);
         }

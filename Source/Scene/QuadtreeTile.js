@@ -11,31 +11,43 @@ define([
         QuadtreeTileState) {
     "use strict";
 
-    var QuadtreeTile = function QuadtreeTile(description) {
+    /**
+     * A single tile in a {@link QuadtreePrimitive}.
+     *
+     * @alias QuadtreeTile
+     * @constructor
+     *
+     * @param {Number} options.level The level of the tile in the quadtree.
+     * @param {Number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.
+     * @param {Number} options.y The Y coordinate of the tile in the quadtree.  0 is the northernmost tile.
+     * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
+     * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
+     */
+    var QuadtreeTile = function QuadtreeTile(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description)) {
-            throw new DeveloperError('description is required.');
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
         }
-        if (!defined(description.x)) {
-            throw new DeveloperError('description.x is required.');
-        } else if (!defined(description.y)) {
-            throw new DeveloperError('description.y is required.');
-        } else if (description.x < 0 || description.y < 0) {
-            throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
+        if (!defined(options.x)) {
+            throw new DeveloperError('options.x is required.');
+        } else if (!defined(options.y)) {
+            throw new DeveloperError('options.y is required.');
+        } else if (options.x < 0 || options.y < 0) {
+            throw new DeveloperError('options.x and options.y must be greater than or equal to zero.');
         }
-        if (!defined(description.level)) {
-            throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
+        if (!defined(options.level)) {
+            throw new DeveloperError('options.level is required and must be greater than or equal to zero.');
         }
-        if (!defined(description.tilingScheme)) {
-            throw new DeveloperError('description.tilingScheme is required.');
+        if (!defined(options.tilingScheme)) {
+            throw new DeveloperError('options.tilingScheme is required.');
         }
         //>>includeEnd('debug');
 
-        this._tilingScheme = description.tilingScheme;
-        this._x = description.x;
-        this._y = description.y;
-        this._level = description.level;
-        this._parent = description.parent;
+        this._tilingScheme = options.tilingScheme;
+        this._x = options.x;
+        this._y = options.y;
+        this._level = options.level;
+        this._parent = options.parent;
         this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
         this._children = undefined;
 
