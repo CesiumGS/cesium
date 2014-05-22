@@ -7,6 +7,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/destroyObject',
         '../Core/Event',
         '../Core/FeatureDetection',
         '../Core/GeometryPipeline',
@@ -36,6 +37,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        destroyObject,
         Event,
         FeatureDetection,
         GeometryPipeline,
@@ -538,6 +540,7 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
+        return destroyObject(this);
     };
 
     GlobeSurfaceTileProvider.prototype._onLayerAdded = function(layer, index) {
