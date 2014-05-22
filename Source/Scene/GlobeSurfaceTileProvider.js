@@ -26,7 +26,7 @@ define([
         './GlobeSurfaceTile',
         './ImageryLayer',
         './ImageryState',
-        './QuadtreeTileState',
+        './QuadtreeTileLoadState',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -55,7 +55,7 @@ define([
         GlobeSurfaceTile,
         ImageryLayer,
         ImageryState,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         SceneMode) {
     "use strict";
 
@@ -316,7 +316,7 @@ define([
 
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
-     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileState#LOADING}.  This function should
+     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
      * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
      *
      * @memberof GlobeSurfaceTileProvider
@@ -547,7 +547,7 @@ define([
             // create TileImagerys for this layer for all previously loaded tiles
             this._quadtree.forEachLoadedTile(function(tile) {
                 if (layer._createTileImagerySkeletons(tile, terrainProvider)) {
-                    tile.state = QuadtreeTileState.LOADING;
+                    tile.state = QuadtreeTileLoadState.LOADING;
                 }
             });
 

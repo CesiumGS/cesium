@@ -3,7 +3,7 @@ defineSuite([
         'Scene/QuadtreePrimitive',
         'Core/defineProperties',
         'Core/GeographicTilingScheme',
-        'Scene/QuadtreeTileState',
+        'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext'
@@ -11,7 +11,7 @@ defineSuite([
         QuadtreePrimitive,
         defineProperties,
         GeographicTilingScheme,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         createContext,
         createFrameState,
         destroyContext) {
@@ -107,7 +107,7 @@ defineSuite([
         expect(tileProvider.renderTile).toHaveBeenCalled();
     });
 
-    it('stops loading a tile that moves to the READY state', function() {
+    it('stops loading a tile that moves to the DONE state', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
         tileProvider.isTileVisible.andReturn(true);
@@ -115,7 +115,7 @@ defineSuite([
         var calls = 0;
         tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
             ++calls;
-            tile.state = QuadtreeTileState.READY;
+            tile.state = QuadtreeTileLoadState.DONE;
         });
 
         var quadtree = new QuadtreePrimitive({

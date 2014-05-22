@@ -3,12 +3,12 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        './QuadtreeTileState'
+        './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        QuadtreeTileState) {
+        QuadtreeTileLoadState) {
     "use strict";
 
     /**
@@ -63,10 +63,10 @@ define([
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
-         * @type {QuadtreeTileState}
-         * @default {@link QuadtreeTileState.START}
+         * @type {QuadtreeTileLoadState}
+         * @default {@link QuadtreeTileLoadState.START}
          */
-        this.state = QuadtreeTileState.START;
+        this.state = QuadtreeTileLoadState.START;
 
         /**
          * Gets or sets a value indicating whether or not the tile is currently renderable.
@@ -131,6 +131,7 @@ define([
     defineProperties(QuadtreeTile.prototype, {
         /**
          * Gets the tiling scheme used to tile the surface.
+         * @memberof QuadtreeTile.prototype
          * @type {TilingScheme}
          */
         tilingScheme : {
@@ -141,6 +142,7 @@ define([
 
         /**
          * Gets the tile X coordinate.
+         * @memberof QuadtreeTile.prototype
          * @type {Number}
          */
         x : {
@@ -151,6 +153,7 @@ define([
 
         /**
          * Gets the tile Y coordinate.
+         * @memberof QuadtreeTile.prototype
          * @type {Number}
          */
         y : {
@@ -161,6 +164,7 @@ define([
 
         /**
          * Gets the level-of-detail, where zero is the coarsest, least-detailed.
+         * @memberof QuadtreeTile.prototype
          * @type {Number}
          */
         level : {
@@ -170,7 +174,8 @@ define([
         },
 
         /**
-         * Gest the parent tile of this tile.
+         * Gets the parent tile of this tile.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile}
          */
         parent : {
@@ -182,6 +187,7 @@ define([
         /**
          * Gets the cartographic rectangle of the tile, with north, south, east and
          * west properties in radians.
+         * @memberof QuadtreeTile.prototype
          * @type {Rectangle}
          */
         rectangle : {
@@ -191,8 +197,8 @@ define([
         },
 
         /**
-         * An array of tiles that would be at the next level of the tile tree.
-         * @memberof Tile.prototype
+         * An array of tiles that is at the next level of the tile tree.
+         * @memberof QuadtreeTile.prototype
          * @type {QuadtreeTile[]}
          */
         children : {
@@ -233,15 +239,55 @@ define([
             }
         },
 
+        /**
+         * Gets a value indicating whether or not this tile needs further loading.
+         * This property will return true if the {@link QuadtreeTile#state} is
+         * <code>START</code> or <code>LOADING</code>.
+         * @memberof QuadtreeTile.prototype
+         * @type {Boolean}
+         */
         needsLoading : {
             get : function() {
-                return this.state.value < QuadtreeTileState.READY.value;
+                return this.state.value < QuadtreeTileLoadState.DONE.value;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not this tile is eligible to be unloaded.
+         * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
+         * such as a request for data, is in progress on it.  A tile will never be
+         * unloaded while it is needed for rendering, regardless of the value of this
+         * property.  If {@link QuadtreeTile#data} is defined and has an
+         * <code>eligibleForUnloading</code> property, the value of that property is returned.
+         * Otherwise, this property returns true.
+         * @memberof QuadtreeTile.prototype
+         * @type {Boolean}
+         */
+        eligibleForUnloading : {
+            get : function() {
+                var result = true;
+
+                if (defined(this.data)) {
+                    result = this.data.eligibleForUnloading;
+                    if (!defined(result)) {
+                        result = true;
+                    }
+                }
+
+                return result;
             }
         }
     });
 
+    /**
+     * Frees the resources assocated with this tile and returns it to the <code>START</code>
+     * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
+     * has a <code>freeResources</code> method, the method will be invoked.
+     *
+     * @memberof QuadtreeTile
+     */
     QuadtreeTile.prototype.freeResources = function() {
-        this.state = QuadtreeTileState.START;
+        this.state = QuadtreeTileLoadState.START;
         this.renderable = false;
         this.upsampledFromParent = false;
 

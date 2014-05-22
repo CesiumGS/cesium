@@ -118,7 +118,7 @@ define([
 
     /**
      * Loads, or continues loading, a given tile.  This function will continue to be called
-     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileState#LOADING}.  This function should
+     * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
      * not be called before {@link QuadtreeTileProvider#ready} returns true.
      *
      * @memberof QuadtreeTileProvider

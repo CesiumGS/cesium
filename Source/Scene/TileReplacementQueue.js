@@ -53,25 +53,7 @@ define([
 
             var previous = tileToTrim.replacementPrevious;
 
-            // Do not remove tiles that are transitioning or that have
-            // imagery that is transitioning.
-            var loadedTerrain = tileToTrim.data.loadedTerrain;
-            var loadingIsTransitioning = defined(loadedTerrain) &&
-                                         (loadedTerrain.state === TerrainState.RECEIVING || loadedTerrain.state === TerrainState.TRANSFORMING);
-
-            var upsampledTerrain = tileToTrim.data.upsampledTerrain;
-            var upsamplingIsTransitioning = defined(upsampledTerrain) &&
-                                            (upsampledTerrain.state === TerrainState.RECEIVING || upsampledTerrain.state === TerrainState.TRANSFORMING);
-
-            var shouldRemoveTile = !loadingIsTransitioning && !upsamplingIsTransitioning;
-
-            var imagery = tileToTrim.data.imagery;
-            for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
-                var tileImagery = imagery[i];
-                shouldRemoveTile = !defined(tileImagery.loadingImagery) || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
-            }
-
-            if (shouldRemoveTile) {
+            if (tileToTrim.eligibleForUnloading) {
                 tileToTrim.freeResources();
                 remove(this, tileToTrim);
             }

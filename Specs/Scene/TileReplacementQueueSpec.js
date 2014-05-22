@@ -3,20 +3,20 @@ defineSuite([
         'Scene/TileReplacementQueue',
         'Core/defined',
         'Scene/ImageryState',
-        'Scene/QuadtreeTileState',
+        'Scene/QuadtreeTileLoadState',
         'Scene/TerrainState'
     ], function(
         TileReplacementQueue,
         defined,
         ImageryState,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         TerrainState) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;
-        this.state = QuadtreeTileState.LOADING;
+        this.state = QuadtreeTileLoadState.LOADING;
         this.data = {};
         this.data.imagery = [];
         if (defined(loadedState)) {

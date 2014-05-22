@@ -1,32 +1,16 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/QuadtreeTile',
-        'Core/CesiumTerrainProvider',
-        'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
-        'Core/WebMercatorTilingScheme',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreeTileState',
-        'Scene/TerrainState',
-        'Specs/createContext',
-        'Specs/destroyContext',
-        'ThirdParty/when'
+        'Core/WebMercatorTilingScheme'
     ], function(
         QuadtreeTile,
-        CesiumTerrainProvider,
-        defined,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
-        WebMercatorTilingScheme,
-        ImageryLayerCollection,
-        QuadtreeTileState,
-        TerrainState,
-        createContext,
-        destroyContext,
-        when) {
+        WebMercatorTilingScheme) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

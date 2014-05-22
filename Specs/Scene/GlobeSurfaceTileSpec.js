@@ -9,7 +9,7 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryLayerCollection',
         'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileState',
+        'Scene/QuadtreeTileLoadState',
         'Scene/TerrainState',
         'Specs/createContext',
         'Specs/destroyContext',
@@ -24,7 +24,7 @@ defineSuite([
         WebMercatorTilingScheme,
         ImageryLayerCollection,
         QuadtreeTile,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         TerrainState,
         createContext,
         destroyContext,
@@ -100,13 +100,13 @@ defineSuite([
         it('starts in the START state', function() {
             for (var i = 0; i < rootTiles.length; ++i) {
                 var tile = rootTiles[i];
-                expect(tile.state).toBe(QuadtreeTileState.START);
+                expect(tile.state).toBe(QuadtreeTileLoadState.START);
             }
         });
 
         it('transitions to the LOADING state immediately', function() {
             GlobeSurfaceTile.processStateMachine(rootTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-            expect(rootTile.state).toBe(QuadtreeTileState.LOADING);
+            expect(rootTile.state).toBe(QuadtreeTileLoadState.LOADING);
         });
 
         it('creates loadedTerrain but not upsampledTerrain for root tiles', function() {
@@ -127,7 +127,7 @@ defineSuite([
         it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function() {
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                return rootTile.state === QuadtreeTileState.READY;
+                return rootTile.state === QuadtreeTileLoadState.DONE;
             }, 'root tile to become ready');
 
             runs(function() {
@@ -284,7 +284,7 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileState.READY;
+                return childTile.state === QuadtreeTileLoadState.DONE;
             }, 'child tile to be ready');
 
             runs(function() {
@@ -327,7 +327,7 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(grandchildTile, context, realTerrainProvider, imageryLayerCollection);
-                return grandchildTile.state === QuadtreeTileState.READY;
+                return grandchildTile.state === QuadtreeTileLoadState.DONE;
             }, 'grandchild to be ready');
 
             runs(function() {
@@ -337,11 +337,11 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileState.READY;
+                return childTile.state === QuadtreeTileLoadState.DONE;
             });
 
             runs(function() {
-                expect(grandchildTile.state).toBe(QuadtreeTileState.READY);
+                expect(grandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(grandchildTile.data.loadedTerrain).toBeUndefined();
                 expect(grandchildTile.data.upsampledTerrain).toBeUndefined();
             });
@@ -368,7 +368,7 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(greatGrandchildTile, context, realTerrainProvider, imageryLayerCollection);
-                return greatGrandchildTile.state === QuadtreeTileState.READY;
+                return greatGrandchildTile.state === QuadtreeTileLoadState.DONE;
             }, 'great-grandchild to be ready');
 
             runs(function() {
@@ -379,12 +379,12 @@ defineSuite([
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileState.READY &&
+                return childTile.state === QuadtreeTileLoadState.DONE &&
                        !defined(grandchildTile.data.upsampledTerrain);
             }, 'child to be loaded and grandchild to be upsampled.');
 
             runs(function() {
-                expect(greatGrandchildTile.state).toBe(QuadtreeTileState.READY);
+                expect(greatGrandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(greatGrandchildTile.data.loadedTerrain).toBeUndefined();
                 expect(greatGrandchildTile.data.upsampledTerrain).toBeUndefined();
             });
@@ -396,12 +396,12 @@ defineSuite([
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
                 GlobeSurfaceTile.processStateMachine(childTile, context, alwaysFailTerrainProvider, imageryLayerCollection);
-                return rootTile.state.value >= QuadtreeTileState.READY.value &&
-                       childTile.state.value >= QuadtreeTileState.READY.value;
+                return rootTile.state.value >= QuadtreeTileLoadState.DONE.value &&
+                       childTile.state.value >= QuadtreeTileLoadState.DONE.value;
             }, 'child tile to be in its final state');
 
             runs(function() {
-                expect(rootTile.state).toBe(QuadtreeTileState.READY);
+                expect(rootTile.state).toBe(QuadtreeTileLoadState.DONE);
                 expect(childTile.upsampledFromParent).toBe(true);
             });
         });
@@ -427,14 +427,14 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, allWaterTerrainProvider, imageryLayerCollection);
-                return rootTile.state === QuadtreeTileState.READY;
+                return rootTile.state === QuadtreeTileLoadState.DONE;
             }, 'root tile to be ready');
 
             var childTile = rootTile.children[0];
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, context, allWaterTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileState.READY;
+                return childTile.state === QuadtreeTileLoadState.DONE;
             }, 'child tile to be ready');
 
             runs(function() {
@@ -464,14 +464,14 @@ defineSuite([
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(rootTile, context, allLandTerrainProvider, imageryLayerCollection);
-                return rootTile.state === QuadtreeTileState.READY;
+                return rootTile.state === QuadtreeTileLoadState.DONE;
             }, 'root tile to be ready');
 
             var childTile = rootTile.children[0];
 
             waitsFor(function() {
                 GlobeSurfaceTile.processStateMachine(childTile, context, allLandTerrainProvider, imageryLayerCollection);
-                return childTile.state === QuadtreeTileState.READY;
+                return childTile.state === QuadtreeTileLoadState.DONE;
             }, 'child tile to be ready');
 
             runs(function() {

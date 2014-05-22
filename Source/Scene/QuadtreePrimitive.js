@@ -11,7 +11,7 @@ define([
         '../Core/Queue',
         './QuadtreeOccluders',
         './QuadtreeTile',
-        './QuadtreeTileState',
+        './QuadtreeTileLoadState',
         './SceneMode',
         './TileReplacementQueue'
     ], function(
@@ -26,7 +26,7 @@ define([
         Queue,
         QuadtreeOccluders,
         QuadtreeTile,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
     "use strict";

@@ -14,7 +14,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         './ImageryState',
-        './QuadtreeTileState',
+        './QuadtreeTileLoadState',
         './TerrainState',
         './TileTerrain'
     ], function(
@@ -32,7 +32,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         ImageryState,
-        QuadtreeTileState,
+        QuadtreeTileLoadState,
         TerrainState,
         TileTerrain) {
     "use strict";
@@ -126,6 +126,39 @@ define([
         this.upsampledTerrain = undefined;
     };
 
+    defineProperties(GlobeSurfaceTile.prototype, {
+        /**
+         * Gets a value indicating whether or not this tile is eligible to be unloaded.
+         * Typically, a tile is ineligible to be unloaded while an asynchronous operation,
+         * such as a request for data, is in progress on it.  A tile will never be
+         * unloaded while it is needed for rendering, regardless of the value of this
+         * property.
+         * @memberof GlobeSurfaceTile.prototype
+         * @type {Boolean}
+         */
+        eligibleForUnloading : {
+            get : function() {
+                // Do not remove tiles that are transitioning or that have
+                // imagery that is transitioning.
+                var loadedTerrain = this.loadedTerrain;
+                var loadingIsTransitioning = defined(loadedTerrain) &&
+                                             (loadedTerrain.state === TerrainState.RECEIVING || loadedTerrain.state === TerrainState.TRANSFORMING);
+
+                var upsampledTerrain = this.upsampledTerrain;
+                var upsamplingIsTransitioning = defined(upsampledTerrain) &&
+                                                (upsampledTerrain.state === TerrainState.RECEIVING || upsampledTerrain.state === TerrainState.TRANSFORMING);
+
+                var shouldRemoveTile = !loadingIsTransitioning && !upsamplingIsTransitioning;
+
+                var imagery = this.imagery;
+                for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
+                    var tileImagery = imagery[i];
+                    shouldRemoveTile = !defined(tileImagery.loadingImagery) || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
+                }
+            }
+        }
+    });
+
     GlobeSurfaceTile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
             --this.waterMaskTexture.referenceCount;
@@ -196,12 +229,12 @@ define([
             surfaceTile = tile.data = new GlobeSurfaceTile();
         }
 
-        if (tile.state === QuadtreeTileState.START) {
+        if (tile.state === QuadtreeTileLoadState.START) {
             prepareNewTile(tile, terrainProvider, imageryLayerCollection);
-            tile.state = QuadtreeTileState.LOADING;
+            tile.state = QuadtreeTileLoadState.LOADING;
         }
 
-        if (tile.state === QuadtreeTileState.LOADING) {
+        if (tile.state === QuadtreeTileLoadState.LOADING) {
             processTerrainStateMachine(tile, context, terrainProvider);
         }
 
@@ -259,7 +292,7 @@ define([
             }
 
             if (isDoneLoading) {
-                tile.state = QuadtreeTileState.READY;
+                tile.state = QuadtreeTileLoadState.DONE;
             }
         }
     };
@@ -446,7 +479,7 @@ define([
         if (defined(tile._children)) {
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile._children[childIndex];
-                if (childTile.state !== QuadtreeTileState.START) {
+                if (childTile.state !== QuadtreeTileLoadState.START) {
                     var childSurfaceTile = childTile.data;
                     if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
@@ -466,7 +499,7 @@ define([
                         level : tile.level
                     });
 
-                    childTile.state = QuadtreeTileState.LOADING;
+                    childTile.state = QuadtreeTileLoadState.LOADING;
                 }
             }
         }
@@ -482,7 +515,7 @@ define([
         if (defined(tile.children)) {
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
                 var childTile = tile.children[childIndex];
-                if (childTile.state !== QuadtreeTileState.START) {
+                if (childTile.state !== QuadtreeTileLoadState.START) {
                     var childSurfaceTile = childTile.data;
                     if (defined(childSurfaceTile.terrainData) && !childSurfaceTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.
@@ -510,7 +543,7 @@ define([
                         }
                     }
 
-                    childTile.state = QuadtreeTileState.LOADING;
+                    childTile.state = QuadtreeTileLoadState.LOADING;
                 }
             }
         }
