@@ -20,7 +20,6 @@ define([
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
-        './CameraColumbusViewMode',
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode'
@@ -45,7 +44,6 @@ define([
         Ray,
         Transforms,
         AnimationCollection,
-        CameraColumbusViewMode,
         CameraEventAggregator,
         CameraEventType,
         SceneMode) {
@@ -149,12 +147,6 @@ define([
          * @default 0.1
          */
         this.maximumMovementRatio = 0.1;
-        /**
-         * Sets the behavior in Columbus view.
-         * @type {CameraColumbusViewMode}
-         * @default {@link CameraColumbusViewMode.FREE}
-         */
-        this.columbusViewMode = CameraColumbusViewMode.FREE;
         /**
          * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
          * @type {Number}
@@ -565,9 +557,14 @@ define([
             controller._animationCollection.removeAll();
         }
 
-        reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-        reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
+            reactToInput(controller, frameState, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        } else {
+            reactToInput(controller, frameState, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, frameState, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        }
 
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
@@ -644,6 +641,7 @@ define([
     var rotateCVOrigin = new Cartesian3();
     var rotateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
     var rotateCVCartesian3 = new Cartesian3();
+    var rotateCVCart = new Cartographic();
 
     function rotateCV(controller, startPosition, movement, frameState) {
         if (defined(movement.angleAndHeight)) {
@@ -748,7 +746,7 @@ define([
     }
 
     function updateCV(controller, frameState) {
-        if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
                 reactToInput(controller, frameState, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
                 reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {

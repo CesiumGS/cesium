@@ -278,12 +278,41 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('transforms to the cameras reference frame', function() {
+    it('worldToCameraCoordinates transforms to the cameras reference frame', function() {
         camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                        1.0, 0.0, 0.0, 0.0,
                                        0.0, 1.0, 0.0, 0.0,
                                        0.0, 0.0, 0.0, 1.0);
         expect(camera.worldToCameraCoordinates(Cartesian4.UNIT_X)).toEqual(Cartesian4.UNIT_Z);
+    });
+
+    it('worldToCameraCoordinatesPoint throws without cartesian', function() {
+        expect(function() {
+            camera.worldToCameraCoordinatesPoint();
+        }).toThrowDeveloperError();
+    });
+
+    it('worldToCameraCoordinatesPoint transforms to the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                       1.0, 0.0, 0.0, 20.0,
+                                       0.0, 1.0, 0.0, 30.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        var expected = Cartesian3.add(Matrix4.getColumn(camera.inverseTransform, 3), Cartesian3.UNIT_Z);
+        expect(camera.worldToCameraCoordinatesPoint(Cartesian3.UNIT_X)).toEqual(expected);
+    });
+
+    it('worldToCameraCoordinatesVector throws without cartesian', function() {
+        expect(function() {
+            camera.worldToCameraCoordinatesVector();
+        }).toThrowDeveloperError();
+    });
+
+    it('worldToCameraCoordinatesVector transforms to the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                       1.0, 0.0, 0.0, 20.0,
+                                       0.0, 1.0, 0.0, 30.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        expect(camera.worldToCameraCoordinatesVector(Cartesian3.UNIT_X)).toEqual(Cartesian3.UNIT_Z);
     });
 
     it('cameraToWorldCoordinates throws without cartesian', function() {
@@ -292,12 +321,41 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('transforms from the cameras reference frame', function() {
+    it('cameraToWorldCoordinates transforms from the cameras reference frame', function() {
         camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                        1.0, 0.0, 0.0, 0.0,
                                        0.0, 1.0, 0.0, 0.0,
                                        0.0, 0.0, 0.0, 1.0);
         expect(camera.cameraToWorldCoordinates(Cartesian4.UNIT_Z)).toEqual(Cartesian4.UNIT_X);
+    });
+
+    it('cameraToWorldCoordinatesPoint throws without cartesian', function() {
+        expect(function() {
+            camera.cameraToWorldCoordinatesPoint();
+        }).toThrowDeveloperError();
+    });
+
+    it('cameraToWorldCoordinatesPoint transforms from the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                       1.0, 0.0, 0.0, 20.0,
+                                       0.0, 1.0, 0.0, 30.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        var expected = Cartesian3.add(Cartesian3.UNIT_X, Matrix4.getColumn(camera.transform, 3));
+        expect(camera.cameraToWorldCoordinatesPoint(Cartesian3.UNIT_Z)).toEqual(expected);
+    });
+
+    it('cameraToWorldCoordinatesVector throws without cartesian', function() {
+        expect(function() {
+            camera.cameraToWorldCoordinatesVector();
+        }).toThrowDeveloperError();
+    });
+
+    it('cameraToWorldCoordinatesVector transforms from the cameras reference frame', function() {
+        camera.transform = new Matrix4(0.0, 0.0, 1.0, 10.0,
+                                       1.0, 0.0, 0.0, 20.0,
+                                       0.0, 1.0, 0.0, 30.0,
+                                       0.0, 0.0, 0.0, 1.0);
+        expect(camera.cameraToWorldCoordinatesVector(Cartesian3.UNIT_Z)).toEqual(Cartesian3.UNIT_X);
     });
 
     it('move throws without an axis', function() {
@@ -733,7 +791,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('lookAt throws in 2D mode', function() {
+    it('lookAt in 2D mode', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -741,13 +799,21 @@ defineSuite([
         frustum.right = 2.0;
         frustum.top = 1.0;
         frustum.bottom = -1.0;
-        camera.frustum = frustum;
 
-        camera.update(SceneMode.SCENE2D, { projection : new GeographicProjection() });
+        var target = new Cartesian3();
+        var position = new Cartesian3(10000.0, 10000.0, 30000.0);
+        var up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
-        expect(function() {
-            camera.lookAt(Cartesian3.UNIT_X, Cartesian3.ZERO, Cartesian3.UNIT_Y);
-        }).toThrowDeveloperError();
+        var tempCamera = camera.clone();
+        tempCamera.frustum = frustum;
+        tempCamera.update(SceneMode.SCENE2D, { projection : new GeographicProjection() });
+        tempCamera.lookAt(position, target, up);
+        expect(Cartesian2.clone(tempCamera.position)).toEqual(Cartesian2.clone(target));
+        expect(tempCamera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z));
+        expect(tempCamera.up).toEqual(Cartesian3.UNIT_Y);
+        expect(tempCamera.right).toEqual(Cartesian3.UNIT_X);
+        expect(tempCamera.frustum.right).toEqual(position.z);
+        expect(tempCamera.frustum.left).toEqual(-position.z);
     });
 
     it('lookAt throws when morphing', function() {
@@ -1121,13 +1187,7 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
-
-        camera._mode = SceneMode.COLUMBUS_VIEW;
-        camera._projection = projection;
+        camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection() });
 
         var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
         var p = camera.pickEllipsoid(windowCoord);
@@ -1372,10 +1432,6 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, maxRadii * 5.0);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var projection = new GeographicProjection();
         camera.update(SceneMode.COLUMBUS_VIEW, { projection : projection });
@@ -1422,10 +1478,6 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, maxRadii * 5.0);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         var projection = new WebMercatorProjection();
         camera.update(SceneMode.COLUMBUS_VIEW, { projection : projection });

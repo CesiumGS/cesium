@@ -8,7 +8,6 @@ define([
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Scene/Camera',
-        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
@@ -22,7 +21,6 @@ define([
         Matrix4,
         Rectangle,
         Camera,
-        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         knockout,
@@ -34,7 +32,6 @@ define([
         var controller = scene.screenSpaceCameraController;
 
         controller.globe = scene.globe;
-        controller.columbusViewMode = CameraColumbusViewMode.FREE;
 
         if (defined(scene) && mode === SceneMode.MORPHING) {
             scene.completeMorph();
@@ -46,10 +43,7 @@ define([
             options = {
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
-                endReferenceFrame : new Matrix4(0, 0, 1, 0,
-                                                1, 0, 0, 0,
-                                                0, 1, 0, 0,
-                                                0, 0, 0, 1)
+                endReferenceFrame : Matrix4.IDENTITY
             };
             flight = CameraFlightPath.createAnimationRectangle(scene, options);
             scene.animations.add(flight);
@@ -76,10 +70,7 @@ define([
                 duration : duration,
                 up : up,
                 direction : direction,
-                endReferenceFrame : new Matrix4(0, 0, 1, 0,
-                                                1, 0, 0, 0,
-                                                0, 1, 0, 0,
-                                                0, 0, 0, 1),
+                endReferenceFrame : Matrix4.IDENTITY,
                 convert : false
             };
 
