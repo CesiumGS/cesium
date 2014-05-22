@@ -95,18 +95,20 @@ define([
      *
      * @returns {Number} The size in bytes.
      *
+     * @exception {DeveloperError} componentDatatype is not a valid value.
+     * 
      * @example
      * // Returns Int8Array.BYTES_PER_ELEMENT
      * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
      */
-    ComponentDatatype.getSizeInBytes = function(value){
+    ComponentDatatype.getSizeInBytes = function(componentDatatype){
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
 
-        switch (value) {
+        switch (componentDatatype) {
         case ComponentDatatype.BYTE:
             return Int8Array.BYTES_PER_ELEMENT;
         case ComponentDatatype.UNSIGNED_BYTE:
@@ -120,7 +122,7 @@ define([
         case ComponentDatatype.DOUBLE:
             return Float64Array.BYTES_PER_ELEMENT;
         default:
-            throw new DeveloperError('value is not a valid value.');
+            throw new DeveloperError('componentDatatype is not a valid value.');
         }
     };
 
