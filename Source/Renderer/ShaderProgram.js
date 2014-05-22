@@ -359,27 +359,8 @@ define([
          */
         this.maximumTextureUnitIndex = undefined;
 
-        /**
-         * GLSL source for the shader program's vertex shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.vertexShaderSource = vertexShaderSource;
-
-        /**
-         * GLSL source for the shader program's fragment shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.fragmentShaderSource = fragmentShaderSource;
+        this._vertexShaderSource = vertexShaderSource;
+        this._fragmentShaderSource = fragmentShaderSource;
 
         /**
          * @private
@@ -388,6 +369,36 @@ define([
     };
 
     defineProperties(ShaderProgram.prototype, {
+        /**
+         * GLSL source for the shader program's vertex shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @memberof ShaderProgram.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        vertexShaderSource: {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
+        /**
+         * GLSL source for the shader program's fragment shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @memberof ShaderProgram.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        fragmentShaderSource: {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
         vertexAttributes: {
             get : function() {
                 initialize(this);

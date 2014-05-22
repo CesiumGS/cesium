@@ -1,34 +1,34 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
-        './Credit',
         './DiscardMissingTileImagePolicy',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        './ImageryProvider'
     ], function(
         Cartesian2,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
-        when,
-        Credit,
-        DiscardMissingTileImagePolicy,
         GeographicTilingScheme,
-        ImageryProvider,
+        jsonp,
         TileProviderError,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        when,
+        DiscardMissingTileImagePolicy,
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -63,8 +63,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
@@ -387,6 +387,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

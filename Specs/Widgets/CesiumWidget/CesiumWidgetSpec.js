@@ -2,8 +2,8 @@
 defineSuite([
         'Widgets/CesiumWidget/CesiumWidget',
         'Core/Clock',
+        'Core/EllipsoidTerrainProvider',
         'Core/ScreenSpaceEventHandler',
-        'Scene/EllipsoidTerrainProvider',
         'Scene/Scene',
         'Scene/SceneMode',
         'Scene/SkyBox',
@@ -12,8 +12,8 @@ defineSuite([
     ], function(
         CesiumWidget,
         Clock,
-        ScreenSpaceEventHandler,
         EllipsoidTerrainProvider,
+        ScreenSpaceEventHandler,
         Scene,
         SceneMode,
         SkyBox,

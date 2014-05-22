@@ -22,7 +22,7 @@ define([
 
     /**
      * A widget for finding addresses and landmarks, and flying the camera to them.  Geocoding is
-     * performed using the <a href="http://msdn.microsoft.com/en-us/library/ff701715.aspx">Bing Maps Locations API</a>.
+     * performed using the {@link http://msdn.microsoft.com/en-us/library/ff701715.aspx|Bing Maps Locations API}.
      *
      * @alias Geocoder
      * @constructor
@@ -31,7 +31,7 @@ define([
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps

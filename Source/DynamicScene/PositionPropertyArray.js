@@ -23,10 +23,10 @@ define([
      * A {@link PositionProperty} whose value is an array whose items are the computed value
      * of other PositionProperty instances.
      *
-     * @alias PositionProperty
+     * @alias PositionPropertyArray
      * @constructor
      *
-     * @param {Array} [value] An array of Property instances.
+     * @param {Property[]} [value] An array of Property instances.
      */
     var PositionPropertyArray = function(value, referenceFrame) {
         this._value = undefined;
@@ -89,8 +89,8 @@ define([
      * @memberof PositionPropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
-     * @param {Array} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Array} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {Cartesian3[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PositionPropertyArray.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
@@ -144,7 +144,7 @@ define([
      * If the value is an object, the object must provide clone and equals functions.
      * @memberof PositionPropertyArray
      *
-     * @param {Array} value An array of Property instances.
+     * @param {Property[]} value An array of Property instances.
      */
     PositionPropertyArray.prototype.setValue = function(value) {
         var eventHelper = this._eventHelper;

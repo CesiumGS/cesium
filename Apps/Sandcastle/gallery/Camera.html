@@ -28,9 +28,9 @@ require(['Cesium'], function(Cesium) {
     "use strict";
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
-        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
-
-        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene, {
+        var destination = Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0);
+        
+        var flight = Cesium.CameraFlightPath.createAnimation(scene, {
             destination : destination
         });
         scene.animations.add(flight);
@@ -179,9 +179,8 @@ require(['Cesium'], function(Cesium) {
         controller.enableTilt = true;
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset(scene);

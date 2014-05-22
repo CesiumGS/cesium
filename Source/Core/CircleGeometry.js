@@ -29,7 +29,7 @@ define([
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see CircleGeometry#createGeometry
+     * @see CircleGeometry.createGeometry
      *
      * @example
      * // Create a circle.

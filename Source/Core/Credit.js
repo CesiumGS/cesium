@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
+        './defined',
+        './defineProperties',
+        './DeveloperError'
     ], function(
         defined,
         defineProperties,
@@ -12,9 +12,9 @@ define([
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      *
-     *  @param {String} [text=undefined] The text to be displayed on the screen if no imageUrl is specified.
-     *  @param {String} [imageUrl=undefined] The source location for an image
-     *  @param {String} [link=undefined] A URL location for which the credit will be hyperlinked
+     *  @param {String} [text] The text to be displayed on the screen if no imageUrl is specified.
+     *  @param {String} [imageUrl] The source location for an image
+     *  @param {String} [link] A URL location for which the credit will be hyperlinked
      *
      *  @alias Credit
      *  @constructor

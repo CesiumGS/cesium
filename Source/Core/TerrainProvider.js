@@ -1,18 +1,12 @@
 /*global define*/
 define([
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/IndexDatatype',
-        '../Renderer/BufferUsage'
+        './defined',
+        './defineProperties',
+        './DeveloperError'
     ], function(
-        ComponentDatatype,
         defined,
         defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        BufferUsage) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -74,19 +68,27 @@ define([
         }
     });
 
-    /**
-     * Specifies the indices of the attributes of the terrain geometry.
-     *
-     * @memberof TerrainProvider
-     */
-    TerrainProvider.attributeLocations = {
-        position3DAndHeight : 0,
-        textureCoordinates : 1
-    };
-
     var regularGridIndexArrays = [];
 
+    /**
+     * Gets a list of indices for a triangle mesh representing a regular grid.  Calling
+     * this function multiple times with the same grid width and height returns the
+     * same list of indices.  The total number of vertices must be less than or equal
+     * to 65536.
+     *
+     * @memberof TerrainProvider
+     *
+     * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
+     * @param {Number} height The number of vertices in the regular grid in the vertical direction.
+     * @returns {Uint16Array} The list of indices.
+     */
     TerrainProvider.getRegularGridIndices = function(width, height) {
+        //>>includeStart('debug', pragmas.debug);
+        if (width * height > 64 * 1024) {
+            throw new DeveloperError('The total number of vertices (width * height) must be less than or equal to 65536.');
+        }
+        //>>includeEnd('debug');
+
         var byWidth = regularGridIndexArrays[width];
         if (!defined(byWidth)) {
             regularGridIndexArrays[width] = byWidth = [];
@@ -119,91 +121,6 @@ define([
         }
 
         return indices;
-    };
-
-    function addTriangle(lines, linesIndex, i0, i1, i2) {
-        lines[linesIndex++] = i0;
-        lines[linesIndex++] = i1;
-
-        lines[linesIndex++] = i1;
-        lines[linesIndex++] = i2;
-
-        lines[linesIndex++] = i2;
-        lines[linesIndex++] = i0;
-
-        return linesIndex;
-    }
-
-    function trianglesToLines(triangles) {
-        var count = triangles.length;
-        var lines = new Uint16Array(2 * count);
-        var linesIndex = 0;
-        for ( var i = 0; i < count; i += 3) {
-            linesIndex = addTriangle(lines, linesIndex, triangles[i], triangles[i + 1], triangles[i + 2]);
-        }
-
-        return lines;
-    }
-
-    TerrainProvider.createTileEllipsoidGeometryFromBuffers = function(context, buffers, tileTerrain, includesHeights) {
-        var datatype = ComponentDatatype.FLOAT;
-        var typedArray = buffers.vertices;
-        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 5 * datatype.sizeInBytes;
-        var position3DAndHeightLength = 3;
-
-        if (includesHeights) {
-            stride += datatype.sizeInBytes;
-            ++position3DAndHeightLength;
-        }
-
-        var attributes = [{
-            index : TerrainProvider.attributeLocations.position3DAndHeight,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : position3DAndHeightLength,
-            offsetInBytes : 0,
-            strideInBytes : stride
-        }, {
-            index : TerrainProvider.attributeLocations.textureCoordinates,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : 2,
-            offsetInBytes : position3DAndHeightLength * datatype.sizeInBytes,
-            strideInBytes : stride
-        }];
-
-        var indexBuffers = buffers.indices.indexBuffers || {};
-        var indexBuffer = indexBuffers[context.id];
-        if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
-            var indices = buffers.indices;
-            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-            indexBuffer.vertexArrayDestroyable = false;
-            indexBuffer.referenceCount = 1;
-            indexBuffers[context.id] = indexBuffer;
-            buffers.indices.indexBuffers = indexBuffers;
-        } else {
-            ++indexBuffer.referenceCount;
-        }
-
-        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
-    };
-
-    /**
-     * Creates a vertex array for wireframe rendering of a terrain tile.
-     *
-     * @private
-     *
-     * @param {Context} context The context in which to create the vertex array.
-     * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
-     *                      will share vertex buffers with this existing one.
-     * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
-     * @returns {VertexArray} The vertex array for wireframe rendering.
-     */
-    TerrainProvider.createWireframeVertexArray = function(context, vertexArray, terrainMesh) {
-        var wireframeIndices = trianglesToLines(terrainMesh.indices);
-        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
-        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     };
 
     /**

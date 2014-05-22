@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/CompositePrimitive',
+        'Scene/PrimitiveCollection',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/defaultValue',
@@ -19,7 +19,7 @@ defineSuite([
         'Specs/pick',
         'Specs/render'
     ], function(
-        CompositePrimitive,
+        PrimitiveCollection,
         Cartesian3,
         Cartographic,
         defaultValue,
@@ -54,7 +54,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        primitives = new CompositePrimitive();
+        primitives = new PrimitiveCollection();
 
         camera = createCamera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -99,6 +99,16 @@ defineSuite([
         polygon.asynchronous = false;
         return polygon;
     }
+
+    it('constructs with options', function() {
+        var collection = new PrimitiveCollection({
+            show : false,
+            destroyPrimitives : false
+        });
+        expect(collection.show).toEqual(false);
+        expect(collection.destroyPrimitives).toEqual(false);
+        collection.destroy();
+    });
 
     it('gets default show', function() {
         expect(primitives.show).toEqual(true);
@@ -202,7 +212,7 @@ defineSuite([
         primitives.add(p);
         primitives.destroyPrimitives = false;
 
-        var otherPrimitives = new CompositePrimitive(context);
+        var otherPrimitives = new PrimitiveCollection();
         otherPrimitives.add(p);
         otherPrimitives.destroyPrimitives = false;
 
@@ -230,7 +240,7 @@ defineSuite([
         var p = createLabels();
         primitives.add(p);
 
-        var otherPrimitives = new CompositePrimitive(context);
+        var otherPrimitives = new PrimitiveCollection();
 
         expect(otherPrimitives.contains(p)).toEqual(false);
         expect(otherPrimitives.remove(p)).toEqual(false);
@@ -260,7 +270,7 @@ defineSuite([
     });
 
     it('renders a primitive in more than one composite', function() {
-        var otherPrimitives = new CompositePrimitive(context);
+        var otherPrimitives = new PrimitiveCollection();
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -287,7 +297,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var children = new CompositePrimitive();
+        var children = new PrimitiveCollection();
         children.add(createLabels());
         primitives.add(children);
 
@@ -319,7 +329,7 @@ defineSuite([
         var labels = createLabels();
         var l = labels.get(0);
 
-        var children = new CompositePrimitive();
+        var children = new PrimitiveCollection();
         children.add(labels);
         primitives.add(children);
 
@@ -451,7 +461,7 @@ defineSuite([
     });
 
     it('is destroyed after calling destroy()', function() {
-        var p = new CompositePrimitive();
+        var p = new PrimitiveCollection();
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
     });
@@ -469,7 +479,7 @@ defineSuite([
     it('destroys children', function() {
         var labels = new LabelCollection(context);
 
-        var children = new CompositePrimitive();
+        var children = new PrimitiveCollection();
         children.add(labels);
 
         primitives.add(children);

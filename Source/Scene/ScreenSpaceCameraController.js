@@ -56,7 +56,7 @@ define([
      * @alias ScreenSpaceCameraController
      * @constructor
      *
-     * @param {HTMLCanvas} canvas The canvas.
+     * @param {Canvas} canvas The canvas to listen for events.
      * @param {Camera} camera The camera.
      * @param {Globe|Ellipsoid} [globeOrEllipsoid=Ellipsoid.WGS84] The globe or ellipsoid to use to determine camera movement direction and speed.
      */

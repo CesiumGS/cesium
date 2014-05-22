@@ -337,9 +337,9 @@ define([
      * Converts the provided array of cartographics to an array of Cartesians.
      * @memberof Ellipsoid
      *
-     * @param {Array} cartographics An array of cartographic positions.
-     * @param {Array} [result] The object onto which to store the result.
-     * @returns {Array} The modified result parameter or a new Array instance if none was provided.
+     * @param {Cartographic[]} cartographics An array of cartographic positions.
+     * @param {Cartesian3[]} [result] The object onto which to store the result.
+     * @returns {Cartesian3[]} The modified result parameter or a new Array instance if none was provided.
      *
      * @example
      * //Convert an array of Cartographics and determine their Cartesian representation on a WGS84 ellipsoid.
@@ -413,15 +413,15 @@ define([
      * Converts the provided array of cartesians to an array of cartographics.
      * @memberof Ellipsoid
      *
-     * @param {Array} cartesians An array of Cartesian positions.
-     * @param {Array} [result] The object onto which to store the result.
-     * @returns {Array} The modified result parameter or a new Array instance if none was provided.
+     * @param {Cartesian3[]} cartesians An array of Cartesian positions.
+     * @param {Cartographic[]} [result] The object onto which to store the result.
+     * @returns {Cartographic[]} The modified result parameter or a new Array instance if none was provided.
      *
      * @example
      * //Create an array of Cartesians and determine their Cartographic representation on a WGS84 ellipsoid.
-     * var positions = [new Cesium.Cartesian(17832.12, 83234.52, 952313.73),
-     *                  new Cesium.Cartesian(17832.13, 83234.53, 952313.73),
-     *                  new Cesium.Cartesian(17832.14, 83234.54, 952313.73)]
+     * var positions = [new Cesium.Cartesian3(17832.12, 83234.52, 952313.73),
+     *                  new Cesium.Cartesian3(17832.13, 83234.53, 952313.73),
+     *                  new Cesium.Cartesian3(17832.14, 83234.54, 952313.73)]
      * var cartographicPositions = Cesium.Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {

@@ -6,8 +6,10 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PixelFormat',
+        '../Core/RuntimeError',
         './MipmapHint',
         './PixelDatatype',
         './TextureMagnificationFilter',
@@ -20,8 +22,10 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         CesiumMath,
         PixelFormat,
+        RuntimeError,
         MipmapHint,
         PixelDatatype,
         TextureMagnificationFilter,
@@ -32,9 +36,112 @@ define([
     /**
      * @private
      */
-    var Texture = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY) {
-        this._gl = gl;
-        this._textureFilterAnisotropic = textureFilterAnisotropic;
+    var Texture = function(context, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var source = options.source;
+        var width = defined(source) ? source.width : options.width;
+        var height = defined(source) ? source.height : options.height;
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
+        var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(width) || !defined(height)) {
+            throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
+        }
+
+        if (width <= 0) {
+            throw new DeveloperError('Width must be greater than zero.');
+        }
+
+        if (width > context._maximumTextureSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        }
+
+        if (height <= 0) {
+            throw new DeveloperError('Height must be greater than zero.');
+        }
+
+        if (height > context._maximumTextureSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        }
+
+        if (!PixelFormat.validate(pixelFormat)) {
+            throw new DeveloperError('Invalid options.pixelFormat.');
+        }
+
+        if (!PixelDatatype.validate(pixelDatatype)) {
+            throw new DeveloperError('Invalid options.pixelDatatype.');
+        }
+
+        if ((pixelFormat === PixelFormat.DEPTH_COMPONENT) &&
+            ((pixelDatatype !== PixelDatatype.UNSIGNED_SHORT) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT))) {
+            throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
+        }
+
+        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
+            throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
+        }
+        //>>includeEnd('debug');
+
+        if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
+            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (defined(source)) {
+                throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, source cannot be provided.');
+            }
+            //>>includeEnd('debug');
+
+            if (!context.depthTexture) {
+                throw new RuntimeError('When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check depthTexture.');
+            }
+        }
+
+        // Use premultiplied alpha for opaque textures should perform better on Chrome:
+        // http://media.tojicode.com/webglCamp4/#20
+        var preMultiplyAlpha = options.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
+        var flipY = defaultValue(options.flipY, true);
+
+        var gl = context._gl;
+        var textureTarget = gl.TEXTURE_2D;
+        var texture = gl.createTexture();
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(textureTarget, texture);
+
+        if (defined(source)) {
+            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+            if (defined(source.arrayBufferView)) {
+                // Source: typed array
+                gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+            } else if (defined(source.framebuffer)) {
+                // Source: framebuffer
+                if (source.framebuffer !== context.defaultFramebuffer) {
+                    source.framebuffer._bind();
+                }
+
+                gl.copyTexImage2D(textureTarget, 0, pixelFormat, source.xOffset, source.yOffset, width, height, 0);
+
+                if (source.framebuffer !== context.defaultFramebuffer) {
+                    source.framebuffer._unBind();
+                }
+            } else {
+                // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
+                gl.texImage2D(textureTarget, 0, pixelFormat, pixelFormat, pixelDatatype, source);
+            }
+        } else {
+            gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, null);
+        }
+        gl.bindTexture(textureTarget, null);
+
+        this._context = context;
+        this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
         this._texture = texture;
         this._pixelFormat = pixelFormat;
@@ -94,7 +201,7 @@ define([
                     }
                 }
 
-                var gl = this._gl;
+                var gl = this._context._gl;
                 var target = this._textureTarget;
 
                 gl.activeTexture(gl.TEXTURE0);
@@ -161,12 +268,12 @@ define([
     });
 
     /**
-     * Copy new image data into this texture, from a source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, {HTMLVideoElement},
+     * Copy new image data into this texture, from a source {ImageData}, {Image}, {Canvas}, {Video},
      * or an object with width, height, and arrayBufferView properties.
      *
      * @memberof Texture
      *
-     * @param {Object} source The source {ImageData}, {HTMLImageElement}, {HTMLCanvasElement}, {HTMLVideoElement},
+     * @param {Object} source The source {ImageData}, {Image}, {Canvas}, {Video},
      *                        or an object with width, height, and arrayBufferView properties.
      * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
@@ -210,7 +317,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        var gl = this._gl;
+        // Internet Explorer 11.0.8 is apparently unable to upload a texture to a non-zero
+        // yOffset when the pipeline is configured to FLIP_Y.  So do the flip manually.
+        if (FeatureDetection.isInternetExplorer() && yOffset !== 0 && this._flipY) {
+            var texture = new Texture(this._context, {
+                source : source,
+                flipY : true,
+                pixelFormat : this._pixelFormat,
+                pixelDatatype : this._pixelDatatype,
+                preMultiplyAlpha : this._preMultiplyAlpha
+            });
+
+            var framebuffer = this._context.createFramebuffer({
+                colorTextures : [texture]
+            });
+            framebuffer._bind();
+            this.copyFromFramebuffer(xOffset, yOffset, 0, 0, texture.width, texture.height);
+            framebuffer._unBind();
+            framebuffer.destroy();
+
+            return;
+        }
+
+        var gl = this._context._gl;
         var target = this._textureTarget;
 
         // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
@@ -281,7 +410,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var gl = this._gl;
+        var gl = this._context._gl;
         var target = this._textureTarget;
 
         gl.activeTexture(gl.TEXTURE0);
@@ -317,7 +446,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var gl = this._gl;
+        var gl = this._context._gl;
         var target = this._textureTarget;
 
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
@@ -332,7 +461,7 @@ define([
     };
 
     Texture.prototype.destroy = function() {
-        this._gl.deleteTexture(this._texture);
+        this._context._gl.deleteTexture(this._texture);
         return destroyObject(this);
     };
 
