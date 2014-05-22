@@ -1,33 +1,36 @@
 /*global define*/
-define([
-        './Enumeration'
-    ], function(
-        Enumeration) {
+define(function() {
     "use strict";
 
     /**
-     * Winding order defines the order of vertices for a triangle to be considered front-facing.
+     * DOC_TBA
      *
      * @exports WindingOrder
      */
     var WindingOrder = {
         /**
-         * 0x0900. Vertices are in clockwise order.
+         * DOC_TBA
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
+         * @default 0x0900
          */
-        CLOCKWISE : new Enumeration(0x0900, 'CLOCKWISE'), // WebGL: CW
+        CLOCKWISE : 0x0900, // WebGL: CW
         /**
-         * 0x0901. Vertices are in counter-clockwise order.
+         * DOC_TBA
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
+         * @default 0x901
          */
-        COUNTER_CLOCKWISE : new Enumeration(0x0901, 'COUNTER_CLOCKWISE'), // WebGL: CCW
+        COUNTER_CLOCKWISE : 0x0901, // WebGL CCW
 
         /**
-         * @private
+         * DOC_TBA
+         *
+         * @param {WindingOrder} windingOrder
+         *
+         * @returns {Boolean}
          */
         validate : function(windingOrder) {
             return ((windingOrder === WindingOrder.CLOCKWISE) ||

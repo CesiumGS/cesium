@@ -236,7 +236,7 @@ define([
             this._lastFrameTime = undefined;
             this._targetFrameRate = undefined;
 
-            if (options.sceneMode) {
+            if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
                     this._scene.morphTo2D(0);
                 }

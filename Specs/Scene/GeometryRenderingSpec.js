@@ -186,7 +186,7 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,
@@ -249,7 +249,7 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,

@@ -944,7 +944,7 @@ define([
                         typedArray.set(value, k * componentsPerAttribute);
                     }
 
-                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                    var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
                     vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                 }
                 attribute.dirty = false;

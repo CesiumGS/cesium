@@ -259,7 +259,7 @@ define([
      *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
      *
-     * @returns {Enumeration} Visibility.NONE if the occludee is not visible,
+     * @returns {Number} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
      * @example

@@ -1300,7 +1300,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the current {@link SceneMode} enumeration, expressed
+         * An automatic GLSL uniform representing the current {@link SceneMode}, expressed
          * as a float.
          *
          * @alias czm_sceneMode
@@ -1325,7 +1325,7 @@ define([
             size : 1,
             datatype : WebGLRenderingContext.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.frameState.mode.value;
+                return uniformState.frameState.mode;
             }
         }),
 

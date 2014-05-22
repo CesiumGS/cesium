@@ -629,7 +629,7 @@ define([
     function complete3DCallback(transitioner) {
         var scene = transitioner._scene;
         scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = SceneMode.SCENE3D.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
         destroyMorphHandler(transitioner);
 
@@ -656,7 +656,7 @@ define([
         var scene = transitioner._scene;
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.SCENE2D.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE2D);
 
         destroyMorphHandler(transitioner);
 
@@ -678,7 +678,7 @@ define([
     function completeColumbusViewCallback(transitioner) {
         var scene = transitioner._scene;
         scene.mode = SceneMode.COLUMBUS_VIEW;
-        scene.morphTime = SceneMode.COLUMBUS_VIEW.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(SceneMode.COLUMBUS_VIEW);
 
         destroyMorphHandler(transitioner);
 

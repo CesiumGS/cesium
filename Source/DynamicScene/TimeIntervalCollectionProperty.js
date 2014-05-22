@@ -3,7 +3,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/isArray',
         '../Core/TimeIntervalCollection',
@@ -12,7 +11,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         isArray,
         TimeIntervalCollection,
@@ -117,7 +115,7 @@ define([
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !isArray(value) && !(value instanceof Enumeration))) {
+        if (defined(value) && (typeof value === 'object' && !isArray(value))) {
             return value.clone(result);
         }
         return value;

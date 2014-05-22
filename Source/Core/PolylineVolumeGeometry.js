@@ -178,7 +178,7 @@ define([
      * @alias PolylineVolumeGeometry
      * @constructor
      *
-     * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
+     * @param {Array} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
      * @param {Number} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -204,7 +204,7 @@ define([
      *     -72.0, 40.0,
      *     -70.0, 35.0
      *   ]),
-     *   shapePositions : compute2DCircle(100000.0)
+     *   shapePositions : computeCircle(100000.0)
      * });
      */
     var PolylineVolumeGeometry = function(options) {
@@ -231,8 +231,6 @@ define([
         this._workerName = 'createPolylineVolumeGeometry';
     };
 
-    var brScratch = new BoundingRectangle();
-
     /**
      * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      * @memberof PolylineVolumeGeometry
@@ -244,6 +242,7 @@ define([
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
      * @exception {DeveloperError} Count of unique shape positions must be at least 3.
      */
+    var brScratch = new BoundingRectangle();
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
         var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);
@@ -259,7 +258,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
+        if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();
         }
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);

@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        '../Core/Enumeration'
-    ], function(
-        Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -15,20 +12,20 @@ define([
         /**
          * The camera is free to move about anywhere.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 0
          */
-        FREE : new Enumeration(0, 'FREE'),
+        FREE : 0,
 
         /**
          * The camera is locked looking at a location, but is free to rotate about that single point.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          * @default 1
          */
-        LOCKED : new Enumeration(1, 'LOCKED')
+        LOCKED : 1
     };
 
     return CameraColumbusViewMode;

@@ -6,15 +6,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('fromValue works', function() {
-        expect(ComponentDatatype.fromValue(ComponentDatatype.BYTE.value)).toBe(ComponentDatatype.BYTE);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.UNSIGNED_BYTE.value)).toBe(ComponentDatatype.UNSIGNED_BYTE);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.SHORT.value)).toBe(ComponentDatatype.SHORT);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.UNSIGNED_SHORT.value)).toBe(ComponentDatatype.UNSIGNED_SHORT);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.FLOAT.value)).toBe(ComponentDatatype.FLOAT);
-        expect(ComponentDatatype.fromValue(ComponentDatatype.DOUBLE.value)).toBe(ComponentDatatype.DOUBLE);
-    });
-
     it('fromTypedArray works', function() {
         expect(ComponentDatatype.fromTypedArray(new Int8Array())).toBe(ComponentDatatype.BYTE);
         expect(ComponentDatatype.fromTypedArray(new Uint8Array())).toBe(ComponentDatatype.UNSIGNED_BYTE);
