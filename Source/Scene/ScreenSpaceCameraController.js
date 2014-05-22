@@ -18,7 +18,6 @@ define([
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
-        './CameraColumbusViewMode',
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode'
@@ -41,7 +40,6 @@ define([
         Ray,
         Transforms,
         AnimationCollection,
-        CameraColumbusViewMode,
         CameraEventAggregator,
         CameraEventType,
         SceneMode) {
