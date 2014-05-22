@@ -13,7 +13,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0x0900
          */
         CLOCKWISE : 0x0900, // WebGL: CW
         /**
@@ -21,7 +20,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0x901
          */
         COUNTER_CLOCKWISE : 0x0901, // WebGL: CCW
 

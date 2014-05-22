@@ -15,7 +15,6 @@ define(function() {
          *
          * @type {String}
          * @constant
-         * @default 0
          */
         AERIAL : 'Aerial',
 
@@ -24,7 +23,6 @@ define(function() {
          *
          * @type {String}
          * @constant
-         * @default 1
          */
         AERIAL_WITH_LABELS : 'AerialWithLabels',
 
@@ -33,7 +31,6 @@ define(function() {
          *
          * @type {String}
          * @constant
-         * @default 2
          */
         ROAD : 'Road',
 
@@ -42,7 +39,6 @@ define(function() {
          *
          * @type {String}
          * @constant
-         * @default 3
          */
         ORDNANCE_SURVEY : 'OrdnanceSurvey',
 
@@ -51,7 +47,6 @@ define(function() {
          *
          * @type {String}
          * @constant
-         * @default 4
          */
         COLLINS_BART : 'CollinsBart'
     };
