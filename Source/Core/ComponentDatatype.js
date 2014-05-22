@@ -96,14 +96,14 @@ define([
      * @returns {Number} The size in bytes.
      *
      * @exception {DeveloperError} componentDatatype is not a valid value.
-     * 
+     *
      * @example
      * // Returns Int8Array.BYTES_PER_ELEMENT
      * var size = Cesium.ComponentDatatype.getSizeInBytes(Cesium.ComponentDatatype.BYTE);
      */
     ComponentDatatype.getSizeInBytes = function(componentDatatype){
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
+        if (!defined(componentDatatype)) {
             throw new DeveloperError('value is required.');
         }
         //>>includeEnd('debug');
