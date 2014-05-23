@@ -16,23 +16,22 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default -1
          */
         NONE : -1,
+
         /**
         * Represents that part, but not all, of an object is visible
         *
         * @type {Number}
         * @constant
-        * @default 0
         */
         PARTIAL : 0,
+
         /**
         * Represents that an object is visible in its entirety.
         *
         * @type {Number}
         * @constant
-        * @default 1
         */
         FULL : 1
     };

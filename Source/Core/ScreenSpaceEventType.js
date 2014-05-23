@@ -13,7 +13,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         LEFT_DOWN : 0,
 
@@ -22,7 +21,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         LEFT_UP : 1,
 
@@ -31,7 +29,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         LEFT_CLICK : 2,
 
@@ -40,7 +37,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 3
          */
         LEFT_DOUBLE_CLICK : 3,
 
@@ -49,7 +45,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 5
          */
         RIGHT_DOWN : 5,
 
@@ -58,7 +53,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 6
          */
         RIGHT_UP : 6,
 
@@ -67,7 +61,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 7
          */
         RIGHT_CLICK : 7,
 
@@ -76,7 +69,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 8
          */
         RIGHT_DOUBLE_CLICK : 8,
 
@@ -85,7 +77,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 10
          */
         MIDDLE_DOWN : 10,
 
@@ -94,7 +85,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 11
          */
         MIDDLE_UP : 11,
 
@@ -103,7 +93,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 12
          */
         MIDDLE_CLICK : 12,
 
@@ -112,7 +101,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 13
          */
         MIDDLE_DOUBLE_CLICK : 13,
 
@@ -121,7 +109,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 15
          */
         MOUSE_MOVE : 15,
 
@@ -130,7 +117,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 16
          */
         WHEEL : 16,
 
@@ -139,7 +125,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 17
          */
         PINCH_START : 17,
 
@@ -148,7 +133,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 18
          */
         PINCH_END : 18,
 
@@ -157,7 +141,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 19
          */
         PINCH_MOVE : 19
     };

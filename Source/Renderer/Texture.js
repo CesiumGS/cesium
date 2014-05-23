@@ -268,12 +268,12 @@ define([
     });
 
     /**
-     * Copy new image data into this texture, from a source {ImageData}, {Image}, {Canvas}, {Video},
+     * Copy new image data into this texture, from a source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      * or an object with width, height, and arrayBufferView properties.
      *
      * @memberof Texture
      *
-     * @param {Object} source The source {ImageData}, {Image}, {Canvas}, {Video},
+     * @param {Object} source The source {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video},
      *                        or an object with width, height, and arrayBufferView properties.
      * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.

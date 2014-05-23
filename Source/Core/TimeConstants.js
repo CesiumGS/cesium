@@ -79,7 +79,6 @@ define(function() {
          * on November 17, 1858.
          * @type {Number}
          * @constant
-         * @default
          */
         MODIFIED_JULIAN_DATE_DIFFERENCE : 2400000.5
     };

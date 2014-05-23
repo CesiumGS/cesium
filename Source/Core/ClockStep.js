@@ -18,7 +18,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         TICK_DEPENDENT : 0,
 
@@ -28,7 +27,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         SYSTEM_CLOCK_MULTIPLIER : 1,
 
@@ -38,7 +36,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         SYSTEM_CLOCK : 2
     };

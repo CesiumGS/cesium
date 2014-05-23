@@ -15,7 +15,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         SCENE2D : 0,
 
@@ -25,7 +24,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         COLUMBUS_VIEW : 1,
 
@@ -34,7 +32,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         SCENE3D : 2,
 
@@ -43,17 +40,16 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 3
          */
         MORPHING : 3
     };
 
-     /**
-      * Returns the morph time for the given scene mode
-      * @param {SceneMode} value The scene mode
-      * @returns {Number} The morph time
-      */
-        SceneMode.getMorphTime = function(value) {
+    /**
+     * Returns the morph time for the given scene mode
+     * @param {SceneMode} value The scene mode
+     * @returns {Number} The morph time
+     */
+    SceneMode.getMorphTime = function(value) {
         if (value === SceneMode.SCENE3D) {
             return 1.0;
         } else if (value === SceneMode.MORPHING) {

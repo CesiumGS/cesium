@@ -13,15 +13,14 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         FIXED : 0,
+
         /**
          * The inertial frame.
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         INERTIAL : 1
     };
