@@ -270,11 +270,11 @@
 				<include name="Specs/**/*.js" />
 				<exclude name="Specs/SpecList.js" />
 
-				<exclude name="Apps\Sandcastle\Sandcastle-client.js" />
-				<exclude name="Apps\Sandcastle\Sandcastle-header.js" />
-				<exclude name="Apps\Sandcastle\Sandcastle-warn.js" />
-				<exclude name="Apps\Sandcastle\gallery\gallery-index.js" />
-				<exclude name="Apps\Sandcastle\jsHintOptions.js" />
+				<exclude name="Apps/Sandcastle/Sandcastle-client.js" />
+				<exclude name="Apps/Sandcastle/Sandcastle-header.js" />
+				<exclude name="Apps/Sandcastle/Sandcastle-warn.js" />
+				<exclude name="Apps/Sandcastle/gallery/gallery-index.js" />
+				<exclude name="Apps/Sandcastle/jsHintOptions.js" />
 
 				<exclude name="**/*.profile.js" />
 			</sourcefiles>
@@ -542,8 +542,8 @@
 	<target name="generateDocumentation" depends="setNodePath" description="Generates HTML documentation.">
 		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
 			<env key="CESIUM_VERSION" value="${version}" />
-			<arg value="node_modules\jsdoc\jsdoc.js" />
-			<arg line="--configure Tools\jsdoc\conf.json" />
+			<arg value="node_modules/jsdoc/jsdoc.js" />
+			<arg line="--configure Tools/jsdoc/conf.json" />
 		</exec>
 
 		<copy todir="${buildDocumentationImagesDirectory}">
