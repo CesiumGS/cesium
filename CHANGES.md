@@ -41,6 +41,9 @@ Beta Releases
 * Added `interleave` option to `Primitive` constructor.
 * Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 * `Camera.transform` now works consistently across scene modes.
+* Added `QuadtreePrimitive`, a low-level feature that enables rendering of massive quantities of geometry using a quadtree-based level-of-detail and culling algorithm.
+* Added `Primitive.getBoundingSphere` and `Primitive.complete`.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 
 ### b28 - 2014-05-01
 
