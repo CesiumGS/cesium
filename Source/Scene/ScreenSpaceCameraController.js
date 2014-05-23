@@ -696,8 +696,20 @@ define([
         var plane = Plane.fromPointNormal(origin, normal, rotateCVPlane);
         var verticalCenter = IntersectionTests.rayPlane(ray, plane, rotateCVVerticalCenter);
 
-        var transform = Matrix4.fromTranslation(center, rotateCVTransform);
-        var verticalTransform = Matrix4.fromTranslation(verticalCenter, rotateCVVerticalTransform);
+        var projection = controller._camera._projection;
+        ellipsoid = projection.ellipsoid;
+
+        Cartesian3.fromElements(center.y, center.z, center.x, center);
+        var cart = projection.unproject(center, rotateCVCart);
+        ellipsoid.cartographicToCartesian(cart, center);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, rotateCVTransform);
+
+        Cartesian3.fromElements(verticalCenter.y, verticalCenter.z, verticalCenter.x, verticalCenter);
+        cart = projection.unproject(verticalCenter, rotateCVCart);
+        ellipsoid.cartographicToCartesian(cart, verticalCenter);
+
+        var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, ellipsoid, rotateCVVerticalTransform);
 
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
