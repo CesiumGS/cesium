@@ -43,6 +43,7 @@ Beta Releases
 * Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 * `Camera.transform` now works consistently across scene modes.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
+* `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
 
 ### b28 - 2014-05-01
 
