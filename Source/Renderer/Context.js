@@ -2236,6 +2236,7 @@ define([
                         ]
                     })
                 },
+                // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
                 indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
                 primitiveType : PrimitiveType.TRIANGLES
             });
