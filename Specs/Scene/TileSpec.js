@@ -318,7 +318,7 @@ defineSuite([
         it('loaded terrainData is copied to the tile once it is available', function() {
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED;
             }, 'root tile loaded terrain to be received');
 
             runs(function() {
@@ -329,13 +329,13 @@ defineSuite([
         it('upsampled terrainData is copied to the tile once it is available', function() {
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED;
             }, 'root tile loaded terrain to be received');
 
             waitsFor(function() {
                 var childTile = rootTile.children[0];
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return childTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'child tile terrain to be upsampled');
 
             runs(function() {
@@ -348,12 +348,12 @@ defineSuite([
 
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED;
             }, 'root tile loaded terrain to be received');
 
             waitsFor(function() {
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return childTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'child tile terrain to be upsampled');
 
             var upsampledTerrainData;
@@ -365,7 +365,7 @@ defineSuite([
 
             waitsFor(function() {
                 childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
-                return childTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
+                return childTile.loadedTerrain.state >= TerrainState.RECEIVED;
             });
 
             runs(function() {
@@ -381,9 +381,9 @@ defineSuite([
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
-                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED &&
-                       grandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state >= TerrainState.RECEIVED &&
+                       grandchildTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'root to be loaded and child and grandchild to be upsampled');
 
             var grandchildUpsampledTerrain;
@@ -395,7 +395,7 @@ defineSuite([
 
             waitsFor(function() {
                 childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
-                return childTile.loadedTerrain.state.value >= TerrainState.RECEIVED;
+                return childTile.loadedTerrain.state >= TerrainState.RECEIVED;
             }, 'child to be loaded');
 
             runs(function() {
@@ -414,10 +414,10 @@ defineSuite([
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 greatGrandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
-                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED &&
-                       grandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED &&
-                       greatGrandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state >= TerrainState.RECEIVED &&
+                       grandchildTile.upsampledTerrain.state >= TerrainState.RECEIVED &&
+                       greatGrandchildTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'root to be loaded and child, grandchild, and great-grandchild to be upsampled');
 
             var greatGrandchildUpsampledTerrain;
@@ -429,8 +429,8 @@ defineSuite([
             waitsFor(function() {
                 childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return childTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
-                       grandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return childTile.loadedTerrain.state >= TerrainState.RECEIVED &&
+                       grandchildTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'child to be loaded and grandchild to be re-upsampled');
 
             runs(function() {
@@ -491,8 +491,8 @@ defineSuite([
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
-                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'root to be loaded and child to be upsampled');
 
             runs(function() {
@@ -531,9 +531,9 @@ defineSuite([
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.loadedTerrain.state.value >= TerrainState.RECEIVED &&
-                       childTile.upsampledTerrain.state.value >= TerrainState.RECEIVED &&
-                       grandchildTile.upsampledTerrain.state.value >= TerrainState.RECEIVED;
+                return rootTile.loadedTerrain.state >= TerrainState.RECEIVED &&
+                       childTile.upsampledTerrain.state >= TerrainState.RECEIVED &&
+                       grandchildTile.upsampledTerrain.state >= TerrainState.RECEIVED;
             }, 'root to be loaded and child and grandchild to be upsampled');
 
             runs(function() {
@@ -571,8 +571,8 @@ defineSuite([
             waitsFor(function() {
                 rootTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 childTile.processStateMachine(context, alwaysFailTerrainProvider, imageryLayerCollection);
-                return rootTile.state.value >= TileState.READY.value &&
-                       childTile.state.value >= TileState.READY.value;
+                return rootTile.state >= TileState.READY &&
+                       childTile.state >= TileState.READY;
             }, 'child tile to be in its final state');
 
             runs(function() {

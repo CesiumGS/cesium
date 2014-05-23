@@ -395,7 +395,7 @@ define([
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             surface._tileReplacementQueue.markTileRendered(tile);
-            if (tile.state.value < TileState.READY.value) {
+            if (tile.state < TileState.READY) {
                 queueTileLoad(surface, tile);
             }
             if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
@@ -635,7 +635,7 @@ define([
             allUpsampledOnly = allUpsampledOnly && child.state === TileState.UPSAMPLED_ONLY;
             allRenderable = allRenderable && child.isRenderable;
 
-            if (child.state.value < TileState.READY.value) {
+            if (child.state < TileState.READY) {
                 queueTileLoad(surface, child);
             }
         }

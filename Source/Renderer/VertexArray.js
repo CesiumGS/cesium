@@ -63,7 +63,7 @@ define([
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype.value, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(this.index);
             };
 
@@ -138,7 +138,7 @@ define([
 
             if (defined(attribute.vertexBuffer)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
-                var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
+                var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(attribute.componentDatatype));
                 numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
                 break;
             }
