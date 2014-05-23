@@ -810,7 +810,7 @@ define([
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
      * The transformation matrix is not verified to have a uniform scale of 1.
-     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
+     * This method is faster than computing the general bounding sphere transform using {@link BoundingSphere.transform}.
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.

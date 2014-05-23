@@ -1419,7 +1419,7 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the product for general 4x4
-     * matrices using {@link #multiply}.
+     * matrices using {@link Matrix4.multiply}.
      * @memberof Matrix4
      *
      * @param {Matrix4} left The first matrix.
@@ -2209,7 +2209,7 @@ define([
       * Computes the inverse of the provided matrix using Cramers Rule.
       * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
       * If the matrix is an affine transformation matrix, it is more efficient
-      * to invert it with {@link #inverseTransformation}.
+      * to invert it with {@link Matrix4.inverseTransformation}.
       * @memberof Matrix4
       *
       * @param {Matrix4} matrix The matrix to invert.
@@ -2336,7 +2336,7 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the inverse for a general 4x4
-     * matrix using {@link #inverse}.
+     * matrix using {@link Matrix4.inverse}.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to invert.

@@ -562,6 +562,7 @@
 		<property name="relativeSourceFilesPath" location="${sourceDirectory}" relative="true" basedir="${jsdoc3Directory}" />
 
 		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true" failonerror="true" maxmemory="1024m">
+			<sysproperty key="java.util.Arrays.useLegacyMergeSort" value="true"/>
 			<arg line="-modules node_modules" />
 			<arg line="-modules rhino_modules" />
 			<arg line="-modules ." />

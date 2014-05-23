@@ -9,7 +9,6 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
@@ -25,7 +24,6 @@ define([
         jsonp,
         Matrix4,
         Rectangle,
-        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         knockout,
@@ -203,11 +201,6 @@ define([
         }
     });
 
-    var transform2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 1.0);
-
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -267,9 +260,8 @@ define([
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
-                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 },
-                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY,
+                endReferenceFrame : Matrix4.IDENTITY,
                 convert : false
             };
 
