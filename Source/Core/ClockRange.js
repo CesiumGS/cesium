@@ -17,7 +17,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         UNBOUNDED : 0,
 
@@ -27,7 +26,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         CLAMPED : 1,
 
@@ -39,7 +37,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         LOOP_STOP : 2
     };

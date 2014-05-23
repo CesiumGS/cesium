@@ -1173,7 +1173,7 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
      * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
@@ -1279,7 +1279,7 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
      * @memberof Context
      *

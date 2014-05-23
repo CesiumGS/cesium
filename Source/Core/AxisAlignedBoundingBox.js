@@ -167,10 +167,11 @@ define([
      * @param {AxisAlignedBoundingBox} box The bounding box to test.
      * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
      *                           where the coefficients a, b, c, and d are the components x, y, z, and w
-     *                           of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
-     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
-     *                     if the box intersects the plane.
+     *                           of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
         //>>includeStart('debug', pragmas.debug);
@@ -216,10 +217,11 @@ define([
      *
      * @param {Cartesian4} plane The coefficients of the plane in the form <code>ax + by + cz + d = 0</code>
      *                           where the coefficients a, b, c, and d are the components x, y, z, and w
-     *                           of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire box is on the side of the plane the normal is pointing,
-     *                     {Intersect.OUTSIDE} if the entire box is on the opposite side, and {Intersect.INTERSETING}
-     *                     if the box intersects the plane.
+     *                           of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
      */
     AxisAlignedBoundingBox.prototype.intersect = function(plane) {
         return AxisAlignedBoundingBox.intersect(this, plane);
