@@ -979,7 +979,7 @@ define([
             }
         }
 
-        var boundingSphere = this.getBoundingSphere(frameState);
+        var boundingSphere = this.getBoundingSphere(frameState.mode);
 
         var passes = frameState.passes;
         if (passes.render) {
@@ -1097,18 +1097,18 @@ define([
      *
      * @memberof Primitive
      *
-     * @param {FrameState} frameState The current frame state.
+     * @param {SceneMode} sceneMode The scene mode (3D, 2D, Columbus View) for which to obtain the bounding sphere.
      *
      * @returns {BoundingSphere} The bounding sphere of the primitive, or undefined if the primitive's bounding sphere
      *          has not yet been computed.
      */
-    Primitive.prototype.getBoundingSphere = function(frameState) {
+    Primitive.prototype.getBoundingSphere = function(sceneMode) {
         var boundingSphere;
-        if (frameState.mode === SceneMode.SCENE3D) {
+        if (sceneMode === SceneMode.SCENE3D) {
             boundingSphere = this._boundingSphereWC;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+        } else if (sceneMode === SceneMode.COLUMBUS_VIEW) {
             boundingSphere = this._boundingSphereCV;
-        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
+        } else if (sceneMode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
             boundingSphere = this._boundingSphere2D;
         } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
             boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
