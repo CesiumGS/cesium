@@ -42,6 +42,7 @@ Beta Releases
 * Added `interleave` option to `Primitive` constructor.
 * Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 * `Camera.transform` now works consistently across scene modes.
+* Updated Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
 
 ### b28 - 2014-05-01
 
