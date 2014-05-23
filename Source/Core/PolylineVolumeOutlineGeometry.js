@@ -118,7 +118,7 @@ define([
      *     -72.0, 40.0,
      *     -70.0, 35.0
      *   ]),
-     *   shapePositions : compute2DCircle(100000.0)
+     *   shapePositions : computeCircle(100000.0)
      * });
      */
     var PolylineVolumeOutlineGeometry = function(options) {
@@ -171,7 +171,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
+        if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();
         }
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);

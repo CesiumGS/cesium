@@ -2,13 +2,11 @@
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/isArray'
     ], function(
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         isArray) {
     "use strict";
@@ -84,7 +82,7 @@ define([
         var oldValue = this._value;
         var simple = this._simple;
         if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
-            simple = typeof value !== 'object' || isArray(value) || value instanceof Enumeration;
+            simple = typeof value !== 'object' || isArray(value);
 
             //>>includeStart('debug', pragmas.debug);
             if (!simple) {

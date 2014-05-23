@@ -3,6 +3,7 @@ defineSuite([
         'Scene/ScreenSpaceCameraController',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
         'Core/IntersectionTests',
@@ -10,8 +11,8 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/Ray',
+        'Core/Transforms',
         'Scene/Camera',
-        'Scene/CameraColumbusViewMode',
         'Scene/CameraEventType',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
@@ -20,6 +21,7 @@ defineSuite([
         ScreenSpaceCameraController,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         GeographicProjection,
         IntersectionTests,
@@ -27,8 +29,8 @@ defineSuite([
         CesiumMath,
         Matrix4,
         Ray,
+        Transforms,
         Camera,
-        CameraColumbusViewMode,
         CameraEventType,
         OrthographicFrustum,
         SceneMode,
@@ -103,10 +105,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         return frameState;
     }
@@ -406,10 +404,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         return frameState;
     }
@@ -543,12 +537,14 @@ defineSuite([
         expect(Cartesian3.dot(Cartesian3.normalize(camera.position), Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
         expect(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z)).toBeLessThan(0.0);
         expect(Cartesian3.dot(camera.up, Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
-        expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
+        expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON7);
     });
 
-    it('rotates in Columus view locked mode', function() {
+    it('rotates in Columus view with camera transform set', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, 0);
@@ -563,9 +559,11 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
-    it('zooms in Columus view locked mode', function() {
+    it('zooms in Columus view with camera transform set', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -578,9 +576,11 @@ defineSuite([
         expect(position.z).toBeGreaterThan(camera.position.z);
     });
 
-    it('zoom in Columbus view locked mode with wheel', function() {
+    it('zoom in Columbus view with camera transform set and with wheel', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
 
