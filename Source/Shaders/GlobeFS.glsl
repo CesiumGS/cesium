@@ -111,7 +111,7 @@ vec4 sampleAndBlend(
 }
 
 vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates);
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue);
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue);
 
 void main()
 {
@@ -150,7 +150,7 @@ void main()
 
         vec2 textureCoordinates = mix(ellipsoidTextureCoordinates, ellipsoidFlippedTextureCoordinates, czm_morphTime * smoothstep(0.9, 0.95, normalMC.z));
 
-        color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, startDayColor, mask);
+        color = computeWaterColor(v_positionEC, textureCoordinates, enuToEye, color, mask);
     }
 #endif
 
@@ -183,7 +183,7 @@ const float oceanAnimationSpeed = 0.006;
 const float oceanAmplitude = 2.0;
 const float oceanSpecularIntensity = 0.5;
 
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue)
+vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec4 imageryColor, float specularMapValue)
 {
     float time = czm_frameNumber * oceanAnimationSpeed;
     
@@ -229,7 +229,7 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), specularMapValue);
     float specular = specularIntensity * surfaceReflectance;
     
-    return vec4(imageryColor + diffuseHighlight + nonDiffuseHighlight + specular, 1.0); 
+    return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a); 
 }
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN
