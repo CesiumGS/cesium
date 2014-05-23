@@ -161,7 +161,7 @@ define([
                     back -= 3;
                 }
                 wallIndices.push(start - Math.floor(l.length / 6));
-                if (cornerType.value === CornerType.BEVELED.value) {
+                if (cornerType === CornerType.BEVELED) {
                     wallIndices.push((back - 2) / 3 + 1);
                 }
                 front += 3;
@@ -177,7 +177,7 @@ define([
                     front += 3;
                 }
                 wallIndices.push(start + Math.floor(r.length / 6));
-                if (cornerType.value === CornerType.BEVELED.value) {
+                if (cornerType === CornerType.BEVELED) {
                     wallIndices.push(front / 3 - 1);
                 }
                 back -= 3;
