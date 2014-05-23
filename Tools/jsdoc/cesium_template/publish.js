@@ -118,6 +118,7 @@ function generate(title, docs, filename, resolveLinks) {
     resolveLinks = resolveLinks === false ? false : true;
 
     var docData = {
+        filename: filename,
         title: title,
         docs: docs
     };
@@ -130,29 +131,6 @@ function generate(title, docs, filename, resolveLinks) {
     }
 
     fs.writeFileSync(outpath, html, 'utf8');
-}
-
-function generateSourceFiles(sourceFiles, encoding) {
-    encoding = encoding || 'utf8';
-    Object.keys(sourceFiles).forEach(function(file) {
-        var source;
-        // links are keyed to the shortened path in each doclet's `meta.shortpath` property
-        var sourceOutfile = helper.getUniqueFilename(sourceFiles[file].shortened);
-        helper.registerLink(sourceFiles[file].shortened, sourceOutfile);
-
-        try {
-            source = {
-                kind: 'source',
-                code: helper.htmlsafe( fs.readFileSync(sourceFiles[file].resolved, encoding) )
-            };
-        }
-        catch(e) {
-            logger.error('Error while generating source file %s: %s', file, e.message);
-        }
-
-        generate('Source: ' + sourceFiles[file].shortened, [source], sourceOutfile,
-            false);
-    });
 }
 
 /**
@@ -229,7 +207,7 @@ exports.publish = function(taffyData, opts, tutorials) {
     data = taffyData;
 
     var conf = env.conf.templates || {};
-    conf['cesium_template'] = conf['cesium_template'] || {};
+    conf['default'] = conf['default'] || {};
 
     var templatePath = opts.template;
     view = new template.Template(templatePath + '/tmpl');
@@ -316,13 +294,14 @@ exports.publish = function(taffyData, opts, tutorials) {
         var url = helper.createLink(doclet);
         helper.registerLink(doclet.longname, url);
 
-        // add a shortened version of the full path
+        // replace the filename with a shortened version of the full path
         var docletPath;
         if (doclet.meta) {
             docletPath = getPathFromDoclet(doclet);
             docletPath = sourceFiles[docletPath].shortened;
             if (docletPath) {
-                doclet.meta.shortpath = docletPath;
+                doclet.meta.filename = docletPath;
+                doclet.meta.sourceUrl = conf['sourceUrl'].replace('{version}', process.env.CESIUM_VERSION).replace('{filename}', docletPath);
             }
         }
     });

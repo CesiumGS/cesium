@@ -69,11 +69,9 @@ if (data.defaultvalue && (data.defaultvaluetype === 'object' || data.defaultvalu
     <div<?js= defaultObjectClass ?>><?js= data.defaultvalue ?></div>
     <?js } ?>
 
-    <?js if (data.meta && self.outputSourceFiles) {?>
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <?js= self.linkto(meta.shortpath) ?>, <?js= self.linkto(meta.shortpath, 'line ' + meta.lineno, null, 'line' + meta.lineno) ?>
-    </li></ul></dd>
+    <?js if (data.examples && examples.length) { ?>
+        <h5>Example<?js= examples.length > 1? 's':'' ?></h5>
+        <?js= this.partial('examples.tmpl', examples) ?>
     <?js } ?>
 
     <?js if (data.tutorials && tutorials.length) {?>
@@ -106,5 +104,12 @@ if (data.defaultvalue && (data.defaultvaluetype === 'object' || data.defaultvalu
             <li><?js= t ?></li>
         <?js }); ?></ul>
     </dd>
+    <?js } ?>
+    
+    <?js if (data.meta && data.meta.sourceUrl) {?>
+    <div class="source-link">
+        Source: 
+        <?js= self.linkto(data.meta.sourceUrl, meta.filename + ', line ' + meta.lineno, null, 'L' + meta.lineno) ?>
+    </div>
     <?js } ?>
 </dl>

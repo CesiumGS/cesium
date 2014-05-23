@@ -434,6 +434,11 @@ h6
     font-family: Consolas, "Lucida Console", Monaco, monospace;
 }
 
+.nameContainer .signature {
+    font-size: 90%;
+    font-weight: normal;
+}
+
 .details { margin-top: 14px; }
 .details dt { width:100px; float:left; border-left: 2px solid #DDD; padding-left: 10px;  padding-top: 6px; }
 #main ul { margin: 0; }
@@ -583,4 +588,9 @@ span.attribute-constant {
 
 .description {
     margin: 1em 0;
+}
+
+.source-link {
+    font-size: 85%;
+    margin-top: 8px;
 }

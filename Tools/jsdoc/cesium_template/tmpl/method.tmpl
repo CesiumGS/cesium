@@ -3,9 +3,12 @@ var data = obj;
 var self = this;
 ?>
 <dt>
+    <div class="nameContainer">
     <h4 class="name" id="<?js= id ?>">
         <?js= data.attribs + (kind === 'class' ? 'new ' : '') + (data.scope === 'static' ? longname : name) + (data.signature ? data.signature : '') ?>
     </h4>
+
+    </div>
 
     <?js if (data.summary) { ?>
     <p class="summary"><?js= summary ?></p>
@@ -42,8 +45,6 @@ var self = this;
         <?js= this.partial('params.tmpl', params) ?>
     <?js } ?>
 
-    <?js= this.partial('details.tmpl', data) ?>
-
     <?js if (data.requires && data.requires.length) { ?>
     <h5>Requires:</h5>
     <ul><?js data.requires.forEach(function(r) { ?>
@@ -72,15 +73,6 @@ var self = this;
     <?js }); ?></ul>
     <?js } ?>
 
-    <?js if (data.exceptions && exceptions.length) { ?>
-    <h5>Throws:</h5>
-    <ul><?js
-        exceptions.forEach(function(r) { ?>
-            <li><?js= self.partial('exceptions.tmpl', r) ?></li>
-        <?js });
-    ?></ul>
-    <?js } ?>
-
     <?js if (data.returns && returns.length) { ?>
     <h5>Returns:</h5>
     <?js if (returns.length > 1) { ?><ul><?js
@@ -93,8 +85,14 @@ var self = this;
         <?js });
     } } ?>
 
-    <?js if (data.examples && examples.length) { ?>
-        <h5>Example<?js= examples.length > 1? 's':'' ?></h5>
-        <?js= this.partial('examples.tmpl', examples) ?>
+    <?js if (data.exceptions && exceptions.length) { ?>
+    <h5>Throws:</h5>
+    <ul><?js
+        exceptions.forEach(function(r) { ?>
+            <li><?js= self.partial('exceptions.tmpl', r) ?></li>
+        <?js });
+    ?></ul>
     <?js } ?>
+
+    <?js= this.partial('details.tmpl', data) ?>
 </dd>
