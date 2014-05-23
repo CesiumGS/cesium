@@ -25,7 +25,7 @@ define([
      * Given the desired degree, returns the number of data points required for interpolation.
      * @memberof InterpolationAlgorithm
      *
-     * @param degree The desired degree of interpolation.
+     * @param {Number} degree The desired degree of interpolation.
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */

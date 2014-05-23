@@ -2274,7 +2274,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Color} The pick color.
+     * @param {Color} pickColor The pick color.
      *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *

@@ -716,7 +716,7 @@ define([
      *
      * @memberof Camera
      *
-     * @param {Matrix4} The camera transform.
+     * @param {Matrix4} transform The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
         var position = Cartesian3.clone(this.positionWC, setTransformPosition);

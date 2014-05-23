@@ -17,7 +17,7 @@ define([
      * @alias CullingVolume
      * @constructor
      *
-     * @param Array planes An array of clipping planes.
+     * @param {Cartesian4[]} planes An array of clipping planes.
      */
     var CullingVolume = function(planes) {
         /**

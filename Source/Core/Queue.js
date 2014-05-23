@@ -60,7 +60,7 @@ define(function() {
     /**
      * Check whether this queue contains the specified item.
      *
-     * @param {Object} the item to search for.
+     * @param {Object} item the item to search for.
      * @memberof Queue
      */
     Queue.prototype.contains = function(item) {
