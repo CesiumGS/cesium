@@ -42,6 +42,7 @@ Beta Releases
 * Added `interleave` option to `Primitive` constructor.
 * Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
 * `Camera.transform` now works consistently across scene modes.
+* Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 
 ### b28 - 2014-05-01
 
