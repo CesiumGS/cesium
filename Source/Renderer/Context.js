@@ -2236,6 +2236,7 @@ define([
                         ]
                     })
                 },
+                indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
@@ -2256,7 +2257,7 @@ define([
 
         return new DrawCommand({
             vertexArray : vertexArray,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
             shaderProgram : this.createShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
             uniformMap : overrides.uniformMap,

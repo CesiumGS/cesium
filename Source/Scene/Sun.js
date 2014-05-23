@@ -10,6 +10,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PixelFormat',
@@ -34,6 +35,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        IndexDatatype,
         CesiumMath,
         Matrix4,
         PixelFormat,
@@ -71,7 +73,7 @@ define([
         this.show = true;
 
         this._command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             boundingVolume : new BoundingSphere(),
             owner : this
         });
@@ -233,7 +235,8 @@ define([
                 normalize : true,
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
-            command.vertexArray = context.createVertexArray(attributes);
+            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
