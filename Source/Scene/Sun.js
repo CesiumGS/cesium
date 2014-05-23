@@ -235,6 +235,7 @@ define([
                 normalize : true,
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
+            // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
             var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             command.vertexArray = context.createVertexArray(attributes, indexBuffer);
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
