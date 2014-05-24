@@ -371,7 +371,7 @@ define([
                 return undefined;
             }
         } else {
-            promise = loadArrayBuffer(url);
+            promise = loadTile(url);
         }
 
         var that = this;
