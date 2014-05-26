@@ -167,7 +167,7 @@ define([
      *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      *
-     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -201,7 +201,7 @@ define([
     *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     *
-    * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+    * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);

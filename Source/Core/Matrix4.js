@@ -85,7 +85,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Matrix4.packedLength = 16;
 
@@ -912,8 +912,8 @@ define([
      * @memberof Matrix4
      *
      * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
-     * @param {Number}[nearDepthRange = 0.0] The near plane distance in window coordinates.
-     * @param {Number}[farDepthRange = 1.0] The far plane distance in window coordinates.
+     * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
+     * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *

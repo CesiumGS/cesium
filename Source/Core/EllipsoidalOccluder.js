@@ -98,7 +98,7 @@ define([
      *
      * @param {Cartesian3} occludee The point to test for visibility.
      *
-     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);
@@ -122,7 +122,7 @@ define([
      *
      * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
      *
-     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 2.5);

@@ -15,7 +15,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         NONE : 0,
 
@@ -24,7 +23,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         REPEAT : 1,
 
@@ -33,7 +31,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         MIRRORED_REPEAT : 2
     };

@@ -17,7 +17,7 @@ define([
     var PackableForInterpolation = {
         /**
          * The number of elements used to store the object into an array in its interpolatable form.
-         * @Type {Number}
+         * @type {Number}
          */
         packedInterpolationLength : undefined,
 

@@ -62,7 +62,7 @@ define([
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof ConstantPositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {

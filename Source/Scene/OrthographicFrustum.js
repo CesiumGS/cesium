@@ -21,7 +21,7 @@ define([
 
     /**
      * The viewing frustum is defined by 6 planes.
-     * Each plane is represented by a {Cartesian4} object, where the x, y, and z components
+     * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *

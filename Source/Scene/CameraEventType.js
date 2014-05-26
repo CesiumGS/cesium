@@ -13,7 +13,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         LEFT_DRAG : 0,
 
@@ -22,7 +21,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         RIGHT_DRAG : 1,
 
@@ -31,7 +29,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         MIDDLE_DRAG : 2,
 
@@ -40,7 +37,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 3
          */
         WHEEL : 3,
 
@@ -49,7 +45,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 4
          */
         PINCH : 4
     };

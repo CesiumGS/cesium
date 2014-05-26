@@ -14,7 +14,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         SHIFT : 0,
 
@@ -23,7 +22,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         CTRL : 1,
 
@@ -32,7 +30,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         ALT : 2
     };
