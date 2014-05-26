@@ -115,7 +115,7 @@ require(['Cesium'], function(Cesium) {
     DemoTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
         var boundingSphere = tile.data.primitive.getBoundingSphere(frameState.mode);
         if (!Cesium.defined(boundingSphere)) {
-            return true;
+            return false;
         } else {
             return frameState.cullingVolume.getVisibility(boundingSphere) !== Cesium.Intersect.OUTSIDE;
         }
