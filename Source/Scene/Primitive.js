@@ -386,7 +386,7 @@ define([
          * @type {Boolean}
          * @readonly
          */
-        complete : {
+        ready : {
             get : function() {
                 return this._state === PrimitiveState.COMPLETE;
             }

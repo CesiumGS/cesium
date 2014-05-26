@@ -105,7 +105,7 @@ require(['Cesium'], function(Cesium) {
         
         if (tile.state === Cesium.QuadtreeTileLoadState.LOADING) {
             tile.data.primitive.update(context, frameState, []);
-            if (tile.data.primitive.complete) {
+            if (tile.data.primitive.ready) {
                 tile.state = Cesium.QuadtreeTileLoadState.DONE;
                 tile.renderable = true;
             }
