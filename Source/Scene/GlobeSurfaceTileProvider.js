@@ -136,6 +136,7 @@ define([
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
+                //>>includeEnd('debug');
 
                 this._quadtree = value;
             }
