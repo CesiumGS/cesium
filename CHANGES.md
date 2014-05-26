@@ -45,6 +45,7 @@ Beta Releases
 * `Camera.transform` now works consistently across scene modes.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
+* Fixed problems that could occur when using `ArcGisMapServerImageryProvider` to access a tiled MapServer of non-global extent.
 * Upgraded JSDoc from 3.0 to 3.3.0-alpha5. The Cesium reference documentation now has a slightly different look and feel.
 * Upgraded Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
 
