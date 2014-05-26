@@ -9,6 +9,7 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -24,6 +25,7 @@ define([
         Event,
         GeographicTilingScheme,
         jsonp,
+        Rectangle,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -90,6 +92,7 @@ define([
         this._tilingScheme = undefined;
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+        this._rectangle = undefined;
 
         this._errorEvent = new Event();
 
@@ -105,6 +108,7 @@ define([
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
+                that._rectangle = that._tilingScheme.rectangle;
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -120,6 +124,15 @@ define([
                     return;
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
+
+                if (defined(data.fullExtent)) {
+                    var projection = that._tilingScheme.projection;
+                    var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
+                    var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                    that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+                } else {
+                    that._rectangle = that._tilingScheme.rectangle;
+                }
 
                 // Install the default tile discard policy if none has been supplied.
                 if (!defined(that._tileDiscardPolicy)) {
@@ -307,7 +320,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.rectangle;
+                return this._rectangle;
             }
         },
 
