@@ -178,7 +178,7 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Cartesian3[]} positions The array of {Cartesian3} positions.
+     * @param {Cartesian3[]} positions The array of positions.
      *
      * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
@@ -224,7 +224,7 @@ define([
      *
      * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
      * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
@@ -271,7 +271,7 @@ define([
      *
      * @param {Number[]} positions The array of type {Number} representing positions.
      * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @param {Number[]} [result] An array to place the resultant positions in.
      *
      * @returns {Number[]} The array of positions scaled to height.

@@ -14,7 +14,6 @@ define(function() {
          * Corner is circular.
          * @type {Number}
          * @constant
-         * @default 0
          */
         ROUNDED : 0,
 
@@ -26,7 +25,6 @@ define(function() {
          * Corner point is the intersection of adjacent edges.
          * @type {Number}
          * @constant
-         * @default 1
          */
         MITERED : 1,
 
@@ -38,7 +36,6 @@ define(function() {
          * Corner is clipped.
          * @type {Number}
          * @constant
-         * @default 2
          */
         BEVELED : 2
     };

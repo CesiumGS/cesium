@@ -15,7 +15,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         FILL : 0,
 
@@ -24,7 +23,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         OUTLINE : 1,
 
@@ -33,7 +31,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 2
          */
         FILL_AND_OUTLINE : 2
     };

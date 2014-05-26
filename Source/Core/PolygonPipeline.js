@@ -687,9 +687,9 @@ define([
      * Do not include number === n1 or number === n2.
      * Do include n1 === n2 === number.
      *
-     * @param {number} number The number tested.
-     * @param {number} n1 First bound.
-     * @param {number} n2 Secound bound.
+     * @param {Number} number The number tested.
+     * @param {Number} n1 First bound.
+     * @param {Number} n2 Secound bound.
      * @returns {Boolean} number is between n1 and n2.
      *
      * @private

@@ -373,7 +373,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Color.packedLength = 4;
 
@@ -434,7 +434,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -446,7 +446,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;

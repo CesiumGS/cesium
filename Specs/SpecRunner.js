@@ -35,11 +35,7 @@ var afterAll;
 
     function getQueryParameter(name) {
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-
-        if (match) {
-            return decodeURIComponent(match[1].replace(/\+/g, ' '));
-        }
-        return null;
+        return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
     }
 
     // patch in beforeAll/afterAll functions

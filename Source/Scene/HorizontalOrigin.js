@@ -17,23 +17,22 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         CENTER : 0,
+
         /**
          * The origin is on the left side of the object.
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         LEFT : 1,
+
         /**
          * The origin is on the right side of the object.
          *
          * @type {Number}
          * @constant
-         * @default -1
          */
         RIGHT : -1
     };
