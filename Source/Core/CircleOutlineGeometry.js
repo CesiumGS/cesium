@@ -23,7 +23,7 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
-     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom of an extruded circle.
+     * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
      *
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.

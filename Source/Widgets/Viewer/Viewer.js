@@ -727,8 +727,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * to the provided viewer instance.
      * @memberof Viewer
      *
-     * @param mixin The Viewer mixin to add to this instance.
-     * @param options The options object to be passed to the mixin function.
+     * @param {Function} mixin The Viewer mixin to add to this instance.
+     * @param {Object} options The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
      * @see viewerDynamicObjectMixin

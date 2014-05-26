@@ -24,7 +24,7 @@ define([
      *
      * @memberof LinearApproximation
      *
-     * @param degree The desired degree of interpolation.
+     * @param {Number} degree The desired degree of interpolation.
      *
      * @exception {DeveloperError} Linear interpolation can only generate a first degree polynomial.
      *

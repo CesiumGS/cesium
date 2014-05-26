@@ -795,8 +795,8 @@ define([
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var horizontalOrigin = billboard.horizontalOrigin.value;
-        var verticalOrigin = billboard.verticalOrigin.value;
+        var horizontalOrigin = billboard.horizontalOrigin;
+        var verticalOrigin = billboard.verticalOrigin;
         var show = billboard.show;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
@@ -805,7 +805,7 @@ define([
             show = false;
         }
 
-        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
+        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeLocations.originAndShow];

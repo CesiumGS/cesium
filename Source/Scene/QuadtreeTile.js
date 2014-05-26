@@ -248,7 +248,7 @@ define([
          */
         needsLoading : {
             get : function() {
-                return this.state.value < QuadtreeTileLoadState.DONE.value;
+                return this.state < QuadtreeTileLoadState.DONE;
             }
         },
 

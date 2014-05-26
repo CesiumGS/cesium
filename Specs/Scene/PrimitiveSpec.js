@@ -292,7 +292,7 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         frameState.camera.viewRectangle(rectangle1);
@@ -326,7 +326,7 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
 
         var frustum = new OrthographicFrustum();
         frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;

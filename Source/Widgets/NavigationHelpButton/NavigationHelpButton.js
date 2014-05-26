@@ -120,7 +120,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     defineProperties(NavigationHelpButton.prototype, {
         /**
          * Gets the parent container.
-         * @memberof SceneModePicker.prototype
+         * @memberof NavigationHelpButton.prototype
          *
          * @type {Element}
          */
@@ -132,9 +132,9 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         /**
          * Gets the view model.
-         * @memberof SceneModePicker.prototype
+         * @memberof NavigationHelpButton.prototype
          *
-         * @type {SceneModePickerViewModel}
+         * @type {NavigationHelpButtonViewModel}
          */
         viewModel: {
             get: function () {
