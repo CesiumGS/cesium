@@ -1,6 +1,0 @@
-/**
-    @ignore
-*/
-function foo(x) {
-    
-}
