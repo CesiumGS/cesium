@@ -16,7 +16,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default -1
          */
         OUTSIDE : -1,
 
@@ -25,7 +24,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         INTERSECTING : 0,
 
@@ -34,7 +32,6 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         INSIDE : 1
     };

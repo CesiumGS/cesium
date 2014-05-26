@@ -1173,7 +1173,7 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
      * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
@@ -1279,7 +1279,7 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
      * @memberof Context
      *
@@ -2236,6 +2236,8 @@ define([
                         ]
                     })
                 },
+                // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+                indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
@@ -2256,7 +2258,7 @@ define([
 
         return new DrawCommand({
             vertexArray : vertexArray,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
             shaderProgram : this.createShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
             uniformMap : overrides.uniformMap,
@@ -2274,7 +2276,7 @@ define([
      *
      * @memberof Context
      *
-     * @param {Color} The pick color.
+     * @param {Color} pickColor The pick color.
      *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *

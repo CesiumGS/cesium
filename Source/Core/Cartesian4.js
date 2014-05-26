@@ -132,7 +132,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Cartesian4.packedLength = 4;
 
@@ -217,7 +217,7 @@ define([
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian4
      *
-     * @param {Cartesian4} The cartesian to use.
+     * @param {Cartesian4} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
     Cartesian4.getMaximumComponent = function(cartesian) {
@@ -234,7 +234,7 @@ define([
      * Computes the value of the minimum component for the supplied Cartesian.
      * @memberof Cartesian4
      *
-     * @param {Cartesian4} The cartesian to use.
+     * @param {Cartesian4} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
     Cartesian4.getMinimumComponent = function(cartesian) {
@@ -610,9 +610,9 @@ define([
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
      * @memberof Cartesian4
      *
-     * @param start The value corresponding to t at 0.0.
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
+     * @param {Cartesian4} start The value corresponding to t at 0.0.
+     * @param {Cartesian4}end The value corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */

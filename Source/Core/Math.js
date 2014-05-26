@@ -224,7 +224,7 @@ define([
      *   </ul>
      *</p>
      *
-     * @param value The number whose hyperbolic sine is to be returned.
+     * @param {Number} value The number whose hyperbolic sine is to be returned.
      *
      * @returns The hyperbolic sine of {@code value}.
      */
@@ -251,7 +251,7 @@ define([
      *   </ul>
      *</p>
      *
-     * @param value The number whose hyperbolic cosine is to be returned.
+     * @param {Number} value The number whose hyperbolic cosine is to be returned.
      *
      * @returns The hyperbolic cosine of {@code value}.
      */

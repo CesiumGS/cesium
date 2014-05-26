@@ -17,23 +17,22 @@ define(function() {
          *
          * @type {Number}
          * @constant
-         * @default 0
          */
         CENTER : 0,
+
         /**
          * The origin is at the bottom of the object.
          *
          * @type {Number}
          * @constant
-         * @default 1
          */
         BOTTOM : 1,
+
         /**
          * The origin is at the top of the object.
          *
          * @type {Number}
          * @constant
-         * @default -1
          */
         TOP : -1
     };
