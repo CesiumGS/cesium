@@ -45,6 +45,7 @@ Beta Releases
 * `Camera.transform` now works consistently across scene modes.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
+* Updated Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
 
 ### b28 - 2014-05-01
 
