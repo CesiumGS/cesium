@@ -390,7 +390,9 @@ define([
     var northeastScratch = new Cartesian3();
 
     /**
-     * Renders a given tile.
+     * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
+     * render commands to the commandList, or use any other method as appropriate.  The tile is not
+     * expected to be visible next frame as well, unless this method is call next frame, too.
      *
      * @memberof GlobeSurfaceTileProvider
      *
@@ -399,7 +401,7 @@ define([
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @param {DrawCommand[]} commandList The list of rendering commands.  This method may add additional commands to this list.
      */
-    GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {

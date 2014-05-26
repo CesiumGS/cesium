@@ -121,7 +121,7 @@ require(['Cesium'], function(Cesium) {
         }
     };
 
-    DemoTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
+    DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         tile.data.primitive.update(context, frameState, commandList);
     };
 

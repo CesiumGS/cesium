@@ -468,7 +468,7 @@ define([
         tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
-            tileProvider.renderTile(tilesToRender[i], context, frameState, commandList);
+            tileProvider.showTileThisFrame(tilesToRender[i], context, frameState, commandList);
         }
     }
 
