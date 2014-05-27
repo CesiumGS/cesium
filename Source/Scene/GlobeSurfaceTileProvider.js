@@ -98,6 +98,7 @@ define([
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
         this._renderState = undefined;
+        this._blendRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -291,6 +292,9 @@ define([
             });
         }
 
+        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
+        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
+
         // And the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
@@ -442,7 +446,7 @@ define([
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    GlobeSurfaceTileProvider.prototype.getDistanceToTile = function(tile, frameState, cameraCartesianPosition, cameraCartographicPosition) {
+    GlobeSurfaceTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
@@ -468,6 +472,9 @@ define([
             northNormal = Cartesian3.UNIT_Z;
             maximumHeight = 0.0;
         }
+
+        var cameraCartesianPosition = frameState.camera.positionWC;
+        var cameraCartographicPosition = frameState.camera.positionCartographic;
 
         var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);

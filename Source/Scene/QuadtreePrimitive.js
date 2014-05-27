@@ -275,12 +275,9 @@ define([
             }
         }
 
-        var cameraPosition = frameState.camera.positionWC;
-
         var ellipsoid = primitive._tileProvider.tilingScheme.ellipsoid;
-        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCameraPositionCartographic);
 
-        primitive._occluders.ellipsoid.cameraPosition = cameraPosition;
+        primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
         var tile;
 
@@ -319,7 +316,7 @@ define([
             // This one doesn't load children unless we refine to them.
             // We may want to revisit this in the future.
 
-            if (screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) < primitive.maximumScreenSpaceError) {
+            if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile)) {
@@ -359,14 +356,14 @@ define([
         }
     }
 
-    function screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+    function screenSpaceError(primitive, context, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
-            return screenSpaceError2D(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile);
+            return screenSpaceError2D(primitive, context, frameState, tile);
         }
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.getDistanceToTile(tile, frameState, cameraPosition, cameraPositionCartographic);
+        var distance = primitive._tileProvider.getDistanceToTile(tile, frameState);
         tile._distance = distance;
 
         var height = context.drawingBufferHeight;
@@ -379,7 +376,7 @@ define([
         return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
-    function screenSpaceError2D(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+    function screenSpaceError2D(primitive, context, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var width = context.drawingBufferWidth;

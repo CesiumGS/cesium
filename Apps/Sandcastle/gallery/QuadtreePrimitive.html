@@ -99,7 +99,11 @@ require(['Cesium'], function(Cesium) {
                     flat : true
                 })
             });
-            
+
+            tile.data.boundingSphere3D = Cesium.BoundingSphere.fromRectangle3D(tile.rectangle);
+            tile.data.boundingSphere2D = Cesium.BoundingSphere.fromRectangle2D(tile.rectangle, frameState.scene2D.projection);
+            Cesium.Cartesian3.fromElements(tile.data.boundingSphere2D.center.z, tile.data.boundingSphere2D.center.x, tile.data.boundingSphere2D.center.y, tile.data.boundingSphere2D.center);
+
             tile.state = Cesium.QuadtreeTileLoadState.LOADING;
         }
         
@@ -113,21 +117,30 @@ require(['Cesium'], function(Cesium) {
     };
 
     DemoTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
-        var boundingSphere = tile.data.primitive.getBoundingSphere(frameState.mode);
-        if (!Cesium.defined(boundingSphere)) {
-            return false;
+        var boundingSphere;
+        if (frameState.mode === Cesium.SceneMode.SCENE3D) {
+            boundingSphere = tile.data.boundingSphere3D;
         } else {
-            return frameState.cullingVolume.getVisibility(boundingSphere) !== Cesium.Intersect.OUTSIDE;
+            boundingSphere = tile.data.boundingSphere2D;
         }
+
+        return frameState.cullingVolume.getVisibility(boundingSphere) !== Cesium.Intersect.OUTSIDE;
     };
 
     DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         tile.data.primitive.update(context, frameState, commandList);
     };
 
-    DemoTileProvider.prototype.getDistanceToTile = function(tile, frameState, cameraCartesianPosition, cameraCartographicPosition) {
-        var boundingSphere = tile.data.primitive.getBoundingSphere(frameState.mode);
-        return Math.max(0.0, Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(boundingSphere.center, frameState.camera.position)) - boundingSphere.radius);
+    DemoTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
+        var boundingSphere;
+
+        if (frameState.mode === Cesium.SceneMode.SCENE3D) {
+            boundingSphere = tile.data.boundingSphere3D;
+        } else {
+            boundingSphere = tile.data.boundingSphere2D;
+        }
+
+        return Math.max(0.0, Cesium.Cartesian3.magnitude(Cesium.Cartesian3.subtract(boundingSphere.center, frameState.camera.positionWC)) - boundingSphere.radius);
     };
 
     DemoTileProvider.prototype.isDestroyed = function() {
