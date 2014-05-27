@@ -275,7 +275,12 @@ define(['../Core/binarySearch',
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
+                var numberOfPoints;
+                if (this._inputOrder){
+                    numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, this._inputOrder), times.length);
+                } else {
+                    numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
+                }
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -340,7 +345,14 @@ define(['../Core/binarySearch',
 
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
-            var interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            var interpolationResult;
+            if (this._inputOrder){
+                var yStride = Math.floor(packedInterpolationLength / (this._inputOrder + 1));
+                interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, this._inputOrder, this._inputOrder, this._interpolationResult);
+            }
+            else{
+                interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            }
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationResult, 0, result);

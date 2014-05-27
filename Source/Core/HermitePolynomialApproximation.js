@@ -76,6 +76,21 @@ define([
     };
 
     /**
+     * Given the input order and desired degree, returns the number of data points required for interpolation.
+     *
+     * @memberof HermitePolynomialApproximation
+     *
+     * @param degree The desired degree of interpolation.
+     *
+     * @param degree The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
+     *
+     * @returns The number of required data points needed for the desired degree of interpolation.
+     */
+    HermitePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
+        return Math.max(Math.floor((degree + 1)/(inputOrder + 1)), 2);
+    };
+
+    /**
      * <p>
      * Interpolates values using Hermite Polynomial Approximation.
      * </p>
@@ -173,6 +188,99 @@ define([
 
         return result;
     };
+
+    HermitePolynomialApproximation.interpolate = function(x, xTable, yTable, yStride,
+                                                                   inputOrder, outputOrder, result) {
+        var resultLength = yStride * (outputOrder + 1);
+        if (!defined(result)) {
+            result = new Array(resultLength);
+        }
+        for (var r = 0; r < resultLength; r++) {
+            result[r] = 0;
+        }
+
+        var length = xTable.length;
+        // The zIndices array holds copies of the addresses of the xTable values
+        // in the range we're looking at. Even though this just holds information already
+        // available in xTable this is a much more convenient format.
+        var zIndices = new Array(length * (inputOrder + 1));
+        for (var i = 0; i < length; i++) {
+            for (var j = 0; j < (inputOrder + 1); j++) {
+                zIndices[i * (inputOrder + 1) + j] = i;
+            }
+        }
+
+        var coefficientArraySize = Math.floor(yStride * zIndices.length * (zIndices.length + 1) / 2);
+        var coefficients = new Array(coefficientArraySize);
+
+        var highestNonZeroCoef = fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder);
+
+        for (var d = 0; d <= Math.min(highestNonZeroCoef, outputOrder); d++) {
+            for (i = d; i <= highestNonZeroCoef; i++) {
+                var tempList = [];
+                var tempTerm = calculateCoefficientTerm(x, zIndices, xTable, d, i, tempList);
+                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndices.length * i);
+
+                for (var s = 0; s < yStride; s++) {
+                    var dimOne = Math.floor(s * zIndices.length * (zIndices.length + 1) / 2);
+                    var coef = coefficients[dimOne + dimTwo];
+                    result[s + d * yStride] += coef * tempTerm;
+                }
+            }
+        }
+
+        return result;
+    };
+
+    function fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder) {
+
+        var highestNonZero = -1;
+        for (var s = 0; s < yStride; s++) {
+            var dimOne = Math.floor(s * zIndices.length * (zIndices.length + 1) / 2);
+
+            var index;
+            var j;
+            for (j = 0; j < zIndices.length; j++) {
+                index = zIndices[j] * yStride * (inputOrder + 1) + s;
+                coefficients[dimOne + j] = yTable[index];
+            }
+
+            for (var i = 1; i < zIndices.length; i++) {
+                var coefIndex = 0;
+                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndices.length * i);
+                var nonZeroCoefficients = false;
+                for (j = 0; j < zIndices.length - i; j++) {
+                    var zj = xTable[zIndices[j]];
+                    var zn = xTable[zIndices[j + i]];
+
+                    var numerator;
+                    var coefficient;
+                    if (zn - zj <= 0) {
+                        index = zIndices[j] * yStride * (inputOrder + 1) + yStride * i + s;
+                        numerator = yTable[index];
+                        coefficient = (numerator / CesiumMath.factorial(i));
+                        coefficients[dimOne + dimTwo + coefIndex] = coefficient;
+                        coefIndex++;
+                    }
+                    else {
+                        var dimTwoMinusOne = Math.floor((i - 1) * (2 - i) / 2) + (zIndices.length * (i - 1));
+                        numerator = coefficients[dimOne + dimTwoMinusOne + j + 1] -
+                                        coefficients[dimOne + dimTwoMinusOne + j];
+                        coefficient = (numerator / (zn - zj));
+                        coefficients[dimOne + dimTwo + coefIndex] = coefficient;
+                        coefIndex++;
+                    }
+                    nonZeroCoefficients = nonZeroCoefficients || (numerator !== 0.0);
+                }
+
+                if (nonZeroCoefficients) {
+                    highestNonZero = Math.max(highestNonZero, i);
+                }
+            }
+        }
+
+        return highestNonZero;
+    }
 
     return HermitePolynomialApproximation;
 });
