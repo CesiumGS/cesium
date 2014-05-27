@@ -53,7 +53,7 @@ define([
      *        Bing Maps imagery without creating a separate key for your application.
      * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
      *        By default, tiles are loaded using the same protocol as the page.
-     * @param {Enumeration} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
+     * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -132,7 +132,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?incl=ImageryProviders&key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 

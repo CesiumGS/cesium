@@ -135,9 +135,9 @@ define([
     /**
      * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
      *
-     * @param ellipsoid The ellipsoid to which the terrain is attached.
-     * @param tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
-     * @param numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+     * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
+     * @param {Number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+     * @param {Number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
      * @returns {Number} An estimated geometric error.
      */
     TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {

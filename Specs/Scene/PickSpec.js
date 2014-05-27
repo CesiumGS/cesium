@@ -56,7 +56,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
     });
 
     afterEach(function() {
@@ -177,7 +177,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
@@ -207,7 +207,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));

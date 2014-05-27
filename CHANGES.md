@@ -31,6 +31,8 @@ Beta Releases
            });
            scene.animations.add(flight);
            
+  * Removed `CameraColumbusViewMode` because it is no longer needed.
+  * Removed `Enumeration`
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
@@ -38,6 +40,14 @@ Beta Releases
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size. Also added `czm_resolutionScale` automatic GLSL uniform.
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
 * Added `interleave` option to `Primitive` constructor.
+* Worked around a bug in Internet Explorer 11.0.8 that caused labels to be missing some of their letters and `TextureAtlas` instances to be missing some of their images.
+* Worked around a bug in Internet Explorer 11.0.8 that caused the Sun not to visible, and the atmosphere to disappear when the Sun should have been in view.
+* `Camera.transform` now works consistently across scene modes.
+* Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
+* `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
+* Fixed problems that could occur when using `ArcGisMapServerImageryProvider` to access a tiled MapServer of non-global extent.
+* Upgraded JSDoc from 3.0 to 3.3.0-alpha5. The Cesium reference documentation now has a slightly different look and feel.
+* Upgraded Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
 
 ### b28 - 2014-05-01
 

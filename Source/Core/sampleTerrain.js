@@ -57,6 +57,24 @@ define([
         }
         //>>includeEnd('debug');
 
+        var deferred = when.defer();
+
+        function doSamplingWhenReady() {
+            if (terrainProvider.ready) {
+                when(doSampling(terrainProvider, level, positions), function(updatedPositions) {
+                    deferred.resolve(updatedPositions);
+                });
+            } else {
+                setTimeout(doSamplingWhenReady, 10);
+            }
+        }
+
+        doSamplingWhenReady();
+
+        return deferred.promise;
+    };
+
+    function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var i;
@@ -98,7 +116,7 @@ define([
         return when.all(tilePromises, function() {
             return positions;
         });
-    };
+    }
 
     function createInterpolateFunction(tileRequest) {
         var tilePositions = tileRequest.positions;

@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HermiteSpline',
+        '../Core/LinearSpline',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -26,6 +27,7 @@ define([
         defined,
         DeveloperError,
         HermiteSpline,
+        LinearSpline,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -199,9 +201,9 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
-        var start = Matrix4.multiplyByPoint(camera.transform, camera.position, scratchStartPosition);
-        var startDirection = Matrix4.multiplyByPointAsVector(camera.transform, camera.direction, scratchStartDirection);
-        var startUp = Matrix4.multiplyByPointAsVector(camera.transform, camera.up, scratchStartUp);
+        var start = camera.cameraToWorldCoordinatesPoint(camera.position, scratchStartPosition);
+        var startDirection = camera.cameraToWorldCoordinatesVector(camera.direction, scratchStartDirection);
+        var startUp = camera.cameraToWorldCoordinatesVector(camera.up, scratchStartUp);
         var startRight = Cartesian3.cross(startDirection, startUp, scratchStartRight);
 
         var path = createPath3D(camera, ellipsoid, start, startUp, startRight, destination, duration);
@@ -227,6 +229,13 @@ define([
     }
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
+        if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
+            return new LinearSpline({
+                points : [start, end],
+                times : [0.0, duration]
+            });
+        }
+
         // get minimum altitude from which the whole map is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
@@ -309,11 +318,6 @@ define([
         });
     }
 
-    var transform2D = new Matrix4(0, 0, 1, 0,
-                                  1, 0, 0, 0,
-                                  0, 1, 0, 0,
-                                  0, 0, 0, 1);
-
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
@@ -327,7 +331,7 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             Matrix4.clone(camera.transform, currentFrame);
-            Matrix4.clone(transform2D, camera.transform);
+            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
 
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
@@ -401,7 +405,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
      * @see Scene#animations
@@ -416,14 +419,20 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
+        if (scene.frameState.mode === SceneMode.MORPHING) {
+            return {
+                duration : 0
+            };
+        }
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
         if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
             throw new DeveloperError('If either direction or up is given, then both are required.');
-        }
-        if (scene.frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
         //>>includeEnd('debug');
 
@@ -563,8 +572,6 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
      * @see Scene#animations
      */
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
@@ -578,9 +585,6 @@ define([
         }
         if (!defined(rectangle)) {
             throw new DeveloperError('options.destination is required.');
-        }
-        if (frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
         //>>includeEnd('debug');
 

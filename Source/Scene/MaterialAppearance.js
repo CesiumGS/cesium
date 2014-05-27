@@ -282,8 +282,6 @@ define([
      * (required vertex format and GLSL shader complexity.
      *
      * @memberof MaterialAppearance
-     *
-     * @enumeration
      */
     MaterialAppearance.MaterialSupport = {
         /**

@@ -21,7 +21,7 @@ define([
      *
      * @memberof LagrangePolynomialApproximation
      *
-     * @param degree The desired degree of interpolation.
+     * @param {Number} degree The desired degree of interpolation.
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
