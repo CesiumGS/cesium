@@ -171,7 +171,6 @@ define([
             value : defaultValue(sampleCoverage.value, 1.0),
             invert : defaultValue(sampleCoverage.invert, false)
         };
-        this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
             (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
             (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
@@ -430,10 +429,6 @@ define([
         }
     }
 
-    function applyDither(gl, renderState) {
-        enableOrDisable(gl, gl.DITHER, renderState.dither);
-    }
-
     var scratchViewport = new BoundingRectangle();
     function applyViewport(gl, renderState, passState) {
         var viewport = renderState.viewport;
@@ -462,7 +457,6 @@ define([
         applyBlending(gl, renderState, passState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
-        applyDither(gl, renderState);
         applyViewport(gl, renderState, passState);
     };
 
@@ -533,10 +527,6 @@ define([
                 (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
                 (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
             funcs.push(applySampleCoverage);
-        }
-
-        if (previousState.dither !== nextState.dither) {
-            funcs.push(applyDither);
         }
 
         // For now, always apply because of passState
@@ -641,7 +631,6 @@ define([
                 value : renderState.sampleCoverage.value,
                 invert : renderState.sampleCoverage.invert
             },
-            dither : renderState.dither,
             viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
         };
     };
