@@ -418,15 +418,22 @@ define([
         }
     }
 
-    function applySampleCoverage(gl, renderState) {
-        var sampleCoverage = renderState.sampleCoverage;
-        var enabled = sampleCoverage.enabled;
+    var applySampleCoverage;
+    if (FeatureDetection.isInternetExplorer()) {
+        // sampleCoverage is not supported in IE 11.0.8
+        applySampleCoverage = function() {
+        };
+    } else {
+        applySampleCoverage = function(gl, renderState) {
+            var sampleCoverage = renderState.sampleCoverage;
+            var enabled = sampleCoverage.enabled;
 
-        enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
+            enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
 
-        if (enabled) {
-            gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
-        }
+            if (enabled) {
+                gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
+            }
+        };
     }
 
     var scratchViewport = new BoundingRectangle();
