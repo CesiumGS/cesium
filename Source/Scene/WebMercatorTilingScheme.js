@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/Rectangle',
-        '../Core/Cartesian2',
         '../Core/WebMercatorProjection',
         './TilingScheme'
     ], function(
+        Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         Ellipsoid,
         Rectangle,
-        Cartesian2,
         WebMercatorProjection,
         TilingScheme) {
     "use strict";
@@ -26,34 +26,34 @@ define([
      * @alias WebMercatorTilingScheme
      * @constructor
      *
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
-     * @param {Number} [description.numberOfLevelZeroTilesX=1] The number of tiles in the X direction at level zero of
+     * @param {Number} [options.numberOfLevelZeroTilesX=1] The number of tiles in the X direction at level zero of
      *        the tile tree.
-     * @param {Number} [description.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
+     * @param {Number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      *        the tile tree.
-     * @param {Cartesian2} [description.rectangleSouthwestInMeters] The southwest corner of the rectangle covered by the
+     * @param {Cartesian2} [options.rectangleSouthwestInMeters] The southwest corner of the rectangle covered by the
      *        tiling scheme, in meters.  If this parameter or rectangleNortheastInMeters is not specified, the entire
      *        globe is covered in the longitude direction and an equal distance is covered in the latitude
      *        direction, resulting in a square projection.
-     * @param {Cartesian2} [description.rectangleNortheastInMeters] The northeast corner of the rectangle covered by the
+     * @param {Cartesian2} [options.rectangleNortheastInMeters] The northeast corner of the rectangle covered by the
      *        tiling scheme, in meters.  If this parameter or rectangleSouthwestInMeters is not specified, the entire
      *        globe is covered in the longitude direction and an equal distance is covered in the latitude
      *        direction, resulting in a square projection.
      */
-    var WebMercatorTilingScheme = function WebMercatorTilingScheme(description) {
-        description = defaultValue(description, {});
+    var WebMercatorTilingScheme = function WebMercatorTilingScheme(options) {
+        options = defaultValue(options, {});
 
-        this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        this._numberOfLevelZeroTilesX = defaultValue(description.numberOfLevelZeroTilesX, 1);
-        this._numberOfLevelZeroTilesY = defaultValue(description.numberOfLevelZeroTilesY, 1);
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 1);
+        this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
 
         this._projection = new WebMercatorProjection(this._ellipsoid);
 
-        if (defined(description.rectangleSouthwestInMeters) &&
-            defined(description.rectangleNortheastInMeters)) {
-            this._rectangleSouthwestInMeters = description.rectangleSouthwestInMeters;
-            this._rectangleNortheastInMeters = description.rectangleNortheastInMeters;
+        if (defined(options.rectangleSouthwestInMeters) &&
+            defined(options.rectangleNortheastInMeters)) {
+            this._rectangleSouthwestInMeters = options.rectangleSouthwestInMeters;
+            this._rectangleNortheastInMeters = options.rectangleNortheastInMeters;
         } else {
             var semimajorAxisTimesPi = this._ellipsoid.maximumRadius * Math.PI;
             this._rectangleSouthwestInMeters = new Cartesian2(-semimajorAxisTimesPi, -semimajorAxisTimesPi);

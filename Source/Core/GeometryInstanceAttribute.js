@@ -28,15 +28,15 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-0.0, 0.0))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *       color : new Cesium.GeometryInstanceAttribute({
-     *         componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
-     *         componentsPerAttribute : 4,
-     *         normalize : true,
-     *         value : [255, 255, 0 255]
-     *       }
+     *     color : new Cesium.GeometryInstanceAttribute({
+     *       componentDatatype : Cesium.ComponentDatatype.UNSIGNED_BYTE,
+     *       componentsPerAttribute : 4,
+     *       normalize : true,
+     *       value : [255, 255, 0 255]
+     *     }
      *   }
      * });
      *

@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolylineVolumeOutlineGeometry',
-         'Core/CornerType',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-         PolylineVolumeOutlineGeometry,
-         CornerType,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/PolylineVolumeOutlineGeometry',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/CornerType',
+        'Core/Ellipsoid'
+    ], function(
+        PolylineVolumeOutlineGeometry,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        CornerType,
+        Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

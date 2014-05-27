@@ -12,12 +12,7 @@ define([
     "use strict";
 
     /**
-     * A face of a cube map (+x, -x, +y, -y, +z, or -z) that can be modified and rendered to.
-     *
-     * @alias CubeMapFace
-     * @internalConstructor
-     *
-     * @see CubeMap
+     * @private
      */
     var CubeMapFace = function(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
         this._gl = gl;
@@ -32,28 +27,16 @@ define([
     };
 
     defineProperties(CubeMapFace.prototype, {
-        /**
-         * The pixel format of this cube map face.  All faces in the same cube map have the same pixel format.
-         * @memberof CubeMapFace.prototype
-         * @type {PixelFormat}
-         */
         pixelFormat : {
             get : function() {
                 return this._pixelFormat;
             }
         },
-
-        /**
-         * The pixel data type of this cube map face.  All faces in the same cube map have the same pixel data type.
-         * @memberof CubeMapFace.prototype
-         * @type {PixelFormat}
-         */
         pixelDatatype : {
             get : function() {
                 return this._pixelDatatype;
             }
         },
-
         _target : {
             get : function() {
                 return this._targetFace;

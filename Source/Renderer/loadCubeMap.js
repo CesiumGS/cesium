@@ -44,6 +44,8 @@ define([
      *
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     *
+     * @private
      */
     var loadCubeMap = function(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);

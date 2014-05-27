@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Scene/CullingVolume'
     ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        defined,
+        defineProperties,
+        DeveloperError,
         Matrix4,
         CullingVolume) {
     "use strict";

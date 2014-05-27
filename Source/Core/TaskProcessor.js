@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        'require',
+        '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './buildModuleUrl',
         './defaultValue',
         './defined',
         './destroyObject',
         './isCrossOriginUrl',
-        '../ThirdParty/when',
-        '../ThirdParty/Uri'
+        'require'
     ], function(
-        require,
+        Uri,
+        when,
         buildModuleUrl,
         defaultValue,
         defined,
         destroyObject,
         isCrossOriginUrl,
-        when,
-        Uri) {
+        require) {
     "use strict";
 
     function canTransferArrayBuffer() {

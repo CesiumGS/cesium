@@ -7,9 +7,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/PixelFormat',
         './MipmapHint',
         './PixelDatatype',
-        './PixelFormat',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
         './TextureWrap'
@@ -21,22 +21,16 @@ define([
         destroyObject,
         DeveloperError,
         CesiumMath,
+        PixelFormat,
         MipmapHint,
         PixelDatatype,
-        PixelFormat,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
     "use strict";
 
     /**
-     * Create a new Texture object that wraps a WebGL texture.
-     *
-     * @alias Texture
-     * @internalConstructor
-     *
-     * @see Context#createTexture2D
-     * @see Context#createTexture2DFromFramebuffer
+     * @private
      */
     var Texture = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, width, height, preMultiplyAlpha, flipY) {
         this._gl = gl;
@@ -124,85 +118,41 @@ define([
                 };
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof Texture.prototype
-         * @type {PixelFormat}
-         */
         pixelFormat : {
             get : function() {
                 return this._pixelFormat;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof Texture.prototype
-         * @type {PixelDatatype}
-         */
         pixelDatatype : {
             get : function() {
                 return this._pixelDatatype;
             }
         },
-
-        /**
-         * The dimensions of this texture as a {Cartesian2}.
-         * @memberof Texture.prototype
-         * @type {Cartesian2}
-         */
         dimensions : {
             get : function() {
                 return this._dimensions;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof Texture.prototype
-         * @type {Boolean}
-         */
         preMultiplyAlpha : {
             get : function() {
                 return this._preMultiplyAlpha;
             }
         },
-
-        /**
-         * True if the source pixels are flipped vertically when the texture is created or updated, i.e.,
-         * <code>UNPACK_FLIP_Y_WEBGL</code> is used.
-         * @memberof Texture.prototype
-         * @type {Boolean}
-         */
         flipY : {
             get : function() {
                 return this._flipY;
             }
         },
-
-        /**
-         * The width of this texture.
-         * @memberof Texture.prototype
-         * @type {Number}
-         */
         width : {
             get : function() {
                 return this._width;
             }
         },
-
-        /**
-         * The height of this texture.
-         * @memberof Texture.prototype
-         * @type {Number}
-         */
         height : {
             get : function() {
                 return this._height;
             }
         },
-
         _target : {
             get : function() {
                 return this._textureTarget;
@@ -279,10 +229,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * @memberof Texture
-     *
      * @param {Number} [xOffset=0] The offset in the x direction within the texture to copy into.
      * @param {Number} [yOffset=0] The offset in the y direction within the texture to copy into.
      * @param {Number} [framebufferXOffset=0] optional
@@ -345,10 +291,6 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * @memberof Texture
-     *
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] optional.
      *
      * @exception {DeveloperError} Cannot call generateMipmap when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
@@ -385,42 +327,10 @@ define([
         gl.bindTexture(target, null);
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Texture
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see Texture#destroy
-     */
     Texture.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Texture
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
-     *
-     * @see Texture#isDestroyed
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
-     *
-     * @example
-     * texture = texture && texture.destroy();
-     */
     Texture.prototype.destroy = function() {
         this._gl.deleteTexture(this._texture);
         return destroyObject(this);

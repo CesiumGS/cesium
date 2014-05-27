@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/TridiagonalSystemSolver',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         TridiagonalSystemSolver,
-         Cartesian3,
-         CesiumMath) {
+        'Core/TridiagonalSystemSolver',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        TridiagonalSystemSolver,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/GeographicTilingScheme',
-         'Core/Cartesian2',
-         'Core/Cartographic',
-         'Core/Rectangle',
-         'Core/GeographicProjection',
-         'Core/Math',
-         'Scene/TilingScheme'
-     ], function(
-         GeographicTilingScheme,
-         Cartesian2,
-         Cartographic,
-         Rectangle,
-         GeographicProjection,
-         CesiumMath,
-         TilingScheme) {
+        'Scene/GeographicTilingScheme',
+        'Core/Cartesian2',
+        'Core/Cartographic',
+        'Core/GeographicProjection',
+        'Core/Math',
+        'Core/Rectangle',
+        'Scene/TilingScheme'
+    ], function(
+        GeographicTilingScheme,
+        Cartesian2,
+        Cartographic,
+        GeographicProjection,
+        CesiumMath,
+        Rectangle,
+        TilingScheme) {
     "use strict";
     /*global document,describe,it,expect*/
 

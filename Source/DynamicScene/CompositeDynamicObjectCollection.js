@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',

@@ -1,24 +1,24 @@
 /*global define*/
 define([
-        './DeveloperError',
+        '../ThirdParty/sprintf',
         './binarySearch',
-        './defined',
         './defaultValue',
-        './TimeConstants',
-        './LeapSecond',
-        './TimeStandard',
+        './defined',
+        './DeveloperError',
         './isLeapYear',
-        '../ThirdParty/sprintf'
+        './LeapSecond',
+        './TimeConstants',
+        './TimeStandard'
     ], function(
-        DeveloperError,
+        sprintf,
         binarySearch,
-        defined,
         defaultValue,
-        TimeConstants,
-        LeapSecond,
-        TimeStandard,
+        defined,
+        DeveloperError,
         isLeapYear,
-        sprintf) {
+        LeapSecond,
+        TimeConstants,
+        TimeStandard) {
     "use strict";
 
     /**

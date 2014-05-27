@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'Scene/CullingVolume',
-             'Core/AxisAlignedBoundingBox',
-             'Core/BoundingSphere',
-             'Core/Cartesian3',
-             'Core/Intersect',
-             'Scene/PerspectiveFrustum'
-        ], function(
-                CullingVolume,
-                AxisAlignedBoundingBox,
-                BoundingSphere,
-                Cartesian3,
-                Intersect,
-                PerspectiveFrustum) {
+        'Scene/CullingVolume',
+        'Core/AxisAlignedBoundingBox',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Intersect',
+        'Scene/PerspectiveFrustum'
+    ], function(
+        CullingVolume,
+        AxisAlignedBoundingBox,
+        BoundingSphere,
+        Cartesian3,
+        Intersect,
+        PerspectiveFrustum) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

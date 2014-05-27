@@ -1,21 +1,22 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/SampledPositionProperty',
-             'DynamicScene/PositionProperty',
-             'Core/Cartesian3',
-             'Core/defined',
-             'Core/JulianDate',
-             'Core/LinearApproximation',
-             'Core/LagrangePolynomialApproximation',
-             'Core/ReferenceFrame'
-     ], function(
-             SampledPositionProperty,
-             PositionProperty,
-             Cartesian3,
-             defined,
-             JulianDate,
-             LinearApproximation,
-             LagrangePolynomialApproximation,
-             ReferenceFrame) {
+defineSuite([
+        'DynamicScene/SampledPositionProperty',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/LagrangePolynomialApproximation',
+        'Core/LinearApproximation',
+        'Core/ReferenceFrame',
+        'DynamicScene/PositionProperty'
+    ], function(
+        SampledPositionProperty,
+        Cartesian3,
+        defined,
+        JulianDate,
+        LagrangePolynomialApproximation,
+        LinearApproximation,
+        ReferenceFrame,
+        PositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -24,13 +25,15 @@ defineSuite(['DynamicScene/SampledPositionProperty',
         expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+        expect(property.hasVelocity).toEqual(false);
     });
 
     it('constructor sets expected values', function() {
-        var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
+        var property = new SampledPositionProperty(ReferenceFrame.INERTIAL, true);
         expect(property.referenceFrame).toEqual(ReferenceFrame.INERTIAL);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+        expect(property.hasVelocity).toEqual(true);
     });
 
     it('getValue works without a result parameter', function() {
@@ -125,6 +128,73 @@ defineSuite(['DynamicScene/SampledPositionProperty',
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSamplesPackedArray works with velocity', function() {
+        var data = [0, 7, 8, 9, 1, 0, 0, 1, 8, 9, 10, 0, 1, 0, 2, 9, 10, 11, 0, 0, 1];
+        var epoch = new JulianDate(0, 0);
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        property.addSamplesPackedArray(data, epoch);
+        expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
+        expect(property.getValue(new JulianDate(0, 0.5))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSample works with velocity', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocities = [new Cartesian3(0, 0, 1), new Cartesian3(0, 1, 0), new Cartesian3(1, 0, 0)];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        property.addSample(times[0], positions[0], velocities[0]);
+        property.addSample(times[1], positions[1], velocities[1]);
+        property.addSample(times[2], positions[2], velocities[2]);
+
+        expect(property.getValue(times[0])).toEqual(positions[0]);
+        expect(property.getValue(times[1])).toEqual(positions[1]);
+        expect(property.getValue(times[2])).toEqual(positions[2]);
+        expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSamples works with velocity', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocities = [new Cartesian3(0, 0, 1), new Cartesian3(0, 1, 0), new Cartesian3(1, 0, 0)];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        property.addSamples(times, positions, velocities);
+        expect(property.getValue(times[0])).toEqual(positions[0]);
+        expect(property.getValue(times[1])).toEqual(positions[1]);
+        expect(property.getValue(times[2])).toEqual(positions[2]);
+        expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('addSample throws when velocity is undefined but expected', function() {
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        expect(function() {
+            property.addSample(new JulianDate(0, 0), new Cartesian3(7, 8, 9), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('addSamples throws when velocity is undefined but expected', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        expect(function() {
+            property.addSamples(times, positions, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('addSamples throws when velocity is not the correct length', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
+        var velocity = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10)];
+
+        var property = new SampledPositionProperty(ReferenceFrame.FIXED, true);
+        expect(function() {
+            property.addSamples(times, positions, velocity);
+        }).toThrowDeveloperError();
     });
 
     it('can set interpolationAlgorithm and degree', function() {

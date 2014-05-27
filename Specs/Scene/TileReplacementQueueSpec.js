@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TileReplacementQueue',
-         'Scene/ImageryState',
-         'Scene/TerrainState',
-         'Scene/TileState',
-         'Core/defined'
-     ], function(
-         TileReplacementQueue,
-         ImageryState,
-         TerrainState,
-         TileState,
-         defined) {
+        'Scene/TileReplacementQueue',
+        'Core/defined',
+        'Scene/ImageryState',
+        'Scene/TerrainState',
+        'Scene/TileState'
+    ], function(
+        TileReplacementQueue,
+        defined,
+        ImageryState,
+        TerrainState,
+        TileState) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 

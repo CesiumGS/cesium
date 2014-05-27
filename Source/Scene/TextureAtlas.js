@@ -8,7 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        './PixelFormat'
+        '../Core/PixelFormat'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -41,28 +41,26 @@ define([
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @alias TextureAtlas
+     * @constructor
      *
-     * @param {Context} description.context The context in which the texture gets created.
-     * @param {PixelFormat} [description.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
-     * @param {Number} [description.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
-     * @param {Cartesian2} [description.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
-     * @param {Array} description.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
-     * @param {Image} description.image Optional single image to be added to the atlas. Same as calling addImage(image).
-     *
-     * @internalConstructor
+     * @param {Scene} options.scene The scene in which the texture gets created.
+     * @param {PixelFormat} [options.pixelFormat = PixelFormat.RGBA] The pixel format of the texture.
+     * @param {Number} [options.borderWidthInPixels = 1] The amount of spacing between adjacent images in pixels.
+     * @param {Cartesian2} [options.initialSize = new Cartesian2(16.0, 16.0)] The initial side lengths of the texture.
+     * @param {Array} options.images Optional array of {@link Image} to be added to the atlas. Same as calling addImages(images).
+     * @param {Image} options.image Optional single image to be added to the atlas. Same as calling addImage(image).
      *
      * @exception {DeveloperError} borderWidthInPixels must be greater than or equal to zero.
      * @exception {DeveloperError} initialSize must be greater than zero.
      */
-    var TextureAtlas = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var context = description.context;
-        var borderWidthInPixels = defaultValue(description.borderWidthInPixels, 1.0);
-        var initialSize = defaultValue(description.initialSize, defaultInitialSize);
+    var TextureAtlas = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+        var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(context)) {
-            throw new DeveloperError('context is required.');
+        if (!defined(options.scene)) {
+            throw new DeveloperError('scene is required.');
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
@@ -72,8 +70,9 @@ define([
         }
         //>>includeEnd('debug');
 
+        var context = options.scene.context;
         this._context = context;
-        this._pixelFormat = defaultValue(description.pixelFormat, PixelFormat.RGBA);
+        this._pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         this._borderWidthInPixels = borderWidthInPixels;
         this._textureCoordinates = [];
         this._guid = createGuid();
@@ -87,12 +86,12 @@ define([
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
 
         // Add initial images if there are any.
-        var images = description.images;
+        var images = options.images;
         if (defined(images) && images.length > 0) {
             this.addImages(images);
         }
 
-        var image = description.image;
+        var image = options.image;
         if (defined(image)) {
             this.addImage(image);
         }

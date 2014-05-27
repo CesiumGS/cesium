@@ -5,12 +5,11 @@ define([
         'Core/getFilenameFromUri',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
-        'Scene/PerformanceDisplay',
         'Scene/TileMapServiceImageryProvider',
         'Widgets/Viewer/Viewer',
+        'Widgets/Viewer/viewerCesiumInspectorMixin',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
-        'Widgets/Viewer/viewerCesiumInspectorMixin',
         'domReady!'
     ], function(
         defined,
@@ -18,12 +17,11 @@ define([
         getFilenameFromUri,
         CzmlDataSource,
         GeoJsonDataSource,
-        PerformanceDisplay,
         TileMapServiceImageryProvider,
         Viewer,
+        viewerCesiumInspectorMixin,
         viewerDragDropMixin,
-        viewerDynamicObjectMixin,
-        viewerCesiumInspectorMixin) {
+        viewerDynamicObjectMixin) {
     "use strict";
     /*global console*/
 
@@ -91,7 +89,7 @@ define([
     });
 
     var scene = viewer.scene;
-    var context = scene._context;
+    var context = scene.context;
     if (endUserOptions.debug) {
         context.validateShaderProgram = true;
         context.validateFramebuffer = true;

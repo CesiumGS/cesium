@@ -3,40 +3,40 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadImage',
-        '../Core/loadXML',
-        '../Core/getImagePixels',
-        '../Core/throttleRequestByServer',
         '../Core/DeveloperError',
-        '../Core/Rectangle',
-        '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getImagePixels',
+        '../Core/loadImage',
+        '../Core/loadXML',
+        '../Core/Math',
+        '../Core/Rectangle',
+        '../Core/throttleRequestByServer',
+        '../ThirdParty/when',
         './Credit',
-        './TerrainProvider',
-        './TileProviderError',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
-        '../ThirdParty/when'
+        './TerrainProvider',
+        './TileProviderError'
     ], function(
         defaultValue,
         defined,
         defineProperties,
-        loadImage,
-        loadXML,
-        getImagePixels,
-        throttleRequestByServer,
         DeveloperError,
-        Rectangle,
-        CesiumMath,
         Ellipsoid,
         Event,
+        getImagePixels,
+        loadImage,
+        loadXML,
+        CesiumMath,
+        Rectangle,
+        throttleRequestByServer,
+        when,
         Credit,
-        TerrainProvider,
-        TileProviderError,
         GeographicTilingScheme,
         HeightmapTerrainData,
-        when) {
+        TerrainProvider,
+        TileProviderError) {
     "use strict";
 
     function DataRectangle(rectangle, maxLevel) {
@@ -51,11 +51,11 @@ define([
      * @alias VRTheWorldTerrainProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the VR-TheWorld TileMap.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
+     * @param {String} options.url The URL of the VR-TheWorld TileMap.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
      *                    specified, the WGS84 ellipsoid is used.
-     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      *
@@ -65,13 +65,13 @@ define([
      * });
      * scene.terrainProvider = terrainProvider;
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        if (!defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
 
-        this._url = description.url;
+        this._url = options.url;
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
@@ -79,7 +79,7 @@ define([
         this._errorEvent = new Event();
         this._ready = false;
 
-        this._proxy = description.proxy;
+        this._proxy = options.proxy;
 
         this._terrainDataStructure = {
                 heightScale : 1.0 / 1000.0,
@@ -90,7 +90,7 @@ define([
                 isBigEndian : true
             };
 
-        var credit = description.credit;
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -101,7 +101,7 @@ define([
 
         var that = this;
         var metadataError;
-        var ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         function metadataSuccess(xml) {
             var srs = xml.getElementsByTagName('SRS')[0].textContent;

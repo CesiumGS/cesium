@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/parseResponseHeaders'], function(parseResponseHeaders) {
+defineSuite([
+        'Core/parseResponseHeaders'
+    ], function(
+        parseResponseHeaders) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

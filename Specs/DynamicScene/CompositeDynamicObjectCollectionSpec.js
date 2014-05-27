@@ -1,32 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/CompositeDynamicObjectCollection',
-         'DynamicScene/CompositePositionProperty',
-         'DynamicScene/CompositeProperty',
-         'DynamicScene/ConstantProperty',
-         'DynamicScene/DynamicBillboard',
-         'DynamicScene/DynamicObjectCollection',
-         'DynamicScene/DynamicObject',
-         'Core/JulianDate',
-         'Core/Iso8601',
-         'Core/TimeInterval',
-         'Core/TimeIntervalCollection',
-         'DynamicScene/CzmlDataSource',
-         'Scene/HorizontalOrigin'
-     ], function(
-         CompositeDynamicObjectCollection,
-         CompositePositionProperty,
-         CompositeProperty,
-         ConstantProperty,
-         DynamicBillboard,
-         DynamicObjectCollection,
-         DynamicObject,
-         JulianDate,
-         Iso8601,
-         TimeInterval,
-         TimeIntervalCollection,
-         CzmlDataSource,
-         HorizontalOrigin) {
+        'DynamicScene/CompositeDynamicObjectCollection',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/CompositePositionProperty',
+        'DynamicScene/CompositeProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicBillboard',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicObjectCollection'
+    ], function(
+        CompositeDynamicObjectCollection,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        CompositePositionProperty,
+        CompositeProperty,
+        ConstantProperty,
+        DynamicBillboard,
+        DynamicObject,
+        DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

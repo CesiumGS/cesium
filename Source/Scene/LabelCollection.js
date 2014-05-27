@@ -1,31 +1,33 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './HorizontalOrigin',
         './Label',
         './LabelStyle',
-        './HorizontalOrigin',
+        './TextureAtlas',
         './VerticalOrigin'
     ], function(
-        defaultValue,
-        defineProperties,
-        DeveloperError,
-        defined,
-        destroyObject,
         Cartesian2,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        HorizontalOrigin,
         Label,
         LabelStyle,
-        HorizontalOrigin,
+        TextureAtlas,
         VerticalOrigin) {
     "use strict";
 
@@ -202,7 +204,7 @@ define([
     // reusable Cartesian2 instance
     var glyphPixelOffset = new Cartesian2();
 
-    function repositionAllGlyphs(label) {
+    function repositionAllGlyphs(label, resolutionScale) {
         var glyphs = label._glyphs;
         var glyph;
         var dimensions;
@@ -227,7 +229,7 @@ define([
             widthOffset -= totalWidth * scale;
         }
 
-        glyphPixelOffset.x = widthOffset;
+        glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
         var verticalOrigin = label._verticalOrigin;
@@ -243,11 +245,13 @@ define([
                 glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
+            glyphPixelOffset.y *= resolutionScale;
+
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
 
-            glyphPixelOffset.x += dimensions.width * scale;
+            glyphPixelOffset.x += dimensions.width * scale * resolutionScale;
         }
     }
 
@@ -315,6 +319,7 @@ define([
         this._labels = [];
         this._labelsToUpdate = [];
         this._totalGlyphCount = 0;
+        this._resolutionScale = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms each label in this collection from model to world coordinates.
@@ -330,7 +335,7 @@ define([
          * @see czm_model
          *
          * @example
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          * labels.add({
          *   position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
@@ -385,7 +390,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @param {Object}[description] A template describing the label's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the label's properties as shown in Example 1.
      *
      * @returns {Label} The label that was added to the collection.
      *
@@ -424,8 +429,8 @@ define([
      *   font : '24px Helvetica',
      * });
      */
-    LabelCollection.prototype.add = function(description) {
-        var label = new Label(description, this);
+    LabelCollection.prototype.add = function(options) {
+        var label = new Label(options, this);
 
         this._labels.push(label);
         this._labelsToUpdate.push(label);
@@ -562,11 +567,26 @@ define([
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
 
         if (!defined(this._textureAtlas)) {
-            this._textureAtlas = context.createTextureAtlas();
+            this._textureAtlas = new TextureAtlas({
+                scene : {
+                    context : context
+                }
+            });
             billboardCollection.textureAtlas = this._textureAtlas;
         }
 
-        var labelsToUpdate = this._labelsToUpdate;
+        var uniformState = context.uniformState;
+        var resolutionScale = uniformState.resolutionScale;
+        var resolutionChanged = this._resolutionScale !== resolutionScale;
+        this._resolutionScale = resolutionScale;
+
+        var labelsToUpdate;
+        if (resolutionChanged) {
+            labelsToUpdate = this._labels;
+        } else {
+            labelsToUpdate = this._labelsToUpdate;
+        }
+
         for (var i = 0, len = labelsToUpdate.length; i < len; ++i) {
             var label = labelsToUpdate[i];
             if (label.isDestroyed()) {
@@ -580,16 +600,16 @@ define([
                 label._rebindAllGlyphs = false;
             }
 
-            if (label._repositionAllGlyphs) {
-                repositionAllGlyphs(label);
+            if (resolutionChanged || label._repositionAllGlyphs) {
+                repositionAllGlyphs(label, resolutionScale);
                 label._repositionAllGlyphs = false;
             }
 
             var glyphCountDifference = label._glyphs.length - preUpdateGlyphCount;
             this._totalGlyphCount += glyphCountDifference;
         }
-        labelsToUpdate.length = 0;
 
+        this._labelsToUpdate.length = 0;
         billboardCollection.update(context, frameState, commandList);
     };
 

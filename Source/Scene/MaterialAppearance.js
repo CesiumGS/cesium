@@ -4,27 +4,27 @@ define([
         '../Core/defined',
         '../Core/freezeObject',
         '../Core/VertexFormat',
-        './Material',
-        './Appearance',
-        '../Shaders/Appearances/BasicMaterialAppearanceVS',
-        '../Shaders/Appearances/BasicMaterialAppearanceFS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
+        '../Shaders/Appearances/AllMaterialAppearanceFS',
         '../Shaders/Appearances/AllMaterialAppearanceVS',
-        '../Shaders/Appearances/AllMaterialAppearanceFS'
+        '../Shaders/Appearances/BasicMaterialAppearanceFS',
+        '../Shaders/Appearances/BasicMaterialAppearanceVS',
+        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
+        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
+        './Appearance',
+        './Material'
     ], function(
         defaultValue,
         defined,
         freezeObject,
         VertexFormat,
-        Material,
-        Appearance,
-        BasicMaterialAppearanceVS,
-        BasicMaterialAppearanceFS,
-        TexturedMaterialAppearanceVS,
-        TexturedMaterialAppearanceFS,
+        AllMaterialAppearanceFS,
         AllMaterialAppearanceVS,
-        AllMaterialAppearanceFS) {
+        BasicMaterialAppearanceFS,
+        BasicMaterialAppearanceVS,
+        TexturedMaterialAppearanceFS,
+        TexturedMaterialAppearanceVS,
+        Appearance,
+        Material) {
     "use strict";
 
     /**
