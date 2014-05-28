@@ -280,8 +280,76 @@ define([
         stop : 0.0
     };
 
+    GlobeSurface.prototype.pick = function(ray, frameState, result) {
+        var stack = [];
+        var sphereIntersections = scratchSphereIntersections;
+        sphereIntersections.length = 0;
+
+        var tile;
+        var i;
+
+        var levelZeroTiles = this._levelZeroTiles;
+        var length = levelZeroTiles.length;
+        for (i = 0; i < length; ++i) {
+            stack.push(levelZeroTiles[i]);
+        }
+
+        while (stack.length > 0) {
+            tile = stack.pop();
+            if (tile.state < TileState.READY) {
+                while (!defined(tile.pickTerrain) && defined(parent)) {
+                    tile = tile.parent;
+                }
+
+                sphereIntersections.push(tile);
+                continue;
+            }
+
+            var boundingVolume = tile.pickBoundingSphere;
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+            } else {
+                BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
+            }
+
+            var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+            if (defined(boundingSphereIntersection)) {
+                var children = tile.children;
+                var childrenLength = children.length;
+                for (i = 0; i < childrenLength; ++i) {
+                    stack.push(children[i]);
+                }
+            }
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+
+        var currentTile = sphereIntersections[0];
+        var uniqueIntersections = [currentTile];
+        length = sphereIntersections.length;
+        for (i = 1; i < length; ++i) {
+            tile = sphereIntersections[i];
+            if (tile !== currentTile) {
+                uniqueIntersections.push(tile);
+                currentTile = tile;
+            }
+        }
+
+        var intersection;
+        length = sphereIntersections.length;
+        for (i = 0; i < length; ++i) {
+            intersection = uniqueIntersections[i].pick(ray, frameState, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
+    };
+
     /**
-     * Find an intersection between a ray and the globe surface.
+     * Find an intersection between a ray and the globe surface that was rendered.
      * @memberof GlobeSurface
      *
      * @param {Ray} ray The ray to test for intersection.
@@ -294,7 +362,7 @@ define([
      * var ray = scene.camera.getPickRay(windowCoordinates);
      * var intersection = surface.pick(ray, scene.frameState);
      */
-    GlobeSurface.prototype.pick = function(ray, frameState, result) {
+    GlobeSurface.prototype.pickRenderedSurface = function(ray, frameState, result) {
         var sphereIntersections = scratchSphereIntersections;
         sphereIntersections.length = 0;
 

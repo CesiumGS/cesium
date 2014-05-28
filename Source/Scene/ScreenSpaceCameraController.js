@@ -598,7 +598,7 @@ define([
         var startPlanePos;
 
         if (defined(controller._globe) && controller._camera.position.z < controller.minimumTerrainHeight) {
-            startPlanePos = controller._globe.pick(startRay, frameState, translateCVStartPos);
+            startPlanePos = controller._globe.pickRenderedSurface(startRay, frameState, translateCVStartPos);
             if (defined(startPlanePos)) {
                 origin.x = startPlanePos.x;
             }
@@ -660,7 +660,7 @@ define([
         } else {
             ray = camera.getPickRay(startPosition, rotateCVWindowRay);
             if (defined(controller._globe)) {
-                center = controller._globe.pick(ray, frameState, rotateCVCenter);
+                center = controller._globe.pickRenderedSurface(ray, frameState, rotateCVCenter);
             }
 
             if (!defined(center)) {
@@ -796,7 +796,7 @@ define([
             var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC, scratchCartographic).height;
             if (defined(controller._globe) && height < controller.minimumTerrainHeight) {
                 var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
-                var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
+                var mousePos = controller._globe.pickRenderedSurface(startRay, frameState, scratchMousePos);
                 if (!defined(mousePos)) {
                     pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
                 } else {
@@ -1011,7 +1011,7 @@ define([
         } else {
             ray = camera.getPickRay(startPosition, tilt3DRay);
             if (defined(controller._globe)) {
-                center = controller._globe.pick(ray, frameState, tilt3DCenter);
+                center = controller._globe.pickRenderedSurface(ray, frameState, tilt3DCenter);
             }
 
             if (!defined(center)) {

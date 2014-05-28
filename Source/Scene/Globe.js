@@ -294,8 +294,12 @@ define([
         }
     });
 
+    Globe.prototype.pick = function(ray, frameState, result) {
+        return this._surface.pick(ray, frameState, result);
+    };
+
     /**
-     * Find an intersection between a ray and the globe.
+     * Find an intersection between a ray and the globe surface that was rendered.
      * @memberof Globe
      *
      * @param {Ray} ray The ray to test for intersection.
@@ -308,8 +312,8 @@ define([
      * var ray = scene.camera.getPickRay(windowCoordinates);
      * var intersection = globe.pick(ray, scene.frameState);
      */
-    Globe.prototype.pick = function(ray, frameState, result) {
-        return this._surface.pick(ray, frameState, result);
+    Globe.prototype.pickRenderedSurface = function(ray, frameState, result) {
+        return this._surface.pickRenderedSurface(ray, frameState, result);
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
