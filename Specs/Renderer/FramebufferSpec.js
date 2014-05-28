@@ -702,30 +702,30 @@ defineSuite([
         framebuffer = context.createFramebuffer();
         expect(function() {
             framebuffer.getColorTexture();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorTexture(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorTexture(context.maximumColorAttachments + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
             framebuffer.getColorRenderbuffer();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorRenderbuffer(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {
