@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -16,33 +16,30 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * advances, and the stars appear to rotate around the planet.  This is a typical
          * view from any fixed location on Earth or in the atmosphere.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        EARTH_FIXED : new Enumeration(0, 'EARTH_FIXED'),
+        EARTH_FIXED : 0,
 
         /**
          * The camera maintains its position in the International Celestial Reference System (ICRF),
          * which means that the stars remain fixed and the Earth rotates as time advances from the
          * camera's point of view.  This works better outside of Earth's atmosphere, in orbit.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        ICRF : new Enumeration(1, 'ICRF'),
+        ICRF : 1,
 
         /**
          * When the camera is centered on a DynamicObject, it will attempt to maintain the
          * Local Vertical, Local Horizontal (LVLH) reference frame, keeping the object's local
          * up (zenith) vector aligned to the top of the camera's view over time.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2
          */
-        LVLH : new Enumeration(2, 'LVLH'),
+        LVLH : 2,
 
         /**
          * When the camera is centered on a DynamicObject, the Earth will be visible "rightside-up"
@@ -50,21 +47,36 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * over time.  This only works for objects in high orbits, where enough of the globe is visible
          * at once that a viewer might expect to see the globe rightside-up.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 3
          */
-        NORTH_UP : new Enumeration(3, 'NORTH_UP'),
+        NORTH_UP : 3,
 
         /**
          * When the camera is centered on a DynamicObject, it attempts to emulate a view directly
          * from that object, displaying what an observer inside that object might see.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 4
          */
-        FROM_OBJECT : new Enumeration(4, 'FROM_OBJECT')
+        FROM_OBJECT : 4
+    };
+
+    /**
+     * Get the name of a StoredViewCameraRotationMode value.
+     * @memberof StoredViewCameraRotationMode
+     *
+     * @param {StoredViewCameraRotationMode} storedViewCameraRotationMode The mode to name.
+     * @returns {String} The name of the mode.
+     */
+    StoredViewCameraRotationMode.getName = function(storedViewCameraRotationMode) {
+        for (var key in StoredViewCameraRotationMode) {
+            if (StoredViewCameraRotationMode.hasOwnProperty(key) && (typeof StoredViewCameraRotationMode[key] === 'number') &&
+                    (StoredViewCameraRotationMode[key] === storedViewCameraRotationMode)) {
+                return key;
+            }
+        }
+        return 'undefined';
     };
 
     /**
@@ -75,7 +87,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      * @returns {Bool} True if a DynamicObject is required.
      */
     StoredViewCameraRotationMode.requiresDynamicObject = function(storedViewCameraRotationMode) {
-        return storedViewCameraRotationMode.value >= 2;
+        return storedViewCameraRotationMode >= 2;
     };
 
     return StoredViewCameraRotationMode;

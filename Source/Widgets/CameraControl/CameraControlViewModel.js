@@ -120,7 +120,7 @@ define([
         this.fieldOfView = 60.0;
 
         this._viewNames = [];
-        this._timeRotateMode = StoredViewCameraRotationMode.EARTH_FIXED.name;
+        this._timeRotateMode = 'EARTH_FIXED';
         this._userRotateMode = 'Z';
         this._constrainedAxis = Cartesian3.UNIT_Z.clone();
         this._minFov = 0.001;
@@ -177,9 +177,9 @@ define([
         this._knockoutSubscriptions.push(knockout.getObservable(this, 'isTrackingObject').subscribe(function(value) {
             var required = StoredViewCameraRotationMode.requiresDynamicObject(that.timeRotateMode);
             if (value && !required) {
-                that._timeRotateMode = StoredViewCameraRotationMode.LVLH.name;
+                that._timeRotateMode = 'LVLH';
             } else if (required && !value) {
-                that._timeRotateMode = StoredViewCameraRotationMode.EARTH_FIXED.name;
+                that._timeRotateMode = 'EARTH_FIXED';
             }
         }));
 
@@ -210,7 +210,7 @@ define([
                 return StoredViewCameraRotationMode[that._timeRotateMode];
             },
             set: function(value) {
-                that._timeRotateMode = value.name;
+                that._timeRotateMode = StoredViewCameraRotationMode.getName(value);
             }
         });
 
