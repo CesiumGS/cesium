@@ -92,10 +92,12 @@ defineSuite([
             webgl : webglOptions
         });
 
-        var contextAttributes = s._context._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
-        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        if (s.context.stencilBits > 0) {
+            expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        }
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);

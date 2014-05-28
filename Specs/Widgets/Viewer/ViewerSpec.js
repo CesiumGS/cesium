@@ -304,7 +304,9 @@ defineSuite([
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
-        expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        if (context.stencilBits > 0) {
+            expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
+        }
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
