@@ -49,7 +49,7 @@ define([
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
@@ -58,7 +58,7 @@ define([
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
-     * @see CylinderGeometry#createGeometry
+     * @see CylinderGeometry.createGeometry
      *
      * @example
      * // create cylinder geometry

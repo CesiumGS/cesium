@@ -152,13 +152,13 @@ define([
      * @alias Model
      * @constructor
      *
-     * @param {Object} [options.gltf=undefined] The object for the glTF JSON.
+     * @param {Object} [options.gltf] The object for the glTF JSON.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
+     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -170,32 +170,8 @@ define([
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        /**
-         * The object for the glTF JSON, including properties with default values omitted
-         * from the JSON provided to this model.
-         *
-         * @type {Object}
-         *
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.gltf = gltfDefaults(options.gltf);
-
-        /**
-         * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .json file
-         * minus the .json file, when binary, image, and shader files are
-         * in the same directory as the .json.  When this is <code>''</code>,
-         * the app's base path is used.
-         *
-         * @type {String}
-         *
-         * @default ''
-         *
-         * @readonly
-         */
-        this.basePath = defaultValue(options.basePath, '');
+        this._gltf = gltfDefaults(options.gltf);
+        this._basePath = defaultValue(options.basePath, '');
 
         /**
          * Determines if the model primitive will be shown.
@@ -367,6 +343,43 @@ define([
 
     defineProperties(Model.prototype, {
         /**
+         * The object for the glTF JSON, including properties with default values omitted
+         * from the JSON provided to this model.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Object}
+         * @readonly
+         *
+         * @default undefined
+         */
+        gltf : {
+            get : function() {
+                return this._gltf;
+            }
+        },
+
+        /**
+         * The base path that paths in the glTF JSON are relative to.  The base
+         * path is the same path as the path containing the .json file
+         * minus the .json file, when binary, image, and shader files are
+         * in the same directory as the .json.  When this is <code>''</code>,
+         * the app's base path is used.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default ''
+         */
+        basePath : {
+            get : function() {
+                return this._basePath;
+            }
+        },
+
+        /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
          * account glTF animation and skins or {@link Model#scale}.
          *
@@ -514,8 +527,8 @@ define([
         var model = new Model(options);
 
         loadText(url, options.headers).then(function(data) {
-            model.gltf = gltfDefaults(JSON.parse(data));
-            model.basePath = basePath;
+            model._gltf = gltfDefaults(JSON.parse(data));
+            model._basePath = basePath;
         });
 
         return model;
@@ -2184,7 +2197,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Model#destroy
      */
@@ -2218,7 +2231,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

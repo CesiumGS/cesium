@@ -419,7 +419,7 @@ define([
      * automatically, and duplicate values will be removed.
      * @memberof AnimationViewModel
      *
-     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
+     * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
         //>>includeStart('debug', pragmas.debug);

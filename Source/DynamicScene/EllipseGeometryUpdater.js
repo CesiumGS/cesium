@@ -13,13 +13,13 @@ define([
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -34,13 +34,13 @@ define([
         GeometryInstance,
         Iso8601,
         ShowGeometryInstanceAttribute,
+        MaterialAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
-        Property,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive) {
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -464,7 +464,7 @@ define([
      * @memberof EllipseGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

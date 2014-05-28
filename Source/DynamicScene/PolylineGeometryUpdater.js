@@ -12,13 +12,13 @@ define([
         '../Core/Iso8601',
         '../Core/PolylineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -32,13 +32,13 @@ define([
         Iso8601,
         PolylineGeometry,
         ShowGeometryInstanceAttribute,
+        PolylineColorAppearance,
+        PolylineMaterialAppearance,
+        Primitive,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
-        Property,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        Primitive) {
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -377,7 +377,7 @@ define([
      * @memberof PolylineGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

@@ -284,9 +284,9 @@ define([
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
          *
          * @memberof Primitive.prototype
-         * @readonly
          *
          * @type {Boolean}
+         * @readonly
          *
          * @default true
          */
@@ -300,9 +300,9 @@ define([
          * Determines if geometry vertex attributes are interleaved, which can slightly improve rendering performance.
          *
          * @memberof Primitive.prototype
-         * @readonly
          *
          * @type {Boolean}
+         * @readonly
          *
          * @default false
          */
@@ -944,7 +944,7 @@ define([
                         typedArray.set(value, k * componentsPerAttribute);
                     }
 
-                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                    var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
                     vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                 }
                 attribute.dirty = false;

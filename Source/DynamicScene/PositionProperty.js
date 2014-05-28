@@ -57,7 +57,7 @@ define([
         /**
          * Gets the reference frame that the position is defined in.
          * @memberof PositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          */
         referenceFrame : {
             get : DeveloperError.throwInstantiationError

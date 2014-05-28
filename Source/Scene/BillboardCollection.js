@@ -140,7 +140,7 @@ define([
      *   imageIndex : 1
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var BillboardCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -351,7 +351,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @param {Object}[billboard=undefined] A template describing the billboard's properties as shown in Example 1.
+     * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
      *
      * @returns {Billboard} The billboard that was added to the collection.
      *
@@ -491,7 +491,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @param {Billboard} billboard The billboard to check for.
+     * @param {Billboard} [billboard] The billboard to check for.
      *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
@@ -795,8 +795,8 @@ define([
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var horizontalOrigin = billboard.horizontalOrigin.value;
-        var verticalOrigin = billboard.verticalOrigin.value;
+        var horizontalOrigin = billboard.horizontalOrigin;
+        var verticalOrigin = billboard.verticalOrigin;
         var show = billboard.show;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
@@ -805,7 +805,7 @@ define([
             show = false;
         }
 
-        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER.value;
+        billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeLocations.originAndShow];
