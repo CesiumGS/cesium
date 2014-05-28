@@ -5,10 +5,10 @@ require({
     baseUrl : '../../Source',
     packages : [{
         name : 'dojo',
-        location : '../ThirdParty/dojo-release-1.9.1/dojo'
+        location : '../ThirdParty/dojo-release-1.9.3/dojo'
     }, {
         name : 'dijit',
-        location : '../ThirdParty/dojo-release-1.9.1/dijit'
+        location : '../ThirdParty/dojo-release-1.9.3/dijit'
     }, {
         name : 'Sandcastle',
         location : '../Apps/Sandcastle'

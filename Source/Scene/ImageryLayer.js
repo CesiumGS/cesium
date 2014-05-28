@@ -10,12 +10,15 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/FeatureDetection',
+        '../Core/GeographicTilingScheme',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/Math',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/Rectangle',
+        '../Core/TerrainProvider',
+        '../Core/TileProviderError',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
         '../Renderer/DrawCommand',
@@ -26,12 +29,9 @@ define([
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
-        './GeographicTilingScheme',
         './Imagery',
         './ImageryState',
-        './TerrainProvider',
-        './TileImagery',
-        './TileProviderError'
+        './TileImagery'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -43,12 +43,15 @@ define([
         defineProperties,
         destroyObject,
         FeatureDetection,
+        GeographicTilingScheme,
         Geometry,
         GeometryAttribute,
         CesiumMath,
         PixelFormat,
         PrimitiveType,
         Rectangle,
+        TerrainProvider,
+        TileProviderError,
         BufferUsage,
         ClearCommand,
         DrawCommand,
@@ -59,12 +62,9 @@ define([
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
         when,
-        GeographicTilingScheme,
         Imagery,
         ImageryState,
-        TerrainProvider,
-        TileImagery,
-        TileProviderError) {
+        TileImagery) {
     "use strict";
 
     /**
@@ -283,7 +283,7 @@ define([
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.
-     * @type {number}
+     * @type {Number}
      * @default 1.0
      */
     ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;

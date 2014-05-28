@@ -18,7 +18,7 @@ defineSuite([
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/SampledProperty',
         'DynamicScene/TimeIntervalCollectionProperty',
-        'Scene/CompositePrimitive',
+        'Scene/PrimitiveCollection',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -40,7 +40,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
-        CompositePrimitive,
+        PrimitiveCollection,
         createScene,
         destroyScene) {
     "use strict";
@@ -333,7 +333,7 @@ defineSuite([
         dynamicObject.ellipsoid = ellipsoid;
 
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -408,7 +408,7 @@ defineSuite([
         var dynamicObject = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -428,7 +428,7 @@ defineSuite([
         dynamicObject.ellipsoid.radii = new SampledProperty(Number);
         dynamicObject.ellipsoid.radii.addSample(time, 4);
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

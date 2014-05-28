@@ -267,7 +267,7 @@ define([
      *                        the name of the GeoJSON file.
      *
      * @see DataSourceDisplay
-     * @see <a href='http://www.geojson.org/'>GeoJSON specification</a>.
+     * @see {@link http://www.geojson.org/|GeoJSON specification}
      *
      * @example
      * //Use a billboard instead of a point.

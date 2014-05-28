@@ -23,7 +23,7 @@ define([
      *
      * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
      * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
-     * @param {Array} [options.indices] Optional index data that determines the primitives in the geometry.
+     * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
 
      *
@@ -48,7 +48,7 @@ define([
      *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html">Geometry and Appearances Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      *
      * @see PolygonGeometry
      * @see RectangleGeometry

@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        './DeveloperError'
     ], function(
         DeveloperError) {
     "use strict";
@@ -17,7 +17,7 @@ define([
     var PackableForInterpolation = {
         /**
          * The number of elements used to store the object into an array in its interpolatable form.
-         * @Type {Number}
+         * @type {Number}
          */
         packedInterpolationLength : undefined,
 
@@ -26,10 +26,10 @@ define([
          * @memberof PackableForInterpolation
          * @function
          *
-         * @param {Array} packedArray The packed array.
+         * @param {Number[]} packedArray The packed array.
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
          * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-         * @param {Array} [result] The object into which to store the result.
+         * @param {Number[]} [result] The object into which to store the result.
          */
         convertPackedArrayForInterpolation : DeveloperError.throwInstantiationError,
 
@@ -38,8 +38,8 @@ define([
          * @memberof PackableForInterpolation
          * @function
          *
-         * @param {Array} array The original packed array.
-         * @param {Array} sourceArray The converted array.
+         * @param {Number[]} array The original packed array.
+         * @param {Number[]} sourceArray The converted array.
          * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
          * @param {Object} [result] The object into which to store the result.

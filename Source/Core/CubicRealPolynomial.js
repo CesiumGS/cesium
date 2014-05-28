@@ -162,7 +162,7 @@ define([
      * @param {Number} b The coefficient of the 2nd order monomial.
      * @param {Number} c The coefficient of the 1st order monomial.
      * @param {Number} d The coefficient of the 0th order monomial.
-     * @returns {Array} The real valued roots.
+     * @returns {Number[]} The real valued roots.
      */
     CubicRealPolynomial.realRoots = function(a, b, c, d) {
         //>>includeStart('debug', pragmas.debug);

@@ -202,8 +202,8 @@ define([
      * @constructor
      * @immutable
      *
-     * @param {Cartographic} [start=undefined] The initial planetodetic point on the path.
-     * @param {Cartographic} [end=undefined] The final planetodetic point on the path.
+     * @param {Cartographic} [start] The initial planetodetic point on the path.
+     * @param {Cartographic} [end] The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
      */
     var EllipsoidGeodesic = function(start, end, ellipsoid) {
