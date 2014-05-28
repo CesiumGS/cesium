@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        './defaultValue',
         './defined',
         './Math'
     ], function(
+        defaultValue,
         defined,
         CesiumMath) {
     "use strict";
@@ -63,30 +65,21 @@ define([
     };
 
     /**
-     * Given the desired degree, returns the number of data points required for interpolation.
-     *
-     * @memberof HermitePolynomialApproximation
-     *
-     * @param degree The desired degree of interpolation.
-     *
-     * @returns The number of required data points needed for the desired degree of interpolation.
-     */
-    HermitePolynomialApproximation.getRequiredDataPoints = function(degree) {
-        return Math.max(degree + 1, 2);
-    };
-
-    /**
      * Given the input order and desired degree, returns the number of data points required for interpolation.
      *
      * @memberof HermitePolynomialApproximation
      *
      * @param degree The desired degree of interpolation.
      *
-     * @param degree The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
+     * @param inputOrder The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
+     * The inputOrder is assumed to be 0 with not provided.
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
     HermitePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
+
+        inputOrder = defaultValue(inputOrder, 0);
+
         return Math.max(Math.floor((degree + 1)/(inputOrder + 1)), 2);
     };
 

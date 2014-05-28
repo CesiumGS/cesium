@@ -347,7 +347,8 @@ define([
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
             var interpolationResult;
-            if (this._inputOrder){
+            // We need both an input order, and an algorithm that can handle a non-zero input order.
+            if (this._inputOrder && interpolationAlgorithm.interpolate){
                 var yStride = Math.floor(packedInterpolationLength / (this._inputOrder + 1));
                 interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, this._inputOrder, this._inputOrder, this._interpolationResult);
             }
