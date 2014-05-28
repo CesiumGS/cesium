@@ -97,6 +97,8 @@ define([
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
+     *        to the bottom of the widget itself.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -218,7 +220,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
-            creditContainer : bottomContainer
+            creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer
         });
 
         var dataSourceCollection = new DataSourceCollection();
