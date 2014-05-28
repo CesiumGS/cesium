@@ -127,6 +127,8 @@ define([
      *
      * @param {Number|Object} type The type of property, which must be a Number or implement {@link Packable}.
      *
+     * @exception {DeveloperError} The type argument is required.
+     *
      * @see SampledPositionProperty
      *
      * @example
@@ -256,6 +258,8 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} The time argument is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -276,12 +280,7 @@ define([
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints;
-                if (this._inputOrder){
-                    numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, this._inputOrder), times.length);
-                } else {
-                    numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
-                }
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, this._inputOrder), times.length);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -325,7 +324,7 @@ define([
             var length = lastIndex - firstIndex + 1;
 
             // Build the tables
-            for ( var i = 0; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
             }
 
@@ -348,11 +347,10 @@ define([
             var x = times[lastIndex].getSecondsDifference(time);
             var interpolationResult;
             // We need both an input order, and an algorithm that can handle a non-zero input order.
-            if (this._inputOrder && interpolationAlgorithm.interpolate){
+            if (defined(this._inputOrder) && defined(interpolationAlgorithm.interpolate)) {
                 var yStride = Math.floor(packedInterpolationLength / (this._inputOrder + 1));
                 interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, this._inputOrder, this._inputOrder, this._interpolationResult);
-            }
-            else{
+            } else {
                 interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
             }
 
@@ -371,6 +369,8 @@ define([
      * @param {Object} options The options
      * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
+     *
+     * @exception {DeveloperError} The options argument is required.
      */
     SampledProperty.prototype.setInterpolationOptions = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -406,6 +406,8 @@ define([
      *
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
+     *
+     * @exception {DeveloperError} The time and value arguments are required.
      */
     SampledProperty.prototype.addSample = function(time, value) {
         //>>includeStart('debug', pragmas.debug);
@@ -432,7 +434,7 @@ define([
      * @param {Array} times An array of JulianDate instances where each index is a sample time.
      * @param {Array} values The array of values, where each value corresponds to the provided times index.
      *
-     * @exception {DeveloperError} times and values must be the same length..
+     * @exception {DeveloperError} times and values must be the same length.
      */
     SampledProperty.prototype.addSamples = function(times, values) {
         //>>includeStart('debug', pragmas.debug);
@@ -465,6 +467,8 @@ define([
      *
      * @param {Array} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
+     *
+     * @exception {DeveloperError} The packedSamples argument is required.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
         //>>includeStart('debug', pragmas.debug);

@@ -2,10 +2,12 @@
 define([
         './defaultValue',
         './defined',
+        './DeveloperError',
         './Math'
     ], function(
         defaultValue,
         defined,
+        DeveloperError,
         CesiumMath) {
     "use strict";
 
@@ -69,18 +71,33 @@ define([
      *
      * @memberof HermitePolynomialApproximation
      *
-     * @param degree The desired degree of interpolation.
+     * @param {Number}degree The desired degree of interpolation.
      *
-     * @param inputOrder The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
-     * The inputOrder is assumed to be 0 with not provided.
+     * @param {Number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
+     *
+     * @exception {DeveloperError} The degree argument is required.
+     * @exception {DeveloperError} The degree argument must be greater than or equal to 1.
+     * @exception {DeveloperError} The order argument must be greater than or equal to 0.
      */
     HermitePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
 
         inputOrder = defaultValue(inputOrder, 0);
 
-        return Math.max(Math.floor((degree + 1)/(inputOrder + 1)), 2);
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(degree)) {
+            throw new DeveloperError('degree is required');
+        }
+        if (degree < 1) {
+            throw new DeveloperError('degree must be 1 or greater');
+        }
+        if (degree < 1) {
+            throw new DeveloperError('degree must be 0 or greater');
+        }
+        //>>includeEnd('debug');
+
+        return Math.max(Math.floor((degree + 1) / (inputOrder + 1)), 2);
     };
 
     /**
@@ -182,8 +199,7 @@ define([
         return result;
     };
 
-    HermitePolynomialApproximation.interpolate = function(x, xTable, yTable, yStride,
-                                                                   inputOrder, outputOrder, result) {
+    HermitePolynomialApproximation.interpolate = function(x, xTable, yTable, yStride, inputOrder, outputOrder, result) {
         var resultLength = yStride * (outputOrder + 1);
         if (!defined(result)) {
             result = new Array(resultLength);
@@ -254,11 +270,9 @@ define([
                         coefficient = (numerator / CesiumMath.factorial(i));
                         coefficients[dimOne + dimTwo + coefIndex] = coefficient;
                         coefIndex++;
-                    }
-                    else {
+                    } else {
                         var dimTwoMinusOne = Math.floor((i - 1) * (2 - i) / 2) + (zIndices.length * (i - 1));
-                        numerator = coefficients[dimOne + dimTwoMinusOne + j + 1] -
-                                        coefficients[dimOne + dimTwoMinusOne + j];
+                        numerator = coefficients[dimOne + dimTwoMinusOne + j + 1] - coefficients[dimOne + dimTwoMinusOne + j];
                         coefficient = (numerator / (zn - zj));
                         coefficients[dimOne + dimTwo + coefIndex] = coefficient;
                         coefIndex++;
