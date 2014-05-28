@@ -636,6 +636,11 @@ defineSuite([
             return;
         }
 
+        if (FeatureDetection.isInternetExplorer()) {
+            // sampleCoverage is not supported in IE 11.0.8
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
