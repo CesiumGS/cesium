@@ -94,7 +94,7 @@ defineSuite([
                     }
                 }
             });
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
 
         expect(function() {
             return new Tile({
@@ -169,7 +169,7 @@ defineSuite([
         it('requires tilingScheme', function() {
             expect(function() {
                 return Tile.createLevelZeroTiles(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('creates expected number of tiles', function() {

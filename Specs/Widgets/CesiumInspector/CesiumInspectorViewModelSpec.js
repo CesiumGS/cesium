@@ -52,7 +52,7 @@ defineSuite([
     it('throws if scene is undefined', function() {
         expect(function() {
             return new CesiumInspectorViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('show frustums', function() {

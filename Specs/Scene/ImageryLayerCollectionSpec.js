@@ -168,7 +168,7 @@ defineSuite([
 
         expect(function() {
             collection.add(layer1, 0);
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
 
         expect(function() {
             collection.add(layer2, -1);
@@ -180,7 +180,7 @@ defineSuite([
 
         expect(function() {
             collection.add(layer2, 0);
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
     });
 
     it('remove ignores request to remove a layer that does not exist in the collection', function() {
@@ -188,7 +188,7 @@ defineSuite([
         var layer1 = new ImageryLayer(fakeProvider);
         expect(function() {
             collection.remove(layer1);
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
     });
 
     it('contains works as expected', function() {

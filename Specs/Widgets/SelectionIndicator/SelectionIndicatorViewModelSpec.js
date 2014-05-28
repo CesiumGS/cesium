@@ -58,10 +58,10 @@ defineSuite([
         var viewModel = new SelectionIndicatorViewModel(scene, selectionIndicatorElement, container);
         expect(function() {
             viewModel.animateAppear();
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
         expect(function() {
             viewModel.animateDepart();
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
     });
 
     it('can use custom screen space positions', function() {
@@ -74,7 +74,7 @@ defineSuite([
         };
         expect(function() {
             viewModel.update();
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
         expect(viewModel._screenPositionX).toBe('-9px');  // Negative half the test size, plus viewModel.position.x (1)
         expect(viewModel._screenPositionY).toBe('-8px');  // Negative half the test size, plus viewModel.position.y (2)
 

@@ -325,7 +325,7 @@ defineSuite([
         scene.initializeFrame();
         expect(function() {
             scene.render();
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
     });
 
     it('does not crash when near plane is greater than or equal to the far plane', function() {
@@ -337,6 +337,6 @@ defineSuite([
         scene.initializeFrame();
         expect(function() {
             scene.render();
-        }).not.toThrow();
+        }).not.toThrowDeveloperError();
     });
 }, 'WebGL');

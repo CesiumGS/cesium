@@ -2,11 +2,13 @@
 define([
         './equals',
         'Core/defined',
-        'Core/DeveloperError'
+        'Core/DeveloperError',
+        'Core/RuntimeError'
     ], function(
         equals,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        RuntimeError) {
     "use strict";
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
@@ -101,6 +103,10 @@ define([
                 return this.actual instanceof expectedConstructor;
             },
 
+            toThrow : function(expectedConstructor) {
+                throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
+            },
+
             toThrowDeveloperError : (function() {
                 if (debug) {
                     return function(expected) {
@@ -129,6 +135,46 @@ define([
                                 return ["Expected function " + not + "to throw DeveloperError, but it threw", exception.message || exception].join(' ');
                             } else {
                                 return "Expected function to throw DeveloperError.";
+                            }
+                        };
+
+                        return result;
+                    };
+                }
+
+                return function() {
+                    return this.isNot ? false : true;
+                };
+            }()),
+
+            toThrowRuntimeError : (function() {
+                if (debug) {
+                    return function(expected) {
+                        // based on the built-in Jasmine toThrow matcher
+                        var result = false;
+                        var exception;
+
+                        if (typeof this.actual !== 'function') {
+                            throw new Error('Actual is not a function');
+                        }
+
+                        try {
+                            this.actual();
+                        } catch (e) {
+                            exception = e;
+                        }
+
+                        if (exception) {
+                            result = exception instanceof RuntimeError;
+                        }
+
+                        var not = this.isNot ? "not " : "";
+
+                        this.message = function() {
+                            if (result) {
+                                return ["Expected function " + not + "to throw RuntimeError, but it threw", exception.message || exception].join(' ');
+                            } else {
+                                return "Expected function to throw RuntimeError.";
                             }
                         };
 
