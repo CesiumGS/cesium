@@ -1,8 +1,8 @@
 /*global defineSuite */
 defineSuite([
-         'Core/combine'
-     ], function(
-         combine) {
+        'Core/combine'
+    ], function(
+        combine) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

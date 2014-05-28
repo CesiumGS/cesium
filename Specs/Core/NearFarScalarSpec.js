@@ -1,9 +1,10 @@
 /*global defineSuite*/
-defineSuite(['Core/NearFarScalar',
-             'Specs/createPackableSpecs'
-     ], function(
-             NearFarScalar,
-             createPackableSpecs) {
+defineSuite([
+        'Core/NearFarScalar',
+        'Specs/createPackableSpecs'
+    ], function(
+        NearFarScalar,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -25,14 +25,14 @@ define([
      * @alias Clock
      * @constructor
      *
-     * @param {JulianDate} [description.startTime] The start time of the clock.
-     * @param {JulianDate} [description.stopTime] The stop time of the clock.
-     * @param {JulianDate} [description.currentTime] The current time.
-     * @param {Number} [description.multiplier=1.0] Determines how much time advances when tick is called, negative values allow for advancing backwards.
-     * @param {ClockStep} [description.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
-     * @param {ClockRange} [description.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-     * @param {Boolean} [description.canAnimate=true] Indicates whether tick can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
-     * @param {Boolean} [description.shouldAnimate=true] Indicates whether tick should attempt to advance time.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+     * @param {JulianDate} [options.startTime] The start time of the clock.
+     * @param {JulianDate} [options.stopTime] The stop time of the clock.
+     * @param {JulianDate} [options.currentTime] The current time.
+     * @param {Number} [options.multiplier=1.0] Determines how much time advances when tick is called, negative values allow for advancing backwards.
+     * @param {ClockStep} [options.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
+     * @param {ClockRange} [options.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+     * @param {Boolean} [options.canAnimate=true] Indicates whether tick can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+     * @param {Boolean} [options.shouldAnimate=true] Indicates whether tick should attempt to advance time.  The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
      *
      * @exception {DeveloperError} startTime must come before stopTime.
      *
@@ -50,16 +50,16 @@ define([
      *    clockStep : SYSTEM_CLOCK_MULTIPLIER
      * });
      */
-    var Clock = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var Clock = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var startTime = description.startTime;
+        var startTime = options.startTime;
         var startTimeUndefined = !defined(startTime);
 
-        var stopTime = description.stopTime;
+        var stopTime = options.stopTime;
         var stopTimeUndefined = !defined(stopTime);
 
-        var currentTime = description.currentTime;
+        var currentTime = options.currentTime;
         var currentTimeUndefined = !defined(currentTime);
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
@@ -115,21 +115,21 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.multiplier = defaultValue(description.multiplier, 1.0);
+        this.multiplier = defaultValue(options.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
          * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
-        this.clockStep = defaultValue(description.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+        this.clockStep = defaultValue(options.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
          * @default {@link ClockRange.UNBOUNDED}
          */
-        this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
+        this.clockRange = defaultValue(options.clockRange, ClockRange.UNBOUNDED);
 
         /**
          * Indicates whether tick can advance time.  This could be false if data is being buffered,
@@ -137,7 +137,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.canAnimate = defaultValue(description.canAnimate, true);
+        this.canAnimate = defaultValue(options.canAnimate, true);
 
         /**
          * Indicates whether tick should attempt to advance time.
@@ -145,7 +145,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.shouldAnimate = defaultValue(description.shouldAnimate, true);
+        this.shouldAnimate = defaultValue(options.shouldAnimate, true);
 
         /**
          * An {@link Event} that is fired whenever <code>tick</code>.

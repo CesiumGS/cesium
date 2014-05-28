@@ -13,7 +13,7 @@ define([
      * constructor of an object that uses the Bing Maps API.  If this property is undefined,
      * Cesium's default key is used, which is only suitable for use early in development.
      * Please generate your own key by visiting
-     * <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>
+     * {@link https://www.bingmapsportal.com/}
      * as soon as possible and prior to deployment.  When Cesium's default key is used,
      * a message is printed to the console the first time the Bing Maps API is used.
      *

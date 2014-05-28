@@ -1,33 +1,33 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './Math',
         './Cartesian2',
         './Cartesian3',
+        './ComponentDatatype',
+        './defaultValue',
         './defined',
-        './Geometry',
-        './GeometryAttribute',
+        './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './defaultValue',
+        './Geometry',
+        './GeometryAttribute',
+        './Math',
         './pointInsideTriangle',
-        './ComponentDatatype',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
     ], function(
-        DeveloperError,
-        CesiumMath,
         Cartesian2,
         Cartesian3,
+        ComponentDatatype,
+        defaultValue,
         defined,
-        Geometry,
-        GeometryAttribute,
+        DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        defaultValue,
+        Geometry,
+        GeometryAttribute,
+        CesiumMath,
         pointInsideTriangle,
-        ComponentDatatype,
         PrimitiveType,
         Queue,
         WindingOrder) {
@@ -44,7 +44,7 @@ define([
     /**
      * Returns the index of the vertex with the maximum X value.
      *
-     * @param {Array} positions An array of the Cartesian points defining the polygon's vertices.
+     * @param {Cartesian2[]} positions An array of the Cartesian points defining the polygon's vertices.
      * @returns {Number} The index of the positions with the maximum X value.
      *
      * @private
@@ -64,7 +64,7 @@ define([
     /**
      * Returns the index of the ring that contains the rightmost vertex.
      *
-     * @param {Array} rings An array of arrays of Cartesians. Each array contains the vertices defining a polygon.
+     * @param {Cartesian2[]} rings An array of arrays of Cartesians. Each array contains the vertices defining a polygon.
      * @returns {Number} The index of the ring containing the rightmost vertex.
      *
      * @private
@@ -86,8 +86,8 @@ define([
     /**
      * Returns a list containing the reflex vertices for a given polygon.
      *
-     * @param {Array} polygon An array of Cartesian elements defining the polygon.
-     * @returns {Array}
+     * @param {Cartesian2[]} polygon An array of Cartesian elements defining the polygon.
+     * @returns {Cartesian2[]}
      *
      * @private
      */
@@ -108,7 +108,7 @@ define([
     /**
      * Returns true if the given point is contained in the list of positions.
      *
-     * @param {Array} positions A list of Cartesian elements defining a polygon.
+     * @param {Cartesian2[]} positions A list of Cartesian elements defining a polygon.
      * @param {Cartesian2} point The point to check.
      * @returns {Number} The index of <code>point</code> in <code>positions</code> or -1 if it was not found.
      *
@@ -127,8 +127,8 @@ define([
      * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
      *
      * @param {Cartesian2} point A point inside the polygon defined by <code>ring</code>.
-     * @param {Array} ring A list of Cartesian points defining a polygon.
-     * @param {Array} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
+     * @param {Cartesian2[]} ring A list of Cartesian points defining a polygon.
+     * @param {Number[]} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
      *
      * @returns {Cartesian2} The intersection point.
      *
@@ -188,8 +188,8 @@ define([
      * Given an outer ring and multiple inner rings, determine the point on the outer ring that is visible
      * to the rightmost vertex of the rightmost inner ring.
      *
-     * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-     * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+     * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+     * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
      * @returns {Number} The index of the vertex in <code>outerRing</code> that is mutually visible to the rightmost vertex in <code>inenrRing</code>.
      *
      * @private
@@ -252,10 +252,10 @@ define([
      * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
      * a polygon with the rightmost hole added to it. The added hole is removed from <code>innerRings</code>.
      *
-     * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-     * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+     * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+     * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
      *
-     * @returns {Array} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     * @returns {Cartesian2[]} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
      *
      * @private
      */
@@ -687,9 +687,9 @@ define([
      * Do not include number === n1 or number === n2.
      * Do include n1 === n2 === number.
      *
-     * @param {number} number The number tested.
-     * @param {number} n1 First bound.
-     * @param {number} n2 Secound bound.
+     * @param {Number} number The number tested.
+     * @param {Number} n1 First bound.
+     * @param {Number} n2 Secound bound.
      * @returns {Boolean} number is between n1 and n2.
      *
      * @private
@@ -704,7 +704,7 @@ define([
      * then continues to "chop" the two resulting polygons.
      *
      * @param {Array} nodeArray Array of <code>{ position, index }</code> objects representing polygon
-     * @returns {Array} Index array representing triangles that fill the polygon
+     * @returns {Number[]} Index array representing triangles that fill the polygon
      *
      * @exception {DeveloperError} Invalid polygon: must have at least three vertices.
      *
@@ -776,14 +776,10 @@ define([
     var scaleToGeodeticHeightP = new Cartesian3();
 
     /**
-     * DOC_TBA
-     *
-     * @exports PolygonPipeline
+     * @private
      */
     var PolygonPipeline = {
         /**
-         * DOC_TBA
-         *
          * Cleans up a simple polygon by removing duplicate adjacent positions and making
          * the first position not equal the last position.
          *
@@ -816,8 +812,6 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
@@ -844,9 +838,7 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
-         * @returns {WindingOrder} DOC_TBA
+         * @returns {WindingOrder} The winding order.
          *
          * @exception {DeveloperError} At least three positions are required.
          */
@@ -858,8 +850,8 @@ define([
         /**
          * Triangulate a polygon
          *
-         * @param {Array} positions - Cartesian2 array containing the vertices of the polygon
-         * @returns {Array} - Index array representing triangles that fill the polygon
+         * @param {Cartesian2[]} positions - Cartesian2 array containing the vertices of the polygon
+         * @returns {Number[]} - Index array representing triangles that fill the polygon
          *
          * @exception {DeveloperError} At least three positions are required.
          */
@@ -899,8 +891,8 @@ define([
         /**
          * Subdivides positions and raises points to the surface of the ellipsoid.
          *
-         * @param {Array} positions An array of {@link Cartesian3} positions of the polygon.
-         * @param {Array} indices An array of indices that determines the triangles in the polygon.
+         * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
+         * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
          * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
          *
          * @exception {DeveloperError} At least three indices are required.
@@ -1112,8 +1104,8 @@ define([
          * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
          * a polygon defined by the outer ring with the inner holes removed.
          *
-         * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-         * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+         * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+         * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
          *
          * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
          *

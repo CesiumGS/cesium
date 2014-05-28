@@ -1,98 +1,94 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoxGeometry',
-         'Core/CircleGeometry',
-         'Core/CylinderGeometry',
-         'Core/defined',
-         'Core/EllipseGeometry',
-         'Core/EllipsoidGeometry',
-         'Core/SphereGeometry',
-         'Core/RectangleGeometry',
-         'Core/PolygonGeometry',
-         'Core/SimplePolylineGeometry',
-         'Core/PolylineGeometry',
-         'Core/WallGeometry',
-         'Core/CorridorGeometry',
-         'Core/CornerType',
-         'Core/defaultValue',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryInstance',
-         'Core/ColorGeometryInstanceAttribute',
-         'Core/GeometryInstanceAttribute',
-         'Core/ComponentDatatype',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Matrix4',
-         'Core/Rectangle',
-         'Core/Ellipsoid',
-         'Core/PrimitiveType',
-         'Core/PolylineVolumeGeometry',
-         'Core/Transforms',
-         'Core/Cartographic',
-         'Core/BoundingSphere',
-         'Core/Math',
-         'Core/Color',
-         'Renderer/ClearCommand',
-         'Scene/PerInstanceColorAppearance',
-         'Scene/PolylineColorAppearance',
-         'Scene/Primitive',
-         'Scene/SceneMode',
-         'Scene/OrthographicFrustum',
-         'Scene/EllipsoidSurfaceAppearance',
-         'Scene/Material',
-         'Specs/render',
-         'Specs/pick',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState'
-     ], 'Scene/GeometryRendering', function(
-         BoxGeometry,
-         CircleGeometry,
-         CylinderGeometry,
-         defined,
-         EllipseGeometry,
-         EllipsoidGeometry,
-         SphereGeometry,
-         RectangleGeometry,
-         PolygonGeometry,
-         SimplePolylineGeometry,
-         PolylineGeometry,
-         WallGeometry,
-         CorridorGeometry,
-         CornerType,
-         defaultValue,
-         Geometry,
-         GeometryAttribute,
-         GeometryInstance,
-         ColorGeometryInstanceAttribute,
-         GeometryInstanceAttribute,
-         ComponentDatatype,
-         Cartesian2,
-         Cartesian3,
-         Matrix4,
-         Rectangle,
-         Ellipsoid,
-         PrimitiveType,
-         PolylineVolumeGeometry,
-         Transforms,
-         Cartographic,
-         BoundingSphere,
-         CesiumMath,
-         Color,
-         ClearCommand,
-         PerInstanceColorAppearance,
-         PolylineColorAppearance,
-         Primitive,
-         SceneMode,
-         OrthographicFrustum,
-         EllipsoidSurfaceAppearance,
-         Material,
-         render,
-         pick,
-         createContext,
-         destroyContext,
-         createFrameState) {
+        'Core/BoundingSphere',
+        'Core/BoxGeometry',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/CircleGeometry',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/ComponentDatatype',
+        'Core/CornerType',
+        'Core/CorridorGeometry',
+        'Core/CylinderGeometry',
+        'Core/defined',
+        'Core/EllipseGeometry',
+        'Core/Ellipsoid',
+        'Core/EllipsoidGeometry',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryInstance',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/PolygonGeometry',
+        'Core/PolylineGeometry',
+        'Core/PolylineVolumeGeometry',
+        'Core/PrimitiveType',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/SimplePolylineGeometry',
+        'Core/SphereGeometry',
+        'Core/Transforms',
+        'Core/WallGeometry',
+        'Renderer/ClearCommand',
+        'Scene/EllipsoidSurfaceAppearance',
+        'Scene/Material',
+        'Scene/OrthographicFrustum',
+        'Scene/PerInstanceColorAppearance',
+        'Scene/PolylineColorAppearance',
+        'Scene/Primitive',
+        'Scene/SceneMode',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/pick',
+        'Specs/render'
+    ], 'Scene/GeometryRendering', function(
+        BoundingSphere,
+        BoxGeometry,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        CircleGeometry,
+        Color,
+        ColorGeometryInstanceAttribute,
+        ComponentDatatype,
+        CornerType,
+        CorridorGeometry,
+        CylinderGeometry,
+        defined,
+        EllipseGeometry,
+        Ellipsoid,
+        EllipsoidGeometry,
+        Geometry,
+        GeometryAttribute,
+        GeometryInstance,
+        CesiumMath,
+        Matrix4,
+        PolygonGeometry,
+        PolylineGeometry,
+        PolylineVolumeGeometry,
+        PrimitiveType,
+        Rectangle,
+        RectangleGeometry,
+        SimplePolylineGeometry,
+        SphereGeometry,
+        Transforms,
+        WallGeometry,
+        ClearCommand,
+        EllipsoidSurfaceAppearance,
+        Material,
+        OrthographicFrustum,
+        PerInstanceColorAppearance,
+        PolylineColorAppearance,
+        Primitive,
+        SceneMode,
+        createContext,
+        createFrameState,
+        destroyContext,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -190,11 +186,7 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
@@ -253,11 +245,8 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
+
         var frustum = new OrthographicFrustum();
         frustum.right = ellipsoid.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
@@ -1116,11 +1105,11 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = Cartesian3.clone(frameState.camera.position);
-                translation.z = 0.0;
-                var transform = Matrix4.fromTranslation(translation);
-                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                Matrix4.clone(transform, frameState.camera.transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO);
                 frameState.camera.zoomIn(primitive._boundingSphere.radius * 1.85);
+                Matrix4.clone(Matrix4.IDENTITY, frameState.camera.transform);
             };
         });
 

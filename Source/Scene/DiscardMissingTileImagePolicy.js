@@ -2,16 +2,16 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/loadImageViaBlob',
-        '../Core/getImagePixels',
         '../Core/DeveloperError',
+        '../Core/getImagePixels',
+        '../Core/loadImageViaBlob',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
-        loadImageViaBlob,
-        getImagePixels,
         DeveloperError,
+        getImagePixels,
+        loadImageViaBlob,
         when) {
     "use strict";
 
@@ -22,25 +22,25 @@ define([
      * @alias DiscardMissingTileImagePolicy
      * @constructor
      *
-     * @param {String} description.missingImageUrl The URL of the known missing image.
-     * @param {Array} description.pixelsToCheck An array of {@link Cartesian2} pixel positions to
+     * @param {String} options.missingImageUrl The URL of the known missing image.
+     * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
-     * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
+     * @param {Boolean} [options.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
      */
-    var DiscardMissingTileImagePolicy = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var DiscardMissingTileImagePolicy = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (!defined(description.missingImageUrl)) {
-            throw new DeveloperError('description.missingImageUrl is required.');
+        if (!defined(options.missingImageUrl)) {
+            throw new DeveloperError('options.missingImageUrl is required.');
         }
 
-        if (!defined(description.pixelsToCheck)) {
-            throw new DeveloperError('description.pixelsToCheck is required.');
+        if (!defined(options.pixelsToCheck)) {
+            throw new DeveloperError('options.pixelsToCheck is required.');
         }
 
-        this._pixelsToCheck = description.pixelsToCheck;
+        this._pixelsToCheck = options.pixelsToCheck;
         this._missingImagePixels = undefined;
         this._missingImageByteLength = undefined;
         this._isReady = false;
@@ -54,11 +54,11 @@ define([
 
             var pixels = getImagePixels(image);
 
-            if (description.disableCheckIfAllPixelsAreTransparent) {
+            if (options.disableCheckIfAllPixelsAreTransparent) {
                 var allAreTransparent = true;
                 var width = image.width;
 
-                var pixelsToCheck = description.pixelsToCheck;
+                var pixelsToCheck = options.pixelsToCheck;
                 for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
                     var pos = pixelsToCheck[i];
                     var index = pos.x * 4 + pos.y * width;
@@ -85,7 +85,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImageViaBlob(description.missingImageUrl), success, failure);
+        when(loadImageViaBlob(options.missingImageUrl), success, failure);
     };
 
     /**

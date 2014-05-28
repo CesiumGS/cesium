@@ -1,25 +1,25 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Cartographic',
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Matrix4',
-        '../Core/BoundingRectangle',
+        '../Core/Cartographic',
+        '../Core/defined',
+        '../Core/DeveloperError',
         '../Core/Math',
+        '../Core/Matrix4',
         './SceneMode'
     ], function(
-        defined,
-        DeveloperError,
-        Cartographic,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Matrix4,
-        BoundingRectangle,
+        Cartographic,
+        defined,
+        DeveloperError,
         CesiumMath,
+        Matrix4,
         SceneMode) {
     "use strict";
 
@@ -42,7 +42,7 @@ define([
      *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
-     * @param {Cartesian2} [result=undefined] An optional object to return the input position transformed to window coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
@@ -90,7 +90,7 @@ define([
      *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
-     * @param {Cartesian2} [result=undefined] An optional object to return the input position transformed to window coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
      *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
@@ -123,7 +123,7 @@ define([
         }
 
         // View-projection matrix to transform from world coordinates to clip coordinates
-        var viewProjection = scene._context.uniformState.viewProjection;
+        var viewProjection = scene.context.uniformState.viewProjection;
         Matrix4.multiplyByVector(viewProjection, Cartesian4.fromElements(actualPosition.x, actualPosition.y, actualPosition.z, 1, positionCC), positionCC);
 
         return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);

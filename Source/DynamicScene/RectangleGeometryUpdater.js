@@ -1,16 +1,17 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/RectangleGeometry',
-        '../Core/RectangleOutlineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/RectangleGeometry',
+        '../Core/RectangleOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
         '../DynamicScene/ColorMaterialProperty',
         '../DynamicScene/ConstantProperty',
@@ -27,11 +28,11 @@ define(['../Core/Color',
         defineProperties,
         destroyObject,
         DeveloperError,
-        RectangleGeometry,
-        RectangleOutlineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
+        RectangleGeometry,
+        RectangleOutlineGeometry,
         ShowGeometryInstanceAttribute,
         ColorMaterialProperty,
         ConstantProperty,
@@ -459,7 +460,7 @@ define(['../Core/Color',
      * @memberof RectangleGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

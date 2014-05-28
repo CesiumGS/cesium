@@ -1,29 +1,29 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/NearFarScalar',
         './Billboard',
-        './LabelStyle',
         './HorizontalOrigin',
+        './LabelStyle',
         './VerticalOrigin'
     ], function(
-        defaultValue,
-        DeveloperError,
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         NearFarScalar,
         Billboard,
-        LabelStyle,
         HorizontalOrigin,
+        LabelStyle,
         VerticalOrigin) {
     "use strict";
 
@@ -56,7 +56,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html">Cesium Sandcastle Labels Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     var Label = function(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -186,7 +186,7 @@ define([
          * Gets and sets the font used to draw this label. Fonts are specified using the same syntax as the CSS 'font' property.
          * @memberof Label.prototype
          * @type {String}
-         * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles'>HTML canvas 2D context text styles</a>
+         * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
          */
         font: {
             get : function() {
@@ -210,7 +210,7 @@ define([
          * Gets and sets the fill color of this label.
          * @memberof Label.prototype
          * @type {Color}
-         * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+         * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         fillColor : {
             get : function() {
@@ -235,7 +235,7 @@ define([
          * Gets and sets the outline color of this label.
          * @memberof Label.prototype
          * @type {Color}
-         * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+         * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineColor : {
             get : function() {
@@ -260,7 +260,7 @@ define([
          * Gets and sets the outline width of this label.
          * @memberof Label.prototype
          * @type {Number}
-         * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
+         * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
         outlineWidth: {
             get : function() {
@@ -604,8 +604,7 @@ define([
      *
      * @memberof Label
      *
-     * @param {Context} context The context.
-     * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
+     * @param {Scene} scene The scene the label is in.
      *
      * @returns {Cartesian2} The screen-space position of the label.
      *

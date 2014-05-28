@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Geocoder/GeocoderViewModel',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         GeocoderViewModel,
-         Cartesian3,
-         Ellipsoid,
-         createScene,
-         destroyScene) {
+        'Widgets/Geocoder/GeocoderViewModel',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        GeocoderViewModel,
+        Cartesian3,
+        Ellipsoid,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

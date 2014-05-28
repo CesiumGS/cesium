@@ -1,10 +1,11 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property',
         './StripeOrientation'
     ], function(
@@ -12,8 +13,8 @@ define(['../Core/Color',
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property,
         StripeOrientation) {
     "use strict";
@@ -117,7 +118,7 @@ define(['../Core/Color',
      * @memberof StripeMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     StripeMaterialProperty.prototype.getType = function(time) {
         return 'Stripe';

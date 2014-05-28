@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Plane',
-         'Core/Cartesian3'
-     ], function(
-         Plane,
-         Cartesian3) {
+        'Core/Plane',
+        'Core/Cartesian3'
+    ], function(
+        Plane,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

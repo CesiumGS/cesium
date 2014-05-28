@@ -1,17 +1,18 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/AssociativeArray',
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
-        '../Core/AssociativeArray',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/PrimitiveState'
     ], function(
+        AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
-        AssociativeArray,
         ShowGeometryInstanceAttribute,
         PerInstanceColorAppearance,
         Primitive,

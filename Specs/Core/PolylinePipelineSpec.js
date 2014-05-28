@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolylinePipeline',
-         'Core/Cartesian3',
-         'Core/Math',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Transforms'
-     ], function(
-         PolylinePipeline,
-         Cartesian3,
-         CesiumMath,
-         Cartographic,
-         Ellipsoid,
-         Transforms) {
+        'Core/PolylinePipeline',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Transforms'
+    ], function(
+        PolylinePipeline,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        Transforms) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

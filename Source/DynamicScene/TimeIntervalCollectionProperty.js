@@ -1,21 +1,20 @@
 /*global define*/
-define(['./Property',
+define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/isArray',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './Property'
     ], function(
-        Property,
         defined,
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         isArray,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        Property) {
     "use strict";
 
     /**
@@ -116,7 +115,7 @@ define(['./Property',
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !isArray(value) && !(value instanceof Enumeration))) {
+        if (defined(value) && (typeof value === 'object' && !isArray(value))) {
             return value.clone(result);
         }
         return value;

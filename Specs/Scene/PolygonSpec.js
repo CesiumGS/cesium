@@ -1,44 +1,44 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Polygon',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/frameState',
-         'Specs/pick',
-         'Specs/render',
-         'Core/defaultValue',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Renderer/ClearCommand',
-         'Scene/Material',
-         'Scene/SceneMode'
-     ], function(
-         Polygon,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         frameState,
-         pick,
-         render,
-         defaultValue,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         ClearCommand,
-         Material,
-         SceneMode) {
+        'Scene/Polygon',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/defaultValue',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/frameState',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        Polygon,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        defaultValue,
+        Ellipsoid,
+        CesiumMath,
+        ClearCommand,
+        Material,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        frameState,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -319,7 +319,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);

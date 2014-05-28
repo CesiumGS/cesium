@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext'
-     ], 'Renderer/Sampler', function(
-         createContext,
-         destroyContext) {
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Sampler', function(
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

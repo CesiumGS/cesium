@@ -1,24 +1,24 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
-        './ImageryProvider',
-        './WebMercatorTilingScheme',
-        './Credit'
+        '../Core/WebMercatorTilingScheme',
+        './ImageryProvider'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         Rectangle,
-        ImageryProvider,
         WebMercatorTilingScheme,
-        Credit) {
+        ImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -28,18 +28,18 @@ define([
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
      * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
-     * <a href='http://wiki.openstreetmap.org/wiki/Tile_usage_policy'>Tile Usage Policy</a>.
+     * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
-     * @param {String} [description.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
-     * @param {String} [description.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
-     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
-     * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
+     * @param {String} [options.fileExtension='png'] The file extension for images on the server.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -47,8 +47,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // OpenStreetMap tile provider
@@ -56,29 +56,29 @@ define([
      *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
-        description = defaultValue(description, {});
+    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+        options = defaultValue(options, {});
 
-        var url = defaultValue(description.url, '//a.tile.openstreetmap.org/');
+        var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';
         }
 
         this._url = url;
-        this._fileExtension = defaultValue(description.fileExtension, 'png');
-        this._proxy = description.proxy;
-        this._tileDiscardPolicy = description.tileDiscardPolicy;
+        this._fileExtension = defaultValue(options.fileExtension, 'png');
+        this._proxy = options.proxy;
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
 
         this._tilingScheme = new WebMercatorTilingScheme();
 
         this._tileWidth = 256;
         this._tileHeight = 256;
 
-        this._minimumLevel = defaultValue(description.minimumLevel, 0);
-        this._maximumLevel = defaultValue(description.maximumLevel, 18);
+        this._minimumLevel = defaultValue(options.minimumLevel, 0);
+        this._maximumLevel = defaultValue(options.maximumLevel, 18);
 
-        this._rectangle = defaultValue(description.rectangle, this._tilingScheme.rectangle);
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
@@ -94,7 +94,7 @@ define([
 
         this._ready = true;
 
-        var credit = defaultValue(description.credit, defaultCredit);
+        var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -305,6 +305,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

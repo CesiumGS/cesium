@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/GeographicProjection',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-             GeographicProjection,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/GeographicProjection',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        GeographicProjection,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -74,5 +74,12 @@ defineSuite([
         var returnValue = projection.unproject(projected, result);
         expect(result).toEqual(returnValue);
         expect(result).toEqual(cartographic);
+    });
+
+    it('project throws without cartesian', function() {
+        var projection = new GeographicProjection();
+        expect(function() {
+            return projection.unproject();
+        }).toThrowDeveloperError();
     });
 });

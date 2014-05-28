@@ -15,10 +15,6 @@ define([
      * can be assigned to a {@link Primitive} for visualization.  A <code>Primitive</code> can
      * be created from many heterogeneous - in many cases - geometries for performance.
      * <p>
-     * In low-level rendering code, a vertex array can be created from a geometry using
-     * {@link Context#createVertexArrayFromGeometry}.
-     * </p>
-     * <p>
      * Geometries can be transformed and optimized using functions in {@link GeometryPipeline}.
      * </p>
      *
@@ -27,7 +23,7 @@ define([
      *
      * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
      * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
-     * @param {Array} [options.indices] Optional index data that determines the primitives in the geometry.
+     * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
 
      *
@@ -52,7 +48,7 @@ define([
      *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html">Geometry and Appearances Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      *
      * @see PolygonGeometry
      * @see RectangleGeometry
@@ -79,9 +75,7 @@ define([
          * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
          * {@link GeometryAttribute} containing the attribute's data.
          * <p>
-         * Attributes are always stored non-interleaved in a Geometry.  When geometry is prepared for rendering
-         * with {@link Context#createVertexArrayFromGeometry}, attributes are generally written interleaved
-         * into the vertex buffer for better rendering performance.
+         * Attributes are always stored non-interleaved in a Geometry.
          * </p>
          * <p>
          * There are reserved attribute names with well-known semantics.  The following attributes
@@ -104,7 +98,7 @@ define([
          *    <li><code>position3DHigh</code> - High 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
          *    <li><code>position2DLow</code> - Low 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
          *    <li><code>color</code> - RGBA color (normalized) usually from {@link GeometryInstance#color}.  32-bit floating-point.  4 components per attribute.</li>
-         *    <li><code>pickColor</code> - RGBA color used for picking, created from {@link Context#createPickId}.  32-bit floating-point.  4 components per attribute.</li>
+         *    <li><code>pickColor</code> - RGBA color used for picking.  32-bit floating-point.  4 components per attribute.</li>
          * </ul>
          * </p>
          *

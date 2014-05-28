@@ -8,9 +8,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Renderer/BufferUsage',
-        './Material',
-        './CustomSensorVolume'
+        './CustomSensorVolume',
+        './Material'
     ], function(
         clone,
         Color,
@@ -20,9 +19,8 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix4,
-        BufferUsage,
-        Material,
-        CustomSensorVolume) {
+        CustomSensorVolume,
+        Material) {
     "use strict";
 
     /**
@@ -86,18 +84,10 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
-
-        /**
-         * DOC_TBA
-         *
-         * @type {BufferUsage}
-         * @default {@link BufferUsage.STATIC_DRAW}
-         */
-        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
 
         /**
          * DOC_TBA
@@ -132,7 +122,7 @@ define([
 
         /**
          * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -147,7 +137,7 @@ define([
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Cesium.Material.StripeType);
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
@@ -208,7 +198,6 @@ define([
         s.showIntersection = this.showIntersection;
         s.showThroughEllipsoid = this.showThroughEllipsoid;
         s.modelMatrix = this.modelMatrix;
-        s.bufferUsage = this.bufferUsage;
         s.radius = this.radius;
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;

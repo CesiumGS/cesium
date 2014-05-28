@@ -1,60 +1,60 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CompositePrimitive',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/frameState',
-         'Specs/render',
-         'Core/BoundingSphere',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/defaultValue',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Occluder',
-         'Renderer/TextureMinificationFilter',
-         'Renderer/TextureMagnificationFilter',
-         'Renderer/ClearCommand',
-         'Scene/BillboardCollection',
-         'Scene/Camera',
-         'Scene/LabelCollection',
-         'Scene/HorizontalOrigin',
-         'Scene/VerticalOrigin',
-         'Scene/Polygon',
-         'Scene/PolylineCollection',
-         'Scene/SceneMode',
-         'Scene/OrthographicFrustum',
-         'Scene/Material'
-     ], 'Scene/PrimitiveCulling', function(
-         CompositePrimitive,
-         createContext,
-         destroyContext,
-         createFrameState,
-         frameState,
-         render,
-         BoundingSphere,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         defaultValue,
-         Ellipsoid,
-         CesiumMath,
-         Occluder,
-         TextureMinificationFilter,
-         TextureMagnificationFilter,
-         ClearCommand,
-         BillboardCollection,
-         Camera,
-         LabelCollection,
-         HorizontalOrigin,
-         VerticalOrigin,
-         Polygon,
-         PolylineCollection,
-         SceneMode,
-         OrthographicFrustum,
-         Material) {
+        'Core/BoundingSphere',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/defaultValue',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Occluder',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
+        'Scene/BillboardCollection',
+        'Scene/Camera',
+        'Scene/HorizontalOrigin',
+        'Scene/LabelCollection',
+        'Scene/Material',
+        'Scene/OrthographicFrustum',
+        'Scene/Polygon',
+        'Scene/PolylineCollection',
+        'Scene/PrimitiveCollection',
+        'Scene/SceneMode',
+        'Scene/TextureAtlas',
+        'Scene/VerticalOrigin',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/frameState',
+        'Specs/render'
+    ], 'Scene/PrimitiveCulling', function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        defaultValue,
+        Ellipsoid,
+        CesiumMath,
+        Occluder,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        BillboardCollection,
+        Camera,
+        HorizontalOrigin,
+        LabelCollection,
+        Material,
+        OrthographicFrustum,
+        Polygon,
+        PolylineCollection,
+        PrimitiveCollection,
+        SceneMode,
+        TextureAtlas,
+        VerticalOrigin,
+        createContext,
+        createFrameState,
+        destroyContext,
+        frameState,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -72,7 +72,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        primitives = new CompositePrimitive();
+        primitives = new PrimitiveCollection();
 
         camera = new Camera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
@@ -366,7 +366,15 @@ defineSuite([
     });
 
     function createBillboard() {
-        var atlas = context.createTextureAtlas({images : [greenImage], borderWidthInPixels : 1, initialSize : new Cartesian2(3, 3)});
+        var mockScene = {
+            context : context
+        };
+        var atlas = new TextureAtlas({
+            scene : mockScene,
+            images : [greenImage],
+            borderWidthInPixels : 1,
+            initialSize : new Cartesian2(3, 3)
+        });
 
         // ANGLE Workaround
         atlas.texture.sampler = context.createSampler({

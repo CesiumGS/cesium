@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Scene/ImageryLayerCollection',
-         'Scene/EllipsoidTerrainProvider',
-         'Specs/EventHelper'
-     ], function(
-         BaseLayerPicker,
-         ImageryLayerCollection,
-         EllipsoidTerrainProvider,
-         EventHelper) {
+        'Widgets/BaseLayerPicker/BaseLayerPicker',
+        'Core/EllipsoidTerrainProvider',
+        'Scene/ImageryLayerCollection',
+        'Specs/EventHelper'
+    ], function(
+        BaseLayerPicker,
+        EllipsoidTerrainProvider,
+        ImageryLayerCollection,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

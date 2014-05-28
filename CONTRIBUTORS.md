@@ -41,5 +41,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
 * [David Hite](https://github.com/dav3hit3)
+* [Kevin Ring](https://github.com/kring)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

@@ -107,7 +107,10 @@ require(['Cesium'], function(Cesium) {
                 billboards = new Cesium.BillboardCollection();
 
                 Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                    var textureAtlas = scene.createTextureAtlas({images : [image]});
+                    var textureAtlas = new Cesium.TextureAtlas({
+                        scene : scene,
+                        images : [image]
+                    });
                     billboards.textureAtlas = textureAtlas;
                 });
             } else {
@@ -177,8 +180,7 @@ require(['Cesium'], function(Cesium) {
     });
 
     var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-        url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
-        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+        url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles'
     });
 
     var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();

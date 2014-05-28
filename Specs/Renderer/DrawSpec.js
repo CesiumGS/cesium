@@ -1,38 +1,30 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/IndexDatatype',
-         'Core/PrimitiveType',
-         'Core/WindingOrder',
-         'Core/BoundingRectangle',
-         'Core/Color',
-         'Renderer/BufferUsage',
-         'Renderer/BlendEquation',
-         'Renderer/BlendFunction',
-         'Renderer/ClearCommand',
-         'Renderer/CullFace',
-         'Renderer/DepthFunction',
-         'Renderer/StencilFunction',
-         'Renderer/StencilOperation'
-     ], 'Renderer/Draw', function(
-         createContext,
-         destroyContext,
-         IndexDatatype,
-         PrimitiveType,
-         WindingOrder,
-         BoundingRectangle,
-         Color,
-         BufferUsage,
-         BlendEquation,
-         BlendFunction,
-         ClearCommand,
-         CullFace,
-         DepthFunction,
-         StencilFunction,
-         StencilOperation) {
+        'Core/BoundingRectangle',
+        'Core/Color',
+        'Core/FeatureDetection',
+        'Core/IndexDatatype',
+        'Core/PrimitiveType',
+        'Core/WindingOrder',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Draw', function(
+        BoundingRectangle,
+        Color,
+        FeatureDetection,
+        IndexDatatype,
+        PrimitiveType,
+        WindingOrder,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -69,11 +61,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -95,11 +88,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -129,11 +123,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
@@ -170,15 +165,16 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
     });
 
-    it('draws with stencil test', function() {
+    it('draws with scissor test', function() {
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -194,21 +190,22 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - fails scissor test
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 scissorTest : {
                     enabled : true,
-                    rectangle : new BoundingRectangle(0, 0, 0, 0)
+                    rectangle : new BoundingRectangle(1, 1, 0, 0)
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 3 of 3:  Render point - passes scissor test
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -219,6 +216,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -238,7 +236,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Render point - blue color mask
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -251,10 +249,11 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 0]);
 
         // 3 of 3:  Render point - red color mask (blue channel not touched)
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -267,6 +266,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
@@ -285,29 +285,29 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 blending : {
                     enabled : true,
-                    equationRgb : BlendEquation.ADD, // Optional, default
-                    equationAlpha : BlendEquation.ADD, // Optional, default
-                    functionSourceRgb : BlendFunction.ONE, // Optional, default
-                    functionSourceAlpha : BlendFunction.ONE, // Optional, default
-                    functionDestinationRgb : BlendFunction.ONE,
-                    functionDestinationAlpha : BlendFunction.ONE
+                    equationRgb : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                    equationAlpha : WebGLRenderingContext.FUNC_ADD, // Optional, default
+                    functionSourceRgb : WebGLRenderingContext.ONE, // Optional, default
+                    functionSourceAlpha : WebGLRenderingContext.ONE, // Optional, default
+                    functionDestinationRgb : WebGLRenderingContext.ONE,
+                    functionDestinationAlpha : WebGLRenderingContext.ONE
                 }
             })
-        };
+        });
 
         // 2 of 3:  Blend:  0 + 0.5
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqualEpsilon([127, 127, 127, 127], 1);
 
         // 3 of 3:  Blend:  0.5 + 0.5
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqualEpsilon([254, 254, 254, 254], 1);
     });
 
@@ -326,33 +326,38 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 blending : {
                     enabled : true,
-                    equationRgb : BlendEquation.ADD,
-                    equationAlpha : BlendEquation.SUBTRACT, // does not actually matter
-                    functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-                    functionSourceAlpha : BlendFunction.ONE, // Don't blend alpha
-                    functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
-                    functionDestinationAlpha : BlendFunction.ZERO
+                    equationRgb : WebGLRenderingContext.FUNC_ADD,
+                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT, // does not actually matter
+                    functionSourceRgb : WebGLRenderingContext.SRC_ALPHA,
+                    functionSourceAlpha : WebGLRenderingContext.ONE, // Don't blend alpha
+                    functionDestinationRgb : WebGLRenderingContext.ONE_MINUS_SRC_ALPHA,
+                    functionDestinationAlpha : WebGLRenderingContext.ZERO
                 }
             })
-        };
+        });
 
         // 2 of 3:  Blend:  RGB:  (255 * 0.5) + (0 * 0.5), Alpha: 0.5 + 0
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqualEpsilon([127, 127, 127, 127], 1);
 
         // 3 of 3:  Blend:  RGB:  (255 * 0.5) + (127 * 0.5), Alpha: 0.5 + 0
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqualEpsilon([191, 191, 191, 127], 2);
     });
 
     it('draws with blend color', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // blendColor is not supported in IE 11.0.8
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -366,7 +371,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -379,19 +384,19 @@ defineSuite([
                         blue : 0.5,
                         alpha : 0.5
                     },
-                    equationRgb : BlendEquation.SUBTRACT,
-                    equationAlpha : BlendEquation.SUBTRACT,
-                    functionSourceRgb : BlendFunction.CONSTANT_COLOR,
-                    functionSourceAlpha : BlendFunction.ONE,
-                    functionDestinationRgb : BlendFunction.ZERO,
-                    functionDestinationAlpha : BlendFunction.ZERO
+                    equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
+                    equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
+                    functionSourceRgb : WebGLRenderingContext.CONSTANT_COLOR,
+                    functionSourceAlpha : WebGLRenderingContext.ONE,
+                    functionDestinationRgb : WebGLRenderingContext.ZERO,
+                    functionDestinationAlpha : WebGLRenderingContext.ZERO
                 }
             })
-        };
+        });
 
         // 2 of 3:  Blend:  RGB:  255 - 127, Alpha: 255 - (255 - 255)
         //   Epsilon of 1 because ANGLE gives 127 and desktop GL gives 128.
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqualEpsilon([128, 128, 128, 255], 1);
     });
 
@@ -411,31 +416,33 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Cull front faces - nothing is drawn
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 cull : {
                     enabled : true,
-                    face : CullFace.FRONT
+                    face : WebGLRenderingContext.FRONT
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 3 of 3:  Cull back faces - nothing is culled
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -455,7 +462,7 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 3:  Cull back faces with opposite winding order - nothing is drawn
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
@@ -463,14 +470,15 @@ defineSuite([
                 frontFace : WindingOrder.CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 3 of 3:  Cull back faces with correct winding order - nothing is culled
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
@@ -478,10 +486,11 @@ defineSuite([
                 frontFace : WindingOrder.COUNTER_CLOCKWISE,
                 cull : {
                     enabled : true,
-                    face : CullFace.BACK
+                    face : WebGLRenderingContext.BACK
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -496,37 +505,38 @@ defineSuite([
             componentsPerAttribute : 4
         }]);
 
-        var da = {
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.LESS_OR_EQUAL
+                    func : WebGLRenderingContext.LEQUAL
                 }
             })
-        };
+        });
 
         // 1 of 2.  Triangle fan passes the depth test.
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 0.0, 0.0, 0.0);
-        command.depth = 1.0;
-        command.execute(context);
+        var clearCommand = new ClearCommand({
+            color : new Color (0.0, 0.0, 0.0, 0.0),
+            depth : 1.0
+        });
+        clearCommand.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         // 2 of 2.  Triangle fan fails the depth test.
-        command.color = new Color (0.0, 0.0, 0.0, 0.0);
-        command.depth = 0.0;
-        command.execute(context);
+        clearCommand.color = new Color (0.0, 0.0, 0.0, 0.0);
+        clearCommand.depth = 0.0;
+        clearCommand.execute(context);
 
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw(da);
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
     });
 
@@ -544,7 +554,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -555,6 +565,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([64, 191, 0, 255]);
     });
 
@@ -572,7 +583,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.LINES,
             shaderProgram : sp,
             vertexArray : va,
@@ -581,6 +592,7 @@ defineSuite([
             // May only be 1.
             })
         });
+        command.execute(context);
 
         // I believe different GL implementations are allowed to AA
         // in different ways (or at least that is what we see in practice),
@@ -602,7 +614,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -614,6 +626,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -636,7 +649,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -648,9 +661,10 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -660,6 +674,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -677,7 +692,7 @@ defineSuite([
         var rs = context.createRenderState({
             stencilTest : {
                 enabled : true,
-                frontFunction : StencilFunction.EQUAL,
+                frontFunction : WebGLRenderingContext.EQUAL,
                 reference : 1,
                 mask : 1
             }
@@ -688,16 +703,17 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 3 of 4.  Render to stencil only, increment
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
@@ -711,20 +727,22 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     frontOperation : {
-                        zPass : StencilOperation.INCREMENT
+                        zPass : WebGLRenderingContext.INCR
                     }
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 4 of 4.  Render where stencil is set
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -743,7 +761,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             stencilTest : {
                 enabled : true,
-                backFunction : StencilFunction.NOT_EQUAL,
+                backFunction : WebGLRenderingContext.NOTEQUAL,
                 reference : 0
             }
         });
@@ -753,16 +771,17 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 3 of 4.  Render to stencil only, increment
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
@@ -777,21 +796,22 @@ defineSuite([
                 stencilTest : {
                     enabled : true,
                     backOperation : {
-                        zPass : StencilOperation.INVERT
+                        zPass : WebGLRenderingContext.INVERT
                     }
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // 4 of 4.  Render where stencil is set
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
-
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -810,22 +830,24 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         // The first point in the vertex buffer does not generate any pixels
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             offset : 0,
             count : 1,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             offset : 1,
             count : 1,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 

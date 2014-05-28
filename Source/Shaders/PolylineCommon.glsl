@@ -1,5 +1,3 @@
-const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
-
 void clipLineSegmentToNearPlane(
     vec3 p0,
     vec3 p1,
@@ -88,6 +86,6 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
         expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec2 offset = direction * expandDirection * expandWidth * czm_highResolutionSnapScale;
+    vec2 offset = direction * expandDirection * expandWidth * czm_resolutionScale;
     return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
 }

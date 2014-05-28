@@ -1,32 +1,32 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Color',
         '../Core/destroyObject',
-        '../Core/Math',
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
+        '../Core/Math',
         '../Core/PolygonGeometry',
         './EllipsoidSurfaceAppearance',
-        './Primitive',
-        './Material'
+        './Material',
+        './Primitive'
     ], function(
-        DeveloperError,
+        Color,
         defaultValue,
         defined,
         defineProperties,
-        Color,
         destroyObject,
-        CesiumMath,
+        DeveloperError,
         Ellipsoid,
         GeometryInstance,
+        CesiumMath,
         PolygonGeometry,
         EllipsoidSurfaceAppearance,
-        Primitive,
-        Material) {
+        Material,
+        Primitive) {
     "use strict";
 
     /**
@@ -36,14 +36,14 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the polygon is drawn on.
-     * @param {Array} [options.positions=undefined] The cartesian positions of the polygon.
-     * @param {Object} [options.polygonHierarchy=undefined] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
+     * @param {Cartesian3[]} [options.positions] The cartesian positions of the polygon.
+     * @param {Object} [options.polygonHierarchy] An object defining the vertex positions of each nested polygon as defined in {@link Polygon#configureFromPolygonHierarchy}.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [options.height=0.0] The height, in meters, that the rectangle is raised above the {@link RectanglePrimitive#ellipsoid}.
      * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Material} [options.material=undefined] The surface appearance of the primitive.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Material} [options.material] The surface appearance of the primitive.
+     * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if the primitive's commands' bounding spheres are shown.
      *
@@ -72,7 +72,7 @@ define([
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))];
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html">Cesium Sandcastle Polygons Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html|Cesium Sandcastle Polygons Demo}
      */
     var Polygon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -134,7 +134,7 @@ define([
 
         /**
          * The surface appearance of the primitive.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -149,7 +149,7 @@ define([
          * // 2. Change material to horizontal stripes
          * polygon.material = Cesium.Material.fromType( Material.StripeType);
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, material);
 
@@ -209,7 +209,7 @@ define([
         /**
          * Gets and sets positions that define the boundary of the polygon.
          * @memberof Polygon.prototype
-         * @type {Array}
+         * @type {Cartesian3[]}
          * @example
          * polygon.positions = [
          *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),

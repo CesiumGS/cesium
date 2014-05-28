@@ -3,15 +3,15 @@ define([
         '../Core/BoundingSphere',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
-        '../Core/Rectangle',
         '../Core/HeightmapTessellator',
+        '../Core/Rectangle',
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
         Ellipsoid,
         EllipsoidalOccluder,
-        Rectangle,
         HeightmapTessellator,
+        Rectangle,
         createTaskProcessorWorker) {
     "use strict";
 

@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/Event',
         './ModelAnimationLoop',
         './ModelAnimationState'
     ], function(
         defaultValue,
+        defineProperties,
         Event,
         ModelAnimationLoop,
         ModelAnimationState) {
@@ -27,47 +29,10 @@ define([
      * @see ModelAnimationCollection#add
      */
     var ModelAnimation = function(options, model, runtimeAnimation) {
-        /**
-         * The glTF animation name that identifies this animation.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.name = options.name;
-
-        /**
-         * The scene time to start playing this animation.  When this is <code>undefined</code>,
-         * the animation starts at the next frame.
-         *
-         * @type {JulianDate}
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.startTime = options.startTime;
-
-        /**
-         * The offset, in seconds, from {@link ModelAnimation#startTime} to start playing.
-         *
-         * @type {Number}
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.startOffset = defaultValue(options.startOffset, 0.0); // in seconds
-
-        /**
-         * The scene time to stop playing this animation.  When this is <code>undefined</code>,
-         * the animation is played for its full duration and perhaps repeated depending on
-         * {@link ModelAnimation#loop}.
-         *
-         * @type {JulianDate}
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.stopTime = options.stopTime;
+        this._name = options.name;
+        this._startTime = options.startTime;
+        this._startOffset = defaultValue(options.startOffset, 0.0); // in seconds
+        this._stopTime = options.stopTime;
 
         /**
          * When <code>true</code>, the animation is removed after it stops playing.
@@ -79,39 +44,9 @@ define([
          */
         this.removeOnStop = defaultValue(options.removeOnStop, false);
 
-        /**
-         * Values greater than <code>1.0</code> increase the speed that the animation is played relative
-         * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
-         * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
-         * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
-         * will play in one second even if <code>speedup</code> is <code>1.0</code>.
-         *
-         * @type {Number}
-         * @default 1.0
-         *
-         * @readonly
-         */
-        this.speedup = defaultValue(options.speedup, 1.0);
-
-        /**
-         * When <code>true</code>, the animation is played in reverse.
-         *
-         * @type {Boolean}
-         * @default false
-         *
-         * @readonly
-         */
-        this.reverse = defaultValue(options.reverse, false);
-
-        /**
-         * Determines if and how the animation is looped.
-         *
-         * @type {ModelAnimationLoop}
-         * @default {@link ModelAnimationLoop.NONE}
-         *
-         * @readonly
-         */
-        this.loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
+        this._speedup = defaultValue(options.speedup, 1.0);
+        this._reverse = defaultValue(options.reverse, false);
+        this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
 
         /**
          * The event fired when this animation is started.  This can be used, for
@@ -184,6 +119,125 @@ define([
             that.stop.raiseEvent(model, that);
         };
     };
+
+    defineProperties(ModelAnimation.prototype, {
+        /**
+         * The glTF animation name that identifies this animation.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        name : {
+            get : function() {
+                return this._name;
+            }
+        },
+
+        /**
+         * The scene time to start playing this animation.  When this is <code>undefined</code>,
+         * the animation starts at the next frame.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {JulianDate}
+         * @readonly
+         *
+         * @default undefined
+         */
+        startTime : {
+            get : function() {
+                return this._startTime;
+            }
+        },
+
+        /**
+         * The offset, in seconds, from {@link ModelAnimation#startTime} to start playing.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @default undefined
+         */
+        startOffset : {
+            get : function() {
+                return this._startOffset;
+            }
+        },
+
+        /**
+         * The scene time to stop playing this animation.  When this is <code>undefined</code>,
+         * the animation is played for its full duration and perhaps repeated depending on
+         * {@link ModelAnimation#loop}.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {JulianDate}
+         * @readonly
+         *
+         * @default undefined
+         */
+        stopTime : {
+            get : function() {
+                return this._stopTime;
+            }
+        },
+
+        /**
+         * Values greater than <code>1.0</code> increase the speed that the animation is played relative
+         * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
+         * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
+         * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
+         * will play in one second even if <code>speedup</code> is <code>1.0</code>.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @default 1.0
+         */
+        speedup : {
+            get : function() {
+                return this._speedup;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the animation is played in reverse.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        reverse : {
+            get : function() {
+                return this._reverse;
+            }
+        },
+
+        /**
+         * Determines if and how the animation is looped.
+         *
+         * @memberof ModelAnimation.prototype
+         *
+         * @type {ModelAnimationLoop}
+         * @readonly
+         *
+         * @default {@link ModelAnimationLoop.NONE}
+         */
+        loop : {
+            get : function() {
+                return this._loop;
+            }
+        }
+    });
 
     return ModelAnimation;
 });

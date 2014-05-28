@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Rectangle',
-         'Core/Math',
-         'Core/Cartographic',
-         'Core/Cartesian3',
-         'Core/Ellipsoid'
-     ], function(
-         Rectangle,
-         CesiumMath,
-         Cartographic,
-         Cartesian3,
-         Ellipsoid) {
+        'Core/Rectangle',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        Rectangle,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

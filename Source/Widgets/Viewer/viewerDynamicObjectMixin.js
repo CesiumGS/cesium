@@ -1,5 +1,6 @@
 /*global define*/
-define(['../../Core/BoundingSphere',
+define([
+        '../../Core/BoundingSphere',
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -16,8 +17,8 @@ define(['../../Core/BoundingSphere',
         '../../DynamicScene/StoredViewCameraRotationMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
-        '../subscribeAndEvaluate',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../subscribeAndEvaluate'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -36,8 +37,8 @@ define(['../../Core/BoundingSphere',
         StoredViewCameraRotationMode,
         CameraFlightPath,
         SceneMode,
-        subscribeAndEvaluate,
-        knockout) {
+        knockout,
+        subscribeAndEvaluate) {
     "use strict";
 
     /**

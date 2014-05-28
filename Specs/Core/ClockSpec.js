@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Clock',
-             'Core/ClockStep',
-             'Core/ClockRange',
-             'Core/JulianDate'
-            ], function(
-              Clock,
-              ClockStep,
-              ClockRange,
-              JulianDate) {
+        'Core/Clock',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/JulianDate'
+    ], function(
+        Clock,
+        ClockRange,
+        ClockStep,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        './Enumeration'
-       ], function(
-         Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -14,19 +11,18 @@ define([
         /**
          * The fixed frame.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        FIXED : new Enumeration(0, 'FIXED'),
+        FIXED : 0,
+
         /**
          * The inertial frame.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        INERTIAL : new Enumeration(1, 'INERTIAL')
+        INERTIAL : 1
     };
 
     return ReferenceFrame;

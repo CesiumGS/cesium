@@ -1,36 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/GoogleEarthImageryProvider',
-         'Core/defined',
-         'Core/DefaultProxy',
-         'Core/FeatureDetection',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'Core/Rectangle',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'Scene/NeverTileDiscardPolicy',
-         'Scene/WebMercatorTilingScheme',
-         'Scene/GeographicTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         GoogleEarthImageryProvider,
-         defined,
-         DefaultProxy,
-         FeatureDetection,
-         loadImage,
-         loadWithXhr,
-         Rectangle,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         NeverTileDiscardPolicy,
-         WebMercatorTilingScheme,
-         GeographicTilingScheme,
-         when) {
+        'Scene/GoogleEarthImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        GoogleEarthImageryProvider,
+        DefaultProxy,
+        defined,
+        GeographicTilingScheme,
+        loadImage,
+        loadWithXhr,
+        Rectangle,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
