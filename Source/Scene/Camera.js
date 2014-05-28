@@ -49,7 +49,7 @@ define([
      * The orientation forms an orthonormal basis with a view, up and right = view x up unit vectors.
      * <br /><br />
      * The viewing frustum is defined by 6 planes.
-     * Each plane is represented by a {Cartesian4} object, where the x, y, and z components
+     * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
@@ -716,7 +716,7 @@ define([
      *
      * @memberof Camera
      *
-     * @param {Matrix4} The camera transform.
+     * @param {Matrix4} transform The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
         var position = Cartesian3.clone(this.positionWC, setTransformPosition);

@@ -209,7 +209,7 @@ define([
         var datatype = ComponentDatatype.FLOAT;
         var typedArray = tileTerrain.mesh.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 6 * datatype.sizeInBytes;
+        var stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
         var position3DAndHeightLength = 4;
 
         var attributes = [{
@@ -224,7 +224,7 @@ define([
             vertexBuffer : buffer,
             componentDatatype : datatype,
             componentsPerAttribute : 2,
-            offsetInBytes : position3DAndHeightLength * datatype.sizeInBytes,
+            offsetInBytes : position3DAndHeightLength * ComponentDatatype.getSizeInBytes(datatype),
             strideInBytes : stride
         }];
 

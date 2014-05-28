@@ -1516,7 +1516,7 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
@@ -1529,7 +1529,7 @@ define([
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
@@ -1542,7 +1542,7 @@ define([
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration = 2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
      * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {

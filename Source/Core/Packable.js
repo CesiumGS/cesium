@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        './DeveloperError'
     ], function(
         DeveloperError) {
     "use strict";
@@ -17,7 +17,7 @@ define([
     var Packable = {
         /**
          * The number of elements used to pack the object into an array.
-         * @Type {Number}
+         * @type {Number}
          */
         packedLength : undefined,
 

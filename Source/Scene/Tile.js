@@ -581,7 +581,7 @@ define([
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
-            if (loaded.state.value >= TerrainState.RECEIVED.value) {
+            if (loaded.state >= TerrainState.RECEIVED) {
                 if (tile.terrainData !== loaded.data) {
                     tile.terrainData = loaded.data;
 
@@ -629,7 +629,7 @@ define([
             // We'll potentially need it to upsample child tiles.
             // It's safe to overwrite terrainData because we won't get here after
             // loaded terrain data has been received.
-            if (upsampled.state.value >= TerrainState.RECEIVED.value) {
+            if (upsampled.state >= TerrainState.RECEIVED) {
                 if (tile.terrainData !== upsampled.data) {
                     tile.terrainData = upsampled.data;
 
