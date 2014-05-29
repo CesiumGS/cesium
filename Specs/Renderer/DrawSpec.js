@@ -873,7 +873,7 @@ defineSuite([
     it('fails to draw (missing command)', function() {
         expect(function() {
             context.draw();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing shaderProgram)', function() {
@@ -881,7 +881,7 @@ defineSuite([
             context.draw({
                 primitiveType : PrimitiveType.POINTS
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing primitiveType)', function() {
@@ -893,7 +893,7 @@ defineSuite([
             context.draw({
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (primitiveType)', function() {
@@ -906,7 +906,7 @@ defineSuite([
                 primitiveType : 'invalid value',
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing vertexArray)', function() {
@@ -919,7 +919,7 @@ defineSuite([
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (negative offset)', function() {
@@ -935,6 +935,6 @@ defineSuite([
                 offset : -1,
                 count : 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

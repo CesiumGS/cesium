@@ -6,6 +6,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/PixelFormat',
         'Core/Rectangle',
+        'Core/RuntimeError',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Scene/AnimationCollection',
@@ -27,6 +28,7 @@ defineSuite([
         Ellipsoid,
         PixelFormat,
         Rectangle,
+        RuntimeError,
         DrawCommand,
         PixelDatatype,
         AnimationCollection,
@@ -533,14 +535,14 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.renderError.addEventListener(spyListener);
 
-        var error = 'foo';
+        var error = new RuntimeError('error');
         s.primitives.update = function() {
             throw error;
         };
 
         expect(function() {
             s.render();
-        }).toThrow();
+        }).toThrowRuntimeError();
 
         expect(spyListener).toHaveBeenCalledWith(s, error);
 

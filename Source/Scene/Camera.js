@@ -675,6 +675,15 @@ define([
      * @private
      */
     Camera.prototype.update = function(mode, scene2D) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(mode)) {
+            throw new DeveloperError('mode is required.');
+        }
+        if (!defined(scene2D)) {
+            throw new DeveloperError('scene2D is required.');
+        }
+        //>>includeEnd('debug');
+
         var updateFrustum = false;
         if (mode !== this._mode) {
             this._mode = mode;

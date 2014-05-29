@@ -623,7 +623,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails fragment shader compile', function() {
@@ -633,7 +633,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to link', function() {
@@ -643,7 +643,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails with built-in function circular dependency', function() {
@@ -652,6 +652,6 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');
