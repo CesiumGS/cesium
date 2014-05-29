@@ -63,12 +63,12 @@ define([
      * @param {Number} y The y coordinate.
      * @param {Number} z The z coordinate.
      * @param {Number} w The w coordinate.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.fromElements = function(x, y, z, w, result) {
         if (!defined(result)) {
-            return new Cartesian4(x, y, z, w);
+            result = new Cartesian4();
         }
 
         result.x = x;
@@ -93,9 +93,8 @@ define([
             throw new DeveloperError('color is required');
         }
         //>>includeEnd('debug');
-
         if (!defined(result)) {
-            return new Cartesian4(color.red, color.green, color.blue, color.alpha);
+            result = new Cartesian4();
         }
 
         result.x = color.red;
@@ -119,7 +118,7 @@ define([
         }
 
         if (!defined(result)) {
-            return new Cartesian4(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+            result = new Cartesian4();
         }
 
         result.x = cartesian.x;
@@ -132,7 +131,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @type {Number}
+     * @Type {Number}
      */
     Cartesian4.packedLength = 4;
 
@@ -149,7 +148,6 @@ define([
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
@@ -190,8 +188,6 @@ define([
         return result;
     };
 
-
-
     /**
      * Creates a Cartesian4 from four consecutive elements in an array.
      * @memberof Cartesian4
@@ -217,7 +213,7 @@ define([
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian4
      *
-     * @param {Cartesian4} cartesian The cartesian to use.
+     * @param {Cartesian4} The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
     Cartesian4.getMaximumComponent = function(cartesian) {
@@ -234,7 +230,7 @@ define([
      * Computes the value of the minimum component for the supplied Cartesian.
      * @memberof Cartesian4
      *
-     * @param {Cartesian4} cartesian The cartesian to use.
+     * @param {Cartesian4} The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
     Cartesian4.getMinimumComponent = function(cartesian) {
@@ -253,7 +249,7 @@ define([
      *
      * @param {Cartesian4} first A cartesian to compare.
      * @param {Cartesian4} second A cartesian to compare.
-     * @param {Cartesian4} [result] The object into which to store the result.
+     * @param {Cartesian4} result The object into which to store the result.
      * @returns {Cartesian4} A cartesian with the minimum components.
      */
     Cartesian4.getMinimumByComponent = function(first, second, result) {
@@ -264,11 +260,10 @@ define([
         if (!defined(second)) {
             throw new DeveloperError('second is required.');
         }
-        //>>includeEnd('debug');
-
         if (!defined(result)) {
-            result = new Cartesian4();
+            throw new DeveloperError('result is required.');
         }
+        //>>includeEnd('debug');
 
         result.x = Math.min(first.x, second.x);
         result.y = Math.min(first.y, second.y);
@@ -284,7 +279,7 @@ define([
      *
      * @param {Cartesian4} first A cartesian to compare.
      * @param {Cartesian4} second A cartesian to compare.
-     * @param {Cartesian4} [result] The object into which to store the result.
+     * @param {Cartesian4} result The object into which to store the result.
      * @returns {Cartesian4} A cartesian with the maximum components.
      */
     Cartesian4.getMaximumByComponent = function(first, second, result) {
@@ -295,11 +290,10 @@ define([
         if (!defined(second)) {
             throw new DeveloperError('second is required.');
         }
-        //>>includeEnd('debug');
-
         if (!defined(result)) {
-            result = new Cartesian4();
+            throw new DeveloperError('result is required.');
         }
+        //>>includeEnd('debug');
 
         result.x = Math.max(first.x, second.x);
         result.y = Math.max(first.y, second.y);
@@ -368,7 +362,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be normalized.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.normalize = function(cartesian, result) {
@@ -376,12 +370,13 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
         var magnitude = Cartesian4.magnitude(cartesian);
-        if (!defined(result)) {
-            return new Cartesian4(cartesian.x / magnitude, cartesian.y / magnitude, cartesian.z / magnitude, cartesian.w / magnitude);
-        }
+
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
         result.z = cartesian.z / magnitude;
@@ -416,7 +411,7 @@ define([
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.multiplyComponents = function(left, right, result) {
@@ -427,11 +422,11 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(left.x * right.x, left.y * right.y, left.z * right.z, left.w * right.w);
-        }
         result.x = left.x * right.x;
         result.y = left.y * right.y;
         result.z = left.z * right.z;
@@ -445,7 +440,7 @@ define([
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.add = function(left, right, result) {
@@ -456,11 +451,11 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w);
-        }
         result.x = left.x + right.x;
         result.y = left.y + right.y;
         result.z = left.z + right.z;
@@ -474,7 +469,7 @@ define([
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.subtract = function(left, right, result) {
@@ -485,11 +480,11 @@ define([
         if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w);
-        }
         result.x = left.x - right.x;
         result.y = left.y - right.y;
         result.z = left.z - right.z;
@@ -503,7 +498,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.multiplyByScalar = function(cartesian, scalar, result) {
@@ -514,11 +509,11 @@ define([
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(cartesian.x * scalar, cartesian.y * scalar, cartesian.z * scalar, cartesian.w * scalar);
-        }
         result.x = cartesian.x * scalar;
         result.y = cartesian.y * scalar;
         result.z = cartesian.z * scalar;
@@ -532,7 +527,7 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.divideByScalar = function(cartesian, scalar, result) {
@@ -543,11 +538,11 @@ define([
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(cartesian.x / scalar, cartesian.y / scalar, cartesian.z / scalar, cartesian.w / scalar);
-        }
         result.x = cartesian.x / scalar;
         result.y = cartesian.y / scalar;
         result.z = cartesian.z / scalar;
@@ -560,7 +555,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be negated.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.negate = function(cartesian, result) {
@@ -568,11 +563,11 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(-cartesian.x, -cartesian.y, -cartesian.z, -cartesian.w);
-        }
         result.x = -cartesian.x;
         result.y = -cartesian.y;
         result.z = -cartesian.z;
@@ -585,7 +580,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian whose absolute value is to be computed.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.abs = function(cartesian, result) {
@@ -593,11 +588,11 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            return new Cartesian4(Math.abs(cartesian.x), Math.abs(cartesian.y), Math.abs(cartesian.z), Math.abs(cartesian.w));
-        }
         result.x = Math.abs(cartesian.x);
         result.y = Math.abs(cartesian.y);
         result.z = Math.abs(cartesian.z);
@@ -610,10 +605,10 @@ define([
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
      * @memberof Cartesian4
      *
-     * @param {Cartesian4} start The value corresponding to t at 0.0.
-     * @param {Cartesian4}end The value corresponding to t at 1.0.
-     * @param {Number} t The point along t at which to interpolate.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param start The value corresponding to t at 0.0.
+     * @param end The value corresponding to t at 1.0.
+     * @param t The point along t at which to interpolate.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
     Cartesian4.lerp = function(start, end, t, result) {
@@ -640,7 +635,7 @@ define([
      * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian on which to find the most orthogonal axis.
-     * @param {Cartesian4} [result] The object onto which to store the result.
+     * @param {Cartesian4} result The object onto which to store the result.
      * @returns {Cartesian4} The most orthogonal axis.
      */
     Cartesian4.mostOrthogonalAxis = function(cartesian, result) {

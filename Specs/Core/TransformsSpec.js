@@ -40,6 +40,8 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var negativeX = new Cartesian4(-1, 0, 0, 0);
+    var negativeZ = new Cartesian4(0, 0, -1, 0);
     it('eastNorthUpToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
@@ -72,7 +74,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(negativeX); // north
         expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z); // up
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
@@ -84,7 +86,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X); // north
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeZ); // up
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -95,7 +97,7 @@ defineSuite([
         var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeX); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -108,7 +110,7 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeX); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -119,9 +121,9 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Transforms.northEastDownToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
-        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(negativeX); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeZ); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
