@@ -127,8 +127,6 @@ define([
      *
      * @param {Number|Object} type The type of property, which must be a Number or implement {@link Packable}.
      *
-     * @exception {DeveloperError} The type argument is required.
-     *
      * @see SampledPositionProperty
      *
      * @example
@@ -258,8 +256,6 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} The time argument is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -369,8 +365,6 @@ define([
      * @param {Object} options The options
      * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
-     *
-     * @exception {DeveloperError} The options argument is required.
      */
     SampledProperty.prototype.setInterpolationOptions = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -406,8 +400,6 @@ define([
      *
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
-     *
-     * @exception {DeveloperError} The time and value arguments are required.
      */
     SampledProperty.prototype.addSample = function(time, value) {
         //>>includeStart('debug', pragmas.debug);
@@ -431,8 +423,8 @@ define([
      * Adds an array of samples
      * @memberof SampledProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of values, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
      *
      * @exception {DeveloperError} times and values must be the same length.
      */
@@ -465,10 +457,8 @@ define([
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
-     *
-     * @exception {DeveloperError} The packedSamples argument is required.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
         //>>includeStart('debug', pragmas.debug);
