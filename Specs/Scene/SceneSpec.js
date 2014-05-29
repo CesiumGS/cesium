@@ -84,7 +84,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
 
@@ -92,7 +92,7 @@ defineSuite([
             webgl : webglOptions
         });
 
-        var contextAttributes = s._context._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);

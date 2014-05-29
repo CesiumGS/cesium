@@ -16,15 +16,15 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/PrimitiveState',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Cartesian3,
         Color,
@@ -42,15 +42,15 @@ define([
         Matrix3,
         Matrix4,
         ShowGeometryInstanceAttribute,
-        ColorMaterialProperty,
-        ConstantProperty,
-        MaterialProperty,
-        Property,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ColorMaterialProperty,
+        ConstantProperty,
+        MaterialProperty,
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);

@@ -2,7 +2,7 @@
 define([
         '../Core/defined',
         '../Core/destroyObject',
-        '../Renderer/ShaderProgram'
+        './ShaderProgram'
     ], function(
         defined,
         destroyObject,

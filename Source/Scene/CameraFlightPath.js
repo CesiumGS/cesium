@@ -14,10 +14,10 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../Scene/PerspectiveFrustum',
-        '../Scene/PerspectiveOffCenterFrustum',
-        '../Scene/SceneMode',
-        '../ThirdParty/Tween'
+        '../ThirdParty/Tween',
+        './PerspectiveFrustum',
+        './PerspectiveOffCenterFrustum',
+        './SceneMode'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -33,10 +33,10 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
+        Tween,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**

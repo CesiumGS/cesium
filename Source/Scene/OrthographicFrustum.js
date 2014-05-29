@@ -7,7 +7,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Scene/CullingVolume'
+        './CullingVolume'
     ], function(
         Cartesian2,
         Cartesian3,

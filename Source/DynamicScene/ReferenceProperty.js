@@ -4,7 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../DynamicScene/Property'
+        './Property'
     ], function(
         defined,
         defineProperties,

@@ -3,7 +3,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Scene/PerspectiveOffCenterFrustum'
+        './PerspectiveOffCenterFrustum'
     ], function(
         defined,
         defineProperties,
