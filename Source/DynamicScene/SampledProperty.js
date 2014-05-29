@@ -276,7 +276,7 @@ define([
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, this._inputOrder), times.length);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -320,7 +320,7 @@ define([
             var length = lastIndex - firstIndex + 1;
 
             // Build the tables
-            for ( var i = 0; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
             }
 
@@ -341,7 +341,14 @@ define([
 
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
-            var interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            var interpolationResult;
+            // We need both an input order, and an algorithm that can handle a non-zero input order.
+            if (defined(this._inputOrder) && defined(interpolationAlgorithm.interpolate)) {
+                var yStride = Math.floor(packedInterpolationLength / (this._inputOrder + 1));
+                interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, this._inputOrder, this._inputOrder, this._interpolationResult);
+            } else {
+                interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            }
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationResult, 0, result);
@@ -419,7 +426,7 @@ define([
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
      * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
      *
-     * @exception {DeveloperError} times and values must be the same length..
+     * @exception {DeveloperError} times and values must be the same length.
      */
     SampledProperty.prototype.addSamples = function(times, values) {
         //>>includeStart('debug', pragmas.debug);

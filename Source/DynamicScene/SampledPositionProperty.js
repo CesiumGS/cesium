@@ -57,6 +57,9 @@ define([
     var SampledPositionProperty = function(referenceFrame, hasVelocity) {
         this._hasVelocity = defaultValue(hasVelocity, false);
         this._property = new SampledProperty(hasVelocity ? PositionVelocity : Cartesian3);
+        if (this._hasVelocity){
+            this._property._inputOrder = 1;
+        }
         this._definitionChanged = new Event();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
 

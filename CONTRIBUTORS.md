@@ -20,6 +20,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Pinkos](https://github.com/hpinkos)
    * [Alex Wood](https://github.com/abwood)
    * [Dan Yankowsky](https://github.com/balefrost)
+   * [Michael Dunkel](https://github.com/mdunkel)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
 * [EU Edge](http://euedge.com/)
