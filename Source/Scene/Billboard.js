@@ -60,7 +60,7 @@ define([
      *
      * @internalConstructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html">Cesium Sandcastle Billboard Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     var Billboard = function(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -387,7 +387,7 @@ define([
          * <img src='images/Billboard.setHorizontalOrigin.png' width='400' height='300' /><br />
          * </div>
          * @memberof Billboard.prototype
-         * @type {HorizontalOrigin} value The horizontal origin.
+         * @type {HorizontalOrigin}
          * @example
          * // Use a bottom, left origin
          * b.horizontalOrigin = Cesium.HorizontalOrigin.LEFT;
@@ -570,7 +570,7 @@ define([
          * Gets and sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
          * The default is the zero vector, which means the billboard is aligned to the screen up vector.
          * @memberof Billboard.prototype
-         * @type {Cartesian3} value The aligned axis.
+         * @type {Cartesian3}
          * @example
          * // Example 1.
          * // Have the billboard up vector point north
@@ -749,6 +749,8 @@ define([
         return positionWC;
     };
 
+    var scratchPixelOffset = new Cartesian2(0.0, 0.0);
+
     /**
      * Computes the screen-space position of the billboard's origin, taking into account eye and pixel offsets.
      * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
@@ -768,7 +770,6 @@ define([
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
      */
-    var tempPixelOffset = new Cartesian2(0.0, 0.0);
     Billboard.prototype.computeScreenSpacePosition = function(scene) {
         var billboardCollection = this._billboardCollection;
 
@@ -782,11 +783,11 @@ define([
         //>>includeEnd('debug');
 
         // pixel offset for screenspace computation is the pixelOffset + screenspace translate
-        Cartesian2.clone(this._pixelOffset, tempPixelOffset);
-        Cartesian2.add(tempPixelOffset, this._translate, tempPixelOffset);
+        Cartesian2.clone(this._pixelOffset, scratchPixelOffset);
+        Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, tempPixelOffset, scene);
+        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
     };
 
     /**

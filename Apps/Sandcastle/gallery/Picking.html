@@ -96,7 +96,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function cleanup() {
-        widget.scene.primitives.removeAll();
+        viewer.scene.primitives.removeAll();
         handler = handler && handler.destroy();
     }
 
@@ -254,8 +254,8 @@ require(['Cesium'], function(Cesium) {
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
-    function layerCompositePrimitive(scene) {
-        Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
+    function layerPrimitiveCollection(scene) {
+        Sandcastle.declare(layerPrimitiveCollection);    // For highlighting in Sandcastle.
         addOverlappingPolygons(scene);
 
         var primitives = scene.primitives;
@@ -319,9 +319,8 @@ require(['Cesium'], function(Cesium) {
 
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
     pickCartographicPosition(scene);
 
@@ -351,8 +350,8 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('Layer Primitives', function() {
         cleanup();
-        layerCompositePrimitive(scene);
-        Sandcastle.highlight(layerCompositePrimitive);
+        layerPrimitiveCollection(scene);
+        Sandcastle.highlight(layerPrimitiveCollection);
     });
 
     Sandcastle.addToolbarButton('Drill-Down Picking', function() {

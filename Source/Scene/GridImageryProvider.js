@@ -4,7 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defineProperties',
         '../Core/Event',
-        './GeographicTilingScheme'
+        '../Core/GeographicTilingScheme'
     ], function(
         Color,
         defaultValue,
@@ -178,6 +178,7 @@ define([
         /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
+         * @memberof GridImageryProvider.prototype
          * @type {Credit}
          */
         credit : {
@@ -192,6 +193,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof GridImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

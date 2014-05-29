@@ -9,7 +9,6 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/CameraColumbusViewMode',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
@@ -25,7 +24,6 @@ define([
         jsonp,
         Matrix4,
         Rectangle,
-        CameraColumbusViewMode,
         CameraFlightPath,
         SceneMode,
         knockout,
@@ -41,7 +39,7 @@ define([
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
@@ -203,11 +201,6 @@ define([
         }
     });
 
-    var transform2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 1.0);
-
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -267,9 +260,9 @@ define([
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
-                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 },
-                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
+                endReferenceFrame : Matrix4.IDENTITY,
+                convert : false
             };
 
             var flight = CameraFlightPath.createAnimation(viewModel._scene, options);

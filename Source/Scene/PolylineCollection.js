@@ -128,7 +128,7 @@ define([
      *     width:4
      * });
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html">Cesium Sandcastle Polyline Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      */
     var PolylineCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -212,7 +212,7 @@ define([
      *
      * @memberof PolylineCollection
      *
-     * @param {Object}[polyline=undefined] A template describing the polyline's properties as shown in Example 1.
+     * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
      *
      * @returns {Polyline} The polyline that was added to the collection.
      *

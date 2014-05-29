@@ -8,10 +8,10 @@ define([
         '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Scene/BlendEquation',
-        '../Scene/BlendFunction',
         '../Shaders/AdjustTranslucentFS',
-        '../Shaders/CompositeOITFS'
+        '../Shaders/CompositeOITFS',
+        './BlendEquation',
+        './BlendFunction'
     ], function(
         Color,
         defined,
@@ -21,10 +21,10 @@ define([
         createShaderSource,
         PixelDatatype,
         RenderState,
-        BlendEquation,
-        BlendFunction,
         AdjustTranslucentFS,
-        CompositeOITFS) {
+        CompositeOITFS,
+        BlendEquation,
+        BlendFunction) {
     "use strict";
     /*global WebGLRenderingContext*/
 

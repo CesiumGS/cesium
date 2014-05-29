@@ -28,9 +28,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @exports PolylinePipeline
+     * @private
      */
     var PolylinePipeline = {};
 
@@ -98,7 +96,7 @@ define([
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The polyline's Cartesian positions.
+     * @param {Cartesian3[]} positions The polyline's Cartesian positions.
      * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
      * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
      * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
@@ -180,9 +178,9 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of {Cartesian3} positions.
+     * @param {Cartesian3[]} positions The array of positions.
      *
-     * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
@@ -224,11 +222,11 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
-     * @returns {Array} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+     * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
      * var positions = Cesium.Cartesian3.fromDegreesArray([
@@ -271,12 +269,12 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of type {Number} representing positions.
-     * @param {Number|Array} height A number or array of numbers representing the heights of each position.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
-     * @param {Array} [result] An array to place the resultant positions in.
+     * @param {Number[]} positions The array of type {Number} representing positions.
+     * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Number[]} [result] An array to place the resultant positions in.
      *
-     * @returns {Array} The array of positions scaled to height.
+     * @returns {Number[]} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
      * @exception {DeveloperError} height must be defined.
@@ -315,7 +313,7 @@ define([
             newPositions = new Array(positions.length);
         }
 
-        if (height === 0) {
+        if (height === 0.0) {
             for (i = 0; i < length; i += 3) {
                 p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
                 newPositions[i] = p.x;

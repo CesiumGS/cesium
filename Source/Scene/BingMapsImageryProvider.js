@@ -2,6 +2,7 @@
 define([
         '../Core/BingMapsApi',
         '../Core/Cartesian2',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,16 +11,16 @@ define([
         '../Core/jsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './Credit',
         './DiscardMissingTileImagePolicy',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme'
+        './ImageryProvider'
     ], function(
         BingMapsApi,
         Cartesian2,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -28,13 +29,12 @@ define([
         jsonp,
         CesiumMath,
         Rectangle,
+        TileProviderError,
+        WebMercatorTilingScheme,
         when,
         BingMapsStyle,
-        Credit,
         DiscardMissingTileImagePolicy,
-        ImageryProvider,
-        TileProviderError,
-        WebMercatorTilingScheme) {
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -45,7 +45,7 @@ define([
      *
      * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
@@ -53,7 +53,7 @@ define([
      *        Bing Maps imagery without creating a separate key for your application.
      * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
      *        By default, tiles are loaded using the same protocol as the page.
-     * @param {Enumeration} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
+     * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
      *        imagery to load.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -75,8 +75,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/ff701713.aspx'>Bing Maps REST Services</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
@@ -132,7 +132,7 @@ define([
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle.imagerySetName + '?incl=ImageryProviders&key=' + this._key;
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 
@@ -423,6 +423,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  Setting this property to false reduces memory usage
          * and texture upload time.
+         * @memberof BingMapsImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {
@@ -496,7 +497,7 @@ define([
      * @param {Number} y The tile's y coordinate.
      * @param {Number} level The tile's zoom level.
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
      * @see BingMapsImageryProvider#quadKeyToTileXY
      */
     BingMapsImageryProvider.tileXYToQuadKey = function(x, y, level) {
@@ -526,7 +527,7 @@ define([
      *
      * @param {String} quadkey The tile's quad key
      *
-     * @see <a href='http://msdn.microsoft.com/en-us/library/bb259689.aspx'>Bing Maps Tile System</a>
+     * @see {@link http://msdn.microsoft.com/en-us/library/bb259689.aspx|Bing Maps Tile System}
      * @see BingMapsImageryProvider#tileXYToQuadKey
      */
     BingMapsImageryProvider.quadKeyToTileXY = function(quadkey) {
