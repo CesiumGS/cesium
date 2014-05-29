@@ -48,8 +48,8 @@ define([
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
-     * // and in the body, include: &lt;div id="baseLayerPickerContainer"
-     * //   style="position:absolute;top:24px;right:24px;width:38px;height:38px;"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="baseLayerPickerContainer"
+     * //   style="position:absolute;top:24px;right:24px;width:38px;height:38px;"></div>
      *
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
