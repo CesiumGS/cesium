@@ -299,7 +299,7 @@ defineSuite([
         var expected = Matrix4.IDENTITY;
         var returnedResult = Matrix4.fromCamera({
             eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z),
+            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         });
         expect(expected).toEqual(returnedResult);
@@ -310,7 +310,7 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Matrix4.fromCamera({
             eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z),
+            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         }, result);
         expect(returnedResult).toBe(result);
@@ -1243,7 +1243,7 @@ defineSuite([
     it('fromCamera throws without eye', function() {
         expect(function() {
             Matrix4.fromCamera({
-                target : Cartesian3.negate(Cartesian3.UNIT_Z),
+                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
                 up : Cartesian3.UNIT_Y
             });
         }).toThrowDeveloperError();
@@ -1262,7 +1262,7 @@ defineSuite([
         expect(function() {
             Matrix4.fromCamera({
                 eye : Cartesian3.ZERO,
-                target : Cartesian3.negate(Cartesian3.UNIT_Z)
+                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
             });
         }).toThrowDeveloperError();
     });

@@ -135,6 +135,7 @@ define([
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
+    var offset3DCrossScratch = new Cartesian3();
     var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
         /**
          * The object to track with the camera.
@@ -163,7 +164,7 @@ define([
         this._lastCartesian = new Cartesian3();
 
         this._offset3D = new Cartesian3(10000, -10000, 10000);
-        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D));
+        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D, offset3DCrossScratch), new Cartesian3());
         Cartesian3.normalize(this._up3D, this._up3D);
 
         this._offset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._offset3D));

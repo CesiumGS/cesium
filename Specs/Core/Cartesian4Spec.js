@@ -572,7 +572,7 @@ defineSuite([
         var t = 2.0;
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(12.0, 32.0, 30.0, 40.0);
-        var result = Cartesian4.lerp(start, end, t, result);
+        result = Cartesian4.lerp(start, end, t, result);
         expect(result).toEqual(expectedResult);
     });
 
@@ -582,7 +582,7 @@ defineSuite([
         var t = -1.0;
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(0.0, -4.0, 0.0, 10.0);
-        var result = Cartesian4.lerp(start, end, t, result);
+        result = Cartesian4.lerp(start, end, t, result);
         expect(result).toEqual(expectedResult);
     });
 

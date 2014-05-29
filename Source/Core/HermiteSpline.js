@@ -502,6 +502,9 @@ define([
      *                             in the array <code>times</code>.
      */
     HermiteSpline.prototype.evaluate = function(time, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
         var points = this.points;
         var times = this.times;
         var inTangents = this.inTangents;

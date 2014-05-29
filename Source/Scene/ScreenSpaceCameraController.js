@@ -759,6 +759,7 @@ define([
     var pan3DTemp1 = new Cartesian3();
     var pan3DTemp2 = new Cartesian3();
     var pan3DTemp3 = new Cartesian3();
+    var basis1Scratch = new Cartesian3();
     function pan3D(controller, movement) {
         var camera = controller._camera;
         var p0 = camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
@@ -784,7 +785,7 @@ define([
             }
         } else {
             var basis0 = camera.constrainedAxis;
-            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0);
+            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0, basis1Scratch);
             Cartesian3.cross(basis1, basis0, basis1);
             Cartesian3.normalize(basis1, basis1);
             var basis2 = Cartesian3.cross(basis0, basis1, pan3DTemp1);

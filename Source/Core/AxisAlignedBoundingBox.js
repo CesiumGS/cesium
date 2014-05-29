@@ -41,7 +41,8 @@ define([
 
         //If center was not defined, compute it.
         if (!defined(center)) {
-            center = Cartesian3.add(this.minimum, this.maximum);
+            center = new Cartesian3();
+            center = Cartesian3.add(this.minimum, this.maximum, center);
             Cartesian3.multiplyByScalar(center, 0.5, center);
         } else {
             center = Cartesian3.clone(center);

@@ -88,7 +88,7 @@ defineSuite([
         rectangle1 = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         rectangle2 = Rectangle.fromDegrees(70.0, 20.0, 80.0, 30.0);
 
-        var translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle1))), 2.0);
+        var translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle1)), new Cartesian3()), 2.0, new Cartesian3());
         rectangleInstance1 = new GeometryInstance({
             geometry : new RectangleGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -103,7 +103,7 @@ defineSuite([
             }
         });
 
-        translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle2))), 3.0);
+        translation = Cartesian3.multiplyByScalar(Cartesian3.normalize(ellipsoid.cartographicToCartesian(Rectangle.getCenter(rectangle2)), new Cartesian3()), 3.0, new Cartesian3());
         rectangleInstance2 = new GeometryInstance({
             geometry : new RectangleGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,

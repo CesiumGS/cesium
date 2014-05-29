@@ -66,12 +66,12 @@ defineSuite([
             var c = u * u * u - 2.0 * u * u + u;
             var d = u * u * u - u * u;
 
-            var p0 = Cartesian3.multiplyByScalar(p, a);
-            var p1 = Cartesian3.multiplyByScalar(q, b);
-            var p2 = Cartesian3.multiplyByScalar(pT, c);
-            var p3 = Cartesian3.multiplyByScalar(qT, d);
+            var p0 = Cartesian3.multiplyByScalar(p, a, new Cartesian3());
+            var p1 = Cartesian3.multiplyByScalar(q, b, new Cartesian3());
+            var p2 = Cartesian3.multiplyByScalar(pT, c, new Cartesian3());
+            var p3 = Cartesian3.multiplyByScalar(qT, d, new Cartesian3());
 
-            return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
+            return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1, p0), p2, p0), p3, p0);
         };
     };
 
@@ -174,7 +174,7 @@ defineSuite([
         var tangents = new Array(points.length);
         tangents[0] = new Cartesian3(1125196, -161816, 270551);
         for (var i = 1; i < tangents.length - 1; ++i) {
-            tangents[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(points[i + 1], points[i - 1]), 0.5);
+            tangents[i] = Cartesian3.multiplyByScalar(Cartesian3.subtract(points[i + 1], points[i - 1], new Cartesian3()), 0.5, new Cartesian3());
         }
         tangents[tangents.length - 1] = new Cartesian3(1165345, 112641, 47281);
 
@@ -364,7 +364,7 @@ defineSuite([
         });
 
         var t = (times[0] + times[1]) * 0.5;
-        expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+        expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
 
     it('createClampedCubic with 2 control points defaults to lerp', function() {
@@ -377,6 +377,6 @@ defineSuite([
         });
 
         var t = (times[0] + times[1]) * 0.5;
-        expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+        expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
 });

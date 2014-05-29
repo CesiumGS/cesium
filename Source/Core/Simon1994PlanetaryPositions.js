@@ -486,6 +486,11 @@ define([
         if (!defined(date)) {
             date = new JulianDate();
         }
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
         result = Cartesian3.negate(translation, result);
