@@ -1,14 +1,22 @@
 /*global define*/
-define(function() {
+define([
+        '../../Core/defaultValue'
+    ], function(
+        defaultValue) {
     "use strict";
 
-    function TimelineHighlightRange(color, heightInPx) {
+    function TimelineHighlightRange(color, heightInPx, base) {
         this._color = color;
         this._height = heightInPx;
+        this._base = defaultValue(base, 0);
     }
 
     TimelineHighlightRange.prototype.getHeight = function() {
         return this._height;
+    };
+
+    TimelineHighlightRange.prototype.getBase = function() {
+        return this._base;
     };
 
     TimelineHighlightRange.prototype.getStartTime = function() {
@@ -39,11 +47,11 @@ define(function() {
                 highlightWidth = renderState.timeBarWidth - highlightLeft;
             }
             if (highlightWidth > 0) {
-                range = '<span class="cesium-timeline-highlight" style="left: ' + highlightLeft.toString() + 'px; width: ' + highlightWidth.toString() + 'px; bottom: ' + renderState.y.toString() +
+                range = '<span class="cesium-timeline-highlight" style="left: ' + highlightLeft.toString() +
+                        'px; width: ' + highlightWidth.toString() + 'px; bottom: ' + this._base.toString() +
                         'px; height: ' + this._height + 'px; background-color: ' + this._color + ';"></span>';
             }
         }
-        renderState.y += this._height;
         return range;
     };
 

@@ -188,8 +188,8 @@ define([
         destroyObject(this);
     };
 
-    Timeline.prototype.addHighlightRange = function(color, heightInPx) {
-        var newHighlightRange = new TimelineHighlightRange(color, heightInPx);
+    Timeline.prototype.addHighlightRange = function(color, heightInPx, base) {
+        var newHighlightRange = new TimelineHighlightRange(color, heightInPx, base);
         this._highlightRanges.push(newHighlightRange);
         this.resize();
         return newHighlightRange;
@@ -370,7 +370,6 @@ define([
         minSize -= epsilon;
 
         var renderState = {
-            y : 0,
             startTime : startTime,
             startJulian : startJulian,
             epochJulian : epochJulian,
