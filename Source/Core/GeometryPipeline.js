@@ -1629,6 +1629,9 @@ define([
         return splitTriangleResult;
     }
 
+    var u0Scratch = new Cartesian2();
+    var u1Scratch = new Cartesian2();
+    var u2Scratch = new Cartesian2();
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
@@ -1644,7 +1647,9 @@ define([
         var t0, t1, t2;
         var s0, s1, s2;
         var v0, v1, v2;
-        var u0, u1, u2;
+        var u0 = u0Scratch;
+        var u1 = u1Scratch;
+        var u2 = u2Scratch;
 
         if (defined(normals)) {
             n0 = Cartesian3.fromArray(normals, i0 * 3);
@@ -1715,7 +1720,7 @@ define([
                 u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
                 u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
 
-                var texCoord = Cartesian2.add(u0, u1);
+                var texCoord = Cartesian2.add(u0, u1, u0);
                 Cartesian2.add(texCoord, u2, texCoord);
 
                 texCoords.push(texCoord.x, texCoord.y);

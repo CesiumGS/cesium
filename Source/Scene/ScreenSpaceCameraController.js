@@ -328,19 +328,19 @@ define([
                 movementState.motion.x = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
                 movementState.motion.y = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
 
-                Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
+                movementState.startPosition = Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
 
-                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
-                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+                movementState.endPosition = Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                movementState.endPosition = Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
 
                 movementState.active = true;
             } else {
-                Cartesian2.clone(movementState.endPosition, movementState.startPosition);
+                movementState.startPosition = Cartesian2.clone(movementState.endPosition, movementState.startPosition);
 
-                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
-                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+                movementState.endPosition = Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                movementState.endPosition = Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
 
-                Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
+                movementState.motion = Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
@@ -471,12 +471,12 @@ define([
         var start = twist2DStart;
         start.x = (2.0 / width) * movement.startPosition.x - 1.0;
         start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-        Cartesian2.normalize(start, start);
+        start = Cartesian2.normalize(start, start);
 
         var end = twist2DEnd;
         end.x = (2.0 / width) * movement.endPosition.x - 1.0;
         end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-        Cartesian2.normalize(end, end);
+        end = Cartesian2.normalize(end, end);
 
         var startTheta = Math.acos(start.x);
         if (start.y < 0) {

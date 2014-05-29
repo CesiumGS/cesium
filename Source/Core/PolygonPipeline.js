@@ -33,9 +33,11 @@ define([
         WindingOrder) {
     "use strict";
 
+    var uScratch = new Cartesian2();
+    var vScratch = new Cartesian2();
     function isTipConvex(p0, p1, p2) {
-        var u = Cartesian2.subtract(p1, p0);
-        var v = Cartesian2.subtract(p2, p1);
+        var u = Cartesian2.subtract(p1, p0, uScratch);
+        var v = Cartesian2.subtract(p2, p1, vScratch);
 
         // Use the sign of the z component of the cross product
         return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
@@ -123,6 +125,7 @@ define([
         return -1;
     }
 
+
     /**
      * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
      *
@@ -134,6 +137,7 @@ define([
      *
      * @private
      */
+    var distScratch = new Cartesian2();
     function intersectPointWithRing(point, ring, edgeIndices) {
         edgeIndices = defaultValue(edgeIndices, []);
 
@@ -168,7 +172,7 @@ define([
                     var ub = (((point2.x - point.x) * (point.y - v1.y)) - ((point2.y - point.y) * (point.x - v1.x))) * temp;
                     if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
                         var tempIntersection = new Cartesian2(point.x + ua * (point2.x - point.x), point.y + ua * (point2.y - point.y));
-                        var dist = Cartesian2.subtract(tempIntersection, point);
+                        var dist = Cartesian2.subtract(tempIntersection, point, distScratch);
                         temp = Cartesian2.magnitudeSquared(dist);
                         if (temp < minDistance) {
                             intersection = tempIntersection;
@@ -194,6 +198,8 @@ define([
      *
      * @private
      */
+    var v1Scratch = new Cartesian2(1.0, 0.0);
+    var v2Scratch = new Cartesian2();
     function getMutuallyVisibleVertexIndex(outerRing, innerRings) {
         var innerRingIndex = getRightmostRingIndex(innerRings);
         var innerRing = innerRings[innerRingIndex];
@@ -208,8 +214,8 @@ define([
         }
 
         // Set P to be the edge endpoint closest to the inner ring vertex
-        var d1 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex));
-        var d2 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex));
+        var d1 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex, v1Scratch));
+        var d2 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex, v1Scratch));
         var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
 
         var reflexVertices = getReflexVertices(outerRing);
@@ -231,9 +237,9 @@ define([
         // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
         var minAngle = Number.MAX_VALUE;
         if (pointsInside.length > 0) {
-            var v1 = new Cartesian2(1.0, 0.0);
+            var v1 = Cartesian2.fromElements(1.0, 0.0, v1Scratch);
             for (i = 0; i < pointsInside.length; i++) {
-                var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
+                var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex, v2Scratch);
                 var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
                 if (denominator !== 0) {
                     var angle = Math.abs(Math.acos(Cartesian2.dot(v1, v2) / denominator));
@@ -374,6 +380,9 @@ define([
      */
     var BEFORE = -1;
     var AFTER = 1;
+    var s1Scratch = new Cartesian3();
+    var s2Scratch = new Cartesian3();
+    var cutScratch = new Cartesian3();
     function internalCut(a1i, a2i, pArray) {
         // Make sure vertex is valid
         validateVertex(a1i, pArray);
@@ -386,14 +395,9 @@ define([
         var before = getNextVertex(a1i, pArray, BEFORE);
         var after = getNextVertex(a1i, pArray, AFTER);
 
-        var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
-        var s2 = Cartesian2.subtract(pArray[after].position, a1.position);
-        var cut = Cartesian2.subtract(a2.position, a1.position);
-
-        // Convert to 3-dimensional so we can use cross product
-        s1 = new Cartesian3(s1.x, s1.y, 0.0);
-        s2 = new Cartesian3(s2.x, s2.y, 0.0);
-        cut = new Cartesian3(cut.x, cut.y, 0.0);
+        var s1 = Cartesian2.subtract(pArray[before].position, a1.position, s1Scratch);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1.position, s2Scratch);
+        var cut = Cartesian2.subtract(a2.position, a1.position, cutScratch);
 
         if (isParallel(s1, cut)) { // Cut is parallel to s1
             return isInternalToParallelSide(s1, cut);
@@ -503,6 +507,8 @@ define([
      *
      * @private
      */
+    var vvScratch1 = new Cartesian3();
+    var vvScratch2 = new Cartesian3();
     function validateVertex(index, pArray) {
         var before = index - 1;
         var after = index + 1;
@@ -513,12 +519,8 @@ define([
             after = 0;
         }
 
-        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position);
-        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position);
-
-        // Convert to 3-dimensional so we can use cross product
-        s1 = new Cartesian3(s1.x, s1.y, 0.0);
-        s2 = new Cartesian3(s2.x, s2.y, 0.0);
+        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position, vvScratch1);
+        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position, vvScratch2);
 
         if (isParallel(s1, s2)) {
             var e = new DeveloperError("Superfluous vertex found.");
@@ -612,6 +614,7 @@ define([
      *
      * @private
      */
+    var intersectionScratch = new Cartesian2();
     function intersectsSide(a1, a2, pArray) {
         for ( var i = 0; i < pArray.length; i++) {
             var b1 = pArray[i].position;
@@ -647,7 +650,7 @@ define([
             }
             var intY = slopeA * intX + a1.y - slopeA * a1.x;
 
-            var intersection = new Cartesian2(intX, intY);
+            var intersection = Cartesian2.fromElements(intX, intY, intersectionScratch);
 
             // If intersection is on an endpoint, count no intersection
             if (Cartesian2.equals(intersection, a1) || Cartesian2.equals(intersection, a2) || Cartesian2.equals(intersection, b1) || Cartesian2.equals(intersection, b2)) {
@@ -665,18 +668,16 @@ define([
         return false;
     }
 
+    var side1Scratch = new Cartesian3();
+    var side2Scratch = new Cartesian3();
     function triangleInLine(pArray) {
         // Get two sides
         var v1 = pArray[0].position;
         var v2 = pArray[1].position;
         var v3 = pArray[2].position;
 
-        var side1 = Cartesian2.subtract(v2, v1);
-        var side2 = Cartesian2.subtract(v3, v1);
-
-        // Convert to 3-dimensional so we can use cross product
-        side1 = new Cartesian3(side1.x, side1.y, 0.0);
-        side2 = new Cartesian3(side2.x, side2.y, 0.0);
+        var side1 = Cartesian2.subtract(v2, v1, side1Scratch);
+        var side2 = Cartesian2.subtract(v3, v1, side2Scratch);
 
         // If they're parallel, so is the last
         return isParallel(side1, side2);

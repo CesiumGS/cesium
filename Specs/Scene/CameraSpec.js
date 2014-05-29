@@ -1225,7 +1225,7 @@ defineSuite([
         var cart = new Cartographic(-75.0, 42.0, 100.0);
         camera.setPositionCartographic(cart);
 
-        expect(Cartesian2.fromCartesian3(camera.position)).toEqual(Cartesian2.fromCartesian3(projection.project(cart)));
+        expect(Cartesian2.fromCartesian3(camera.position, new Cartesian2())).toEqual(Cartesian2.fromCartesian3(projection.project(cart), new Cartesian2()));
         expect(camera.direction).toEqual(Cartesian3.negate(Cartesian3.UNIT_Z));
         expect(camera.up).toEqual(Cartesian3.UNIT_Y);
         expect(camera.right).toEqual(Cartesian3.UNIT_X);

@@ -985,7 +985,7 @@ defineSuite([
         });
 
         function getGlyphBillboardVertexTranslate(label, index) {
-            return Cartesian2.clone(label._glyphs[index].billboard._translate);
+            return Cartesian2.clone(label._glyphs[index].billboard._translate, new Cartesian2());
         }
 
         it('should set vertexTranslate of billboards correctly when vertical origin is changed', function() {
