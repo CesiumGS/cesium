@@ -113,7 +113,7 @@ define([
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
-     * // and in the body, include: &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="cesiumContainer"></div>
      *
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');

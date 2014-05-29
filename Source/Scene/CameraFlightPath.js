@@ -577,10 +577,12 @@ define([
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
-        var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        if (!defined(scene.frameState)) {
             throw new DeveloperError('frameState is required.');
         }
         if (!defined(rectangle)) {
@@ -588,6 +590,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var frameState = scene.frameState;
         var createAnimationoptions = clone(options);
         var camera = frameState.camera;
         camera.getRectangleCameraCoordinates(rectangle, c3destination);

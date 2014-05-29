@@ -315,7 +315,7 @@ define([
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="animationContainer"></div>
      *
      * var clock = new Cesium.Clock();
      * var clockViewModel = new Cesium.ClockViewModel(clock);
