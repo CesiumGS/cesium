@@ -116,7 +116,7 @@ defineSuite([
             expect(context.readPixels({
                 width : -1
             })).toEqual([0, 0, 0, 0]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to read pixels (height)', function() {
@@ -124,6 +124,6 @@ defineSuite([
             expect(context.readPixels({
                 height : -1
             })).toEqual([0, 0, 0, 0]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

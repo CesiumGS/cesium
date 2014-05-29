@@ -66,12 +66,12 @@ defineSuite([
     it('constructor throws if url is not provided', function() {
         expect(function() {
             return new VRTheWorldTerrainProvider();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new VRTheWorldTerrainProvider({
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('has error event', function() {
@@ -105,7 +105,7 @@ defineSuite([
 
         expect(function() {
             provider.getLevelMaximumGeometricError(0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getTilingScheme must not be called before isReady returns true', function() {
@@ -115,7 +115,7 @@ defineSuite([
 
         expect(function() {
             var t = provider.tilingScheme;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('logo is undefined if credit is not provided', function() {
@@ -199,7 +199,7 @@ defineSuite([
 
             expect(function() {
                 terrainProvider.requestTileGeometry(0, 0, 0);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('uses the proxy if one is supplied', function() {

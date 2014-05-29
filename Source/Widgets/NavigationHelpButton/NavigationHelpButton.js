@@ -33,13 +33,13 @@ define([
      *
      * @example
      * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
-     * // and in the body, include: &lt;div id="navigationHelpButtonContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
      *
      * var navigationHelpButton = new Cesium.NavigationHelpButton({
      *     container : 'navigationHelpButtonContainer'
      * });
      */
-    var NavigationHelpButton = function (options) {
+    var NavigationHelpButton = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.container)) {
             throw new DeveloperError('options.container is required.');
@@ -107,7 +107,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         this._viewModel = viewModel;
         this._wrapper = wrapper;
 
-        this._closeInstructions = function (e) {
+        this._closeInstructions = function(e) {
             if (!wrapper.contains(e.target)) {
                 viewModel.showInstructions = false;
             }
@@ -124,8 +124,8 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
          *
          * @type {Element}
          */
-        container: {
-            get: function () {
+        container : {
+            get : function() {
                 return this._container;
             }
         },
@@ -136,8 +136,8 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
          *
          * @type {NavigationHelpButtonViewModel}
          */
-        viewModel: {
-            get: function () {
+        viewModel : {
+            get : function() {
                 return this._viewModel;
             }
         }
@@ -147,7 +147,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * @memberof NavigationHelpButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
-    NavigationHelpButton.prototype.isDestroyed = function () {
+    NavigationHelpButton.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -156,7 +156,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * removing the widget from layout.
      * @memberof NavigationHelpButton
      */
-    NavigationHelpButton.prototype.destroy = function () {
+    NavigationHelpButton.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeInstructions, true);
         document.removeEventListener('touchstart', this._closeInstructions, true);
 
