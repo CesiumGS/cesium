@@ -361,6 +361,10 @@ define([
         // Width in pixels of a typical label, plus padding
         this._rulerEle.innerHTML = this.makeLabel(this._endJulian.addSeconds(-minimumDuration));
         var sampleWidth = this._rulerEle.offsetWidth + 20;
+        if (sampleWidth < 30) {
+            // Workaround an apparent IE bug with measuring the width after going full-screen from inside an iframe.
+            sampleWidth = 180;
+        }
 
         var origMinSize = minSize;
         minSize -= epsilon;
@@ -464,6 +468,10 @@ define([
                 var ticLabel = this.makeLabel(ticTime);
                 this._rulerEle.innerHTML = ticLabel;
                 textWidth = this._rulerEle.offsetWidth;
+                if (textWidth < 10) {
+                    // IE iframe fullscreen sampleWidth workaround, continued.
+                    textWidth = sampleWidth;
+                }
                 var labelLeft = ticLeft - ((textWidth / 2) - 1);
                 if (labelLeft > lastTextLeft) {
                     lastTextLeft = labelLeft + textWidth + 5;
