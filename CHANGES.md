@@ -8,7 +8,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
-  * Remove `CameraFlightPath.createAnimationCartographic`. Code that looked like:
+  * Removed `CameraFlightPath.createAnimationCartographic`. Code that looked like:
 
            var flight = CameraFlightPath.createAnimationCartographic(scene, {
                destination : cartographic
@@ -34,11 +34,11 @@ Beta Releases
   * Removed `CameraColumbusViewMode` and `Enumeration`.
 * Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
 * Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
+* Improved Internet Explorer 11.0.8 support including workarounds for rendering labels, billboards, and the sun.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size.
-* Improved Internet Explorer 11.0.8 support including workarounds for rendering labels, billboards, and the sun.
 * `Camera.transform` now works consistently across scene modes.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
