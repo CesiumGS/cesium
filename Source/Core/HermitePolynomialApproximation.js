@@ -80,7 +80,6 @@ define([
      * @exception {DeveloperError} The degree argument must be greater than or equal to 1.
      * @exception {DeveloperError} The order argument must be greater than or equal to 0.
      */
-
     HermitePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
 
         inputOrder = defaultValue(inputOrder, 0);
@@ -92,8 +91,8 @@ define([
         if (degree < 1) {
             throw new DeveloperError('degree must be 1 or greater');
         }
-        if (degree < 1) {
-            throw new DeveloperError('degree must be 0 or greater');
+        if (inputOrder < 0) {
+            throw new DeveloperError('inputOrder must be 0 or greater');
         }
         //>>includeEnd('debug');
 
