@@ -77,8 +77,8 @@ define([
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
      *
-     * @exception {DeveloperError} The degree argument must be greater than or equal to 1.
-     * @exception {DeveloperError} The order argument must be greater than or equal to 0.
+     * @exception {DeveloperError} degree must be 1 or greater.
+     * @exception {DeveloperError} inputOrder must be 0 or greater.
      */
     HermitePolynomialApproximation.getRequiredDataPoints = function(degree, inputOrder) {
 
@@ -86,13 +86,13 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(degree)) {
-            throw new DeveloperError('degree is required');
+            throw new DeveloperError('degree is required.');
         }
         if (degree < 1) {
-            throw new DeveloperError('degree must be 1 or greater');
+            throw new DeveloperError('degree must be 1 or greater.');
         }
         if (inputOrder < 0) {
-            throw new DeveloperError('inputOrder must be 0 or greater');
+            throw new DeveloperError('inputOrder must be 0 or greater.');
         }
         //>>includeEnd('debug');
 
