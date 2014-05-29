@@ -871,7 +871,13 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var container = viewer._container;
         var width = container.clientWidth;
         var height = container.clientHeight;
-        if (width === viewer._lastWidth && height === viewer._lastHeight) {
+        var animationShown = defined(viewer._animation) && viewer._animation.show;
+        var timelineShown = defined(viewer._timeline) && viewer._timeline.show;
+
+        if (width === viewer._lastWidth && height === viewer._lastHeight &&
+            animationShown === viewer._lastAnimationShown &&
+            timelineShown === viewer._lastTimelineShown) {
+
             return;
         }
 
@@ -887,44 +893,44 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var timeline = viewer._timeline;
-        var timelineExists = defined(timeline);
-        var animationExists = defined(viewer._animation);
         var animationContainer;
-        var resizeWidgets = !animationExists;
+        var resizeWidgets = animationShown !== viewer._lastAnimationShown;
         var animationWidth = 0;
 
-        if (animationExists) {
+        if (animationShown) {
             var lastWidth = viewer._lastWidth;
             animationContainer = viewer._animation.container;
             if (width > 900) {
+                animationWidth = 169;
                 if (lastWidth <= 900) {
-                    animationWidth = 169;
                     animationContainer.style.width = '169px';
                     animationContainer.style.height = '112px';
                     resizeWidgets = true;
                     viewer._animation.resize();
                 }
             } else if (width >= 600) {
+                animationWidth = 136;
                 if (lastWidth < 600 || lastWidth > 900) {
-                    animationWidth = 136;
                     animationContainer.style.width = '136px';
                     animationContainer.style.height = '90px';
                     resizeWidgets = true;
                     viewer._animation.resize();
                 }
-            } else if (lastWidth > 600 || lastWidth === 0) {
+            } else {
                 animationWidth = 106;
-                animationContainer.style.width = '106px';
-                animationContainer.style.height = '70px';
-                resizeWidgets = true;
-                viewer._animation.resize();
+                if (lastWidth > 600 || lastWidth === 0) {
+                    animationContainer.style.width = '106px';
+                    animationContainer.style.height = '70px';
+                    resizeWidgets = true;
+                    viewer._animation.resize();
+                }
             }
         }
 
         if (resizeWidgets) {
             var logoBottom = 0;
             var logoLeft = animationWidth + 5;
-            if (timelineExists) {
+            if (timelineShown) {
                 var fullscreenButton = viewer._fullscreenButton;
                 var timelineContainer = timeline.container;
                 var timelineStyle = timelineContainer.style;
@@ -936,19 +942,25 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                     timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
                 }
             }
-            if (timelineExists || animationExists) {
-                var bottomContainer = viewer._bottomContainer;
-                bottomContainer.style.bottom = logoBottom + 'px';
-                bottomContainer.style.left = logoLeft + 'px';
-            }
         }
 
-        if (timelineExists) {
+        if (animationShown) {
+            viewer._bottomContainer.style.left = (animationWidth + 5) + 'px';
+        } else {
+            viewer._bottomContainer.style.left = 0;
+        }
+
+        if (timelineShown) {
+            viewer._bottomContainer.style.bottom = logoBottom + 'px';
             timeline.resize();
+        } else {
+            viewer._bottomContainer.style.bottom = 0;
         }
 
         viewer._lastWidth = width;
         viewer._lastHeight = height;
+        viewer._lastAnimationShown = animationShown;
+        viewer._lastTimelineShown = timelineShown;
     }
 
     return Viewer;
