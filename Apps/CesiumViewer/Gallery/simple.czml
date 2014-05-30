@@ -3866,8 +3866,8 @@
     },
     "vertexPositions":{
       "references":[
-        "Satellite/Geoeye1.position",
-        "Satellite/ISS.position"
+        "Satellite/Geoeye1#position",
+        "Satellite/ISS#position"
       ]
     }
   },

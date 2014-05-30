@@ -590,7 +590,7 @@ define([
         }
 
         if (defined(packetData.reference)) {
-            object[propertyName] = new ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
             return;
         }
 
@@ -730,7 +730,7 @@ define([
         }
 
         if (defined(packetData.reference)) {
-            object[propertyName] = new ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
             return;
         }
 

@@ -19,7 +19,21 @@ define([
             var resolveBuffer = referenceProperty._dynamicObjectCollection;
             var targetObject = resolveBuffer.getById(referenceProperty._targetObjectId);
             if (defined(targetObject)) {
-                targetProperty = targetObject[referenceProperty._targetPropertyName];
+                var names = referenceProperty._targetPropertyNames;
+
+                targetProperty = targetObject[names[0]];
+                if (!defined(targetProperty)) {
+                    return undefined;
+                }
+
+                var length = names.length;
+                for (var i = 1; i < length; i++) {
+                    targetProperty = targetProperty[names[i]];
+                    if (!defined(targetProperty)) {
+                        return undefined;
+                    }
+                }
+
                 referenceProperty._targetProperty = targetProperty;
                 referenceProperty._targetObject = targetObject;
             }
@@ -81,7 +95,7 @@ define([
      * @param {String} targetObjectId The id of the object which is being referenced.
      * @param {String} targetPropertyName The name of the property on the target object which we will use.
      */
-    var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
+    var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyNames) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObjectCollection)) {
             throw new DeveloperError('dynamicObjectCollection is required.');
@@ -89,7 +103,7 @@ define([
         if (!defined(targetObjectId)) {
             throw new DeveloperError('targetObjectId is required.');
         }
-        if (!defined(targetPropertyName)) {
+        if (!defined(targetPropertyNames)) {
             throw new DeveloperError('targetPropertyName is required.');
         }
         //>>includeEnd('debug');
@@ -98,7 +112,7 @@ define([
         this._dynamicObjectCollection = dynamicObjectCollection;
         this._targetObjectId = targetObjectId;
         this._targetObject = undefined;
-        this._targetPropertyName = targetPropertyName;
+        this._targetPropertyNames = targetPropertyNames;
         this._definitionChanged = new Event();
     };
 
@@ -162,12 +176,10 @@ define([
         //>>includeEnd('debug');
 
         var tmp = trySplit(referenceString, '#');
-        if (tmp.length !== 2)
-        {
+        if (tmp.length !== 2) {
             throw new DeveloperError();
         }
-        var id = tmp[0];
-
+        var identifier = tmp[0];
 
         var index = findUnescaped(referenceString, 0, '#') + 1;
         var values = trySplit(referenceString.substring(index), '.');
@@ -183,7 +195,7 @@ define([
             }
         }
 
-        return new ReferenceProperty(dynamicObjectCollection, id, values[0]);
+        return new ReferenceProperty(dynamicObjectCollection, identifier, values);
     };
 
     /**
@@ -242,10 +254,28 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ReferenceProperty.prototype.equals = function(other) {
-        return this === other || //
-               (this._dynamicObjectCollection === other._dynamicObjectCollection && //
-                this._targetObjectId === other._targetObjectId && //
-                this._targetPropertyName === other._targetPropertyName);
+        if (this === other) {
+            return true;
+        }
+
+        if (this._dynamicObjectCollection !== other._dynamicObjectCollection || //
+            this._targetObjectId !== other._targetObjectId || //
+            defined(this._targetPropertyNames) !== defined(other._targetPropertyNames) || //
+            this._targetPropertyNames.length !== other._targetPropertyNames.length) {
+            return false;
+        }
+
+        var names = this._targetPropertyNames;
+        var otherNames = other._targetPropertyNames;
+
+        var length = this._targetPropertyNames.length;
+        for (var i = 0; i < length; i++) {
+            if (names[i] !== otherNames[i]) {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     return ReferenceProperty;

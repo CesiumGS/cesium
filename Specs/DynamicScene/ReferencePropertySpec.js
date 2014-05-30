@@ -30,13 +30,13 @@ defineSuite([
 
     it('constructor throws if missing dynamicObjectCollection parameter', function() {
         expect(function() {
-            return new ReferenceProperty(undefined, 'object', 'property');
+            return new ReferenceProperty(undefined, 'object', ['property']);
         }).toThrowDeveloperError();
     });
 
     it('constructor throws if missing targetObjectId parameter', function() {
         expect(function() {
-            return new ReferenceProperty(new DynamicObjectCollection(), undefined, 'property');
+            return new ReferenceProperty(new DynamicObjectCollection(), undefined, ['property']);
         }).toThrowDeveloperError();
     });
 
@@ -94,10 +94,10 @@ defineSuite([
         var right = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         expect(left.equals(right)).toEqual(true);
 
-        right = new ReferenceProperty(dynamicObjectCollection, 'testObject', 'property2');
+        right = new ReferenceProperty(dynamicObjectCollection, 'testObject', ['property2']);
         expect(left.equals(right)).toEqual(false);
 
-        right = new ReferenceProperty(dynamicObjectCollection, 'testObject2', 'property');
+        right = new ReferenceProperty(dynamicObjectCollection, 'testObject2', ['property']);
         expect(left.equals(right)).toEqual(false);
     });
 });
