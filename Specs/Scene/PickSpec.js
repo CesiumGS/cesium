@@ -81,7 +81,7 @@ defineSuite([
     it('pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -118,7 +118,7 @@ defineSuite([
     it('drill pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('drill pick (all picked)', function() {

@@ -323,9 +323,7 @@ defineSuite([
 
     it('render without a central body or any primitives', function() {
         scene.initializeFrame();
-        expect(function() {
-            scene.render();
-        }).not.toThrow();
+        scene.render();
     });
 
     it('does not crash when near plane is greater than or equal to the far plane', function() {
@@ -335,8 +333,6 @@ defineSuite([
 
         createBillboards();
         scene.initializeFrame();
-        expect(function() {
-            scene.render();
-        }).not.toThrow();
+        scene.render();
     });
 }, 'WebGL');

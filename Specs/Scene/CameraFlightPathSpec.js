@@ -90,7 +90,7 @@ defineSuite([
             CameraFlightPath.createAnimationRectangle(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('create animation with rectangle throws without a destination', function() {

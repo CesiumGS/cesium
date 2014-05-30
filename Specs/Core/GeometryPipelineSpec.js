@@ -132,7 +132,7 @@ defineSuite([
                 indices : [],
                 primitiveType : PrimitiveType.POINTS
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors', function() {
@@ -172,7 +172,7 @@ defineSuite([
     it('createLineSegmentsForVectors throws without geometry.attributes.position', function() {
         expect(function() {
             GeometryPipeline.createLineSegmentsForVectors();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors throws when geometry.attributes does not have an attributeName property', function() {
@@ -339,7 +339,7 @@ defineSuite([
             });
 
             geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
@@ -568,7 +568,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectTo2D', function() {
@@ -700,7 +700,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('encodeAttribute encodes positions', function() {

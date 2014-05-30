@@ -94,7 +94,7 @@ defineSuite([
 
         expect(function() {
             crs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws when time is out of range', function() {
@@ -105,7 +105,7 @@ defineSuite([
 
         expect(function() {
             crs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('check Catmull-Rom spline against a Hermite spline', function() {

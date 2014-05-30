@@ -202,9 +202,7 @@ defineSuite([
                 vertices.push(4.0);
             }
 
-            expect(function() {
-                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7);
-            }).not.toThrow();
+            ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7);
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(undefined, vertices, 7);
