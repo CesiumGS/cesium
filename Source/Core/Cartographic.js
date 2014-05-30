@@ -52,8 +52,8 @@ define([
      * specified in radians.
      * @memberof Cartographic
      *
-     * @param {Number} [longitude] The longitude, in radians.
-     * @param {Number} [latitude] The latitude, in radians.
+     * @param {Number} longitude The longitude, in radians.
+     * @param {Number} latitude The latitude, in radians.
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
