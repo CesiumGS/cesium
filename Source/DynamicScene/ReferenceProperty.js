@@ -3,40 +3,50 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/RuntimeError',
         '../Core/Event',
         './Property'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        RuntimeError,
         Event,
         Property) {
     "use strict";
 
-    function resolve(referenceProperty) {
-        var targetProperty = referenceProperty._targetProperty;
+    function resolve(that) {
+        var targetProperty = that._targetProperty;
         if (!defined(targetProperty)) {
-            var resolveBuffer = referenceProperty._dynamicObjectCollection;
-            var targetObject = resolveBuffer.getById(referenceProperty._targetObjectId);
-            if (defined(targetObject)) {
-                var names = referenceProperty._targetPropertyNames;
+            var targetObject = that._targetObject;
 
-                targetProperty = targetObject[names[0]];
-                if (!defined(targetProperty)) {
-                    return undefined;
+            if (!defined(targetObject)) {
+                var targetCollection = that._targetCollection;
+
+                targetObject = targetCollection.getById(that._targetId);
+                if (!defined(targetObject)) {
+                    throw new RuntimeError('target object could not be resolved.');
                 }
-
-                var length = names.length;
-                for (var i = 1; i < length; i++) {
-                    targetProperty = targetProperty[names[i]];
-                    if (!defined(targetProperty)) {
-                        return undefined;
-                    }
-                }
-
-                referenceProperty._targetProperty = targetProperty;
-                referenceProperty._targetObject = targetObject;
+                targetObject.definitionChanged.addEventListener(ReferenceProperty.prototype._onTargetObjectDefinitionChanged, that);
+                that._targetObject = targetObject;
             }
+
+            var names = that._targetPropertyNames;
+
+            targetProperty = targetObject[names[0]];
+            if (!defined(targetProperty)) {
+                throw new RuntimeError('targetProperty could not be resolved.');
+            }
+
+            var length = names.length;
+            for (var i = 1; i < length; i++) {
+                targetProperty = targetProperty[names[i]];
+                if (!defined(targetProperty)) {
+                    throw new RuntimeError('targetProperty could not be resolved.');
+                }
+            }
+
+            that._targetProperty = targetProperty;
         }
         return targetProperty;
     }
@@ -91,29 +101,31 @@ define([
      * @alias ReferenceProperty
      * @constructor
      *
-     * @param {DynamicObjectCollection} dynamicObjectCollection The object collection which will be used to resolve the reference.
-     * @param {String} targetObjectId The id of the object which is being referenced.
-     * @param {String} targetPropertyName The name of the property on the target object which we will use.
+     * @param {targetCollection} targetCollection The object collection which will be used to resolve the reference.
+     * @param {String} targetId The id of the object which is being referenced.
+     * @param {String} targetPropertyNames The name of the property on the target object which we will use.
      */
-    var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyNames) {
+    var ReferenceProperty = function(targetCollection, targetId, targetPropertyNames) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(targetCollection)) {
+            throw new DeveloperError('targetCollection is required.');
         }
-        if (!defined(targetObjectId)) {
-            throw new DeveloperError('targetObjectId is required.');
+        if (!defined(targetId)) {
+            throw new DeveloperError('targetId is required.');
         }
         if (!defined(targetPropertyNames)) {
             throw new DeveloperError('targetPropertyName is required.');
         }
         //>>includeEnd('debug');
 
-        this._targetProperty = undefined;
-        this._dynamicObjectCollection = dynamicObjectCollection;
-        this._targetObjectId = targetObjectId;
-        this._targetObject = undefined;
+        this._targetCollection = targetCollection;
+        this._targetId = targetId;
         this._targetPropertyNames = targetPropertyNames;
+        this._targetProperty = undefined;
+        this._targetObject = undefined;
         this._definitionChanged = new Event();
+
+        targetCollection.collectionChanged.addEventListener(ReferenceProperty.prototype._onCollectionChanged, this);
     };
 
     defineProperties(ReferenceProperty.prototype, {
@@ -147,8 +159,37 @@ define([
          */
         referenceFrame : {
             get : function() {
-                var targetProperty = resolve(this);
-                return defined(targetProperty) ? targetProperty.referenceFrame : undefined;
+                return resolve(this).referenceFrame;
+            }
+        },
+        /**
+         * Gets the reference frame that the position is defined in.
+         * @memberof ReferenceProperty.prototype
+         * @Type {String}
+         */
+        targetId : {
+            get : function() {
+                return this._targetId;
+            }
+        },
+        /**
+         * Gets the reference frame that the position is defined in.
+         * @memberof ReferenceProperty.prototype
+         * @Type {DynamicObjectCollection}
+         */
+        targetCollection : {
+            get : function() {
+                return this._targetCollection;
+            }
+        },
+        /**
+         * Gets the reference frame that the position is defined in.
+         * @memberof ReferenceProperty.prototype
+         * @Type {String[]}
+         */
+        targetPropertyNames : {
+            get : function() {
+                return this._targetPropertyNames;
             }
         }
     });
@@ -158,17 +199,17 @@ define([
      * be used to resolve it and a string indicating the target object id and property,
      * delineated by a period.
      *
-     * @param {DynamicObject} dynamicObjectCollection
+     * @param {DynamicObject} targetCollection
      * @param {String} referenceString
      *
      * @returns A new instance of ReferenceProperty.
      *
      * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
      */
-    ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
+    ReferenceProperty.fromString = function(targetCollection, referenceString) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
+        if (!defined(targetCollection)) {
+            throw new DeveloperError('targetCollection is required.');
         }
         if (!defined(referenceString)) {
             throw new DeveloperError('referenceString is required.');
@@ -176,26 +217,27 @@ define([
         //>>includeEnd('debug');
 
         var tmp = trySplit(referenceString, '#');
-        if (tmp.length !== 2) {
+        var identifier = tmp[0];
+
+        //>>includeStart('debug', pragmas.debug);
+        if (tmp.length !== 2 || !defined(identifier) || identifier === '') {
             throw new DeveloperError();
         }
-        var identifier = tmp[0];
+        //>>includeEnd('debug');
 
         var index = findUnescaped(referenceString, 0, '#') + 1;
         var values = trySplit(referenceString.substring(index), '.');
 
-        if (values.length === 0) {
-            throw new DeveloperError();
-        }
-
+        //>>includeStart('debug', pragmas.debug);
         for (var i = 0; i < values.length; i++) {
             var item = values[i];
             if (!defined(item) || item === '') {
                 throw new DeveloperError();
             }
         }
+        //>>includeEnd('debug');
 
-        return new ReferenceProperty(dynamicObjectCollection, identifier, values);
+        return new ReferenceProperty(targetCollection, identifier, values);
     };
 
     /**
@@ -208,14 +250,7 @@ define([
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        //>>includeEnd('debug');
-
-        var targetProperty = resolve(this);
-        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
+        return resolve(this).getValue(time, result);
     };
 
     /**
@@ -229,8 +264,7 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ReferenceProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
-        var targetProperty = resolve(this);
-        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValueInReferenceFrame(time, referenceFrame, result) : undefined;
+        return resolve(this).getValueInReferenceFrame(time, referenceFrame, result);
     };
 
     /**
@@ -241,8 +275,7 @@ define([
      * @returns {String} The type of material.
      */
     ReferenceProperty.prototype.getType = function(time) {
-        var targetProperty = resolve(this);
-        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getType(time) : undefined;
+        return resolve(this).getType(time);
     };
 
     /**
@@ -258,8 +291,8 @@ define([
             return true;
         }
 
-        if (this._dynamicObjectCollection !== other._dynamicObjectCollection || //
-            this._targetObjectId !== other._targetObjectId || //
+        if (this._targetCollection !== other._targetCollection || //
+            this._targetId !== other._targetId || //
             defined(this._targetPropertyNames) !== defined(other._targetPropertyNames) || //
             this._targetPropertyNames.length !== other._targetPropertyNames.length) {
             return false;
@@ -276,6 +309,25 @@ define([
         }
 
         return true;
+    };
+
+    ReferenceProperty.prototype._onTargetObjectDefinitionChanged = function(targetObject, name, value, oldValue) {
+        if (this._targetPropertyNames[0] === name) {
+            this._targetProperty = undefined;
+            this._definitionChanged.raiseEvent(this);
+        }
+    };
+
+    ReferenceProperty.prototype._onCollectionChanged = function(collection, added, removed) {
+        var targetObject = this._targetObject;
+        if (defined(targetObject)) {
+            if (removed.indexOf(targetObject) === -1) {
+                targetObject.definitionChanged.removeEventListener(ReferenceProperty.prototype._onTargetObjectDefinitionChanged, this);
+                this._targetProperty = undefined;
+                this._targetObject = undefined;
+                this._definitionChanged.raiseEvent(this);
+            }
+        }
     };
 
     return ReferenceProperty;
