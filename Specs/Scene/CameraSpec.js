@@ -244,10 +244,17 @@ defineSuite([
         expect(camera.tilt).toEqualEpsilon(newTilt, CesiumMath.EPSILON14);
     });
 
+    it('update throws in 2D mode without mode', function() {
+        var frustum = new OrthographicFrustum();
+        expect(function() {
+            camera.update(undefined, frustum);
+        }).toThrowDeveloperError();
+    });
+
     it('update throws in 2D mode without an orthographic frustum', function() {
         expect(function() {
-            camera.update(SceneMode.SCENE2D);
-        }).toThrow();
+            camera.update(SceneMode.SCENE2D, undefined);
+        }).toThrowDeveloperError();
     });
 
     it('setTransform', function() {

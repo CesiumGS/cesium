@@ -1,13 +1,6 @@
 <?js
 var data = obj;
 var self = this;
-var defaultObjectClass = '';
-
-// Check if the default value is an object or array; if so, apply code highlighting
-if (data.defaultvalue && (data.defaultvaluetype === 'object' || data.defaultvaluetype === 'array')) {
-    data.defaultvalue = "<pre class=\"prettyprint\"><code>" + data.defaultvalue + "</code></pre>";
-    defaultObjectClass = ' class="object-value"';
-}
 ?>
 <dl class="details">
     <?js
@@ -39,10 +32,8 @@ if (data.defaultvalue && (data.defaultvaluetype === 'object' || data.defaultvalu
     <?js } ?>
 
     <?js if (data.deprecated) { ?>
-        <dt class="important tag-deprecated">Deprecated:</dt><?js
-            if (data.deprecated === true) { ?><dd class="yes-def tag-deprecated"><ul class="dummy"><li>Yes</li></ul></dd><?js }
-            else { ?><dd><ul class="dummy"><li><?js= data.deprecated ?></li><ul></dd><?js }
-        ?>
+    <span class="details-header important">Deprecated:</span>
+    <span><?js= data.deprecated ?></span>
     <?js } ?>
 
     <?js if (data.author && author.length) {?>
@@ -65,12 +56,12 @@ if (data.defaultvalue && (data.defaultvaluetype === 'object' || data.defaultvalu
     <?js } ?>
 
     <?js if (data.defaultvalue) {?>
-    <h5>Default Value:</h5>
-    <div<?js= defaultObjectClass ?>><?js= data.defaultvalue ?></div>
+    <span class="details-header">Default Value:</span>
+    <code class="language-javascript"><?js= data.defaultvalue ?></code>
     <?js } ?>
 
     <?js if (data.examples && examples.length) { ?>
-        <h5>Example<?js= examples.length > 1? 's':'' ?></h5>
+        <h5>Example<?js= examples.length > 1? 's':'' ?>:</h5>
         <?js= this.partial('examples.tmpl', examples) ?>
     <?js } ?>
 

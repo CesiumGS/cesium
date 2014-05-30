@@ -553,7 +553,7 @@ defineSuite([
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -566,7 +566,7 @@ defineSuite([
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -824,10 +824,10 @@ defineSuite([
             });
 
             expect(function() {
-                texture.sampler = context.createSample({
+                texture.sampler = context.createSampler({
                     minificationFilter : TextureMinificationFilter.LINEAR
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 
@@ -839,10 +839,10 @@ defineSuite([
             });
 
             expect(function() {
-                texture.sampler = context.createSample({
+                texture.sampler = context.createSampler({
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 

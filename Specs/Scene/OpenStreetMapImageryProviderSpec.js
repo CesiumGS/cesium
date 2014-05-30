@@ -38,10 +38,7 @@ defineSuite([
     });
 
     it('can be default constructed', function() {
-        function defaultConstruct() {
-            return new OpenStreetMapImageryProvider();
-        }
-        expect(defaultConstruct).not.toThrow();
+        return new OpenStreetMapImageryProvider();
     });
 
     it('returns valid value for hasAlphaChannel', function() {
