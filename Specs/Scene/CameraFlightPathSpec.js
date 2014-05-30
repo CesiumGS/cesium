@@ -384,7 +384,7 @@ defineSuite([
         var camera = frameState.camera;
         var start = Cartesian3.clone(camera.position);
         var mag = Cartesian3.magnitude(start);
-        var end = Cartesian3.multiplyByScalar(Cartesian3.normalize(start), mag - 1000000.0, new Cartesian3());
+        var end = Cartesian3.multiplyByScalar(Cartesian3.normalize(start, new Cartesian3()), mag - 1000000.0, new Cartesian3());
 
         var duration = 3000.0;
         var flight = CameraFlightPath.createAnimation(scene, {

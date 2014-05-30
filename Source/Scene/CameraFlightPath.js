@@ -91,15 +91,16 @@ define([
         return Math.max(dx, dy);
     }
 
-    var scratch1 = new Cartesian3();
-    var scratch2 = new Cartesian3();
+    var scratchCart = new Cartesian3();
+    var scratchCart2 = new Cartesian3();
+    var scratchCart3 = new Cartesian3();
     function createPath3D(camera, ellipsoid, start, up, right, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
-        var dot = Cartesian3.dot(Cartesian3.normalize(start, scratch1), Cartesian3.normalize(end, scratch1));
+        var dot = Cartesian3.dot(Cartesian3.normalize(start, scratchCart), Cartesian3.normalize(end, scratchCart2));
 
         var points;
         var altitude;
@@ -108,19 +109,19 @@ define([
             altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
-            var diff = Cartesian3.subtract(start, end, scratch1);
-            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5, scratch2), end, scratch2));
-            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratch2));
-            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratch2));
+            var diff = Cartesian3.subtract(start, end, scratchCart);
+            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5, scratchCart2), end, scratchCart2));
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end, scratch1), altitude, scratch1);
-        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start, scratch2), altitude, scratch2);
+        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end, scratchCart2), altitude, scratchCart2);
+        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start, scratchCart), altitude, scratchCart);
 
-        var axis, angle, rotation, middle;
-        middle = new Cartesian3();
+        var axis, angle, rotation;
+        var middle = new Cartesian3();
         if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
             middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end, middle), 0.5, middle), end, middle);
             points = [ start, middle, end ];
@@ -129,9 +130,8 @@ define([
             points = [ start, middle, end ];
         } else {
             points = [ start ];
-
-            angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart, afterStart), Cartesian3.normalize(aboveEnd, aboveEnd)));
-            axis = Cartesian3.cross(aboveEnd, afterStart, scratch2);
+            angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart, scratchCart3), Cartesian3.normalize(aboveEnd, scratchCart3)));
+            axis = Cartesian3.cross(aboveEnd, afterStart, scratchCart3);
             if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
             }
@@ -231,7 +231,7 @@ define([
         return update;
     }
 
-    var diff2DScratch = new Cartesian3();
+    var cartScratch1 = new Cartesian3();
     function createPath2D(camera, ellipsoid, start, end, duration) {
         if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
             return new LinearSpline({
@@ -251,7 +251,7 @@ define([
         if (start.z > maxStartAlt) {
             altitude = 0.6 * maxStartAlt;
         } else {
-            var diff = Cartesian3.subtract(start, end, diff2DScratch);
+            var diff = Cartesian3.subtract(start, end, cartScratch1);
             altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
         }
 
@@ -270,14 +270,15 @@ define([
         } else {
             points = [ start ];
 
-            var v = Cartesian3.subtract(afterStart, aboveEnd, new Cartesian3());
+            var v = Cartesian3.subtract(afterStart, aboveEnd, cartScratch1);
             var distance = Cartesian3.magnitude(v);
             Cartesian3.normalize(v, v);
 
             var increment = incrementPercentage * distance;
             var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i, v), aboveEnd, v));
+                var p = new Cartesian3();
+                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i, p), aboveEnd, p));
             }
 
             points.push(end);
@@ -299,7 +300,8 @@ define([
     var right2D = new Cartesian3();
     right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y, right2D), right2D);
     var up2D = Cartesian3.cross(right2D, direction2D, new Cartesian3());
-    var quat = createQuaternion(direction2D, up2D, new Cartesian3());
+    var quat = createQuaternion(direction2D, up2D);
+
     function createOrientations2D(camera, path, endDirection, endUp) {
         var points = path.points;
         var orientations = new Array(points.length);
@@ -581,10 +583,12 @@ define([
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
-        var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        if (!defined(scene.frameState)) {
             throw new DeveloperError('frameState is required.');
         }
         if (!defined(rectangle)) {
@@ -592,6 +596,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var frameState = scene.frameState;
         var createAnimationoptions = clone(options);
         var camera = frameState.camera;
         camera.getRectangleCameraCoordinates(rectangle, c3destination);
