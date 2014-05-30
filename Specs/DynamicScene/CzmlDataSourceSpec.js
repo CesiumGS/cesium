@@ -19,6 +19,7 @@ defineSuite([
         'Core/Spherical',
         'Core/TimeInterval',
         'DynamicScene/DynamicObjectCollection',
+        'DynamicScene/ReferenceProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
@@ -43,6 +44,7 @@ defineSuite([
         Spherical,
         TimeInterval,
         DynamicObjectCollection,
+        ReferenceProperty,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -1993,5 +1995,94 @@ defineSuite([
         expect(dynamicObject.wall.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.granularity);
         expect(dynamicObject.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.minimumHeights.array);
         expect(dynamicObject.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
+    });
+
+    it('CZML can use constant reference properies', function() {
+        var time = new JulianDate();
+        var packets = [{
+            id : 'targetId',
+            point : {
+                pixelSize : 1.0
+            }
+        }, {
+            id : 'referenceId',
+            point : {
+                pixelSize : {
+                    reference : 'targetId#point.pixelSize'
+                }
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+
+        var targetObject = dataSource.dynamicObjects.getById('targetId');
+        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+
+        expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+        expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
+    });
+
+    it('CZML can use interval reference properies', function() {
+        var packets = [{
+            id : 'targetId',
+            point : {
+                pixelSize : 1.0
+            }
+        }, {
+            id : 'targetId2',
+            point : {
+                pixelSize : 2.0
+            }
+        }, {
+            id : 'referenceId',
+            point : {
+                pixelSize : [{
+                    interval : '2012/2013',
+                    reference : 'targetId#point.pixelSize'
+                }, {
+                    interval : '2013/2014',
+                    reference : 'targetId2#point.pixelSize'
+                }]
+            }
+        }];
+
+        var time1 = JulianDate.fromIso8601('2012');
+        var time2 = JulianDate.fromIso8601('2014');
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+
+        var targetObject = dataSource.dynamicObjects.getById('targetId');
+        var targetObject2 = dataSource.dynamicObjects.getById('targetId2');
+        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+
+        expect(targetObject.point.pixelSize.getValue(time1)).toEqual(referenceObject.point.pixelSize.getValue(time1));
+        expect(targetObject2.point.pixelSize.getValue(time2)).toEqual(referenceObject.point.pixelSize.getValue(time2));
+    });
+
+    it('CZML can use constant position reference properies', function() {
+        var time = new JulianDate();
+
+        var packets = [{
+            id : 'targetId',
+            position : {
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        }, {
+            id : 'referenceId',
+            position : {
+                reference : 'targetId#position'
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+
+        var targetObject = dataSource.dynamicObjects.getById('targetId');
+        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+
+        expect(referenceObject.position instanceof ReferenceProperty).toBe(true);
+        expect(targetObject.position.getValue(time)).toEqual(referenceObject.position.getValue(time));
     });
 });
