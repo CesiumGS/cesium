@@ -2,7 +2,6 @@
 defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Matrix4',
@@ -11,13 +10,11 @@ defineSuite([
         'Scene/PerspectiveFrustum',
         'Scene/RectanglePrimitive',
         'Scene/SceneMode',
-        'Specs/createCamera',
         'Specs/createScene',
         'Specs/destroyScene'
     ], 'Scene/Pick', function(
         Cartesian2,
         Cartesian3,
-        Cartographic,
         Ellipsoid,
         CesiumMath,
         Matrix4,
@@ -26,7 +23,6 @@ defineSuite([
         PerspectiveFrustum,
         RectanglePrimitive,
         SceneMode,
-        createCamera,
         createScene,
         destroyScene) {
     "use strict";
@@ -60,7 +56,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
     });
 
     afterEach(function() {
@@ -85,7 +81,7 @@ defineSuite([
     it('pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -122,7 +118,7 @@ defineSuite([
     it('drill pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('drill pick (all picked)', function() {
@@ -181,7 +177,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
@@ -211,7 +207,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));

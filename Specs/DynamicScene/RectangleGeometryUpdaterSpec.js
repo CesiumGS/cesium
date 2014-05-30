@@ -2,7 +2,6 @@
 defineSuite([
         'DynamicScene/RectangleGeometryUpdater',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/JulianDate',
@@ -11,20 +10,16 @@ defineSuite([
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantPositionProperty',
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicObject',
         'DynamicScene/DynamicRectangle',
         'DynamicScene/GridMaterialProperty',
-        'DynamicScene/PropertyArray',
-        'DynamicScene/SampledPositionProperty',
         'DynamicScene/SampledProperty',
         'DynamicScene/TimeIntervalCollectionProperty',
-        'Scene/CompositePrimitive'
+        'Scene/PrimitiveCollection'
     ], function(
         RectangleGeometryUpdater,
         Cartesian3,
-        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         JulianDate,
@@ -33,16 +28,13 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
-        ConstantPositionProperty,
         ConstantProperty,
         DynamicObject,
         DynamicRectangle,
         GridMaterialProperty,
-        PropertyArray,
-        SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
-        CompositePrimitive) {
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -340,7 +332,7 @@ defineSuite([
         dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
 
         var updater = new RectangleGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -411,7 +403,7 @@ defineSuite([
         var dynamicObject = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -431,7 +423,7 @@ defineSuite([
         dynamicObject.rectangle.height = new SampledProperty(Number);
         dynamicObject.rectangle.height.addSample(time, 4);
         var updater = new RectangleGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

@@ -3,7 +3,7 @@ define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * The type of a geometric primitive, i.e., points, lines, and triangles.
      *
      * @exports PrimitiveType
      */
@@ -63,11 +63,7 @@ define(function() {
         TRIANGLE_FAN : 0x0006,
 
         /**
-         * DOC_TBA
-         *
-         * @param {PrimitiveType} primitiveType
-         *
-         * @returns {Boolean}
+         * @private
          */
         validate : function(primitiveType) {
             return ((primitiveType === PrimitiveType.POINTS) ||

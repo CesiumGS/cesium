@@ -7,8 +7,8 @@ define([
         DeveloperError) {
     "use strict";
 
-    var leftScratchArray;
-    var rightScratchArray;
+    var leftScratchArray = [];
+    var rightScratchArray = [];
 
     function merge(array, compare, userDefinedObject, start, middle, end) {
         var leftLength = middle - start + 1;
@@ -36,7 +36,7 @@ define([
             if (i < leftLength && (j >= rightLength || compare(leftElement, rightElement, userDefinedObject) <= 0)) {
                 array[k] = leftElement;
                 ++i;
-            } else if (j < rightLength){
+            } else if (j < rightLength) {
                 array[k] = rightElement;
                 ++j;
             }
@@ -86,12 +86,16 @@ define([
 
         var length = array.length;
         var scratchLength = Math.ceil(length * 0.5);
-        if (!defined(leftScratchArray) || leftScratchArray.length < scratchLength) {
-            leftScratchArray = new Array(scratchLength);
-            rightScratchArray = new Array(scratchLength);
-        }
+
+        // preallocate space in scratch arrays
+        leftScratchArray.length = scratchLength;
+        rightScratchArray.length = scratchLength;
 
         sort(array, comparator, userDefinedObject, 0, length - 1);
+
+        // trim scratch arrays
+        leftScratchArray.length = 0;
+        rightScratchArray.length = 0;
     };
 
     return mergeSort;

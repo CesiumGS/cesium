@@ -16,16 +16,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluate throws', function() {
-        var Spline2 = function() {};
-        Spline2.prototype.evaluate = Spline.prototype.eavaluate;
-        var spline = new Spline2();
-
-        expect(function() {
-            return spline.evaluate();
-        }).toThrow();
-    });
-
     it('findTimeInterval throws without a time', function() {
         var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],

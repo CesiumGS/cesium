@@ -11,7 +11,6 @@ defineSuite([
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantPositionProperty',
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicObject',
         'DynamicScene/DynamicPolygon',
@@ -20,7 +19,7 @@ defineSuite([
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/SampledProperty',
         'DynamicScene/TimeIntervalCollectionProperty',
-        'Scene/CompositePrimitive'
+        'Scene/PrimitiveCollection'
     ], function(
         PolygonGeometryUpdater,
         Cartesian3,
@@ -33,7 +32,6 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
-        ConstantPositionProperty,
         ConstantProperty,
         DynamicObject,
         DynamicPolygon,
@@ -42,7 +40,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
-        CompositePrimitive) {
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -330,7 +328,7 @@ defineSuite([
         dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
 
         var updater = new PolygonGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -404,7 +402,7 @@ defineSuite([
         var dynamicObject = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -424,7 +422,7 @@ defineSuite([
         dynamicObject.polygon.height = new SampledProperty(Number);
         dynamicObject.polygon.height.addSample(time, 4);
         var updater = new PolygonGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

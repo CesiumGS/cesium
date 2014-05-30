@@ -1,13 +1,11 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/Color',
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/getFilenameFromUri',
         '../Core/loadJson',
@@ -23,13 +21,11 @@ define([
         './DynamicPolyline'
     ], function(
         Cartesian3,
-        Cartographic,
         Color,
         createGuid,
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid,
         Event,
         getFilenameFromUri,
         loadJson,
@@ -271,7 +267,7 @@ define([
      *                        the name of the GeoJSON file.
      *
      * @see DataSourceDisplay
-     * @see <a href='http://www.geojson.org/'>GeoJSON specification</a>.
+     * @see {@link http://www.geojson.org/|GeoJSON specification}
      *
      * @example
      * //Use a billboard instead of a point.

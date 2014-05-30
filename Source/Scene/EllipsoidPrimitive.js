@@ -57,11 +57,11 @@ define([
      * @constructor
      *
      * @param {Cartesian3} [options.center=Cartesian3.ZERO] The center of the ellipsoid in the ellipsoid's model coordinates.
-     * @param {Cartesian3} [options.radii=undefined] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
+     * @param {Cartesian3} [options.radii] The radius of the ellipsoid along the <code>x</code>, <code>y</code>, and <code>z</code> axes in the ellipsoid's model coordinates.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Material} [options.material=Material.ColorType] The surface appearance of the primitive.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
      * @example
@@ -79,7 +79,7 @@ define([
      * e.radii = new Cesium.Cartesian3(100000.0, 100000.0, 200000.0);
      * primitives.add(e);
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html">Cesium Sandcastle Volumes Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Volumes.html|Cesium Sandcastle Volumes Demo}
      */
     var EllipsoidPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -151,7 +151,7 @@ define([
 
         /**
          * The surface appearance of the ellipsoid.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -166,7 +166,7 @@ define([
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Material.StripeType);
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;

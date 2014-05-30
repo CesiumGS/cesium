@@ -74,7 +74,7 @@ define([
          * to use.
          * @memberof CompositePositionProperty.prototype
          *
-         * @Type {ReferenceFrame} The preferred reference frame.
+         * @type {ReferenceFrame}
          */
         referenceFrame : {
             get : function() {

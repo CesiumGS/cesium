@@ -6,10 +6,8 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/IntersectionTests',
         'Core/Math',
-        'Core/Occluder',
         'Core/Ray',
-        'Core/Rectangle',
-        'Core/Visibility'
+        'Core/Rectangle'
     ], function(
         EllipsoidalOccluder,
         BoundingSphere,
@@ -17,10 +15,8 @@ defineSuite([
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
-        Occluder,
         Ray,
-        Rectangle,
-        Visibility) {
+        Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -206,9 +202,7 @@ defineSuite([
                 vertices.push(4.0);
             }
 
-            expect(function() {
-                ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7);
-            }).not.toThrow();
+            ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7);
 
             expect(function() {
                 ellipsoidalOccluder.computeHorizonCullingPointFromVertices(undefined, vertices, 7);

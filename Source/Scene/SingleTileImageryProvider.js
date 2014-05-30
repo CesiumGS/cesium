@@ -1,28 +1,28 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
         '../Core/loadImage',
         '../Core/Rectangle',
-        '../ThirdParty/when',
-        './Credit',
-        './GeographicTilingScheme',
-        './TileProviderError'
+        '../Core/TileProviderError',
+        '../ThirdParty/when'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        GeographicTilingScheme,
         loadImage,
         Rectangle,
-        when,
-        Credit,
-        GeographicTilingScheme,
-        TileProviderError) {
+        TileProviderError,
+        when) {
     "use strict";
 
     /**
@@ -304,6 +304,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof SingleTileImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,
@@ -26,14 +26,14 @@ define([
     var Spline = function() {
         /**
          * An array of times for the control points.
-         * @type {Array}
+         * @type {Number[]}
          * @default undefined
          */
         this.times = undefined;
 
         /**
          * An array of control points.
-         * @type {Array}
+         * @type {Cartesian3[]|Quaternion[]}
          * @default undefined
          */
         this.points = undefined;

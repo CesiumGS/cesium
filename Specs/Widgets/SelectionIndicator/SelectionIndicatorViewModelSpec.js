@@ -3,14 +3,12 @@ defineSuite([
         'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
         SelectionIndicatorViewModel,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
         createScene,
         destroyScene) {
     "use strict";
@@ -58,12 +56,8 @@ defineSuite([
 
     it('can animate selection element', function() {
         var viewModel = new SelectionIndicatorViewModel(scene, selectionIndicatorElement, container);
-        expect(function() {
-            viewModel.animateAppear();
-        }).not.toThrow();
-        expect(function() {
-            viewModel.animateDepart();
-        }).not.toThrow();
+        viewModel.animateAppear();
+        viewModel.animateDepart();
     });
 
     it('can use custom screen space positions', function() {
@@ -74,9 +68,7 @@ defineSuite([
         viewModel.computeScreenSpacePosition = function(position, result) {
             return Cartesian2.clone(position, result);
         };
-        expect(function() {
-            viewModel.update();
-        }).not.toThrow();
+        viewModel.update();
         expect(viewModel._screenPositionX).toBe('-9px');  // Negative half the test size, plus viewModel.position.x (1)
         expect(viewModel._screenPositionY).toBe('-8px');  // Negative half the test size, plus viewModel.position.y (2)
 

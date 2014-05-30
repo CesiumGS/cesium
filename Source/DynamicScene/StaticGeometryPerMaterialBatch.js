@@ -3,7 +3,6 @@ define([
         '../Core/AssociativeArray',
         '../Core/defined',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/Material',
         '../Scene/Primitive',
         '../Scene/PrimitiveState',
         './MaterialProperty'
@@ -11,7 +10,6 @@ define([
         AssociativeArray,
         defined,
         ShowGeometryInstanceAttribute,
-        Material,
         Primitive,
         PrimitiveState,
         MaterialProperty) {

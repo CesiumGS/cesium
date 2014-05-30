@@ -10,7 +10,8 @@ defineSuite([
         createContext,
         destroyContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFo,WebGLRenderingContext*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global WebGLRenderingContext*/
 
     var context;
 
@@ -96,8 +97,7 @@ defineSuite([
                 enabled : false,
                 value : 1.0,
                 invert : false
-            },
-            dither : true
+            }
         };
 
         var rs = context.createRenderState();
@@ -149,7 +149,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(defaultRS.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
-        expect(rs.dither).toEqual(defaultRS.dither);
     });
 
     it('creates with all render states', function() {
@@ -226,8 +225,7 @@ defineSuite([
                 enabled : true,
                 value : 0.5,
                 invert : true
-            },
-            dither : false
+            }
         };
 
         var rs = context.createRenderState(r);
@@ -279,7 +277,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
-        expect(rs.dither).toEqual(r.dither);
     });
 
     it('creates with some render states', function() {
@@ -341,7 +338,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(defaultRS.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
-        expect(rs.dither).toEqual(defaultRS.dither);
     });
 
     it('caches render states', function() {
@@ -389,7 +385,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.minimumAliasedLineWidth - 1
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to create (large lineWidth)', function() {
@@ -397,7 +393,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.maximumAliasedLineWidth + 1
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to create (negative scissorTest.rectangle.width)', function() {
@@ -733,8 +729,7 @@ defineSuite([
                 enabled : true,
                 value : 0.5,
                 invert : true
-            },
-            dither : false
+            }
         };
 
         var r2 = context.createRenderState(r);
@@ -787,7 +782,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
-        expect(rs.dither).toEqual(r.dither);
     });
 
 }, 'WebGL');

@@ -86,7 +86,7 @@ define([
      * Creates a Matrix3 from 9 consecutive elements in an array.
      * @memberof Matrix3
      *
-     * @param {Array} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
      *
@@ -136,7 +136,7 @@ define([
      * @memberof Matrix3
      * @function
      *
-     * @param {Array} values The column-major order array.
+     * @param {Number[]} values The column-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      */
@@ -155,7 +155,7 @@ define([
      * The resulting matrix will be in column-major order.
      * @memberof Matrix3
      *
-     * @param {Array} values The row-major order array.
+     * @param {Number[]} values The row-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      */
@@ -458,8 +458,8 @@ define([
      * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use..
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @param {Number[]} [result] The Array onto which to store the result.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix3.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);

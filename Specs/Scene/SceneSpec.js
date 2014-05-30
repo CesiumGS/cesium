@@ -3,25 +3,18 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/defaultValue',
-        'Core/defined',
         'Core/Ellipsoid',
-        'Core/Event',
         'Core/PixelFormat',
         'Core/Rectangle',
-        'Renderer/ClearCommand',
-        'Renderer/Context',
+        'Core/RuntimeError',
         'Renderer/DrawCommand',
-        'Renderer/PassState',
         'Renderer/PixelDatatype',
-        'Renderer/UniformState',
         'Scene/AnimationCollection',
         'Scene/Camera',
-        'Scene/CompositePrimitive',
         'Scene/FrameState',
         'Scene/Globe',
-        'Scene/OIT',
         'Scene/Pass',
+        'Scene/PrimitiveCollection',
         'Scene/RectanglePrimitive',
         'Scene/ScreenSpaceCameraController',
         'Specs/createScene',
@@ -32,25 +25,18 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
-        defaultValue,
-        defined,
         Ellipsoid,
-        Event,
         PixelFormat,
         Rectangle,
-        ClearCommand,
-        Context,
+        RuntimeError,
         DrawCommand,
-        PassState,
         PixelDatatype,
-        UniformState,
         AnimationCollection,
         Camera,
-        CompositePrimitive,
         FrameState,
         Globe,
-        OIT,
         Pass,
+        PrimitiveCollection,
         RectanglePrimitive,
         ScreenSpaceCameraController,
         createScene,
@@ -80,7 +66,7 @@ defineSuite([
 
     it('constructor has expected defaults', function() {
         expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
-        expect(scene.primitives).toBeInstanceOf(CompositePrimitive);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
         expect(scene.frameState).toBeInstanceOf(FrameState);
@@ -100,7 +86,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
 
@@ -108,7 +94,7 @@ defineSuite([
             webgl : webglOptions
         });
 
-        var contextAttributes = s._context._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
@@ -549,14 +535,14 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.renderError.addEventListener(spyListener);
 
-        var error = 'foo';
+        var error = new RuntimeError('error');
         s.primitives.update = function() {
             throw error;
         };
 
         expect(function() {
             s.render();
-        }).toThrow();
+        }).toThrowRuntimeError();
 
         expect(spyListener).toHaveBeenCalledWith(s, error);
 

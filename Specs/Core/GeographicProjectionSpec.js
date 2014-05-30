@@ -75,4 +75,11 @@ defineSuite([
         expect(result).toEqual(returnValue);
         expect(result).toEqual(cartographic);
     });
+
+    it('project throws without cartesian', function() {
+        var projection = new GeographicProjection();
+        expect(function() {
+            return projection.unproject();
+        }).toThrowDeveloperError();
+    });
 });

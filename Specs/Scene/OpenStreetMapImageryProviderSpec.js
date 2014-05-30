@@ -6,11 +6,11 @@ defineSuite([
         'Core/jsonp',
         'Core/loadImage',
         'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Scene/WebMercatorTilingScheme',
         'ThirdParty/when'
     ], function(
         OpenStreetMapImageryProvider,
@@ -19,11 +19,11 @@ defineSuite([
         jsonp,
         loadImage,
         Rectangle,
+        WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        WebMercatorTilingScheme,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -38,10 +38,7 @@ defineSuite([
     });
 
     it('can be default constructed', function() {
-        function defaultConstruct() {
-            return new OpenStreetMapImageryProvider();
-        }
-        expect(defaultConstruct).not.toThrow();
+        return new OpenStreetMapImageryProvider();
     });
 
     it('returns valid value for hasAlphaChannel', function() {

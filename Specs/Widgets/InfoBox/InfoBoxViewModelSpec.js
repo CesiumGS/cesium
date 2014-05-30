@@ -1,14 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-        'Widgets/InfoBox/InfoBoxViewModel',
-        'Core/Ellipsoid',
-        'Specs/createScene',
-        'Specs/destroyScene'
+        'Widgets/InfoBox/InfoBoxViewModel'
     ], function(
-        InfoBoxViewModel,
-        Ellipsoid,
-        createScene,
-        destroyScene) {
+        InfoBoxViewModel) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

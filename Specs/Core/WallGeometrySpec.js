@@ -64,14 +64,12 @@ defineSuite([
     });
 
     it('does not throw when positions are unique but close', function() {
-        expect(function() {
-            return WallGeometry.createGeometry(new WallGeometry({
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : ellipsoid.cartographicArrayToCartesianArray([
-                                    Cartographic.fromDegrees(-47.93121266896352,-15.771192496304398),
-                                    Cartographic.fromDegrees(-47.93119792786269,-15.771148001875085)])
-            }));
-        }).not.toThrowDeveloperError();
+        WallGeometry.createGeometry(new WallGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions    : ellipsoid.cartographicArrayToCartesianArray([
+                                Cartographic.fromDegrees(-47.93121266896352,-15.771192496304398),
+                                Cartographic.fromDegrees(-47.93119792786269,-15.771148001875085)])
+        }));
     });
 
     it('creates positions relative to ellipsoid', function() {

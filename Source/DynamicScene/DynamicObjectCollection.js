@@ -89,8 +89,8 @@ define([
      * @function
      *
      * @param {DynamicObjectCollection} collection The collection that triggered the event.
-     * @param {Array} added The array of {@link DynamicObject} instances that have been added to the collection.
-     * @param {Array} removed The array of {@link DynamicObject} instances that have been removed from the collection.
+     * @param {DynamicObject[]} added The array of {@link DynamicObject} instances that have been added to the collection.
+     * @param {DynamicObject[]} removed The array of {@link DynamicObject} instances that have been removed from the collection.
      */
     DynamicObjectCollection.collectionChangedEventCallback = undefined;
 
@@ -281,7 +281,7 @@ define([
      * The array should not be modified directly.
      * @memberof DynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     DynamicObjectCollection.prototype.getObjects = function() {
         return this._objects.values;

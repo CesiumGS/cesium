@@ -3,19 +3,18 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
+        '../../Core/Credit',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Event',
         '../../Core/formatError',
         '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
-        '../../Scene/Credit',
         '../../Scene/Globe',
         '../../Scene/Moon',
         '../../Scene/Scene',
@@ -28,19 +27,18 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        Event,
         formatError,
         getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
-        Credit,
         Globe,
         Moon,
         Scene,
@@ -109,13 +107,13 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
-     * // and in the body, include: &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="cesiumContainer"></div>
      *
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
@@ -238,7 +236,7 @@ define([
             this._lastFrameTime = undefined;
             this._targetFrameRate = undefined;
 
-            if (options.sceneMode) {
+            if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
                     this._scene.morphTo2D(0);
                 }

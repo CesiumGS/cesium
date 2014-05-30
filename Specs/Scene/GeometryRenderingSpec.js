@@ -12,7 +12,6 @@ defineSuite([
         'Core/CornerType',
         'Core/CorridorGeometry',
         'Core/CylinderGeometry',
-        'Core/defaultValue',
         'Core/defined',
         'Core/EllipseGeometry',
         'Core/Ellipsoid',
@@ -20,7 +19,6 @@ defineSuite([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryInstance',
-        'Core/GeometryInstanceAttribute',
         'Core/Math',
         'Core/Matrix4',
         'Core/PolygonGeometry',
@@ -59,7 +57,6 @@ defineSuite([
         CornerType,
         CorridorGeometry,
         CylinderGeometry,
-        defaultValue,
         defined,
         EllipseGeometry,
         Ellipsoid,
@@ -67,7 +64,6 @@ defineSuite([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
-        GeometryInstanceAttribute,
         CesiumMath,
         Matrix4,
         PolygonGeometry,
@@ -190,11 +186,7 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
@@ -253,11 +245,8 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
+
         var frustum = new OrthographicFrustum();
         frustum.right = ellipsoid.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
@@ -1116,11 +1105,11 @@ defineSuite([
             };
 
             afterViewCV = function(frameState, primitive) {
-                var translation = Cartesian3.clone(frameState.camera.position);
-                translation.z = 0.0;
-                var transform = Matrix4.fromTranslation(translation);
-                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                Matrix4.clone(transform, frameState.camera.transform);
+                frameState.camera.rotateDown(-CesiumMath.PI_OVER_TWO);
                 frameState.camera.zoomIn(primitive._boundingSphere.radius * 1.85);
+                Matrix4.clone(Matrix4.IDENTITY, frameState.camera.transform);
             };
         });
 

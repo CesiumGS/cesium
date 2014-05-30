@@ -3,11 +3,11 @@ defineSuite([
         'Widgets/Viewer/Viewer',
         'Core/ClockRange',
         'Core/ClockStep',
+        'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
         'DynamicScene/DataSourceCollection',
         'DynamicScene/DataSourceDisplay',
         'DynamicScene/DynamicClock',
-        'Scene/EllipsoidTerrainProvider',
         'Scene/SceneMode',
         'Specs/EventHelper',
         'Specs/MockDataSource',
@@ -24,11 +24,11 @@ defineSuite([
         Viewer,
         ClockRange,
         ClockStep,
+        EllipsoidTerrainProvider,
         JulianDate,
         DataSourceCollection,
         DataSourceDisplay,
         DynamicClock,
-        EllipsoidTerrainProvider,
         SceneMode,
         EventHelper,
         MockDataSource,
@@ -286,7 +286,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {

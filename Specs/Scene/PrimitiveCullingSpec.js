@@ -8,18 +8,17 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Occluder',
-        'Renderer/ClearCommand',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
         'Scene/Camera',
-        'Scene/CompositePrimitive',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
         'Scene/OrthographicFrustum',
         'Scene/Polygon',
         'Scene/PolylineCollection',
+        'Scene/PrimitiveCollection',
         'Scene/SceneMode',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
@@ -37,18 +36,17 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         Occluder,
-        ClearCommand,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BillboardCollection,
         Camera,
-        CompositePrimitive,
         HorizontalOrigin,
         LabelCollection,
         Material,
         OrthographicFrustum,
         Polygon,
         PolylineCollection,
+        PrimitiveCollection,
         SceneMode,
         TextureAtlas,
         VerticalOrigin,
@@ -74,7 +72,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        primitives = new CompositePrimitive();
+        primitives = new PrimitiveCollection();
 
         camera = new Camera(context);
         camera.position = new Cartesian3(1.02, 0.0, 0.0);

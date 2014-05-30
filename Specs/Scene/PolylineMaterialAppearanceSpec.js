@@ -2,8 +2,6 @@
 defineSuite([
         'Scene/PolylineMaterialAppearance',
         'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
         'Renderer/ClearCommand',
@@ -18,8 +16,6 @@ defineSuite([
     ], function(
         PolylineMaterialAppearance,
         Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
         GeometryInstance,
         PolylineGeometry,
         ClearCommand,

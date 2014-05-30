@@ -269,14 +269,10 @@ define([
      *
      * @example
      * //Set the view to in the inertial frame.
-     * function updateAndRender() {
-     *     var now = new Cesium.JulianDate();
-     *     scene.initializeFrame();
-     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
-     *     scene.render();
-     *     Cesium.requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * scene.preRender.addEventListener(function(scene, time) {
+     *   var now = new Cesium.JulianDate();
+     *   scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
+     * });
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
         //>>includeStart('debug', pragmas.debug);

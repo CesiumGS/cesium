@@ -4,12 +4,14 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError'
     ], function(
         Color,
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -47,42 +49,6 @@ define([
         alpha = defaultValue(alpha, 1.0);
 
         /**
-         * The datatype of each component in the attribute, e.g., individual elements in
-         * {@link ColorGeometryInstanceAttribute#value}.
-         *
-         * @type ComponentDatatype
-         *
-         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
-         *
-         * @readonly
-         */
-        this.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
-
-        /**
-         * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
-         *
-         * @type Number
-         *
-         * @default 4
-         *
-         * @readonly
-         */
-        this.componentsPerAttribute = 4;
-
-        /**
-         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
-         * indicate that the components should be mapped to the range [0, 1] (unsigned)
-         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-         *
-         * @type Boolean
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.normalize = true;
-
-        /**
          * The values for the attributes stored in a typed array.
          *
          * @type Uint8Array
@@ -96,6 +62,59 @@ define([
             Color.floatToByte(alpha)
         ]);
     };
+
+    defineProperties(ColorGeometryInstanceAttribute.prototype, {
+        /**
+         * The datatype of each component in the attribute, e.g., individual elements in
+         * {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @memberof ColorGeometryInstanceAttribute.prototype
+         *
+         * @type {ComponentDatatype}
+         * @readonly
+         *
+         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
+         */
+        componentDatatype : {
+            get : function() {
+                return ComponentDatatype.UNSIGNED_BYTE;
+            }
+        },
+
+        /**
+         * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @memberof ColorGeometryInstanceAttribute.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @default 4
+         */
+        componentsPerAttribute : {
+            get : function() {
+                return 4;
+            }
+        },
+
+        /**
+         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
+         * indicate that the components should be mapped to the range [0, 1] (unsigned)
+         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+         *
+         * @memberof ColorGeometryInstanceAttribute.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        normalize : {
+            get : function() {
+                return true;
+            }
+        }
+    });
 
     /**
      * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.

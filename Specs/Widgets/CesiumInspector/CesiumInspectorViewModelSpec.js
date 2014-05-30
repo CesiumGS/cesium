@@ -4,11 +4,11 @@ defineSuite([
         'Core/defined',
         'Core/Math',
         'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
         'Scene/Globe',
         'Scene/Material',
         'Scene/RectanglePrimitive',
         'Scene/Tile',
-        'Scene/WebMercatorTilingScheme',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -16,11 +16,11 @@ defineSuite([
         defined,
         CesiumMath,
         Rectangle,
+        WebMercatorTilingScheme,
         Globe,
         Material,
         RectanglePrimitive,
         Tile,
-        WebMercatorTilingScheme,
         createScene,
         destroyScene) {
     "use strict";
@@ -52,7 +52,7 @@ defineSuite([
     it('throws if scene is undefined', function() {
         expect(function() {
             return new CesiumInspectorViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('show frustums', function() {

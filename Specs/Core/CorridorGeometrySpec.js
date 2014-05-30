@@ -5,7 +5,6 @@ defineSuite([
         'Core/Cartographic',
         'Core/CornerType',
         'Core/Ellipsoid',
-        'Core/Math',
         'Core/VertexFormat'
     ], function(
         CorridorGeometry,
@@ -13,7 +12,6 @@ defineSuite([
         Cartographic,
         CornerType,
         Ellipsoid,
-        CesiumMath,
         VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

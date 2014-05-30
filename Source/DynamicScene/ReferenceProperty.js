@@ -4,7 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../DynamicScene/Property'
+        './Property'
     ], function(
         defined,
         defineProperties,
@@ -90,7 +90,7 @@ define([
      * delineated by a period.
      *
      * @param {DynamicObject} dynamicObjectCollection
-     * @param referenceString
+     * @param {String} referenceString
      *
      * @returns A new instance of ReferenceProperty.
      *

@@ -5,6 +5,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/WindingOrder'
     ], function(
@@ -13,6 +14,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        FeatureDetection,
         RuntimeError,
         WindingOrder) {
     "use strict";
@@ -169,7 +171,6 @@ define([
             value : defaultValue(sampleCoverage.value, 1.0),
             invert : defaultValue(sampleCoverage.invert, false)
         };
-        this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
             (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
             (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
@@ -358,6 +359,17 @@ define([
         gl.stencilMask(renderState.stencilMask);
     }
 
+    var applyBlendingColor;
+    if (FeatureDetection.isInternetExplorer()) {
+        // blendColor is not supported in IE 11.0.8
+        applyBlendingColor = function() {
+        };
+    } else {
+        applyBlendingColor = function(gl, color) {
+            gl.blendColor(color.red, color.green, color.blue, color.alpha);
+        };
+    }
+
     function applyBlending(gl, renderState, passState) {
         var blending = renderState.blending;
         var enabled = (defined(passState.blendingEnabled)) ? passState.blendingEnabled : blending.enabled;
@@ -365,17 +377,9 @@ define([
         enableOrDisable(gl, gl.BLEND, enabled);
 
         if (enabled) {
-            var color = blending.color;
-            var equationRgb = blending.equationRgb;
-            var equationAlpha = blending.equationAlpha;
-            var functionSourceRgb = blending.functionSourceRgb;
-            var functionDestinationRgb = blending.functionDestinationRgb;
-            var functionSourceAlpha = blending.functionSourceAlpha;
-            var functionDestinationAlpha = blending.functionDestinationAlpha;
-
-            gl.blendColor(color.red, color.green, color.blue, color.alpha);
-            gl.blendEquationSeparate(equationRgb, equationAlpha);
-            gl.blendFuncSeparate(functionSourceRgb, functionDestinationRgb, functionSourceAlpha, functionDestinationAlpha);
+            applyBlendingColor(gl, blending.color);
+            gl.blendEquationSeparate(blending.equationRgb, blending.equationAlpha);
+            gl.blendFuncSeparate(blending.functionSourceRgb, blending.functionDestinationRgb, blending.functionSourceAlpha, blending.functionDestinationAlpha);
         }
     }
 
@@ -414,19 +418,22 @@ define([
         }
     }
 
-    function applySampleCoverage(gl, renderState) {
-        var sampleCoverage = renderState.sampleCoverage;
-        var enabled = sampleCoverage.enabled;
+    var applySampleCoverage;
+    if (FeatureDetection.isInternetExplorer()) {
+        // sampleCoverage is not supported in IE 11.0.8
+        applySampleCoverage = function() {
+        };
+    } else {
+        applySampleCoverage = function(gl, renderState) {
+            var sampleCoverage = renderState.sampleCoverage;
+            var enabled = sampleCoverage.enabled;
 
-        enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
+            enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
 
-        if (enabled) {
-            gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
-        }
-    }
-
-    function applyDither(gl, renderState) {
-        enableOrDisable(gl, gl.DITHER, renderState.dither);
+            if (enabled) {
+                gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
+            }
+        };
     }
 
     var scratchViewport = new BoundingRectangle();
@@ -457,7 +464,6 @@ define([
         applyBlending(gl, renderState, passState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
-        applyDither(gl, renderState);
         applyViewport(gl, renderState, passState);
     };
 
@@ -528,10 +534,6 @@ define([
                 (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
                 (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
             funcs.push(applySampleCoverage);
-        }
-
-        if (previousState.dither !== nextState.dither) {
-            funcs.push(applyDither);
         }
 
         // For now, always apply because of passState
@@ -636,7 +638,6 @@ define([
                 value : renderState.sampleCoverage.value,
                 invert : renderState.sampleCoverage.invert
             },
-            dither : renderState.dither,
             viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
         };
     };

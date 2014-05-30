@@ -2,37 +2,41 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HermiteSpline',
+        '../Core/LinearSpline',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../Scene/PerspectiveFrustum',
-        '../Scene/PerspectiveOffCenterFrustum',
-        '../Scene/SceneMode',
-        '../ThirdParty/Tween'
+        '../ThirdParty/Tween',
+        './PerspectiveFrustum',
+        './PerspectiveOffCenterFrustum',
+        './SceneMode'
     ], function(
         Cartesian2,
         Cartesian3,
+        Cartographic,
         clone,
         defaultValue,
         defined,
         DeveloperError,
         HermiteSpline,
+        LinearSpline,
         CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
         QuaternionSpline,
+        Tween,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -197,9 +201,9 @@ define([
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
 
-        var start = Matrix4.multiplyByPoint(camera.transform, camera.position, scratchStartPosition);
-        var startDirection = Matrix4.multiplyByPointAsVector(camera.transform, camera.direction, scratchStartDirection);
-        var startUp = Matrix4.multiplyByPointAsVector(camera.transform, camera.up, scratchStartUp);
+        var start = camera.cameraToWorldCoordinatesPoint(camera.position, scratchStartPosition);
+        var startDirection = camera.cameraToWorldCoordinatesVector(camera.direction, scratchStartDirection);
+        var startUp = camera.cameraToWorldCoordinatesVector(camera.up, scratchStartUp);
         var startRight = Cartesian3.cross(startDirection, startUp, scratchStartRight);
 
         var path = createPath3D(camera, ellipsoid, start, startUp, startRight, destination, duration);
@@ -225,6 +229,13 @@ define([
     }
 
     function createPath2D(camera, ellipsoid, start, end, duration) {
+        if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
+            return new LinearSpline({
+                points : [start, end],
+                times : [0.0, duration]
+            });
+        }
+
         // get minimum altitude from which the whole map is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
@@ -307,11 +318,6 @@ define([
         });
     }
 
-    var transform2D = new Matrix4(0, 0, 1, 0,
-                                  1, 0, 0, 0,
-                                  0, 1, 0, 0,
-                                  0, 0, 0, 1);
-
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
         var ellipsoid = frameState.scene2D.projection.ellipsoid;
@@ -325,7 +331,7 @@ define([
             Matrix3.fromQuaternion(orientation, rotMatrix);
 
             Matrix4.clone(camera.transform, currentFrame);
-            Matrix4.clone(transform2D, camera.transform);
+            Matrix4.clone(Matrix4.IDENTITY, camera.transform);
 
             camera.position = path.evaluate(time, camera.position);
             camera.right = Matrix3.getRow(rotMatrix, 0, camera.right);
@@ -376,6 +382,12 @@ define([
         return update;
     }
 
+    var dirScratch = new Cartesian3();
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var scratchDestination = new Cartesian3();
+
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be given in world coordinates.
@@ -385,20 +397,18 @@ define([
      * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [onComplete] The function to execute when the animation has completed.
-     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Function} [options.onComplete] The function to execute when the animation has completed.
+     * @param {Function} [options.onCancel] The function to execute if the animation is cancelled.
+     * @param {Matrix4} [options.endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
+     *                  to be in the correct coordinate system.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      * @exception {DeveloperError} If either direction or up is given, then both are required.
      *
      * @see Scene#animations
      */
-    var dirScratch = new Cartesian3();
-    var rightScratch = new Cartesian3();
-    var upScratch = new Cartesian3();
     CameraFlightPath.createAnimation = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
@@ -409,19 +419,34 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        //>>includeEnd('debug');
+
+        if (scene.frameState.mode === SceneMode.MORPHING) {
+            return {
+                duration : 0
+            };
+        }
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
         if ((defined(direction) && !defined(up)) || (defined(up) && !defined(direction))) {
             throw new DeveloperError('If either direction or up is given, then both are required.');
         }
-        if (scene.frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
-        }
         //>>includeEnd('debug');
 
-        var duration = defaultValue(options.duration, 3000.0);
+        var convert = defaultValue(options.convert, true);
+
         var frameState = scene.frameState;
+        if (convert && frameState.mode !== SceneMode.SCENE3D) {
+            var projection = frameState.scene2D.projection;
+            var ellipsoid = projection.ellipsoid;
+            ellipsoid.cartesianToCartographic(destination, scratchCartographic);
+            destination = projection.project(scratchCartographic, scratchDestination);
+        }
+
+        var duration = defaultValue(options.duration, 3000.0);
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
 
@@ -535,54 +560,6 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. All arguments should
-     * be given in world coordinates.
-     *
-     * @param {Scene} scene The scene instance to use.
-     * @param {Cartographic} options.destination The final position of the camera.
-     * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
-     * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [onComplete] The function to execute when the animation has completed.
-     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
-     *
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
-     *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
-     * @see Scene#animations
-     */
-    CameraFlightPath.createAnimationCartographic = function(scene, options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var destination = options.destination;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        if (!defined(destination)) {
-            throw new DeveloperError('options.destination is required.');
-        }
-        //>>includeEnd('debug');
-
-        var frameState = scene.frameState;
-        var projection = frameState.scene2D.projection;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            var ellipsoid = projection.ellipsoid;
-            ellipsoid.cartographicToCartesian(destination, c3destination);
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW || frameState.mode === SceneMode.SCENE2D) {
-            projection.project(destination, c3destination);
-        } else {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
-        }
-
-        var createAnimationoptions = clone(options);
-        createAnimationoptions.destination = c3destination;
-        return this.createAnimation(scene, createAnimationoptions);
-    };
-
-    /**
      * Creates an animation to fly the camera from it's current position to a position in which the entire rectangle will be visible. All arguments should
      * be given in world coordinates.
      *
@@ -595,32 +572,31 @@ define([
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
-     *
      * @see Scene#animations
      */
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
-        var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        if (!defined(scene.frameState)) {
             throw new DeveloperError('frameState is required.');
         }
         if (!defined(rectangle)) {
             throw new DeveloperError('options.destination is required.');
         }
-        if (frameState.mode === SceneMode.MORPHING) {
-            throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
-        }
         //>>includeEnd('debug');
 
+        var frameState = scene.frameState;
         var createAnimationoptions = clone(options);
         var camera = frameState.camera;
         camera.getRectangleCameraCoordinates(rectangle, c3destination);
 
         createAnimationoptions.destination = c3destination;
+        createAnimationoptions.convert = false;
         return this.createAnimation(scene, createAnimationoptions);
     };
 

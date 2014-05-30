@@ -46,7 +46,7 @@ define([
 
         /**
          * The render state to apply when executing the clear command.  The following states affect clearing:
-         * scissor test, color mask, depth mask, stencil mask, and dither.  When the render state is
+         * scissor test, color mask, depth mask, and stencil mask.  When the render state is
          * <code>undefined</code>, the default render state is used.
          *
          * @type {RenderState}

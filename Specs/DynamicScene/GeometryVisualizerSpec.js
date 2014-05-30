@@ -15,7 +15,6 @@ defineSuite([
         'DynamicScene/EllipseGeometryUpdater',
         'DynamicScene/GridMaterialProperty',
         'DynamicScene/SampledProperty',
-        'Scene/PrimitiveState',
         'Specs/createScene',
         'Specs/destroyScene'
     ], function(
@@ -34,7 +33,6 @@ defineSuite([
         EllipseGeometryUpdater,
         GridMaterialProperty,
         SampledProperty,
-        PrimitiveState,
         createScene,
         destroyScene) {
     "use strict";

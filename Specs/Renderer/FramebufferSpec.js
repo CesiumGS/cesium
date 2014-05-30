@@ -687,7 +687,7 @@ defineSuite([
             context.createFramebuffer({
                 colorTextures : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
@@ -695,37 +695,37 @@ defineSuite([
             context.createFramebuffer({
                 colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the index to getColorTexture is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
             framebuffer.getColorTexture();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorTexture(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorTexture(context.maximumColorAttachments + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
             framebuffer.getColorRenderbuffer();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorRenderbuffer(-1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {

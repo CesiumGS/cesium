@@ -1,44 +1,16 @@
 /*global defineSuite*/
 defineSuite([
         'Core/EarthOrientationParameters',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
         'Core/defined',
-        'Core/DeveloperError',
-        'Core/Ellipsoid',
         'Core/JulianDate',
         'Core/LeapSecond',
-        'Core/loadJson',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/TimeConstants',
-        'Core/TimeInterval',
-        'Core/TimeStandard',
-        'Core/Transforms',
-        'ThirdParty/when'
+        'Core/TimeStandard'
     ], function(
         EarthOrientationParameters,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
         defined,
-        DeveloperError,
-        Ellipsoid,
         JulianDate,
         LeapSecond,
-        loadJson,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        TimeConstants,
-        TimeInterval,
-        TimeStandard,
-        Transforms,
-        when) {
+        TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
