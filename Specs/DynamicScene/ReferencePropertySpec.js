@@ -15,7 +15,7 @@ defineSuite([
     var validTime = JulianDate.fromIso8601('2012');
     var invalidTime = JulianDate.fromIso8601('2014');
 
-    var testObjectLink = 'testObject.property';
+    var testObjectLink = 'testObject#property';
     function createTestObject(dynamicObjectCollection, methodName) {
         var testObject = dynamicObjectCollection.getOrCreateObject('testObject');
         testObject.availability = TimeInterval.fromIso8601('2012/2013');
@@ -48,7 +48,7 @@ defineSuite([
 
     it('fromString throws if missing dynamicObjectCollection parameter', function() {
         expect(function() {
-            return ReferenceProperty.fromString(undefined, 'object.property');
+            return ReferenceProperty.fromString(undefined, 'object#property');
         }).toThrowDeveloperError();
     });
 
@@ -65,14 +65,14 @@ defineSuite([
     });
 
     it('getValue throws with undefined time', function() {
-        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
+        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object#property');
         expect(function() {
             property.getValue(undefined);
         }).toThrowDeveloperError();
     });
 
     it('getValue returned undefined for unresolved property', function() {
-        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
+        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object#property');
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 

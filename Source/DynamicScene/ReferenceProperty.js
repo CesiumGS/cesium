@@ -27,6 +27,50 @@ define([
         return targetProperty;
     }
 
+    function findUnescaped(value, start, delimiter) {
+        var index;
+        do {
+            index = value.indexOf(delimiter, start);
+            if (index === -1) {
+                break;
+            }
+
+            var count = 0;
+            var place = index - 1;
+            while (place !== -1 && value[place--] === '\\') {
+                count++;
+            }
+            if (count % 2 === 0) {
+                return index;
+            }
+            start = index + 1;
+        } while (index !== -1);
+        return -1;
+    }
+
+    function trySplit(value, delimiter) {
+        var indices = [];
+        var start = 0;
+        var index;
+        do {
+            index = findUnescaped(value, start, delimiter);
+            if (index !== -1) {
+                indices.push(index);
+                start = index + 1;
+            }
+        } while (index !== -1);
+
+        var lastIndex = 0;
+        var result = new Array(indices.length + 1);
+        for (var i = 0; i < indices.length; i++) {
+            index = indices[i];
+            result[i] = value.substring(lastIndex, index).replace('\\#', '#').replace('\\\\', '\\').replace('\\.', '.');
+            lastIndex = index + 1;
+        }
+        result[indices.length] = value.substring(lastIndex).replace('\\#', '#').replace('\\\\', '\\').replace('\\.', '.');
+        return result;
+    }
+
     /**
      * A {@link Property} which transparently links to another property on a provided object.
      *
@@ -117,15 +161,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        var parts = referenceString.split('.');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (parts.length !== 2) {
-            throw new DeveloperError('referenceString must contain a single . delineating the target object ID and property name.');
+        var tmp = trySplit(referenceString, '#');
+        if (tmp.length !== 2)
+        {
+            throw new DeveloperError();
         }
-        //>>includeEnd('debug');
+        var id = tmp[0];
 
-        return new ReferenceProperty(dynamicObjectCollection, parts[0], parts[1]);
+
+        var index = findUnescaped(referenceString, 0, '#') + 1;
+        var values = trySplit(referenceString.substring(index), '.');
+
+        if (values.length === 0) {
+            throw new DeveloperError();
+        }
+
+        for (var i = 0; i < values.length; i++) {
+            var item = values[i];
+            if (!defined(item) || item === '') {
+                throw new DeveloperError();
+            }
+        }
+
+        return new ReferenceProperty(dynamicObjectCollection, id, values[0]);
     };
 
     /**
@@ -164,9 +222,8 @@ define([
     };
 
     /**
-     * Gets the {@link Material} type at the provided time.
-     * @memberof MaterialProperty
-     * @function
+     * Gets the {@link Material} type at the provided time when the referenced property is a {@link MaterialProperty}.
+     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
      * @returns {String} The type of material.

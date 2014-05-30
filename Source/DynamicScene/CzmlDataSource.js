@@ -440,7 +440,7 @@ define([
         }
 
         if (defined(packetData.reference)) {
-            object[propertyName] = new ReferenceProperty(dynamicObjectCollection, packetData.reference.id, packetData.reference.path);
+            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
             return;
         }
 
@@ -590,7 +590,7 @@ define([
         }
 
         if (defined(packetData.reference)) {
-            object[propertyName] = new ReferenceProperty(dynamicObjectCollection, packetData.reference.id, packetData.reference.path);
+            object[propertyName] = new ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
             return;
         }
 
@@ -730,7 +730,7 @@ define([
         }
 
         if (defined(packetData.reference)) {
-            object[propertyName] = new ReferenceProperty(dynamicObjectCollection, packetData.reference.id, packetData.reference.path);
+            object[propertyName] = new ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
             return;
         }
 
@@ -855,13 +855,7 @@ define([
         if (defined(references)) {
             var properties = [];
             for (i = 0, len = references.length; i < len; i++) {
-                var reference = references[i];
-                if (typeof reference === 'string') {
-                    //Backwards compatibility
-                    properties.push(new ReferenceProperty.fromString(dynamicObjectCollection, reference));
-                } else {
-                    properties.push(new ReferenceProperty(dynamicObjectCollection, reference.id, reference.path));
-                }
+                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
             }
 
             var iso8601Interval = vertexPositionsData.interval;
