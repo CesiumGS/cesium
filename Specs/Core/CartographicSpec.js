@@ -36,6 +36,19 @@ defineSuite([
         expect(c.height).toEqual(100.0);
     });
 
+    it('fromRadians throws without longitude or latitude parameter but defaults altitude', function() {
+        expect(function() {
+            Cartographic.fromRadians(undefined, 0.0);
+        }).toThrowDeveloperError();
+        expect(function() {
+            Cartographic.fromRadians(0.0, undefined);
+        }).toThrowDeveloperError();
+        var c = Cartographic.fromRadians(Math.PI/2, Math.PI/4);
+        expect(c.longitude).toEqual(Math.PI/2);
+        expect(c.latitude).toEqual(Math.PI/4);
+        expect(c.height).toEqual(0.0);
+    });
+
     it('fromDegrees works without a result parameter', function() {
         var c = Cartographic.fromDegrees(90.0, 45.0, 100.0);
         expect(c.longitude).toEqual(Math.PI/2);
@@ -50,6 +63,19 @@ defineSuite([
         expect(c.longitude).toEqual(Math.PI/2);
         expect(c.latitude).toEqual(Math.PI/4);
         expect(c.height).toEqual(100);
+    });
+
+    it('fromDegrees throws without longitude or latitude parameter but defaults altitude', function() {
+        expect(function() {
+            Cartographic.fromDegrees(undefined, 0.0);
+        }).toThrowDeveloperError();
+        expect(function() {
+            Cartographic.fromDegrees(0.0, undefined);
+        }).toThrowDeveloperError();
+        var c = Cartographic.fromDegrees(90.0, 45.0);
+        expect(c.longitude).toEqual(Math.PI/2);
+        expect(c.latitude).toEqual(Math.PI/4);
+        expect(c.height).toEqual(0.0);
     });
 
     it('clone without a result parameter', function() {

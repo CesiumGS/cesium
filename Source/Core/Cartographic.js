@@ -54,11 +54,20 @@ define([
      *
      * @param {Number} [longitude] The longitude, in radians.
      * @param {Number} [latitude] The latitude, in radians.
-     * @param {Number} [height] The height, in meters, above the ellipsoid.
+     * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      */
     Cartographic.fromRadians = function(longitude, latitude, height, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(longitude)) {
+            throw new DeveloperError('longitude is required.');
+        }
+        if (!defined(latitude)) {
+            throw new DeveloperError('latitude is required.');
+        }
+        height = defaultValue(height, 0.0);
+        //>>includeEnd('debug');
         if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
@@ -77,22 +86,23 @@ define([
      *
      * @param {Number} [longitude] The longitude, in degrees.
      * @param {Number} [latitude] The latitude, in degrees.
-     * @param {Number} [height] The height, in meters, above the ellipsoid.
+     * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      */
     Cartographic.fromDegrees = function(longitude, latitude, height, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(longitude)) {
+            throw new DeveloperError('longitude is required.');
+        }
+        if (!defined(latitude)) {
+            throw new DeveloperError('latitude is required.');
+        }
+        //>>includeEnd('debug');
         longitude = CesiumMath.toRadians(longitude);
         latitude = CesiumMath.toRadians(latitude);
 
-        if (!defined(result)) {
-            return new Cartographic(longitude, latitude, height);
-        }
-
-        result.longitude = longitude;
-        result.latitude = latitude;
-        result.height = height;
-        return result;
+        return Cartographic.fromRadians(longitude, latitude, height, result);
     };
 
     /**
