@@ -66,8 +66,10 @@ define([
         if (!defined(latitude)) {
             throw new DeveloperError('latitude is required.');
         }
-        height = defaultValue(height, 0.0);
         //>>includeEnd('debug');
+        
+        height = defaultValue(height, 0.0);
+        
         if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
