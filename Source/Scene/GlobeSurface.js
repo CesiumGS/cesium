@@ -323,11 +323,15 @@ define([
             }
         }
 
+        length = sphereIntersections.length;
+        if (length === 0) {
+            return undefined;
+        }
+
         sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
         var currentTile = sphereIntersections[0];
         var uniqueIntersections = [currentTile];
-        length = sphereIntersections.length;
         for (i = 1; i < length; ++i) {
             tile = sphereIntersections[i];
             if (tile !== currentTile) {
@@ -337,7 +341,7 @@ define([
         }
 
         var intersection;
-        length = sphereIntersections.length;
+        length = uniqueIntersections.length;
         for (i = 0; i < length; ++i) {
             intersection = uniqueIntersections[i].pick(ray, frameState, result);
             if (defined(intersection)) {
