@@ -30,7 +30,7 @@ define([
         /**
          * Gets the number of data sources in this collection.
          * @memberof DataSourceCollection.prototype
-         * @type {Event}
+         * @type {Number}
          * @readonly
          */
         length : {
