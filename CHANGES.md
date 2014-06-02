@@ -7,7 +7,7 @@ Beta Releases
 ### 1.0 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
-   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  TODO: constructors.
+   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 
 ### b29 - 2014-06-02
