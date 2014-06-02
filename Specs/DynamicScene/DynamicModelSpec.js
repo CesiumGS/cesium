@@ -68,6 +68,6 @@ defineSuite([
         var target = new DynamicModel();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

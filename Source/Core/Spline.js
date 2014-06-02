@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,

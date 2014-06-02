@@ -45,10 +45,9 @@ define([
      *
      * @example
      * // In HTML head, include a link to the SceneModePicker.css stylesheet,
-     * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
-     * // Note: This code assumed you already have a Scene instance.
+     * // and in the body, include: <div id="sceneModePickerContainer"></div>
+     * // Note: This code assumes you already have a Scene instance.
      *
-     * var scene = viewer.scene;
      * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
     var SceneModePicker = function(container, scene, duration) {

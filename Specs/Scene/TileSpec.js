@@ -85,19 +85,6 @@ defineSuite([
 
         expect(function() {
             return new Tile({
-                x : 0,
-                y : 0,
-                level : 0,
-                tilingScheme : {
-                    tileXYToRectangle : function() {
-                        return undefined;
-                    }
-                }
-            });
-        }).not.toThrow();
-
-        expect(function() {
-            return new Tile({
                 y : 0,
                 level : 0,
                 tilingScheme : {
@@ -169,7 +156,7 @@ defineSuite([
         it('requires tilingScheme', function() {
             expect(function() {
                 return Tile.createLevelZeroTiles(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('creates expected number of tiles', function() {

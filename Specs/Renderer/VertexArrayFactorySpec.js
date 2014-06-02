@@ -597,7 +597,7 @@ defineSuite([
                 geometry : geometry,
                 interleave : true
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('throws with duplicate indices', function() {
@@ -625,6 +625,6 @@ defineSuite([
                     normal : 0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

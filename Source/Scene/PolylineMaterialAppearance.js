@@ -1,8 +1,8 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defineProperties',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/VertexFormat',
         '../Renderer/createShaderSource',
         '../Shaders/Appearances/PolylineMaterialAppearanceVS',
@@ -12,8 +12,8 @@ define([
         './Material'
     ], function(
         defaultValue,
-        defineProperties,
         defined,
+        defineProperties,
         VertexFormat,
         createShaderSource,
         PolylineMaterialAppearanceVS,

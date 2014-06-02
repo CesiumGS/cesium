@@ -171,7 +171,6 @@ define([
             value : defaultValue(sampleCoverage.value, 1.0),
             invert : defaultValue(sampleCoverage.invert, false)
         };
-        this.dither = defaultValue(rs.dither, true);
         this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
             (!defined(viewport.width)) ? context.drawingBufferWidth : viewport.width,
             (!defined(viewport.height)) ? context.drawingBufferHeight : viewport.height) : undefined;
@@ -419,19 +418,22 @@ define([
         }
     }
 
-    function applySampleCoverage(gl, renderState) {
-        var sampleCoverage = renderState.sampleCoverage;
-        var enabled = sampleCoverage.enabled;
+    var applySampleCoverage;
+    if (FeatureDetection.isInternetExplorer()) {
+        // sampleCoverage is not supported in IE 11.0.8
+        applySampleCoverage = function() {
+        };
+    } else {
+        applySampleCoverage = function(gl, renderState) {
+            var sampleCoverage = renderState.sampleCoverage;
+            var enabled = sampleCoverage.enabled;
 
-        enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
+            enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
 
-        if (enabled) {
-            gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
-        }
-    }
-
-    function applyDither(gl, renderState) {
-        enableOrDisable(gl, gl.DITHER, renderState.dither);
+            if (enabled) {
+                gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
+            }
+        };
     }
 
     var scratchViewport = new BoundingRectangle();
@@ -462,7 +464,6 @@ define([
         applyBlending(gl, renderState, passState);
         applyStencilTest(gl, renderState);
         applySampleCoverage(gl, renderState);
-        applyDither(gl, renderState);
         applyViewport(gl, renderState, passState);
     };
 
@@ -533,10 +534,6 @@ define([
                 (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
                 (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
             funcs.push(applySampleCoverage);
-        }
-
-        if (previousState.dither !== nextState.dither) {
-            funcs.push(applyDither);
         }
 
         // For now, always apply because of passState
@@ -641,7 +638,6 @@ define([
                 value : renderState.sampleCoverage.value,
                 invert : renderState.sampleCoverage.invert
             },
-            dither : renderState.dither,
             viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
         };
     };
