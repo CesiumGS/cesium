@@ -91,6 +91,7 @@ define([
      *
      * @memberof ModelAnimationCollection
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.name The glTF animation name that identifies the animation.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
@@ -175,6 +176,7 @@ define([
      *
      * @memberof ModelAnimationCollection
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {JulianDate} [options.startTime] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.

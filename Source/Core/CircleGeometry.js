@@ -17,6 +17,7 @@ define([
      * @alias CircleGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
      * @param {Number} options.radius The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.

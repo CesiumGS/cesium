@@ -35,6 +35,7 @@ define([
      * @alias QuantizedMeshTerrainData
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
      * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.

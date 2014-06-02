@@ -18,6 +18,7 @@ define([
      * If text is blank, returns undefined.
      *
      * @param {String} text The text to write.
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.font='10px sans-serif'] The CSS font to use.
      * @param {String} [options.textBaseline='bottom'] The baseline of the text.
      * @param {Boolean} [options.fill=true] Whether to fill the text.

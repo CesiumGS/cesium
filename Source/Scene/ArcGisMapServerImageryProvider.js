@@ -44,6 +44,7 @@ define([
      * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default

@@ -21,6 +21,7 @@ define([
      * @alias TileCoordinatesImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
      * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
      * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.

@@ -241,6 +241,7 @@ define([
      *
      * @alias Material
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.

@@ -98,7 +98,7 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Configuration options for the widget.
+     * @param {Object} [options] Object with the following properties:
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.

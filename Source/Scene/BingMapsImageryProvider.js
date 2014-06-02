@@ -43,6 +43,7 @@ define([
      * @alias BingMapsImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
