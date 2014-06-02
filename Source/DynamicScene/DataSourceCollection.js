@@ -126,6 +126,7 @@ define([
                 dataSource.destroy();
             }
         }
+        dataSources.length = 0;
     };
 
     /**
