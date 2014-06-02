@@ -227,8 +227,9 @@ define([
 
     /**
      * Creates a new reference property given the dynamic object collection that will
-     * be used to resolve it and a string indicating the target object id and property,
-     * delineated by a period.
+     * be used to resolve it and a string indicating the target object id and property.
+     * The format of the string is "objectId#foo.bar", where # separates the id from
+     * property path and . separates sub-properties.
      *
      * @param {DynamicObject} targetCollection
      * @param {String} referenceString
