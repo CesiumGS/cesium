@@ -9,7 +9,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -30,7 +29,6 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -208,8 +206,9 @@ define([
 
         this._mode = SceneMode.SCENE3D;
         this._modeChanged = true;
-        this._projection = new GeographicProjection();
-        this._maxCoord = new Cartesian3();
+        var projection = scene.scene2D.projection;
+        this._projection = projection;
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
     };
 
@@ -670,17 +669,13 @@ define([
         }
     });
 
-    var scratchUpdateCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
     /**
      * @private
      */
-    Camera.prototype.update = function(mode, scene2D) {
+    Camera.prototype.update = function(mode) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(mode)) {
             throw new DeveloperError('mode is required.');
-        }
-        if (!defined(scene2D)) {
-            throw new DeveloperError('scene2D is required.');
         }
         //>>includeEnd('debug');
 
@@ -689,12 +684,6 @@ define([
             this._mode = mode;
             this._modeChanged = mode !== SceneMode.MORPHING;
             updateFrustum = this._mode === SceneMode.SCENE2D;
-        }
-
-        var projection = scene2D.projection;
-        if (defined(projection) && projection !== this._projection) {
-            this._projection = projection;
-            this._maxCoord = projection.project(scratchUpdateCartographic, this._maxCoord);
         }
 
         if (updateFrustum) {

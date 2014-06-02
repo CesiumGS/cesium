@@ -30,7 +30,8 @@ define([
 
         camera = defaultValue(camera, new Camera({
             drawingBufferWidth : 1,
-            drawingBufferHeight : 1
+            drawingBufferHeight : 1,
+            scene2D : frameState.scene2D
         }));
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);

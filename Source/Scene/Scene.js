@@ -181,8 +181,6 @@ define([
         this._globe = undefined;
         this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
-        this._camera = new Camera(this);
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, this._camera);
 
         this._animations = new AnimationCollection();
 
@@ -431,9 +429,13 @@ define([
         this._performanceDisplay = undefined;
         this._debugSphere = undefined;
 
+        var camera = new Camera(this);
+        this._camera = camera;
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, camera);
+
         // initial guess at frustums.
-        var near = this._camera.frustum.near;
-        var far = this._camera.frustum.far;
+        var near = camera.frustum.near;
+        var far = camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
         updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
 
@@ -1222,7 +1224,7 @@ define([
         }
 
         this._animations.update();
-        this._camera.update(this.mode, this.scene2D);
+        this._camera.update(this.mode);
         this._screenSpaceCameraController.update(this.mode);
     };
 

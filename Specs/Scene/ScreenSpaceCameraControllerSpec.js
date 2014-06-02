@@ -16,6 +16,7 @@ defineSuite([
         'Scene/CameraEventType',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/MockCanvas'
     ], function(
         ScreenSpaceCameraController,
@@ -34,6 +35,7 @@ defineSuite([
         CameraEventType,
         OrthographicFrustum,
         SceneMode,
+        createCamera,
         MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -47,10 +49,8 @@ defineSuite([
     beforeEach(function() {
         // create a mock canvas object to add events to so they are callable.
         canvas = new MockCanvas();
-        camera = new Camera({
-            canvas: canvas,
-            drawingBufferWidth : canvas.clientWidth * 2,
-            drawingBufferHeight: canvas.clientHeight * 2
+        camera = createCamera({
+            canvas : canvas
         });
         controller = new ScreenSpaceCameraController(canvas, camera);
     });
@@ -78,7 +78,7 @@ defineSuite([
     });
 
     function updateController(frameState) {
-        camera.update(frameState.mode, frameState.scene2D);
+        camera.update(frameState.mode);
         controller.update(frameState.mode);
     }
 

@@ -56,7 +56,7 @@ defineSuite([
         polylines = new PolylineCollection();
 
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     afterEach(function() {
