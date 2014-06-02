@@ -172,27 +172,27 @@ define([
                 var billboard = glyph.billboard;
                 if (!defined(billboard)) {
                     if (labelCollection._spareBillboards.length > 0) {
-                        glyph.billboard = billboard = labelCollection._spareBillboards.pop();
+                        billboard = labelCollection._spareBillboards.pop();
                     } else {
-                        glyph.billboard = billboard = labelCollection._billboardCollection.add({
+                        billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
                         });
                     }
-
-                    billboard.show = label._show;
-                    billboard.position = label._position;
-                    billboard.eyeOffset = label._eyeOffset;
-                    billboard.pixelOffset = label._pixelOffset;
-                    billboard.horizontalOrigin = HorizontalOrigin.LEFT;
-                    billboard.verticalOrigin = label._verticalOrigin;
-                    billboard.scale = label._scale;
-                    billboard.pickPrimitive = label;
-                    billboard.id = label._id;
+                    glyph.billboard = billboard;
                 }
 
-                glyph.billboard.imageIndex = glyphTextureInfo.index;
-                glyph.billboard.translucencyByDistance = label._translucencyByDistance;
-                glyph.billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
+                billboard.show = label._show;
+                billboard.position = label._position;
+                billboard.eyeOffset = label._eyeOffset;
+                billboard.pixelOffset = label._pixelOffset;
+                billboard.horizontalOrigin = HorizontalOrigin.LEFT;
+                billboard.verticalOrigin = label._verticalOrigin;
+                billboard.scale = label._scale;
+                billboard.pickPrimitive = label;
+                billboard.id = label._id;
+                billboard.imageIndex = glyphTextureInfo.index;
+                billboard.translucencyByDistance = label._translucencyByDistance;
+                billboard.pixelOffsetScaleByDistance = label._pixelOffsetScaleByDistance;
             }
         }
 
