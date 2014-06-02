@@ -60,9 +60,7 @@ defineSuite([
         };
         this.drawingBufferWidth = 1024;
         this.drawingBufferHeight = 768;
-        this.scene2D = {
-            projection : defaultValue(projection, new GeographicProjection())
-        };
+        this.mapProjection = defaultValue(projection, new GeographicProjection());
     };
 
     beforeEach(function() {
@@ -438,7 +436,7 @@ defineSuite([
 
         camera.update(SceneMode.SCENE2D);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
@@ -686,7 +684,7 @@ defineSuite([
 
         camera.update(SceneMode.SCENE2D);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
         var dx = max.x * factor;
         var ratio = frustum.top / frustum.right;
@@ -710,7 +708,7 @@ defineSuite([
 
         camera.update(SceneMode.SCENE2D);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
         var dx = max.x * factor;
 
@@ -1346,7 +1344,7 @@ defineSuite([
 
         camera.update(SceneMode.SCENE2D);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
@@ -1391,7 +1389,7 @@ defineSuite([
 
         camera.update(SceneMode.SCENE2D);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
         var dx = max.x * factor;
         var animationCollection = new AnimationCollection();
@@ -1428,7 +1426,7 @@ defineSuite([
 
         camera.update(SceneMode.COLUMBUS_VIEW);
 
-        var max = scene.scene2D.projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;

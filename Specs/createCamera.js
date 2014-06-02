@@ -22,9 +22,7 @@ define([
         this.canvas = canvas;
         this.drawingBufferWidth = canvas.clientWidth * 2;
         this.drawingBufferHeight = canvas.clientHeight * 2;
-        this.scene2D = {
-            projection : new GeographicProjection()
-        };
+        this.mapProjection = new GeographicProjection();
     };
 
     function createCamera(options) {

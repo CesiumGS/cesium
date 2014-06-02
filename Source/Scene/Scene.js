@@ -11,7 +11,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Ellipsoid',
         '../Core/EllipsoidGeometry',
         '../Core/Event',
         '../Core/GeographicProjection',
@@ -61,7 +60,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        Ellipsoid,
         EllipsoidGeometry,
         Event,
         GeographicProjection,
@@ -307,14 +305,12 @@ define([
          */
         this.mode = SceneMode.SCENE3D;
         /**
-         * DOC_TBA
+         * The map projection to use in 2D and Columbus View modes.
+         *
+         * @type {MapProjection}
+         * @default new GeographicProjection()
          */
-        this.scene2D = {
-            /**
-             * The projection to use in 2D mode.
-             */
-            projection : new GeographicProjection(Ellipsoid.WGS84)
-        };
+        this.mapProjection = new GeographicProjection();
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -690,7 +686,7 @@ define([
         var frameState = scene._frameState;
         frameState.mode = scene.mode;
         frameState.morphTime = scene.morphTime;
-        frameState.scene2D = scene.scene2D;
+        frameState.mapProjection = scene.mapProjection;
         frameState.frameNumber = frameNumber;
         frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
@@ -949,7 +945,7 @@ define([
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 center = Matrix4.multiplyByPoint(transformFrom2D, center);
-                var projection = frameState.scene2D.projection;
+                var projection = frameState.mapProjection;
                 var centerCartographic = projection.unproject(center);
                 center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
             }

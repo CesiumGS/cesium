@@ -584,7 +584,7 @@ define([
             return;
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var colorCommand;
         var pickCommand;
         var geometry;

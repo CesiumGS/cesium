@@ -1370,7 +1370,7 @@ defineSuite([
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
@@ -1393,7 +1393,7 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
@@ -1423,7 +1423,7 @@ defineSuite([
     });
 
     it('computes bounding sphere in 2D', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({

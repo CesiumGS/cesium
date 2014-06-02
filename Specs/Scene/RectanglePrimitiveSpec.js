@@ -204,7 +204,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
+        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.mapProjection));
     });
 
     it('test 2D bounding sphere', function() {
@@ -218,7 +218,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
+        var b2D = BoundingSphere.projectTo2D(b3D, frameState.mapProjection);
         b2D.center.x = 0.0;
         expect(boundingVolume).toEqual(b2D);
     });

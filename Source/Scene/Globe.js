@@ -555,7 +555,7 @@ define([
         }
 
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var modeChanged = false;
 
         if (this._mode !== mode || !defined(this._rsColor)) {

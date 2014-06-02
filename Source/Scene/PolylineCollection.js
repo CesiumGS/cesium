@@ -385,7 +385,7 @@ define([
 
         updateMode(this, frameState);
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
 

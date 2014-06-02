@@ -206,7 +206,7 @@ define([
 
         this._mode = SceneMode.SCENE3D;
         this._modeChanged = true;
-        var projection = scene.scene2D.projection;
+        var projection = scene.mapProjection;
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;

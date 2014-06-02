@@ -87,9 +87,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
+            projection : projection
         };
         var maxRadii = ellipsoid.maximumRadius;
         var frustum = new OrthographicFrustum();
@@ -394,9 +392,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.COLUMBUS_VIEW,
-            scene2D : {
-                projection : projection
-            }
+            projection : projection
         };
 
         var maxRadii = ellipsoid.maximumRadius;
@@ -613,9 +609,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE3D,
-            scene2D : {
-                projection : projection
-            }
+            projection : projection
         };
         return frameState;
     }
@@ -757,7 +751,7 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.mapProjection.ellipsoid);
         expect(intersection).toBeDefined();
     });
 
@@ -769,7 +763,7 @@ defineSuite([
 
         camera.lookRight(CesiumMath.PI_OVER_TWO);
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.mapProjection.ellipsoid);
         expect(intersection).not.toBeDefined();
 
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);

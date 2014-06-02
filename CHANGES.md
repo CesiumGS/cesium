@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### 1.0 - 2014-07-01
+
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  TODO: constructors.
+
 ### b29 - 2014-06-02
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))

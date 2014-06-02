@@ -411,7 +411,7 @@ defineSuite([
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var positions = [
             Cartographic.fromDegrees(-1.0, -1.0, 0.0),

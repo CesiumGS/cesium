@@ -814,7 +814,7 @@ define([
         Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
         projection.project(sunCartographic, uniformState._sunPositionColumbusView);
@@ -849,7 +849,7 @@ define([
      */
     UniformState.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
-        this._mapProjection = frameState.scene2D.projection;
+        this._mapProjection = frameState.mapProjection;
 
         var canvas = context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
