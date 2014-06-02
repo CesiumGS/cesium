@@ -4,11 +4,17 @@ Change Log
 Beta Releases
 -------------
 
+### 1.0 - 2014-07-01
+
+* Breaking changes 
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+* `DynamicObject.id` can now include period characters.
+* `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
+
 ### b29 - 2014-06-02
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
-  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
   * Removed `CameraFlightPath.createAnimationCartographic`. Code that looked like:
 
            var flight = CameraFlightPath.createAnimationCartographic(scene, {
@@ -48,8 +54,6 @@ Beta Releases
 * Added `interleave` option to `Primitive` constructor.
 * Upgraded JSDoc from 3.0 to 3.3.0-alpha5. The Cesium reference documentation now has a slightly different look and feel.
 * Upgraded Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
-* `DynamicObject.id` can now include period characters.
-* `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 
 ### b28 - 2014-05-01
 
