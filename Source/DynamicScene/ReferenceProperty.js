@@ -235,7 +235,7 @@ define([
      *
      * @returns A new instance of ReferenceProperty.
      *
-     * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
+     * @exception {DeveloperError} invalid referenceString.
      */
     ReferenceProperty.fromString = function(targetCollection, referenceString) {
         //>>includeStart('debug', pragmas.debug);
@@ -252,7 +252,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (tmp.length !== 2 || !defined(identifier) || identifier === '') {
-            throw new DeveloperError();
+            throw new DeveloperError('invalid referenceString.');
         }
         //>>includeEnd('debug');
 
@@ -263,7 +263,7 @@ define([
         for (var i = 0; i < values.length; i++) {
             var item = values[i];
             if (!defined(item) || item === '') {
-                throw new DeveloperError();
+                throw new DeveloperError('invalid referenceString.');
             }
         }
         //>>includeEnd('debug');

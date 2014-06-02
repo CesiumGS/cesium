@@ -141,6 +141,15 @@ define([
         TimeIntervalCollectionProperty) {
     "use strict";
 
+    var currentId;
+
+    function makeReference(collection, referenceString) {
+        if (referenceString[0] === '#') {
+            referenceString = currentId + referenceString;
+        }
+        return ReferenceProperty.fromString(collection, referenceString);
+    }
+
     //This class is a workaround for CZML represented as two properties which get turned into a single Cartesian2 property once loaded.
     var Cartesian2WrapperProperty = function() {
         this._definitionChanged = new Event();
@@ -449,7 +458,7 @@ define([
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isReference) {
-                object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+                object[propertyName] = makeReference(dynamicObjectCollection, packetData.reference);
             } else if (defined(type.unpack)) {
                 object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
             } else {
@@ -487,7 +496,7 @@ define([
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isReference) {
-                combinedInterval.data = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+                combinedInterval.data = makeReference(dynamicObjectCollection, packetData.reference);
             } else if (defined(type.unpack)) {
                 combinedInterval.data = type.unpack(unwrappedInterval, 0);
             } else {
@@ -612,7 +621,7 @@ define([
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isReference) {
-                object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+                object[propertyName] = makeReference(dynamicObjectCollection, packetData.reference);
             } else {
                 object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
             }
@@ -648,7 +657,7 @@ define([
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isReference) {
-                combinedInterval.data = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+                combinedInterval.data = makeReference(dynamicObjectCollection, packetData.reference);
             } else {
                 combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
             }
@@ -870,7 +879,7 @@ define([
         if (defined(references)) {
             var properties = [];
             for (i = 0, len = references.length; i < len; i++) {
-                properties.push(ReferenceProperty.fromString(dynamicObjectCollection, references[i]));
+                properties.push(makeReference(dynamicObjectCollection, references[i]));
             }
 
             var iso8601Interval = vertexPositionsData.interval;
@@ -1434,6 +1443,8 @@ define([
             objectId = createGuid();
         }
 
+        currentId = objectId;
+
         if (packet['delete'] === true) {
             dynamicObjectCollection.removeById(objectId);
         } else {
@@ -1453,6 +1464,8 @@ define([
                 updaterFunctions[i](dynamicObject, packet, dynamicObjectCollection, sourceUri);
             }
         }
+
+        currentId = undefined;
     }
 
     function loadCzml(dataSource, czml, sourceUri) {

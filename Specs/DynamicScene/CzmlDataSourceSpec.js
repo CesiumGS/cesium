@@ -2149,4 +2149,24 @@ defineSuite([
         expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
         expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
     });
+
+    it('Can reference local properties.', function() {
+        var time = new JulianDate();
+        var packet = {
+            id : 'testObject',
+            point : {
+                pixelSize : 1.0,
+                outlineWidth : {
+                    reference : '#point.pixelSize'
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packet);
+
+        var targetObject = dataSource.dynamicObjects.getById('testObject');
+        expect(targetObject.point.outlineWidth instanceof ReferenceProperty).toBe(true);
+        expect(targetObject.point.outlineWidth.getValue(time)).toEqual(targetObject.point.pixelSize.getValue(time));
+    });
 });
