@@ -8,6 +8,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  TODO: constructors.
+   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 
 ### b29 - 2014-06-02
 

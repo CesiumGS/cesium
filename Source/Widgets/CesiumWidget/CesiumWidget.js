@@ -170,7 +170,11 @@ define([
             creditContainer.className = 'cesium-widget-credits';
             widgetNode.appendChild(creditContainer);
 
-            var scene = new Scene(canvas, options.contextOptions, creditContainer);
+            var scene = new Scene({
+                canvas : canvas,
+                contextOptions : options.contextOptions,
+                creditContainer : creditContainer
+            });
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;

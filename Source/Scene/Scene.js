@@ -127,40 +127,58 @@ define([
      * object used to create the WebGL context.
      * </p>
      * <p>
-     * <code>options.webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
+     * <code>webgl.alpha</code> defaults to false, which can improve performance compared to the standard WebGL default
      * of true.  If an application needs to composite Cesium above other HTML elements using alpha-blending, set
-     * <code>options.webgl.alpha</code> to true.
+     * <code>webgl.alpha</code> to true.
      * </p>
      * <p>
-     * <code>options.webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
+     * <code>webgl.failIfMajorPerformanceCaveat</code> defaults to true, which ensures a context is not successfully created
      * if the system has a major performance issue such as only supporting software rendering.  The standard WebGL default is false,
      * which is not appropriate for almost any Cesium app.
      * </p>
      * <p>
-     * The other <code>options.webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
+     * The other <code>webgl</code> properties match the WebGL defaults for {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}.
      * </p>
      * <p>
-     * <code>options.allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
+     * <code>allowTextureFilterAnisotropic</code> defaults to true, which enables anisotropic texture filtering when the
      * WebGL extension is supported.  Setting this to false will improve performance, but hurt visual quality, especially for horizon views.
      * </p>
      *
      * @alias Scene
      * @constructor
      *
-     * @param {Canvas} canvas The HTML canvas element to create the scene for.
-     * @param {Object} [contextOptions] Context and WebGL creation properties.  See details above.
-     * @param {Element} [creditContainer] The HTML element in which the credits will be displayed.
+     * @param {Object} [options] Options for the function.
+     * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
+     * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
+     * @param {MapProjection} [options.mapProjection] The map projection to use in 2D and Columbus View modes.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
      *
+     * @exception {DeveloperError} options and options.canvas are required.
+     *
      * @example
      * // Create scene without anisotropic texture filtering
-     * var scene = new Cesium.Scene(canvas, {
-     *   allowTextureFilterAnisotropic : false
+     * var scene = new Cesium.Scene({
+     *   canvas : canvas,
+     *   contextOptions : {
+     *     allowTextureFilterAnisotropic : false
+     *   }
      * });
      */
-    var Scene = function(canvas, contextOptions, creditContainer) {
+    var Scene = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var canvas = options.canvas;
+        var contextOptions = options.contextOptions;
+        var creditContainer = options.creditContainer;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(canvas)) {
+            throw new DeveloperError('options and options.canvas are required.');
+        }
+        //>>includeEnd('debug');
+
         var context = new Context(canvas, contextOptions);
         if (!defined(creditContainer)) {
             creditContainer = document.createElement('div');
@@ -304,13 +322,9 @@ define([
          * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
-        /**
-         * The map projection to use in 2D and Columbus View modes.
-         *
-         * @type {MapProjection}
-         * @default new GeographicProjection()
-         */
-        this.mapProjection = new GeographicProjection();
+
+        this._mapProjection = defaultValue(options.mapProjection, new GeographicProjection());
+
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
@@ -444,7 +458,9 @@ define([
         /**
          * Gets the canvas element to which this scene is bound.
          * @memberof Scene.prototype
+         *
          * @type {Element}
+         * @readonly
          */
         canvas : {
             get : function() {
@@ -455,7 +471,10 @@ define([
         /**
          * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferHeight : {
@@ -467,7 +486,10 @@ define([
         /**
          * The drawingBufferHeight of the underlying GL context.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
          */
         drawingBufferWidth : {
@@ -479,7 +501,10 @@ define([
         /**
          * The maximum aliased line width, in pixels, supported by this WebGL implementation.  It will be at least one.
          * @memberof Scene.prototype
+         *
          * @type {Number}
+         * @readonly
+         *
          * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>ALIASED_LINE_WIDTH_RANGE</code>.
          */
         maximumAliasedLineWidth : {
@@ -491,7 +516,9 @@ define([
         /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
+         *
          * @type {Globe}
+         * @readonly
          */
         globe : {
             get: function() {
@@ -507,7 +534,9 @@ define([
         /**
          * Gets the collection of primitives.
          * @memberof Scene.prototype
+         *
          * @type {PrimitiveCollection}
+         * @readonly
          */
         primitives : {
             get : function() {
@@ -518,7 +547,9 @@ define([
         /**
          * Gets the camera.
          * @memberof Scene.prototype
+         *
          * @type {Camera}
+         * @readonly
          */
         camera : {
             get : function() {
@@ -530,7 +561,9 @@ define([
         /**
          * Gets the controller for camera input handling.
          * @memberof Scene.prototype
+         *
          * @type {ScreenSpaceCameraController}
+         * @readonly
          */
         screenSpaceCameraController : {
             get : function() {
@@ -539,10 +572,27 @@ define([
         },
 
         /**
+         * Get the map projection to use in 2D and Columbus View modes.
+         * @memberof Scene.prototype
+         *
+         * @type {MapProjection}
+         * @readonly
+         *
+         * @default new GeographicProjection()
+         */
+        mapProjection : {
+            get: function() {
+                return this._mapProjection;
+            }
+        },
+
+        /**
          * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
          * function, the previous frame's state is returned.
          * @memberof Scene.prototype
+         *
          * @type {FrameState}
+         * @readonly
          */
         frameState : {
             get: function() {
@@ -553,7 +603,9 @@ define([
         /**
          * Gets the collection of animations taking place in the scene.
          * @memberof Scene.prototype
+         *
          * @type {AnimationCollection}
+         * @readonly
          */
         animations : {
             get : function() {
@@ -564,7 +616,9 @@ define([
         /**
          * Gets the collection of image layers that will be rendered on the globe.
          * @memberof Scene.prototype
+         *
          * @type {ImageryLayerCollection}
+         * @readonly
          */
         imageryLayers : {
             get : function() {
@@ -575,7 +629,9 @@ define([
         /**
          * The terrain provider providing surface geometry for the globe.
          * @memberof Scene.prototype
+         *
          * @type {TerrainProvider}
+         * @readonly
          */
         terrainProvider : {
             get : function() {
@@ -592,7 +648,9 @@ define([
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting
          * the <code>rethrowRenderErrors</code> property.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         renderError : {
             get : function() {
@@ -604,7 +662,9 @@ define([
          * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         preRender : {
             get : function() {
@@ -616,7 +676,9 @@ define([
          * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         postRender : {
             get : function() {
@@ -646,7 +708,7 @@ define([
          *
          * @memberof Scene.prototype
          *
-         * @type Object
+         * @type {Object}
          * @readonly
          *
          * @default undefined
