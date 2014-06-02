@@ -13,13 +13,13 @@ define([
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/WallGeometry',
         '../Core/WallOutlineGeometry',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -34,13 +34,13 @@ define([
         ShowGeometryInstanceAttribute,
         WallGeometry,
         WallOutlineGeometry,
+        MaterialAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
-        Property,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive) {
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);

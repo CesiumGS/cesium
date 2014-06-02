@@ -14,10 +14,10 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../Scene/PerspectiveFrustum',
-        '../Scene/PerspectiveOffCenterFrustum',
-        '../Scene/SceneMode',
-        '../ThirdParty/Tween'
+        '../ThirdParty/Tween',
+        './PerspectiveFrustum',
+        './PerspectiveOffCenterFrustum',
+        './SceneMode'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -33,10 +33,10 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
+        Tween,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
-        SceneMode,
-        Tween) {
+        SceneMode) {
     "use strict";
 
     /**
@@ -577,10 +577,12 @@ define([
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
-        var frameState = scene.frameState;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frameState)) {
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        if (!defined(scene.frameState)) {
             throw new DeveloperError('frameState is required.');
         }
         if (!defined(rectangle)) {
@@ -588,6 +590,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var frameState = scene.frameState;
         var createAnimationoptions = clone(options);
         var camera = frameState.camera;
         camera.getRectangleCameraCoordinates(rectangle, c3destination);

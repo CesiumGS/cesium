@@ -1608,8 +1608,7 @@ define([
      *         enabled : false,
      *         value : 1.0,
      *         invert : false
-     *      },
-     *     dither : true
+     *      }
      * };
      *
      * // Same as just context.createRenderState().

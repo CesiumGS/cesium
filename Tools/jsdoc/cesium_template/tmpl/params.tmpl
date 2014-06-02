@@ -76,7 +76,7 @@
             <?js if (params.hasDefault) {?>
                 <td class="default">
                 <?js if (typeof param.defaultvalue !== 'undefined') { ?>
-                    <?js= self.htmlsafe(param.defaultvalue) ?>
+                    <code class="language-javascript"><?js= self.htmlsafe(param.defaultvalue) ?></code>
                 <?js } ?>
                 </td>
             <?js } ?>

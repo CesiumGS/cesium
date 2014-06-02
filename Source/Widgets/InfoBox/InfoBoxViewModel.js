@@ -125,20 +125,20 @@ define([
             }
         });
 
-        /**
-         * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
-         * @param {Number} offset The offset in pixels.
-         * @returns {String}
-         */
-        InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
-            return (this.maxHeight - offset) + 'px';
-        };
-
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
                 return !this._descriptionSanitizedHtml;
             }
         });
+    };
+
+    /**
+     * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
+     * @param {Number} offset The offset in pixels.
+     * @returns {String}
+     */
+    InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
+        return (this.maxHeight - offset) + 'px';
     };
 
     var sanitizerTaskProcessor;
