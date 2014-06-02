@@ -1,19 +1,19 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/GeoJsonDataSource',
-        'DynamicScene/DynamicObjectCollection',
-        'Core/Cartographic',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Event',
+        'DynamicScene/DynamicObjectCollection',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
-        DynamicObjectCollection,
-        Cartographic,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         Event,
+        DynamicObjectCollection,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -583,7 +583,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithNullCrs);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs type', function() {
@@ -599,7 +599,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with undefined crs properties', function() {
@@ -614,7 +614,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs', function() {
@@ -632,7 +632,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs link', function() {
@@ -651,7 +651,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('raises error when an error occurs in loadUrl', function() {

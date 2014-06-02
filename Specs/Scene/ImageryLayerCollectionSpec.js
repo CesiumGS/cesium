@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ImageryLayerCollection',
-         'Scene/ImageryLayer'
-     ], function(
-         ImageryLayerCollection,
-         ImageryLayer) {
+        'Scene/ImageryLayerCollection',
+        'Scene/ImageryLayer'
+    ], function(
+        ImageryLayerCollection,
+        ImageryLayer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -166,9 +166,7 @@ defineSuite([
             collection.add(layer1, -1);
         }).toThrowDeveloperError();
 
-        expect(function() {
-            collection.add(layer1, 0);
-        }).not.toThrow();
+        collection.add(layer1, 0);
 
         expect(function() {
             collection.add(layer2, -1);
@@ -178,17 +176,13 @@ defineSuite([
             collection.add(layer2, 2);
         }).toThrowDeveloperError();
 
-        expect(function() {
-            collection.add(layer2, 0);
-        }).not.toThrow();
+        collection.add(layer2, 0);
     });
 
     it('remove ignores request to remove a layer that does not exist in the collection', function() {
         var collection = new ImageryLayerCollection();
         var layer1 = new ImageryLayer(fakeProvider);
-        expect(function() {
-            collection.remove(layer1);
-        }).not.toThrow();
+        expect(collection.remove(layer1)).toBe(false);
     });
 
     it('contains works as expected', function() {

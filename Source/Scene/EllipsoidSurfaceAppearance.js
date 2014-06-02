@@ -2,19 +2,21 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/VertexFormat',
-        './Material',
-        './Appearance',
+        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
-        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
+        './Appearance',
+        './Material'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         VertexFormat,
-        Material,
-        Appearance,
+        EllipsoidSurfaceAppearanceFS,
         EllipsoidSurfaceAppearanceVS,
-        EllipsoidSurfaceAppearanceFS) {
+        Appearance,
+        Material) {
     "use strict";
 
     /**
@@ -32,9 +34,9 @@ define([
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link EllipsoidSurfaceAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.aboveGround=false] When <code>true</code>, the geometry is expected to be on the ellipsoid's surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
-     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -49,7 +51,7 @@ define([
      *   })
      * });
      *
-     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var EllipsoidSurfaceAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -63,20 +65,47 @@ define([
          *
          * @type Material
          *
-         * @default Material.ColorType
+         * @default {@link Material.ColorType}
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 
         /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.translucent = defaultValue(options.translucent, true);
+
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
+        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, !aboveGround));
+        this._closed = false;
+
+        // Non-derived members
+
+        this._flat = defaultValue(options.flat, false);
+        this._faceForward = defaultValue(options.faceForward, aboveGround);
+        this._aboveGround = aboveGround;
+    };
+
+    defineProperties(EllipsoidSurfaceAppearance.prototype, {
+        /**
          * The GLSL source code for the vertex shader.
          *
-         * @type String
+         * @memberof EllipsoidSurfaceAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
 
         /**
          * The GLSL source code for the fragment shader.  The full fragment shader
@@ -84,50 +113,88 @@ define([
          * {@link EllipsoidSurfaceAppearance#flat}, and {@link EllipsoidSurfaceAppearance#faceForward}.
          * Use {@link EllipsoidSurfaceAppearance#getFragmentShaderSource} to get the full source.
          *
-         * @type String
+         * @memberof EllipsoidSurfaceAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
 
         /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
+         * The WebGL fixed-function state to use when rendering the geometry.
          * <p>
          * The render state can be explicitly defined when constructing a {@link EllipsoidSurfaceAppearance}
          * instance, or it is set implicitly via {@link EllipsoidSurfaceAppearance#translucent}
          * and {@link EllipsoidSurfaceAppearance#aboveGround}.
          * </p>
          *
-         * @type Object
+         * @memberof EllipsoidSurfaceAppearance.prototype
          *
+         * @type {Object}
          * @readonly
          */
-        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, !aboveGround));
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
 
-        // Non-derived members
+        /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
+         * @memberof EllipsoidSurfaceAppearance.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        },
 
         /**
          * The {@link VertexFormat} that this appearance instance is compatible with.
          * A geometry can have more vertex attributes and still be compatible - at a
          * potential performance cost - but it can't have less.
          *
-         * @type VertexFormat
+         * @memberof EllipsoidSurfaceAppearance.prototype
          *
+         * @type VertexFormat
          * @readonly
+         *
+         * @default {@link EllipsoidSurfaceAppearance.VERTEX_FORMAT}
          */
-        this.vertexFormat = EllipsoidSurfaceAppearance.VERTEX_FORMAT;
+        vertexFormat : {
+            get : function() {
+                return EllipsoidSurfaceAppearance.VERTEX_FORMAT;
+            }
+        },
 
         /**
          * When <code>true</code>, flat shading is used in the fragment shader,
          * which means lighting is not taking into account.
          *
+         * @memberof EllipsoidSurfaceAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.flat = defaultValue(options.flat, false);
+        flat : {
+            get : function() {
+                return this._flat;
+            }
+        },
 
         /**
          * When <code>true</code>, the fragment shader flips the surface normal
@@ -135,44 +202,38 @@ define([
          * dark spots.  This is useful when both sides of a geometry should be
          * shaded like {@link WallGeometry}.
          *
+         * @memberof EllipsoidSurfaceAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default true
          */
-        this.faceForward = defaultValue(options.faceForward, aboveGround);
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link EllipsoidSurfaceAppearance#renderState} has alpha blending enabled.
-         *
-         * @readonly
-         *
-         * @default true
-         */
-        this.translucent = translucent;
-
-        /**
-         * When <code>true</code>, the geometry is expected to be closed so
-         * {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
-         * If the viewer enters the geometry, it will not be visible.
-         *
-         * @readonly
-         *
-         * @default true
-         */
-        this.closed = false;
+        faceForward : {
+            get : function() {
+                return this._faceForward;
+            }
+        },
 
         /**
          * When <code>true</code>, the geometry is expected to be on the ellipsoid's
          * surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState}
          * has backface culling enabled.
          *
+         *
+         * @memberof EllipsoidSurfaceAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.aboveGround = aboveGround;
-    };
+        aboveGround : {
+            get : function() {
+                return this._aboveGround;
+            }
+        }
+    });
 
     /**
      * The {@link VertexFormat} that all {@link EllipsoidSurfaceAppearance} instances

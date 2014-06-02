@@ -2,16 +2,16 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
         defined,
         defineProperties,
+        DeveloperError,
         loadImage,
         loadImageViaBlob,
-        DeveloperError,
         throttleRequestByServer) {
     "use strict";
 
@@ -29,8 +29,8 @@ define([
      * @see OpenStreetMapImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html">Cesium Sandcastle Imagery Layers Demo</a>
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     var ImageryProvider = function ImageryProvider() {
         /**
@@ -244,6 +244,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof ImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {
@@ -291,7 +292,7 @@ define([
      * that the request should be retried later.
      * @memberof ImageryProvider
      *
-     * @param url {String} The URL of the image.
+     * @param {String} url The URL of the image.
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

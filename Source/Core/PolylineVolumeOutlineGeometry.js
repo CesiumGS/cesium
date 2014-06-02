@@ -95,21 +95,30 @@ define([
      * @alias PolylineVolumeOutlineGeometry
      * @constructor
      *
-     * @param {Array} options.polylinePositions An array of {Cartesain3} positions that define the center of the polyline volume.
-     * @param {Number} options.shapePositions An array of {Cartesian2} positions that define the shape to be extruded along the polyline
+     * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
+     * @param {Number} options.shapePositions An array of positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
      * @example
+     * function computeCircle(radius) {
+     *   var positions = [];
+     *   for (var i = 0; i < 360; i++) {
+     *     var radians = Cesium.Math.toRadians(i);
+     *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+     *   }
+     *   return positions;
+     * }
+     *
      * var volumeOutline = new Cesium.PolylineVolumeOutlineGeometry({
-     *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
-     *     ]),
-     *     shapePositions : Cesium.Shapes.compute2DCircle(100000.0)
+     *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0
+     *   ]),
+     *   shapePositions : computeCircle(100000.0)
      * });
      */
     var PolylineVolumeOutlineGeometry = function(options) {
@@ -134,6 +143,8 @@ define([
         this._workerName = 'createPolylineVolumeOutlineGeometry';
     };
 
+    var brScratch = new BoundingRectangle();
+
     /**
      * Computes the geometric representation of the outline of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      * @memberof PolylineVolumeOutlineGeometry
@@ -145,7 +156,6 @@ define([
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
      * @exception {DeveloperError} Count of unique shape positions must be at least 3.
      */
-    var brScratch = new BoundingRectangle();
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
         var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeOutlineGeometry._ellipsoid);
@@ -161,7 +171,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
+        if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();
         }
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);

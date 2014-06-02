@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/IntersectionTests',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Plane',
-         'Core/Ray'
-     ], function(
-         IntersectionTests,
-         Cartesian3,
-         defined,
-         Ellipsoid,
-         CesiumMath,
-         Plane,
-         Ray) {
+        'Core/IntersectionTests',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Plane',
+        'Core/Ray'
+    ], function(
+        IntersectionTests,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Plane,
+        Ray) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

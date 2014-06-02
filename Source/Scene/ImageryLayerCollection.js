@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Math',
         './ImageryLayer'
     ], function(
-        DeveloperError,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event,
         CesiumMath,
         ImageryLayer) {
@@ -25,8 +25,8 @@ define([
      * @alias ImageryLayerCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html">Cesium Sandcastle Imagery Adjustment Demo</a>
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];

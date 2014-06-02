@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/WebMercatorProjection',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-         WebMercatorProjection,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/WebMercatorProjection',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        WebMercatorProjection,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -149,5 +149,12 @@ defineSuite([
         var northPole = projection.project(new Cartographic(0.0, CesiumMath.PI_OVER_TWO));
         var northLimit = projection.project(new Cartographic(0.0, WebMercatorProjection.MaximumLatitude));
         expect(northPole.y).toEqual(northLimit.y);
+    });
+
+    it('project throws without cartesian', function() {
+        var projection = new WebMercatorProjection();
+        expect(function() {
+            return projection.unproject();
+        }).toThrowDeveloperError();
     });
 });

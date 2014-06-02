@@ -1,34 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicVectorVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/DynamicVector',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-                    DynamicVectorVisualizer,
-                    createScene,
-                    destroyScene,
-                    ConstantProperty,
-                    ConstantPositionProperty,
-                    DynamicEllipse,
-                    DynamicVector,
-                    DynamicObjectCollection,
-                    DynamicObject,
-                    JulianDate,
-                    Cartesian2,
-                    Cartesian3,
-                    Color,
-                    Scene) {
+        'DynamicScene/DynamicVectorVisualizer',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicObjectCollection',
+        'DynamicScene/DynamicVector',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicVectorVisualizer,
+        Cartesian3,
+        Color,
+        JulianDate,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicObjectCollection,
+        DynamicVector,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

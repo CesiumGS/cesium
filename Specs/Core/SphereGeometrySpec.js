@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/SphereGeometry',
-         'Core/Cartesian3',
-         'Core/Math',
-         'Core/VertexFormat'
-     ], function(
-         SphereGeometry,
-         Cartesian3,
-         CesiumMath,
-         VertexFormat) {
+        'Core/SphereGeometry',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/VertexFormat'
+    ], function(
+        SphereGeometry,
+        Cartesian3,
+        CesiumMath,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

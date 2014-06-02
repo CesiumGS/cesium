@@ -189,8 +189,8 @@ define([
         },
         /**
          * Gets or sets the function for converting the world position of the object to the screen space position.
-         * Expects the {Cartesian3} parameter for the position and the optional {Cartesian2} parameter for the result.
-         * Should return a {Cartesian2}.
+         * Expects the {@link Cartesian3} parameter for the position and the optional {@link Cartesian2} parameter for the result.
+         * Should return a {@link Cartesian2}.
          *
          * Defaults to SceneTransforms.wgs84ToWindowCoordinates
          *

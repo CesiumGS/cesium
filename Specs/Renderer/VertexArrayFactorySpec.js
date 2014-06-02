@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryPipeline',
-         'Core/PrimitiveType',
-         'Core/IndexDatatype',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/VertexLayout'
-     ], 'Renderer/VertexArrayFactory', function(
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         Geometry,
-         GeometryAttribute,
-         GeometryPipeline,
-         PrimitiveType,
-         IndexDatatype,
-         BufferUsage,
-         ClearCommand,
-         VertexLayout) {
+        'Core/ComponentDatatype',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryPipeline',
+        'Core/IndexDatatype',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/VertexArrayFactory', function(
+        ComponentDatatype,
+        Geometry,
+        GeometryAttribute,
+        GeometryPipeline,
+        IndexDatatype,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -51,7 +51,7 @@ defineSuite([
 
     it('creates with no geometry', function() {
         va = context.createVertexArrayFromGeometry({
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
         expect(va.numberOfAttributes).toEqual(0);
         expect(va.indexBuffer).not.toBeDefined();
@@ -102,7 +102,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED,
+            interleave : true,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
 
@@ -114,7 +114,7 @@ defineSuite([
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
-        expect(va.getAttribute(0).strideInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(0).strideInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
 
         expect(va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
@@ -181,7 +181,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(2);
@@ -189,7 +189,7 @@ defineSuite([
 
         var position = geometry.attributes.customPosition;
         var normal = geometry.attributes.customNormal;
-        var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + normal.componentDatatype.sizeInBytes * normal.componentsPerAttribute;
+        var expectedStride = ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute + ComponentDatatype.getSizeInBytes(normal.componentDatatype) * normal.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
@@ -200,7 +200,7 @@ defineSuite([
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
-        expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(1).offsetInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
@@ -226,7 +226,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(2);
@@ -234,7 +234,7 @@ defineSuite([
 
         var position = geometry.attributes.position;
         var colors = geometry.attributes.colors;
-        var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + colors.componentDatatype.sizeInBytes * colors.componentsPerAttribute;
+        var expectedStride = ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute + ComponentDatatype.getSizeInBytes(colors.componentDatatype) * colors.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
@@ -245,7 +245,7 @@ defineSuite([
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(colors.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(colors.componentsPerAttribute);
-        expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(1).offsetInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
@@ -277,7 +277,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(3);
@@ -308,11 +308,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -338,7 +339,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(32); // No per-vertex padding needed
@@ -363,22 +364,24 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 0,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 1,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -413,7 +416,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.numberOfAttributes).toEqual(4);
@@ -441,11 +444,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
@@ -481,7 +485,7 @@ defineSuite([
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeLocations : attributeLocations,
-            vertexLayout : VertexLayout.INTERLEAVED
+            interleave : true
         });
 
         expect(va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 32); // Includes 3 byte per-vertex padding
@@ -513,13 +517,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 0,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 0, 255]);
 
         var vs2 =
@@ -541,13 +546,14 @@ defineSuite([
         sp = sp.destroy();
         sp = context.createShaderProgram(vs2, fs, attributeLocations);
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             offset : 1,
             count : 1
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -589,9 +595,9 @@ defineSuite([
         expect(function() {
             return context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                vertexLayout : VertexLayout.INTERLEAVED
+                interleave : true
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('throws with duplicate indices', function() {
@@ -619,6 +625,6 @@ defineSuite([
                     normal : 0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

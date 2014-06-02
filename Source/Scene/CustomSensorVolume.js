@@ -1,51 +1,51 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
+        '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/combine',
-        '../Core/destroyObject',
-        '../Core/FAR',
-        '../Core/Cartesian3',
-        '../Core/Matrix4',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/FAR',
+        '../Core/Matrix4',
         '../Core/PrimitiveType',
-        '../Core/BoundingSphere',
         '../Renderer/BufferUsage',
-        '../Renderer/BlendingState',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/CullFace',
-        '../Renderer/Pass',
-        './Material',
-        '../Shaders/SensorVolume',
-        '../Shaders/CustomSensorVolumeVS',
+        '../Renderer/DrawCommand',
         '../Shaders/CustomSensorVolumeFS',
+        '../Shaders/CustomSensorVolumeVS',
+        '../Shaders/SensorVolume',
+        './BlendingState',
+        './CullFace',
+        './Material',
+        './Pass',
         './SceneMode'
     ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
+        BoundingSphere,
+        Cartesian3,
         Color,
         combine,
-        destroyObject,
-        FAR,
-        Cartesian3,
-        Matrix4,
         ComponentDatatype,
+        defaultValue,
+        defined,
+        destroyObject,
+        DeveloperError,
+        FAR,
+        Matrix4,
         PrimitiveType,
-        BoundingSphere,
         BufferUsage,
-        BlendingState,
-        DrawCommand,
         createShaderSource,
-        CullFace,
-        Pass,
-        Material,
-        ShadersSensorVolume,
-        CustomSensorVolumeVS,
+        DrawCommand,
         CustomSensorVolumeFS,
+        CustomSensorVolumeVS,
+        ShadersSensorVolume,
+        BlendingState,
+        CullFace,
+        Material,
+        Pass,
         SceneMode) {
     "use strict";
 
@@ -139,20 +139,11 @@ define([
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
          * // The sensor's opens upward, along the surface normal.
-         * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+         * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * sensor.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
-
-        /**
-         * DOC_TBA
-         *
-         * @type {BufferUsage}
-         * @default {@link BufferUsage.STATIC_DRAW}
-         */
-        this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
-        this._bufferUsage = this.bufferUsage;
 
         /**
          * DOC_TBA
@@ -168,7 +159,7 @@ define([
 
         /**
          * The surface appearance of the sensor.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -183,7 +174,7 @@ define([
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Material.StripeType);
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;
@@ -334,7 +325,7 @@ define([
             vertices[k++] = n.z;
         }
 
-        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), customSensorVolume.bufferUsage);
+        var vertexBuffer = context.createVertexBuffer(new Float32Array(vertices), BufferUsage.STATIC_DRAW);
         var stride = 2 * 3 * Float32Array.BYTES_PER_ELEMENT;
 
         var attributes = [{
@@ -454,10 +445,9 @@ define([
         }
 
         // Recreate vertex buffer when directions change
-        var directionsChanged = this._directionsDirty || (this._bufferUsage !== this.bufferUsage);
+        var directionsChanged = this._directionsDirty;
         if (directionsChanged) {
             this._directionsDirty = false;
-            this._bufferUsage = this.bufferUsage;
             this._va = this._va && this._va.destroy();
 
             var directions = this._directions;
@@ -501,7 +491,7 @@ define([
                     sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS]
                 });
 
-                frontFaceColorCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                frontFaceColorCommand.shaderProgram = context.replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeLocations);
                 frontFaceColorCommand.uniformMap = combine(this._uniforms, this._material._uniforms);
 
@@ -538,7 +528,7 @@ define([
                     pickColorQualifier : 'uniform'
                 });
 
-                pickCommand.shaderProgram = context.shaderCache.replaceShaderProgram(
+                pickCommand.shaderProgram = context.replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeLocations);
 
                 var that = this;
@@ -569,8 +559,8 @@ define([
      */
     CustomSensorVolume.prototype.destroy = function() {
         this._frontFaceColorCommand.vertexArray = this._frontFaceColorCommand.vertexArray && this._frontFaceColorCommand.vertexArray.destroy();
-        this._frontFaceColorCommand.shaderProgram = this._frontFaceColorCommand.shaderProgram && this._frontFaceColorCommand.shaderProgram.release();
-        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.release();
+        this._frontFaceColorCommand.shaderProgram = this._frontFaceColorCommand.shaderProgram && this._frontFaceColorCommand.shaderProgram.destroy();
+        this._pickCommand.shaderProgram = this._pickCommand.shaderProgram && this._pickCommand.shaderProgram.destroy();
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };

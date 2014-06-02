@@ -5,9 +5,9 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -23,30 +23,30 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
-        '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/createShaderSource',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../ThirdParty/gltfDefaults',
+        './BlendingState',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
         './ModelMesh',
         './ModelNode',
         './ModelTypes',
-        './SceneMode',
-        '../ThirdParty/gltfDefaults'
+        './Pass',
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         combine,
+        defaultValue,
         defined,
         defineProperties,
-        defaultValue,
         destroyObject,
         DeveloperError,
         Event,
@@ -62,21 +62,21 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
-        BlendingState,
         BufferUsage,
         createShaderSource,
         DrawCommand,
-        Pass,
         TextureMinificationFilter,
         TextureWrap,
+        gltfDefaults,
+        BlendingState,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
         ModelMesh,
         ModelNode,
         ModelTypes,
-        SceneMode,
-        gltfDefaults) {
+        Pass,
+        SceneMode) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -152,13 +152,13 @@ define([
      * @alias Model
      * @constructor
      *
-     * @param {Object} [options.gltf=undefined] The object for the glTF JSON.
+     * @param {Object} [options.gltf] The object for the glTF JSON.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the model is picked with {@link Scene#pick}.
+     * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
@@ -170,32 +170,8 @@ define([
     var Model = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        /**
-         * The object for the glTF JSON, including properties with default values omitted
-         * from the JSON provided to this model.
-         *
-         * @type {Object}
-         *
-         * @default undefined
-         *
-         * @readonly
-         */
-        this.gltf = gltfDefaults(options.gltf);
-
-        /**
-         * The base path that paths in the glTF JSON are relative to.  The base
-         * path is the same path as the path containing the .json file
-         * minus the .json file, when binary, image, and shader files are
-         * in the same directory as the .json.  When this is <code>''</code>,
-         * the app's base path is used.
-         *
-         * @type {String}
-         *
-         * @default ''
-         *
-         * @readonly
-         */
-        this.basePath = defaultValue(options.basePath, '');
+        this._gltf = gltfDefaults(options.gltf);
+        this._basePath = defaultValue(options.basePath, '');
 
         /**
          * Determines if the model primitive will be shown.
@@ -217,8 +193,7 @@ define([
          * @default {@link Matrix4.IDENTITY}
          *
          * @example
-         * var origin = ellipsoid.cartographicToCartesian(
-         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
          *
          * @see Transforms.eastNorthUpToFixedFrame
@@ -368,6 +343,43 @@ define([
 
     defineProperties(Model.prototype, {
         /**
+         * The object for the glTF JSON, including properties with default values omitted
+         * from the JSON provided to this model.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Object}
+         * @readonly
+         *
+         * @default undefined
+         */
+        gltf : {
+            get : function() {
+                return this._gltf;
+            }
+        },
+
+        /**
+         * The base path that paths in the glTF JSON are relative to.  The base
+         * path is the same path as the path containing the .json file
+         * minus the .json file, when binary, image, and shader files are
+         * in the same directory as the .json.  When this is <code>''</code>,
+         * the app's base path is used.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default ''
+         */
+        basePath : {
+            get : function() {
+                return this._basePath;
+            }
+        },
+
+        /**
          * The model's bounding sphere in its local coordinate system.  This does not take into
          * account glTF animation and skins or {@link Model#scale}.
          *
@@ -477,8 +489,7 @@ define([
      * }));
      *
      * // Example 2. Create model and provide all properties and events
-     * var origin = ellipsoid.cartographicToCartesian(
-     *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+     * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
      *
      * var model = scene.primitives.add(Model.fromGltf({
@@ -516,8 +527,8 @@ define([
         var model = new Model(options);
 
         loadText(url, options.headers).then(function(data) {
-            model.gltf = gltfDefaults(JSON.parse(data));
-            model.basePath = basePath;
+            model._gltf = gltfDefaults(JSON.parse(data));
+            model._basePath = basePath;
         });
 
         return model;
@@ -942,7 +953,7 @@ define([
         var vs = shaders[program.vertexShader];
         var fs = shaders[program.fragmentShader];
 
-        model._rendererResources.programs[name] = context.shaderCache.getShaderProgram(vs, fs, attributeLocations);
+        model._rendererResources.programs[name] = context.createShaderProgram(vs, fs, attributeLocations);
 
         if (model.allowPicking) {
             // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
@@ -950,7 +961,7 @@ define([
                 sources : [fs],
                 pickColorQualifier : 'uniform'
             });
-            model._rendererResources.pickPrograms[name] = context.shaderCache.getShaderProgram(vs, pickFS, attributeLocations);
+            model._rendererResources.pickPrograms[name] = context.createShaderProgram(vs, pickFS, attributeLocations);
         }
     }
 
@@ -1730,19 +1741,20 @@ define([
                     mesh : runtimeMeshes[mesh.name]
                 };
 
-                var command = new DrawCommand();
-                command.boundingVolume = new BoundingSphere(); // updated in update()
-                command.modelMatrix = new Matrix4();           // computed in update()
-                command.primitiveType = primitive.primitive;
-                command.vertexArray = vertexArray;
-                command.count = count;
-                command.offset = offset;
-                command.shaderProgram = rendererPrograms[instanceProgram.program];
-                command.uniformMap = uniformMap;
-                command.renderState = rs;
-                command.owner = owner;
-                command.debugShowBoundingVolume = debugShowBoundingVolume;
-                command.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                var command = new DrawCommand({
+                    boundingVolume : new BoundingSphere(), // updated in update()
+                    modelMatrix : new Matrix4(),           // computed in update()
+                    primitiveType : primitive.primitive,
+                    vertexArray : vertexArray,
+                    count : count,
+                    offset : offset,
+                    shaderProgram : rendererPrograms[instanceProgram.program],
+                    uniformMap : uniformMap,
+                    renderState : rs,
+                    owner : owner,
+                    debugShowBoundingVolume : debugShowBoundingVolume,
+                    pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                });
                 commands.push(command);
 
                 var pickCommand;
@@ -1756,18 +1768,19 @@ define([
                             czm_pickColor : createPickColorFunction(pickId.color)
                         });
 
-                    pickCommand = new DrawCommand();
-                    pickCommand.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand.modelMatrix = new Matrix4();           // computed in update()
-                    pickCommand.primitiveType = primitive.primitive;
-                    pickCommand.vertexArray = vertexArray;
-                    pickCommand.count = count;
-                    pickCommand.offset = offset;
-                    pickCommand.shaderProgram = rendererPickPrograms[instanceProgram.program];
-                    pickCommand.uniformMap = pickUniformMap;
-                    pickCommand.renderState = rs;
-                    pickCommand.owner = owner;
-                    pickCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
+                    pickCommand = new DrawCommand({
+                        boundingVolume : new BoundingSphere(), // updated in update()
+                        modelMatrix : new Matrix4(),           // computed in update()
+                        primitiveType : primitive.primitive,
+                        vertexArray : vertexArray,
+                        count : count,
+                        offset : offset,
+                        shaderProgram : rendererPickPrograms[instanceProgram.program],
+                        uniformMap : pickUniformMap,
+                        renderState : rs,
+                        owner : owner,
+                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                    });
                     pickCommands.push(pickCommand);
                 }
 
@@ -2184,7 +2197,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Model#destroy
      */
@@ -2203,7 +2216,7 @@ define([
     function release(property) {
         for (var name in property) {
             if (property.hasOwnProperty(name)) {
-                property[name].release();
+                property[name].destroy();
             }
         }
     }
@@ -2218,7 +2231,7 @@ define([
      *
      * @memberof Model
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

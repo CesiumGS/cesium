@@ -1,12 +1,12 @@
 /*global defineSuite */
 defineSuite([
-         'Core/buildModuleUrl',
-         'Core/loadText',
-         'ThirdParty/Uri'
-     ], function(
-         buildModuleUrl,
-         loadText,
-         Uri) {
+        'Core/buildModuleUrl',
+        'Core/loadText',
+        'ThirdParty/Uri'
+    ], function(
+        buildModuleUrl,
+        loadText,
+        Uri) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

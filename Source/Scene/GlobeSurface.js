@@ -10,23 +10,27 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
-        '../Core/Rectangle',
         '../Core/FeatureDetection',
+        '../Core/GeometryPipeline',
         '../Core/getTimestamp',
+        '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
+        '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        '../ThirdParty/when',
         './ImageryLayer',
         './ImageryState',
+        './Pass',
         './SceneMode',
-        './TerrainProvider',
+        './Tile',
         './TileReplacementQueue',
-        './TileState',
-        '../ThirdParty/when'
+        './TileState'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -38,23 +42,27 @@ define([
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
-        Rectangle,
         FeatureDetection,
+        GeometryPipeline,
         getTimestamp,
+        IndexDatatype,
         Intersect,
         Matrix4,
         PrimitiveType,
         Queue,
+        Rectangle,
+        TerrainProvider,
         WebMercatorProjection,
+        BufferUsage,
         DrawCommand,
-        Pass,
+        when,
         ImageryLayer,
         ImageryState,
+        Pass,
         SceneMode,
-        TerrainProvider,
+        Tile,
         TileReplacementQueue,
-        TileState,
-        when) {
+        TileState) {
     "use strict";
 
     /**
@@ -366,7 +374,7 @@ define([
         if (!defined(surface._levelZeroTiles)) {
             if (surface._terrainProvider.ready) {
                 var terrainTilingScheme = surface._terrainProvider.tilingScheme;
-                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+                surface._levelZeroTiles = Tile.createLevelZeroTiles(terrainTilingScheme);
             } else {
                 // Nothing to do until the terrain provider is ready.
                 return;
@@ -387,7 +395,7 @@ define([
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             surface._tileReplacementQueue.markTileRendered(tile);
-            if (tile.state !== TileState.READY) {
+            if (tile.state < TileState.READY) {
                 queueTileLoad(surface, tile);
             }
             if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
@@ -432,8 +440,8 @@ define([
                     }
                 }
             } else {
-                ++debug.tilesWaitingForChildren;
-                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                // SSE is not good enough but either all children are upsampled (so there's no point in refining) or they're not all loaded yet.
+                // So render the current tile.
                 addTileToRenderList(surface, tile);
             }
         }
@@ -616,20 +624,28 @@ define([
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(surface, frameState, tile) {
         var allRenderable = true;
+        var allUpsampledOnly = true;
 
         var children = tile.children;
         for (var i = 0, len = children.length; i < len; ++i) {
             var child = children[i];
+
             surface._tileReplacementQueue.markTileRendered(child);
-            if (child.state !== TileState.READY) {
+
+            allUpsampledOnly = allUpsampledOnly && child.state === TileState.UPSAMPLED_ONLY;
+            allRenderable = allRenderable && child.isRenderable;
+
+            if (child.state < TileState.READY) {
                 queueTileLoad(surface, child);
-            }
-            if (!child.isRenderable) {
-                allRenderable = false;
             }
         }
 
-        return allRenderable;
+        if (!allRenderable) {
+            ++surface._debug.tilesWaitingForChildren;
+        }
+
+        // If all children are upsampled from this tile, we just render this tile instead of its children.
+        return allRenderable && !allUpsampledOnly;
     }
 
     function queueTileLoad(surface, tile) {
@@ -888,10 +904,10 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (!defined(command)) {
-                        command = new DrawCommand();
-                        command.owner = tile;
-                        command.cull = false;
-                        command.boundingVolume = new BoundingSphere();
+                        command = new DrawCommand({
+                            cull : false,
+                            boundingVolume : new BoundingSphere()
+                        });
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
                     }
@@ -1053,7 +1069,7 @@ define([
 
         when(tile.meshForWireframePromise, function(mesh) {
             if (tile.vertexArray === vertexArray) {
-                tile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, tile.vertexArray, mesh);
+                tile.wireframeVertexArray = createWireframeVertexArray(context, tile.vertexArray, mesh);
             }
             tile.meshForWireframePromise = undefined;
         });
@@ -1082,6 +1098,30 @@ define([
                 }
             }
         }
+    }
+
+    /**
+     * Creates a vertex array for wireframe rendering of a terrain tile.
+     *
+     * @private
+     *
+     * @param {Context} context The context in which to create the vertex array.
+     * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
+     *                      will share vertex buffers with this existing one.
+     * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
+     * @returns {VertexArray} The vertex array for wireframe rendering.
+     */
+    function createWireframeVertexArray(context, vertexArray, terrainMesh) {
+        var geometry = {
+            indices : terrainMesh.indices,
+            primitiveType : PrimitiveType.TRIANGLES
+        };
+
+        GeometryPipeline.toWireframe(geometry);
+
+        var wireframeIndices = geometry.indices;
+        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
     return GlobeSurface;

@@ -1,34 +1,36 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createCamera',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Matrix4',
-         'Core/PrimitiveType',
-         'Core/defaultValue',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Scene/FrameState',
-         'Scene/OrthographicFrustum',
-         'Scene/SceneMode'
-     ], 'Renderer/AutomaticUniforms', function(
-         createCamera,
-         createContext,
-         destroyContext,
-         createFrameState,
-         Cartesian2,
-         Cartesian3,
-         Matrix4,
-         PrimitiveType,
-         defaultValue,
-         BufferUsage,
-         ClearCommand,
-         FrameState,
-         OrthographicFrustum,
-         SceneMode) {
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/defaultValue',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Scene/FrameState',
+        'Scene/OrthographicFrustum',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext'
+    ], 'Renderer/AutomaticUniforms', function(
+        Cartesian2,
+        Cartesian3,
+        defaultValue,
+        Matrix4,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        FrameState,
+        OrthographicFrustum,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -79,12 +81,13 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             modelMatrix : modelMatrix
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();

@@ -1,26 +1,26 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Core/destroyObject',
-        '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/BoundingRectangle',
-        './Material',
-        '../Renderer/BlendingState',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
-        '../Shaders/ViewportQuadFS'
+        '../Shaders/ViewportQuadFS',
+        './BlendingState',
+        './Material',
+        './Pass'
     ], function(
-        Color,
-        destroyObject,
-        defined,
-        DeveloperError,
         BoundingRectangle,
-        Material,
-        BlendingState,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
         createShaderSource,
-        Pass,
-        ViewportQuadFS) {
+        ViewportQuadFS,
+        BlendingState,
+        Material,
+        Pass) {
     "use strict";
 
     /**
@@ -67,7 +67,7 @@ define([
 
         /**
          * The surface appearance of the viewport quad.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
-         * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
+         * {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}.
          * <p>
          * The default material is <code>Material.ColorType</code>.
          * </p>
@@ -81,7 +81,7 @@ define([
          * // 2. Change material to horizontal stripes
          * viewportQuad.material = Cesium.Material.fromType(Material.StripeType);
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = material;
         this._material = undefined;
@@ -127,7 +127,7 @@ define([
                 this._material = this.material;
 
                 if (defined(this._overlayCommand)) {
-                    this._overlayCommand.shaderProgram.release();
+                    this._overlayCommand.shaderProgram.destroy();
                 }
 
                 var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
@@ -183,7 +183,7 @@ define([
      */
     ViewportQuad.prototype.destroy = function() {
         if (defined(this._overlayCommand)) {
-            this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.release();
+            this._overlayCommand.shaderProgram = this._overlayCommand.shaderProgram && this._overlayCommand.shaderProgram.destroy();
         }
         return destroyObject(this);
     };

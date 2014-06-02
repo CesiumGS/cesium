@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/LinearSpline',
-         'Core/Cartesian3'
-     ], function(
-         LinearSpline,
-         Cartesian3) {
+        'Core/LinearSpline',
+        'Core/Cartesian3'
+    ], function(
+        LinearSpline,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,16 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/NavigationHelpButton/NavigationHelpButton',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/EventHelper'
-     ], function(
-         NavigationHelpButton,
-         Ellipsoid,
-         createScene,
-         destroyScene,
-         EventHelper) {
+        'Widgets/NavigationHelpButton/NavigationHelpButton',
+        'Specs/EventHelper'
+    ], function(
+        NavigationHelpButton,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -98,13 +92,13 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if description is undefined', function() {
+    it('throws if options is undefined', function() {
         expect(function() {
             return new NavigationHelpButton(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('throws if description.container is undefined', function() {
+    it('throws if options.container is undefined', function() {
         expect(function() {
             return new NavigationHelpButton({
                 container : undefined

@@ -1,17 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumInspector/CesiumInspector',
-         'Scene/Globe',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         CesiumInspector,
-         Globe,
-         Ellipsoid,
-         createScene,
-         destroyScene
-     ) {
+        'Widgets/CesiumInspector/CesiumInspector',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        CesiumInspector,
+        Ellipsoid,
+        Globe,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -45,18 +44,18 @@ defineSuite([
     it('constructor throws with no element', function() {
         expect(function() {
             return new CesiumInspector();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
             return new CesiumInspector('does not exist', scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no scene', function() {
         expect(function() {
             return new CesiumInspector(document.body);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

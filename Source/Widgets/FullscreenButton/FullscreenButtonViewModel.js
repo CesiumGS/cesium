@@ -5,16 +5,16 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Fullscreen',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defineProperties,
         destroyObject,
         DeveloperError,
         Fullscreen,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
@@ -46,7 +46,7 @@ define([
          * Gets or sets whether or not fullscreen functionality should be enabled.  This property is observable.
          *
          * @type {Boolean}
-         * @see Fullscreen.isFullscreenEnabled
+         * @see Fullscreen.enabled
          */
         this.isFullscreenEnabled = undefined;
         knockout.defineProperty(this, 'isFullscreenEnabled', {

@@ -27,17 +27,17 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    function createPrimitives(scene, ellipsoid) {
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
 
         // Create a simple polygon
         var polygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                 Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-                 Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-                 Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-                 Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-                 Cesium.Cartographic.fromDegrees(-68.0, 40.0)])
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                 -72.0, 40.0,
+                 -70.0, 35.0,
+                 -75.0, 30.0,
+                 -70.0, 30.0,
+                 -68.0, 40.0])
         }));
         Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
         
@@ -52,32 +52,32 @@ require(['Cesium'], function(Cesium) {
 
         // Create a nested polygon with holes
         var hierarchy = {
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                 Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-                 Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-                 Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-                 Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                 -109.0, 30.0,
+                 -95.0, 30.0,
+                 -95.0, 40.0,
+                 -109.0, 40.0
              ]),
              holes : [{
-                 positions : ellipsoid.cartographicArrayToCartesianArray([
-                     Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-                     Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-                     Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-                     Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+                 positions : Cesium.Cartesian3.fromDegreesArray([
+                     -107.0, 31.0,
+                     -107.0, 39.0,
+                     -97.0, 39.0,
+                     -97.0, 31.0
                  ]),
                  holes : [{
-                     positions : ellipsoid.cartographicArrayToCartesianArray([
-                         Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-                         Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-                         Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-                         Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+                     positions : Cesium.Cartesian3.fromDegreesArray([
+                         -105.0, 33.0,
+                         -99.0, 33.0,
+                         -99.0, 37.0,
+                         -105.0, 37.0
                      ]),
                      holes : [{
-                         positions : ellipsoid.cartographicArrayToCartesianArray([
-                             Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-                             Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-                             Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-                             Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+                         positions : Cesium.Cartesian3.fromDegreesArray([
+                             -103.0, 34.0,
+                             -101.0, 34.0,
+                             -101.0, 36.0,
+                             -103.0, 36.0
                          ])
                     }]
                 }]
@@ -99,11 +99,11 @@ require(['Cesium'], function(Cesium) {
 
         // Apply a material to a polygon
         var checkeredPolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-90.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-80.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-80.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-90.0, 40.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -90.0, 30.0,
+                -80.0, 30.0,
+                -80.0, 40.0,
+                -90.0, 40.0
             ]),
             material : Cesium.Material.fromType('Checkerboard')
         }));
@@ -116,7 +116,7 @@ require(['Cesium'], function(Cesium) {
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-    createPrimitives(viewer.scene, viewer.scene.globe.ellipsoid);
+    createPrimitives(viewer.scene);
 
     Sandcastle.finishedLoading();
 });

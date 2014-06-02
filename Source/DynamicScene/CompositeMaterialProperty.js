@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define([
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -68,7 +69,7 @@ define(['../Core/defined',
      * @memberof CompositeMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     CompositeMaterialProperty.prototype.getType = function(time) {
         //>>includeStart('debug', pragmas.debug);

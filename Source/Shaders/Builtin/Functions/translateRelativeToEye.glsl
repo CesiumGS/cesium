@@ -6,7 +6,7 @@
  * respectively.
  * <p>
  * This technique, called GPU RTE, eliminates jittering artifacts when using large coordinates as
- * described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
+ * described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
  * </p>
  *
  * @name czm_translateRelativeToEye

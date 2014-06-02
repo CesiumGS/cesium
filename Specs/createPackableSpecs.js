@@ -33,19 +33,19 @@ define(function() {
             var array = [];
             expect(function() {
                 packable.pack(undefined, array);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('pack throws with undefined array', function() {
             expect(function() {
                 packable.pack(instance, undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('unpack throws with undefined array', function() {
             expect(function() {
                 packable.unpack(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
     }
 

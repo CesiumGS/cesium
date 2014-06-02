@@ -1,24 +1,24 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Color',
-        '../Renderer/createShaderSource',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
-        defined,
-        destroyObject,
         Cartesian2,
         Color,
-        createShaderSource,
-        ClearCommand,
-        PixelDatatype,
+        defined,
+        destroyObject,
         PixelFormat,
+        ClearCommand,
+        createShaderSource,
+        PixelDatatype,
         RenderbufferFormat,
         FXAAFS) {
     "use strict";
@@ -33,10 +33,11 @@ define([
         this._fbo = undefined;
         this._command = undefined;
 
-        var clearCommand = new ClearCommand();
-        clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        clearCommand.depth = 1.0;
-        clearCommand.owner = this;
+        var clearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            owner : this
+        });
         this._clearCommand = clearCommand;
     };
 
@@ -52,7 +53,7 @@ define([
         fxaa._depthRenderbuffer = undefined;
 
         if (defined(fxaa._command)) {
-            fxaa._command.shaderProgram = fxaa._command.shaderProgram && fxaa._command.shaderProgram.release();
+            fxaa._command.shaderProgram = fxaa._command.shaderProgram && fxaa._command.shaderProgram.destroy();
             fxaa._command = undefined;
         }
     }

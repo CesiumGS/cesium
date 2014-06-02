@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Color',
-        '../Renderer/createShaderSource',
-        '../Renderer/BlendEquation',
-        '../Renderer/BlendFunction',
+        '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/createShaderSource',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Renderer/RenderState',
         '../Shaders/AdjustTranslucentFS',
-        '../Shaders/CompositeOITFS'
+        '../Shaders/CompositeOITFS',
+        './BlendEquation',
+        './BlendFunction'
     ], function(
+        Color,
         defined,
         destroyObject,
-        Color,
-        createShaderSource,
-        BlendEquation,
-        BlendFunction,
-        ClearCommand,
-        PixelDatatype,
         PixelFormat,
+        ClearCommand,
+        createShaderSource,
+        PixelDatatype,
         RenderState,
         AdjustTranslucentFS,
-        CompositeOITFS) {
+        CompositeOITFS,
+        BlendEquation,
+        BlendFunction) {
     "use strict";
     /*global WebGLRenderingContext*/
 
@@ -49,25 +49,22 @@ define([
         this._adjustTranslucentFBO = undefined;
         this._adjustAlphaFBO = undefined;
 
-        var opaqueClearCommand = new ClearCommand();
-        opaqueClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        opaqueClearCommand.owner = this;
-        this._opaqueClearCommand = opaqueClearCommand;
-
-        var translucentMRTClearCommand = new ClearCommand();
-        translucentMRTClearCommand.color = new Color(0.0, 0.0, 0.0, 1.0);
-        translucentMRTClearCommand.owner = this;
-        this._translucentMRTClearCommand = translucentMRTClearCommand;
-
-        var translucentMultipassClearCommand = new ClearCommand();
-        translucentMultipassClearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-        translucentMultipassClearCommand.owner = this;
-        this._translucentMultipassClearCommand = translucentMultipassClearCommand;
-
-        var alphaClearCommand= new ClearCommand();
-        alphaClearCommand.color = new Color(1.0, 1.0, 1.0, 1.0);
-        alphaClearCommand.owner = this;
-        this._alphaClearCommand = alphaClearCommand;
+        this._opaqueClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            owner : this
+        });
+        this._translucentMRTClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 1.0),
+            owner : this
+        });
+        this._translucentMultipassClearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            owner : this
+        });
+        this._alphaClearCommand = new ClearCommand({
+            color : new Color(1.0, 1.0, 1.0, 1.0),
+            owner : this
+        });
 
         this._translucentRenderStateCache = {};
         this._alphaRenderStateCache = {};
@@ -407,7 +404,7 @@ define([
                 source +
                 '}\n';
 
-            shader = context.shaderCache.getShaderProgram(vs, newSourceFS, attributeLocations);
+            shader = context.createShaderProgram(vs, newSourceFS, attributeLocations);
             cache[id] = shader;
         }
 
@@ -432,7 +429,7 @@ define([
         var shaderProgram;
         var j;
 
-        var context = scene._context;
+        var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
@@ -475,7 +472,7 @@ define([
     }
 
     function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands) {
-        var context = scene._context;
+        var context = scene.context;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
@@ -552,22 +549,22 @@ define([
         destroyResources(this);
 
         if (defined(this._compositeCommand)) {
-            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.release();
+            this._compositeCommand.shaderProgram = this._compositeCommand.shaderProgram && this._compositeCommand.shaderProgram.destroy();
         }
 
         if (defined(this._adjustTranslucentCommand)) {
-            this._adjustTranslucentCommand.shaderProgram = this._adjustTranslucentCommand.shaderProgram && this._adjustTranslucentCommand.shaderProgram.release();
+            this._adjustTranslucentCommand.shaderProgram = this._adjustTranslucentCommand.shaderProgram && this._adjustTranslucentCommand.shaderProgram.destroy();
         }
 
         if (defined(this._adjustAlphaCommand)) {
-            this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.release();
+            this._adjustAlphaCommand.shaderProgram = this._adjustAlphaCommand.shaderProgram && this._adjustAlphaCommand.shaderProgram.destroy();
         }
 
         var name;
         var cache = this._translucentShaderCache;
         for (name in cache) {
             if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].release();
+                cache[name].destroy();
             }
         }
         this._translucentShaderCache = {};
@@ -575,7 +572,7 @@ define([
         cache = this._alphaShaderCache;
         for (name in cache) {
             if (cache.hasOwnProperty(name) && defined(cache[name])) {
-                cache[name].release();
+                cache[name].destroy();
             }
         }
         this._alphaShaderCache = {};

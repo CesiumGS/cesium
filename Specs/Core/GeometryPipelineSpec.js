@@ -1,40 +1,40 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/GeometryPipeline',
-         'Core/PrimitiveType',
-         'Core/ComponentDatatype',
-         'Core/BoxGeometry',
-         'Core/EllipsoidGeometry',
-         'Core/Ellipsoid',
-         'Core/Cartesian3',
-         'Core/EncodedCartesian3',
-         'Core/Matrix4',
-         'Core/Tipsify',
-         'Core/GeographicProjection',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryInstance',
-         'Core/VertexFormat',
-         'Core/Math',
-         'Core/BoundingSphere'
-     ], function(
-         GeometryPipeline,
-         PrimitiveType,
-         ComponentDatatype,
-         BoxGeometry,
-         EllipsoidGeometry,
-         Ellipsoid,
-         Cartesian3,
-         EncodedCartesian3,
-         Matrix4,
-         Tipsify,
-         GeographicProjection,
-         Geometry,
-         GeometryAttribute,
-         GeometryInstance,
-         VertexFormat,
-         CesiumMath,
-         BoundingSphere) {
+        'Core/GeometryPipeline',
+        'Core/BoundingSphere',
+        'Core/BoxGeometry',
+        'Core/Cartesian3',
+        'Core/ComponentDatatype',
+        'Core/Ellipsoid',
+        'Core/EllipsoidGeometry',
+        'Core/EncodedCartesian3',
+        'Core/GeographicProjection',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryInstance',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Core/Tipsify',
+        'Core/VertexFormat'
+    ], function(
+        GeometryPipeline,
+        BoundingSphere,
+        BoxGeometry,
+        Cartesian3,
+        ComponentDatatype,
+        Ellipsoid,
+        EllipsoidGeometry,
+        EncodedCartesian3,
+        GeographicProjection,
+        Geometry,
+        GeometryAttribute,
+        GeometryInstance,
+        CesiumMath,
+        Matrix4,
+        PrimitiveType,
+        Tipsify,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -132,7 +132,7 @@ defineSuite([
                 indices : [],
                 primitiveType : PrimitiveType.POINTS
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors', function() {
@@ -172,7 +172,7 @@ defineSuite([
     it('createLineSegmentsForVectors throws without geometry.attributes.position', function() {
         expect(function() {
             GeometryPipeline.createLineSegmentsForVectors();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors throws when geometry.attributes does not have an attributeName property', function() {
@@ -339,7 +339,7 @@ defineSuite([
             });
 
             geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
@@ -568,7 +568,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectTo2D', function() {
@@ -700,7 +700,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('encodeAttribute encodes positions', function() {

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Cartesian3',
+define([
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -15,15 +16,15 @@ define(['../Core/Cartesian3',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/PrimitiveState',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Cartesian3,
         Color,
@@ -41,15 +42,15 @@ define(['../Core/Cartesian3',
         Matrix3,
         Matrix4,
         ShowGeometryInstanceAttribute,
-        ColorMaterialProperty,
-        ConstantProperty,
-        MaterialProperty,
-        Property,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ColorMaterialProperty,
+        ConstantProperty,
+        MaterialProperty,
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -473,7 +474,7 @@ define(['../Core/Cartesian3',
      * @memberof EllipsoidGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

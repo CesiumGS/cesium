@@ -1,39 +1,39 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
+        './ComponentDatatype',
+        './CornerType',
+        './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './CornerType',
-        './CorridorGeometryLibrary',
-        './ComponentDatatype',
         './Ellipsoid',
         './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
         './PrimitiveType',
-        './BoundingSphere',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './VertexFormat'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        ComponentDatatype,
+        CornerType,
+        CorridorGeometryLibrary,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        CornerType,
-        CorridorGeometryLibrary,
-        ComponentDatatype,
         Ellipsoid,
         Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
         PrimitiveType,
-        BoundingSphere,
-        GeometryAttribute,
-        GeometryAttributes,
         VertexFormat) {
     "use strict";
 
@@ -626,24 +626,21 @@ define([
      * @alias CorridorGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {Cartesain3} positions that define the center of the corridor.
+     * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
      * @param {Number} options.width The distance between the edges of the corridor in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance in meters between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @see CorridorGeometry#createGeometry
+     * @see CorridorGeometry.createGeometry
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
-     *     ]),
+     *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
      *   width : 100000
      * });
      */

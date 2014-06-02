@@ -7,7 +7,7 @@ define(function() {
      *
      * @exports createGuid
      *
-     * @see <a href='http://www.ietf.org/rfc/rfc4122.txt'>RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace</a>
+     * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
      *
      * @example
      * this.guid = Cesium.createGuid();

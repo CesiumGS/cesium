@@ -1,17 +1,59 @@
 /*global define*/
 define([
+        './equals',
         'Core/defined',
         'Core/DeveloperError',
-        './equals'
+        'Core/RuntimeError'
     ], function(
+        equals,
         defined,
         DeveloperError,
-        equals) {
+        RuntimeError) {
     "use strict";
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
             return 'Expected function \'' + item + '\' to exist on ' + actualPrototype.constructor.name + ' because it should implement interface ' + expectedInterfacePrototype.constructor.name + '.';
+        };
+    }
+
+    function makeThrowFunction(debug, Type, name) {
+        if (debug) {
+            return function(expected) {
+                // based on the built-in Jasmine toThrow matcher
+                var result = false;
+                var exception;
+
+                if (typeof this.actual !== 'function') {
+                    throw new Error('Actual is not a function');
+                }
+
+                try {
+                    this.actual();
+                } catch (e) {
+                    exception = e;
+                }
+
+                if (exception) {
+                    result = exception instanceof Type;
+                }
+
+                var not = this.isNot ? 'not ' : '';
+
+                this.message = function() {
+                    if (result) {
+                        return ['Expected function ' + not + 'to throw ' + name + ' , but it threw', exception.message || exception].join(' ');
+                    } else {
+                        return 'Expected function to throw ' + name + '.';
+                    }
+                };
+
+                return result;
+            };
+        }
+
+        return function() {
+            return this.isNot ? false : true;
         };
     }
 
@@ -44,10 +86,10 @@ define([
                     if (defined(a)) {
                         if (typeof a.equalsEpsilon === 'function') {
                             return a.equalsEpsilon(b, epsilon);
-                        } else if(a instanceof Object) {
+                        } else if (a instanceof Object) {
                             // Check if the current object has a static function named 'equalsEpsilon'
                             to_run = Object.getPrototypeOf(a).constructor.equalsEpsilon;
-                            if( typeof to_run === 'function') {
+                            if (typeof to_run === 'function') {
                                 return to_run(a, b, epsilon);
                             }
                         }
@@ -56,10 +98,10 @@ define([
                     if (defined(b)) {
                         if (typeof b.equalsEpsilon === 'function') {
                             return b.equalsEpsilon(a, epsilon);
-                        } else if(b instanceof Object) {
+                        } else if (b instanceof Object) {
                             // Check if the current object has a static function named 'equalsEpsilon'
                             to_run = Object.getPrototypeOf(b).constructor.equalsEpsilon;
-                            if( typeof to_run === 'function') {
+                            if (typeof to_run === 'function') {
                                 return to_run(b, a, epsilon);
                             }
                         }
@@ -101,45 +143,13 @@ define([
                 return this.actual instanceof expectedConstructor;
             },
 
-            toThrowDeveloperError : (function() {
-                if (debug) {
-                    return function(expected) {
-                        // based on the built-in Jasmine toThrow matcher
-                        var result = false;
-                        var exception;
+            toThrow : function(expectedConstructor) {
+                throw new Error('Do not use toThrow.  Use toThrowDeveloperError or toThrowRuntimeError instead.');
+            },
 
-                        if (typeof this.actual !== 'function') {
-                            throw new Error('Actual is not a function');
-                        }
+            toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
-                        try {
-                            this.actual();
-                        } catch (e) {
-                            exception = e;
-                        }
-
-                        if (exception) {
-                            result = exception instanceof DeveloperError;
-                        }
-
-                        var not = this.isNot ? "not " : "";
-
-                        this.message = function() {
-                            if (result) {
-                                return ["Expected function " + not + "to throw DeveloperError, but it threw", exception.message || exception].join(' ');
-                            } else {
-                                return "Expected function to throw DeveloperError.";
-                            }
-                        };
-
-                        return result;
-                    };
-                }
-
-                return function() {
-                    return this.isNot ? false : true;
-                };
-            }())
+            toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError')
         };
     }
 

@@ -3,16 +3,16 @@ define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
-        'Renderer/Pass',
         'Scene/CreditDisplay',
-        'Scene/FrameState'
+        'Scene/FrameState',
+        'Scene/Pass'
     ], function(
         BoundingRectangle,
         Color,
         ClearCommand,
-        Pass,
         CreditDisplay,
-        FrameState) {
+        FrameState,
+        Pass) {
     "use strict";
 
     function executeCommands(context, passState, commands) {
@@ -34,10 +34,11 @@ define([
         var commands = [];
         primitives.update(context, frameState, commands);
 
-        var clear = new ClearCommand();
-        clear.color = new Color(0.0, 0.0, 0.0, 0.0);
-        clear.depth = 1.0;
-        clear.stencil = 1.0;
+        var clear = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            stencil : 1.0
+        });
         clear.execute(context, passState);
 
         var opaqueCommands = [];

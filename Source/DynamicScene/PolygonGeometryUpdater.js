@@ -1,24 +1,25 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/PolygonGeometry',
-        '../Core/PolygonOutlineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/PolygonGeometry',
+        '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -27,19 +28,19 @@ define(['../Core/Color',
         defineProperties,
         destroyObject,
         DeveloperError,
-        PolygonGeometry,
-        PolygonOutlineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
+        PolygonGeometry,
+        PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
+        MaterialAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
-        Property,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive) {
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -453,7 +454,7 @@ define(['../Core/Color',
      * @memberof PolygonGeometryUpdater
      * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
