@@ -439,11 +439,7 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        if (defined(packetData.reference)) {
-            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
-            return;
-        }
-
+        var isReference = defined(packetData.reference);
         var unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = defaultValue(type.packedLength, 1);
@@ -452,7 +448,9 @@ define([
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            if (defined(type.unpack)) {
+            if (isReference) {
+                object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            } else if (defined(type.unpack)) {
                 object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
             } else {
                 object[propertyName] = new ConstantProperty(unwrappedInterval);
@@ -488,7 +486,9 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            if (defined(type.unpack)) {
+            if (isReference) {
+                combinedInterval.data = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            } else if (defined(type.unpack)) {
                 combinedInterval.data = type.unpack(unwrappedInterval, 0);
             } else {
                 combinedInterval.data = unwrappedInterval;
@@ -496,16 +496,20 @@ define([
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                property = new TimeIntervalCollectionProperty();
+                if (isReference) {
+                    property = new CompositeProperty();
+                } else {
+                    property = new TimeIntervalCollectionProperty();
+                }
                 object[propertyName] = property;
             }
 
-            if (property instanceof TimeIntervalCollectionProperty) {
+            if (!isReference && property instanceof TimeIntervalCollectionProperty) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositeProperty) {
                 //If the collection was already a CompositeProperty, use it.
-                combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositeProperty but preserve the existing data.
@@ -522,7 +526,7 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantProperty and add it.
-                combinedInterval.data = new ConstantProperty(combinedInterval.data);
+                combinedInterval.data = isReference ? combinedInterval.data : new ConstantProperty(combinedInterval.data);
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -589,22 +593,30 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        if (defined(packetData.reference)) {
-            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
-            return;
-        }
+        var isReference = defined(packetData.reference);
 
-        var referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
-        var unwrappedInterval = unwrapCartesianInterval(packetData);
+        var referenceFrame;
+        var unwrappedInterval;
+        var isSampled = false;
+        var unwrappedIntervalLength;
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = Cartesian3.packedLength;
-        var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-        var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+
+        if (!isReference) {
+            referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
+            unwrappedInterval = unwrapCartesianInterval(packetData);
+            unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+            isSampled = unwrappedIntervalLength > packedLength;
+        }
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
-            object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
-            return true;
+            if (isReference) {
+                object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            } else {
+                object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
+            }
+            return;
         }
 
         var property = object[propertyName];
@@ -635,20 +647,28 @@ define([
         if (!isSampled && hasInterval) {
             //Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
-            combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
+            if (isReference) {
+                combinedInterval.data = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
+            } else {
+                combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
+            }
 
             //If no property exists, simply use a new interval collection
             if (!defined(property)) {
-                property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                if (isReference) {
+                    property = new CompositePositionProperty(referenceFrame);
+                } else {
+                    property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                }
                 object[propertyName] = property;
             }
 
-            if (property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
+            if (!isReference && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
                 //If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
                 //If the collection was already a CompositePositionProperty, use it.
-                combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositePositionProperty but preserve the existing data.
@@ -665,7 +685,7 @@ define([
                 property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantPositionProperty and add it.
-                combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
+                combinedInterval.data = isReference ? combinedInterval.data : new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 property.intervals.addInterval(combinedInterval);
             }
 
@@ -727,11 +747,6 @@ define([
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
-        }
-
-        if (defined(packetData.reference)) {
-            object[propertyName] = ReferenceProperty.fromString(dynamicObjectCollection, packetData.reference);
-            return;
         }
 
         var property = object[propertyName];

@@ -1997,7 +1997,7 @@ defineSuite([
         expect(dynamicObject.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlRectangle.maximumHeights.array);
     });
 
-    it('CZML can use constant reference properies', function() {
+    it('Can use constant reference properties', function() {
         var time = new JulianDate();
         var packets = [{
             id : 'targetId',
@@ -2023,7 +2023,7 @@ defineSuite([
         expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
     });
 
-    it('CZML can use interval reference properies', function() {
+    it('Can use interval reference properties', function() {
         var packets = [{
             id : 'targetId',
             point : {
@@ -2061,7 +2061,7 @@ defineSuite([
         expect(targetObject2.point.pixelSize.getValue(time2)).toEqual(referenceObject.point.pixelSize.getValue(time2));
     });
 
-    it('CZML can use constant position reference properies', function() {
+    it('Can use constant reference properties for position', function() {
         var time = new JulianDate();
 
         var packets = [{
@@ -2084,5 +2084,69 @@ defineSuite([
 
         expect(referenceObject.position instanceof ReferenceProperty).toBe(true);
         expect(targetObject.position.getValue(time)).toEqual(referenceObject.position.getValue(time));
+    });
+
+    it('Can use interval reference properties for positions', function() {
+        var time = new JulianDate();
+
+        var packets = [{
+            id : 'targetId',
+            position : {
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        }, {
+            id : 'targetId2',
+            position : {
+                cartesian : [4.0, 5.0, 6.0]
+            }
+        }, {
+            id : 'referenceId',
+            position : [{
+                interval : '2012/2013',
+                reference : 'targetId#position'
+            }, {
+                interval : '2013/2014',
+                reference : 'targetId2#position'
+            }]
+        }];
+
+        var time1 = JulianDate.fromIso8601('2012');
+        var time2 = JulianDate.fromIso8601('2014');
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+
+        var targetObject = dataSource.dynamicObjects.getById('targetId');
+        var targetObject2 = dataSource.dynamicObjects.getById('targetId2');
+        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+
+        expect(targetObject.position.getValue(time1)).toEqual(referenceObject.position.getValue(time1));
+        expect(targetObject2.position.getValue(time2)).toEqual(referenceObject.position.getValue(time2));
+    });
+
+    it('Can reference properties before they exist.', function() {
+        var time = new JulianDate();
+        var packets = [{
+            id : 'referenceId',
+            point : {
+                pixelSize : {
+                    reference : 'targetId#point.pixelSize'
+                }
+            }
+        }, {
+            id : 'targetId',
+            point : {
+                pixelSize : 1.0
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+
+        var targetObject = dataSource.dynamicObjects.getById('targetId');
+        var referenceObject = dataSource.dynamicObjects.getById('referenceId');
+
+        expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+        expect(targetObject.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
     });
 });
