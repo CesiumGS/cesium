@@ -506,7 +506,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated moon position
      */
-    Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame = function(date, result){
+    Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(date, result){
         if (!defined(date)) {
             date = new JulianDate();
         }

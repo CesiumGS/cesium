@@ -4,9 +4,9 @@ Change Log
 Beta Releases
 -------------
 
-### b30 - 2014-07-01
+### 1.0 - 2014-07-01
 * Breaking changes
-  *
+  * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 
 ### b29 - 2014-06-02
