@@ -36,7 +36,9 @@ define([
          * Gets a value indicating if this property is constant.  This property
          * is considered constant if all property items in the array are constant.
          * @memberof PropertyArray.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -58,7 +60,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value or one of the properties in the array also changes.
          * @memberof PropertyArray.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

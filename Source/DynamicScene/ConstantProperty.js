@@ -37,7 +37,9 @@ define([
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             value : true
@@ -47,7 +49,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

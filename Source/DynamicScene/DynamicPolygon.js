@@ -43,7 +43,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicPolygon.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

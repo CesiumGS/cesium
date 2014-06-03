@@ -55,7 +55,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicCone.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

@@ -68,7 +68,9 @@ define([
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof CompositeProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -80,7 +82,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof CompositeProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
