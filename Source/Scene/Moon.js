@@ -113,7 +113,7 @@ define([
         Matrix3.transpose(rotation, rotation);
         Matrix3.multiply(icrfToFixed, rotation, rotation);
 
-        var translation = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date, translationScratch);
+        var translation = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date, translationScratch);
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);

@@ -804,7 +804,7 @@ define([
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        var position = Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
+        var position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
 
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
@@ -812,7 +812,7 @@ define([
         position = Matrix3.multiplyByVector(uniformState.viewRotation3D, position, uniformState._sunDirectionEC);
         Cartesian3.normalize(position, position);
 
-        position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
+        position = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
