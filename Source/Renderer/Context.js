@@ -456,7 +456,7 @@ define([
         /**
          * The number of depth bits per pixel in the default bound framebuffer.  The minimum is 16 bits; most
          * implementations will have 24 bits.
-         * @memberof Context.protoytpe
+         * @memberof Context.prototype
          * @type {Number}
          * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>DEPTH_BITS</code>.
          */
