@@ -59,10 +59,10 @@ define([
          */
         isConstant : {
             get : function() {
-                return Property.isConstant(this._orientation) && //
-                       Property.isConstant(this._evenColor) && //
-                       Property.isConstant(this._oddColor) && //
-                       Property.isConstant(this._offset) && //
+                return Property.isConstant(this._orientation) &&
+                       Property.isConstant(this._evenColor) &&
+                       Property.isConstant(this._oddColor) &&
+                       Property.isConstant(this._offset) &&
                        Property.isConstant(this._repeat);
             }
         },

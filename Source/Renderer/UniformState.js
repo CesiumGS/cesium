@@ -178,6 +178,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         viewportCartesian4 : {
@@ -250,6 +251,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         inverseTranposeModel : {
@@ -392,6 +394,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         inverseProjectionOIT : {

@@ -36,7 +36,7 @@ define([
     defineProperties(DynamicModel.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPolygon.prototype
+         * @memberof DynamicModel.prototype
          * @type {Event}
          */
         definitionChanged : {

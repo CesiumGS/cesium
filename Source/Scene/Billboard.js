@@ -657,6 +657,7 @@ define([
 
         /**
          * The primitive to return when picking this billboard.
+         * @memberof Billboard.prototype
          * @private
          */
         pickPrimitive : {

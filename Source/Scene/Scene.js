@@ -627,6 +627,7 @@ define([
         },
 
         /**
+         * @memberof Scene.prototype
          * @private
          */
         context : {

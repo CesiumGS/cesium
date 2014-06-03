@@ -121,7 +121,7 @@ define([
 
         /**
          * The perspective projection matrix computed from the view frustum with an infinite far plane.
-         * @memberof PerspectiveFrustum
+         * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveFrustum#projectionMatrix
