@@ -189,6 +189,7 @@ define([
         this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
         this._definitionChanged = new Event();
+        this._inputOrder = 0;
     };
 
     defineProperties(SampledProperty.prototype, {
@@ -273,10 +274,11 @@ define([
             var yTable = this._yTable;
             var interpolationAlgorithm = this._interpolationAlgorithm;
             var packedInterpolationLength = this._packedInterpolationLength;
+            var inputOrder = this._inputOrder;
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, this._inputOrder), times.length);
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), times.length);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -342,12 +344,11 @@ define([
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
             var interpolationResult;
-            // We need both an input order, and an algorithm that can handle a non-zero input order.
-            if (defined(this._inputOrder) && defined(interpolationAlgorithm.interpolate)) {
-                var yStride = Math.floor(packedInterpolationLength / (this._inputOrder + 1));
-                interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, this._inputOrder, this._inputOrder, this._interpolationResult);
-            } else {
+            if (inputOrder === 0 || !defined(interpolationAlgorithm.interpolate)) {
                 interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            } else {
+                var yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
+                interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, inputOrder, inputOrder, this._interpolationResult);
             }
 
             if (!defined(innerType.unpackInterpolationResult)) {
