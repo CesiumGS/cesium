@@ -26,6 +26,7 @@ define([
      * @alias NavigationHelpButton
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
      *

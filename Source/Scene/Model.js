@@ -152,6 +152,7 @@ define([
      * @alias Model
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Object} [options.gltf] The object for the glTF JSON.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
@@ -469,6 +470,7 @@ define([
      *
      * @memberof Model
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the glTF .json file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
