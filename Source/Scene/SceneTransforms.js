@@ -138,7 +138,7 @@ define([
             return Cartesian3.clone(position, result);
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
         if (!defined(positionInCartographic)) {
             result = undefined;

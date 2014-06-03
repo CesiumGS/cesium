@@ -40,8 +40,11 @@ define([
     defineProperties(GeographicProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof GeographicProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {

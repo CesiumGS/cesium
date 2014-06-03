@@ -104,6 +104,7 @@ define([
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -135,7 +136,10 @@ define([
      *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
      *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
      *         }
-     *     })
+     *     }),
+     *     // Show Columbus View map with Web Mercator projection
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      */
     var CesiumWidget = function(container, options) {
@@ -170,7 +174,12 @@ define([
             creditContainer.className = 'cesium-widget-credits';
             widgetNode.appendChild(creditContainer);
 
-            var scene = new Scene(canvas, options.contextOptions, creditContainer);
+            var scene = new Scene({
+                canvas : canvas,
+                contextOptions : options.contextOptions,
+                creditContainer : creditContainer,
+                mapProjection : options.mapProjection
+            });
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;

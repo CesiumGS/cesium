@@ -87,8 +87,8 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.update(frameState.mode, frameState.scene2D);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+        frameState.camera.update(frameState.mode);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.mapProjection);
     }
 
     var context;
@@ -259,7 +259,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
-        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
+        frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         updateUntilDone(globe);
 
@@ -274,7 +274,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
-        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
+        frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         updateUntilDone(globe);
 
@@ -288,7 +288,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(globe);
@@ -303,7 +303,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(globe);
@@ -339,7 +339,7 @@ defineSuite([
         runs(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
 
-            frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+            frameState.camera.update(SceneMode.COLUMBUS_VIEW);
             frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 

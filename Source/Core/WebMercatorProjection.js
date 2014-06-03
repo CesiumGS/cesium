@@ -41,8 +41,11 @@ define([
     defineProperties(WebMercatorProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof WebMercatorProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
