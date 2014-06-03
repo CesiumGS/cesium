@@ -354,7 +354,6 @@ define([
      *
      * @param {String} type The base material type.
      * @param {Object} [uniforms] Overrides for the default uniforms.
-     *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that type does not exist.
@@ -518,10 +517,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Material#isDestroyed
-     *
      * @example
      * material = material && material.destroy();
+     *
+     * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {
         var materials = this.materials;

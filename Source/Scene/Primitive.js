@@ -1025,7 +1025,6 @@ define([
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
      * @param {Object} id The id of the {@link GeometryInstance}.
-     *
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
@@ -1113,10 +1112,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Primitive#isDestroyed
-     *
      * @example
      * e = e && e.destroy();
+     *
+     * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
         var length;

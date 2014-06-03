@@ -209,7 +209,6 @@ define([
      * @param {Number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @example
@@ -1489,7 +1488,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Cartesian3} translation The translation on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromTranslation
@@ -1552,7 +1550,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Number} scale The uniform scale on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromUniformScale
@@ -1583,7 +1580,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromScale

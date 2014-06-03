@@ -201,7 +201,6 @@ define([
      * @param {Number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
      * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     *
      * @returns {Color} The modified result parameter or a new instance if result was undefined.
      *
      * @exception {DeveloperError} minimumRed must be less than or equal to maximumRed.
@@ -528,6 +527,7 @@ define([
      * Creates a string containing the CSS color value for this color.
      *
      * @returns {String} The CSS equivalent of this color.
+     *
      * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
      */
     Color.prototype.toCssColorString = function() {

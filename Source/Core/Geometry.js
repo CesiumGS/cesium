@@ -155,7 +155,6 @@ define([
      * respect to the number of attributes in a vertex, not the number of vertices.
      *
      * @param {Cartesian3} geometry The geometry.
-     *
      * @returns {Number} The number of vertices in the geometry.
      *
      * @example

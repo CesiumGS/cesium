@@ -603,14 +603,13 @@ define([
      * left to right, and <code>y</code> increases from bottom to top.
      *
      * @param {Scene} scene The scene the label is in.
-     *
      * @returns {Cartesian2} The screen-space position of the label.
-     *
-     * @see Label#eyeOffset
-     * @see Label#pixelOffset
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
+     *
+     * @see Label#eyeOffset
+     * @see Label#pixelOffset
      */
     Label.prototype.computeScreenSpacePosition = function(scene) {
         //>>includeStart('debug', pragmas.debug);
@@ -631,7 +630,6 @@ define([
      * are equal.  Labels in different collections can be equal.
      *
      * @param {Label} other The label to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {

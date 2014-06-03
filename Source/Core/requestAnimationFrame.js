@@ -44,7 +44,6 @@ define([
      * @exports requestAnimationFrame
      *
      * @param {Function} callback The function to call when animation is ready.
-     *
      * @returns An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
      *
      * @example

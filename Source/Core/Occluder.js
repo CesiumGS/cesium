@@ -163,7 +163,6 @@ define([
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
@@ -195,7 +194,6 @@ define([
     * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
     *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
-    *
     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
     * @example
@@ -251,7 +249,6 @@ define([
      * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
      *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
-     *
      * @returns {Number} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
@@ -401,7 +398,6 @@ define([
      *
      * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
-     *
      * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      */

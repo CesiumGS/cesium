@@ -320,7 +320,6 @@ define([
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @param {Image} image An image to be added to the texture atlas.
-     *
      * @returns {Number} The index of the newly added image.
      *
      * @see TextureAtlas#addImages
@@ -341,7 +340,6 @@ define([
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
      * @param {Image[]} images An array of {@link Image} to be added to the texture atlas.
-     *
      * @returns {Number} The first index of the newly added images.
      *
      * @see TextureAtlas#addImage
@@ -388,7 +386,6 @@ define([
      *
      * @param {Image} image An image to be added to the texture atlas.
      * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
-     *
      * @returns {Number} The index of the first newly-added region.
      */
     TextureAtlas.prototype.addSubRegions = function(image, subRegions) {
@@ -441,10 +438,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see TextureAtlas#isDestroyed
-     *
      * @example
      * atlas = atlas && atlas.destroy();
+     *
+     * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {
         this._texture = this._texture && this._texture.destroy();

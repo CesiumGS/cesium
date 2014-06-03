@@ -146,10 +146,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Moon#isDestroyed
-     *
      * @example
      * moon = moon && moon.destroy();
+     *
+     * @see Moon#isDestroyed
      */
     Moon.prototype.destroy = function() {
         this._ellipsoid = this._ellipsoid && this._ellipsoid.destroy();

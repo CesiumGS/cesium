@@ -316,8 +316,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#length
-     *
      * @example
      * // Toggle the show property of every primitive in the collection.
      * var primitives = scene.primitives;
@@ -326,6 +324,8 @@ define([
      *   var p = primitives.get(i);
      *   p.show = !p.show;
      * }
+     *
+     * @see PrimitiveCollection#length
      */
     PrimitiveCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -382,10 +382,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#isDestroyed
-     *
      * @example
      * primitives = primitives && primitives.destroy();
+     *
+     * @see PrimitiveCollection#isDestroyed
      */
     PrimitiveCollection.prototype.destroy = function() {
         this.removeAll();

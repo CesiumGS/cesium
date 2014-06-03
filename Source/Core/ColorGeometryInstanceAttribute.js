@@ -120,7 +120,6 @@ define([
      * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.
      *
      * @param {Color} color The color.
-     *
      * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
      *
      * @example

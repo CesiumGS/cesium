@@ -405,10 +405,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Polygon#isDestroyed
-     *
      * @example
      * polygon = polygon && polygon.destroy();
+     *
+     * @see Polygon#isDestroyed
      */
     Polygon.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

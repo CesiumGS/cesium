@@ -758,7 +758,6 @@ define([
      * left to right, and <code>y</code> increases from bottom to top.
      *
      * @param {Scene} scene The scene.
-     *
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
@@ -794,7 +793,6 @@ define([
      * are equal.  Billboards in different collections can be equal.
      *
      * @param {Billboard} other The billboard to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
      */
     Billboard.prototype.equals = function(other) {

@@ -192,7 +192,6 @@ define([
      * negative, or 0 if the value is 0.
      *
      * @param {Number} value The value to return the sign of.
-     *
      * @returns {Number} The sign of value.
      */
     CesiumMath.sign = function(value) {
@@ -225,7 +224,6 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic sine is to be returned.
-     *
      * @returns The hyperbolic sine of {@code value}.
      */
     CesiumMath.sinh = function(value) {
@@ -252,7 +250,6 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
-     *
      * @returns The hyperbolic cosine of {@code value}.
      */
     CesiumMath.cosh = function(value) {
@@ -420,7 +417,6 @@ define([
      * Converts a longitude value, in radians, to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
      *
      * @param {Number} angle The longitude value, in radians, to convert to the range [<code>-Math.PI</code>, <code>Math.PI</code>).
-     *
      * @returns {Number} The equivalent longitude value in the range [<code>-Math.PI</code>, <code>Math.PI</code>).
      *
      * @example
@@ -449,6 +445,7 @@ define([
 
     /**
      * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
+     *
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
      */
@@ -475,6 +472,7 @@ define([
 
     /**
      * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
+     *
      * @param {Number} angle in radians
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
      */
@@ -523,16 +521,15 @@ define([
      * Computes the factorial of the provided number.
      *
      * @param {Number} n The number whose factorial is to be computed.
-     *
      * @returns {Number} The factorial of the provided number or undefined if the number is less than 0.
      *
-     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
+     * @exception {DeveloperError} A number greater than or equal to 0 is required.
      *
      * @example
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = Cesium.Math.factorial(7);
      *
-     * @exception {DeveloperError} A number greater than or equal to 0 is required.
+     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      */
     CesiumMath.factorial = function(n) {
         //>>includeStart('debug', pragmas.debug);
@@ -557,14 +554,13 @@ define([
      * @param {Number} [n] The number to be incremented.
      * @param {Number} [maximumValue] The maximum incremented value before rolling over to the minimum value.
      * @param {Number} [minimumValue=0.0] The number reset to after the maximum value has been exceeded.
-     *
      * @returns {Number} The incremented number.
+     *
+     * @exception {DeveloperError} Maximum value must be greater than minimum value.
      *
      * @example
      * var n = Cesium.Math.incrementWrap(5, 10, 0); // returns 6
      * var n = Cesium.Math.incrementWrap(10, 10, 0); // returns 0
-     *
-     * @exception {DeveloperError} Maximum value must be greater than minimum value.
      */
     CesiumMath.incrementWrap = function(n, maximumValue, minimumValue) {
         minimumValue = defaultValue(minimumValue, 0.0);
@@ -589,7 +585,6 @@ define([
      * Determines if a positive integer is a power of two.
      *
      * @param {Number} n The positive integer to test.
-     *
      * @returns {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
      *
      * @exception {DeveloperError} A number greater than or equal to 0 is required.
@@ -612,7 +607,6 @@ define([
      * Computes the next power-of-two integer greater than or equal to the provided positive integer.
      *
      * @param {Number} n The positive integer to test.
-     *
      * @returns {Number} The next power-of-two integer.
      *
      * @exception {DeveloperError} A number greater than or equal to 0 is required.

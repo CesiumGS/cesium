@@ -175,10 +175,10 @@ var requirejs, require, define;
 
     /**
      * Constructs an error with a pointer to an URL with more information.
+     *
      * @param {String} id the error ID that maps to an ID on a web page.
      * @param {String} message human readable error.
      * @param {Error} [err] the original error, if there is one.
-     *
      * @returns {Error}
      */
     function makeError(id, msg, err, requireModules) {
@@ -275,6 +275,7 @@ var requirejs, require, define;
         /**
          * Given a relative module name, like ./something, normalize it to
          * a real name that can be mapped to a path.
+         *
          * @param {String} name the relative name
          * @param {String} baseName a real name that the name arg is relative
          * to.
@@ -429,7 +430,6 @@ var requirejs, require, define;
          * This is true if this call is done for a define() module ID.
          * @param {Boolean} applyMap: apply the map config to the ID.
          * Should only be true if this map is for a dependency.
-         *
          * @returns {Object}
          */
         function makeModuleMap(name, parentModuleMap, isNormalized, applyMap) {
@@ -1209,6 +1209,7 @@ var requirejs, require, define;
         /**
          * Given an event from a script node, get the requirejs info from it,
          * and then removes the event listeners on the node.
+         *
          * @param {Event} evt
          * @returns {Object}
          */

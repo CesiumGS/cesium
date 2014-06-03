@@ -212,7 +212,6 @@ define([
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
      * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
-     *
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -247,7 +246,6 @@ define([
      * Removes a polyline from the collection.
      *
      * @param {Polyline} polyline The polyline to remove.
-     *
      * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
      * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
@@ -315,7 +313,6 @@ define([
      * Determines if this collection contains the specified polyline.
      *
      * @param {Polyline} polyline The polyline to check for.
-     *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
@@ -332,7 +329,6 @@ define([
      * in the collection.
      *
      * @param {Number} index The zero-based index of the polyline.
-     *
      * @returns {Polyline} The polyline at the specified index.
      *
      * @performance If polylines were removed from the collection and
@@ -628,10 +624,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#isDestroyed
-     *
      * @example
      * polylines = polylines && polylines.destroy();
+     *
+     * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
         destroyVertexArrays(this);

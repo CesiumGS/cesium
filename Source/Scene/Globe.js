@@ -828,10 +828,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Globe#isDestroyed
-     *
      * @example
      * globe = globe && globe.destroy();
+     *
+     * @see Globe#isDestroyed
      */
     Globe.prototype.destroy = function() {
         this._northPoleCommand.vertexArray = this._northPoleCommand.vertexArray && this._northPoleCommand.vertexArray.destroy();

@@ -442,10 +442,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EllipsoidPrimitive#isDestroyed
-     *
      * @example
      * e = e && e.destroy();
+     *
+     * @see EllipsoidPrimitive#isDestroyed
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();

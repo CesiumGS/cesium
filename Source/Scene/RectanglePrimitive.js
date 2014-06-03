@@ -286,10 +286,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Rectangle#isDestroyed
-     *
      * @example
      * rectangle = rectangle && rectangle.destroy();
+     *
+     * @see Rectangle#isDestroyed
      */
     RectanglePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

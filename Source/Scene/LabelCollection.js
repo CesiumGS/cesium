@@ -390,7 +390,6 @@ define([
      * The added label is returned so it can be modified or removed from the collection later.
      *
      * @param {Object}[options] A template describing the label's properties as shown in Example 1.
-     *
      * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -441,7 +440,6 @@ define([
      * Removes a label from the collection.  Once removed, a label is no longer usable.
      *
      * @param {Label} label The label to remove.
-     *
      * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
@@ -502,7 +500,6 @@ define([
      * Check whether this collection contains a given label.
      *
      * @param {Label} label The label to check for.
-     *
      * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
@@ -630,10 +627,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#isDestroyed
-     *
      * @example
      * labels = labels && labels.destroy();
+     *
+     * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
         this.removeAll();

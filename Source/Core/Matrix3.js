@@ -87,7 +87,6 @@ define([
      * @param {Number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
-     *
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @example
@@ -182,7 +181,6 @@ define([
      * Computes a 3x3 rotation matrix from the provided quaternion.
      *
      * @param {Quaternion} quaternion the quaternion to use.
-     *
      * @returns {Matrix3} The 3x3 rotation matrix from this quaternion.
      */
     Matrix3.fromQuaternion = function(quaternion, result) {
@@ -317,7 +315,6 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     *
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
@@ -361,7 +358,6 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     *
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example
@@ -405,7 +401,6 @@ define([
      *
      * @param {Number} angle The angle, in radians, of the rotation.  Positive angles are counterclockwise.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     *
      * @returns The modified result parameter, or a new Matrix3 instance if one was not provided.
      *
      * @example

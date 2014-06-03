@@ -89,7 +89,6 @@ define([
      * Checks whether two leap seconds are equivalent to each other.
      *
      * @param {LeapSecond} other The leap second to compare against.
-     *
      * @returns {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
      *
      * @example
@@ -108,19 +107,18 @@ define([
      *
      * @param {LeapSecond} leapSecond1 The first leap second to be compared.
      * @param {LeapSecond} leapSecond2 The second leap second to be compared.
-     *
      * @returns {Number} A negative value if the first leap second is earlier than the second,
      *                  a positive value if the first leap second is later than the second, or
      *                  zero if the two leap seconds are equal (ignoring their offsets).
-     *
-     * @see JulianDate#lessThan
-     * @see JulianDate#isAfter
      *
      * @example
      * var date = new Date('January 1, 2006 00:00:00 UTC');
      * var leapSecond1 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 33.0);
      * var leapSecond2 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 34.0);
      * Cesium.LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
+     *
+     * @see JulianDate#lessThan
+     * @see JulianDate#isAfter
      */
     LeapSecond.compareLeapSecondDate = function(leapSecond1, leapSecond2) {
         return leapSecond1.julianDate.compareTo(leapSecond2.julianDate);

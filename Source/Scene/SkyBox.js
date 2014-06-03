@@ -210,10 +210,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyBox#isDestroyed
-     *
      * @example
      * skyBox = skyBox && skyBox.destroy();
+     *
+     * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {
         var command = this._command;

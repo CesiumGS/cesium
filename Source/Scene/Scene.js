@@ -1398,7 +1398,6 @@ define([
      * potentially be set depending on the type of primitive.
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1448,7 +1447,6 @@ define([
      * scene (front to back).
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1572,10 +1570,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Scene#isDestroyed
-     *
      * @example
      * scene = scene && scene.destroy();
+     *
+     * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {
         this._animations.removeAll();

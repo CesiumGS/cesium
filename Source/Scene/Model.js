@@ -480,7 +480,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     *
      * @returns {Model} The newly created model.
      *
      * @example
@@ -554,7 +553,6 @@ define([
      * modify a node's transform for animation outside of glTF animations.
      *
      * @param {String} name The glTF name of the node.
-     *
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
@@ -586,7 +584,6 @@ define([
      * Returns the glTF material with the given <code>name</code> property.
      *
      * @param {String} name The glTF name of the material.
-     *
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.

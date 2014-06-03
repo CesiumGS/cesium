@@ -225,7 +225,6 @@ define([
      * @param {Number} y3 The y coordinate of the triangle's third vertex.
      * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
      *                     is undefined, a new instance is created and returned.
-     *
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
      *
      * @example

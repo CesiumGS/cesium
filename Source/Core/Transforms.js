@@ -350,15 +350,15 @@ define([
      *          and evaluation of the transformation between the fixed and ICRF axes will
      *          no longer return undefined for a time inside the interval.
      *
-     * @see Transforms.computeIcrfToFixedMatrix
-     * @see Transforms.computeFixedToIcrfMatrix
-     * @see when
-     *
      * @example
      * var interval = new Cesium.TimeInterval(...);
      * when(preloadIcrfFixed(interval), function() {
      *     // the data is now loaded
      * });
+     *
+     * @see Transforms.computeIcrfToFixedMatrix
+     * @see Transforms.computeFixedToIcrfMatrix
+     * @see when
      */
     Transforms.preloadIcrfFixed = function(timeInterval) {
         var startDayTT = timeInterval.start.getJulianDayNumber();
@@ -384,8 +384,6 @@ define([
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
-     * @see Transforms.preloadIcrfFixed
-     *
      * @example
      * //Set the view to the inertial frame.
      * function updateAndRender() {
@@ -399,6 +397,8 @@ define([
      *     Cesium.requestAnimationFrame(updateAndRender);
      * }
      * updateAndRender();
+     *
+     * @see Transforms.preloadIcrfFixed
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -432,8 +432,6 @@ define([
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
-     * @see Transforms.preloadIcrfFixed
-     *
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
      * var now = new Cesium.JulianDate();
@@ -443,6 +441,8 @@ define([
      * if (Cesium.defined(fixedToIcrf)) {
      *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
      * }
+     *
+     * @see Transforms.preloadIcrfFixed
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
