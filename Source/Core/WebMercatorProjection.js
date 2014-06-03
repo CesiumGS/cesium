@@ -42,7 +42,7 @@ define([
         /**
          * Gets the {@link Ellipsoid}.
          *
-         * @memberof GeographicProjection.prototype
+         * @memberof WebMercatorProjection.prototype
          *
          * @type {Ellipsoid}
          * @readonly
