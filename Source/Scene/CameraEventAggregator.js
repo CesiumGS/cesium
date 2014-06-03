@@ -308,7 +308,6 @@ define([
 
     /**
      * Gets if a mouse button down or touch has started and has been moved.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -327,7 +326,6 @@ define([
 
     /**
      * Gets the aggregated start and end position of the current event.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -347,7 +345,6 @@ define([
 
     /**
      * Gets the start and end position of the last move event (not the aggregated event).
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -371,7 +368,6 @@ define([
 
     /**
      * Gets whether the mouse button is down or a touch has started.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -413,7 +409,6 @@ define([
 
     /**
      * Gets whether any mouse button is down, a touch has started, or the wheel has been moved.
-     * @memberof CameraEventAggregator
      *
      * @returns {Boolean} Whether any mouse button is down, a touch has started, or the wheel has been moved.
      */
@@ -427,7 +422,6 @@ define([
 
     /**
      * Gets the time the button was pressed or the touch was started.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -446,7 +440,6 @@ define([
 
     /**
      * Gets the time the button was released or the touch was ended.
-     * @memberof CameraEventAggregator
      *
      * @param {CameraEventType} type The camera event type.
      * @param {KeyboardEventModifier} [modifier] The keyboard modifier.
@@ -465,7 +458,6 @@ define([
 
     /**
      * Signals that all of the events have been handled and the aggregator should be reset to handle new events.
-     * @memberof CameraEventAgregator
      */
     CameraEventAggregator.prototype.reset = function() {
         for ( var name in this._update) {
@@ -481,8 +473,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof CameraEventAggregator
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see CameraEventAggregator#destroy
@@ -497,8 +487,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof CameraEventAggregator
      *
      * @returns {undefined}
      *

@@ -22,6 +22,7 @@ define([
      * @alias DiscardMissingTileImagePolicy
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.missingImageUrl The URL of the known missing image.
      * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.

@@ -139,6 +139,7 @@ define([
      * @alias EllipseOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
@@ -211,7 +212,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipseOutlineGeometry
      *
      * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

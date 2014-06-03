@@ -267,6 +267,7 @@ define([
      * @alias RectangleOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -324,7 +325,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
-     * @memberof RectangleOutlineGeometry
      *
      * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
      * @returns {Geometry} The computed vertices and indices.

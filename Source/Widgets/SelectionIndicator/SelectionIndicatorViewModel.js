@@ -92,7 +92,6 @@ define([
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model.
      * This function should be called as part of the render loop.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.update = function() {
         if (this.showSelection && defined(this.position)) {
@@ -113,7 +112,6 @@ define([
 
     /**
      * Animate the indicator to draw attention to the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
         var viewModel = this;
@@ -134,7 +132,6 @@ define([
 
     /**
      * Animate the indicator to release the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
         var viewModel = this;

@@ -41,13 +41,14 @@ define([
      * @alias WallOutlineGeometry
      * @constructor
      *
-     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number[]} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+     * @param {Number[]} [options.maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Number[]} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+     * @param {Number[]} [options.minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      *
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
@@ -77,13 +78,13 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(wallPositions)) {
-            throw new DeveloperError('positions is required.');
+            throw new DeveloperError('options.positions is required.');
         }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('positions and maximumHeights must have the same length.');
+            throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
         if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
-            throw new DeveloperError('positions and minimumHeights must have the same length.');
+            throw new DeveloperError('options.positions and options.minimumHeights must have the same length.');
         }
         //>>includeEnd('debug');
 
@@ -101,8 +102,6 @@ define([
     /**
      * A description of a walloutline. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
-     *
-     * @memberof WallOutlineGeometry
      *
      * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
@@ -173,7 +172,6 @@ define([
 
     /**
      * Computes the geometric representation of a wall outline, including its vertices, indices, and a bounding sphere.
-     * @memberof WallOutlineGeometry
      *
      * @param {WallOutlineGeometry} wallGeometry A description of the wall outline.
      * @returns {Geometry} The computed vertices and indices.

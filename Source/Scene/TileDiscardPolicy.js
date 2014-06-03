@@ -21,7 +21,6 @@ define([
 
     /**
      * Determines if the discard policy is ready to process images.
-     * @memberof TileDiscardPolicy
      * @function
      * @returns {Boolean} True if the discard policy is ready to process images; otherwise, false.
      */
@@ -29,7 +28,6 @@ define([
 
     /**
      * Given a tile image, decide whether to discard that image.
-     * @memberof TileDiscardPolicy
      * @function
      *
      * @param {Image|Promise} image An image, or a promise that will resolve to an image.

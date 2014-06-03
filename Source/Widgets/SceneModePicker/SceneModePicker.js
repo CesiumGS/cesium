@@ -45,10 +45,9 @@ define([
      *
      * @example
      * // In HTML head, include a link to the SceneModePicker.css stylesheet,
-     * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
-     * // Note: This code assumed you already have a Scene instance.
+     * // and in the body, include: <div id="sceneModePickerContainer"></div>
+     * // Note: This code assumes you already have a Scene instance.
      *
-     * var scene = viewer.scene;
      * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
     var SceneModePicker = function(container, scene, duration) {
@@ -168,7 +167,6 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
     });
 
     /**
-     * @memberof SceneModePicker
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SceneModePicker.prototype.isDestroyed = function() {
@@ -178,7 +176,6 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof SceneModePicker
      */
     SceneModePicker.prototype.destroy = function() {
         this._viewModel.destroy();

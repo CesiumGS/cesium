@@ -126,8 +126,6 @@ define([
      * Procedurally creates the full GLSL fragment shader source for this appearance
      * taking into account {@link Appearance#fragmentShaderSource} and {@link Appearance#material}.
      *
-     * @memberof Appearance
-     *
      * @returns {String} The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
@@ -140,8 +138,6 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link Appearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof Appearance
-     *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
     Appearance.prototype.isTranslucent = function() {
@@ -152,8 +148,6 @@ define([
      * Creates a render state.  This is not the final {@link RenderState} instance; instead,
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
-     *
-     * @memberof Appearance
      *
      * @returns {Object} The render state.
      */

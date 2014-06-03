@@ -393,7 +393,7 @@ h4
     color: #A35A00;
 }
 
-h5, .container-overview .subsection-title
+h5, .container-overview .subsection-title, .details-header
 {
     font-size: 120%;
     font-weight: bold;

@@ -20,6 +20,7 @@ define([
      * @alias GridImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
      * @param {Number} [options.cells=8] The number of grids cells.
      * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
@@ -205,8 +206,6 @@ define([
 
     /**
      * Draws a grid of lines into a canvas.
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._drawGrid = function(context) {
         var minPixel = 0;
@@ -225,8 +224,6 @@ define([
 
     /**
      * Render a grid into a canvas with background and glow
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._createGridCanvas = function() {
         var canvas = document.createElement('canvas');
@@ -271,8 +268,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof GridImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -288,8 +283,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link GridImageryProvider#ready} returns true.
-     *
-     * @memberof GridImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

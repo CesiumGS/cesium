@@ -19,8 +19,6 @@ define([
     /**
      * Given the desired degree, returns the number of data points required for interpolation.
      *
-     * @memberof LagrangePolynomialApproximation
-     *
      * @param {Number} degree The desired degree of interpolation.
      *
      * @returns The number of required data points needed for the desired degree of interpolation.
@@ -51,8 +49,6 @@ define([
      *
      * @see LinearApproximation
      * @see HermitePolynomialApproximation
-     *
-     * @memberof LagrangePolynomialApproximation
      */
     LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         if (!defined(result)) {

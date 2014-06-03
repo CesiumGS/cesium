@@ -69,7 +69,7 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Configuration options for the widget.
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
@@ -95,6 +95,7 @@ define([
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -138,7 +139,10 @@ define([
      *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
      *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
      *         }
-     *     })
+     *     }),
+     *     // Show Columbus View map with Web Mercator projection
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      *
      * //Add basic drag and drop functionality
@@ -204,6 +208,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
+            mapProjection : options.mapProjection,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
@@ -724,7 +729,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Extends the base viewer functionality with the provided mixin.
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
-     * @memberof Viewer
      *
      * @param {Function} mixin The Viewer mixin to add to this instance.
      * @param {Object} options The options object to be passed to the mixin function.
@@ -746,7 +750,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Resizes the widget to match the container size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof Viewer
      */
     Viewer.prototype.resize = function() {
         var cesiumWidget = this._cesiumWidget;
@@ -757,14 +760,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof Viewer
      */
     Viewer.prototype.render = function() {
         this._cesiumWidget.render();
     };
 
     /**
-     * @memberof Viewer
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Viewer.prototype.isDestroyed = function() {
@@ -774,7 +775,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
         var i;
