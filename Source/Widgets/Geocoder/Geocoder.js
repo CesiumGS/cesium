@@ -132,7 +132,6 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
     });
 
     /**
-     * @memberof Geocoder
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Geocoder.prototype.isDestroyed = function() {
@@ -142,7 +141,6 @@ cesiumSvgPath: { path: isSearchInProgress ? _stopSearchPath : _startSearchPath, 
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Geocoder
      */
     Geocoder.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._onInputBegin, true);

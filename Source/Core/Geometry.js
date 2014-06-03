@@ -154,8 +154,6 @@ define([
      * Computes the number of vertices in a geometry.  The runtime is linear with
      * respect to the number of attributes in a vertex, not the number of vertices.
      *
-     * @memberof Geometry
-     *
      * @param {Cartesian3} geometry The geometry.
      *
      * @returns {Number} The number of vertices in the geometry.

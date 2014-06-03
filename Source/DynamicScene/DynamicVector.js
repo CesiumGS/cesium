@@ -84,7 +84,6 @@ define([
 
     /**
      * Duplicates a DynamicVector instance.
-     * @memberof DynamicVector
      *
      * @param {DynamicVector} [result] The object onto which to store the result.
      * @returns {DynamicVector} The modified result parameter or a new instance if one was not provided.
@@ -104,7 +103,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicVector
      *
      * @param {DynamicVector} source The object to be merged into this object.
      */

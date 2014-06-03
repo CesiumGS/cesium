@@ -20,8 +20,6 @@ define([
      * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
      * 3, or 4 vertices.
      *
-     * @memberof Intersections2D
-     *
      * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
      * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
      *                            to keep the portion below.
@@ -216,8 +214,6 @@ define([
 
     /**
      * Compute the barycentric coordinates of a 2D position within a 2D triangle.
-     *
-     * @memberof Intersections2D
      *
      * @param {Number} x The x coordinate of the position for which to find the barycentric coordinates.
      * @param {Number} y The y coordinate of the position for which to find the barycentric coordinates.

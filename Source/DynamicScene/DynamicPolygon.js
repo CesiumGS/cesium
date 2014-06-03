@@ -129,7 +129,6 @@ define([
 
     /**
      * Duplicates a DynamicPolygon instance.
-     * @memberof DynamicPolygon
      *
      * @param {DynamicPolygon} [result] The object onto which to store the result.
      * @returns {DynamicPolygon} The modified result parameter or a new instance if one was not provided.
@@ -154,7 +153,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicPolygon
      *
      * @param {DynamicPolygon} source The object to be merged into this object.
      */

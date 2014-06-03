@@ -627,6 +627,7 @@ define([
         },
 
         /**
+         * @memberof Scene.prototype
          * @private
          */
         context : {
@@ -1396,8 +1397,6 @@ define([
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
      * potentially be set depending on the type of primitive.
      *
-     * @memberof Scene
-     *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
      * @returns {Object} Object containing the picked primitive.
@@ -1447,8 +1446,6 @@ define([
      * a particular window coordinate position. Other properties may also be set depending on the
      * type of primitive. The primitives in the list are ordered by their visual order in the
      * scene (front to back).
-     *
-     * @memberof Scene
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
      *
@@ -1508,7 +1505,6 @@ define([
 
     /**
      * Instantly completes an active transition.
-     * @memberof Scene
      */
     Scene.prototype.completeMorph = function(){
         this._transitioner.completeMorph();
@@ -1517,7 +1513,6 @@ define([
     /**
      * Asynchronously transitions the scene to 2D.
      * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
      */
     Scene.prototype.morphTo2D = function(duration) {
         var globe = this.globe;
@@ -1530,7 +1525,6 @@ define([
     /**
      * Asynchronously transitions the scene to Columbus View.
      * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var globe = this.globe;
@@ -1543,7 +1537,6 @@ define([
     /**
      * Asynchronously transitions the scene to 3D.
      * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
-     * @memberof Scene
      */
     Scene.prototype.morphTo3D = function(duration) {
         var globe = this.globe;
@@ -1558,8 +1551,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Scene
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
@@ -1576,8 +1567,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Scene
      *
      * @returns {undefined}
      *

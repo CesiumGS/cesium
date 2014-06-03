@@ -169,8 +169,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
      *
-     * @memberof DebugModelMatrixPrimitive
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see DebugModelMatrixPrimitive#destroy
@@ -187,8 +185,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @memberof DebugModelMatrixPrimitive
      *
      * @returns {undefined}
      *

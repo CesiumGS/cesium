@@ -89,8 +89,6 @@ define([
     /**
      * Gets the total number of tiles in the X direction at a specified level-of-detail.
      *
-     * @memberof GeographicTilingScheme
-     *
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the X direction at the given level.
      */
@@ -100,8 +98,6 @@ define([
 
     /**
      * Gets the total number of tiles in the Y direction at a specified level-of-detail.
-     *
-     * @memberof GeographicTilingScheme
      *
      * @param {Number} level The level-of-detail.
      * @returns {Number} The number of tiles in the Y direction at the given level.
@@ -113,8 +109,6 @@ define([
     /**
      * Transforms an rectangle specified in geodetic radians to the native coordinate system
      * of this tiling scheme.
-     *
-     * @memberof GeographicTilingScheme
      *
      * @param {Rectangle} rectangle The rectangle to transform.
      * @param {Rectangle} [result] The instance to which to copy the result, or undefined if a new instance
@@ -149,8 +143,6 @@ define([
      * Converts tile x, y coordinates and level to an rectangle expressed in the native coordinates
      * of the tiling scheme.
      *
-     * @memberof GeographicTilingScheme
-     *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
@@ -171,8 +163,6 @@ define([
 
     /**
      * Converts tile x, y coordinates and level to a cartographic rectangle in radians.
-     *
-     * @memberof GeographicTilingScheme
      *
      * @param {Number} x The integer x coordinate of the tile.
      * @param {Number} y The integer y coordinate of the tile.
@@ -211,8 +201,6 @@ define([
     /**
      * Calculates the tile x, y coordinates of the tile containing
      * a given cartographic position.
-     *
-     * @memberof GeographicTilingScheme
      *
      * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.

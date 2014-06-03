@@ -54,7 +54,7 @@ define([
     /**
      * A {@link GeometryUpdater} for polylines.
      * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
-     * @alias PolygonGeometryUpdater
+     * @alias PolylineGeometryUpdater
      * @constructor
      *
      * @param {DynamicObject} dynamicObject The object containing the geometry to be visualized.
@@ -198,8 +198,6 @@ define([
 
     /**
      * Checks if the geometry is outlined at the provided time.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
@@ -210,8 +208,6 @@ define([
 
     /**
      * Checks if the geometry is filled at the provided time.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
@@ -223,8 +219,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
@@ -273,8 +267,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
@@ -289,8 +281,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -300,8 +290,6 @@ define([
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
@@ -374,8 +362,6 @@ define([
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     * @memberof PolylineGeometryUpdater
-     * @function
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.

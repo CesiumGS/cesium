@@ -138,7 +138,6 @@ define([
 
     /**
      * Checks if the geometry is outlined at the provided time.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
@@ -148,7 +147,6 @@ define([
 
     /**
      * Checks if the geometry is filled at the provided time.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
@@ -158,7 +156,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
@@ -170,7 +167,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
@@ -182,7 +178,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof GeometryUpdater
      * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
@@ -191,7 +186,6 @@ define([
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     * @memberof GeometryUpdater
      * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -200,7 +194,6 @@ define([
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.

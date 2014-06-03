@@ -106,8 +106,6 @@ define([
     /**
      * Returns true if the credits are equal
      *
-     * @memberof Credit
-     *
      * @param {Credit} left The first credit
      * @param {Credit} left The second credit
      *
@@ -127,8 +125,6 @@ define([
 
     /**
      * Returns true if the credits are equal
-     *
-     * @memberof Credit
      *
      * @param {Credit} credits The credit to compare to.
      *

@@ -55,7 +55,6 @@ define([
 
     /**
      * Duplicates a Matrix3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to duplicate.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -84,7 +83,6 @@ define([
 
     /**
      * Creates a Matrix3 from 9 consecutive elements in an array.
-     * @memberof Matrix3
      *
      * @param {Number[]} array The array whose 9 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
@@ -133,8 +131,6 @@ define([
 
     /**
      * Creates a Matrix3 instance from a column-major order array.
-     * @memberof Matrix3
-     * @function
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -153,7 +149,6 @@ define([
     /**
      * Creates a Matrix3 instance from a row-major order array.
      * The resulting matrix will be in column-major order.
-     * @memberof Matrix3
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -185,7 +180,6 @@ define([
 
     /**
      * Computes a 3x3 rotation matrix from the provided quaternion.
-     * @memberof Matrix3
      *
      * @param {Quaternion} quaternion the quaternion to use.
      *
@@ -240,7 +234,6 @@ define([
 
     /**
      * Computes a Matrix3 instance representing a non-uniform scale.
-     * @memberof Matrix3
      *
      * @param {Cartesian3} scale The x, y, and z scale factors.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -281,7 +274,6 @@ define([
 
     /**
      * Computes a Matrix3 instance representing a uniform scale.
-     * @memberof Matrix3
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -455,7 +447,6 @@ define([
     /**
      * Creates an Array from the provided Matrix3 instance.
      * The array will be in column-major order.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use..
      * @param {Number[]} [result] The Array onto which to store the result.
@@ -485,7 +476,6 @@ define([
 
     /**
      * Computes the array index of the element at the provided row and column.
-     * @memberof Matrix3
      *
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
@@ -515,7 +505,6 @@ define([
 
     /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
@@ -523,8 +512,6 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.
-     *
-     * @see Cartesian3
      */
     Matrix3.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -553,7 +540,6 @@ define([
 
     /**
      * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
@@ -562,8 +548,6 @@ define([
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.
-     *
-     * @see Cartesian3
      */
     Matrix3.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -588,7 +572,6 @@ define([
 
     /**
      * Retrieves a copy of the matrix row at the provided index as a Cartesian3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
@@ -596,8 +579,6 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.
-     *
-     * @see Cartesian3
      */
     Matrix3.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -625,7 +606,6 @@ define([
 
     /**
      * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
@@ -634,8 +614,6 @@ define([
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, or 2.
-     *
-     * @see Cartesian3
      */
     Matrix3.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -661,7 +639,6 @@ define([
 
     /**
      * Extracts the non-uniform scale assuming the matrix is an affine transformation.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -689,7 +666,6 @@ define([
     /**
      * Computes the maximum scale assuming the matrix is an affine transformation.
      * The maximum scale is the maximum length of the column vectors.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix.
      * @returns {Number} The maximum scale.
@@ -701,7 +677,6 @@ define([
 
     /**
      * Computes the product of two matrices.
-     * @memberof Matrix3
      *
      * @param {Matrix3} left The first matrix.
      * @param {Matrix3} right The second matrix.
@@ -749,7 +724,6 @@ define([
 
     /**
      * Computes the product of a matrix and a column vector.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix.
      * @param {Cartesian3} cartesian The column.
@@ -785,7 +759,6 @@ define([
 
     /**
      * Computes the product of a matrix and a scalar.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
@@ -821,7 +794,6 @@ define([
 
     /**
      * Creates a negated copy of the provided matrix.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to negate.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -853,7 +825,6 @@ define([
 
     /**
      * Computes the transpose of the provided matrix.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to transpose.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -987,7 +958,6 @@ define([
      * The values along the diagonal of the diagonal matrix are the eigenvalues. The columns
      * of the unitary matrix are the corresponding eigenvectors.
      * </p>
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to decompose into diagonal and unitary matrix. Expected to be symmetric.
      * @param {Object} [result] An object with unitary and diagonal properties which are matrices onto which to store the result.
@@ -1052,7 +1022,6 @@ define([
 
     /**
      * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix with signed elements.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -1085,7 +1054,6 @@ define([
 
     /**
      * Computes the determinant of the provided matrix.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to use.
      * @returns {Number} The value of the determinant of the matrix.
@@ -1112,7 +1080,6 @@ define([
 
     /**
      * Computes the inverse of the provided matrix.
-     * @memberof Matrix3
      *
      * @param {Matrix3} matrix The matrix to invert.
      * @param {Matrix3} [result] The object onto which to store the result.
@@ -1164,7 +1131,6 @@ define([
     /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Matrix3
      *
      * @param {Matrix3} [left] The first matrix.
      * @param {Matrix3} [right] The second matrix.
@@ -1189,7 +1155,6 @@ define([
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Matrix3
      *
      * @param {Matrix3} [left] The first matrix.
      * @param {Matrix3} [right] The second matrix.
@@ -1219,7 +1184,9 @@ define([
 
     /**
      * An immutable Matrix3 instance initialized to the identity matrix.
-     * @memberof Matrix3
+     *
+     * @type {Matrix3}
+     * @constant
      */
     Matrix3.IDENTITY = freezeObject(new Matrix3(1.0, 0.0, 0.0,
                                                 0.0, 1.0, 0.0,
@@ -1227,61 +1194,78 @@ define([
 
     /**
      * The index into Matrix3 for column 0, row 0.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN0ROW0 = 0;
 
     /**
      * The index into Matrix3 for column 0, row 1.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN0ROW1 = 1;
 
     /**
      * The index into Matrix3 for column 0, row 2.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN0ROW2 = 2;
 
     /**
      * The index into Matrix3 for column 1, row 0.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN1ROW0 = 3;
 
     /**
      * The index into Matrix3 for column 1, row 1.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN1ROW1 = 4;
 
     /**
      * The index into Matrix3 for column 1, row 2.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN1ROW2 = 5;
 
     /**
      * The index into Matrix3 for column 2, row 0.
-     * @memberof Matrix3
+     *
+     * @type {Number}
+     * @constant
      */
     Matrix3.COLUMN2ROW0 = 6;
 
     /**
      * The index into Matrix3 for column 2, row 1.
-     * @memberof Matrix3
+     *
+     * @type {Matrix3}
+     * @constant
      */
     Matrix3.COLUMN2ROW1 = 7;
 
     /**
      * The index into Matrix3 for column 2, row 2.
-     * @memberof Matrix3
+     *
+     * @type {Matrix3}
+     * @constant
      */
     Matrix3.COLUMN2ROW2 = 8;
 
     /**
      * Duplicates the provided Matrix3 instance.
-     * @memberof Matrix3
      *
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
@@ -1293,7 +1277,6 @@ define([
     /**
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Matrix3
      *
      * @param {Matrix3} [right] The right hand side matrix.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -1306,7 +1289,6 @@ define([
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Matrix3
      *
      * @param {Matrix3} [right] The right hand side matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -1319,7 +1301,6 @@ define([
     /**
      * Creates a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1, column2)'.
-     * @memberof Matrix3
      *
      * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2)'.
      */

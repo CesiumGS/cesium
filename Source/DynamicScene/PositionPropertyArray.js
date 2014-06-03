@@ -86,7 +86,6 @@ define([
 
     /**
      * Gets the value of the property.
-     * @memberof PositionPropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
      * @param {Cartesian3[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -98,7 +97,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
-     * @memberof PositionPropertyArray
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
@@ -142,7 +140,6 @@ define([
     /**
      * Sets the value of the property.
      * If the value is an object, the object must provide clone and equals functions.
-     * @memberof PositionPropertyArray
      *
      * @param {Property[]} value An array of Property instances.
      */
@@ -168,7 +165,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof PositionPropertyArray
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

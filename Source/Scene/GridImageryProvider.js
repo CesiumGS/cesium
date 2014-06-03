@@ -206,8 +206,6 @@ define([
 
     /**
      * Draws a grid of lines into a canvas.
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._drawGrid = function(context) {
         var minPixel = 0;
@@ -226,8 +224,6 @@ define([
 
     /**
      * Render a grid into a canvas with background and glow
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._createGridCanvas = function() {
         var canvas = document.createElement('canvas');
@@ -272,8 +268,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof GridImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -289,8 +283,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link GridImageryProvider#ready} returns true.
-     *
-     * @memberof GridImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
