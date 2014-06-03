@@ -473,6 +473,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.

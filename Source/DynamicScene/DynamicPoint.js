@@ -86,7 +86,7 @@ define([
         /**
          * Gets or sets the {@link NearFarScalar} {@link Property} used to scale billboards based on distance.
          * If undefined, a constant size is used.
-         * @memberof DynamicBillboard.prototype
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
         scaleByDistance : createDynamicPropertyDescriptor('scaleByDistance')
