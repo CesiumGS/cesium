@@ -404,7 +404,9 @@ define([
          * will return the value of `options.usePreCachedTilesIfAvailable`, even if the MapServer does
          * not have pre-cached tiles.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * @returns {Boolean}
+         *
+         * @type {Boolean}
+         * @default true
          */
         usingPrecachedTiles : {
             get : function() {
@@ -419,7 +421,9 @@ define([
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
          * @memberof ArcGisMapServerImageryProvider.prototype
+         *
          * @type {Boolean}
+         * @default true
          */
         hasAlphaChannel : {
             get : function() {
