@@ -28,16 +28,53 @@ define([
     var updateTransformCartesian3Scratch2 = new Cartesian3();
     var updateTransformCartesian3Scratch3 = new Cartesian3();
 
+    var northUpRadiusFactor = 1.2;                  // times ellipsoid's maximum radius
+    var northUpMinimumVelocity = 8000.0;            // meters/sec
+    var vvlhMinimumVelocity = CesiumMath.EPSILON4;  // meters/sec
+
     function updateTransform(that, camera, objectChanged, positionProperty, time, ellipsoid) {
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
         if (defined(cartesian)) {
-            var successful = false;
+            var hasBasis = false;
+            var xBasis;
+            var yBasis;
+            var zBasis;
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
             var deltaTime = time.addSeconds(0.01);
             var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
-            if (defined(deltaCartesian) && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
+            var positionRadiusFactor = Cartesian3.magnitude(cartesian) / ellipsoid.maximumRadius;
+            var velocityMagnitude = 0;
+            if (defined(deltaCartesian)) {
+                Cartesian3.subtract(cartesian, deltaCartesian, updateTransformCartesian3Scratch2);
+                velocityMagnitude = Cartesian3.magnitude(updateTransformCartesian3Scratch2) * 100.0;  // meters/sec
+            }
+
+            if (positionRadiusFactor > northUpRadiusFactor || velocityMagnitude > northUpMinimumVelocity) {
+                // North-up viewing from deep space.
+
+                // X along the nadir
+                xBasis = updateTransformCartesian3Scratch2;
+                Cartesian3.normalize(cartesian, xBasis);
+                Cartesian3.negate(xBasis, xBasis);
+
+                // Z is North
+                zBasis = Cartesian3.clone(Cartesian3.UNIT_Z, updateTransformCartesian3Scratch3);
+
+                // Y is along the cross of z and x (right handed basis / in the direction of motion)
+                yBasis = Cartesian3.cross(zBasis, xBasis, updateTransformCartesian3Scratch1);
+
+                Cartesian3.normalize(xBasis, xBasis);
+                Cartesian3.normalize(yBasis, yBasis);
+
+                zBasis = Cartesian3.cross(xBasis, yBasis, updateTransformCartesian3Scratch3);
+                Cartesian3.normalize(zBasis, zBasis);
+                hasBasis = true;
+
+            } else if (velocityMagnitude > vvlhMinimumVelocity) {
+                // Approximation of VVLH (Vehicle Velocity Local Horizontal)
+
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, updateTransformMatrix3Scratch2);
                 var toFixed;
@@ -52,7 +89,7 @@ define([
                 }
 
                 // Z along the position
-                var zBasis = updateTransformCartesian3Scratch2;
+                zBasis = updateTransformCartesian3Scratch2;
                 Cartesian3.normalize(cartesian, zBasis);
                 Cartesian3.normalize(deltaCartesian, deltaCartesian);
 
@@ -60,10 +97,10 @@ define([
                 Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
 
                 // Y is along the angular momentum vector (e.g. "orbit normal")
-                var yBasis = Cartesian3.cross(zBasis, deltaCartesian, updateTransformCartesian3Scratch3);
+                yBasis = Cartesian3.cross(zBasis, deltaCartesian, updateTransformCartesian3Scratch3);
                 if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                     // X is along the cross of y and z (right handed basis / in the direction of motion)
-                    var xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
+                    xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
 
                     Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
                     Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
@@ -73,29 +110,30 @@ define([
                     Cartesian3.normalize(yBasis, yBasis);
                     Cartesian3.normalize(zBasis, zBasis);
 
-                    var transform = camera.transform;
-                    transform[0]  = xBasis.x;
-                    transform[1]  = xBasis.y;
-                    transform[2]  = xBasis.z;
-                    transform[3]  = 0.0;
-                    transform[4]  = yBasis.x;
-                    transform[5]  = yBasis.y;
-                    transform[6]  = yBasis.z;
-                    transform[7]  = 0.0;
-                    transform[8]  = zBasis.x;
-                    transform[9]  = zBasis.y;
-                    transform[10] = zBasis.z;
-                    transform[11] = 0.0;
-                    transform[12]  = cartesian.x;
-                    transform[13]  = cartesian.y;
-                    transform[14] = cartesian.z;
-                    transform[15] = 0.0;
-
-                    successful = true;
+                    hasBasis = true;
                 }
             }
 
-            if (!successful) {
+            if (hasBasis) {
+                var transform = camera.transform;
+                transform[0]  = xBasis.x;
+                transform[1]  = xBasis.y;
+                transform[2]  = xBasis.z;
+                transform[3]  = 0.0;
+                transform[4]  = yBasis.x;
+                transform[5]  = yBasis.y;
+                transform[6]  = yBasis.z;
+                transform[7]  = 0.0;
+                transform[8]  = zBasis.x;
+                transform[9]  = zBasis.y;
+                transform[10] = zBasis.z;
+                transform[11] = 0.0;
+                transform[12]  = cartesian.x;
+                transform[13]  = cartesian.y;
+                transform[14] = cartesian.z;
+                transform[15] = 0.0;
+            } else {
+                // Stationary or slow-moving, low-altitude objects use East-North-Up.
                 Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, camera.transform);
             }
 
@@ -162,7 +200,7 @@ define([
         //Re-usable objects to be used for retrieving position.
         this._lastCartesian = new Cartesian3();
 
-        this._offset3D = new Cartesian3(10000, -10000, 10000);
+        this._offset3D = new Cartesian3(-10000, 2500, 2500);
         this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D));
         Cartesian3.normalize(this._up3D, this._up3D);
 
