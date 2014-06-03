@@ -730,7 +730,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Extends the base viewer functionality with the provided mixin.
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
-     * @memberof Viewer
      *
      * @param {Function} mixin The Viewer mixin to add to this instance.
      * @param {Object} options The options object to be passed to the mixin function.
@@ -752,7 +751,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Resizes the widget to match the container size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof Viewer
      */
     Viewer.prototype.resize = function() {
         var cesiumWidget = this._cesiumWidget;
@@ -763,14 +761,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof Viewer
      */
     Viewer.prototype.render = function() {
         this._cesiumWidget.render();
     };
 
     /**
-     * @memberof Viewer
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Viewer.prototype.isDestroyed = function() {
@@ -780,7 +776,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
         var i;

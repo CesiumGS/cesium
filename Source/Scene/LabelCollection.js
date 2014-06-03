@@ -389,8 +389,6 @@ define([
      * Creates and adds a label with the specified initial properties to the collection.
      * The added label is returned so it can be modified or removed from the collection later.
      *
-     * @memberof LabelCollection
-     *
      * @param {Object}[options] A template describing the label's properties as shown in Example 1.
      *
      * @returns {Label} The label that was added to the collection.
@@ -442,8 +440,6 @@ define([
     /**
      * Removes a label from the collection.  Once removed, a label is no longer usable.
      *
-     * @memberof LabelCollection
-     *
      * @param {Label} label The label to remove.
      *
      * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
@@ -479,8 +475,6 @@ define([
     /**
      * Removes all labels from the collection.
      *
-     * @memberof LabelCollection
-     *
      * @performance <code>O(n)</code>.  It is more efficient to remove all the labels
      * from a collection and then add new ones than to create a new collection entirely.
      *
@@ -507,8 +501,6 @@ define([
     /**
      * Check whether this collection contains a given label.
      *
-     * @memberof LabelCollection
-     *
      * @param {Label} label The label to check for.
      *
      * @returns {Boolean} true if this collection contains the label, false otherwise.
@@ -525,8 +517,6 @@ define([
      * it to the left, changing their indices.  This function is commonly used with
      * {@link LabelCollection#length} to iterate over all the labels
      * in the collection.
-     *
-     * @memberof LabelCollection
      *
      * @param {Number} index The zero-based index of the billboard.
      *
@@ -620,8 +610,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof LabelCollection
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see LabelCollection#destroy
@@ -637,8 +625,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof LabelCollection
      *
      * @returns {undefined}
      *

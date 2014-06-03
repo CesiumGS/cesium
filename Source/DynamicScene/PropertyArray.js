@@ -69,7 +69,6 @@ define([
 
     /**
      * Gets the value of the property.
-     * @memberof PropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
      * @param {Object[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -108,7 +107,6 @@ define([
 
     /**
      * Sets the value of the property.
-     * @memberof PropertyArray
      *
      * @param {Property[]} value An array of Property instances.
      */
@@ -134,7 +132,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof PropertyArray
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

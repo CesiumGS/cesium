@@ -804,8 +804,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Globe
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see Globe#destroy
@@ -821,8 +819,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Globe
      *
      * @returns {undefined}
      *

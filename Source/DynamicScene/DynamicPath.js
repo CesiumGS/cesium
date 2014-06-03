@@ -112,7 +112,6 @@ define([
 
     /**
      * Duplicates a DynamicPath instance.
-     * @memberof DynamicPath
      *
      * @param {DynamicPath} [result] The object onto which to store the result.
      * @returns {DynamicPath} The modified result parameter or a new instance if one was not provided.
@@ -135,7 +134,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicPath
      *
      * @param {DynamicPath} source The object to be merged into this object.
      */

@@ -271,7 +271,6 @@ define([
     /**
      * Creates a spline where the tangents at each control point are the same.
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -338,7 +337,6 @@ define([
     /**
      * Creates a natural cubic spline. The tangents at the control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -401,7 +399,6 @@ define([
     /**
      * Creates a clamped cubic spline. The tangents at the interior control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
      * @param {Number[]} options.times The array of control point times.
      * @param {Cartesian3[]} options.points The array of control points.
@@ -476,7 +473,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof HermiteSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -492,7 +489,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof HermiteSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.

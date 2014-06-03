@@ -213,8 +213,6 @@ define([
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
      *
      * @returns {Polyline} The polyline that was added to the collection.
@@ -249,8 +247,6 @@ define([
 
     /**
      * Removes a polyline from the collection.
-     *
-     * @memberof PolylineCollection
      *
      * @param {Polyline} polyline The polyline to remove.
      *
@@ -296,8 +292,6 @@ define([
      * @performance <code>O(n)</code>.  It is more efficient to remove all the polylines
      * from a collection and then add new ones than to create a new collection entirely.
      *
-     * @memberof PolylineCollection
-     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see PolylineCollection#add
@@ -322,8 +316,6 @@ define([
     /**
      * Determines if this collection contains the specified polyline.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Polyline} polyline The polyline to check for.
      *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
@@ -341,8 +333,6 @@ define([
      * {@link PolylineCollection#length} to iterate over all the polylines
      * in the collection.
      *
-     * @memberof PolylineCollection
-     *
      * @param {Number} index The zero-based index of the polyline.
      *
      * @returns {Polyline} The polyline at the specified index.
@@ -353,8 +343,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#length
-     *
      * @example
      * // Toggle the show property of every polyline in the collection
      * var len = polylines.length;
@@ -362,6 +350,8 @@ define([
      *   var p = polylines.get(i);
      *   p.show = !p.show;
      * }
+     *
+     * @see PolylineCollection#length
      */
     PolylineCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -621,8 +611,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof PolylineCollection
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see PolylineCollection#destroy
@@ -638,8 +626,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof PolylineCollection
      *
      * @returns {undefined}
      *

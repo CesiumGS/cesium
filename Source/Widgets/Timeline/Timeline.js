@@ -87,7 +87,6 @@ define([
 
         /**
          * Gets the parent container.
-         * @memberof Timeline
          * @type {Element}
          */
         this.container = container;

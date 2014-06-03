@@ -58,7 +58,6 @@ define([
 
     /**
      * Gets the value of the property.
-     * @memberof ConstantProperty
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -71,7 +70,6 @@ define([
     /**
      * Sets the value of the property.
      * If the value is a non-basic type, then it must provide clone and equals functions.
-     * @memberof ConstantProperty
      *
      * @param {Object} value The property value.
      *
@@ -104,7 +102,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ConstantProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

@@ -429,8 +429,6 @@ define([
      * when a render loop error occurs, if showRenderLoopErrors was not false when the
      * widget was constructed.
      *
-     * @memberof CesiumWidget
-     *
      * @param {String} title The title to be displayed on the error panel.
      * @param {String} error The error to be displayed on the error panel.  Optional.
      */
@@ -488,7 +486,6 @@ define([
     };
 
     /**
-     * @memberof CesiumWidget
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {
@@ -498,7 +495,6 @@ define([
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.destroy = function() {
         this._scene = this._scene && this._scene.destroy();
@@ -510,7 +506,6 @@ define([
      * Updates the canvas size, camera aspect ratio, and viewport size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
@@ -549,7 +544,6 @@ define([
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
         this._scene.initializeFrame();

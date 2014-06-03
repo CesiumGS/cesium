@@ -225,7 +225,7 @@ define([
      * Returns the full GLSL fragment shader source, which for {@link DebugAppearance} is just
      * {@link DebugAppearance#fragmentShaderSource}.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -234,7 +234,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link DebugAppearance#translucent}.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -245,7 +245,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof DebugAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

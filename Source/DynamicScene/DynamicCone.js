@@ -157,7 +157,6 @@ define([
 
     /**
      * Duplicates a DynamicCone instance.
-     * @memberof DynamicCone
      *
      * @param {DynamicCone} [result] The object onto which to store the result.
      * @returns {DynamicCone} The modified result parameter or a new instance if one was not provided.
@@ -185,7 +184,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicCone
      *
      * @param {DynamicCone} source The object to be merged into this object.
      */

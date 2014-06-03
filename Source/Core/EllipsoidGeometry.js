@@ -91,7 +91,6 @@ define([
 
     /**
      * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipsoidGeometry
      *
      * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
      * @returns {Geometry} The computed vertices and indices.

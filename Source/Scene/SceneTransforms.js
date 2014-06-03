@@ -38,8 +38,6 @@ define([
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
      * HTML element at the same screen position as an object in the scene.
      *
-     * @memberof SceneTransforms
-     *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
@@ -85,8 +83,6 @@ define([
     /**
      * Transforms a position in WGS84 coordinates to drawing buffer coordinates.  This may produce different
      * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
-     *
-     * @memberof SceneTransforms
      *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
