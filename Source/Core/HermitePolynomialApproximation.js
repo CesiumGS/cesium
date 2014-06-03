@@ -88,8 +88,8 @@ define([
         if (!defined(degree)) {
             throw new DeveloperError('degree is required.');
         }
-        if (degree < 1) {
-            throw new DeveloperError('degree must be 1 or greater.');
+        if (degree < 0) {
+            throw new DeveloperError('degree must be 0 or greater.');
         }
         if (inputOrder < 0) {
             throw new DeveloperError('inputOrder must be 0 or greater.');

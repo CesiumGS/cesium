@@ -21,22 +21,15 @@ define([
 
     /**
      * Given the desired degree, returns the number of data points required for interpolation.
-     *
+     * Since linear interpolation can only generate a first degree polynomial, this function
+     * always returns 2.
      * @memberof LinearApproximation
      *
      * @param {Number} degree The desired degree of interpolation.
      *
-     * @exception {DeveloperError} Linear interpolation can only generate a first degree polynomial.
-     *
-     * @returns The number of required data points needed for the desired degree of interpolation.
+     * @returns The function always returns 2.
      */
     LinearApproximation.getRequiredDataPoints = function(degree) {
-        //>>includeStart('debug', pragmas.debug);
-        if (degree !== 1) {
-            throw new DeveloperError('Linear interpolation can only generate a first degree polynomial.');
-        }
-        //>>includeEnd('debug');
-
         return 2;
     };
 
