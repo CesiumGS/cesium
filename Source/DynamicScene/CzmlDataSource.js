@@ -448,12 +448,20 @@ define([
             combinedInterval = constrainedInterval;
         }
 
+        var packedLength;
+        var isSampled;
+        var unwrappedInterval;
+        var unwrappedIntervalLength;
         var isReference = defined(packetData.reference);
-        var unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
-        var packedLength = defaultValue(type.packedLength, 1);
-        var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
-        var isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+
+        if (!isReference) {
+            unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
+            packedLength = defaultValue(type.packedLength, 1);
+            unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+            isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+        }
+
 
         //Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
@@ -602,14 +610,13 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        var isReference = defined(packetData.reference);
-
         var referenceFrame;
         var unwrappedInterval;
         var isSampled = false;
         var unwrappedIntervalLength;
-        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var packedLength = Cartesian3.packedLength;
+        var isReference = defined(packetData.reference);
+        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
         if (!isReference) {
             referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
