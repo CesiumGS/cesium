@@ -35,6 +35,7 @@ define([
      * @alias RectanglePrimitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the rectangle is drawn on.
      * @param {Rectangle} [options.rectangle] The rectangle, which defines the rectangular region to draw.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.

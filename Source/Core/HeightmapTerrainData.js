@@ -34,6 +34,7 @@ define([
      * @alias HeightmapTerrainData
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {TypedArray} options.buffer The buffer containing height data.
      * @param {Number} options.width The width (longitude direction) of the heightmap, in samples.
      * @param {Number} options.height The height (latitude direction) of the heightmap, in samples.

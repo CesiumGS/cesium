@@ -24,6 +24,7 @@ define([
      * @alias DebugAppearance
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.attributeName The name of the attribute to visualize.
      * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.

@@ -393,6 +393,7 @@ define([
      * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.destination The final position of the camera.
      * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
