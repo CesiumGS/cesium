@@ -182,7 +182,7 @@ define([
          * @type {MaterialAppearance.MaterialSupport}
          * @readonly
          *
-         * @default @link MaterialAppearance.MaterialSupport.TEXTURED}
+         * @default {@link MaterialAppearance.MaterialSupport.TEXTURED}
          */
         materialSupport : {
             get : function() {
@@ -287,7 +287,7 @@ define([
          * Only basic materials, which require just <code>position</code> and
          * <code>normal</code> vertex attributes, are supported.
          *
-         * @readonly
+         * @constant
          */
         BASIC : freezeObject({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
@@ -299,7 +299,7 @@ define([
          * <code>normal</code>, and <code>st</code> vertex attributes,
          * are supported.  The vast majority of materials fall into this category.
          *
-         * @readonly
+         * @constant
          */
         TEXTURED : freezeObject({
             vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
@@ -311,7 +311,7 @@ define([
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
          * <code>binormal</code>, and <code>tangent</code> vertex attributes.
          *
-         * @readonly
+         * @constant
          */
         ALL : freezeObject({
             vertexFormat : VertexFormat.ALL,
