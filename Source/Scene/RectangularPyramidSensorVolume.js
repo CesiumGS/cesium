@@ -235,7 +235,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.isDestroyed = function() {
         return false;
@@ -243,7 +242,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.destroy = function() {
         this._customSensor = this._customSensor && this._customSensor.destroy();

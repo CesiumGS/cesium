@@ -374,8 +374,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof WebMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -391,8 +389,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

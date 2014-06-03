@@ -323,8 +323,6 @@ define([
      * it actually does not, by stretching the texels at the edges over the entire
      * globe.
      *
-     * @memberof ImageryLayer
-     *
      * @returns {Boolean} true if this is the base layer; otherwise, false.
      */
     ImageryLayer.prototype.isBaseLayer = function() {
@@ -336,8 +334,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof ImageryLayer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -354,8 +350,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof ImageryLayer
      *
      * @returns {undefined}
      *
@@ -374,7 +368,6 @@ define([
      * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
      * tile.
      *
-     * @memberof ImageryLayer
      * @private
      *
      * @param {Tile} tile The terrain tile.
@@ -562,7 +555,6 @@ define([
      * Calculate the translation and scale for a particular {@link TileImagery} attached to a
      * particular terrain {@link Tile}.
      *
-     * @memberof ImageryLayer
      * @private
      *
      * @param {Tile} tile The terrain tile.
@@ -589,7 +581,6 @@ define([
      * Request a particular piece of imagery from the imagery provider.  This method handles raising an
      * error event if the request fails, and retrying the request if necessary.
      *
-     * @memberof ImageryLayer
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
@@ -648,11 +639,10 @@ define([
     /**
      * Create a WebGL texture for a given {@link Imagery} instance.
      *
-     *  @memberof ImageryLayer
-     *  @private
+     * @private
      *
-     *  @param {Context} context The rendered context to use to create textures.
-     *  @param {Imagery} imagery The imagery for which to create a texture.
+     * @param {Context} context The rendered context to use to create textures.
+     * @param {Imagery} imagery The imagery for which to create a texture.
      */
     ImageryLayer.prototype._createTexture = function(context, imagery) {
         var imageryProvider = this._imageryProvider;
@@ -692,7 +682,6 @@ define([
      * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
      * mipmaps for the geographic texture.
      *
-     * @memberof ImageryLayer
      * @private
      *
      * @param {Context} context The rendered context to use.

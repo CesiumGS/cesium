@@ -318,8 +318,6 @@ define([
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
      * important to check {@link TextureAtlas#getGUID} before using old values.
      *
-     * @memberof TextureAtlas
-     *
      * @param {Image} image An image to be added to the texture atlas.
      *
      * @returns {Number} The index of the newly added image.
@@ -340,8 +338,6 @@ define([
      * Calling addImages is more space-efficient than calling addImage multiple times.
      * Texture coordinates are subject to change if the texture atlas resizes, so it is
      * important to check {@link TextureAtlas#getGUID} before using old values.
-     *
-     * @memberof TextureAtlas
      *
      * @param {Image[]} images An array of {@link Image} to be added to the texture atlas.
      *
@@ -389,8 +385,6 @@ define([
     /**
      * Add a set of sub-regions to one atlas image as additional image indices.
      *
-     * @memberof TextureAtlas
-     *
      * @param {Image} image An image to be added to the texture atlas.
      * @param {BoundingRectangle[]} subRegions An array of {@link BoundingRectangle} sub-regions measured in pixels from the bottom-left.
      *
@@ -426,8 +420,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof TextureAtlas
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see TextureAtlas#destroy
@@ -443,8 +435,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof TextureAtlas
      *
      * @returns {undefined}
      *

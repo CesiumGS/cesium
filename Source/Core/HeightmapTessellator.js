@@ -43,8 +43,6 @@ define([
      * [X, Y, Z, H, U, V], where X, Y, and Z represent the Cartesian position of the vertex, H is the
      * height above the ellipsoid, and U and V are the texture coordinates.
      *
-     * @memberof HeightmapTessellator
-     *
      * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
      *                             If options.skirtHeight is 0.0, the array should have
      *                             options.width * options.height * 6 elements.  If

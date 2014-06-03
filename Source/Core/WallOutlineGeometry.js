@@ -102,8 +102,6 @@ define([
      * A description of a walloutline. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
-     * @memberof WallOutlineGeometry
-     *
      * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
@@ -173,7 +171,6 @@ define([
 
     /**
      * Computes the geometric representation of a wall outline, including its vertices, indices, and a bounding sphere.
-     * @memberof WallOutlineGeometry
      *
      * @param {WallOutlineGeometry} wallGeometry A description of the wall outline.
      * @returns {Geometry} The computed vertices and indices.

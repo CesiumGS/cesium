@@ -167,7 +167,6 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
     });
 
     /**
-     * @memberof SceneModePicker
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SceneModePicker.prototype.isDestroyed = function() {
@@ -177,7 +176,6 @@ cesiumSvgPath: { path: _columbusViewPath, width: 64, height: 64 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof SceneModePicker
      */
     SceneModePicker.prototype.destroy = function() {
         this._viewModel.destroy();

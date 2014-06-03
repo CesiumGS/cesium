@@ -305,8 +305,6 @@ define([
     /**
      * A description of a polygon outline from an array of positions.
      *
-     * @memberof PolygonOutlineGeometry
-     *
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
@@ -353,7 +351,6 @@ define([
 
     /**
      * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
-     * @memberof PolygonOutlineGeometry
      *
      * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
      * @returns {Geometry} The computed vertices and indices.

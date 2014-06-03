@@ -147,7 +147,6 @@ define([
 
     /**
      * Computes the geometric representation of the outline of a polyline with a volume, including its vertices, indices, and a bounding sphere.
-     * @memberof PolylineVolumeOutlineGeometry
      *
      * @param {PolylineVolumeOutlineGeometry} polylineVolumeOutlineGeometry A description of the polyline volume outline.
      *

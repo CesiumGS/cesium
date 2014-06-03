@@ -106,7 +106,6 @@ define([
 
     /**
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
-     * @memberof CylinderGeometry
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
      * @returns {Geometry} The computed vertices and indices.

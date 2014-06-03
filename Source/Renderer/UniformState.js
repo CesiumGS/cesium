@@ -828,8 +828,6 @@ define([
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
      *
-     * @memberof UniformState
-     *
      * @param {Object} frustum The frustum to synchronize with.
      */
     UniformState.prototype.updateFrustum = function(frustum) {
@@ -845,8 +843,6 @@ define([
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
-     *
-     * @memberof UniformState
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */

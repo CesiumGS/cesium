@@ -522,8 +522,6 @@ define([
     /**
      * Computes the factorial of the provided number.
      *
-     * @memberof CesiumMath
-     *
      * @param {Number} n The number whose factorial is to be computed.
      *
      * @returns {Number} The factorial of the provided number or undefined if the number is less than 0.
@@ -555,8 +553,6 @@ define([
 
     /**
      * Increments a number with a wrapping to a minimum value if the number exceeds the maximum value.
-     *
-     * @memberof CesiumMath
      *
      * @param {Number} [n] The number to be incremented.
      * @param {Number} [maximumValue] The maximum incremented value before rolling over to the minimum value.
@@ -592,8 +588,6 @@ define([
     /**
      * Determines if a positive integer is a power of two.
      *
-     * @memberof CesiumMath
-     *
      * @param {Number} n The positive integer to test.
      *
      * @returns {Boolean} <code>true</code> if the number if a power of two; otherwise, <code>false</code>.
@@ -616,8 +610,6 @@ define([
 
     /**
      * Computes the next power-of-two integer greater than or equal to the provided positive integer.
-     *
-     * @memberof CesiumMath
      *
      * @param {Number} n The positive integer to test.
      *
@@ -651,8 +643,6 @@ define([
     /**
      * Constraint a value to lie between two values.
      *
-     * @memberof CesiumMath
-     *
      * @param {Number} value The value to constrain.
      * @param {Number} min The minimum value.
      * @param {Number} max The maximum value.
@@ -679,8 +669,6 @@ define([
      * Sets the seed used by the random number generator
      * in {@link CesiumMath#nextRandomNumber}.
      *
-     * @memberof CesiumMath
-     *
      * @param {Number} seed An integer used as the seed.
      */
     CesiumMath.setRandomNumberSeed = function(seed) {
@@ -696,8 +684,6 @@ define([
     /**
      * Generates a random number in the range of [0.0, 1.0)
      * using a Mersenne twister.
-     *
-     * @memberof CesiumMath
      *
      * @returns A random number in the range of [0.0, 1.0).
      *

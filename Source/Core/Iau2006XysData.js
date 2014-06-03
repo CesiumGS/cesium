@@ -86,8 +86,6 @@ define([
     /**
      * Preloads XYS data for a specified date range.
      *
-     * @memberof Iau2006XysData
-     *
      * @param {Number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
      *                 the Terrestrial Time (TT) time standard.
      * @param {Number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
@@ -128,8 +126,6 @@ define([
     /**
      * Computes the XYS values for a given date by interpolating.  If the required data is not yet downloaded,
      * this method will return undefined.
-     *
-     * @memberof Iau2006XysData
      *
      * @param {Number} dayTT The Julian day number for which to compute the XYS value, expressed in
      *                 the Terrestrial Time (TT) time standard.

@@ -699,7 +699,6 @@ define([
 
     /**
      * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
-     * @memberof RectangleGeometry
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
      * @returns {Geometry} The computed vertices and indices.

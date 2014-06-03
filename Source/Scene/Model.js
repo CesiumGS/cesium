@@ -467,8 +467,6 @@ define([
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
-     * @memberof Model
-     *
      * @param {String} options.url The url to the glTF .json file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
@@ -552,8 +550,6 @@ define([
      * Returns the glTF node with the given <code>name</code> property.  This is used to
      * modify a node's transform for animation outside of glTF animations.
      *
-     * @memberof Model
-     *
      * @param {String} name The glTF name of the node.
      *
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
@@ -573,8 +569,6 @@ define([
     /**
      * Returns the glTF mesh with the given <code>name</code> property.
      *
-     * @memberof Model
-     *
      * @param {String} name The glTF name of the mesh.
      *
      * @returns {ModelMesh} The mesh or <code>undefined</code> if no mesh with <code>name</code> exists.
@@ -587,8 +581,6 @@ define([
 
     /**
      * Returns the glTF material with the given <code>name</code> property.
-     *
-     * @memberof Model
      *
      * @param {String} name The glTF name of the material.
      *
@@ -2195,8 +2187,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Model
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Model#destroy
@@ -2228,8 +2218,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Model
      *
      * @returns {undefined}
      *

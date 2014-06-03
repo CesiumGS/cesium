@@ -22,8 +22,6 @@ define([
     /**
      * Given the desired degree, returns the number of data points required for interpolation.
      *
-     * @memberof LinearApproximation
-     *
      * @param {Number} degree The desired degree of interpolation.
      *
      * @exception {DeveloperError} Linear interpolation can only generate a first degree polynomial.

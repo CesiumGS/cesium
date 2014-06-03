@@ -67,7 +67,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof CircleOutlineGeometry
      *
      * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
      * @returns {Geometry} The computed vertices and indices.

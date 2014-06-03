@@ -50,7 +50,6 @@ define([
     /**
      * Associates the provided key with the provided value.  If the key already
      * exists, it is overwritten with the new value.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key A unique identifier.
      * @param {Object} value The value to associate with the provided key.
@@ -69,7 +68,6 @@ define([
 
     /**
      * Retrieves the value associated with the provided key.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key The key whose value is to be retrieved.
      * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
@@ -85,7 +83,6 @@ define([
 
     /**
      * Removes a key-value pair from the collection.
-     * @memberof AssociativeArray
      *
      * @param {String|Number} key The key to be removed.
      * @returns {Boolean} True if it was removed, false if the key was not in the collection.
@@ -109,7 +106,6 @@ define([
 
     /**
      * Clears the collection.
-     * @memberof AssociativeArray
      */
     AssociativeArray.prototype.removeAll = function() {
         this._hash = {};

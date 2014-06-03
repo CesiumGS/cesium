@@ -83,7 +83,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipsoidOutlineGeometry
      *
      * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
      * @returns {Geometry} The computed vertices and indices.

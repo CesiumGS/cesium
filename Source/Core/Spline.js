@@ -60,7 +60,6 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof Spline
      *
      * @param {Number} time The time.
      * @param {Number} startIndex The index from which to start the search.

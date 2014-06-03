@@ -211,7 +211,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipseOutlineGeometry
      *
      * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

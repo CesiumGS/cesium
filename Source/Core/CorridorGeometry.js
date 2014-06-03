@@ -671,7 +671,6 @@ define([
 
     /**
      * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
-     * @memberof CorridorGeometry
      *
      * @param {CorridorGeometry} corridorGeometry A description of the corridor.
      *

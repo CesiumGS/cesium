@@ -270,7 +270,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
-     * @memberof ImageryProvider
      * @function
      *
      * @param {Number} x The tile X coordinate.
@@ -290,7 +289,6 @@ define([
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
-     * @memberof ImageryProvider
      *
      * @param {String} url The URL of the image.
      * @returns {Promise} A promise for the image that will resolve when the image is available, or

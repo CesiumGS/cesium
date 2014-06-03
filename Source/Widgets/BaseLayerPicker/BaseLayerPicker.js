@@ -240,7 +240,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     });
 
     /**
-     * @memberof BaseLayerPicker
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     BaseLayerPicker.prototype.isDestroyed = function() {
@@ -250,7 +249,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown, true);
