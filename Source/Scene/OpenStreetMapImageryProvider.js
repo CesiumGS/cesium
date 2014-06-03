@@ -33,6 +33,7 @@ define([
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.

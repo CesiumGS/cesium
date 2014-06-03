@@ -36,6 +36,7 @@ define([
      * @alias EarthOrientationParameters
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url] The URL from which to obtain EOP data.  If neither this
      *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.  If options.data is specified, this parameter is

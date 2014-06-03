@@ -20,6 +20,7 @@ define([
      * @alias GridImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
      * @param {Number} [options.cells=8] The number of grids cells.
      * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.

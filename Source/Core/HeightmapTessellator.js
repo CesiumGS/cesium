@@ -45,6 +45,7 @@ define([
      *
      * @memberof HeightmapTessellator
      *
+     * @param {Object} options Object with the following properties:
      * @param {Array|Float32Array} options.vertices The array to use to store computed vertices.
      *                             If options.skirtHeight is 0.0, the array should have
      *                             options.width * options.height * 6 elements.  If

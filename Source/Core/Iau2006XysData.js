@@ -26,6 +26,7 @@ define([
      * @alias Iau2006XysData
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
      * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.

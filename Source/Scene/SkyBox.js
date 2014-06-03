@@ -44,6 +44,7 @@ define([
      * @alias SkyBox
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *

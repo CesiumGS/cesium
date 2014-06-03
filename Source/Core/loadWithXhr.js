@@ -21,7 +21,7 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Options for the request.
+     * @param {Object} options Object with the following properties:
      * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
