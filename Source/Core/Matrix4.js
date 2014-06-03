@@ -898,8 +898,6 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
-     * @see czm_viewportTransformation
-     *
      * @example
      * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
      * var m = Cesium.Matrix4.computeViewportTransformation({

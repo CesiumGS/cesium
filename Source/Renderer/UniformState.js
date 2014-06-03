@@ -439,7 +439,8 @@ define([
         },
 
         /**
-         * The model-view relative to eye matrix used to define the {@link czm_modelViewRelativeToEye} GLSL uniform.
+         * Model-view relative to eye matrix.
+         *
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
@@ -522,7 +523,8 @@ define([
         },
 
         /**
-         * The model-view-projection relative to eye matrix used to define the {@link czm_modelViewProjectionRelativeToEye} GLSL uniform.
+         * Model-view-projection relative to eye matrix.
+         *
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
@@ -699,7 +701,7 @@ define([
         },
 
         /**
-         * The high bits of the camera position used to define the {@link czm_encodedCameraPositionMCHigh} GLSL uniform.
+         * The high bits of the camera position.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
@@ -711,7 +713,7 @@ define([
         },
 
         /**
-         * The low bits of the camera position used to define the {@link czm_encodedCameraPositionMCLow} GLSL uniform.
+         * The low bits of the camera position.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
