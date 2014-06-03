@@ -420,7 +420,7 @@ define([
      *    styles=
      *    format=image/jpeg
      *
-     * @memberof WebMapServiceImageryProvider
+     * @readonly
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',

@@ -43,7 +43,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof Spline
      * @function
      *
      * @param {Number} time The time at which to evaluate the curve.

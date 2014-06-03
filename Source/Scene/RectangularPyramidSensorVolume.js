@@ -180,8 +180,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof RectangularPyramidSensorVolume
-     *
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */

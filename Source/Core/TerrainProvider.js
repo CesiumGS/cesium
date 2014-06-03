@@ -76,8 +76,6 @@ define([
      * same list of indices.  The total number of vertices must be less than or equal
      * to 65536.
      *
-     * @memberof TerrainProvider
-     *
      * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
      * @param {Number} height The number of vertices in the regular grid in the vertical direction.
      * @returns {Uint16Array} The list of indices.

@@ -93,8 +93,6 @@ define([
     /**
      * Commits changes to properties before rendering by updating the object's WebGL resources.
      *
-     * @memberof ViewportQuad
-     *
      * @exception {DeveloperError} this.material must be defined.
      * @exception {DeveloperError} this.rectangle must be defined.
      */

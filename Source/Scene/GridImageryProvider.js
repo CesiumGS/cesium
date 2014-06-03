@@ -205,8 +205,6 @@ define([
 
     /**
      * Draws a grid of lines into a canvas.
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._drawGrid = function(context) {
         var minPixel = 0;
@@ -225,8 +223,6 @@ define([
 
     /**
      * Render a grid into a canvas with background and glow
-     *
-     * @memberof GridImageryProvider
      */
     GridImageryProvider.prototype._createGridCanvas = function() {
         var canvas = document.createElement('canvas');

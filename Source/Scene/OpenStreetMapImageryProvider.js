@@ -126,7 +126,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof OpenStreetMapImageryProvider
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -228,7 +228,7 @@ define([
         /**
          * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProviderr.prototype
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Rectangle}
          */
         rectangle : {

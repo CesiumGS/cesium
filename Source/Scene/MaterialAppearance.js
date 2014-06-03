@@ -249,7 +249,7 @@ define([
      * this is derived from {@link MaterialAppearance#fragmentShaderSource}, {@link MaterialAppearance#material},
      * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -258,7 +258,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link MaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -269,7 +269,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */
@@ -280,8 +280,6 @@ define([
      * {@link MaterialAppearance} instance.  This is a trade-off between
      * flexibility (a wide array of materials) and memory/performance
      * (required vertex format and GLSL shader complexity.
-     *
-     * @memberof MaterialAppearance
      */
     MaterialAppearance.MaterialSupport = {
         /**

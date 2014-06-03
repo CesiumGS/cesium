@@ -60,8 +60,6 @@ define([
      *
      * @see LagrangePolynomialApproximation
      * @see HermitePolynomialApproximation
-     *
-     * @memberof LinearApproximation
      */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -112,8 +112,6 @@ define([
     /**
      * Copies texels from the framebuffer to the cubemap's face.
      *
-     * @memberof CubeMapFace
-     *
      * @param {Number} [xOffset=0] An offset in the x direction in the cubemap where copying begins.
      * @param {Number} [yOffset=0] An offset in the y direction in the cubemap where copying begins.
      * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.

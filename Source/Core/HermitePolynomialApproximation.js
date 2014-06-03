@@ -95,8 +95,6 @@ define([
      *
      * @see LinearApproximation
      * @see LagrangePolynomialApproximation
-     *
-     * @memberof HermitePolynomialApproximation
      */
     HermitePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         if (!defined(result)) {

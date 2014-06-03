@@ -30,7 +30,7 @@ define([
 
     /**
      * Updates the visualization to the provided time.
-     * @memberof Visualizer
+     * @function
      *
      * @param {JulianDate} time The time.
      *
@@ -42,7 +42,7 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof Visualizer
+     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -50,7 +50,7 @@ define([
 
     /**
      * Removes all visualization and cleans up any resources associated with this instance.
-     * @memberof Visualizer
+     * @function
      */
     Visualizer.prototype.destroy = DeveloperError.throwInstantiationError;
 
