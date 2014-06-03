@@ -75,6 +75,7 @@ define([
      * @constructor
      *
      * @param {ImageryProvider} imageryProvider The imagery provider to use.
+     * @param {Object} [options] Object with the following properties:
      * @param {Rectangle} [options.rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
      *        can limit the visible portion of the imagery provider.
      * @param {Number|Function} [options.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.

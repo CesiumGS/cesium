@@ -26,6 +26,7 @@ define([
      * @alias WebMercatorTilingScheme
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
      * @param {Number} [options.numberOfLevelZeroTilesX=1] The number of tiles in the X direction at level zero of

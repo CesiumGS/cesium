@@ -35,6 +35,7 @@ define([
      * @alias TileMapServiceImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='.'] Path to image tiles on server.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.

@@ -353,7 +353,7 @@ define([
     /**
      * Sets the algorithm and degree to use when interpolating a value.
      *
-     * @param {Object} options The options
+     * @param {Object} [options] Object with the following properties:
      * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
      */

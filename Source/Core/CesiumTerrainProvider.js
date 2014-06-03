@@ -49,6 +49,7 @@ define([
      * @alias CesiumTerrainProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the Cesium terrain server.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.

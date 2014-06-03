@@ -178,6 +178,7 @@ define([
      * @alias PolylineVolumeGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
      * @param {Number} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.

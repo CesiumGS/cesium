@@ -43,6 +43,7 @@ define([
      * @alias TextureAtlas
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The scene in which the texture gets created.
      * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGBA] The pixel format of the texture.
      * @param {Number} [options.borderWidthInPixels=1] The amount of spacing between adjacent images in pixels.

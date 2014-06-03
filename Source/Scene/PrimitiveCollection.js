@@ -23,6 +23,7 @@ define([
      * @alias PrimitiveCollection
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Determines if the primitives in the collection will be shown.
      * @param {Boolean} [options.destroyPrimitives=true] Determines if primitives in the collection are destroyed when they are removed.
      *

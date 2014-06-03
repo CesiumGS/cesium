@@ -46,6 +46,7 @@ define([
      * @alias GoogleEarthImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Google Earth server hosting the imagery.
      * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
      *        The channel number can be found by looking at the json file located at:

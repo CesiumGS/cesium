@@ -152,6 +152,7 @@ define([
      * @alias Model
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Object} [options.gltf] The object for the glTF JSON.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
@@ -467,6 +468,8 @@ define([
      * Creates a model from a glTF asset.  When the model is ready to render, i.e., when the external binary, image,
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyToRender} event is fired.
      *
+     *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to the glTF .json file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.

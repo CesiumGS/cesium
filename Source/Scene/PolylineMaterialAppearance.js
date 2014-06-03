@@ -29,6 +29,7 @@ define([
      * @alias PolylineMaterialAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.

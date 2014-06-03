@@ -47,6 +47,7 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.

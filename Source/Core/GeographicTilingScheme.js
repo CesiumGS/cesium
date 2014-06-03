@@ -31,6 +31,7 @@ define([
      * @alias GeographicTilingScheme
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid whose surface is being tiled. Defaults to
      * the WGS84 ellipsoid.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the tiling scheme.

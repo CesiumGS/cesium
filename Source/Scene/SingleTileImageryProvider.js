@@ -32,6 +32,7 @@ define([
      * @alias SingleTileImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url for the tile.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.

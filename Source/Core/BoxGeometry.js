@@ -33,6 +33,7 @@ define([
      * @alias BoxGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.

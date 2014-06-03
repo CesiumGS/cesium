@@ -187,7 +187,7 @@ define([
      * Creates a random color using the provided options. For reproducible random colors, you should
      * call {@link CesiumMath#setRandomNumberSeed} once at the beginning of your application.
      *
-     * @param {Object} [options] Object containing the options.
+     * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
      * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
      * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
