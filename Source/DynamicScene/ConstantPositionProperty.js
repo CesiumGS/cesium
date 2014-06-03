@@ -52,7 +52,9 @@ define([
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof ConstantPositionProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

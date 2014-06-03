@@ -77,7 +77,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof TimeIntervalCollectionProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

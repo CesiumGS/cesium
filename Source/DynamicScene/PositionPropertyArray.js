@@ -64,7 +64,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value or one of the properties in the array also changes.
          * @memberof PositionPropertyArray.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

@@ -80,7 +80,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof CompositeProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
