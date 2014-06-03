@@ -482,7 +482,7 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} Calculated sun position
      */
-    Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
+    Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(date, result){
         if (!defined(date)) {
             date = new JulianDate();
         }

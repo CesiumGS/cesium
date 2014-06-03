@@ -42,7 +42,7 @@ defineSuite([
             Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
         }
 
-        var moonPosition = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date);
+        var moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition), 1e7);
 
