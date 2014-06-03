@@ -21,7 +21,7 @@ Beta Releases
                destination : ellipsoid.cartographicToCartesian(cartographic)
            });
            scene.animations.add(flight);
-           
+
   * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
   * Renamed `CompositePrimitive` to `PrimitiveCollection` and added an `options` parameter to the constructor function.
   * Removed `Shapes.compute2DCircle`, `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
