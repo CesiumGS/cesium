@@ -195,7 +195,7 @@ define([
         /**
          * Gets the width of each tile, in pixels. This function should
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
-         * @memberof WebMapServiceImageryProviderr.prototype
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
          */
         tileWidth : {

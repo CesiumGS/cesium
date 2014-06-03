@@ -79,7 +79,7 @@ define([
 
         /**
          * The radius of the occluder.
-         * @memberof Occluder.prrototype
+         * @memberof Occluder.prototype
          * @type {Number}
          */
         radius: {

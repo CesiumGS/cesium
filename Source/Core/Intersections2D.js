@@ -37,9 +37,9 @@ define([
      *                     the new vertex lies on, and the fraction of the distance from the first
      *                     vertex to the second one.
      *
-     *  @example
-     *  var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
-     *  // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
+     * @example
+     * var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
         //>>includeStart('debug', pragmas.debug);

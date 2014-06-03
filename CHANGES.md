@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b30 - 2014-07-01
+* Breaking changes
+  *
+* Added `Cesium.VERSION` to the combined `Cesium.js` file.
+
 ### b29 - 2014-06-02
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))

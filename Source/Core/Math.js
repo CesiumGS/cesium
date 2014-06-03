@@ -206,7 +206,7 @@ define([
     };
 
     /**
-     * Returns the hyperbolic sine of a {@code Number}.
+     * Returns the hyperbolic sine of a number.
      * The hyperbolic sine of <em>value</em> is defined to be
      * (<em>e<sup>x</sup>&nbsp;-&nbsp;e<sup>-x</sup></em>)/2.0
      * where <i>e</i> is Euler's number, approximately 2.71828183.
@@ -224,7 +224,7 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic sine is to be returned.
-     * @returns The hyperbolic sine of {@code value}.
+     * @returns The hyperbolic sine of <code>value</code>.
      */
     CesiumMath.sinh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -234,7 +234,7 @@ define([
     };
 
     /**
-     * Returns the hyperbolic cosine of a {@code Number}.
+     * Returns the hyperbolic cosine of a number.
      * The hyperbolic cosine of <strong>value</strong> is defined to be
      * (<em>e<sup>x</sup>&nbsp;+&nbsp;e<sup>-x</sup></em>)/2.0
      * where <i>e</i> is Euler's number, approximately 2.71828183.
@@ -245,12 +245,12 @@ define([
      *
      *     <li>If the argument is infinite, then the result is positive infinity.</li>
      *
-     *     <li>If the argument is zero, then the result is {@code 1.0}.</li>
+     *     <li>If the argument is zero, then the result is 1.0.</li>
      *   </ul>
      *</p>
      *
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
-     * @returns The hyperbolic cosine of {@code value}.
+     * @returns The hyperbolic cosine of <code>value</code>.
      */
     CesiumMath.cosh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -432,10 +432,10 @@ define([
     };
 
     /**
-     * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
+     * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
      *
      * @param {Number} angle in radians
-     * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
+     * @returns {Number} The angle in the range [<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>].
      */
     CesiumMath.negativePiToPi = function(x) {
         //>>includeStart('debug', pragmas.debug);
@@ -459,10 +459,10 @@ define([
     };
 
     /**
-     * Produces an angle in the range -Pi <= angle <= Pi which is equivalent to the provided angle.
+     * Produces an angle in the range 0 <= angle <= 2Pi which is equivalent to the provided angle.
      *
      * @param {Number} angle in radians
-     * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
+     * @returns {Number} The angle in the range [0, <code>CesiumMath.TWO_PI</code>].
      */
     CesiumMath.zeroToTwoPi = function(x) {
         //>>includeStart('debug', pragmas.debug);
@@ -529,7 +529,7 @@ define([
         var length = factorials.length;
         if (n >= length) {
             var sum = factorials[length - 1];
-            for ( var i = length; i <= n; i++) {
+            for (var i = length; i <= n; i++) {
                 factorials.push(sum * i);
             }
         }
