@@ -236,8 +236,6 @@ define([
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
      *
-     * @memberof Tile
-     *
      * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
      * @returns {Tile[]} An array containing the tiles at level of detail zero, starting with the
      * tile in the northwest corner and followed by the tile (if any) to its east.

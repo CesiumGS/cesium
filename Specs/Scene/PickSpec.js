@@ -81,7 +81,7 @@ defineSuite([
     it('pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -118,7 +118,7 @@ defineSuite([
     it('drill pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('drill pick (all picked)', function() {
@@ -155,7 +155,7 @@ defineSuite([
     });
 
     it('pick in 2D', function() {
-        var ellipsoid = scene.scene2D.projection.ellipsoid;
+        var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
@@ -185,7 +185,7 @@ defineSuite([
     });
 
     it('pick in 2D when rotated', function() {
-        var ellipsoid = scene.scene2D.projection.ellipsoid;
+        var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);

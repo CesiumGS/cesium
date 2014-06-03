@@ -469,7 +469,7 @@ defineSuite([
             runs(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
-                }).toThrow();
+                }).toThrowRuntimeError();
             });
         });
 
@@ -484,7 +484,7 @@ defineSuite([
             runs(function() {
                 expect(function() {
                     return Transforms.computeIcrfToFixedMatrix(time);
-                }).toThrow();
+                }).toThrowRuntimeError();
             });
         });
 

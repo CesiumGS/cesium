@@ -210,7 +210,6 @@ define([
      * Updates the view model with the contents of the underlying clock.
      * Can be called to force an update of the viewModel if the underlying
      * clock has changed and <code>Clock.tick</code> has not yet been called.
-     * @memberof ClockViewModel
      */
     ClockViewModel.prototype.synchronize = function() {
         var clock = this._clock;
@@ -236,7 +235,6 @@ define([
     };
 
     /**
-     * @memberof ClockViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     ClockViewModel.prototype.isDestroyed = function() {
@@ -246,7 +244,6 @@ define([
     /**
      * Destroys the view model.  Should be called to
      * properly clean up the view model when it is no longer needed.
-     * @memberof ClockViewModel
      */
     ClockViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

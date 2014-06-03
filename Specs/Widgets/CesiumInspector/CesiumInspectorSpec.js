@@ -44,18 +44,18 @@ defineSuite([
     it('constructor throws with no element', function() {
         expect(function() {
             return new CesiumInspector();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with string element that does not exist', function() {
         expect(function() {
             return new CesiumInspector('does not exist', scene);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with no scene', function() {
         expect(function() {
             return new CesiumInspector(document.body);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

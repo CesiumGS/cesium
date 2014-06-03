@@ -687,7 +687,7 @@ defineSuite([
             context.createFramebuffer({
                 colorTextures : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
@@ -695,7 +695,7 @@ defineSuite([
             context.createFramebuffer({
                 colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the index to getColorTexture is out of bounds', function(){

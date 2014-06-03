@@ -234,8 +234,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof TaskProcessor
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see TaskProcessor#destroy
@@ -249,8 +247,6 @@ define([
      * <br /><br />
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof TaskProcessor
      *
      * @returns {undefined}
      */

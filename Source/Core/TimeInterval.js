@@ -86,8 +86,6 @@ define([
     /**
      * Creates an immutable TimeInterval from an ISO 8601 interval string.
      *
-     * @memberof TimeInterval
-     *
      * @param {String} iso8601String A valid ISO8601 interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
@@ -114,7 +112,6 @@ define([
     /**
      * Compares the provided TimeIntervals and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [left] The first interval.
      * @param {TimeInterval} [right] The second interval.
@@ -139,7 +136,6 @@ define([
      * Compares the provided TimeIntervals componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [left] The first TimeInterval.
      * @param {TimeInterval} [right] The second TimeInterval.
@@ -171,8 +167,6 @@ define([
      * Creates a copy of this TimeInterval.
      *
      * @returns A new TimeInterval that is equal to this interval.
-     *
-     * @memberof TimeInterval
      */
     TimeInterval.prototype.clone = function() {
         return new TimeInterval(this.start, this.stop, this.isStartIncluded, this.isStopIncluded, this.data);
@@ -181,7 +175,8 @@ define([
     /**
      * An empty interval.
      *
-     * @memberof TimeInterval
+     * @type {TimeInterval}
+     * @constant
      */
     TimeInterval.EMPTY = freezeObject(new TimeInterval(new JulianDate(0, 0, TimeStandard.TAI), new JulianDate(0, 0, TimeStandard.TAI), false, false));
 
@@ -256,8 +251,6 @@ define([
     /**
      * Returns <code>true</code> if this interval contains the specified date.
      *
-     * @memberof TimeInterval
-     *
      * @param {JulianDate} date The date to check for.
      *
      * @returns {Boolean} <code>true</code> if the TimeInterval contains the specified date, <code>false</code> otherwise.
@@ -286,7 +279,6 @@ define([
     /**
      * Compares this TimeInterval against the provided TimeInterval componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
@@ -301,7 +293,6 @@ define([
      * Compares this TimeInterval against the provided TimeInterval componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.

@@ -98,6 +98,6 @@ defineSuite([
 
         expect(function() {
             r.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

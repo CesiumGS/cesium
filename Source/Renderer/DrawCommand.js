@@ -176,8 +176,6 @@ define([
     /**
      * Executes the draw command.
      *
-     * @memberof DrawCommand
-     *
      * @param {Context} context The renderer context in which to draw.
      * @param {PassState} [passState] The state for the current render pass.
      * @param {RenderState} [renderState] The render state that will override the render state of the command.
