@@ -23,28 +23,6 @@ define([
         SampledProperty) {
     "use strict";
 
-    var PositionVelocity = function(position, velocity) {
-        this.position = position;
-        this.velocity = velocity;
-    };
-
-    PositionVelocity.packedLength = Cartesian3.packedLength * 2;
-
-    PositionVelocity.pack = function(value, array, startingIndex) {
-        Cartesian3.pack(value.position, array, startingIndex);
-        Cartesian3.pack(value.velocity, array, startingIndex + Cartesian3.packedLength);
-    };
-
-    PositionVelocity.unpack = function(array, startingIndex, result) {
-        if (!defined(result)) {
-            result = new PositionVelocity();
-        }
-
-        result.position = Cartesian3.unpack(array, startingIndex, result.position);
-        result.velocity = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, result.velocity);
-        return result;
-    };
-
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.
      *
@@ -52,14 +30,21 @@ define([
      * @constructor
      *
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
-     * @param {Boolean} [hasVelocity=false] The reference frame in which the position is defined.
+     * @param {Number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
      */
-    var SampledPositionProperty = function(referenceFrame, hasVelocity) {
-        this._hasVelocity = defaultValue(hasVelocity, false);
-        this._property = new SampledProperty(hasVelocity ? PositionVelocity : Cartesian3);
-        if (this._hasVelocity){
-            this._property._inputOrder = 1;
+    var SampledPositionProperty = function(referenceFrame, numberOfDerivatives) {
+        numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
+
+        var derivativeTypes;
+        if (numberOfDerivatives > 0) {
+            derivativeTypes = new Array(numberOfDerivatives);
+            for (var i = 0; i < numberOfDerivatives; i++) {
+                derivativeTypes[i] = Cartesian3;
+            }
         }
+
+        this._numberOfDerivatives = numberOfDerivatives;
+        this._property = new SampledProperty(Cartesian3, derivativeTypes);
         this._definitionChanged = new Event();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
 
@@ -134,9 +119,9 @@ define([
          * @type {Boolean}
          * @default false
          */
-        hasVelocity : {
+        numberOfDerivatives : {
             get : function() {
-                return this._hasVelocity;
+                return this._numberOfDerivatives;
             }
         }
     });
@@ -174,9 +159,6 @@ define([
 
         result = this._property.getValue(time, result);
         if (defined(result)) {
-            if (this._hasVelocity) {
-                return PositionProperty.convertToReferenceFrame(time, result.position, this._referenceFrame, referenceFrame, result.position);
-            }
             return PositionProperty.convertToReferenceFrame(time, result, this._referenceFrame, referenceFrame, result);
         }
         return undefined;
@@ -202,15 +184,14 @@ define([
      * @param {Cartesian3} position The position at the provided time.
      * @param {Cartesian3} [velocity] The velocity at the provided time. This value is required when an instance contains velocity information.
      */
-    SampledPositionProperty.prototype.addSample = function(time, position, velocity) {
-        if (this._hasVelocity) {
-            if (!defined(velocity)) {
-                throw new DeveloperError('velocity is required.');
-            }
-            this._property.addSample(time, new PositionVelocity(position, velocity));
-        } else {
-            this._property.addSample(time, position);
+    SampledPositionProperty.prototype.addSample = function(time, position, derivatives) {
+        var numberOfDerivatives = this._numberOfDerivatives;
+        //>>includeStart('debug', pragmas.debug);
+        if (numberOfDerivatives > 0 && (!defined(derivatives) || derivatives.length !== numberOfDerivatives)) {
+            throw new DeveloperError('derivatives length must be equal to the number of derivatives.');
         }
+        //>>includeEnd('debug');
+        this._property.addSample(time, position, derivatives);
     };
 
     /**
@@ -223,28 +204,11 @@ define([
      *
      * @exception {DeveloperError} All arrays must be the same length.
      */
-    SampledPositionProperty.prototype.addSamples = function(times, positions, velocities) {
-        if (this._hasVelocity) {
-            if (!defined(velocities)) {
-                throw new DeveloperError('velocities is required.');
-            }
-
-            if (times.length !== positions.length || times.length !== velocities.length) {
-                throw new DeveloperError('All arrays must be the same length.');
-            }
-
-            var values = [];
-            for (var i = 0; i < positions.length; i++) {
-                values.push(new PositionVelocity(positions[i], velocities[i]));
-            }
-            this._property.addSamples(times, values);
-        } else {
-            if (times.length !== positions.length) {
-                throw new DeveloperError('All arrays must be the same length.');
-            }
-
-            this._property.addSamples(times, positions);
+    SampledPositionProperty.prototype.addSamples = function(times, positions, derivatives) {
+        if (times.length !== positions.length) {
+            throw new DeveloperError('All arrays must be the same length.');
         }
+        this._property.addSamples(times, positions, derivatives);
     };
 
     /**

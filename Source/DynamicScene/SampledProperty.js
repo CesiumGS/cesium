@@ -163,7 +163,7 @@ define([
      * //Retrieve an interpolated value
      * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
-    var SampledProperty = function(type) {
+    var SampledProperty = function(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -189,6 +189,7 @@ define([
         this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
         this._definitionChanged = new Event();
+        this._derivativeTypes = derivativeTypes;
         this._inputOrder = 0;
     };
 
@@ -402,7 +403,7 @@ define([
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
      */
-    SampledProperty.prototype.addSample = function(time, value) {
+    SampledProperty.prototype.addSample = function(time, value, derivatives) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -429,7 +430,7 @@ define([
      *
      * @exception {DeveloperError} times and values must be the same length.
      */
-    SampledProperty.prototype.addSamples = function(times, values) {
+    SampledProperty.prototype.addSamples = function(times, values, derivatives) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
