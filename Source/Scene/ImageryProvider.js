@@ -254,7 +254,6 @@ define([
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     * @memberof ImageryProvider
      * @function
      *
      * @param {Number} x The tile X coordinate.

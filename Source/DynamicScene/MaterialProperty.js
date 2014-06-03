@@ -51,7 +51,6 @@ define([
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof MaterialProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the type.
@@ -61,7 +60,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof MaterialProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.

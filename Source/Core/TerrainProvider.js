@@ -148,7 +148,6 @@ define([
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
@@ -166,7 +165,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
@@ -179,7 +177,6 @@ define([
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
      * @function
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
