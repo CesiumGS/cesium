@@ -111,7 +111,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof WallGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject :{
             get : function() {

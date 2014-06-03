@@ -63,7 +63,9 @@ define([
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {

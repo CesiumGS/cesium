@@ -132,7 +132,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject : {
             get : function() {

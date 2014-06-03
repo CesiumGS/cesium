@@ -100,7 +100,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject :{
             get : function() {

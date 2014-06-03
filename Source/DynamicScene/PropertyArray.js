@@ -36,7 +36,9 @@ define([
          * Gets a value indicating if this property is constant.  This property
          * is considered constant if all property items in the array are constant.
          * @memberof PropertyArray.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {

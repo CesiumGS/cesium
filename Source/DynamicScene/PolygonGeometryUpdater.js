@@ -116,7 +116,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject :{
             get : function() {

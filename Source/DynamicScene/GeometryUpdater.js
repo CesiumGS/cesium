@@ -52,7 +52,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject : {
             get : DeveloperError.throwInstantiationError
