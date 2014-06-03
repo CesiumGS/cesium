@@ -62,7 +62,9 @@ define([
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : DeveloperError.throwInstantiationError
@@ -70,7 +72,9 @@ define([
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : DeveloperError.throwInstantiationError
@@ -78,7 +82,9 @@ define([
         /**
          * Gets the material property used to fill the geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : DeveloperError.throwInstantiationError
@@ -86,7 +92,9 @@ define([
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             get : DeveloperError.throwInstantiationError
@@ -94,7 +102,9 @@ define([
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             get : DeveloperError.throwInstantiationError
@@ -102,7 +112,9 @@ define([
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             get : DeveloperError.throwInstantiationError
@@ -111,9 +123,10 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : DeveloperError.throwInstantiationError
@@ -122,7 +135,9 @@ define([
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             get : DeveloperError.throwInstantiationError
@@ -131,7 +146,9 @@ define([
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : DeveloperError.throwInstantiationError

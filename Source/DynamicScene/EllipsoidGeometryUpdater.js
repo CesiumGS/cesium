@@ -144,7 +144,9 @@ define([
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : function() {
@@ -154,7 +156,9 @@ define([
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : function() {
@@ -167,7 +171,9 @@ define([
         /**
          * Gets the material property used to fill the geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : function() {
@@ -177,7 +183,9 @@ define([
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             get : function() {
@@ -187,7 +195,9 @@ define([
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             get : function() {
@@ -200,7 +210,9 @@ define([
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             get : function() {
@@ -211,9 +223,10 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : function() {
@@ -224,7 +237,9 @@ define([
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             value : true
@@ -233,7 +248,9 @@ define([
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : function() {
