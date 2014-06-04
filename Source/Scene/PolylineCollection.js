@@ -112,21 +112,23 @@ define([
      *
      * @example
      * // Create a polyline collection with two polylines
-     * var polylines = new Cesium.PolylineCollection(undefined);
-     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53),
-     *     new Cesium.Cartographic2(-80.50, 35.14),
-     *     new Cesium.Cartographic2(-80.12, 25.46)]),
-     *     width:2
-     *     });
+     * var polylines = new Cesium.PolylineCollection();
+     * polylines.add({
+     *   position : Cartesian3.fromDegreesArray([
+     *     -75.10, 39.57,
+     *     -77.02, 38.53,
+     *     -80.50, 35.14,
+     *     -80.12, 25.46]),
+     *   width : 2
+     * });
      *
-     * polylines.add({positions:ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-73.10, 37.57),
-     *     new Cesium.Cartographic2(-75.02, 36.53),
-     *     new Cesium.Cartographic2(-78.50, 33.14),
-     *     new Cesium.Cartographic2(-78.12, 23.46)]),
-     *     width:4
+     * polylines.add({
+     *   positions : Cartesian3.fromDegreesArray([
+     *     -73.10, 37.57,
+     *     -75.02, 36.53,
+     *     -78.50, 33.14,
+     *     -78.12, 23.46]),
+     *   width : 4
      * });
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
@@ -368,11 +370,12 @@ define([
 
         updateMode(this, frameState);
 
+        var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
 
         if (this._createVertexArray || computeNewBuffersUsage(this)) {
-            createVertexArrays(this, context);
+            createVertexArrays(this, context, projection);
         } else if (this._polylinesUpdated) {
             // Polylines were modified, but no polylines were added or removed.
             var polylinesToUpdate = this._polylinesToUpdate;
@@ -387,7 +390,7 @@ define([
             // if a polyline's positions size changes, we need to recreate the vertex arrays and vertex buffers because the indices will be different.
             // if a polyline's material changes, we need to recreate the VAOs and VBOs because they will be batched differenty.
             if (properties[POSITION_SIZE_INDEX] || properties[MATERIAL_INDEX]) {
-                createVertexArrays(this, context);
+                createVertexArrays(this, context, projection);
             } else {
                 var length = polylinesToUpdate.length;
                 var polylineBuckets = this._polylineBuckets;
@@ -400,7 +403,7 @@ define([
                         if (polylineBuckets.hasOwnProperty(x)) {
                             if (polylineBuckets[x] === bucket) {
                                 if (properties[POSITION_INDEX] || properties[SHOW_INDEX] || properties[WIDTH_INDEX]) {
-                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer);
+                                    bucket.writeUpdate(index, polyline, this._positionBuffer, this._texCoordExpandWidthAndShowBuffer, projection);
                                 }
                                 break;
                             }
@@ -666,7 +669,7 @@ define([
 
     var emptyVertexBuffer = [0.0, 0.0, 0.0];
 
-    function createVertexArrays(collection, context) {
+    function createVertexArrays(collection, context, projection) {
         collection._createVertexArray = false;
         releaseShaders(collection);
         destroyVertexArrays(collection);
@@ -709,7 +712,7 @@ define([
             for (x in polylineBuckets) {
                 if (polylineBuckets.hasOwnProperty(x)) {
                     bucket = polylineBuckets[x];
-                    bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context);
+                    bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection);
 
                     if (mode === SceneMode.MORPHING) {
                         if (!defined(position3DArray)) {
@@ -914,7 +917,6 @@ define([
 
     function sortPolylinesIntoBuckets(collection) {
         var mode = collection._mode;
-        var projection = collection._projection;
         var modelMatrix = collection._modelMatrix;
 
         var polylineBuckets = collection._polylineBuckets = {};
@@ -927,7 +929,7 @@ define([
                 var material = p.material;
                 var value = polylineBuckets[material.type];
                 if (!defined(value)) {
-                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
+                    value = polylineBuckets[material.type] = new PolylineBucket(material, mode, modelMatrix);
                 }
                 value.addPolyline(p);
             }
@@ -936,11 +938,9 @@ define([
 
     function updateMode(collection, frameState) {
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
 
-        if (collection._mode !== mode || (collection._projection !== projection) || (!Matrix4.equals(collection._modelMatrix, collection.modelMatrix))) {
+        if (collection._mode !== mode || (!Matrix4.equals(collection._modelMatrix, collection.modelMatrix))) {
             collection._mode = mode;
-            collection._projection = projection;
             collection._modelMatrix = Matrix4.clone(collection.modelMatrix);
             collection._createVertexArray = true;
         }
@@ -1008,15 +1008,13 @@ define([
         this.bucket = bucket;
     }
 
-    var PolylineBucket = function(material, mode, projection, modelMatrix) {
+    var PolylineBucket = function(material, mode, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
         this.pickShaderProgram = undefined;
         this.mode = mode;
-        this.projection = projection;
-        this.ellipsoid = projection.ellipsoid;
         this.modelMatrix = modelMatrix;
     };
 
@@ -1067,7 +1065,7 @@ define([
     var scratchWriteNextPosition = new Cartesian3();
     var scratchWriteVector = new Cartesian3();
 
-    PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context) {
+    PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection) {
         var mode = this.mode;
         var polylines = this.polylines;
         var length = polylines.length;
@@ -1075,7 +1073,7 @@ define([
             var polyline = polylines[i];
             var width = polyline.width;
             var show = polyline.show && width > 0.0;
-            var segments = this.getSegments(polyline);
+            var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
             var positionsLength = positions.length;
@@ -1342,7 +1340,7 @@ define([
     };
     var scratchLengths = new Array(1);
 
-    PolylineBucket.prototype.getSegments = function(polyline) {
+    PolylineBucket.prototype.getSegments = function(polyline, projection) {
         var positions = polyline.positions;
 
         if (this.mode === SceneMode.SCENE3D) {
@@ -1356,8 +1354,7 @@ define([
             positions = polyline._segments.positions;
         }
 
-        var ellipsoid = this.ellipsoid;
-        var projection = this.projection;
+        var ellipsoid = projection.ellipsoid;
         var newPositions = [];
         var modelMatrix = this.modelMatrix;
         var length = positions.length;
@@ -1384,7 +1381,7 @@ define([
     var scratchPositionsArray;
     var scratchTexCoordArray;
 
-    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer) {
+    PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer, projection) {
         var mode = this.mode;
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
@@ -1406,7 +1403,7 @@ define([
             var positionIndex = 0;
             var texCoordExpandWidthAndShowIndex = 0;
 
-            var segments = this.getSegments(polyline);
+            var segments = this.getSegments(polyline, projection);
             var positions = segments.positions;
             var lengths = segments.lengths;
 

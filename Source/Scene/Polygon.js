@@ -302,7 +302,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
         if (this.granularity < 0.0) {
-            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
+            throw new DeveloperError('this.granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 

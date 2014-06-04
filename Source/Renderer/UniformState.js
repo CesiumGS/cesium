@@ -806,7 +806,7 @@ define([
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        var position = Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
+        var position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
 
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
@@ -814,12 +814,12 @@ define([
         position = Matrix3.multiplyByVector(uniformState.viewRotation3D, position, uniformState._sunDirectionEC);
         Cartesian3.normalize(position, position);
 
-        position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
+        position = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
         projection.project(sunCartographic, uniformState._sunPositionColumbusView);
@@ -850,7 +850,7 @@ define([
      */
     UniformState.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
-        this._mapProjection = frameState.scene2D.projection;
+        this._mapProjection = frameState.mapProjection;
 
         var canvas = context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;

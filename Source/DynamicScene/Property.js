@@ -33,7 +33,9 @@ define([
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof Property.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : DeveloperError.throwInstantiationError
@@ -43,7 +45,9 @@ define([
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof Property.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : DeveloperError.throwInstantiationError

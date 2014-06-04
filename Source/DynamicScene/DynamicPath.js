@@ -45,7 +45,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicPath.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {

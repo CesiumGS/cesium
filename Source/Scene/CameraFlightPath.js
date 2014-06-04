@@ -199,7 +199,7 @@ define([
 
     function createUpdate3D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var start = camera.cameraToWorldCoordinatesPoint(camera.position, scratchStartPosition);
         var startDirection = camera.cameraToWorldCoordinatesVector(camera.direction, scratchStartDirection);
@@ -320,7 +320,7 @@ define([
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
         var orientations = createOrientations2D(camera, path, direction, up);
@@ -346,7 +346,7 @@ define([
 
     function createUpdate2D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var start = Cartesian3.clone(camera.position);
         start.z = camera.frustum.right - camera.frustum.left;
@@ -440,7 +440,7 @@ define([
 
         var frameState = scene.frameState;
         if (convert && frameState.mode !== SceneMode.SCENE3D) {
-            var projection = frameState.scene2D.projection;
+            var projection = frameState.mapProjection;
             var ellipsoid = projection.ellipsoid;
             ellipsoid.cartesianToCartographic(destination, scratchCartographic);
             destination = projection.project(scratchCartographic, scratchDestination);

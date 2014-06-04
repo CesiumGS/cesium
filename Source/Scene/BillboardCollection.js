@@ -229,7 +229,6 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -992,7 +991,6 @@ define([
 
     function updateMode(billboardCollection, frameState) {
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
 
         var billboards = billboardCollection._billboards;
         var billboardsToUpdate = billboardCollection._billboardsToUpdate;
@@ -1000,12 +998,10 @@ define([
 
         if (billboardCollection._createVertexArray ||
             billboardCollection._mode !== mode ||
-            billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
             !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
 
             billboardCollection._mode = mode;
-            billboardCollection._projection = projection;
             Matrix4.clone(billboardCollection.modelMatrix, modelMatrix);
             billboardCollection._createVertexArray = true;
 

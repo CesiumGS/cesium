@@ -100,7 +100,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject :{
             get : function() {
@@ -110,7 +112,9 @@ define([
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : function() {
@@ -120,7 +124,9 @@ define([
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : function() {
@@ -130,7 +136,9 @@ define([
         /**
          * Gets the material property used to fill the geometry.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : function() {
@@ -140,7 +148,9 @@ define([
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             value : false
@@ -148,7 +158,9 @@ define([
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             value : true
@@ -156,7 +168,9 @@ define([
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             value : undefined
@@ -165,9 +179,10 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : function() {
@@ -178,7 +193,9 @@ define([
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             value : false
@@ -187,7 +204,9 @@ define([
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof PolylineGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : function() {
