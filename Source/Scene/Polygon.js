@@ -51,6 +51,8 @@ define([
      * @exception {DeveloperError} Either options.positions or options.polygonHierarchy can be provided, but not both.
      * @exception {DeveloperError} When options.positions is provided, at least three positions are required.
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html|Cesium Sandcastle Polygons Demo}
+     *
      * @example
      * // Example 1
      * var polygon = new Cesium.Polygon({
@@ -61,6 +63,7 @@ define([
      *   ]
      * });
      *
+     * @example
      * // Example 2
      * var polygon = new Cesium.Polygon();
      * polygon.material.uniforms.color = {
@@ -72,8 +75,6 @@ define([
      * polygon.positions = [ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))];
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html|Cesium Sandcastle Polygons Demo}
      */
     var Polygon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

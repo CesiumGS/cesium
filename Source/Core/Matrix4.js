@@ -907,6 +907,7 @@ define([
      *     height : 768.0
      * }, 0.0, 1.0);
      *
+     * @example
      * // Example 2.  Create viewport transformation using the context's viewport.
      * var m = Cesium.Matrix4.computeViewportTransformation(context.getViewport());
      */
@@ -1056,6 +1057,7 @@ define([
      * //Example 1: Creates an instance of Cartesian
      * var a = Cesium.Matrix4.getColumn(m, 2);
      *
+     * @example
      * //Example 2: Sets values for Cartesian instance
      * var a = new Cesium.Cartesian4();
      * Cesium.Matrix4.getColumn(m, 2, a);
@@ -1157,7 +1159,8 @@ define([
      * //Example 1: Returns an instance of Cartesian
      * var a = Cesium.Matrix4.getRow(m, 2);
      *
-     * //Example 1: Sets values for a Cartesian instance
+     * @example
+     * //Example 2: Sets values for a Cartesian instance
      * var a = new Cartesian4();
      * Cesium.Matrix4.getRow(m, 2, a);
      *

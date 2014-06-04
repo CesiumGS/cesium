@@ -488,6 +488,7 @@ define([
      *   url : './duck/duck.json'
      * }));
      *
+     * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
