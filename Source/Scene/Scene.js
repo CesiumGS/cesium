@@ -1262,12 +1262,12 @@ define([
 
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
 
-		// HOOK: Post process external filter.
-		if (defined(scene.customPostProcess)) {
-			scene.customPostProcess.execute(context);
-		} // END HOOK.
+        // HOOK: Post process external filter.
+        if (defined(scene.customPostProcess)) {
+            scene.customPostProcess.execute(context);
+        } // END HOOK.
 
-		executeOverlayCommands(scene, passState);
+        executeOverlayCommands(scene, passState);
 
         frameState.creditDisplay.endFrame();
 
