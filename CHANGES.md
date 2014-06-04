@@ -11,6 +11,8 @@ Beta Releases
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
+* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
 
 ### b29 - 2014-06-02
 
