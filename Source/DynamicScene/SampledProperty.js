@@ -177,6 +177,7 @@ define([
         var packedLength = innerType.packedLength;
         var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, packedLength);
 
+        var inputOrder = 0;
         var innerDerivativeTypes;
         if (defined(derivativeTypes)) {
             var length = derivativeTypes.length;
@@ -191,6 +192,7 @@ define([
                 packedInterpolationLength += defaultValue(derivativeType.packedInterpolationLength, derivativePackedLength);
                 innerDerivativeTypes[i] = derivativeType;
             }
+            inputOrder = length;
         }
 
         this._type = type;
@@ -209,7 +211,7 @@ define([
         this._definitionChanged = new Event();
         this._derivativeTypes = derivativeTypes;
         this._innerDerivativeTypes = innerDerivativeTypes;
-        this._inputOrder = 0;
+        this._inputOrder = inputOrder;
     };
 
     defineProperties(SampledProperty.prototype, {
@@ -552,15 +554,37 @@ define([
             return false;
         }
 
+        var derivativeTypes = this._derivativeTypes;
+        var hasDerivatives = defined(derivativeTypes);
+        var otherDerivativeTypes = other._derivativeTypes;
+        var otherHasDerivatives = defined(otherDerivativeTypes);
+        if (hasDerivatives !== otherHasDerivatives) {
+            return false;
+        }
+
+        var i;
+        var length;
+        if (hasDerivatives) {
+            length = derivativeTypes.length;
+            if (length !== otherDerivativeTypes.length) {
+                return false;
+            }
+
+            for (i = 0; i < length; i++) {
+                if (derivativeTypes[i] !== otherDerivativeTypes[i]) {
+                    return false;
+                }
+            }
+        }
+
         var times = this._times;
         var otherTimes = other._times;
-        var length = times.length;
+        length = times.length;
 
         if (length !== otherTimes.length) {
             return false;
         }
 
-        var i;
         for (i = 0; i < length; i++) {
             if (!JulianDate.equals(times[i], otherTimes[i])) {
                 return false;

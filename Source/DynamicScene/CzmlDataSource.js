@@ -597,8 +597,8 @@ define([
         var referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
         var unwrappedInterval = unwrapCartesianInterval(packetData);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
-        var hasVelocity = defined(packetData.cartesianVelocity);
-        var packedLength = hasVelocity ? 6 : Cartesian3.packedLength;
+        var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
+        var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
         var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
         var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
 
@@ -621,7 +621,7 @@ define([
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
-                property = new SampledPositionProperty(referenceFrame, hasVelocity);
+                property = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
                 object[propertyName] = property;
                 propertyCreated = true;
             }
@@ -703,7 +703,7 @@ define([
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
             //If not, create a SampledPositionProperty for it.
             interval = combinedInterval.clone();
-            interval.data = new SampledPositionProperty(referenceFrame, hasVelocity);
+            interval.data = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
             intervals.addInterval(interval);
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
