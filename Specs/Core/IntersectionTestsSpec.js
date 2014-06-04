@@ -60,25 +60,25 @@ defineSuite([
     it('rayTriangle throws without ray', function() {
         expect(function() {
             IntersectionTests.rayTriangle();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayTriangle throws without p0', function() {
         expect(function() {
             IntersectionTests.rayTriangle(new Ray());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayTriangle throws without p1', function() {
         expect(function() {
             IntersectionTests.rayTriangle(new Ray(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayTriangle throws without p2', function() {
         expect(function() {
             IntersectionTests.rayTriangle(new Ray(), new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayTriangle intersects front face', function() {
