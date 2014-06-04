@@ -163,14 +163,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;

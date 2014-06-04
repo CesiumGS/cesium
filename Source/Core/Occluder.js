@@ -165,14 +165,14 @@ define([
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
+     * @see Occluder#getVisibility
+     *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
      * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
      * var point = new Cesium.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
-     *
-     * @see Occluder#getVisibility
      */
     Occluder.prototype.isPointVisible = function(occludee) {
         if (this._horizonDistance !== Number.MAX_VALUE) {
@@ -196,14 +196,14 @@ define([
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
+    * @see Occluder#getVisibility
+    *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
     * var littleSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 0.25);
     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
     * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
     * occluder.isBoundingSphereVisible(bigSphere); //returns true
-    *
-    * @see Occluder#getVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
         var occludeePosition = Cartesian3.clone(occludee.center, occludeePositionScratch);
@@ -252,14 +252,15 @@ define([
      * @returns {Number} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
+     *
+     * @see Occluder#isVisible
+     *
      * @example
      * var sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
      * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.getVisibility(sphere2); //returns Visibility.NONE
-     *
-     * @see Occluder#isVisible
      */
     Occluder.prototype.getVisibility = function(occludeeBS) {
         if (!defined(occludeeBS)) {

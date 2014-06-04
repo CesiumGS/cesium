@@ -258,6 +258,10 @@ define([
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
      *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     *
      * @example
      * // Create a color material with fromType:
      * polygon.material = Cesium.Material.fromType('Color');
@@ -275,10 +279,6 @@ define([
      *         }
      *     }
      * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      */
     var Material = function(options) {
         /**
@@ -517,10 +517,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see Material#isDestroyed
+     *
      * @example
      * material = material && material.destroy();
-     *
-     * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {
         var materials = this.materials;

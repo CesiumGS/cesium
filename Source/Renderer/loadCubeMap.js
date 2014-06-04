@@ -27,6 +27,9 @@ define([
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
      * @example
      * Cesium.loadCubeMap(context, {
      *     positiveX : 'skybox_px.png',
@@ -40,9 +43,6 @@ define([
      * }, function(error) {
      *     // an error occurred
      * });
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @private
      */

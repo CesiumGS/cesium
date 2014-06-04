@@ -144,8 +144,6 @@ define([
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -625,10 +623,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see PolylineCollection#isDestroyed
+     *
      * @example
      * polylines = polylines && polylines.destroy();
-     *
-     * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
         destroyVertexArrays(this);

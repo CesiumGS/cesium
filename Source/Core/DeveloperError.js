@@ -16,11 +16,11 @@ define([
      * to catch.
      *
      * @alias DeveloperError
+     * @constructor
      *
      * @param {String} [message] The error message for this exception.
      *
      * @see RuntimeError
-     * @constructor
      */
     var DeveloperError = function(message) {
         /**

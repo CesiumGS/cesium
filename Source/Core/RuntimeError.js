@@ -15,11 +15,11 @@ define([
      * calling code.
      *
      * @alias RuntimeError
+     * @constructor
      *
      * @param {String} [message] The error message for this exception.
      *
      * @see DeveloperError
-     * @constructor
      */
     var RuntimeError = function(message) {
         /**

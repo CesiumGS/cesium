@@ -58,10 +58,10 @@ define([
      * @alias Sun
      * @constructor
      *
+     * @see Scene.sun
+     *
      * @example
      * scene.sun = new Cesium.Sun();
-     *
-     * @see Scene.sun
      */
     var Sun = function() {
         /**
@@ -315,10 +315,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see Sun#isDestroyed
+     *
      * @example
      * sun = sun && sun.destroy();
-     *
-     * @see Sun#isDestroyed
      */
     Sun.prototype.destroy = function() {
         var command = this._command;

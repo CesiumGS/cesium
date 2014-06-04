@@ -321,16 +321,16 @@ define([
      *
      * @exception {DeveloperError} date must be a valid JavaScript Date.
      *
-     * @example
-     * // Construct a JulianDate specifying the UTC time standard
-     * var date = new Date('January 1, 2011 12:00:00 EST');
-     * var julianDate = Cesium.JulianDate.fromDate(date, Cesium.TimeStandard.UTC);
-     *
      * @see JulianDate
      * @see JulianDate.fromTotalDays
      * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
+     *
+     * @example
+     * // Construct a JulianDate specifying the UTC time standard
+     * var date = new Date('January 1, 2011 12:00:00 EST');
+     * var julianDate = Cesium.JulianDate.fromDate(date, Cesium.TimeStandard.UTC);
      */
     JulianDate.fromDate = function(date, timeStandard) {
         //>>includeStart('debug', pragmas.debug);
@@ -353,6 +353,12 @@ define([
      *
      * @exception {DeveloperError} Valid ISO 8601 date string required.
      *
+     * @see JulianDate
+     * @see JulianDate.fromTotalDays
+     * @see JulianDate.fromDate
+     * @see LeapSecond
+     * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
+     *
      * @example
      * // Example 1. Construct a JulianDate in UTC at April 24th, 2012 6:08PM UTC
      * var julianDate = Cesium.JulianDate.fromIso8601('2012-04-24T18:08Z');
@@ -360,12 +366,6 @@ define([
      * var localDay = Cesium.JulianDate.fromIso8601('2012-04-24');
      * // Example 3. Construct a JulianDate 5 hours behind UTC April 24th, 2012 5:00 pm UTC
      * var localDay = Cesium.JulianDate.fromIso8601('2012-04-24T12:00-05:00');
-     *
-     * @see JulianDate
-     * @see JulianDate.fromTotalDays
-     * @see JulianDate.fromDate
-     * @see LeapSecond
-     * @see {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601 on Wikipedia}
      */
     JulianDate.fromIso8601 = function(iso8601String) {
         //>>includeStart('debug', pragmas.debug);
@@ -615,15 +615,15 @@ define([
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] Indicates the time standard in which the first parameter is defined.
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
-     * @example
-     * // Construct a date which corresponds to January 1, 1991 06:00:00 UTC.
-     * var julianDate = Cesium.JulianDate.fromTotalDays(2448257.75, Cesium.TimeStandard.UTC);
-     *
      * @see JulianDate
      * @see JulianDate.fromDate
      * @see JulianDate.fromIso8601
      * @see TimeStandard
      * @see LeapSecond
+     *
+     * @example
+     * // Construct a date which corresponds to January 1, 1991 06:00:00 UTC.
+     * var julianDate = Cesium.JulianDate.fromTotalDays(2448257.75, Cesium.TimeStandard.UTC);
      */
     JulianDate.fromTotalDays = function(totalDays, timeStandard) {
         //>>includeStart('debug', pragmas.debug);
@@ -917,13 +917,13 @@ define([
      *
      * @returns {Number} The number of seconds this TAI date is ahead of UTC
      *
+     * @see LeapSecond
+     * @see TimeStandard
+     *
      * @example
      * var date = new Date('August 1, 2012 12:00:00 UTC');
      * var julianDate = Cesium.JulianDate.fromDate(date);
      * var difference = julianDate.getTaiMinusUtc(); //35
-     *
-     * @see LeapSecond
-     * @see TimeStandard
      */
     JulianDate.prototype.getTaiMinusUtc = function() {
         binarySearchScratchLeapSecond.julianDate = this;
@@ -947,16 +947,16 @@ define([
      * @param {JulianDate} [result] The JulianDate to store the result into.
      * @returns {JulianDate} The modified result parameter or a new JulianDate instance if it was not provided.
      *
+     * @see JulianDate#addMinutes
+     * @see JulianDate#addHours
+     * @see JulianDate#addDays
+     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00:00 UTC
      * date.setUTCHours(12, 0, 00, 0);
      * var start = Cesium.JulianDate.fromDate(date);
      * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
-     *
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addHours
-     * @see JulianDate#addDays
      */
     JulianDate.prototype.addSeconds = function(seconds, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -975,16 +975,16 @@ define([
      * @param {Number} duration An integer number of minutes to add or subtract.
      * @returns {JulianDate} A new JulianDate object
      *
+     * @see JulianDate#addSeconds
+     * @see JulianDate#addHours
+     * @see JulianDate#addDays
+     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
      * var start = Cesium.JulianDate.fromDate(date);
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
-     *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addHours
-     * @see JulianDate#addDays
      */
     JulianDate.prototype.addMinutes = function(duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -1004,16 +1004,16 @@ define([
      * @param {Number} duration An integer number of hours to add or subtract.
      * @returns {JulianDate} A new JulianDate object
      *
+     * @see JulianDate#addSeconds
+     * @see JulianDate#addMinutes
+     * @see JulianDate#addDays
+     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
      * var start = Cesium.JulianDate.fromDate(date);
      * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
-     *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addDays
      */
     JulianDate.prototype.addHours = function(duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -1033,16 +1033,16 @@ define([
      * @param {Number} duration An integer number of days to add or subtract.
      * @returns {JulianDate} A new JulianDate object
      *
+     * @see JulianDate#addSeconds
+     * @see JulianDate#addMinutes
+     * @see JulianDate#addHours
+     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
      * date.setUTCHours(12, 0, 0, 0);
      * var start = Cesium.JulianDate.fromDate(date);
      * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
-     *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addHours
      */
     JulianDate.prototype.addDays = function(duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -1061,14 +1061,14 @@ define([
      * @param {JulianDate} other The JulianDate to be compared.
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically earlier than <code>other</code>; otherwise, <code>false</code>.
      *
+     * @see JulianDate#lessThanOrEquals
+     * @see JulianDate#greaterThan
+     * @see JulianDate#greaterThanOrEquals
+     *
      * @example
      * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
      * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:01:00'));
      * start.lessThan(end);     // true
-     *
-     * @see JulianDate#lessThanOrEquals
-     * @see JulianDate#greaterThan
-     * @see JulianDate#greaterThanOrEquals
      */
     JulianDate.prototype.lessThan = function(other) {
         return JulianDate.compare(this, other) < 0;
@@ -1080,14 +1080,14 @@ define([
      * @param {JulianDate} other The JulianDate to be compared.
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically less than or equal to<code>other</code>; otherwise, <code>false</code>.
      *
+     * @see JulianDate#lessThan
+     * @see JulianDate#greaterThan
+     * @see JulianDate#greaterThanOrEquals
+     *
      * @example
      * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
      * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:00:00'));
      * start.lessThanOrEquals(end);     // true
-     *
-     * @see JulianDate#lessThan
-     * @see JulianDate#greaterThan
-     * @see JulianDate#greaterThanOrEquals
      */
     JulianDate.prototype.lessThanOrEquals = function(other) {
         return JulianDate.compare(this, other) <= 0;

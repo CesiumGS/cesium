@@ -202,6 +202,8 @@ define([
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
          *
+         * @see Transforms.eastNorthUpToFixedFrame
+         *
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
          * billboards.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
@@ -210,8 +212,6 @@ define([
          * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0) }); // north
          * billboards.add({ imageIndex: 0, position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) }); // up
          * ]);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -356,6 +356,9 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see BillboardCollection#remove
+     * @see BillboardCollection#removeAll
+     *
      * @example
      * // Example 1:  Add a billboard, specifying all the default values.
      * var b = billboards.add({
@@ -375,9 +378,6 @@ define([
      * var b = billboards.add({
      *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height))
      * });
-     *
-     * @see BillboardCollection#remove
-     * @see BillboardCollection#removeAll
      */
     BillboardCollection.prototype.add = function(billboard) {
         var b = new Billboard(billboard, this);

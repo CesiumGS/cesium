@@ -1046,8 +1046,6 @@ define([
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
-     * @see Cartesian4
-     *
      * @example
      * //returns a Cartesian4 instance with values from the specified column
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1102,8 +1100,6 @@ define([
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
-     * @see Cartesian4
-     *
      * @example
      * //creates a new Matrix4 instance with new column values from the Cartesian4 instance
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1150,8 +1146,6 @@ define([
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
      *
      * @example
      * //returns a Cartesian4 instance with values from the specified column
@@ -1205,8 +1199,6 @@ define([
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
      *
      * @example
      * //create a new Matrix4 instance with new row values from the Cartesian4 instance

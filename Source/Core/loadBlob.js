@@ -17,6 +17,9 @@ define([
      * @param {Object} [headers] HTTP headers to send with the requests.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
      * @example
      * // load a single URL asynchronously
      * Cesium.loadBlob('some/url').then(function(blob) {
@@ -24,9 +27,6 @@ define([
      * }, function(error) {
      *     // an error occurred
      * });
-     *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     var loadBlob = function(url, headers) {
         return loadWithXhr({

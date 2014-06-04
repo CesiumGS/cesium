@@ -196,8 +196,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -482,6 +480,8 @@ define([
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @returns {Model} The newly created model.
      *
+     * @see Model#readyToRender
+     *
      * @example
      * // Example 1. Create a model from a glTF asset
      * var model = scene.primitives.add(Model.fromGltf({
@@ -507,8 +507,6 @@ define([
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
-     *
-     * @see Model#readyToRender
      */
     Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);

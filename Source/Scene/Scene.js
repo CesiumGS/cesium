@@ -1630,10 +1630,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see Scene#isDestroyed
+     *
      * @example
      * scene = scene && scene.destroy();
-     *
-     * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {
         this._animations.removeAll();

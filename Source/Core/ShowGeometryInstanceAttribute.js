@@ -21,6 +21,9 @@ define([
      *
      * @param {Boolean} [show=true] Determines if the geometry instance will be shown.
      *
+     * @see GeometryInstance
+     * @see GeometryInstanceAttribute
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
@@ -34,9 +37,6 @@ define([
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)
      *   }
      * });
-     *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
      */
     var ShowGeometryInstanceAttribute = function(show) {
         show = defaultValue(show, true);

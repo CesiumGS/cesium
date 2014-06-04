@@ -19,9 +19,9 @@ define([
      * @param {Number} [x=0.0] The X component.
      * @param {Number} [y=0.0] The Y component.
      *
-     * @see Packable
      * @see Cartesian3
      * @see Cartesian4
+     * @see Packable
      */
     var Cartesian2 = function(x, y) {
         /**

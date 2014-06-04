@@ -111,14 +111,14 @@ define([
      *                  a positive value if the first leap second is later than the second, or
      *                  zero if the two leap seconds are equal (ignoring their offsets).
      *
+     * @see JulianDate#lessThan
+     * @see JulianDate#isAfter
+     *
      * @example
      * var date = new Date('January 1, 2006 00:00:00 UTC');
      * var leapSecond1 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 33.0);
      * var leapSecond2 = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 34.0);
      * Cesium.LeapSecond.compareLeapSecondDate(leapSecond1, leapSecond2);    // returns 0
-     *
-     * @see JulianDate#lessThan
-     * @see JulianDate#isAfter
      */
     LeapSecond.compareLeapSecondDate = function(leapSecond1, leapSecond2) {
         return leapSecond1.julianDate.compareTo(leapSecond2.julianDate);

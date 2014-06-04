@@ -979,6 +979,12 @@ define([
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      *
+     * @see Context#createVertexArray
+     * @see Context#createIndexBuffer
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml|glGenBuffer}
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
+     *
      * @example
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
      * var buffer = context.createVertexBuffer(16, BufferUsage.DYNAMIC_DRAW);
@@ -990,12 +996,6 @@ define([
      * // interpreted as vertices using a vertex array.
      * var positionBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
      *     BufferUsage.STATIC_DRAW);
-     *
-     * @see Context#createVertexArray
-     * @see Context#createIndexBuffer
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml|glGenBuffer}
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
      */
     Context.prototype.createVertexBuffer = function(typedArrayOrSizeInBytes, usage) {
         return createBuffer(this._gl, this._gl.ARRAY_BUFFER, typedArrayOrSizeInBytes, usage);
@@ -1018,6 +1018,14 @@ define([
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
      *
+     * @see Context#createVertexArray
+     * @see Context#createVertexBuffer
+     * @see Context#draw
+     * @see VertexArray
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml|glGenBuffer}
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
+     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
+     *
      * @example
      * // Example 1. Create a stream index buffer of unsigned shorts that is
      * // 16 bytes in size.
@@ -1029,14 +1037,6 @@ define([
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
-     *
-     * @see Context#createVertexArray
-     * @see Context#createVertexBuffer
-     * @see Context#draw
-     * @see VertexArray
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGenBuffer.xml|glGenBuffer}
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
-     * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
      */
     Context.prototype.createIndexBuffer = function(typedArrayOrSizeInBytes, usage, indexDatatype) {
         //>>includeStart('debug', pragmas.debug);
@@ -1090,6 +1090,11 @@ define([
      * @exception {DeveloperError} Attribute must have a valid <code>componentDatatype</code> or not specify it.
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
+     *
+     * @see Context#createVertexArrayFromGeometry
+     * @see Context#createVertexBuffer
+     * @see Context#createIndexBuffer
+     * @see Context#draw
      *
      * @example
      * // Example 1. Create a vertex array with vertices made up of three floating point
@@ -1154,11 +1159,6 @@ define([
      *     }
      * ];
      * var va = context.createVertexArray(attributes);
-     *
-     * @see Context#createVertexArrayFromGeometry
-     * @see Context#createVertexBuffer
-     * @see Context#createIndexBuffer
-     * @see Context#draw
      */
     Context.prototype.createVertexArray = function(attributes, indexBuffer) {
         return new VertexArray(this._gl, this._vertexArrayObject, attributes, indexBuffer);
@@ -1208,13 +1208,13 @@ define([
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
      * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
-     * @example
-     * // Create a texture with the contents of the framebuffer.
-     * var t = context.createTexture2DFromFramebuffer();
-     *
      * @see Context#createTexture2D
      * @see Context#createCubeMap
      * @see Context#createSampler
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = context.createTexture2DFromFramebuffer();
      */
     Context.prototype.createTexture2DFromFramebuffer = function(pixelFormat, framebufferXOffset, framebufferYOffset, width, height, framebuffer) {
         var gl = this._gl;
@@ -1419,6 +1419,10 @@ define([
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      * @exception {DeveloperError} The number of color attachments exceeds the number supported.
      *
+     * @see Context#createTexture2D
+     * @see Context#createCubeMap
+     * @see Context#createRenderbuffer
+     *
      * @example
      * // Create a framebuffer with color and depth texture attachments.
      * var width = context.canvas.clientWidth;
@@ -1436,10 +1440,6 @@ define([
      *     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
      *   })
      * });
-     *
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     * @see Context#createRenderbuffer
      */
     Context.prototype.createFramebuffer = function(options) {
         return new Framebuffer(this._gl, this._maximumColorAttachments, options);
@@ -1515,6 +1515,9 @@ define([
      * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
      * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
      * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
+     *
+     * @see DrawCommand
+     * @see ClearCommand
      *
      * @example
      * var defaults = {
@@ -1595,9 +1598,6 @@ define([
      *
      * // Same as just context.createRenderState().
      * var rs = context.createRenderState(defaults);
-     *
-     * @see DrawCommand
-     * @see ClearCommand
      */
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);
@@ -2256,10 +2256,10 @@ define([
      * @param {Color} pickColor The pick color.
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *
+     * @see Context#createPickId
+     *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     *
-     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);

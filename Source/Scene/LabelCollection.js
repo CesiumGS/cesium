@@ -293,6 +293,8 @@ define([
      * @see Label
      * @see BillboardCollection
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     *
      * @example
      * // Create a label collection with two labels
      * var labels = new Cesium.LabelCollection();
@@ -304,8 +306,6 @@ define([
      *   position : { x : 4.0, y : 5.0, z : 6.0 },
      *   text : 'Another label'
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     var LabelCollection = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -330,8 +330,6 @@ define([
          *
          * @type Matrix4
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          *
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -625,10 +623,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
+     * @see LabelCollection#isDestroyed
+     *
      * @example
      * labels = labels && labels.destroy();
-     *
-     * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
         this.removeAll();
