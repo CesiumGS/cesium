@@ -113,7 +113,9 @@ define([
         /**
          * Gets the ellipsoid the atmosphere is drawn around.
          * @memberof SkyAtmosphere.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
