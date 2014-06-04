@@ -182,7 +182,7 @@ define([
      *
      * @param {JulianDate} time The sample time.
      * @param {Cartesian3} position The position at the provided time.
-     * @param {Cartesian3} [velocity] The velocity at the provided time. This value is required when an instance contains velocity information.
+     * @param {Cartesian3} [derivatives]
      */
     SampledPositionProperty.prototype.addSample = function(time, position, derivatives) {
         var numberOfDerivatives = this._numberOfDerivatives;
@@ -200,14 +200,11 @@ define([
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
      * @param {Cartesian3[]} positions The array of Cartesian3 position instances, where each value corresponds to the provided times index.
-     * @param {Cartesian3[]} [velocities] The array of Cartesian3 velocity instances, where each value corresponds to the provided times index. This value is required when an instance contains velocity information.
+     * @param {Cartesian3[][]} [derivatives]
      *
      * @exception {DeveloperError} All arrays must be the same length.
      */
     SampledPositionProperty.prototype.addSamples = function(times, positions, derivatives) {
-        if (times.length !== positions.length) {
-            throw new DeveloperError('All arrays must be the same length.');
-        }
         this._property.addSamples(times, positions, derivatives);
     };
 

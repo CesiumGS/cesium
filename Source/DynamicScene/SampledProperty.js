@@ -174,7 +174,24 @@ define([
         if (innerType === Number) {
             innerType = PackableNumber;
         }
-        var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, innerType.packedLength);
+        var packedLength = innerType.packedLength;
+        var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, packedLength);
+
+        var innerDerivativeTypes;
+        if (defined(derivativeTypes)) {
+            var length = derivativeTypes.length;
+            innerDerivativeTypes = new Array(length);
+            for (var i = 0; i < length; i++) {
+                var derivativeType = derivativeTypes[i];
+                if (derivativeType === Number) {
+                    derivativeType = PackableNumber;
+                }
+                var derivativePackedLength = derivativeType.packedLength;
+                packedLength += derivativePackedLength;
+                packedInterpolationLength += defaultValue(derivativeType.packedInterpolationLength, derivativePackedLength);
+                innerDerivativeTypes[i] = derivativeType;
+            }
+        }
 
         this._type = type;
         this._innerType = innerType;
@@ -185,11 +202,13 @@ define([
         this._values = [];
         this._xTable = [];
         this._yTable = [];
+        this._packedLength = packedLength;
         this._packedInterpolationLength = packedInterpolationLength;
         this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
         this._definitionChanged = new Event();
         this._derivativeTypes = derivativeTypes;
+        this._innerDerivativeTypes = innerDerivativeTypes;
         this._inputOrder = 0;
     };
 
@@ -225,6 +244,16 @@ define([
         type : {
             get : function() {
                 return this._type;
+            }
+        },
+        /**
+         * Gets the derivative types.
+         * @memberof SampledProperty.prototype
+         * @type {Object[]}
+         */
+        derivativeTypes : {
+            get : function() {
+                return this._derivativeTypes;
             }
         },
         /**
@@ -329,7 +358,7 @@ define([
 
             if (!defined(innerType.convertPackedArrayForInterpolation)) {
                 var destinationIndex = 0;
-                var packedLength = innerType.packedLength;
+                var packedLength = this._packedLength;
                 var sourceIndex = firstIndex * packedLength;
                 var stop = (lastIndex + 1) * packedLength;
 
@@ -357,7 +386,7 @@ define([
             }
             return innerType.unpackInterpolationResult(interpolationResult, values, firstIndex, lastIndex, result);
         }
-        return innerType.unpack(this._values, index * innerType.packedLength, result);
+        return innerType.unpack(this._values, index * this._packedLength, result);
     };
 
     /**
@@ -416,7 +445,7 @@ define([
         var innerType = this._innerType;
         var data = [time];
         innerType.pack(value, data, 1);
-        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        mergeNewSamples(undefined, this._times, this._values, data, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
@@ -450,7 +479,7 @@ define([
             data.push(times[i]);
             innerType.pack(values[i], data, data.length);
         }
-        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        mergeNewSamples(undefined, this._times, this._values, data, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
@@ -469,7 +498,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
+        mergeNewSamples(epoch, this._times, this._values, packedSamples, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
