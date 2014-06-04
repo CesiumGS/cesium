@@ -143,7 +143,7 @@ defineSuite([
     it('addSample works with derivatives', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
         var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
-        var velocities = [new Cartesian3(0, 0, 1), new Cartesian3(0, 1, 0), new Cartesian3(1, 0, 0)];
+        var velocities = [[new Cartesian3(0, 0, 1)], [new Cartesian3(0, 1, 0)], [new Cartesian3(1, 0, 0)]];
 
         var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
         property.addSample(times[0], positions[0], velocities[0]);
@@ -159,7 +159,7 @@ defineSuite([
     it('addSamples works with derivatives', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
         var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
-        var velocities = [new Cartesian3(0, 0, 1), new Cartesian3(0, 1, 0), new Cartesian3(1, 0, 0)];
+        var velocities = [[new Cartesian3(0, 0, 1)], [new Cartesian3(0, 1, 0)], [new Cartesian3(1, 0, 0)]];
 
         var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
         property.addSamples(times, positions, velocities);
@@ -189,7 +189,7 @@ defineSuite([
     it('addSamples throws when derivative is not the correct length', function() {
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
         var positions = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
-        var velocities = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10)];
+        var velocities = [[new Cartesian3(7, 8, 9)], [new Cartesian3(8, 9, 10)]];
 
         var property = new SampledPositionProperty(ReferenceFrame.FIXED, 1);
         expect(function() {
