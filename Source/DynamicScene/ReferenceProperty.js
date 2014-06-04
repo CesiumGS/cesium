@@ -189,6 +189,7 @@ define([
          * This property is only valid if the referenced property is a {@link PositionProperty}.
          * @memberof ReferenceProperty.prototype
          * @Type {ReferenceFrame}
+         * @readonly
          */
         referenceFrame : {
             get : function() {
@@ -199,6 +200,7 @@ define([
          * Gets the id of the object being referenced.
          * @memberof ReferenceProperty.prototype
          * @Type {String}
+         * @readonly
          */
         targetId : {
             get : function() {
@@ -209,6 +211,7 @@ define([
          * Gets the collection containing the object being referenced.
          * @memberof ReferenceProperty.prototype
          * @Type {DynamicObjectCollection}
+         * @readonly
          */
         targetCollection : {
             get : function() {
@@ -219,6 +222,7 @@ define([
          * Gets the array of property names used to retrieve the referenced property.
          * @memberof ReferenceProperty.prototype
          * @Type {String[]}
+         * @readonly
          */
         targetPropertyNames : {
             get : function() {
@@ -228,7 +232,7 @@ define([
     });
 
     /**
-     * Creates a new reference property given the dynamic object collection that will
+     * Creates a new instance given the dynamic object collection that will
      * be used to resolve it and a string indicating the target object id and property.
      * The format of the string is "objectId#foo.bar", where # separates the id from
      * property path and . separates sub-properties.
