@@ -1,52 +1,54 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/IndexDatatype',
         '../Core/Math',
-        '../Core/PrimitiveType',
-        '../Core/Color',
-        '../Core/BoundingRectangle',
         '../Core/Matrix4',
-        '../Renderer/BlendingState',
+        '../Core/PixelFormat',
+        '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/PixelFormat',
         '../Renderer/ClearCommand',
-        './SceneTransforms',
-        './SceneMode',
-        '../Shaders/SunVS',
+        '../Renderer/DrawCommand',
         '../Shaders/SunFS',
-        '../Shaders/SunTextureFS'
+        '../Shaders/SunTextureFS',
+        '../Shaders/SunVS',
+        './BlendingState',
+        './SceneMode',
+        './SceneTransforms'
     ], function(
+        BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Color,
         ComponentDatatype,
         defined,
         defineProperties,
         destroyObject,
+        IndexDatatype,
         CesiumMath,
-        PrimitiveType,
-        Color,
-        BoundingRectangle,
         Matrix4,
-        BlendingState,
-        BufferUsage,
-        DrawCommand,
         PixelFormat,
+        PrimitiveType,
+        BufferUsage,
         ClearCommand,
-        SceneTransforms,
-        SceneMode,
-        SunVS,
+        DrawCommand,
         SunFS,
-        SunTextureFS) {
+        SunTextureFS,
+        SunVS,
+        BlendingState,
+        SceneMode,
+        SceneTransforms) {
     "use strict";
 
     /**
@@ -70,7 +72,11 @@ define([
          */
         this.show = true;
 
-        this._command = new DrawCommand();
+        this._command = new DrawCommand({
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingVolume : new BoundingSphere(),
+            owner : this
+        });
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
@@ -124,7 +130,7 @@ define([
      */
     Sun.prototype.update = function(scene) {
         var frameState = scene.frameState;
-        var context = scene._context;
+        var context = scene.context;
 
         if (!this.show) {
             return undefined;
@@ -165,9 +171,10 @@ define([
             });
             fbo.destroyAttachments = false;
 
-            var clearCommand = new ClearCommand();
-            clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
-            clearCommand.framebuffer = fbo;
+            var clearCommand = new ClearCommand({
+                color : new Color(0.0, 0.0, 0.0, 0.0),
+                framebuffer : fbo
+            });
 
             var rs = context.createRenderState({
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
@@ -196,7 +203,7 @@ define([
             clearCommand.execute(context);
             drawCommand.execute(context);
 
-            drawCommand.shaderProgram.release();
+            drawCommand.shaderProgram.destroy();
             fbo.destroy();
         }
 
@@ -228,15 +235,14 @@ define([
                 normalize : true,
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
-            command.vertexArray = context.createVertexArray(attributes);
-            command.primitiveType = PrimitiveType.TRIANGLE_FAN;
-
-            command.shaderProgram = context.shaderCache.getShaderProgram(SunVS, SunFS, attributeLocations);
+            // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
+            command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
             command.uniformMap = this._uniformMap;
-            command.boundingVolume = new BoundingSphere();
         }
 
         var sunPosition = context.uniformState.sunPositionWC;
@@ -321,7 +327,7 @@ define([
     Sun.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+        command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
 
         this._texture = this._texture && this._texture.destroy();
 

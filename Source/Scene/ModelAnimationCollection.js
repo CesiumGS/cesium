@@ -1,28 +1,28 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Event',
         '../Core/JulianDate',
+        '../Core/Math',
+        './ModelAnimation',
         './ModelAnimationLoop',
-        './ModelAnimationState',
-        './ModelAnimation'
+        './ModelAnimationState'
     ], function(
         clone,
+        defaultValue,
         defined,
         defineProperties,
-        defaultValue,
         DeveloperError,
-        CesiumMath,
         Event,
         JulianDate,
+        CesiumMath,
+        ModelAnimation,
         ModelAnimationLoop,
-        ModelAnimationState,
-        ModelAnimation) {
+        ModelAnimationState) {
     "use strict";
 
     /**
@@ -72,8 +72,8 @@ define([
          * The number of animations in the collection.
          *
          * @memberof ModelAnimationCollection
-         * @type {Number}
          *
+         * @type {Number}
          * @readonly
          */
         length : {
@@ -92,9 +92,9 @@ define([
      * @memberof ModelAnimationCollection
      *
      * @param {String} options.name The glTF animation name that identifies the animation.
-     * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
+     * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
-     * @param {JulianDate} [options.stopTime=undefined] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
+     * @param {JulianDate} [options.stopTime] The scene time to stop playing the animation.  When this is <code>undefined</code>, the animation is played for its full duration.
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animation is removed after it stops playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
@@ -175,15 +175,15 @@ define([
      *
      * @memberof ModelAnimationCollection
      *
-     * @param {JulianDate} [options.startTime=undefined] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
+     * @param {JulianDate} [options.startTime] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
-     * @param {JulianDate} [options.stopTime=undefined] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.
+     * @param {JulianDate} [options.stopTime] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.
      * @param {Boolean} [options.removeOnStop=false] When <code>true</code>, the animations are removed after they stop playing.
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
      *
-     * @returns {Array} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
+     * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
      * @exception {DeveloperError} options.speedup must be greater than zero.

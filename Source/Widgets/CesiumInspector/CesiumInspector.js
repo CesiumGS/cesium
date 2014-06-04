@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './CesiumInspectorViewModel',
-        '../../ThirdParty/knockout'
+        './CesiumInspectorViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        CesiumInspectorViewModel,
-        knockout) {
+        CesiumInspectorViewModel) {
     "use strict";
 
     /**

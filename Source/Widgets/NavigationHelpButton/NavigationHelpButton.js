@@ -1,22 +1,22 @@
 /*global define*/
 define([
         '../../Core/buildModuleUrl',
-        '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './NavigationHelpButtonViewModel',
-        '../../ThirdParty/knockout'
-], function (
+        './NavigationHelpButtonViewModel'
+    ], function(
         buildModuleUrl,
-        defineProperties,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        NavigationHelpButtonViewModel,
-        knockout) {
+        NavigationHelpButtonViewModel) {
     "use strict";
 
     /**
@@ -26,31 +26,31 @@ define([
      * @alias NavigationHelpButton
      * @constructor
      *
-     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
-     * @param {Boolean} [description.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
+     * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+     * @param {Boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @example
      * // In HTML head, include a link to the NavigationHelpButton.css stylesheet,
-     * // and in the body, include: &lt;div id="navigationHelpButtonContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="navigationHelpButtonContainer"></div>
      *
      * var navigationHelpButton = new Cesium.NavigationHelpButton({
      *     container : 'navigationHelpButtonContainer'
      * });
      */
-    var NavigationHelpButton = function (description) {
+    var NavigationHelpButton = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.container)) {
-            throw new DeveloperError('description.container is required.');
+        if (!defined(options) || !defined(options.container)) {
+            throw new DeveloperError('options.container is required.');
         }
         //>>includeEnd('debug');
 
-        var container = getElement(description.container);
+        var container = getElement(options.container);
 
         var viewModel = new NavigationHelpButtonViewModel();
 
-        if (description.instructionsInitiallyVisible) {
+        if (options.instructionsInitiallyVisible) {
             viewModel.showInstructions = true;
         }
 
@@ -107,7 +107,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         this._viewModel = viewModel;
         this._wrapper = wrapper;
 
-        this._closeInstructions = function (e) {
+        this._closeInstructions = function(e) {
             if (!wrapper.contains(e.target)) {
                 viewModel.showInstructions = false;
             }
@@ -120,24 +120,24 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     defineProperties(NavigationHelpButton.prototype, {
         /**
          * Gets the parent container.
-         * @memberof SceneModePicker.prototype
+         * @memberof NavigationHelpButton.prototype
          *
          * @type {Element}
          */
-        container: {
-            get: function () {
+        container : {
+            get : function() {
                 return this._container;
             }
         },
 
         /**
          * Gets the view model.
-         * @memberof SceneModePicker.prototype
+         * @memberof NavigationHelpButton.prototype
          *
-         * @type {SceneModePickerViewModel}
+         * @type {NavigationHelpButtonViewModel}
          */
-        viewModel: {
-            get: function () {
+        viewModel : {
+            get : function() {
                 return this._viewModel;
             }
         }
@@ -147,7 +147,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * @memberof NavigationHelpButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
-    NavigationHelpButton.prototype.isDestroyed = function () {
+    NavigationHelpButton.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -156,7 +156,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
      * removing the widget from layout.
      * @memberof NavigationHelpButton
      */
-    NavigationHelpButton.prototype.destroy = function () {
+    NavigationHelpButton.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeInstructions, true);
         document.removeEventListener('touchstart', this._closeInstructions, true);
 

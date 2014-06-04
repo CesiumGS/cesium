@@ -1,17 +1,18 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/PolylineOutlineMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-     ], function(
-             PolylineOutlineMaterialProperty,
-             ConstantProperty,
-             TimeIntervalCollectionProperty,
-             Color,
-             JulianDate,
-             TimeInterval) {
+defineSuite([
+        'DynamicScene/PolylineOutlineMaterialProperty',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/TimeIntervalCollectionProperty'
+    ], function(
+        PolylineOutlineMaterialProperty,
+        Color,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty,
+        TimeIntervalCollectionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

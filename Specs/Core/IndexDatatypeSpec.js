@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/IndexDatatype',
-         'Core/Math'
-     ], function(
-         IndexDatatype,
-         CesiumMath) {
+        'Core/IndexDatatype',
+        'Core/Math'
+    ], function(
+        IndexDatatype,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/Color',
         '../getElement',
         '../subscribeAndEvaluate'
     ], function(
+        Color,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        Color,
         getElement,
         subscribeAndEvaluate) {
     "use strict";
@@ -315,7 +315,7 @@ define([
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="animationContainer"></div>
      *
      * var clock = new Cesium.Clock();
      * var clockViewModel = new Cesium.ClockViewModel(clock);

@@ -1,15 +1,16 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/SampledProperty',
-             'Core/defined',
-             'Core/JulianDate',
-             'Core/LinearApproximation',
-             'Core/LagrangePolynomialApproximation'
-     ], function(
-             SampledProperty,
-             defined,
-             JulianDate,
-             LinearApproximation,
-             LagrangePolynomialApproximation) {
+defineSuite([
+        'DynamicScene/SampledProperty',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/LagrangePolynomialApproximation',
+        'Core/LinearApproximation'
+    ], function(
+        SampledProperty,
+        defined,
+        JulianDate,
+        LagrangePolynomialApproximation,
+        LinearApproximation) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

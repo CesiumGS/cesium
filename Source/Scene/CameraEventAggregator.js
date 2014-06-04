@@ -4,27 +4,27 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../Core/KeyboardEventModifier',
         './CameraEventType'
     ], function(
         Cartesian2,
         defined,
         destroyObject,
         DeveloperError,
+        KeyboardEventModifier,
         CesiumMath,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        KeyboardEventModifier,
         CameraEventType) {
     "use strict";
 
     function getKey(type, modifier) {
-        var key = type.name;
+        var key = type;
         if (defined(modifier)) {
-            key += '+' + modifier.name;
+            key += '+' + modifier;
         }
         return key;
     }
@@ -189,7 +189,7 @@ define([
         for ( var typeName in CameraEventType) {
             if (CameraEventType.hasOwnProperty(typeName)) {
                 var type = CameraEventType[typeName];
-                if (defined(type.name)) {
+                if (defined(type)) {
                     var key = getKey(type, modifier);
                     update[key] = true;
 
@@ -215,7 +215,7 @@ define([
             for ( var typeName in CameraEventType) {
                 if (CameraEventType.hasOwnProperty(typeName)) {
                     var type = CameraEventType[typeName];
-                    if (defined(type.name)) {
+                    if (defined(type)) {
                         var key = getKey(type, modifier);
                         if (isDown[key]) {
                             if (!update[key]) {
@@ -241,7 +241,7 @@ define([
      * @alias CameraEventAggregator
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas DOC_TBA
+     * @param {Canvas} [element=document] The element to handle events for.
      *
      * @see ScreenSpaceEventHandler
      */
@@ -273,7 +273,7 @@ define([
         for ( var modifierName in KeyboardEventModifier) {
             if (KeyboardEventModifier.hasOwnProperty(modifierName)) {
                 var modifier = KeyboardEventModifier[modifierName];
-                if (defined(modifier.name)) {
+                if (defined(modifier)) {
                     listenToWheel(this, modifier);
                     listenToPinch(this, modifier, canvas);
                     listenMouseButtonDownUp(this, modifier, CameraEventType.LEFT_DRAG);

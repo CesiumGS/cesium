@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/binarySearch',
+define([
+        '../Core/binarySearch',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,7 +8,7 @@ define(['../Core/binarySearch',
         '../Core/Event',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
-       ], function(
+    ], function(
         binarySearch,
         defaultValue,
         defined,
@@ -415,8 +416,8 @@ define(['../Core/binarySearch',
      * Adds an array of samples
      * @memberof SampledProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of values, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
      *
      * @exception {DeveloperError} times and values must be the same length..
      */
@@ -449,7 +450,7 @@ define(['../Core/binarySearch',
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {

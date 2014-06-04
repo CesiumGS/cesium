@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/barycentricCoordinates',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         barycentricCoordinates,
-         Cartesian3,
-         CesiumMath) {
+        'Core/barycentricCoordinates',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        barycentricCoordinates,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

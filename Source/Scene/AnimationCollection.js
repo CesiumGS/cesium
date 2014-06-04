@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        '../Core/clone',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/clone',
         '../Core/getTimestamp',
-        '../ThirdParty/Tween',
-        '../Core/defaultValue'
+        '../ThirdParty/Tween'
     ], function(
+        clone,
+        defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        clone,
         getTimestamp,
-        Tween,
-        defaultValue) {
+        Tween) {
     "use strict";
 
     /**
@@ -23,7 +23,7 @@ define([
      * @alias AnimationCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
      */
     var AnimationCollection = function() {
         this._tweens = [];

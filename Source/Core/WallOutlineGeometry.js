@@ -41,11 +41,11 @@ define([
      * @alias WallOutlineGeometry
      * @constructor
      *
-     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Array} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
+     * @param {Number[]} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Array} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
+     * @param {Number[]} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      *
@@ -56,17 +56,15 @@ define([
      * @see WallGeometry#fromConstantHeight
      *
      * @example
-     * var positions = [
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     * ];
-     *
      * // create a wall outline that spans from ground level to 10000 meters
      * var wall = new Cesium.WallOutlineGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
+     *   positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+     *     19.0, 47.0, 10000.0,
+     *     19.0, 48.0, 10000.0,
+     *     20.0, 48.0, 10000.0,
+     *     20.0, 47.0, 10000.0,
+     *     19.0, 47.0, 10000.0
+     *   ])
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */
@@ -106,7 +104,7 @@ define([
      *
      * @memberof WallOutlineGeometry
      *
-     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
      * @param {Number} [minimumHeight] A constant that defines the minimum height of the
@@ -116,19 +114,17 @@ define([
      * @see WallOutlineGeometry#createGeometry
      *
      * @example
-     * var positions = [
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     * ];
-     *
      * // create a wall that spans from 10000 meters to 20000 meters
      * var wall = Cesium.WallOutlineGeometry.fromConstantHeights({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
-     *     minimumHeight : 20000.0,
-     *     maximumHeight : 10000.0
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     19.0, 47.0,
+     *     19.0, 48.0,
+     *     20.0, 48.0,
+     *     20.0, 47.0,
+     *     19.0, 47.0,
+     *   ]),
+     *   minimumHeight : 20000.0,
+     *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
      */

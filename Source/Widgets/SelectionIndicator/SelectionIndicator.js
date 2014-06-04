@@ -2,19 +2,19 @@
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './SelectionIndicatorViewModel',
-        '../../ThirdParty/knockout'
+        './SelectionIndicatorViewModel'
     ], function(
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
+        knockout,
         getElement,
-        SelectionIndicatorViewModel,
-        knockout) {
+        SelectionIndicatorViewModel) {
     "use strict";
 
     /**

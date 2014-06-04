@@ -66,7 +66,7 @@ define([
         /**
          * The list of leap seconds used throughout Cesium.
          * @memberof LeapSecond
-         * @type {Array}
+         * @type {LeapSecond[]}
          */
         leapSeconds: {
             get: function() {

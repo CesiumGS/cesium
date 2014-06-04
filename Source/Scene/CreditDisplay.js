@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        './Credit'
-    ], function (
+        '../Core/DeveloperError'
+    ], function(
+        Credit,
         defaultValue,
         defined,
         destroyObject,
-        DeveloperError,
-        Credit) {
+        DeveloperError) {
     "use strict";
 
     function displayTextCredit(credit, container, delimiter) {
@@ -148,7 +148,6 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-
     var CreditDisplay = function(container, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {

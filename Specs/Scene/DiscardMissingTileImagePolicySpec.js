@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/DiscardMissingTileImagePolicy',
-         'Core/Cartesian2',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'ThirdParty/when'
-     ], function(
-         DiscardMissingTileImagePolicy,
-         Cartesian2,
-         defined,
-         loadImage,
-         loadWithXhr,
-         when) {
+        'Scene/DiscardMissingTileImagePolicy',
+        'Core/Cartesian2',
+        'Core/defined',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'ThirdParty/when'
+    ], function(
+        DiscardMissingTileImagePolicy,
+        Cartesian2,
+        defined,
+        loadImage,
+        loadWithXhr,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -28,7 +28,7 @@ defineSuite([
                     pixelsToCheck : [new Cartesian2(0, 0)]
                 });
             }
-            expect(constructWithoutMissingImageUrl).toThrow();
+            expect(constructWithoutMissingImageUrl).toThrowDeveloperError();
         });
 
         it('throws if pixelsToCheck is not provided', function() {
@@ -37,7 +37,7 @@ defineSuite([
                     missingImageUrl : 'http://some.host.invalid/missingImage.png'
                 });
             }
-            expect(constructWithoutPixelsToCheck).toThrow();
+            expect(constructWithoutPixelsToCheck).toThrowDeveloperError();
         });
 
         it('requests the missing image url', function() {
@@ -211,7 +211,7 @@ defineSuite([
                 policy.shouldDiscardImage(new Image());
             }
 
-            expect(callShouldDiscardImage).toThrow();
+            expect(callShouldDiscardImage).toThrowDeveloperError();
         });
     });
 });

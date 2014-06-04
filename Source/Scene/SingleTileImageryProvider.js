@@ -1,26 +1,26 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadImage',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicTilingScheme',
+        '../Core/loadImage',
         '../Core/Rectangle',
-        './Credit',
-        './GeographicTilingScheme',
-        './TileProviderError',
+        '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
-        loadImage,
         DeveloperError,
         Event,
-        Rectangle,
-        Credit,
         GeographicTilingScheme,
+        loadImage,
+        Rectangle,
         TileProviderError,
         when) {
     "use strict";
@@ -32,10 +32,10 @@ define([
      * @alias SingleTileImageryProvider
      * @constructor
      *
-     * @param {String} description.url The url for the tile.
-     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
-     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String} options.url The url for the tile.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -44,9 +44,9 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      */
-    var SingleTileImageryProvider = function(description) {
-        description = defaultValue(description, {});
-        var url = description.url;
+    var SingleTileImageryProvider = function(options) {
+        options = defaultValue(options, {});
+        var url = options.url;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
@@ -56,10 +56,10 @@ define([
 
         this._url = url;
 
-        var proxy = description.proxy;
+        var proxy = options.proxy;
         this._proxy = proxy;
 
-        var rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
+        var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         var tilingScheme = new GeographicTilingScheme({
             rectangle : rectangle,
             numberOfLevelZeroTilesX : 1,
@@ -81,7 +81,7 @@ define([
             imageUrl = proxy.getURL(imageUrl);
         }
 
-        var credit = description.credit;
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -304,6 +304,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof SingleTileImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

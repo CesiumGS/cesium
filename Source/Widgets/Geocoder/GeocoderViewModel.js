@@ -6,15 +6,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Rectangle',
         '../../Core/jsonp',
         '../../Core/Matrix4',
-        '../../Scene/CameraColumbusViewMode',
+        '../../Core/Rectangle',
         '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
-        '../createCommand',
         '../../ThirdParty/knockout',
-        '../../ThirdParty/when'
+        '../../ThirdParty/when',
+        '../createCommand'
     ], function(
         BingMapsApi,
         defaultValue,
@@ -22,15 +21,14 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         jsonp,
         Matrix4,
-        CameraColumbusViewMode,
+        Rectangle,
         CameraFlightPath,
         SceneMode,
-        createCommand,
         knockout,
-        when) {
+        when,
+        createCommand) {
     "use strict";
 
     /**
@@ -38,34 +36,34 @@ define([
      * @alias GeocoderViewModel
      * @constructor
      *
-     * @param {Scene} description.scene The Scene instance to use.
-     * @param {String} [description.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
-     * @param {String} [description.key] The Bing Maps key for your application, which can be
-     *        created at <a href='https://www.bingmapsportal.com/'>https://www.bingmapsportal.com/</a>.
+     * @param {Scene} options.scene The Scene instance to use.
+     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.key] The Bing Maps key for your application, which can be
+     *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
      *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
-     * @param {Number} [description.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
+     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
      */
-    var GeocoderViewModel = function(description) {
+    var GeocoderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.scene)) {
-            throw new DeveloperError('description.scene is required.');
+        if (!defined(options) || !defined(options.scene)) {
+            throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(description.url, '//dev.virtualearth.net/');
+        this._url = defaultValue(options.url, '//dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
 
-        this._key = BingMapsApi.getKey(description.key);
-        this._scene = description.scene;
-        this._ellipsoid = defaultValue(description.ellipsoid, Ellipsoid.WGS84);
-        this._flightDuration = defaultValue(description.flightDuration, 1500);
+        this._key = BingMapsApi.getKey(options.key);
+        this._scene = options.scene;
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._flightDuration = defaultValue(options.flightDuration, 1500);
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
@@ -203,11 +201,6 @@ define([
         }
     });
 
-    var transform2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 0.0, 1.0);
-
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -261,18 +254,18 @@ define([
                 return;
             }
 
-            var description = {
+            var options = {
                 destination : position,
                 duration : viewModel._flightDuration,
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
-                    screenSpaceCameraController.columbusViewMode = CameraColumbusViewMode.FREE;
                 },
-                endReferenceFrame : (viewModel._scene.mode !== SceneMode.SCENE3D) ? transform2D : Matrix4.IDENTITY
+                endReferenceFrame : Matrix4.IDENTITY,
+                convert : false
             };
 
-            var flight = CameraFlightPath.createAnimation(viewModel._scene, description);
+            var flight = CameraFlightPath.createAnimation(viewModel._scene, options);
             viewModel._scene.animations.add(flight);
         }, function() {
             if (geocodeInProgress.cancel) {

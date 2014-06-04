@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Cartesian3',
+define([
+        '../Core/Cartesian3',
         '../Core/CircleOutlineGeometry',
         '../Core/Ellipsoid'
     ], function(

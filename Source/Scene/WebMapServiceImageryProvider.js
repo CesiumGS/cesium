@@ -1,28 +1,28 @@
 /*global define*/
 define([
         '../Core/clone',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/freezeObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/freezeObject',
+        '../Core/GeographicTilingScheme',
         '../Core/Rectangle',
-        './Credit',
-        './ImageryProvider',
-        './GeographicTilingScheme'
+        './ImageryProvider'
     ], function(
         clone,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
-        freezeObject,
         DeveloperError,
         Event,
+        freezeObject,
+        GeographicTilingScheme,
         Rectangle,
-        Credit,
-        ImageryProvider,
-        GeographicTilingScheme) {
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -31,14 +31,14 @@ define([
      * @alias WebMapServiceImageryProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the WMS service.
-     * @param {String} description.layers The layers to include, separated by commas.
-     * @param {Object} [description.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
-     * @param {Rectangle} [description.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
-     * @param {Number} [description.maximumLevel] The maximum level-of-detail supported by the imagery provider.
+     * @param {String} options.url The URL of the WMS service.
+     * @param {String} options.layers The layers to include, separated by commas.
+     * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
-     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
@@ -48,8 +48,8 @@ define([
      * @see TileMapServiceImageryProvider
      * @see OpenStreetMapImageryProvider
      *
-     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
@@ -58,30 +58,30 @@ define([
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(description) {
-        description = defaultValue(description, {});
+    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+        options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
-        if (!defined(description.layers)) {
-            throw new DeveloperError('description.layers is required.');
+        if (!defined(options.layers)) {
+            throw new DeveloperError('options.layers is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = description.url;
-        this._tileDiscardPolicy = description.tileDiscardPolicy;
-        this._proxy = description.proxy;
-        this._layers = description.layers;
+        this._url = options.url;
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._proxy = options.proxy;
+        this._layers = options.layers;
 
         // Merge the parameters with the defaults, and make all parameter names lowercase
         var parameters = clone(WebMapServiceImageryProvider.DefaultParameters);
-        if (defined(description.parameters)) {
-            for (var parameter in description.parameters) {
-                if (description.parameters.hasOwnProperty(parameter)) {
+        if (defined(options.parameters)) {
+            for (var parameter in options.parameters) {
+                if (options.parameters.hasOwnProperty(parameter)) {
                     var parameterLowerCase = parameter.toLowerCase();
-                    parameters[parameterLowerCase] = description.parameters[parameter];
+                    parameters[parameterLowerCase] = options.parameters[parameter];
                 }
             }
         }
@@ -90,14 +90,14 @@ define([
 
         this._tileWidth = 256;
         this._tileHeight = 256;
-        this._maximumLevel = description.maximumLevel; // undefined means no limit
+        this._maximumLevel = options.maximumLevel; // undefined means no limit
 
-        var rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
+        var rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
         this._tilingScheme = new GeographicTilingScheme({
             rectangle : rectangle
         });
 
-        var credit = description.credit;
+        var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -361,6 +361,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

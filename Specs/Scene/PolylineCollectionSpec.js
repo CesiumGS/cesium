@@ -1,42 +1,42 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/PolylineCollection',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/frameState',
-         'Specs/pick',
-         'Specs/render',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Color',
-         'Core/Math',
-         'Renderer/ClearCommand',
-         'Scene/SceneMode',
-         'Scene/Material'
-     ], function(
-         PolylineCollection,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         frameState,
-         pick,
-         render,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Color,
-         CesiumMath,
-         ClearCommand,
-         SceneMode,
-         Material) {
+        'Scene/PolylineCollection',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Color',
+        'Core/Math',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/frameState',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        PolylineCollection,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Color,
+        CesiumMath,
+        ClearCommand,
+        Material,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        frameState,
+        pick,
+        render) {
     "use strict";
     /*global it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
@@ -851,7 +851,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        expect(scene._context.readPixels()).toNotEqual([0, 0, 0, 0]);
+        expect(scene.context.readPixels()).toNotEqual([0, 0, 0, 0]);
 
         destroyScene(scene);
     });

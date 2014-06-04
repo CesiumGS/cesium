@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/Matrix4',
-             'Core/Matrix3',
-             'Core/Cartesian3',
-             'Core/Cartesian4',
-             'Core/Quaternion',
-             'Core/Math'
-            ], function(
-              Matrix4,
-              Matrix3,
-              Cartesian3,
-              Cartesian4,
-              Quaternion,
-              CesiumMath) {
+        'Core/Matrix4',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Quaternion'
+    ], function(
+        Matrix4,
+        Cartesian3,
+        Cartesian4,
+        CesiumMath,
+        Matrix3,
+        Quaternion) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -1640,7 +1640,7 @@ defineSuite([
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         expect(function() {
             Matrix4.inverse(matrix);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('inverseTransformation throws without matrix parameter', function() {

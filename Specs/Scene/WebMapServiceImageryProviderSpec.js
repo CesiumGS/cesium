@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/WebMapServiceImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Rectangle',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'ThirdParty/when'
-     ], function(
-         WebMapServiceImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         DefaultProxy,
-         Rectangle,
-         CesiumMath,
-         GeographicTilingScheme,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         when) {
+        'Scene/WebMapServiceImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        WebMapServiceImageryProvider,
+        DefaultProxy,
+        defined,
+        GeographicTilingScheme,
+        jsonp,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

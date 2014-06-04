@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicLabel',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Core/NearFarScalar',
-             'Scene/HorizontalOrigin',
-             'Scene/VerticalOrigin',
-             'Scene/LabelStyle',
-             'DynamicScene/ConstantProperty'
-         ], function(
-             DynamicLabel,
-             Cartesian2,
-             Cartesian3,
-             Color,
-             NearFarScalar,
-             HorizontalOrigin,
-             VerticalOrigin,
-             LabelStyle,
-             ConstantProperty) {
+        'DynamicScene/DynamicLabel',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/NearFarScalar',
+        'DynamicScene/ConstantProperty',
+        'Scene/HorizontalOrigin',
+        'Scene/LabelStyle',
+        'Scene/VerticalOrigin'
+    ], function(
+        DynamicLabel,
+        Cartesian2,
+        Cartesian3,
+        Color,
+        NearFarScalar,
+        ConstantProperty,
+        HorizontalOrigin,
+        LabelStyle,
+        VerticalOrigin) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
