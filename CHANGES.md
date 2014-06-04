@@ -11,6 +11,7 @@ Beta Releases
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Added `Scene.trackIcrf` for better viewing of orbits.
 
 ### b29 - 2014-06-02
 
