@@ -71,7 +71,7 @@ define([
 
                 var semiMajorAxis = -mu / (inertialVelocity * inertialVelocity - (2 * mu / Cartesian3.magnitude(inertialCartesian)));
 
-                if (semiMajorAxis > northUpAxisFactor * ellipsoid.maximumRadius) {
+                if (semiMajorAxis < 0 || semiMajorAxis > northUpAxisFactor * ellipsoid.maximumRadius) {
                     // North-up viewing from deep space.
 
                     // X along the nadir
