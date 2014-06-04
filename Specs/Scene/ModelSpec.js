@@ -36,12 +36,14 @@ defineSuite([
 
     var duckUrl = './Data/Models/duck/duck.json';
     var customDuckUrl = './Data/Models/customDuck/duck.json';
+    var embeddedDuckUrl = './Data/Models/embeddedDuck/duck.json';
     var cesiumAirUrl = './Data/Models/CesiumAir/CesiumAir.json';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
 
     var duckModel;
     var customDuckModel;
+    var embeddedDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -374,6 +376,21 @@ defineSuite([
         customDuckModel.zoomTo();
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         customDuckModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    it('loads embeddedDuck', function() {
+        embeddedDuckModel = loadModel(embeddedDuckUrl);
+    });
+
+    it('renders embeddedDuckModel (NPOT textures and all uniform semantics)', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        embeddedDuckModel.show = true;
+        embeddedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        embeddedDuckModel.show = false;
     });
 
     ///////////////////////////////////////////////////////////////////////////
