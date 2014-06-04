@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        './DeveloperError'
     ], function(
         DeveloperError) {
     "use strict";
@@ -23,7 +23,6 @@ define([
 
         /**
          * Stores the provided instance into the provided array.
-         * @memberof Packable
          * @function
          *
          * @param {Object} value The value to pack.
@@ -34,7 +33,6 @@ define([
 
         /**
          * Retrieves an instance from a packed array.
-         * @memberof Packable
          * @function
          *
          * @param {Number[]} array The packed array.

@@ -657,6 +657,7 @@ define([
 
         /**
          * The primitive to return when picking this billboard.
+         * @memberof Billboard.prototype
          * @private
          */
         pickPrimitive : {
@@ -756,8 +757,6 @@ define([
      * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
      * left to right, and <code>y</code> increases from bottom to top.
      *
-     * @memberof Billboard
-     *
      * @param {Scene} scene The scene.
      *
      * @returns {Cartesian2} The screen-space position of the billboard.
@@ -793,8 +792,6 @@ define([
     /**
      * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
      * are equal.  Billboards in different collections can be equal.
-     *
-     * @memberof Billboard
      *
      * @param {Billboard} other The billboard to compare for equality.
      *

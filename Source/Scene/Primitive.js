@@ -79,6 +79,7 @@ define([
      * @alias Primitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
@@ -600,7 +601,7 @@ define([
             return;
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -1123,8 +1124,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
      *
-     * @memberof Primitive
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Primitive#destroy
@@ -1141,8 +1140,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @memberof Primitive
      *
      * @returns {undefined}
      *

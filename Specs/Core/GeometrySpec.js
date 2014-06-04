@@ -126,7 +126,7 @@ defineSuite([
 
         expect(function() {
             Geometry.computeNumberOfVertices(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeNumberOfVertices throws without geometry', function() {

@@ -241,6 +241,7 @@ define([
      *
      * @alias Material
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
@@ -497,8 +498,6 @@ define([
     * If this object was destroyed, it should not be used; calling any function other than
     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
     *
-    * @memberof Material
-    *
     * @returns {Boolean} True if this object was destroyed; otherwise, false.
     *
     * @see Material#destroy
@@ -514,8 +513,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Material
      *
      * @returns {undefined}
      *

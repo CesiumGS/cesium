@@ -7,7 +7,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Scene/CullingVolume'
+        './CullingVolume'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -149,8 +149,6 @@ define([
     /**
      * Creates a culling volume for this frustum.
      *
-     * @memberof OrthographicFrustum
-     *
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
@@ -271,8 +269,6 @@ define([
     /**
      * Returns the pixel's width and height in meters.
      *
-     * @memberof OrthographicFrustum
-     *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @param {Cartesian2} [result] The object onto which to store the result.
@@ -317,7 +313,6 @@ define([
 
     /**
      * Returns a duplicate of a OrthographicFrustum instance.
-     * @memberof OrthographicFrustum
      *
      * @param {OrthographicFrustum} [result] The object onto which to store the result.
      * @returns {OrthographicFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
@@ -348,8 +343,6 @@ define([
     /**
      * Compares the provided OrthographicFrustum componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @memberof OrthographicFrustum
      *
      * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

@@ -73,6 +73,8 @@ defineSuite([
         collection.add(sources[1]);
         collection.add(sources[2]);
         collection.removeAll();
+
+        expect(collection.length).toEqual(0);
         expect(removeCalled).toEqual(sources.length);
     });
 

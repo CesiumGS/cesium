@@ -12,10 +12,16 @@ define([
     "use strict";
 
     function createScene(options) {
-        options = clone(defaultValue(options, {}));
-        options.webgl = clone(defaultValue(options.webgl, {}));
-        options.webgl.antialias = defaultValue(options.webgl.antialias, false);
-        var scene = new Scene(createCanvas(), options);
+        options = clone(defaultValue(options, {}), true);
+
+        options.canvas = defaultValue(options.canvas, createCanvas());
+        options.contextOptions = defaultValue(options.contextOptions, {});
+
+        var contextOptions = options.contextOptions;
+        contextOptions.webgl = defaultValue(contextOptions.webgl, {});
+        contextOptions.webgl.antialias = defaultValue(contextOptions.webgl.antialias, false);
+
+        var scene = new Scene(options);
 
         // Add functions for test
         scene.renderForSpecs = function(time) {

@@ -45,8 +45,6 @@ define([
      * If the url is already in the atlas, the atlas is unchanged and the callback
      * is triggered immediately with the existing index.
      *
-     * @memberof TextureAtlasBuilder
-     *
      * @param {String} url The url of the image to add to the atlas.
      * @param {Function} textureAvailableCallback A function taking the image index as it's only parameter.
      */
@@ -78,8 +76,6 @@ define([
      * across many billboards.  Only the first billboard will actually create the texture
      * while subsequent billboards will re-use the existing one.
      * </p>
-     *
-     * @memberof TextureAtlasBuilder
      *
      * @param {String} id The id of the image to add to the atlas.
      * @param {Function} getImageCallback A function which takes two parameters; first the id of the image to

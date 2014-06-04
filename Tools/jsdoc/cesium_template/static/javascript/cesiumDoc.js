@@ -1,7 +1,5 @@
 (function() {
 
-    SyntaxHighlighter.all();
-
     var filterType = document.getElementById('filterType');
     var classFilter = document.getElementById('ClassFilter');
     var classList = document.getElementById('ClassList');

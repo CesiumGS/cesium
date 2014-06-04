@@ -95,7 +95,6 @@ define([
     /**
      * Creates a new instance from the provided ellipsoid and the center
      * point of the provided Cartesians.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesians The list of positions surrounding the center point.
@@ -116,7 +115,6 @@ define([
 
     /**
      * Computes the projection of the provided 3D position onto the 2D plane.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Cartesian3} cartesian The point to project.
      * @param {Cartesian2} [result] The object onto which to store the result.
@@ -156,7 +154,6 @@ define([
 
     /**
      * Computes the projection of the provided 3D positions onto the 2D plane.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Cartesian3[]} cartesians The array of points to project.
      * @param {Cartesian2[]} [result] The array of Cartesian2 instances onto which to store results.
@@ -190,7 +187,6 @@ define([
     var projectPointsOntoEllipsoidScratch = new Cartesian3();
     /**
      * Computes the projection of the provided 2D positions onto the 3D ellipsoid.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Cartesian2[]} cartesians The array of points to project.
      * @param {Cartesian3[]} [result] The array of Cartesian3 instances onto which to store results.

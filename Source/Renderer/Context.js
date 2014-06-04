@@ -456,7 +456,7 @@ define([
         /**
          * The number of depth bits per pixel in the default bound framebuffer.  The minimum is 16 bits; most
          * implementations will have 24 bits.
-         * @memberof Context.protoytpe
+         * @memberof Context.prototype
          * @type {Number}
          * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>DEPTH_BITS</code>.
          */
@@ -972,8 +972,6 @@ define([
      * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
      * etc., by interpreting the raw data in one or more vertex buffers.
      *
-     * @memberof Context
-     *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      *
@@ -1010,8 +1008,6 @@ define([
      * An index buffer can be attached to a vertex array to select vertices for rendering.
      * <code>Context.draw</code> can render using the entire index buffer or a subset
      * of the index buffer defined by an offset and count.
-     *
-     * @memberof Context
      *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
@@ -1085,8 +1081,6 @@ define([
     /**
      * Creates a vertex array, which defines the attributes making up a vertex, and contains an optional index buffer
      * to select vertices for rendering.  Attributes are defined using object literals as shown in Example 1 below.
-     *
-     * @memberof Context
      *
      * @param {Object[]} [attributes] An optional array of attributes.
      * @param {IndexBuffer} [indexBuffer] An optional index buffer.
@@ -1200,8 +1194,6 @@ define([
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
      * the texture is the same width and height as the framebuffer and contains its contents.
      *
-     * @memberof Context
-     *
      * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
      * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
      * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
@@ -1280,8 +1272,6 @@ define([
 
     /**
      * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
-     *
-     * @memberof Context
      *
      * @returns {CubeMap} The newly created cube map.
      *
@@ -1418,8 +1408,6 @@ define([
      * Framebuffers are used for render-to-texture effects; they allow us to render to
      * textures in one pass, and read from it in a later pass.
      *
-     * @memberof Context
-     *
      * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
      * @returns {Framebuffer} The created framebuffer.
@@ -1501,8 +1489,6 @@ define([
      * Validates and then finds or creates an immutable render state, which defines the pipeline
      * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
      * use the defaults shown in the example below.
-     *
-     * @memberof Context
      *
      * @param {Object} [renderState] The states defining the render state as shown in the example below.
      *
@@ -1608,8 +1594,7 @@ define([
      *         enabled : false,
      *         value : 1.0,
      *         invert : false
-     *      },
-     *     dither : true
+     *      }
      * };
      *
      * // Same as just context.createRenderState().
@@ -2069,8 +2054,6 @@ define([
      * <br />
      * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
      *
-     * @memberof Context
-     *
      * @param {Object} [options] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
      *
      * @exception {RuntimeError} Each attribute list must have the same number of vertices.
@@ -2274,8 +2257,6 @@ define([
     /**
      * Gets the object associated with a pick color.
      *
-     * @memberof Context
-     *
      * @param {Color} pickColor The pick color.
      *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
@@ -2321,8 +2302,6 @@ define([
      * Creates a unique ID associated with the input object for use with color-buffer picking.
      * The ID has an RGBA color value unique to this context.  You must call destroy()
      * on the pick ID when destroying the input object.
-     *
-     * @memberof Context
      *
      * @param {Object} object The object to associate with the pick ID.
      *

@@ -69,19 +69,6 @@ defineSuite([
 
         expect(function() {
             return new QuadtreeTile({
-                x : 0,
-                y : 0,
-                level : 0,
-                tilingScheme : {
-                    tileXYToRectangle : function() {
-                        return undefined;
-                    }
-                }
-            });
-        }).not.toThrow();
-
-        expect(function() {
-            return new QuadtreeTile({
                 y : 0,
                 level : 0,
                 tilingScheme : {
@@ -153,7 +140,7 @@ defineSuite([
         it('requires tilingScheme', function() {
             expect(function() {
                 return QuadtreeTile.createLevelZeroTiles(undefined);
-            }).toThrow();
+            }).toThrowDeveloperError();
         });
 
         it('creates expected number of tiles', function() {

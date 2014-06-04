@@ -63,7 +63,6 @@ define([
 
     /**
      * Creates a plane from a normal and a point on the plane.
-     * @memberof Plane
      *
      * @param {Cartesian3} point The point on the plane.
      * @param {Cartesian3} normal The plane's normal (normalized).
@@ -102,7 +101,6 @@ define([
      * is on.  If the distance is positive, the point is in the half-space
      * in the direction of the normal; if negative, the point is in the half-space
      * opposite to the normal; if zero, the plane passes through the point.
-     * @memberof Plane
      *
      * @param {Plane} plane The plane.
      * @param {Cartesian3} point The point.

@@ -26,6 +26,7 @@ define([
      * @alias Iau2006XysData
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
      * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
@@ -86,8 +87,6 @@ define([
     /**
      * Preloads XYS data for a specified date range.
      *
-     * @memberof Iau2006XysData
-     *
      * @param {Number} startDayTT The Julian day number of the beginning of the interval to preload, expressed in
      *                 the Terrestrial Time (TT) time standard.
      * @param {Number} startSecondTT The seconds past noon of the beginning of the interval to preload, expressed in
@@ -128,8 +127,6 @@ define([
     /**
      * Computes the XYS values for a given date by interpolating.  If the required data is not yet downloaded,
      * this method will return undefined.
-     *
-     * @memberof Iau2006XysData
      *
      * @param {Number} dayTT The Julian day number for which to compute the XYS value, expressed in
      *                 the Terrestrial Time (TT) time standard.

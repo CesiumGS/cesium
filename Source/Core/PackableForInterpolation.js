@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        '../Core/DeveloperError'
+        './DeveloperError'
     ], function(
         DeveloperError) {
     "use strict";
@@ -23,7 +23,6 @@ define([
 
         /**
          * Converts a packed array into a form suitable for interpolation.
-         * @memberof PackableForInterpolation
          * @function
          *
          * @param {Number[]} packedArray The packed array.
@@ -35,7 +34,6 @@ define([
 
         /**
          * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
-         * @memberof PackableForInterpolation
          * @function
          *
          * @param {Number[]} array The original packed array.

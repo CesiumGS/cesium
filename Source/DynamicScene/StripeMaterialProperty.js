@@ -55,7 +55,9 @@ define([
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof StripeMaterialProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -71,7 +73,9 @@ define([
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof StripeMaterialProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -115,7 +119,6 @@ define([
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof StripeMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
      * @returns {String} The type of material.
@@ -126,7 +129,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof StripeMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -148,7 +150,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof StripeMaterialProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

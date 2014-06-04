@@ -184,7 +184,6 @@ define([
         this.show = true;
 
         this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
 
         /**
          * The normal map to use for rendering waves in the ocean.  Setting this property will
@@ -562,7 +561,7 @@ define([
         }
 
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var modeChanged = false;
 
         if (this._mode !== mode || !defined(this._rsColor)) {
@@ -669,7 +668,6 @@ define([
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
-        var projectionChanged = this._projection !== projection;
         var hasWaterMask = this._surface.tileProvider.ready && this._surface.tileProvider.terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
@@ -677,7 +675,6 @@ define([
         if (!defined(this._northPoleCommand.shaderProgram) ||
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
-            projectionChanged ||
             hasWaterMaskChanged ||
             hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
@@ -753,7 +750,6 @@ define([
         fillPoles(this, context, frameState);
 
         this._mode = mode;
-        this._projection = projection;
 
         var pass = frameState.passes;
         if (pass.render) {
@@ -812,8 +808,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Globe
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see Globe#destroy
@@ -829,8 +823,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Globe
      *
      * @returns {undefined}
      *
