@@ -5,6 +5,8 @@ defineSuite([
         'Core/Color',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/JulianDate',
+        'Core/Matrix4',
         'Core/PixelFormat',
         'Core/Rectangle',
         'Core/RuntimeError',
@@ -30,6 +32,8 @@ defineSuite([
         Color,
         Ellipsoid,
         GeographicProjection,
+        JulianDate,
+        Matrix4,
         PixelFormat,
         Rectangle,
         RuntimeError,
@@ -78,6 +82,7 @@ defineSuite([
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.animations).toBeInstanceOf(AnimationCollection);
+        expect(scene.trackIcrf).toEqual(false);
 
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
@@ -597,5 +602,15 @@ defineSuite([
         expect(spyListener.callCount).toBe(1);
 
         destroyScene(s);
+    });
+
+    it('can set and clear the trackIcrf flag', function() {
+        scene.trackIcrf = true;
+        scene.render(JulianDate.fromIso8601('2014-06-04T01:00Z'));
+        expect(scene.trackIcrf).toEqual(true);
+        expect(Matrix4.equals(scene.camera.transform, Matrix4.IDENTITY)).toEqual(false);
+        scene.trackIcrf = false;
+        expect(scene.trackIcrf).toEqual(false);
+        expect(Matrix4.equals(scene.camera.transform, Matrix4.IDENTITY)).toEqual(true);
     });
 }, 'WebGL');

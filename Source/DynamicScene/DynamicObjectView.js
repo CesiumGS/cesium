@@ -207,6 +207,7 @@ define([
         var positionProperty = dynamicObject.position;
         var objectChanged = dynamicObject !== this._lastDynamicObject;
         this._lastDynamicObject = dynamicObject;
+        scene.trackIcrf = false;
 
         if (scene.mode !== SceneMode.MORPHING) {
             updateTransform(this, scene.camera, objectChanged, positionProperty, time, ellipsoid);

@@ -20,10 +20,12 @@ define([
         '../Core/Interval',
         '../Core/JulianDate',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
@@ -69,10 +71,12 @@ define([
         Interval,
         JulianDate,
         CesiumMath,
+        Matrix3,
         Matrix4,
         mergeSort,
         Occluder,
         ShowGeometryInstanceAttribute,
+        Transforms,
         ClearCommand,
         Context,
         PassState,
@@ -227,6 +231,9 @@ define([
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._trackIcrf = false;
+        this._lastRenderTime = undefined;
 
         /**
          * Exceptions occurring in <code>render</code> are always caught in order to raise the
@@ -693,6 +700,27 @@ define([
         context : {
             get : function() {
                 return this._context;
+            }
+        },
+
+        /**
+         * Gets or sets a flag that indicates that <code>camera.transform</code> will track the
+         * International Celestial Reference Frame (GCRF/ICRF).  The tracking is only applicable
+         * to SceneMode.SCENE3D, and only when the camera is focused on the globe.
+         *
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        trackIcrf : {
+            get : function() {
+                return this._trackIcrf;
+            },
+            set : function(value) {
+                if (value) {
+                    setIcrf(this);
+                } else {
+                    clearIcrf(this);
+                }
             }
         },
 
@@ -1272,6 +1300,35 @@ define([
         functions.length = 0;
     }
 
+    var scratchInertialToFixed3x3 = new Matrix3();
+    var scratchInertialToFixed4x4 = new Matrix4();
+
+    function computeInertialToFixed(currentTime) {
+        if (!defined(Transforms.computeIcrfToFixedMatrix(currentTime, scratchInertialToFixed3x3))) {
+            Transforms.computeTemeToPseudoFixedMatrix(currentTime, scratchInertialToFixed3x3);
+        }
+
+        return Matrix4.fromRotationTranslation(scratchInertialToFixed3x3, Cartesian3.ZERO, scratchInertialToFixed4x4);
+    }
+
+    function setIcrf(scene) {
+        if (!scene._trackIcrf) {
+            scene._trackIcrf = true;
+            if (defined(scene._lastRenderTime) && scene.mode === SceneMode.SCENE3D) {
+                scene.camera.setTransform(computeInertialToFixed(scene._lastRenderTime));
+            }
+        }
+    }
+
+    function clearIcrf(scene) {
+        if (scene._trackIcrf) {
+            scene._trackIcrf = false;
+            if (scene.mode === SceneMode.SCENE3D) {
+                scene.camera.setTransform(Matrix4.IDENTITY);
+            }
+        }
+    }
+
     /**
      * @private
      */
@@ -1291,6 +1348,11 @@ define([
         if (!defined(time)) {
             time = new JulianDate();
         }
+
+        if (scene._trackIcrf && scene.mode === SceneMode.SCENE3D) {
+            Matrix4.clone(computeInertialToFixed(time), scene.camera.transform);
+        }
+        scene._lastRenderTime = time;
 
         scene._preRender.raiseEvent(scene, time);
 
