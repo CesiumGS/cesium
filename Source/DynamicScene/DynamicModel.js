@@ -36,8 +36,10 @@ define([
     defineProperties(DynamicModel.prototype, {
         /**
          * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicPolygon.prototype
+         * @memberof DynamicModel.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -73,7 +75,6 @@ define([
 
     /**
      * Duplicates a DynamicModel instance.
-     * @memberof DynamicModel
      *
      * @param {DynamicModel} [result] The object onto which to store the result.
      * @returns {DynamicModel} The modified result parameter or a new instance if one was not provided.
@@ -92,7 +93,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicModel
      *
      * @param {DynamicModel} source The object to be merged into this object.
      */

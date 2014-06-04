@@ -107,6 +107,7 @@ define([
      * @alias BillboardCollection
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each billboard from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
@@ -230,7 +231,6 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
 
         // The buffer usage for each attribute is determined based on the usage of the attribute over time.
         this._buffersUsage = [
@@ -349,8 +349,6 @@ define([
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
      *
-     * @memberof BillboardCollection
-     *
      * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
      *
      * @returns {Billboard} The billboard that was added to the collection.
@@ -397,8 +395,6 @@ define([
     /**
      * Removes a billboard from the collection.
      *
-     * @memberof BillboardCollection
-     *
      * @param {Billboard} billboard The billboard to remove.
      *
      * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
@@ -436,8 +432,6 @@ define([
      *
      * @performance <code>O(n)</code>.  It is more efficient to remove all the billboards
      * from a collection and then add new ones than to create a new collection entirely.
-     *
-     * @memberof BillboardCollection
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -489,8 +483,6 @@ define([
     /**
      * Check whether this collection contains a given billboard.
      *
-     * @memberof BillboardCollection
-     *
      * @param {Billboard} [billboard] The billboard to check for.
      *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
@@ -507,8 +499,6 @@ define([
      * it to the left, changing their indices.  This function is commonly used with
      * {@link BillboardCollection#length} to iterate over all the billboards
      * in the collection.
-     *
-     * @memberof BillboardCollection
      *
      * @param {Number} index The zero-based index of the billboard.
      *
@@ -1007,7 +997,6 @@ define([
 
     function updateMode(billboardCollection, frameState) {
         var mode = frameState.mode;
-        var projection = frameState.scene2D.projection;
 
         var billboards = billboardCollection._billboards;
         var billboardsToUpdate = billboardCollection._billboardsToUpdate;
@@ -1015,12 +1004,10 @@ define([
 
         if (billboardCollection._createVertexArray ||
             billboardCollection._mode !== mode ||
-            billboardCollection._projection !== projection ||
             mode !== SceneMode.SCENE3D &&
             !Matrix4.equals(modelMatrix, billboardCollection.modelMatrix)) {
 
             billboardCollection._mode = mode;
-            billboardCollection._projection = projection;
             Matrix4.clone(billboardCollection.modelMatrix, modelMatrix);
             billboardCollection._createVertexArray = true;
 
@@ -1353,8 +1340,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof BillboardCollection
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see BillboardCollection#destroy
@@ -1370,8 +1355,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof BillboardCollection
      *
      * @returns {undefined}
      *

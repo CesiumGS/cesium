@@ -59,7 +59,6 @@ define([
     /**
      * Updates the sensors created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicPyramidVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -80,7 +79,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicPyramidVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -90,7 +88,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicPyramidVisualizer
      */
     DynamicPyramidVisualizer.prototype.destroy = function() {
         var i;

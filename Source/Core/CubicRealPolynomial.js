@@ -16,7 +16,6 @@ define([
 
     /**
      * Provides the discriminant of the cubic equation from the supplied coefficients.
-     * @memberof CubicRealPolynomial
      *
      * @param {Number} a The coefficient of the 3rd order monomial.
      * @param {Number} b The coefficient of the 2nd order monomial.
@@ -156,7 +155,6 @@ define([
 
     /**
      * Provides the real valued roots of the cubic polynomial with the provided coefficients.
-     * @memberof CubicRealPolynomial
      *
      * @param {Number} a The coefficient of the 3rd order monomial.
      * @param {Number} b The coefficient of the 2nd order monomial.

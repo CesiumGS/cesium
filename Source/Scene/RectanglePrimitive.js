@@ -35,6 +35,7 @@ define([
      * @alias RectanglePrimitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the rectangle is drawn on.
      * @param {Rectangle} [options.rectangle] The rectangle, which defines the rectangular region to draw.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
@@ -202,7 +203,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
         if (this.granularity < 0.0) {
-            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
+            throw new DeveloperError('this.granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -265,8 +266,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Rectangle
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Rectangle#destroy
@@ -282,8 +281,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Rectangle
      *
      * @returns {undefined}
      *

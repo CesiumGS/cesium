@@ -36,6 +36,7 @@ define([
      * @alias GeocoderViewModel
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
      * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be

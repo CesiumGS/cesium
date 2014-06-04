@@ -34,6 +34,7 @@ define([
      * @alias Moon
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Determines whether the moon will be rendered.
      * @param {String} [options.textureUrl=buildModuleUrl('Assets/Textures/moonSmall.jpg')] The moon texture.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
@@ -112,7 +113,7 @@ define([
         Matrix3.transpose(rotation, rotation);
         Matrix3.multiply(icrfToFixed, rotation, rotation);
 
-        var translation = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date, translationScratch);
+        var translation = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date, translationScratch);
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
@@ -124,8 +125,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Moon
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
@@ -142,8 +141,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Moon
      *
      * @returns {undefined}
      *

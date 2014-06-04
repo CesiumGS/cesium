@@ -100,7 +100,6 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicConeVisualizerUsingCustomSensor
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -121,7 +120,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicConeVisualizerUsingCustomSensor
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -131,7 +129,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicConeVisualizerUsingCustomSensor
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

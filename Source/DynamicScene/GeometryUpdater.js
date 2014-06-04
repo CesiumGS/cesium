@@ -52,7 +52,9 @@ define([
         /**
          * Gets the object associated with this geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject : {
             get : DeveloperError.throwInstantiationError
@@ -60,7 +62,9 @@ define([
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : DeveloperError.throwInstantiationError
@@ -68,7 +72,9 @@ define([
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : DeveloperError.throwInstantiationError
@@ -76,7 +82,9 @@ define([
         /**
          * Gets the material property used to fill the geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : DeveloperError.throwInstantiationError
@@ -84,7 +92,9 @@ define([
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             get : DeveloperError.throwInstantiationError
@@ -92,7 +102,9 @@ define([
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             get : DeveloperError.throwInstantiationError
@@ -100,7 +112,9 @@ define([
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             get : DeveloperError.throwInstantiationError
@@ -109,9 +123,10 @@ define([
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : DeveloperError.throwInstantiationError
@@ -120,7 +135,9 @@ define([
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             get : DeveloperError.throwInstantiationError
@@ -129,7 +146,9 @@ define([
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof GeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : DeveloperError.throwInstantiationError
@@ -138,7 +157,6 @@ define([
 
     /**
      * Checks if the geometry is outlined at the provided time.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
@@ -148,7 +166,6 @@ define([
 
     /**
      * Checks if the geometry is filled at the provided time.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
@@ -158,7 +175,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
@@ -170,7 +186,6 @@ define([
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
@@ -182,7 +197,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof GeometryUpdater
      * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
@@ -191,7 +205,6 @@ define([
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     * @memberof GeometryUpdater
      * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -200,7 +213,6 @@ define([
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     * @memberof GeometryUpdater
      * @function
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.

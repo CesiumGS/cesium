@@ -18,8 +18,6 @@ define(function() {
     /**
      * Get the final URL to use to request a given resource.
      *
-     * @memberof DefaultProxy
-     *
      * @param {String} resource The resource to request.
      */
     DefaultProxy.prototype.getURL = function(resource) {

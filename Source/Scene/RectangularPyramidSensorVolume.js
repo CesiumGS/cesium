@@ -180,8 +180,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof RectangularPyramidSensorVolume
-     *
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      */
@@ -235,7 +233,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.isDestroyed = function() {
         return false;
@@ -243,7 +240,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.destroy = function() {
         this._customSensor = this._customSensor && this._customSensor.destroy();

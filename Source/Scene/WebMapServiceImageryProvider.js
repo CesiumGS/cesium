@@ -31,6 +31,7 @@ define([
      * @alias WebMapServiceImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the WMS service.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
@@ -194,7 +195,7 @@ define([
         /**
          * Gets the width of each tile, in pixels. This function should
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
-         * @memberof WebMapServiceImageryProviderr.prototype
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
          */
         tileWidth : {
@@ -374,8 +375,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof WebMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -391,8 +390,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
-     *
-     * @memberof WebMapServiceImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -424,7 +421,7 @@ define([
      *    styles=
      *    format=image/jpeg
      *
-     * @memberof WebMapServiceImageryProvider
+     * @readonly
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',

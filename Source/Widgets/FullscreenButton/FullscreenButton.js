@@ -93,7 +93,6 @@ cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath
     });
 
     /**
-     * @memberof FullscreenButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     FullscreenButton.prototype.isDestroyed = function() {
@@ -103,7 +102,6 @@ cesiumSvgPath: { path: isFullscreen ? _exitFullScreenPath : _enterFullScreenPath
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof FullscreenButton
      */
     FullscreenButton.prototype.destroy = function() {
         this._viewModel.destroy();

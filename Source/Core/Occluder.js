@@ -79,7 +79,7 @@ define([
 
         /**
          * The radius of the occluder.
-         * @memberof Occluder.prrototype
+         * @memberof Occluder.prototype
          * @type {Number}
          */
         radius: {
@@ -130,7 +130,6 @@ define([
 
     /**
      * Creates an occluder from a bounding sphere and the camera position.
-     * @memberof Occluder
      *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
@@ -163,8 +162,6 @@ define([
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
-     * @memberof Occluder
-     *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
@@ -196,8 +193,6 @@ define([
 
     /**
     * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
-    *
-    * @memberof Occluder
     *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     *
@@ -254,8 +249,6 @@ define([
 
     /**
      * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
-     *
-     * @memberof Occluder
      *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
      *
@@ -330,17 +323,14 @@ define([
      * terrain.  You are better off not calling this and using the object's bounding sphere for objects
      * such as a satellite or ground vehicle.
      *
-     * @memberof Occluder
-     *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
      * @param {Cartesian3[]} positions List of altitude points on the horizon near the surface of the occluder.
+     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * which is a boolean value.
      *
      * @exception {DeveloperError} <code>positions</code> must contain at least one element.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
-     *
-     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
-     * which is a boolean value.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -408,8 +398,6 @@ define([
     var computeOccludeePointFromRectangleScratch = [];
     /**
      * Computes a point that can be used as the occludee position to the visibility functions from an rectangle.
-     *
-     * @memberof Occluder
      *
      * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.

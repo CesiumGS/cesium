@@ -29,6 +29,7 @@ define([
      * @alias PolylineMaterialAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
@@ -194,7 +195,7 @@ define([
      * Procedurally creates the full GLSL fragment shader source.  For {@link PolylineMaterialAppearance},
      * this is derived from {@link PolylineMaterialAppearance#fragmentShaderSource} and {@link PolylineMaterialAppearance#material}.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -203,7 +204,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PolylineMaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -214,7 +215,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof PolylineMaterialAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */
