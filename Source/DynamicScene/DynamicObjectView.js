@@ -42,7 +42,7 @@ define([
             var zBasis;
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
-            // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+            // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
             var deltaTime = time.addSeconds(0.001);
             var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
             if (defined(deltaCartesian)) {
@@ -84,28 +84,25 @@ define([
 
                     // Y is along the cross of z and x (right handed basis / in the direction of motion)
                     yBasis = Cartesian3.cross(zBasis, xBasis, updateTransformCartesian3Scratch1);
+                    if (Cartesian3.magnitude(yBasis) > CesiumMath.EPSILON7) {
+                        Cartesian3.normalize(xBasis, xBasis);
+                        Cartesian3.normalize(yBasis, yBasis);
 
-                    Cartesian3.normalize(xBasis, xBasis);
-                    Cartesian3.normalize(yBasis, yBasis);
+                        zBasis = Cartesian3.cross(xBasis, yBasis, updateTransformCartesian3Scratch3);
+                        Cartesian3.normalize(zBasis, zBasis);
 
-                    zBasis = Cartesian3.cross(xBasis, yBasis, updateTransformCartesian3Scratch3);
-                    Cartesian3.normalize(zBasis, zBasis);
-
-                    hasBasis = true;
-
+                        hasBasis = true;
+                    }
                 } else if (!Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON7)) {
-                    // Approximation of VVLH (Vehicle Velocity Local Horizontal)
+                    // Approximation of VVLH (Vehicle Velocity Local Horizontal) with the Z-axis flipped.
 
                     // Z along the position
                     zBasis = updateTransformCartesian3Scratch2;
-                    Cartesian3.normalize(cartesian, zBasis);
-                    Cartesian3.normalize(deltaCartesian, deltaCartesian);
-
-                    Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
-                    Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+                    Cartesian3.normalize(inertialCartesian, zBasis);
+                    Cartesian3.normalize(inertialDeltaCartesian, inertialDeltaCartesian);
 
                     // Y is along the angular momentum vector (e.g. "orbit normal")
-                    yBasis = Cartesian3.cross(zBasis, deltaCartesian, updateTransformCartesian3Scratch3);
+                    yBasis = Cartesian3.cross(zBasis, inertialDeltaCartesian, updateTransformCartesian3Scratch3);
                     if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON7)) {
                         // X is along the cross of y and z (right handed basis / in the direction of motion)
                         xBasis = Cartesian3.cross(yBasis, zBasis, updateTransformCartesian3Scratch1);
