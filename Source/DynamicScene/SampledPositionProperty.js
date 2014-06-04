@@ -117,7 +117,7 @@ define([
             }
         },
         /**
-         * Gets whether or not this property contains velocity information.
+         * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
          * @memberof SampledPositionProperty.prototype
          *
          * @type {Boolean}
@@ -178,11 +178,11 @@ define([
     };
 
     /**
-     * Adds a new sample
+     * Adds a new sample.
      *
      * @param {JulianDate} time The sample time.
      * @param {Cartesian3} position The position at the provided time.
-     * @param {Cartesian3} [derivatives]
+     * @param {Cartesian3[]} [derivatives] The array of derivative values at the provided time.
      */
     SampledPositionProperty.prototype.addSample = function(time, position, derivatives) {
         var numberOfDerivatives = this._numberOfDerivatives;
@@ -198,8 +198,8 @@ define([
      * Adds multiple samples via parallel arrays.
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
-     * @param {Cartesian3[]} positions The array of Cartesian3 position instances, where each value corresponds to the provided times index.
-     * @param {Cartesian3[][]} [derivatives]
+     * @param {Cartesian3[]} positions An array of Cartesian3 position instances, where each value corresponds to the provided time index.
+     * @param {Array[]} [derivatives] An array where each value is another array containing derivatives for the corresponding time index.
      *
      * @exception {DeveloperError} All arrays must be the same length.
      */
@@ -208,7 +208,8 @@ define([
     };
 
     /**
-     * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * Adds samples as a single packed array where each new sample is represented as a date,
+     * followed by the packed representation of the corresponding value and derivatives.
      *
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.

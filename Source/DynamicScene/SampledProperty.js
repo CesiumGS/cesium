@@ -126,6 +126,7 @@ define([
      * @constructor
      *
      * @param {Number|Packable} type The type of property.
+     * @param {Packable[]} [derivativeTypes] When supplied, indicates that samples will contain derivative information of the specified types.
      *
      * @see SampledPositionProperty
      *
@@ -253,7 +254,7 @@ define([
             }
         },
         /**
-         * Gets the derivative types.
+         * Gets the derivative types used by this property.
          * @memberof SampledProperty.prototype
          * @type {Packable[]}
          */
@@ -433,7 +434,8 @@ define([
      * Adds a new sample
      *
      * @param {JulianDate} time The sample time.
-     * @param {Object} value The value at the provided time.
+     * @param {Packable} value The value at the provided time.
+     * @param {Packable[]} [derivatives] The array of derivatives at the provided time.
      */
     SampledProperty.prototype.addSample = function(time, value, derivatives) {
         var innerDerivativeTypes = this._innerDerivativeTypes;
@@ -472,9 +474,10 @@ define([
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
      * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
+     * @param {Array[]} [derivativeValues] An array where each item is the array of derivatives at the equivalent time index.
      *
      * @exception {DeveloperError} times and values must be the same length.
-     * @exception {DeveloperError} values and derivatives must be the same length when using derivative information.
+     * @exception {DeveloperError} times and derivativeValues must be the same length.
      */
     SampledProperty.prototype.addSamples = function(times, values, derivativeValues) {
         var innerDerivativeTypes = this._innerDerivativeTypes;
@@ -491,7 +494,7 @@ define([
             throw new DeveloperError('times and values must be the same length.');
         }
         if (hasDerivatives && (!defined(derivativeValues) || derivativeValues.length !== times.length)) {
-            throw new DeveloperError('values and derivativeValues must be the same length.');
+            throw new DeveloperError('times and derivativeValues must be the same length.');
         }
         //>>includeEnd('debug');
 
@@ -516,7 +519,8 @@ define([
     };
 
     /**
-     * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * Adds samples as a single packed array where each new sample is represented as a date,
+     * followed by the packed representation of the corresponding value and derivatives.
      *
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.

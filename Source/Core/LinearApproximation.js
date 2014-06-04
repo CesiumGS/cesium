@@ -9,11 +9,8 @@ define([
 
 
     /**
-     * Functions for performing linear interpolation.
+     * An {@link InterpolationAlgorithm} for performing linear interpolation.
      * @exports LinearApproximation
-     *
-     * @see LagrangePolynomialApproximation
-     * @see HermitePolynomialApproximation
      */
     var LinearApproximation = {
         type : 'Linear'
@@ -32,9 +29,7 @@ define([
     };
 
     /**
-     * <p>
      * Interpolates values using linear approximation.
-     * </p>
      *
      * @param {Number} x The independent variable for which the dependent variables will be interpolated.
      *
@@ -49,10 +44,7 @@ define([
      *
      * @param {Number[]} [result] An existing array into which to store the result.
      *
-     * @returns The array of interpolated values, or the result parameter if one was provided.
-     *
-     * @see LagrangePolynomialApproximation
-     * @see HermitePolynomialApproximation
+     * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         //>>includeStart('debug', pragmas.debug);

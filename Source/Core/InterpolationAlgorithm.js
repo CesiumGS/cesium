@@ -32,7 +32,7 @@ define([
     InterpolationAlgorithm.getRequiredDataPoints = DeveloperError.throwInstantiationError;
 
     /**
-     * Interpolates values.
+     * Performs zero order interpolation.
      * @function
      *
      * @param {Number} x The independent variable for which the dependent variables will be interpolated.
@@ -44,12 +44,13 @@ define([
      * each independent variable value in xTable.
      * @param {Number[]} [result] An existing array into which to store the result.
      *
-     * @returns The array of interpolated values, or the result parameter if one was provided.
+     * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     InterpolationAlgorithm.interpolateOrderZero = DeveloperError.throwInstantiationError;
 
     /**
-     * Interpolates values.
+     * Performs higher order interpolation.  Not all interpolators need to support high-order interpolation,
+     * if this function remains undefined on implementing objects, interpolateOrderZero will be used instead.
      * @function
      *
      * @param {Number} x The independent variable for which the dependent variables will be interpolated.
@@ -59,13 +60,13 @@ define([
      * dependent values (p,q,w) at time 1 and time 2 this should be as follows: {p1, q1, w1, p2, q2, w2}.
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
-     * @param {Number} inputOrder An existing array into which to store the result.
-     * @param {Number} outputOrder An existing array into which to store the result.
+     * @param {Number} inputOrder The number of derivatives supplied for input.
+     * @param {Number} outputOrder The number of derivatives desired for output.
      * @param {Number[]} [result] An existing array into which to store the result.
      *
-     * @returns The array of interpolated values, or the result parameter if one was provided.
+     * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
-    InterpolationAlgorithm.interpolate = DeveloperError.throwInstantiationError;//function(x, xTable, yTable, yStride, inputOrder, outputOrder, result) {
+    InterpolationAlgorithm.interpolate = DeveloperError.throwInstantiationError;
 
     return InterpolationAlgorithm;
 });
