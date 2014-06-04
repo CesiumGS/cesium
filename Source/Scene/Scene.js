@@ -1255,16 +1255,16 @@ define([
         var passState = scene._passState;
 
         // HOOK: Post process external filter.
-        if (defined(this.customPostProcess)) {
-            passState.framebuffer = this.customPostProcess.update(context);
-            this.sun = undefined; // Disable the sun to avoid conflict with post processing.
+        if (defined(scene.customPostProcess)) {
+            passState.framebuffer = scene.customPostProcess.update(context);
+            scene.sun = undefined; // Disable the sun to avoid conflict with post processing.
         } // END HOOK.
 
         executeCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
 
 		// HOOK: Post process external filter.
-		if (defined(this.customPostProcess)) {
-		    this.customPostProcess.execute(context);
+		if (defined(scene.customPostProcess)) {
+			scene.customPostProcess.execute(context);
 		} // END HOOK.
 
 		executeOverlayCommands(scene, passState);

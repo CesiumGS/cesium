@@ -71,7 +71,7 @@ define([
     PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
       this._xOffset = xOffset;
       this._yOffset = yOffset;
-    }
+    };
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
