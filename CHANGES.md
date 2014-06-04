@@ -10,6 +10,7 @@ Beta Releases
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+   * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 
 ### b29 - 2014-06-02

@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -34,7 +33,6 @@ defineSuite([
         createContext,
         createFrameState,
         destroyContext,
-        frameState,
         pick,
         render) {
     "use strict";
@@ -42,11 +40,13 @@ defineSuite([
 
     var context;
     var primitives;
+    var frameState;
     var us;
     var camera;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {

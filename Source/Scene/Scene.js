@@ -593,6 +593,8 @@ define([
          *
          * @type {FrameState}
          * @readonly
+         *
+         * @private
          */
         frameState : {
             get: function() {

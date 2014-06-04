@@ -323,6 +323,8 @@ define([
      *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
+     *
+     * @private
      */
     Transforms.iau2006XysData = new Iau2006XysData();
 
@@ -334,6 +336,8 @@ define([
      *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
+     *
+     * @private
      */
     Transforms.earthOrientationParameters = EarthOrientationParameters.NONE;
 

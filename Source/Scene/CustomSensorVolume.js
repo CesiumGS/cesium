@@ -9,7 +9,6 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/FAR',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
@@ -33,7 +32,6 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        FAR,
         Matrix4,
         PrimitiveType,
         BufferUsage,
@@ -53,6 +51,8 @@ define([
         position : 0,
         normal : 1
     };
+
+    var FAR = 5906376272000.0;  // distance from the Sun to Pluto in meters.
 
     /**
      * DOC_TBA

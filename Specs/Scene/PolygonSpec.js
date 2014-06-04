@@ -16,7 +16,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyContext',
         'Specs/destroyScene',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -36,18 +35,19 @@ defineSuite([
         createScene,
         destroyContext,
         destroyScene,
-        frameState,
         pick,
         render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var context;
+    var frameState;
     var polygon;
     var us;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {

@@ -725,7 +725,7 @@ define([
     var scratchCartesian2 = new Cartesian2();
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-        var camera = scene.frameState.camera;
+        var camera = scene.camera;
         var view = camera.viewMatrix;
         var projection = camera.frustum.projectionMatrix;
 

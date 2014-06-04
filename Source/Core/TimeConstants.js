@@ -8,6 +8,8 @@ define(function() {
      * @exports TimeConstants
      *
      * @see JulianDate
+     *
+     * @private
      */
     var TimeConstants = {
         /**

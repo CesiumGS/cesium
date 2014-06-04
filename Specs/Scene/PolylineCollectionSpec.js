@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/destroyContext',
         'Specs/destroyScene',
-        'Specs/frameState',
         'Specs/pick',
         'Specs/render'
     ], function(
@@ -34,18 +33,19 @@ defineSuite([
         createScene,
         destroyContext,
         destroyScene,
-        frameState,
         pick,
         render) {
     "use strict";
     /*global it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;
+    var frameState;
     var polylines;
     var us;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState();
     });
 
     afterAll(function() {

@@ -22,6 +22,8 @@ define([
      *
      * @see czm_modelViewRelativeToEye
      * @see czm_modelViewProjectionRelativeToEye
+     *
+     * @private
      */
     var EncodedCartesian3 = function() {
         /**

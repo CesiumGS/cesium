@@ -26,6 +26,8 @@ define([
      * @param {Function} [computeFunction] The function that computes the {@link IauOrientationParameters} given a {@link JulianDate}.
      *
      * @see Iau2000Orientation
+     *
+     * @private
      */
     var IauOrientationAxes = function (computeFunction) {
         if (!defined(computeFunction) || typeof computeFunction !== 'function') {
