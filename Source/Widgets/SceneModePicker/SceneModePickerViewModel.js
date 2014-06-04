@@ -205,7 +205,6 @@ define([
     });
 
     /**
-     * @memberof SceneModePickerViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SceneModePickerViewModel.prototype.isDestroyed = function() {
@@ -214,7 +213,6 @@ define([
 
     /**
      * Destroys the view model.
-     * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

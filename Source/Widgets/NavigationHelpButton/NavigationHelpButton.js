@@ -26,6 +26,7 @@ define([
      * @alias NavigationHelpButton
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Boolean} [options.instructionsInitiallyVisible=false] True if the navigation instructions should initially be visible; otherwise, false.
      *
@@ -144,7 +145,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     });
 
     /**
-     * @memberof NavigationHelpButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     NavigationHelpButton.prototype.isDestroyed = function() {
@@ -154,7 +154,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof NavigationHelpButton
      */
     NavigationHelpButton.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeInstructions, true);

@@ -98,12 +98,13 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Configuration options for the widget.
+     * @param {Object} [options] Object with the following properties:
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
@@ -135,7 +136,10 @@ define([
      *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
      *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
      *         }
-     *     })
+     *     }),
+     *     // Show Columbus View map with Web Mercator projection
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      */
     var CesiumWidget = function(container, options) {
@@ -170,7 +174,12 @@ define([
             creditContainer.className = 'cesium-widget-credits';
             widgetNode.appendChild(creditContainer);
 
-            var scene = new Scene(canvas, options.contextOptions, creditContainer);
+            var scene = new Scene({
+                canvas : canvas,
+                contextOptions : options.contextOptions,
+                creditContainer : creditContainer,
+                mapProjection : options.mapProjection
+            });
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
@@ -420,8 +429,6 @@ define([
      * when a render loop error occurs, if showRenderLoopErrors was not false when the
      * widget was constructed.
      *
-     * @memberof CesiumWidget
-     *
      * @param {String} title The title to be displayed on the error panel.
      * @param {String} error The error to be displayed on the error panel.  Optional.
      */
@@ -479,7 +486,6 @@ define([
     };
 
     /**
-     * @memberof CesiumWidget
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {
@@ -489,7 +495,6 @@ define([
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.destroy = function() {
         this._scene = this._scene && this._scene.destroy();
@@ -501,7 +506,6 @@ define([
      * Updates the canvas size, camera aspect ratio, and viewport size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
@@ -540,7 +544,6 @@ define([
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
         this._scene.initializeFrame();

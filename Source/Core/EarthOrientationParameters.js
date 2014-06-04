@@ -36,6 +36,7 @@ define([
      * @alias EarthOrientationParameters
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url] The URL from which to obtain EOP data.  If neither this
      *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.  If options.data is specified, this parameter is
@@ -132,8 +133,6 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @memberof EarthOrientationParameters
-     *
      * @returns {Promise} The promise.
      *
      * @see when
@@ -145,8 +144,6 @@ define([
     /**
      * Computes the Earth Orientation Parameters (EOP) for a given date by interpolating.
      * If the EOP data has not yet been download, this method returns undefined.
-     *
-     * @memberof EarthOrientationParameters
      *
      * @param {JulianDate} date The date for each to evaluate the EOP.
      * @param {EarthOrientationParametersSample} [result] The instance to which to copy the result.

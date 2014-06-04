@@ -36,6 +36,7 @@ define([
      * @alias MaterialAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
      * @param {Boolean} [options.faceForward=!options.closed] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
@@ -249,7 +250,7 @@ define([
      * this is derived from {@link MaterialAppearance#fragmentShaderSource}, {@link MaterialAppearance#material},
      * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -258,7 +259,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link MaterialAppearance#translucent} and {@link Material#isTranslucent}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -269,7 +270,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof MaterialAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */
@@ -280,8 +281,6 @@ define([
      * {@link MaterialAppearance} instance.  This is a trade-off between
      * flexibility (a wide array of materials) and memory/performance
      * (required vertex format and GLSL shader complexity.
-     *
-     * @memberof MaterialAppearance
      */
     MaterialAppearance.MaterialSupport = {
         /**

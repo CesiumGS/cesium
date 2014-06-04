@@ -46,13 +46,13 @@ define([
          */
         this.time = undefined;
 
-        this.scene2D = {
-            /**
-             * The projection to use in 2D mode.
-             * @default undefined
-             */
-            projection : undefined
-        };
+        /**
+         * The map projection to use in 2D and Columbus View modes.
+         *
+         * @type {MapProjection}
+         * @default undefined
+         */
+        this.mapProjection = undefined;
 
         /**
          * The current camera.

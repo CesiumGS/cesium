@@ -49,7 +49,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicRectangle.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -157,7 +159,6 @@ define([
 
     /**
      * Duplicates a DynamicRectangle instance.
-     * @memberof DynamicRectangle
      *
      * @param {DynamicRectangle} [result] The object onto which to store the result.
      * @returns {DynamicRectangle} The modified result parameter or a new instance if one was not provided.
@@ -185,7 +186,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicRectangle
      *
      * @param {DynamicRectangle} source The object to be merged into this object.
      */
