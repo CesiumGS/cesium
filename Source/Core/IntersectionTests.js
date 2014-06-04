@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './defaultValue',
@@ -10,6 +11,7 @@ define([
         './QuadraticRealPolynomial',
         './QuarticRealPolynomial'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartographic,
         defaultValue,
@@ -162,6 +164,49 @@ define([
         return Cartesian3.add(origin, result, result);
     };
 
+    function solveQuadratic(a, b, c, result) {
+        var det = b * b - 4.0 * a * c;
+        if (det < 0.0) {
+            return undefined;
+        } else if (det > 0.0) {
+            var denom = 1.0 / (2.0 * a);
+            var disc = Math.sqrt(det);
+            var root0 = (-b + disc) * denom;
+            var root1 = (-b - disc) * denom;
+
+            if (root0 <= 0.0 && root1 <= 0.0) {
+                return undefined;
+            } else if (root0 < 0.0) {
+                root0 = 0.0;
+            } else if (root1 < 0.0) {
+                root1 = 0.0;
+            }
+
+            if (root0 < root1) {
+                result.root0 = root0;
+                result.root1 = root1;
+            } else {
+                result.root0 = root1;
+                result.root1 = root0;
+            }
+
+            return result;
+        }
+
+        var root = -b / (2.0 * a);
+        if (root === 0.0) {
+            return undefined;
+        }
+
+        result.root0 = result.root1 = root;
+        return result;
+    }
+
+    var raySphereRoots = {
+        root0 : 0.0,
+        root1 : 0.0
+    };
+
     /**
      * Computes the intersection points of a ray with a sphere.
      * @memberof IntersectionTests
@@ -197,40 +242,13 @@ define([
         var b = 2.0 * Cartesian3.dot(direction, diff);
         var c = Cartesian3.magnitudeSquared(diff) - radiusSquared;
 
-        var det = b * b - 4.0 * a * c;
-        if (det < 0.0) {
-            return undefined;
-        } else if (det > 0.0) {
-            var denom = 1.0 / (2.0 * a);
-            var disc = Math.sqrt(det);
-            var root0 = (-b + disc) * denom;
-            var root1 = (-b - disc) * denom;
-
-            if (root0 <= 0.0 && root1 <= 0.0) {
-                return undefined;
-            } else if (root0 < 0.0) {
-                root0 = 0.0;
-            } else if (root1 < 0.0) {
-                root1 = 0.0;
-            }
-
-            if (root0 < root1) {
-                result.start = root0;
-                result.stop = root1;
-            } else {
-                result.start = root1;
-                result.stop = root0;
-            }
-
-            return result;
-        }
-
-        var root = -b / (2.0 * a);
-        if (root === 0.0) {
+        var roots = solveQuadratic(a, b, c, raySphereRoots);
+        if (!defined(roots)) {
             return undefined;
         }
 
-        result.start = result.stop = root;
+        result.start = roots.root0;
+        result.stop = roots.root1;
         return result;
     };
 
@@ -727,6 +745,138 @@ define([
         // if numBehind is 3, the triangle is completely behind the plane;
         // otherwise, it is completely in front (numBehind is 0).
         return undefined;
+    };
+
+    IntersectionTests.spherePlane = function(sphere, plane, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        //>>includeEnd('debug');
+
+        var sphereCenter = sphere.center;
+        var sphereRadius = sphere.radius;
+
+        var planeNormal = plane.normal;
+        var planeD = plane.distance;
+
+        var p = Cartesian3.dot(planeNormal, sphereCenter) + planeD;
+        var planeNormalMagSqrd = Cartesian3.magnitudeSquared(planeNormal);
+        var d = Math.abs(p) / Math.sqrt(planeNormalMagSqrd);
+
+        if (sphereRadius < d) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var center = result.center;
+        if (!defined(result.center)) {
+            center = result.center = new Cartesian3();
+        }
+
+        var c = p / planeNormalMagSqrd;
+        Cartesian3.multiplyByScalar(planeNormal, c, center);
+        Cartesian3.subtract(sphereCenter, center, center);
+
+        result.radius = (sphereRadius > d) ? Math.sqrt(sphereRadius * sphereRadius - d * d) : 0.0;
+
+        return result;
+    };
+
+    var scratchCircleCircleRoots = {
+        root0 : 0.0,
+        root1 : 0.0
+    };
+
+    IntersectionTests.circleCircle = function(c0, c1, result) {
+        var p0 = c0.center;
+        var p1 = c1.center;
+        if (Cartesian2.equalsEpsilon(p0, p1, CesiumMath.EPSILON6)) {
+            return undefined;
+        }
+
+        var r0 = c0.radius;
+        var r1 = c1.radius;
+
+        if (Cartesian2.distance(p0, p1) > r0 + r1) {
+            return undefined;
+        }
+
+        var x0 = p0.x;
+        var y0 = p0.y;
+
+        var x1 = p1.x;
+        var y1 = p1.y;
+
+        var r0Sqrd = r0 * r0;
+        var x0Sqrd = x0 * x0;
+        var y0Sqrd = y0 * y0;
+
+        var q = r0Sqrd - r1 * r1 + y1 * y1 - y0Sqrd + x1 * x1 - x0Sqrd;
+
+        if (!CesiumMath.equalsEpsilon(y1, y0, CesiumMath.EPSILON6)) {
+            var invYDiff = 1.0 / (y1 - y0);
+            q *= 0.5 * invYDiff;
+            var r = (x1 - x0) * invYDiff;
+
+            var a = 1.0 + r * r;
+            var b = 2.0 * (r * y0 - q * r - x0);
+            var c = x0Sqrd + q * q - 2.0 * q * y0 + y0Sqrd - r0Sqrd;
+
+            var roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
+            if (!defined(roots)) {
+                return undefined;
+            }
+
+            x0 = roots.root0;
+            y0 = q - roots.root0 * r;
+
+            x1 = roots.root1;
+            y1 = q - roots.root1 * r;
+        } else {
+            q /= 2.0 * (x1 - x0);
+
+            a = 1.0;
+            b = -2.0 * y0;
+            c = y0Sqrd - r0Sqrd + q * q - 2.0 * q * x0 + x0Sqrd;
+
+            var roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
+            if (!defined(roots)) {
+                return undefined;
+            }
+
+            x0 = x1 = q;
+            y0 = roots.root0;
+            y1 = roots.root1;
+        }
+
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var cartesian = result[0];
+        if (!defined(cartesian)) {
+            cartesian = result[0] = new Cartesian2();
+        }
+
+        cartesian.x = x0;
+        cartesian.y = y0;
+
+        cartesian = result[1];
+        if (!defined(cartesian)) {
+            cartesian = result[1] = new Cartesian2();
+        }
+
+        cartesian.x = x1;
+        cartesian.y = y1;
+
+        return result;
     };
 
     return IntersectionTests;
