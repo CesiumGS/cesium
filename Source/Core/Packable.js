@@ -1,10 +1,13 @@
 /*global define*/
-define(['../Core/DeveloperError'], function(DeveloperError) {
+define([
+        './DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     /**
      * Static interface for types which can store their values as packed
-     * elements in an array.  These methods and properties are expected to be 
+     * elements in an array.  These methods and properties are expected to be
      * defined on a constructor function.
      *
      * @exports Packable
@@ -14,7 +17,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     var Packable = {
         /**
          * The number of elements used to pack the object into an array.
-         * @Type {Number}
+         * @type {Number}
          */
         packedLength : undefined,
 
@@ -24,7 +27,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @function
          *
          * @param {Object} value The value to pack.
-         * @param {Array} array The array to pack into.
+         * @param {Number[]} array The array to pack into.
          * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
          */
         pack : DeveloperError.throwInstantiationError,
@@ -34,7 +37,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @memberof Packable
          * @function
          *
-         * @param {Array} array The packed array.
+         * @param {Number[]} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
          * @param {Object} [result] The object into which to store the result.
          */

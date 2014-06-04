@@ -1,18 +1,18 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/KeyboardEventModifier',
         '../Core/FAR',
         '../Core/IntersectionTests',
         '../Core/isArray',
+        '../Core/KeyboardEventModifier',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Ray',
@@ -20,22 +20,21 @@ define([
         './AnimationCollection',
         './CameraEventAggregator',
         './CameraEventType',
-        './CameraColumbusViewMode',
         './SceneMode'
     ], function(
-        defined,
-        defineProperties,
-        destroyObject,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defined,
+        defineProperties,
+        destroyObject,
         DeveloperError,
         Ellipsoid,
-        KeyboardEventModifier,
         FAR,
         IntersectionTests,
         isArray,
+        KeyboardEventModifier,
         CesiumMath,
         Matrix4,
         Ray,
@@ -43,7 +42,6 @@ define([
         AnimationCollection,
         CameraEventAggregator,
         CameraEventType,
-        CameraColumbusViewMode,
         SceneMode) {
     "use strict";
 
@@ -52,7 +50,7 @@ define([
      * @alias ScreenSpaceCameraController
      * @constructor
      *
-     * @param {HTMLCanvasElement} canvas The canvas to listen for events.
+     * @param {Canvas} canvas The canvas to listen for events.
      * @param {Camera} camera The camera.
      */
     var ScreenSpaceCameraController = function(canvas, camera) {
@@ -144,12 +142,6 @@ define([
          * @default 0.1
          */
         this.maximumMovementRatio = 0.1;
-        /**
-         * Sets the behavior in Columbus view.
-         * @type {CameraColumbusViewMode}
-         * @default {@link CameraColumbusViewMode.FREE}
-         */
-        this.columbusViewMode = CameraColumbusViewMode.FREE;
         /**
          * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
          * @type {Number}
@@ -523,9 +515,14 @@ define([
             controller._animationCollection.removeAll();
         }
 
-        reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-        reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-        reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
+            reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        } else {
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+        }
 
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
@@ -579,6 +576,8 @@ define([
     var rotateCVWindowRay = new Ray();
     var rotateCVCenter = new Cartesian3();
     var rotateTransform = new Matrix4();
+    var rotateCVCart = new Cartographic();
+
     function rotateCV(controller, movement) {
         if (defined(movement.angleAndHeight)) {
             movement = movement.angleAndHeight;
@@ -595,7 +594,15 @@ define([
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
-        var transform = Matrix4.fromTranslation(center, rotateTransform);
+
+        var projection = controller._camera._projection;
+        var ellipsoid = projection.ellipsoid;
+
+        Cartesian3.fromElements(center.y, center.z, center.x, center);
+        var cart = projection.unproject(center, rotateCVCart);
+        ellipsoid.cartographicToCartesian(cart, center);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, rotateTransform);
 
         var oldEllipsoid = controller._ellipsoid;
         controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
@@ -626,7 +633,7 @@ define([
     }
 
     function updateCV(controller) {
-        if (controller.columbusViewMode === CameraColumbusViewMode.LOCKED) {
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
                 reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
                 reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {

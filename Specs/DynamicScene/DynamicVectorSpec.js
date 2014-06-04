@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicVector',
-             'Core/Cartesian3',
-             'Core/Color',
-             'DynamicScene/ConstantProperty'
-         ], function(
-             DynamicVector,
-             Cartesian3,
-             Color,
-             ConstantProperty) {
+        'DynamicScene/DynamicVector',
+        'Core/Cartesian3',
+        'Core/Color',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicVector,
+        Cartesian3,
+        Color,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

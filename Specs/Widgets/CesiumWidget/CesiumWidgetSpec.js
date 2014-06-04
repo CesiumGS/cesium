@@ -1,24 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Core/Clock',
-         'Core/ScreenSpaceEventHandler',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/Scene',
-         'Scene/SceneMode',
-         'Scene/SkyBox',
-         'Scene/TileCoordinatesImageryProvider',
-         'Specs/EventHelper'
-     ], function(
-         CesiumWidget,
-         Clock,
-         ScreenSpaceEventHandler,
-         EllipsoidTerrainProvider,
-         Scene,
-         SceneMode,
-         SkyBox,
-         TileCoordinatesImageryProvider,
-         EventHelper) {
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Core/Clock',
+        'Core/EllipsoidTerrainProvider',
+        'Core/ScreenSpaceEventHandler',
+        'Scene/Scene',
+        'Scene/SceneMode',
+        'Scene/SkyBox',
+        'Scene/TileCoordinatesImageryProvider',
+        'Specs/EventHelper'
+    ], function(
+        CesiumWidget,
+        Clock,
+        EllipsoidTerrainProvider,
+        ScreenSpaceEventHandler,
+        Scene,
+        SceneMode,
+        SkyBox,
+        TileCoordinatesImageryProvider,
+        EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -90,6 +90,13 @@ defineSuite([
         expect(widget.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        widget = new CesiumWidget(container, {
+            targetFrameRate : 23
+        });
+        expect(widget.targetFrameRate).toBe(23);
+    });
+
     it('sets expected options imageryProvider', function() {
         var options = {
             imageryProvider : new TileCoordinatesImageryProvider()
@@ -139,7 +146,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -151,7 +158,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = widget.scene._context;
+        var context = widget.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -169,39 +176,51 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws if targetFrameRate less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        widget = new CesiumWidget(container);
+        widget.resolutionScale = 0.5;
+        expect(widget.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        widget = new CesiumWidget(container);
+        expect(function() {
+            widget.resolutionScale = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('throws if no container id does not exist', function() {
         expect(function() {
             return new CesiumWidget('doesnotexist');
         }).toThrowDeveloperError();
     });
 
-    it('raises onRenderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         widget = new CesiumWidget(container);
         expect(widget.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        widget.onRenderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(widget, error);
-            expect(widget.useDefaultRenderLoop).toEqual(false);
-        });
+            return !widget.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('shows the error panel when render throws', function() {
         widget = new CesiumWidget(container);
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 
@@ -226,7 +245,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        widget.render = function() {
+        widget.scene.primitives.update = function() {
             throw error;
         };
 

@@ -1,7 +1,5 @@
 /*global define*/
-define([
-    ], function(
-        ) {
+define([], function() {
     "use strict";
 
     /**
@@ -12,7 +10,7 @@ define([
      *
      * @see DiscardMissingTileImagePolicy
      */
-    var NeverTileDiscardPolicy = function(description) {
+    var NeverTileDiscardPolicy = function(options) {
     };
 
     /**

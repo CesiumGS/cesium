@@ -1,46 +1,46 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/Viewer',
-         'Widgets/Animation/Animation',
-         'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Widgets/BaseLayerPicker/ProviderViewModel',
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Widgets/FullscreenButton/FullscreenButton',
-         'Widgets/HomeButton/HomeButton',
-         'Widgets/Geocoder/Geocoder',
-         'Widgets/SceneModePicker/SceneModePicker',
-         'Widgets/Timeline/Timeline',
-         'Core/ClockRange',
-         'Core/ClockStep',
-         'Core/JulianDate',
-         'DynamicScene/DataSourceDisplay',
-         'DynamicScene/DataSourceCollection',
-         'DynamicScene/DynamicClock',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/SceneMode',
-         'Specs/EventHelper',
-         'Specs/MockDataSource'
-     ], function(
-         Viewer,
-         Animation,
-         BaseLayerPicker,
-         ProviderViewModel,
-         CesiumWidget,
-         FullscreenButton,
-         HomeButton,
-         Geocoder,
-         SceneModePicker,
-         Timeline,
-         ClockRange,
-         ClockStep,
-         JulianDate,
-         DataSourceDisplay,
-         DataSourceCollection,
-         DynamicClock,
-         EllipsoidTerrainProvider,
-         SceneMode,
-         EventHelper,
-         MockDataSource) {
+        'Widgets/Viewer/Viewer',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/EllipsoidTerrainProvider',
+        'Core/JulianDate',
+        'DynamicScene/DataSourceCollection',
+        'DynamicScene/DataSourceDisplay',
+        'DynamicScene/DynamicClock',
+        'Scene/SceneMode',
+        'Specs/EventHelper',
+        'Specs/MockDataSource',
+        'Widgets/Animation/Animation',
+        'Widgets/BaseLayerPicker/BaseLayerPicker',
+        'Widgets/BaseLayerPicker/ProviderViewModel',
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Widgets/FullscreenButton/FullscreenButton',
+        'Widgets/Geocoder/Geocoder',
+        'Widgets/HomeButton/HomeButton',
+        'Widgets/SceneModePicker/SceneModePicker',
+        'Widgets/Timeline/Timeline'
+    ], function(
+        Viewer,
+        ClockRange,
+        ClockStep,
+        EllipsoidTerrainProvider,
+        JulianDate,
+        DataSourceCollection,
+        DataSourceDisplay,
+        DynamicClock,
+        SceneMode,
+        EventHelper,
+        MockDataSource,
+        Animation,
+        BaseLayerPicker,
+        ProviderViewModel,
+        CesiumWidget,
+        FullscreenButton,
+        Geocoder,
+        HomeButton,
+        SceneModePicker,
+        Timeline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -286,7 +286,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -298,7 +298,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene._context;
+        var context = viewer.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -355,6 +355,33 @@ defineSuite([
         expect(viewer.useDefaultRenderLoop).toBe(false);
     });
 
+    it('can set target frame rate', function() {
+        viewer = new Viewer(container, {
+            targetFrameRate : 23
+        });
+        expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        viewer = new Viewer(container);
+        viewer.resolutionScale = 0.5;
+        expect(viewer.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.resolutionScale = -1;
+        }).toThrowDeveloperError();
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);
@@ -391,26 +418,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises renderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        viewer.renderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, error);
-            expect(viewer.useDefaultRenderLoop).toEqual(false);
-        });
+            return !viewer.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('sets the clock and timeline based on the first data source', function() {
@@ -550,7 +569,7 @@ defineSuite([
         viewer = new Viewer(container);
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
@@ -575,7 +594,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 

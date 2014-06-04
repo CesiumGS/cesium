@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/binarySearch'], function(binarySearch) {
+defineSuite([
+        'Core/binarySearch'
+    ], function(
+        binarySearch) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/createCommand',
-         'ThirdParty/knockout'
-     ], function(
-         createCommand,
-         knockout) {
+        'Widgets/createCommand',
+        'ThirdParty/knockout'
+    ], function(
+        createCommand,
+        knockout) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

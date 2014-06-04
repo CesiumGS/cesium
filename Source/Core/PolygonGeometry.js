@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './defaultValue',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
+        './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
@@ -26,12 +26,12 @@ define([
         './VertexFormat',
         './WindingOrder'
     ], function(
-        defaultValue,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
@@ -490,65 +490,65 @@ define([
      * @example
      * // 1. create a polygon from points
      * var polygon = new Cesium.PolygonGeometry({
-     *     polygonHierarchy : {
-     *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *             Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *             Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *         ])
-     *     }
+     *   polygonHierarchy : {
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -72.0, 40.0,
+     *       -70.0, 35.0,
+     *       -75.0, 30.0,
+     *       -70.0, 30.0,
+     *       -68.0, 40.0
+     *     ])
+     *   }
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      *
      * // 2. create a nested polygon with holes
      * var polygonWithHole = new Cesium.PolygonGeometry({
-     *     polygonHierarchy : {
-     *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-     *             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+     *   polygonHierarchy : {
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -109.0, 30.0,
+     *       -95.0, 30.0,
+     *       -95.0, 40.0,
+     *       -109.0, 40.0
+     *     ]),
+     *     holes : [{
+     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     *         -107.0, 31.0,
+     *         -107.0, 39.0,
+     *         -97.0, 39.0,
+     *         -97.0, 31.0
+     *       ]),
+     *       holes : [{
+     *         positions : Cesium.Cartesian3.fromDegreesArray([
+     *           -105.0, 33.0,
+     *           -99.0, 33.0,
+     *           -99.0, 37.0,
+     *           -105.0, 37.0
      *         ]),
      *         holes : [{
-     *             positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
-     *             ]),
-     *             holes : [{
-     *                 positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
-     *                     ]),
-     *                 holes : [{
-     *                     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
-     *                     ])
-     *                 }]
-     *              }]
+     *           positions : Cesium.Cartesian3.fromDegreesArray([
+     *             -103.0, 34.0,
+     *             -101.0, 34.0,
+     *             -101.0, 36.0,
+     *             -103.0, 36.0
+     *           ])
      *         }]
-     *     }
+     *       }]
+     *     }]
+     *   }
      * });
      * var geometry = PolygonGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon
      * var extrudedPolygon = new PolygonGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *     ]),
-     *     extrudedHeight: 300000
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0,
+     *     -75.0, 30.0,
+     *     -70.0, 30.0,
+     *     -68.0, 40.0
+     *   ]),
+     *   extrudedHeight: 300000
      * });
      * var geometry = PolygonGeometry.createGeometry(extrudedPolygon);
      */
@@ -594,7 +594,7 @@ define([
      *
      * @memberof PolygonGeometry
      *
-     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -608,13 +608,13 @@ define([
      * @example
      * // create a polygon from points
      * var polygon = Cesium.PolygonGeometry.fromPositions({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0,
+     *     -75.0, 30.0,
+     *     -70.0, 30.0,
+     *     -68.0, 40.0
+     *   ])
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
      */

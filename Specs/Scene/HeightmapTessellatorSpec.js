@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/HeightmapTessellator',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/Math',
-         'Core/WebMercatorProjection'
-     ], function(
-         HeightmapTessellator,
-         Cartesian2,
-         Cartesian3,
-         Ellipsoid,
-         Rectangle,
-         CesiumMath,
-         WebMercatorProjection) {
+        'Core/HeightmapTessellator',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection'
+    ], function(
+        HeightmapTessellator,
+        Cartesian2,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -121,7 +121,7 @@ defineSuite([
         var width = 3;
         var height = 3;
         var vertices = new Float32Array(width * height * 6);
-        var description = {
+        var options = {
             vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
@@ -139,10 +139,10 @@ defineSuite([
                 CesiumMath.toRadians(20.0),
                 CesiumMath.toRadians(40.0))
         };
-        HeightmapTessellator.computeVertices(description);
+        HeightmapTessellator.computeVertices(options);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
             var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
@@ -151,7 +151,7 @@ defineSuite([
                 var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
-                var heightSample = description.heightmap[j * width + i];
+                var heightSample = options.heightmap[j * width + i];
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
                     longitude : longitude,
@@ -174,7 +174,7 @@ defineSuite([
         var width = 3;
         var height = 3;
         var vertices = new Float32Array((width + 2) * (height + 2) * 6);
-        var description = {
+        var options = {
             vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
@@ -187,10 +187,10 @@ defineSuite([
                 north : 40.0
             }
         };
-        HeightmapTessellator.computeVertices(description);
+        HeightmapTessellator.computeVertices(options);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         for (var j = -1; j <= height; ++j) {
             var realJ = CesiumMath.clamp(j, 0, height - 1);
@@ -201,10 +201,10 @@ defineSuite([
                 var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, realI / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
-                var heightSample = description.heightmap[realJ * width + realI];
+                var heightSample = options.heightmap[realJ * width + realI];
 
                 if (realI !== i || realJ !== j) {
-                    heightSample -= description.skirtHeight;
+                    heightSample -= options.skirtHeight;
                 }
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
@@ -228,7 +228,7 @@ defineSuite([
         var width = 3;
         var height = 3;
         var vertices = new Float32Array(width * height * 6);
-        var description = {
+        var options = {
             vertices : vertices,
             heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
             width : width,
@@ -242,11 +242,11 @@ defineSuite([
             },
             isGeographic : false
         };
-        HeightmapTessellator.computeVertices(description);
+        HeightmapTessellator.computeVertices(options);
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new WebMercatorProjection(ellipsoid);
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         var geographicSouthwest = projection.unproject(new Cartesian2(nativeRectangle.west, nativeRectangle.south));
         var geographicNortheast = projection.unproject(new Cartesian2(nativeRectangle.east, nativeRectangle.north));
@@ -260,7 +260,7 @@ defineSuite([
                 var longitude = latLon.longitude;
                 var latitude = latLon.latitude;
 
-                var heightSample = description.heightmap[j * width + i];
+                var heightSample = options.heightmap[j * width + i];
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
                     longitude : longitude,
@@ -286,7 +286,7 @@ defineSuite([
         var width = 3;
         var height = 3;
         var vertices = new Float32Array(width * height * 6);
-        var description = {
+        var options = {
             vertices : vertices,
             heightmap : [1.0, 2.0, 100.0,
                          3.0, 4.0, 100.0,
@@ -317,10 +317,10 @@ defineSuite([
                 elementMultiplier : 10
             }
         };
-        HeightmapTessellator.computeVertices(description);
+        HeightmapTessellator.computeVertices(options);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
             var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
@@ -329,8 +329,8 @@ defineSuite([
                 var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
-                var heightSampleIndex = (j * width + i) * description.structure.stride;
-                var heightSample = description.heightmap[heightSampleIndex] + description.heightmap[heightSampleIndex + 1] * 10.0;
+                var heightSampleIndex = (j * width + i) * options.structure.stride;
+                var heightSample = options.heightmap[heightSampleIndex] + options.heightmap[heightSampleIndex + 1] * 10.0;
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
                     longitude : longitude,
@@ -353,7 +353,7 @@ defineSuite([
         var width = 3;
         var height = 3;
         var vertices = new Float32Array(width * height * 6);
-        var description = {
+        var options = {
             vertices : vertices,
             heightmap : [1.0, 2.0, 100.0,
                          3.0, 4.0, 100.0,
@@ -385,10 +385,10 @@ defineSuite([
                 isBigEndian : true
             }
         };
-        HeightmapTessellator.computeVertices(description);
+        HeightmapTessellator.computeVertices(options);
 
         var ellipsoid = Ellipsoid.WGS84;
-        var nativeRectangle = description.nativeRectangle;
+        var nativeRectangle = options.nativeRectangle;
 
         for (var j = 0; j < height; ++j) {
             var latitude = CesiumMath.lerp(nativeRectangle.north, nativeRectangle.south, j / (height - 1));
@@ -397,8 +397,8 @@ defineSuite([
                 var longitude = CesiumMath.lerp(nativeRectangle.west, nativeRectangle.east, i / (width - 1));
                 longitude = CesiumMath.toRadians(longitude);
 
-                var heightSampleIndex = (j * width + i) * description.structure.stride;
-                var heightSample = description.heightmap[heightSampleIndex] * 10.0 + description.heightmap[heightSampleIndex + 1];
+                var heightSampleIndex = (j * width + i) * options.structure.stride;
+                var heightSample = options.heightmap[heightSampleIndex] * 10.0 + options.heightmap[heightSampleIndex + 1];
 
                 var expectedVertexPosition = ellipsoid.cartographicToCartesian({
                     longitude : longitude,

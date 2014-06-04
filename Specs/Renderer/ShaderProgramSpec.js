@@ -1,35 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/ShaderProgram',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Matrix2',
-         'Core/Matrix3',
-         'Core/Matrix4',
-         'Core/PrimitiveType',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/UniformDatatype',
-         'Renderer/ShaderProgram'
-     ], function(
-         ShaderProgram,
-         createContext,
-         destroyContext,
-         Cartesian2,
-         Cartesian3,
-         Cartesian4,
-         Matrix2,
-         Matrix3,
-         Matrix4,
-         PrimitiveType,
-         BufferUsage,
-         ClearCommand,
-         UniformDatatype) {
+        'Renderer/ShaderProgram',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Matrix2',
+        'Core/Matrix3',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        ShaderProgram,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Matrix2,
+        Matrix3,
+        Matrix4,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createContext,
+        destroyContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -82,11 +81,12 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : shaderProgram,
             vertexArray : va
         });
+        command.execute(context);
 
         return context.readPixels();
     }
@@ -208,23 +208,23 @@ defineSuite([
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
-        expect(sp.allUniforms.u_float.datatype).toEqual(UniformDatatype.FLOAT);
-        expect(sp.allUniforms.u_vec2.datatype).toEqual(UniformDatatype.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.datatype).toEqual(UniformDatatype.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.datatype).toEqual(UniformDatatype.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.datatype).toEqual(UniformDatatype.INT);
-        expect(sp.allUniforms.u_ivec2.datatype).toEqual(UniformDatatype.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.datatype).toEqual(UniformDatatype.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.datatype).toEqual(UniformDatatype.INT_VEC4);
-        expect(sp.allUniforms.u_bool.datatype).toEqual(UniformDatatype.BOOL);
-        expect(sp.allUniforms.u_bvec2.datatype).toEqual(UniformDatatype.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.datatype).toEqual(UniformDatatype.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.datatype).toEqual(UniformDatatype.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.datatype).toEqual(UniformDatatype.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.datatype).toEqual(UniformDatatype.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.datatype).toEqual(UniformDatatype.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(UniformDatatype.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(UniformDatatype.SAMPLER_CUBE);
+        expect(sp.allUniforms.u_float.datatype).toEqual(WebGLRenderingContext.FLOAT);
+        expect(sp.allUniforms.u_vec2.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC2);
+        expect(sp.allUniforms.u_vec3.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC3);
+        expect(sp.allUniforms.u_vec4.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC4);
+        expect(sp.allUniforms.u_int.datatype).toEqual(WebGLRenderingContext.INT);
+        expect(sp.allUniforms.u_ivec2.datatype).toEqual(WebGLRenderingContext.INT_VEC2);
+        expect(sp.allUniforms.u_ivec3.datatype).toEqual(WebGLRenderingContext.INT_VEC3);
+        expect(sp.allUniforms.u_ivec4.datatype).toEqual(WebGLRenderingContext.INT_VEC4);
+        expect(sp.allUniforms.u_bool.datatype).toEqual(WebGLRenderingContext.BOOL);
+        expect(sp.allUniforms.u_bvec2.datatype).toEqual(WebGLRenderingContext.BOOL_VEC2);
+        expect(sp.allUniforms.u_bvec3.datatype).toEqual(WebGLRenderingContext.BOOL_VEC3);
+        expect(sp.allUniforms.u_bvec4.datatype).toEqual(WebGLRenderingContext.BOOL_VEC4);
+        expect(sp.allUniforms.u_mat2.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT2);
+        expect(sp.allUniforms.u_mat3.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT3);
+        expect(sp.allUniforms.u_mat4.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT4);
+        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(WebGLRenderingContext.SAMPLER_2D);
+        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(WebGLRenderingContext.SAMPLER_CUBE);
     });
 
     it('has a struct uniform', function() {
@@ -290,23 +290,23 @@ defineSuite([
         expect(sp.allUniforms.u_sampler2D.name).toEqual('u_sampler2D');
         expect(sp.allUniforms.u_samplerCube.name).toEqual('u_samplerCube');
 
-        expect(sp.allUniforms.u_float.datatype).toEqual(UniformDatatype.FLOAT);
-        expect(sp.allUniforms.u_vec2.datatype).toEqual(UniformDatatype.FLOAT_VEC2);
-        expect(sp.allUniforms.u_vec3.datatype).toEqual(UniformDatatype.FLOAT_VEC3);
-        expect(sp.allUniforms.u_vec4.datatype).toEqual(UniformDatatype.FLOAT_VEC4);
-        expect(sp.allUniforms.u_int.datatype).toEqual(UniformDatatype.INT);
-        expect(sp.allUniforms.u_ivec2.datatype).toEqual(UniformDatatype.INT_VEC2);
-        expect(sp.allUniforms.u_ivec3.datatype).toEqual(UniformDatatype.INT_VEC3);
-        expect(sp.allUniforms.u_ivec4.datatype).toEqual(UniformDatatype.INT_VEC4);
-        expect(sp.allUniforms.u_bool.datatype).toEqual(UniformDatatype.BOOL);
-        expect(sp.allUniforms.u_bvec2.datatype).toEqual(UniformDatatype.BOOL_VEC2);
-        expect(sp.allUniforms.u_bvec3.datatype).toEqual(UniformDatatype.BOOL_VEC3);
-        expect(sp.allUniforms.u_bvec4.datatype).toEqual(UniformDatatype.BOOL_VEC4);
-        expect(sp.allUniforms.u_mat2.datatype).toEqual(UniformDatatype.FLOAT_MAT2);
-        expect(sp.allUniforms.u_mat3.datatype).toEqual(UniformDatatype.FLOAT_MAT3);
-        expect(sp.allUniforms.u_mat4.datatype).toEqual(UniformDatatype.FLOAT_MAT4);
-        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(UniformDatatype.SAMPLER_2D);
-        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(UniformDatatype.SAMPLER_CUBE);
+        expect(sp.allUniforms.u_float.datatype).toEqual(WebGLRenderingContext.FLOAT);
+        expect(sp.allUniforms.u_vec2.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC2);
+        expect(sp.allUniforms.u_vec3.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC3);
+        expect(sp.allUniforms.u_vec4.datatype).toEqual(WebGLRenderingContext.FLOAT_VEC4);
+        expect(sp.allUniforms.u_int.datatype).toEqual(WebGLRenderingContext.INT);
+        expect(sp.allUniforms.u_ivec2.datatype).toEqual(WebGLRenderingContext.INT_VEC2);
+        expect(sp.allUniforms.u_ivec3.datatype).toEqual(WebGLRenderingContext.INT_VEC3);
+        expect(sp.allUniforms.u_ivec4.datatype).toEqual(WebGLRenderingContext.INT_VEC4);
+        expect(sp.allUniforms.u_bool.datatype).toEqual(WebGLRenderingContext.BOOL);
+        expect(sp.allUniforms.u_bvec2.datatype).toEqual(WebGLRenderingContext.BOOL_VEC2);
+        expect(sp.allUniforms.u_bvec3.datatype).toEqual(WebGLRenderingContext.BOOL_VEC3);
+        expect(sp.allUniforms.u_bvec4.datatype).toEqual(WebGLRenderingContext.BOOL_VEC4);
+        expect(sp.allUniforms.u_mat2.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT2);
+        expect(sp.allUniforms.u_mat3.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT3);
+        expect(sp.allUniforms.u_mat4.datatype).toEqual(WebGLRenderingContext.FLOAT_MAT4);
+        expect(sp.allUniforms.u_sampler2D.datatype).toEqual(WebGLRenderingContext.SAMPLER_2D);
+        expect(sp.allUniforms.u_samplerCube.datatype).toEqual(WebGLRenderingContext.SAMPLER_CUBE);
     });
 
     it('sets uniforms', function() {
@@ -616,16 +616,6 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
     });
 
-    it('destroys', function() {
-        var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
-        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        var s = context.createShaderProgram(vs, fs);
-
-        expect(s.isDestroyed()).toEqual(false);
-        s.destroy();
-        expect(s.isDestroyed()).toEqual(true);
-    });
-
     it('fails vertex shader compile', function() {
         var vs = 'does not compile.';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
@@ -633,7 +623,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails fragment shader compile', function() {
@@ -643,7 +633,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to link', function() {
@@ -653,18 +643,7 @@ defineSuite([
 
         expect(function() {
             sp._bind();
-        }).toThrow();
-    });
-
-    it('fails to destroy', function() {
-        var vs = 'void main() { gl_Position = vec4(1.0); }';
-        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        var s = context.createShaderProgram(vs, fs);
-        s.destroy();
-
-        expect(function() {
-            s.destroy();
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails with built-in function circular dependency', function() {
@@ -673,6 +652,6 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
         expect(function() {
             sp._bind();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

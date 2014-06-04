@@ -56,7 +56,7 @@ require(['Cesium'], function(Cesium) {
                 dimensions : new Cesium.Cartesian3(400000.0, 300000.0, 500000.0)
             }),
             modelMatrix : Cesium.Matrix4.multiplyByTranslation(
-                Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))),
+                Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-105.0, 45.0)),
                 new Cesium.Cartesian3(0.0, 0.0, 250000)),
             attributes : {
                 color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
@@ -84,13 +84,14 @@ require(['Cesium'], function(Cesium) {
     var image = new Image();
     image.onload = function() {
         var billboards = new Cesium.BillboardCollection();
-        var textureAtlas = scene.createTextureAtlas({
+        var textureAtlas = new Cesium.TextureAtlas({
+            scene : scene,
             image : image
         });
         billboards.textureAtlas = textureAtlas;
 
         billboards.add({
-            position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883, 150000)),
+            position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883, 150000),
             imageIndex : 0
         });
         scene.primitives.add(billboards);

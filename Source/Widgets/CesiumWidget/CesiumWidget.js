@@ -3,19 +3,19 @@ define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian3',
         '../../Core/Clock',
+        '../../Core/Credit',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
-        '../../Core/Event',
         '../../Core/formatError',
+        '../../Core/getTimestamp',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/Globe',
-        '../../Scene/Credit',
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
@@ -27,19 +27,19 @@ define([
         buildModuleUrl,
         Cartesian3,
         Clock,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
-        Event,
         formatError,
+        getTimestamp,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         Globe,
-        Credit,
         Moon,
         Scene,
         SceneMode,
@@ -55,30 +55,34 @@ define([
 
     function startRenderLoop(widget) {
         widget._renderLoopRunning = true;
+        widget._lastFrameTime = getTimestamp();
 
         function render() {
             if (widget.isDestroyed()) {
                 return;
             }
 
-            try {
-                if (widget._useDefaultRenderLoop) {
+            if (widget._useDefaultRenderLoop) {
+                var targetFrameRate = widget._targetFrameRate;
+                if (!defined(targetFrameRate)) {
                     widget.resize();
                     widget.render();
                     requestAnimationFrame(render);
                 } else {
-                    widget._renderLoopRunning = false;
+                    var lastFrameTime = widget._lastFrameTime;
+                    var interval = 1000.0 / targetFrameRate;
+                    var now = getTimestamp();
+                    var delta = now - lastFrameTime;
+
+                    if (delta > interval) {
+                        widget.resize();
+                        widget.render();
+                        widget._lastFrameTime = now - (delta % interval);
+                    }
+                    requestAnimationFrame(render);
                 }
-            } catch (error) {
-                widget._useDefaultRenderLoop = false;
+            } else {
                 widget._renderLoopRunning = false;
-                widget._renderLoopError.raiseEvent(widget, error);
-                if (widget._showRenderLoopErrors) {
-                    var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    widget.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
-                }
             }
         }
 
@@ -101,14 +105,15 @@ define([
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
-     * // and in the body, include: &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="cesiumContainer"></div>
      *
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
@@ -152,14 +157,6 @@ define([
         this._element = widgetNode;
 
         try {
-            if (defined(document.createElementNS)) {
-                var svgNS = "http://www.w3.org/2000/svg";
-                var zoomDetector = document.createElementNS(svgNS, 'svg');
-                zoomDetector.style.display = 'none';
-                widgetNode.appendChild(zoomDetector);
-                this._zoomDetector = zoomDetector;
-            }
-
             var canvas = document.createElement('canvas');
             canvas.oncontextmenu = function() {
                 return false;
@@ -234,9 +231,12 @@ define([
             this._creditContainer = creditContainer;
             this._canRender = false;
             this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
-            this._renderLoopError = new Event();
+            this._resolutionScale = 1.0;
+            this._forceResize = false;
+            this._lastFrameTime = undefined;
+            this._targetFrameRate = undefined;
 
-            if (options.sceneMode) {
+            if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
                     this._scene.morphTo2D(0);
                 }
@@ -246,7 +246,19 @@ define([
             }
 
             this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+            this.targetFrameRate = options.targetFrameRate;
 
+            var that = this;
+            scene.renderError.addEventListener(function(scene, error) {
+                that._useDefaultRenderLoop = false;
+                that._renderLoopRunning = false;
+                if (that._showRenderLoopErrors) {
+                    var title = 'An error occurred while rendering.  Rendering has stopped.';
+                    var message = formatError(error);
+                    that.showErrorPanel(title, message);
+                    console.error(title + ' ' + message);
+                }
+            });
         } catch (error) {
             var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
             this.showErrorPanel(title, error);
@@ -328,16 +340,23 @@ define([
         },
 
         /**
-         * Gets the event that will be raised when an error is encountered during the default render loop.
-         * The widget instance and the generated exception are the only two parameters passed to the event handler.
-         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
-         * be set back to true to continue rendering after an exception.
-         * @memberof Viewer.prototype
-         * @type {Event}
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no affect.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Number}
          */
-        onRenderLoopError : {
+        targetFrameRate : {
             get : function() {
-                return this._renderLoopError;
+                return this._targetFrameRate;
+            },
+            set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('targetFrameRate must be greater than 0.');
+                }
+                this._targetFrameRate = value;
             }
         },
 
@@ -347,7 +366,10 @@ define([
          * perform rendering and resizing of the widget, as well as drive the
          * simulation clock. If set to false, you must manually call the
          * <code>resize</code>, <code>render</code> methods as part of a custom
-         * render loop.
+         * render loop.  If an error occurs during rendering, {@link Scene}'s
+         * <code>renderError</code> event will be raised and this property
+         * will be set to false.  It must be set back to true to continue rendering
+         * after the error.
          * @memberof CesiumWidget.prototype
          *
          * @type {Boolean}
@@ -363,6 +385,31 @@ define([
                         startRenderLoop(this);
                     }
                 }
+            }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._resolutionScale;
+            },
+            set : function(value) {
+                if (value <= 0) {
+                    throw new DeveloperError('resolutionScale must be greater than 0.');
+                }
+                this._resolutionScale = value;
+                this._forceResize = true;
             }
         }
     });
@@ -460,22 +507,12 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
+        this._forceResize = false;
 
-        var zoomFactor;
-        if (defined(window.devicePixelRatio) && window.devicePixelRatio !== 1) {
-            // prefer devicePixelRatio if available.
-            zoomFactor = window.devicePixelRatio;
-        } else if (this._zoomDetector.currentScale !== 1) {
-            // on Chrome pre-31, devicePixelRatio does not reflect page zoom, but
-            // our SVG's currentScale property does.
-            zoomFactor = this._zoomDetector.currentScale;
-        } else {
-            // otherwise we don't know.
-            zoomFactor = 1;
-        }
+        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * this._resolutionScale;
 
         this._canvasWidth = width;
         this._canvasHeight = height;

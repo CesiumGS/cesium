@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../ThirdParty/mersenne-twister',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        '../ThirdParty/mersenne-twister'
-       ], function(
-         defaultValue,
-         defined,
-         DeveloperError,
-         MersenneTwister) {
+        './DeveloperError'
+    ], function(
+        MersenneTwister,
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -224,7 +224,7 @@ define([
      *   </ul>
      *</p>
      *
-     * @param value The number whose hyperbolic sine is to be returned.
+     * @param {Number} value The number whose hyperbolic sine is to be returned.
      *
      * @returns The hyperbolic sine of {@code value}.
      */
@@ -251,7 +251,7 @@ define([
      *   </ul>
      *</p>
      *
-     * @param value The number whose hyperbolic cosine is to be returned.
+     * @param {Number} value The number whose hyperbolic cosine is to be returned.
      *
      * @returns The hyperbolic cosine of {@code value}.
      */
@@ -263,7 +263,15 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Computes the linear interpolation of two values.
+     *
+     * @param {Number} p The start value to interpolate.
+     * @param {Number} q The end value to interpolate.
+     * @param {Number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
+     * @returns {Number} The linearly interpolated value.
+     *
+     * @example
+     * var n = Cesium.Math.lerp(0.0, 2.0, 0.5); // returns 1.0
      */
     CesiumMath.lerp = function(p, q, time) {
         return ((1.0 - time) * p) + (time * q);
@@ -386,6 +394,11 @@ define([
      * @returns {Number} The corresponding angle in radians.
      */
     CesiumMath.toRadians = function(degrees) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(degrees)) {
+            throw new DeveloperError('degrees is required.');
+        }
+        //>>includeEnd('debug');
         return degrees * CesiumMath.RADIANS_PER_DEGREE;
     };
 
@@ -395,6 +408,11 @@ define([
      * @returns {Number} The corresponding angle in degrees.
      */
     CesiumMath.toDegrees = function(radians) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(radians)) {
+            throw new DeveloperError('radians is required.');
+        }
+        //>>includeEnd('debug');
         return radians * CesiumMath.DEGREES_PER_RADIAN;
     };
 
@@ -410,6 +428,11 @@ define([
      * var longitude = Cesium.Math.convertLongitudeRange(Cesium.Math.toRadians(270.0));
      */
     CesiumMath.convertLongitudeRange = function(angle) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+        //>>includeEnd('debug');
         var twoPi = CesiumMath.TWO_PI;
 
         var simplified = angle - Math.floor(angle / twoPi) * twoPi;
@@ -430,6 +453,11 @@ define([
      * @returns {Number} The angle in the range ()<code>-CesiumMath.PI</code>, <code>CesiumMath.PI</code>).
      */
     CesiumMath.negativePiToPi = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        //>>includeEnd('debug');
         var epsilon10 = CesiumMath.EPSILON10;
         var pi = CesiumMath.PI;
         var two_pi = CesiumMath.TWO_PI;
@@ -451,6 +479,11 @@ define([
      * @returns {Number} The angle in the range (0 , <code>CesiumMath.TWO_PI</code>).
      */
     CesiumMath.zeroToTwoPi = function(x) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        //>>includeEnd('debug');
         var value = x % CesiumMath.TWO_PI;
         // We do a second modules here if we add 2Pi to ensure that we don't have any numerical issues with very
         // small negative values.
@@ -458,9 +491,28 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Determines if two values are equal within the provided epsilon.  This is useful
+     * to avoid problems due to roundoff error when comparing floating-point values directly.
+     *
+     * @param {Number} left The first value to compare.
+     * @param {Number} right The other value to compare.
+     * @param {Number} [epsilon=0.0] The maximum inclusive delta between <code>left</code> and <code>right</code> where they will be considered equal.
+     * @returns {Boolean} <code>true</code> if the values are equal within the epsilon; otherwise, <code>false</code>.
+     *
+     * @example
+     * var b = Cesium.Math.equalsEpsilon(0.0, 0.01, Cesium.Math.EPSILON2); // true
+     * var b = Cesium.Math.equalsEpsilon(0.0, 0.1, Cesium.Math.EPSILON2);  // false
      */
     CesiumMath.equalsEpsilon = function(left, right, epsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required.');
+        }
+
+        if (!defined(right)) {
+            throw new DeveloperError('right is required.');
+        }
+        //>>includeEnd('debug');
         epsilon = defaultValue(epsilon, 0.0);
         return Math.abs(left - right) <= epsilon;
     };
@@ -476,7 +528,7 @@ define([
      *
      * @returns {Number} The factorial of the provided number or undefined if the number is less than 0.
      *
-     * @see <a href='http://en.wikipedia.org/wiki/Factorial'>Factorial on Wikipedia</a>.
+     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      *
      * @example
      * //Compute 7!, which is equal to 5040
@@ -522,8 +574,11 @@ define([
         minimumValue = defaultValue(minimumValue, 0.0);
 
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(n)) {
+            throw new DeveloperError('n is required.');
+        }
         if (maximumValue <= minimumValue) {
-            throw new DeveloperError('Maximum value must be greater than minimum value.');
+            throw new DeveloperError('maximumValue must be greater than minimumValue.');
         }
         //>>includeEnd('debug');
 
@@ -604,6 +659,17 @@ define([
      * @returns The value clamped so that min <= value <= max.
      */
     CesiumMath.clamp = function(value, min, max) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(min)) {
+            throw new DeveloperError('min is required.');
+        }
+        if (!defined(max)) {
+            throw new DeveloperError('max is required.');
+        }
+        //>>includeEnd('debug');
         return value < min ? min : value > max ? max : value;
     };
 
@@ -635,8 +701,8 @@ define([
      *
      * @returns A random number in the range of [0.0, 1.0).
      *
-     * @see CesiumMath#setRandomNumberSeed
-     * @see http://en.wikipedia.org/wiki/Mersenne_twister
+     * @see CesiumMath.setRandomNumberSeed
+     * @see {@link http://en.wikipedia.org/wiki/Mersenne_twister|Mersenne twister on Wikipedia}
      */
     CesiumMath.nextRandomNumber = function() {
         return randomNumberGenerator.random();

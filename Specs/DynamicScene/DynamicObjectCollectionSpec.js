@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DynamicObjectCollection',
-         'Core/JulianDate',
-         'Core/Iso8601',
-         'Core/TimeInterval',
-         'Core/TimeIntervalCollection',
-         'DynamicScene/DynamicObject'
-     ], function(
-         DynamicObjectCollection,
-         JulianDate,
-         Iso8601,
-         TimeInterval,
-         TimeIntervalCollection,
-         DynamicObject) {
+        'DynamicScene/DynamicObjectCollection',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/DynamicObject'
+    ], function(
+        DynamicObjectCollection,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        DynamicObject) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -297,7 +297,7 @@ defineSuite([
 
         expect(function() {
             dynamicObjectCollection.add(dynamicObject2);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('remove throws with undefined DynamicObject', function() {

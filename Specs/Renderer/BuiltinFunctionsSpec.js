@@ -1,26 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Core/BoundingRectangle',
-         'Core/PrimitiveType',
-         'Core/Cartesian3',
-         'Core/EncodedCartesian3',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
-     ], 'Renderer/BuiltinFunctions', function(
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         BoundingRectangle,
-         PrimitiveType,
-         Cartesian3,
-         EncodedCartesian3,
-         BufferUsage,
-         ClearCommand) {
+        'Core/BoundingRectangle',
+        'Core/Cartesian3',
+        'Core/EncodedCartesian3',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext'
+    ], 'Renderer/BuiltinFunctions', function(
+        BoundingRectangle,
+        Cartesian3,
+        EncodedCartesian3,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,12 +49,13 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             uniformMap : uniformMap
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();

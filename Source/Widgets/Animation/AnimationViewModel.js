@@ -1,26 +1,26 @@
 /*global define*/
 define([
         '../../Core/binarySearch',
-        '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/ClockStep',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../ToggleButtonViewModel',
+        '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
-        '../../ThirdParty/knockout'
+        '../createCommand',
+        '../ToggleButtonViewModel'
     ], function(
         binarySearch,
-        ClockStep,
         ClockRange,
+        ClockStep,
         defined,
         defineProperties,
         DeveloperError,
-        createCommand,
-        ToggleButtonViewModel,
+        knockout,
         sprintf,
-        knockout) {
+        createCommand,
+        ToggleButtonViewModel) {
     "use strict";
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -419,7 +419,7 @@ define([
      * automatically, and duplicate values will be removed.
      * @memberof AnimationViewModel
      *
-     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
+     * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
         //>>includeStart('debug', pragmas.debug);

@@ -1,38 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/BingMapsImageryProvider',
-         'Core/DefaultProxy',
-         'Core/defined',
-         'Core/FeatureDetection',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'Scene/BingMapsStyle',
-         'Scene/DiscardMissingTileImagePolicy',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'Scene/NeverTileDiscardPolicy',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         BingMapsImageryProvider,
-         DefaultProxy,
-         defined,
-         FeatureDetection,
-         jsonp,
-         loadImage,
-         loadWithXhr,
-         BingMapsStyle,
-         DiscardMissingTileImagePolicy,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         NeverTileDiscardPolicy,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/BingMapsImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/WebMercatorTilingScheme',
+        'Scene/BingMapsStyle',
+        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        BingMapsImageryProvider,
+        DefaultProxy,
+        defined,
+        jsonp,
+        loadImage,
+        loadWithXhr,
+        WebMercatorTilingScheme,
+        BingMapsStyle,
+        DiscardMissingTileImagePolicy,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -91,7 +87,7 @@ defineSuite([
     it('returns valid value for hasAlphaChannel', function() {
         var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -139,7 +135,7 @@ defineSuite([
     it('can provide a root tile', function() {
         var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
 
         jsonp.loadAndExecuteScript = function(url, functionName) {
             expect(url.indexOf(metadataUrl) === 0).toEqual(true);
@@ -234,7 +230,7 @@ defineSuite([
     it('routes requests through a proxy if one is specified', function() {
         var url = 'http://foo.bar.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
-        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?incl=ImageryProviders&key=';
+        var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
         var proxy = new DefaultProxy('/proxy/');
 
         jsonp.loadAndExecuteScript = function(url, functionName) {

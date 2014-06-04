@@ -1,19 +1,19 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
      * @private
      */
     var ImageryState = {
-        UNLOADED : new Enumeration(0, 'UNLOADED'),
-        TRANSITIONING : new Enumeration(1, 'TRANSITIONING'),
-        RECEIVED : new Enumeration(2, 'RECEIVED'),
-        TEXTURE_LOADED : new Enumeration(3, 'TEXTURE_LOADED'),
-        READY : new Enumeration(4, 'READY'),
-        FAILED : new Enumeration(5, 'FAILED'),
-        INVALID : new Enumeration(6, 'INVALID'),
-        PLACEHOLDER : new Enumeration(7, 'PLACEHOLDER')
+        UNLOADED : 0,
+        TRANSITIONING : 1,
+        RECEIVED : 2,
+        TEXTURE_LOADED : 3,
+        READY : 4,
+        FAILED : 5,
+        INVALID : 6,
+        PLACEHOLDER : 7
     };
 
     return ImageryState;

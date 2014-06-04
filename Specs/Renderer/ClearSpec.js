@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/Color',
-         'Core/BoundingRectangle',
-         'Renderer/ClearCommand'
-     ], 'Renderer/Clear', function(
-         createContext,
-         destroyContext,
-         Color,
-         BoundingRectangle,
-         ClearCommand) {
+        'Core/BoundingRectangle',
+        'Core/Color',
+        'Renderer/ClearCommand',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Clear', function(
+        BoundingRectangle,
+        Color,
+        ClearCommand,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -33,20 +33,9 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var command = new ClearCommand();
-        command.color = Color.WHITE;
-
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
-    });
-
-    it('clears to white by executing a clear command', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        var command = new ClearCommand();
-        command.color = Color.WHITE;
-
+        var command = new ClearCommand({
+            color : Color.WHITE
+        });
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
@@ -55,24 +44,25 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var command = new ClearCommand();
-        command.color = Color.WHITE;
-        command.renderState = context.createRenderState({
-            colorMask : {
-                red : true,
-                green : false,
-                blue : true,
-                alpha : false
-            }
+        var command = new ClearCommand({
+            color : Color.WHITE,
+            renderState : context.createRenderState({
+                colorMask : {
+                    red : true,
+                    green : false,
+                    blue : true,
+                    alpha : false
+                }
+            })
         });
-
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 0, 255, 0]);
     });
 
     it('clears with scissor test', function() {
-        var command = new ClearCommand();
-        command.color = Color.WHITE;
+        var command = new ClearCommand({
+            color : Color.WHITE
+        });
 
         command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
@@ -108,10 +98,10 @@ defineSuite([
             colorTextures : [colorTexture]
         });
 
-        var command = new ClearCommand();
-        command.color = new Color(0.0, 1.0, 0.0, 1.0);
-        command.framebuffer = framebuffer;
-
+        var command = new ClearCommand({
+            color : new Color(0.0, 1.0, 0.0, 1.0),
+            framebuffer : framebuffer
+        });
         command.execute(context);
 
         expect(context.readPixels({
@@ -126,7 +116,7 @@ defineSuite([
             expect(context.readPixels({
                 width : -1
             })).toEqual([0, 0, 0, 0]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to read pixels (height)', function() {
@@ -134,6 +124,6 @@ defineSuite([
             expect(context.readPixels({
                 height : -1
             })).toEqual([0, 0, 0, 0]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

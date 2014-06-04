@@ -2,29 +2,31 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/freezeObject',
         '../Core/VertexFormat',
-        './Material',
-        './Appearance',
-        '../Shaders/Appearances/BasicMaterialAppearanceVS',
-        '../Shaders/Appearances/BasicMaterialAppearanceFS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
-        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
+        '../Shaders/Appearances/AllMaterialAppearanceFS',
         '../Shaders/Appearances/AllMaterialAppearanceVS',
-        '../Shaders/Appearances/AllMaterialAppearanceFS'
+        '../Shaders/Appearances/BasicMaterialAppearanceFS',
+        '../Shaders/Appearances/BasicMaterialAppearanceVS',
+        '../Shaders/Appearances/TexturedMaterialAppearanceFS',
+        '../Shaders/Appearances/TexturedMaterialAppearanceVS',
+        './Appearance',
+        './Material'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         freezeObject,
         VertexFormat,
-        Material,
-        Appearance,
-        BasicMaterialAppearanceVS,
-        BasicMaterialAppearanceFS,
-        TexturedMaterialAppearanceVS,
-        TexturedMaterialAppearanceFS,
+        AllMaterialAppearanceFS,
         AllMaterialAppearanceVS,
-        AllMaterialAppearanceFS) {
+        BasicMaterialAppearanceFS,
+        BasicMaterialAppearanceVS,
+        TexturedMaterialAppearanceFS,
+        TexturedMaterialAppearanceVS,
+        Appearance,
+        Material) {
     "use strict";
 
     /**
@@ -40,9 +42,9 @@ define([
      * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
      * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
-     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
-     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
-     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -56,9 +58,9 @@ define([
      *     material : Cesium.Material.fromType('Color'),
      *     faceForward : true
      *   })
-     * });
      *
-     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+     * });
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -73,20 +75,48 @@ define([
          *
          * @type Material
          *
-         * @default Material.ColorType
+         * @default {@link Material.ColorType}
          *
-         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = (defined(options.material)) ? options.material : Material.fromType(Material.ColorType);
 
         /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.translucent = translucent;
+
+        this._vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
+        this._fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
+        this._renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        this._closed = closed;
+
+        // Non-derived members
+
+        this._materialSupport = materialSupport;
+        this._vertexFormat = materialSupport.vertexFormat;
+        this._flat = defaultValue(options.flat, false);
+        this._faceForward = defaultValue(options.faceForward, !closed);
+    };
+
+    defineProperties(MaterialAppearance.prototype, {
+        /**
          * The GLSL source code for the vertex shader.
          *
-         * @type String
+         * @memberof MaterialAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
+        vertexShaderSource : {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
 
         /**
          * The GLSL source code for the fragment shader.  The full fragment shader
@@ -94,60 +124,105 @@ define([
          * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
          * Use {@link MaterialAppearance#getFragmentShaderSource} to get the full source.
          *
-         * @type String
+         * @memberof MaterialAppearance.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
+        fragmentShaderSource : {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
 
         /**
-         * The render state.  This is not the final {@link RenderState} instance; instead,
-         * it can contain a subset of render state properties identical to <code>renderState</code>
-         * passed to {@link Context#createRenderState}.
+         * The WebGL fixed-function state to use when rendering the geometry.
          * <p>
          * The render state can be explicitly defined when constructing a {@link MaterialAppearance}
          * instance, or it is set implicitly via {@link MaterialAppearance#translucent}
          * and {@link MaterialAppearance#closed}.
          * </p>
          *
-         * @type Object
+         * @memberof MaterialAppearance.prototype
          *
+         * @type {Object}
          * @readonly
          */
-        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+        renderState : {
+            get : function() {
+                return this._renderState;
+            }
+        },
 
-        // Non-derived members
+        /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link MaterialAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
+         * @memberof MaterialAppearance.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        closed : {
+            get : function() {
+                return this._closed;
+            }
+        },
 
         /**
          * The type of materials supported by this instance.  This impacts the required
          * {@link VertexFormat} and the complexity of the vertex and fragment shaders.
          *
-         * @type MaterialAppearance.MaterialSupport
+         * @memberof MaterialAppearance.prototype
          *
+         * @type {MaterialAppearance.MaterialSupport}
          * @readonly
+         *
+         * @default @link MaterialAppearance.MaterialSupport.TEXTURED}
          */
-        this.materialSupport = materialSupport;
+        materialSupport : {
+            get : function() {
+                return this._materialSupport;
+            }
+        },
 
         /**
          * The {@link VertexFormat} that this appearance instance is compatible with.
          * A geometry can have more vertex attributes and still be compatible - at a
          * potential performance cost - but it can't have less.
          *
-         * @type VertexFormat
+         * @memberof MaterialAppearance.prototype
          *
+         * @type VertexFormat
          * @readonly
+         *
+         * @default {@link MaterialAppearance.VERTEX_FORMAT}
          */
-        this.vertexFormat = materialSupport.vertexFormat;
+        vertexFormat : {
+            get : function() {
+                return this._vertexFormat;
+            }
+        },
 
         /**
          * When <code>true</code>, flat shading is used in the fragment shader,
          * which means lighting is not taking into account.
          *
+         * @memberof MaterialAppearance.prototype
+         *
+         * @type {Boolean}
          * @readonly
          *
          * @default false
          */
-        this.flat = defaultValue(options.flat, false);
+        flat : {
+            get : function() {
+                return this._flat;
+            }
+        },
 
         /**
          * When <code>true</code>, the fragment shader flips the surface normal
@@ -155,31 +230,19 @@ define([
          * dark spots.  This is useful when both sides of a geometry should be
          * shaded like {@link WallGeometry}.
          *
-         * @readonly
-         */
-        this.faceForward = defaultValue(options.faceForward, !closed);
-
-        /**
-         * When <code>true</code>, the geometry is expected to appear translucent so
-         * {@link MaterialAppearance#renderState} has alpha blending enabled.
+         * @memberof MaterialAppearance.prototype
          *
+         * @type {Boolean}
          * @readonly
          *
          * @default true
          */
-        this.translucent = translucent;
-
-        /**
-         * When <code>true</code>, the geometry is expected to be closed so
-         * {@link MaterialAppearance#renderState} has backface culling enabled.
-         * If the viewer enters the geometry, it will not be visible.
-         *
-         * @readonly
-         *
-         * @default false
-         */
-        this.closed = closed;
-    };
+        faceForward : {
+            get : function() {
+                return this._faceForward;
+            }
+        }
+    });
 
     /**
      * Procedurally creates the full GLSL fragment shader source.  For {@link MaterialAppearance},
@@ -219,8 +282,6 @@ define([
      * (required vertex format and GLSL shader complexity.
      *
      * @memberof MaterialAppearance
-     *
-     * @enumeration
      */
     MaterialAppearance.MaterialSupport = {
         /**

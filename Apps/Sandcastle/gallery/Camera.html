@@ -26,14 +26,11 @@
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
-
-    var ellipsoid = Cesium.Ellipsoid.WGS84;
-
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
-        var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
-
-        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene, {
+        var destination = Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0);
+        
+        var flight = Cesium.CameraFlightPath.createAnimation(scene, {
             destination : destination
         });
         scene.animations.add(flight);
@@ -42,8 +39,7 @@ require(['Cesium'], function(Cesium) {
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
         function fly(position) {
-            var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
-            destination = ellipsoid.cartographicToCartesian(destination);
+            var destination = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
 
             var flight = Cesium.CameraFlightPath.createAnimation(scene, {
                 destination : destination
@@ -62,18 +58,17 @@ require(['Cesium'], function(Cesium) {
         var north = 42.0;
 
         var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-        scene.camera.viewRectangle(rectangle, ellipsoid);
+        scene.camera.viewRectangle(rectangle, scene.globe.ellipsoid);
 
         // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray(
-                    [
-                     Cesium.Cartographic.fromDegrees(west, south),
-                     Cesium.Cartographic.fromDegrees(west, north),
-                     Cesium.Cartographic.fromDegrees(east, north),
-                     Cesium.Cartographic.fromDegrees(east, south),
-                     Cesium.Cartographic.fromDegrees(west, south)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                     west, south,
+                     west, north,
+                     east, north,
+                     east, south,
+                     west, south
                     ])
         });
         scene.primitives.add(polylines);
@@ -96,13 +91,12 @@ require(['Cesium'], function(Cesium) {
         // Show the rectangle.  Not required; just for show.
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
-            positions : ellipsoid.cartographicArrayToCartesianArray(
-                    [
-                     Cesium.Cartographic.fromDegrees(west, south),
-                     Cesium.Cartographic.fromDegrees(west, north),
-                     Cesium.Cartographic.fromDegrees(east, north),
-                     Cesium.Cartographic.fromDegrees(east, south),
-                     Cesium.Cartographic.fromDegrees(west, south)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                     west, south,
+                     west, north,
+                     east, north,
+                     east, south,
+                     west, south
                     ])
         });
         scene.primitives.add(polylines);
@@ -110,12 +104,12 @@ require(['Cesium'], function(Cesium) {
 
     function eastNorthUp(scene) {
         Sandcastle.declare(eastNorthUp); // For highlighting in Sandcastle.
-        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883));
+        var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
         // View in east-north-up frame
         var camera = scene.camera;
-        camera.transform = transform;
+        Cesium.Matrix4.clone(transform, camera.transform);
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
 
         var controller = scene.screenSpaceCameraController;
@@ -124,14 +118,14 @@ require(['Cesium'], function(Cesium) {
 
         // Zoom in
         camera.lookAt(
-                new Cesium.Cartesian3(120000.0, 120000.0, 120000.0),
+                new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
                 Cesium.Cartesian3.ZERO,
                 Cesium.Cartesian3.UNIT_Z);
 
         // Show reference frame.  Not required.
         var primitives = scene.primitives;
         var polylines = new Cesium.PolylineCollection();
-        polylines.modelMatrix = transform;
+        Cesium.Matrix4.clone(transform, polylines.modelMatrix);
 
         var xAxis = {
             color : Cesium.Color.RED,
@@ -164,29 +158,24 @@ require(['Cesium'], function(Cesium) {
     }
 
     function reset(scene) {
+        var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
-
-        var camera = scene.camera;
-        if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
-            return;
-        }
-
-        Cesium.Matrix4.clone(Cesium.Matrix4.IDENTITY, camera.transform);
-        camera.constrainedAxis = undefined;
-        camera.lookAt(
-                Cesium.Cartesian3.multiplyByScalar(Cesium.Cartesian3.normalize(new Cesium.Cartesian3(0.0, -2.0, 1.0)), 2.0 * ellipsoid.maximumRadius),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
-
+        
         var controller = scene.screenSpaceCameraController;
         controller.ellipsoid = ellipsoid;
         controller.enableTilt = true;
+        
+        var camera = scene.camera;
+        camera.setTransform(Cesium.Matrix4.IDENTITY);
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+    
+    scene.morphComplete.addEventListener(function() {
+        reset(scene);
+    });
 
     Sandcastle.addToolbarButton('Fly to San Diego', function() {
         reset(scene);

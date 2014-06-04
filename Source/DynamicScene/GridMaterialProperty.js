@@ -1,11 +1,12 @@
 /*global define*/
-define(['../Core/Cartesian2',
+define([
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
@@ -13,8 +14,8 @@ define(['../Core/Cartesian2',
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -80,24 +81,28 @@ define(['../Core/Cartesian2',
         color : createDynamicPropertyDescriptor('color'),
         /**
          * Gets or sets the numeric property which determines the grid cells alpha value, when combined with the color alpha.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0.1)
          */
         cellAlpha : createDynamicPropertyDescriptor('cellAlpha'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the number of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(8, 8))
          */
         lineCount : createDynamicPropertyDescriptor('lineCount'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the thickness of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
         lineThickness : createDynamicPropertyDescriptor('lineThickness'),
         /**
          * Gets or sets the {@link Cartesian2} property which determines the offset of rows and columns in the grid.
+         * @memberof GridMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(new Cartesian2(0.0, 0.0))
          */
@@ -109,7 +114,7 @@ define(['../Core/Cartesian2',
      * @memberof GridMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     GridMaterialProperty.prototype.getType = function(time) {
         return 'Grid';

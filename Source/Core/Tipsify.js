@@ -20,17 +20,19 @@ define([
      * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
      * by Sander, Nehab, and Barczak
+     *
+     * @private
      */
     var Tipsify = {};
 
     /**
      * Calculates the average cache miss ratio (ACMR) for a given set of indices.
      *
-     * @param {Array} description.indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the geometry's triangles.
-     * @param {Number} [description.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+     * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
-     * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+     * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
@@ -43,11 +45,11 @@ define([
      * var cacheSize = 3;
      * var acmr = Cesium.Tipsify.calculateACMR({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
-    Tipsify.calculateACMR = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var indices = description.indices;
-        var maximumIndex = description.maximumIndex;
-        var cacheSize = defaultValue(description.cacheSize, 24);
+    Tipsify.calculateACMR = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var indices = options.indices;
+        var maximumIndex = options.maximumIndex;
+        var cacheSize = defaultValue(options.cacheSize, 24);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(indices)) {
@@ -104,16 +106,16 @@ define([
     /**
      * Optimizes triangles for the post-vertex shader cache.
      *
-     * @param {Array} description.indices Lists triads of numbers corresponding to the indices of the vertices
+     * @param {Number[]} options.indices Lists triads of numbers corresponding to the indices of the vertices
      *                        in the vertex buffer that define the geometry's triangles.
-     * @param {Number} [description.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
+     * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
-     * @param {Number} [description.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+     * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
      *
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @returns {Array} A list of the input indices in an optimized order.
+     * @returns {Number[]} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
@@ -121,11 +123,11 @@ define([
      * var cacheSize = 3;
      * var reorderedIndices = Cesium.Tipsify.tipsify({indices : indices, maxIndex : maxIndex, cacheSize : cacheSize});
      */
-    Tipsify.tipsify = function(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        var indices = description.indices;
-        var maximumIndex = description.maximumIndex;
-        var cacheSize = defaultValue(description.cacheSize, 24);
+    Tipsify.tipsify = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var indices = options.indices;
+        var maximumIndex = options.maximumIndex;
+        var cacheSize = defaultValue(options.cacheSize, 24);
 
         var cursor;
 

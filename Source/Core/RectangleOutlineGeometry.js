@@ -1,40 +1,40 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
-        './Rectangle',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
         './Math',
         './Matrix2',
-        './PrimitiveType'
+        './PrimitiveType',
+        './Rectangle'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
         Cartographic,
-        Rectangle,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
         CesiumMath,
         Matrix2,
-        PrimitiveType) {
+        PrimitiveType,
+        Rectangle) {
     "use strict";
 
     function isValidLatLon(latitude, longitude) {
