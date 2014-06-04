@@ -70,8 +70,6 @@ define([
      * depends on the glTF type of the parameter.  It will be a floating-point
      * number, Cartesian, or matrix.
      *
-     * @memberof ModelMaterial
-     *
      * @param {String} name The name of the parameter.
      * @param {Object} [value] The value to assign to the parameter.
      *
@@ -103,8 +101,6 @@ define([
      * Returns the value of the parameter with the given <code>name</code>.  The type of the
      * returned object depends on the glTF type of the parameter.  It will be a floating-point
      * number, Cartesian, or matrix.
-     *
-     * @memberof ModelMaterial
      *
      * @param {String} name The name of the parameter.
      *

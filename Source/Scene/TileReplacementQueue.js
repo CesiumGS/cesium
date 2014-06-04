@@ -36,8 +36,6 @@ define([
      * tiles.  Tiles that were used last frame will not be unloaded, even if that puts the number
      * of tiles above the specified maximum.
      *
-     * @memberof TileReplacementQueue
-     *
      * @param {Number} maximumTiles The maximum number of tiles in the queue.
      */
     TileReplacementQueue.prototype.trimTiles = function(maximumTiles) {
@@ -109,8 +107,6 @@ define([
     /**
      * Marks a tile as rendered this frame and moves it before the first tile that was not rendered
      * this frame.
-     *
-     * @memberof TileReplacementQueue
      *
      * @param {TileReplacementQueue} item The tile that was rendered.
      */

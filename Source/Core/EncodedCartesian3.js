@@ -54,7 +54,6 @@ define([
      * <p>
      * The fixed-point encoding follows {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
      * </p>
-     * @memberof EncodedCartesian3
      *
      * @param {Number} value The floating-point value to encode.
      * @param {Object} [result] The object onto which to store the result.
@@ -104,7 +103,6 @@ define([
      * <p>
      * The fixed-point encoding follows {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
      * </p>
-     * @memberof EncodedCartesian3
      *
      * @param {Cartesian3} cartesian The cartesian to encode.
      * @param {EncodedCartesian3} [result] The object onto which to store the result.

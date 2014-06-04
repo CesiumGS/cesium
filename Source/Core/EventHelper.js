@@ -32,7 +32,6 @@ define([
 
     /**
      * Adds a listener to an event, and records the registration to be cleaned up later.
-     * @memberof EventHelper
      *
      * @param {Event} event The event to attach to.
      * @param {Function} listener The function to be executed when the event is raised.
@@ -63,7 +62,6 @@ define([
 
     /**
      * Unregisters all previously added listeners.
-     * @memberof EventHelper
      *
      * @see Event#removeEventListener
      */

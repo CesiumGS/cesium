@@ -37,6 +37,7 @@ define([
      * @alias DebugModelMatrixPrimitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.length=10000000.0] The length of the axes in meters.
      * @param {Number} [options.width=2.0] The width of the axes in pixels.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
@@ -168,8 +169,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
      *
-     * @memberof DebugModelMatrixPrimitive
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see DebugModelMatrixPrimitive#destroy
@@ -186,8 +185,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @memberof DebugModelMatrixPrimitive
      *
      * @returns {undefined}
      *

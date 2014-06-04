@@ -165,6 +165,7 @@ define([
          * Gets a value indicating if this property is constant.
          * @memberof ReferenceProperty.prototype
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -176,6 +177,7 @@ define([
          * The definition is changed whenever the referenced property's definition is changed.
          * @memberof ReferenceProperty.prototype
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -274,7 +276,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -288,7 +289,6 @@ define([
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
      * This method is only valid if the property being referenced is a {@link PositionProperty}.
-     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
@@ -302,7 +302,6 @@ define([
     /**
      * Gets the {@link Material} type at the provided time.
      * This method is only valid if the property being referenced is a {@link MaterialProperty}.
-     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
      * @returns {String} The type of material.
@@ -314,7 +313,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ReferenceProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

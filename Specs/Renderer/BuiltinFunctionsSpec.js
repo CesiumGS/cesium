@@ -96,7 +96,7 @@ defineSuite([
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
-        var camera = createCamera(context);
+        var camera = createCamera();
         camera.frustum.near = 1.0;
 
         var canvas = context.canvas;
@@ -122,7 +122,7 @@ defineSuite([
     });
 
     it('has czm_windowToEyeCoordinates', function() {
-        var camera = createCamera(context);
+        var camera = createCamera();
         camera.frustum.near = 1.0;
 
         var canvas = context.canvas;
@@ -161,7 +161,9 @@ defineSuite([
     });
 
     it('has czm_translateRelativeToEye', function() {
-        var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
+        var camera = createCamera({
+            eye : new Cartesian3(1.0, 2.0, 3.0)
+        });
         context.uniformState.update(context, createFrameState(camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);

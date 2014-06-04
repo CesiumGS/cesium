@@ -16,7 +16,6 @@ define([
 
     /**
      * Provides the discriminant of the quadratic equation from the supplied coefficients.
-     * @memberof QuadraticRealPolynomial
      *
      * @param {Number} a The coefficient of the 2nd order monomial.
      * @param {Number} b The coefficient of the 1st order monomial.
@@ -52,7 +51,6 @@ define([
 
     /**
      * Provides the real valued roots of the quadratic polynomial with the provided coefficients.
-     * @memberof QuadraticRealPolynomial
      *
      * @param {Number} a The coefficient of the 2nd order monomial.
      * @param {Number} b The coefficient of the 1st order monomial.

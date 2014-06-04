@@ -71,7 +71,7 @@ define([
         /**
          * The number of animations in the collection.
          *
-         * @memberof ModelAnimationCollection
+         * @memberof ModelAnimationCollection.prototype
          *
          * @type {Number}
          * @readonly
@@ -89,8 +89,8 @@ define([
      * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
      * </p>
      *
-     * @memberof ModelAnimationCollection
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.name The glTF animation name that identifies the animation.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
@@ -173,8 +173,7 @@ define([
      * This raises the {@link ModelAnimationCollection#animationAdded} event for each model so, for example, a UI can stay in sync.
      * </p>
      *
-     * @memberof ModelAnimationCollection
-     *
+     * @param {Object} [options] Object with the following properties:
      * @param {JulianDate} [options.startTime] The scene time to start playing the animations.  When this is <code>undefined</code>, the animations starts at the next frame.
      * @param {Number} [options.startOffset=0.0] The offset, in seconds, from <code>startTime</code> to start playing.
      * @param {JulianDate} [options.stopTime] The scene time to stop playing the animations.  When this is <code>undefined</code>, the animations are played for its full duration.
@@ -231,8 +230,6 @@ define([
      * <code>true</code>.  The {@link ModelAnimationCollection#animationRemoved} event is still fired when the animation is removed.
      * </p>
      *
-     * @memberof ModelAnimationCollection
-     *
      * @param {ModelAnimation} animation The animation to remove.
      *
      * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
@@ -263,8 +260,6 @@ define([
      * This raises the {@link ModelAnimationCollection#animationRemoved} event for each
      * animation so, for example, a UI can stay in sync.
      * </p>
-     *
-     * @memberof ModelAnimationCollection
      */
     ModelAnimationCollection.prototype.removeAll = function() {
         var model = this._model;
@@ -280,8 +275,6 @@ define([
 
     /**
      * Determines whether this collection contains a given animation.
-     *
-     * @memberof ModelAnimationCollection
      *
      * @param {ModelAnimation} animation The animation to check for.
      *
@@ -300,8 +293,6 @@ define([
      * and increase as animations are added.  Removing an animation shifts all animations after
      * it to the left, changing their indices.  This function is commonly used to iterate over
      * all the animations in the collection.
-     *
-     * @memberof ModelAnimationCollection
      *
      * @param {Number} index The zero-based index of the animation.
      *

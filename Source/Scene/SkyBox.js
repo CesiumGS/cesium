@@ -44,6 +44,7 @@ define([
      * @alias SkyBox
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
@@ -189,8 +190,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof SkyBox
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see SkyBox#destroy
@@ -206,8 +205,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof SkyBox
      *
      * @returns {undefined}
      *
