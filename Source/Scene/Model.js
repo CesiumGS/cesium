@@ -176,14 +176,9 @@ define([
         this._gltf = gltfDefaults(options.gltf);
         this._basePath = defaultValue(options.basePath, '');
 
-        if (defined(options.basePath)) {
-            var docUri = new Uri(document.location.href);
-            var modelUri = new Uri(options.basePath);
-            this._baseUri = modelUri.resolve(docUri);
-        }
-        else {
-            this._baseUri = undefined;
-        }
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(this._basePath);
+        this._baseUri = modelUri.resolve(docUri);
 
         /**
          * Determines if the model primitive will be shown.
