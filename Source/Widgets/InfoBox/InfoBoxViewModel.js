@@ -156,7 +156,6 @@ define([
      *
      * This property returns a function which takes a unsanitized HTML String and returns a
      * sanitized String, or a Promise which resolves to the sanitized version.
-     * @memberof InfoBoxViewModel
      */
     InfoBoxViewModel.defaultSanitizer = defaultSanitizer;
 

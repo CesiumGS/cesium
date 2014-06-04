@@ -160,7 +160,6 @@ define([
      * Advances the clock from the currentTime based on the current configuration options.
      * tick should be called every frame, regardless of whether animation is taking place
      * or not.  To control animation, use the <code>shouldAnimate</code> property.
-     * @memberof Clock
      *
      * @returns {JulianDate} The new value of the <code>currentTime</code> property.
      */

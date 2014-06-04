@@ -67,8 +67,7 @@ define([
     };
 
     /**
-     * Given the input order and desired degree, returns the number of data points required for interpolation.
-     * @memberof HermitePolynomialApproximation
+     * Given the desired degree, returns the number of data points required for interpolation.
      *
      * @param {Number} degree The desired degree of interpolation.
      * @param {Number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).

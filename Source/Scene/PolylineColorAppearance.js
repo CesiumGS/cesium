@@ -190,7 +190,7 @@ define([
     /**
      * Procedurally creates the full GLSL fragment shader source.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -199,7 +199,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PolylineColorAppearance#translucent}.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -210,7 +210,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

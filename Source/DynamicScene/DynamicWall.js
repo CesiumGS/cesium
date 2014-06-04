@@ -39,7 +39,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicWall.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -112,7 +114,6 @@ define([
 
     /**
      * Duplicates a DynamicWall instance.
-     * @memberof DynamicWall
      *
      * @param {DynamicWall} [result] The object onto which to store the result.
      * @returns {DynamicWall} The modified result parameter or a new instance if one was not provided.
@@ -135,7 +136,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicWall
      *
      * @param {DynamicWall} source The object to be merged into this object.
      */

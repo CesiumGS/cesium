@@ -241,8 +241,6 @@ define([
     /**
      * Create a set of polygons with holes from a nested hierarchy.
      *
-     * @memberof Polygon
-     *
      * @param {Object} hierarchy An object defining the vertex positions of each nested polygon.
      * For example, the following polygon has two holes, and one hole has a hole. <code>holes</code> is optional.
      * Leaf nodes only have <code>positions</code>.
@@ -304,7 +302,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
         if (this.granularity < 0.0) {
-            throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
+            throw new DeveloperError('this.granularity must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -387,8 +385,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Polygon
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Polygon#destroy
@@ -404,8 +400,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Polygon
      *
      * @returns {undefined}
      *

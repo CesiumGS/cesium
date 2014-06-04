@@ -439,8 +439,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof BingMapsImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -461,8 +459,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link BingMapsImageryProvider#ready} returns true.
-     *
-     * @memberof BingMapsImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -491,8 +487,6 @@ define([
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
      * from a Bing Maps server.
-     *
-     * @memberof BingMapsImageryProvider
      *
      * @param {Number} x The tile's x coordinate.
      * @param {Number} y The tile's y coordinate.
@@ -523,8 +517,6 @@ define([
     /**
      * Converts a tile's quadkey used to request an image from a Bing Maps server into the
      * (x, y, level) position.
-     *
-     * @memberof BingMapsImageryProvider
      *
      * @param {String} quadkey The tile's quad key
      *

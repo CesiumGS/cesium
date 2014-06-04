@@ -264,7 +264,7 @@ define([
      * this is derived from {@link PerInstanceColorAppearance#fragmentShaderSource}, {@link PerInstanceColorAppearance#flat},
      * and {@link PerInstanceColorAppearance#faceForward}.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -273,7 +273,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PerInstanceColorAppearance#translucent}.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -284,7 +284,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof PerInstanceColorAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

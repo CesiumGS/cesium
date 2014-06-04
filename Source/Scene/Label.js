@@ -602,8 +602,6 @@ define([
      * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
      * left to right, and <code>y</code> increases from bottom to top.
      *
-     * @memberof Label
-     *
      * @param {Scene} scene The scene the label is in.
      *
      * @returns {Cartesian2} The screen-space position of the label.
@@ -631,8 +629,6 @@ define([
     /**
      * Determines if this label equals another label.  Labels are equal if all their properties
      * are equal.  Labels in different collections can be equal.
-     *
-     * @memberof Label
      *
      * @param {Label} other The label to compare for equality.
      *
@@ -663,8 +659,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Label
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
