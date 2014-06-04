@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -11,47 +11,42 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A left mouse button press followed by moving the mouse and releasing the button.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        LEFT_DRAG : new Enumeration(0, 'LEFT_DRAG'),
+        LEFT_DRAG : 0,
 
         /**
          *  A right mouse button press followed by moving the mouse and releasing the button.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        RIGHT_DRAG : new Enumeration(1, 'RIGHT_DRAG'),
+        RIGHT_DRAG : 1,
 
         /**
          *  A middle mouse button press followed by moving the mouse and releasing the button.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2
          */
-        MIDDLE_DRAG : new Enumeration(2, 'MIDDLE_DRAG'),
+        MIDDLE_DRAG : 2,
 
         /**
          * Scrolling the middle mouse button.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 3
          */
-        WHEEL : new Enumeration(3, 'WHEEL'),
+        WHEEL : 3,
 
         /**
          * A two-finger touch on a touch surface.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 4
          */
-        PINCH : new Enumeration(4, 'PINCH')
+        PINCH : 4
     };
 
     return CameraEventType;

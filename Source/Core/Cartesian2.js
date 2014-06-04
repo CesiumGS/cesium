@@ -105,7 +105,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Cartesian2.packedLength = 2;
 
@@ -114,7 +114,7 @@ define([
      * @memberof Cartesian2
      *
      * @param {Cartesian2} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Cartesian2.pack = function(value, array, startingIndex) {
@@ -138,7 +138,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Cartesian2
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian2} [result] The object into which to store the result.
      */
@@ -163,7 +163,7 @@ define([
      * Creates a Cartesian2 from two consecutive elements in an array.
      * @memberof Cartesian2
      *
-     * @param {Array} array The array whose two consecutive elements correspond to the x and y components, respectively.
+     * @param {Number[]} array The array whose two consecutive elements correspond to the x and y components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian2} [result] The object onto which to store the result.
      *
@@ -184,7 +184,7 @@ define([
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian2
      *
-     * @param {Cartesian2} The cartesian to use.
+     * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
     Cartesian2.getMaximumComponent = function(cartesian) {
@@ -201,7 +201,7 @@ define([
      * Computes the value of the minimum component for the supplied Cartesian.
      * @memberof Cartesian2
      *
-     * @param {Cartesian2} The cartesian to use.
+     * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
     Cartesian2.getMinimumComponent = function(cartesian) {
@@ -556,9 +556,9 @@ define([
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
      * @memberof Cartesian2
      *
-     * @param start The value corresponding to t at 0.0.
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
+     * @param {Cartesian2} start The value corresponding to t at 0.0.
+     * @param {Cartesian2} end The value corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */

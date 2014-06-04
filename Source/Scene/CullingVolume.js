@@ -17,14 +17,14 @@ define([
      * @alias CullingVolume
      * @constructor
      *
-     * @param Array planes An array of clipping planes.
+     * @param {Cartesian4[]} planes An array of clipping planes.
      */
     var CullingVolume = function(planes) {
         /**
          * Each plane is represented by a Cartesian4 object, where the x, y, and z components
          * define the unit vector normal to the plane, and the w component is the distance of the
          * plane from the origin.
-         * @type {Array}
+         * @type {Cartesian4[]}
          * @default []
          */
         this.planes = defaultValue(planes, []);

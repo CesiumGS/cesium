@@ -1,26 +1,26 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Globe',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Renderer/ClearCommand',
-         'Scene/SingleTileImageryProvider',
-         'Specs/createContext',
-         'Specs/createFrameState',
-         'Specs/destroyContext',
-         'Specs/render'
-     ], function(
-         Globe,
-         defined,
-         Ellipsoid,
-         Rectangle,
-         ClearCommand,
-         SingleTileImageryProvider,
-         createContext,
-         createFrameState,
-         destroyContext,
-         render) {
+        'Scene/Globe',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/Rectangle',
+        'Renderer/ClearCommand',
+        'Scene/SingleTileImageryProvider',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/render'
+    ], function(
+        Globe,
+        defined,
+        Ellipsoid,
+        Rectangle,
+        ClearCommand,
+        SingleTileImageryProvider,
+        createContext,
+        createFrameState,
+        destroyContext,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

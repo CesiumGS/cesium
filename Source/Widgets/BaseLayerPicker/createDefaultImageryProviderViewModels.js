@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../BaseLayerPicker/ProviderViewModel',
         '../../Core/buildModuleUrl',
+        '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
-        '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider'
+        '../../Scene/TileMapServiceImageryProvider',
+        '../BaseLayerPicker/ProviderViewModel'
     ], function(
-        ProviderViewModel,
         buildModuleUrl,
+        ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
-        ArcGisMapServerImageryProvider,
         OpenStreetMapImageryProvider,
-        TileMapServiceImageryProvider) {
+        TileMapServiceImageryProvider,
+        ProviderViewModel) {
     "use strict";
 
     /**

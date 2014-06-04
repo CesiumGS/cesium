@@ -386,8 +386,7 @@ require(['Cesium'], function(Cesium) {
         primitive.material = material;
     }
 
-    function createButtons(widget) {
-        var scene = widget.scene;
+    function createButtons(scene) {
         var primitives = scene.primitives;
 
         function toggleRectangleVisibility() {
@@ -611,10 +610,8 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
-    function createPrimitives(widget) {
-        var scene = widget.scene;
+    function createPrimitives(scene) {
         var primitives = scene.primitives;
-        var ellipsoid = scene.globe.ellipsoid;
 
         rectangle = new Cesium.RectanglePrimitive({
             rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0)
@@ -630,22 +627,23 @@ require(['Cesium'], function(Cesium) {
 
         var polylines = new Cesium.PolylineCollection();
         polyline = polylines.add({
-            positions : [
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-110.0, 42.0)),
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( -85.0, 36.0)),
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 25.0)),
-                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees( -77.0, 12.0))
-            ],
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -110.0, 42.0,
+                -85.0, 36.0,
+                -100.0, 25.0,
+                 -77.0, 12.0
+            ]),
             width : 10.0,
             show : false
         });
         primitives.add(polylines);
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
-    createPrimitives(widget);
-    createButtons(widget);
+    createPrimitives(scene);
+    createButtons(scene);
 
     Sandcastle.finishedLoading();
 });

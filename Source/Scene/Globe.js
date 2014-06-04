@@ -1,98 +1,101 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/buildModuleUrl',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/combine',
-        '../Core/loadImage',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/ComponentDatatype',
         '../Core/Ellipsoid',
-        '../Core/Rectangle',
+        '../Core/EllipsoidTerrainProvider',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/Intersect',
+        '../Core/loadImage',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Occluder',
         '../Core/PrimitiveType',
+        '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/Transforms',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/DepthFunction',
-        '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
-        '../Renderer/Pass',
-        './GlobeSurface',
-        './GlobeSurfaceShaderSet',
-        './EllipsoidTerrainProvider',
-        './ImageryLayerCollection',
-        './SceneMode',
-        './TerrainProvider',
+        '../Renderer/DrawCommand',
         '../Shaders/GlobeFS',
         '../Shaders/GlobeFSDepth',
         '../Shaders/GlobeFSPole',
         '../Shaders/GlobeVS',
         '../Shaders/GlobeVSDepth',
         '../Shaders/GlobeVSPole',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './DepthFunction',
+        './GlobeSurface',
+        './GlobeSurfaceShaderSet',
+        './ImageryLayerCollection',
+        './Pass',
+        './SceneMode',
+        './terrainAttributeLocations'
     ], function(
+        BoundingRectangle,
+        BoundingSphere,
         buildModuleUrl,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
         combine,
-        loadImage,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ComponentDatatype,
         Ellipsoid,
-        Rectangle,
+        EllipsoidTerrainProvider,
         FeatureDetection,
         GeographicProjection,
         Geometry,
         GeometryAttribute,
         Intersect,
+        loadImage,
         CesiumMath,
         Matrix4,
         Occluder,
         PrimitiveType,
+        Rectangle,
+        TerrainProvider,
         Transforms,
         BufferUsage,
         ClearCommand,
-        DepthFunction,
-        DrawCommand,
         createShaderSource,
-        Pass,
-        GlobeSurface,
-        GlobeSurfaceShaderSet,
-        EllipsoidTerrainProvider,
-        ImageryLayerCollection,
-        SceneMode,
-        TerrainProvider,
+        DrawCommand,
         GlobeFS,
         GlobeFSDepth,
         GlobeFSPole,
         GlobeVS,
         GlobeVSDepth,
         GlobeVSPole,
-        when) {
+        when,
+        DepthFunction,
+        GlobeSurface,
+        GlobeSurfaceShaderSet,
+        ImageryLayerCollection,
+        Pass,
+        SceneMode,
+        terrainAttributeLocations) {
     "use strict";
 
     /**
-     * DOC_TBA
+     * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
+     * and imagery layers ({@link Globe#imageryLayers}).  Access the globe using {@link Scene#globe}.
      *
      * @alias Globe
      * @constructor
@@ -120,31 +123,30 @@ define([
 
         this._occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), Cartesian3.ZERO);
 
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet(terrainAttributeLocations);
 
         this._rsColor = undefined;
         this._rsColorWithoutDepthTest = undefined;
 
-        var clearDepthCommand = new ClearCommand();
-        clearDepthCommand.depth = 1.0;
-        clearDepthCommand.stencil = 0;
-        clearDepthCommand.owner = this;
-        this._clearDepthCommand = clearDepthCommand;
+        this._clearDepthCommand = new ClearCommand({
+            depth : 1.0,
+            stencil : 0,
+            owner : this
+        });
 
-        this._depthCommand = new DrawCommand();
-        this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
-        this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
-        this._depthCommand.pass = Pass.OPAQUE;
-        this._depthCommand.owner = this;
-
-        this._northPoleCommand = new DrawCommand();
-        this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._northPoleCommand.pass = Pass.OPAQUE;
-        this._northPoleCommand.owner = this;
-        this._southPoleCommand = new DrawCommand();
-        this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
-        this._southPoleCommand.pass = Pass.OPAQUE;
-        this._southPoleCommand.owner = this;
+        this._depthCommand = new DrawCommand({
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._northPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
+        this._southPoleCommand = new DrawCommand({
+            pass : Pass.OPAQUE,
+            owner : this
+        });
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
@@ -637,10 +639,8 @@ define([
             this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(depthQuad);
         }
 
-        var shaderCache = context.shaderCache;
-
         if (!defined(this._depthCommand.shaderProgram)) {
-            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+            this._depthCommand.shaderProgram = context.createShaderProgram(
                 GlobeVSDepth,
                 GlobeFSDepth, {
                     position : 0
@@ -730,8 +730,8 @@ define([
             });
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                GlobeVSPole, GlobeFSPole, TerrainProvider.attributeLocations);
+            var poleShaderProgram = context.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+                GlobeVSPole, GlobeFSPole, terrainAttributeLocations);
 
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
@@ -843,10 +843,10 @@ define([
 
         this._surfaceShaderSet = this._surfaceShaderSet && this._surfaceShaderSet.destroy();
 
-        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.release();
+        this._northPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram && this._northPoleCommand.shaderProgram.destroy();
         this._southPoleCommand.shaderProgram = this._northPoleCommand.shaderProgram;
 
-        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.release();
+        this._depthCommand.shaderProgram = this._depthCommand.shaderProgram && this._depthCommand.shaderProgram.destroy();
         this._depthCommand.vertexArray = this._depthCommand.vertexArray && this._depthCommand.vertexArray.destroy();
 
         this._surface = this._surface && this._surface.destroy();

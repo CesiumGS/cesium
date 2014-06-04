@@ -1,28 +1,17 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/RenderState',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/WindingOrder',
-         'Renderer/BlendEquation',
-         'Renderer/BlendFunction',
-         'Renderer/CullFace',
-         'Renderer/DepthFunction',
-         'Renderer/StencilFunction',
-         'Renderer/StencilOperation'
-     ], function(
-         RenderState,
-         createContext,
-         destroyContext,
-         WindingOrder,
-         BlendEquation,
-         BlendFunction,
-         CullFace,
-         DepthFunction,
-         StencilFunction,
-         StencilOperation) {
+        'Renderer/RenderState',
+        'Core/WindingOrder',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        RenderState,
+        WindingOrder,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global WebGLRenderingContext*/
 
     var context;
 
@@ -39,7 +28,7 @@ defineSuite([
             frontFace : WindingOrder.COUNTER_CLOCKWISE,
             cull : {
                 enabled : false,
-                face : CullFace.BACK
+                face : WebGLRenderingContext.BACK
             },
             lineWidth : 1,
             polygonOffset : {
@@ -62,7 +51,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : false,
-                func : DepthFunction.LESS
+                func : WebGLRenderingContext.LESS
             },
             colorMask : {
                 red : true,
@@ -80,36 +69,35 @@ defineSuite([
                     blue : 0.0,
                     alpha : 0.0
                 },
-                equationRgb : BlendEquation.ADD,
-                equationAlpha : BlendEquation.ADD,
-                functionSourceRgb : BlendFunction.ONE,
-                functionSourceAlpha : BlendFunction.ONE,
-                functionDestinationRgb : BlendFunction.ZERO,
-                functionDestinationAlpha : BlendFunction.ZERO
+                equationRgb : WebGLRenderingContext.FUNC_ADD,
+                equationAlpha : WebGLRenderingContext.FUNC_ADD,
+                functionSourceRgb : WebGLRenderingContext.ONE,
+                functionSourceAlpha : WebGLRenderingContext.ONE,
+                functionDestinationRgb : WebGLRenderingContext.ZERO,
+                functionDestinationAlpha : WebGLRenderingContext.ZERO
             },
             stencilTest : {
                 enabled : false,
-                frontFunction : StencilFunction.ALWAYS,
-                backFunction : StencilFunction.ALWAYS,
+                frontFunction : WebGLRenderingContext.ALWAYS,
+                backFunction : WebGLRenderingContext.ALWAYS,
                 reference : 0,
                 mask : ~0,
                 frontOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
+                    fail : WebGLRenderingContext.KEEP,
+                    zFail : WebGLRenderingContext.KEEP,
+                    zPass : WebGLRenderingContext.KEEP
                 },
                 backOperation : {
-                    fail : StencilOperation.KEEP,
-                    zFail : StencilOperation.KEEP,
-                    zPass : StencilOperation.KEEP
+                    fail : WebGLRenderingContext.KEEP,
+                    zFail : WebGLRenderingContext.KEEP,
+                    zPass : WebGLRenderingContext.KEEP
                 }
             },
             sampleCoverage : {
                 enabled : false,
                 value : 1.0,
                 invert : false
-            },
-            dither : true
+            }
         };
 
         var rs = context.createRenderState();
@@ -161,7 +149,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(defaultRS.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
-        expect(rs.dither).toEqual(defaultRS.dither);
     });
 
     it('creates with all render states', function() {
@@ -169,7 +156,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             cull : {
                 enabled : true,
-                face : CullFace.FRONT
+                face : WebGLRenderingContext.FRONT
             },
             lineWidth : context.maximumAliasedLineWidth,
             polygonOffset : {
@@ -192,7 +179,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : true,
-                func : DepthFunction.GREATER
+                func : WebGLRenderingContext.GREATER
             },
             colorMask : {
                 red : false,
@@ -210,36 +197,35 @@ defineSuite([
                     blue : 1.0,
                     alpha : 1.0
                 },
-                equationRgb : BlendEquation.SUBTRACT,
-                equationAlpha : BlendEquation.SUBTRACT,
-                functionSourceRgb : BlendFunction.ZERO,
-                functionSourceAlpha : BlendFunction.ZERO,
-                functionDestinationRgb : BlendFunction.ONE,
-                functionDestinationAlpha : BlendFunction.ONE
+                equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
+                equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
+                functionSourceRgb : WebGLRenderingContext.ZERO,
+                functionSourceAlpha : WebGLRenderingContext.ZERO,
+                functionDestinationRgb : WebGLRenderingContext.ONE,
+                functionDestinationAlpha : WebGLRenderingContext.ONE
             },
             stencilTest : {
                 enabled : true,
-                frontFunction : StencilFunction.NEVER,
-                backFunction : StencilFunction.NEVER,
+                frontFunction : WebGLRenderingContext.NEVER,
+                backFunction : WebGLRenderingContext.NEVER,
                 reference : 1,
                 mask : 0,
                 frontOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
+                    fail : WebGLRenderingContext.REPLACE,
+                    zFail : WebGLRenderingContext.REPLACE,
+                    zPass : WebGLRenderingContext.REPLACE
                 },
                 backOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
+                    fail : WebGLRenderingContext.REPLACE,
+                    zFail : WebGLRenderingContext.REPLACE,
+                    zPass : WebGLRenderingContext.REPLACE
                 }
             },
             sampleCoverage : {
                 enabled : true,
                 value : 0.5,
                 invert : true
-            },
-            dither : false
+            }
         };
 
         var rs = context.createRenderState(r);
@@ -291,7 +277,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
-        expect(rs.dither).toEqual(r.dither);
     });
 
     it('creates with some render states', function() {
@@ -353,7 +338,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(defaultRS.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(defaultRS.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(defaultRS.sampleCoverage.invert);
-        expect(rs.dither).toEqual(defaultRS.dither);
     });
 
     it('caches render states', function() {
@@ -363,14 +347,14 @@ defineSuite([
         var rs3 = context.createRenderState({
             depthTest : {
                 enabled : false,
-                func : DepthFunction.LESS
+                func : WebGLRenderingContext.LESS
             }
         });
         // rs4 is a cache miss since it has a different depthTest
         var rs4 = context.createRenderState({
             depthTest : {
                 enabled : true,
-                func : DepthFunction.NEVER
+                func : WebGLRenderingContext.NEVER
             }
         });
         expect(rs2).toBe(rs);
@@ -401,7 +385,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.minimumAliasedLineWidth - 1
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to create (large lineWidth)', function() {
@@ -409,7 +393,7 @@ defineSuite([
             context.createRenderState({
                 lineWidth : context.maximumAliasedLineWidth + 1
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('fails to create (negative scissorTest.rectangle.width)', function() {
@@ -676,7 +660,7 @@ defineSuite([
             frontFace : WindingOrder.CLOCKWISE,
             cull : {
                 enabled : true,
-                face : CullFace.FRONT
+                face : WebGLRenderingContext.FRONT
             },
             lineWidth : context.maximumAliasedLineWidth,
             polygonOffset : {
@@ -699,7 +683,7 @@ defineSuite([
             },
             depthTest : {
                 enabled : true,
-                func : DepthFunction.GREATER
+                func : WebGLRenderingContext.GREATER
             },
             colorMask : {
                 red : false,
@@ -717,36 +701,35 @@ defineSuite([
                     blue : 1.0,
                     alpha : 1.0
                 },
-                equationRgb : BlendEquation.SUBTRACT,
-                equationAlpha : BlendEquation.SUBTRACT,
-                functionSourceRgb : BlendFunction.ZERO,
-                functionSourceAlpha : BlendFunction.ZERO,
-                functionDestinationRgb : BlendFunction.ONE,
-                functionDestinationAlpha : BlendFunction.ONE
+                equationRgb : WebGLRenderingContext.FUNC_SUBTRACT,
+                equationAlpha : WebGLRenderingContext.FUNC_SUBTRACT,
+                functionSourceRgb : WebGLRenderingContext.ZERO,
+                functionSourceAlpha : WebGLRenderingContext.ZERO,
+                functionDestinationRgb : WebGLRenderingContext.ONE,
+                functionDestinationAlpha : WebGLRenderingContext.ONE
             },
             stencilTest : {
                 enabled : true,
-                frontFunction : StencilFunction.NEVER,
-                backFunction : StencilFunction.NEVER,
+                frontFunction : WebGLRenderingContext.NEVER,
+                backFunction : WebGLRenderingContext.NEVER,
                 reference : 1,
                 mask : 0,
                 frontOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
+                    fail : WebGLRenderingContext.REPLACE,
+                    zFail : WebGLRenderingContext.REPLACE,
+                    zPass : WebGLRenderingContext.REPLACE
                 },
                 backOperation : {
-                    fail : StencilOperation.REPLACE,
-                    zFail : StencilOperation.REPLACE,
-                    zPass : StencilOperation.REPLACE
+                    fail : WebGLRenderingContext.REPLACE,
+                    zFail : WebGLRenderingContext.REPLACE,
+                    zPass : WebGLRenderingContext.REPLACE
                 }
             },
             sampleCoverage : {
                 enabled : true,
                 value : 0.5,
                 invert : true
-            },
-            dither : false
+            }
         };
 
         var r2 = context.createRenderState(r);
@@ -799,7 +782,6 @@ defineSuite([
         expect(rs.sampleCoverage.enabled).toEqual(r.sampleCoverage.enabled);
         expect(rs.sampleCoverage.value).toEqual(r.sampleCoverage.value);
         expect(rs.sampleCoverage.invert).toEqual(r.sampleCoverage.invert);
-        expect(rs.dither).toEqual(r.dither);
     });
 
 }, 'WebGL');

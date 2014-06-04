@@ -19,7 +19,7 @@ define([
      * @exports sanitize
      *
      * @see TaskProcessor
-     * @see <a href='http://www.w3.org/TR/workers/'>Web Workers</a>
+     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
      */
     var sanitizeHtml = function(html) {
         if (!defined(html_sanitize)) {

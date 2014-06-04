@@ -1,12 +1,12 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defined',
-        './DeveloperError',
-        './Cartesian3'
+        './DeveloperError'
     ], function(
+        Cartesian3,
         defined,
-        DeveloperError,
-        Cartesian3) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -20,16 +20,16 @@ define([
     /**
      * Solves a tridiagonal system of linear equations.
      *
-     * @param {Array} diagonal An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
-     * @param {Array} lower An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
-     * @param {Array} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
-     * @param {Array} right An array of Cartesians with length <code>n</code> that is the right side of the system of equations.
+     * @param {Number[]} diagonal An array with length <code>n</code> that contains the diagonal of the coefficient matrix.
+     * @param {Number[]} lower An array with length <code>n - 1</code> that contains the lower diagonal of the coefficient matrix.
+     * @param {Number[]} upper An array with length <code>n - 1</code> that contains the upper diagonal of the coefficient matrix.
+     * @param {Cartesian3[]} right An array of Cartesians with length <code>n</code> that is the right side of the system of equations.
      *
      * @exception {DeveloperError} diagonal and right must have the same lengths.
      * @exception {DeveloperError} lower and upper must have the same lengths.
      * @exception {DeveloperError} lower and upper must be one less than the length of diagonal.
      *
-     * @returns {Array} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
+     * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
      *
      * @performance Linear time.
      *

@@ -1,34 +1,40 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/jsonp',
-        '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicProjection',
+        '../Core/GeographicTilingScheme',
+        '../Core/jsonp',
+        '../Core/Rectangle',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorProjection',
+        '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './DiscardMissingTileImagePolicy',
-        './GeographicTilingScheme',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme',
-        './Credit',
-        '../ThirdParty/when'
+        './ImageryProvider'
     ], function(
+        Cartesian2,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
-        jsonp,
-        Cartesian2,
         DeveloperError,
         Event,
-        DiscardMissingTileImagePolicy,
+        GeographicProjection,
         GeographicTilingScheme,
-        ImageryProvider,
+        jsonp,
+        Rectangle,
         TileProviderError,
+        WebMercatorProjection,
         WebMercatorTilingScheme,
-        Credit,
-        when) {
+        when,
+        DiscardMissingTileImagePolicy,
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -38,8 +44,8 @@ define([
      * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
-     * @param {String} description.url The URL of the ArcGIS MapServer service.
-     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
+     * @param {String} options.url The URL of the ArcGIS MapServer service.
+     * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
      *        {@link DiscardMissingTileImagePolicy} is used for tiled map servers, and a
      *        {@link NeverTileDiscardPolicy} is used for non-tiled map servers.  In the former case,
@@ -50,9 +56,9 @@ define([
      *        these defaults should be correct tile discarding for a standard ArcGIS Server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
-     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Boolean} [description.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
+     * @param {Boolean} [options.usePreCachedTilesIfAvailable=true] If true, the server's pre-cached
      *        tiles are used if they are available.  If false, any pre-cached tiles are ignored and the
      *        'export' service is used.
      *
@@ -63,33 +69,34 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://resources.esri.com/help/9.3/arcgisserver/apis/rest/'>ArcGIS Server REST API</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      */
-    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(description) {
-        description = defaultValue(description, {});
+    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(options) {
+        options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = description.url;
-        this._tileDiscardPolicy = description.tileDiscardPolicy;
-        this._proxy = description.proxy;
+        this._url = options.url;
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._proxy = options.proxy;
 
         this._tileWidth = undefined;
         this._tileHeight = undefined;
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
         this._credit = undefined;
-        this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
+        this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+        this._rectangle = undefined;
 
         this._errorEvent = new Event();
 
@@ -105,6 +112,7 @@ define([
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
+                that._rectangle = that._tilingScheme.rectangle;
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -120,6 +128,28 @@ define([
                     return;
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
+
+                if (defined(data.fullExtent)) {
+                    var projection = that._tilingScheme.projection;
+
+                    if (defined(data.fullExtent.spatialReference) && defined(data.fullExtent.spatialReference.wkid)) {
+                        if (data.fullExtent.spatialReference.wkid === 102100) {
+                            projection = new WebMercatorProjection();
+                        } else if (data.fullExtent.spatialReference.wkid === 4326) {
+                            projection = new GeographicProjection();
+                        } else {
+                            var extentMessage = 'fullExtent.spatialReference WKID ' + data.fullExtent.spatialReference.wkid + ' is not supported.';
+                            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, extentMessage, undefined, undefined, undefined, requestMetadata);
+                            return;
+                        }
+                    }
+
+                    var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
+                    var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                    that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+                } else {
+                    that._rectangle = that._tilingScheme.rectangle;
+                }
 
                 // Install the default tile discard policy if none has been supplied.
                 if (!defined(that._tileDiscardPolicy)) {
@@ -307,7 +337,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.rectangle;
+                return this._rectangle;
             }
         },
 
@@ -370,7 +400,7 @@ define([
         /**
          * Gets a value indicating whether this imagery provider is using pre-cached tiles from the
          * ArcGIS MapServer.  If the imagery provider is not yet ready ({@link ArcGisMapServerImageryProvider#ready}), this function
-         * will return the value of `description.usePreCachedTilesIfAvailable`, even if the MapServer does
+         * will return the value of `options.usePreCachedTilesIfAvailable`, even if the MapServer does
          * not have pre-cached tiles.
          * @memberof ArcGisMapServerImageryProvider.prototype
          * @returns {Boolean}
@@ -387,6 +417,7 @@ define([
          * be ignored.  If this property is true, any images without an alpha channel will be treated
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
+         * @memberof ArcGisMapServerImageryProvider.prototype
          * @type {Boolean}
          */
         hasAlphaChannel : {

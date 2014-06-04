@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './defined',
+        './Cartesian3',
         './defaultValue',
-        './Cartesian3'
-       ], function(
-         DeveloperError,
-         defined,
-         defaultValue,
-         Cartesian3) {
+        './defined',
+        './DeveloperError'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**

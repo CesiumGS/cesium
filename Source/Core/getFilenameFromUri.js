@@ -1,11 +1,12 @@
 /*global define*/
-define(['./defined',
-        './DeveloperError',
-        '../ThirdParty/Uri'
+define([
+        '../ThirdParty/Uri',
+        './defined',
+        './DeveloperError'
     ], function(
+        Uri,
         defined,
-        DeveloperError,
-        Uri) {
+        DeveloperError) {
     "use strict";
 
     /**

@@ -1,22 +1,22 @@
 /*global define*/
 define([
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/freezeObject'
     ], function(
         Color,
+        defaultValue,
         freezeObject) {
     "use strict";
 
     /**
      * Represents a command to the renderer for clearing a framebuffer.
      *
-     * @alias ClearCommand
-     * @constructor
-     *
-     * @see DrawCommand
-     * @see PassState
+     * @private
      */
-    var ClearCommand = function() {
+    var ClearCommand = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The value to clear the color buffer to.  When <code>undefined</code>, the color buffer is not cleared.
          *
@@ -24,7 +24,7 @@ define([
          *
          * @default undefined
          */
-        this.color = undefined;
+        this.color = options.color;
 
         /**
          * The value to clear the depth buffer to.  When <code>undefined</code>, the depth buffer is not cleared.
@@ -33,7 +33,7 @@ define([
          *
          * @default undefined
          */
-        this.depth = undefined;
+        this.depth = options.depth;
 
         /**
          * The value to clear the stencil buffer to.  When <code>undefined</code>, the stencil buffer is not cleared.
@@ -42,11 +42,11 @@ define([
          *
          * @default undefined
          */
-        this.stencil = undefined;
+        this.stencil = options.stencil;
 
         /**
          * The render state to apply when executing the clear command.  The following states affect clearing:
-         * scissor test, color mask, depth mask, stencil mask, and dither.  When the render state is
+         * scissor test, color mask, depth mask, and stencil mask.  When the render state is
          * <code>undefined</code>, the default render state is used.
          *
          * @type {RenderState}
@@ -55,7 +55,7 @@ define([
          *
          * @see Context#createRenderState
          */
-        this.renderState = undefined;
+        this.renderState = options.renderState;
 
         /**
          * The framebuffer to clear.
@@ -64,7 +64,7 @@ define([
          *
          * @default undefined
          */
-        this.framebuffer = undefined;
+        this.framebuffer = options.framebuffer;
 
         /**
          * The object who created this command.  This is useful for debugging command
@@ -78,13 +78,8 @@ define([
          *
          * @see Scene#debugCommandFilter
          */
-        this.owner = undefined;
+        this.owner = options.owner;
     };
-
-    var all = new ClearCommand();
-    all.color = new Color(0.0, 0.0, 0.0, 0.0);
-    all.depth = 1.0;
-    all.stencil = 0.0;
 
     /**
      * Clears color to (0.0, 0.0, 0.0, 0.0); depth to 1.0; and stencil to 0.
@@ -93,16 +88,12 @@ define([
      *
      * @constant
      */
-    ClearCommand.ALL = freezeObject(all);
+    ClearCommand.ALL = freezeObject(new ClearCommand({
+        color : new Color(0.0, 0.0, 0.0, 0.0),
+        depth : 1.0,
+        stencil : 0.0
+    }));
 
-    /**
-     * Executes the clear command.
-     *
-     * @memberof ClearCommand
-     *
-     * @param {Context} context The renderer context in which to clear.
-     * @param {PassState} [passState] The state for the current rendering pass.
-     */
     ClearCommand.prototype.execute = function(context, passState) {
         context.clear(this, passState);
     };

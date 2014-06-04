@@ -31,15 +31,18 @@ require(['Cesium'], function(Cesium) {
     var label;
     var billboard;
 
-    function addBillboard(scene, ellipsoid) {
+    function addBillboard(scene) {
         var primitives = scene.primitives;
         var image = new Image();
         image.onload = function() {
             var billboards = new Cesium.BillboardCollection();
-            var textureAtlas = scene.createTextureAtlas({image : image});
+            var textureAtlas = new Cesium.TextureAtlas({
+                scene : scene,
+                image : image
+            });
             billboards.textureAtlas = textureAtlas;
             billboard = billboards.add({
-                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
                 imageIndex : 0
             });
             primitives.add(billboards);
@@ -47,36 +50,36 @@ require(['Cesium'], function(Cesium) {
         image.src = '../images/Cesium_Logo_overlay.png';
     }
 
-    function addOverlappingPolygons(scene, ellipsoid) {
+    function addOverlappingPolygons(scene) {
         var primitives = scene.primitives;
 
         // Add primitives from bottom to top.
         var redPolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-60.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-60.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-70.0, 40.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -70.0, 30.0,
+                -60.0, 30.0,
+                -60.0, 40.0,
+                -70.0, 40.0
             ])
         }));
         redPolygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
 
         var bluePolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-75.0, 34.0),
-                Cesium.Cartographic.fromDegrees(-63.0, 34.0),
-                Cesium.Cartographic.fromDegrees(-63.0, 40.0),
-                Cesium.Cartographic.fromDegrees(-75.0, 40.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -75.0, 34.0,
+                -63.0, 34.0,
+                -63.0, 40.0,
+                -75.0, 40.0
             ])
         }));
         bluePolygon.material.uniforms.color = new Cesium.Color(0.0, 0.0, 1.0, 0.5);
 
         var greenPolygon = primitives.add(new Cesium.Polygon({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                Cesium.Cartographic.fromDegrees(-67.0, 36.0),
-                Cesium.Cartographic.fromDegrees(-55.0, 36.0),
-                Cesium.Cartographic.fromDegrees(-55.0, 30.0),
-                Cesium.Cartographic.fromDegrees(-67.0, 30.0)
+            positions : Cesium.Cartesian3.fromDegreesArray([
+                -67.0, 36.0,
+                -55.0, 36.0,
+                -55.0, 30.0,
+                -67.0, 30.0
             ])
         }));
         greenPolygon.material.uniforms.color = new Cesium.Color(0.0, 1.0, 0.0, 0.5);
@@ -93,13 +96,13 @@ require(['Cesium'], function(Cesium) {
     }
 
     function cleanup() {
-        widget.scene.primitives.removeAll();
+        viewer.scene.primitives.removeAll();
         handler = handler && handler.destroy();
     }
 
-    function pickCartographicPosition(scene, ellipsoid) {
+    function pickCartographicPosition(scene) {
         Sandcastle.declare(pickCartographicPosition);   // For highlighting in Sandcastle.
-
+        var ellipsoid = scene.globe.ellipsoid;
         var labels = new Cesium.LabelCollection();
         label = labels.add();
         scene.primitives.add(labels);
@@ -119,9 +122,9 @@ require(['Cesium'], function(Cesium) {
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
-    function pickBillboard(scene, ellipsoid) {
+    function pickBillboard(scene) {
         Sandcastle.declare(pickBillboard);  // For highlighting in Sandcastle.
-        addBillboard(scene, ellipsoid);
+        addBillboard(scene);
 
         // If the mouse is over the billboard, change its scale and color
         handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
@@ -142,9 +145,9 @@ require(['Cesium'], function(Cesium) {
         );
     }
 
-    function animateBillboardOnPick(scene, ellipsoid) {
+    function animateBillboardOnPick(scene) {
         Sandcastle.declare(animateBillboardOnPick); // For highlighting in Sandcastle.
-        addBillboard(scene, ellipsoid);
+        addBillboard(scene);
 
         var animation;
 
@@ -214,11 +217,11 @@ require(['Cesium'], function(Cesium) {
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
-    function fadeSensorOnClick(scene, ellipsoid) {
+    function fadeSensorOnClick(scene) {
         Sandcastle.declare(fadeSensorOnClick); // For highlighting in Sandcastle.
 
         // Setup - Add the sensor.
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
+        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(Cesium.Cartesian3.fromDegrees(-90.0, 0.0));
         modelMatrix = Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
         var sensors = new Cesium.SensorVolumeCollection();
         var sensor = sensors.addRectangularPyramid({
@@ -251,9 +254,9 @@ require(['Cesium'], function(Cesium) {
             }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
     }
 
-    function layerCompositePrimitive(scene, ellipsoid) {
-        Sandcastle.declare(layerCompositePrimitive);    // For highlighting in Sandcastle.
-        addOverlappingPolygons(scene, ellipsoid);
+    function layerPrimitiveCollection(scene) {
+        Sandcastle.declare(layerPrimitiveCollection);    // For highlighting in Sandcastle.
+        addOverlappingPolygons(scene);
 
         var primitives = scene.primitives;
         // Move the primitive that the mouse is over to the top.
@@ -267,9 +270,9 @@ require(['Cesium'], function(Cesium) {
     }
 
     var originalColor= {};
-    function multiPickPrimitives(scene, ellipsoid) {
+    function multiPickPrimitives(scene) {
         Sandcastle.declare(multiPickPrimitives);    // For highlighting in Sandcastle.
-        addOverlappingPolygons(scene, ellipsoid);
+        addOverlappingPolygons(scene);
 
         var primitives = scene.primitives;
         // Move the primitive that the mouse is over to the top.
@@ -316,178 +319,45 @@ require(['Cesium'], function(Cesium) {
 
     }
 
-    function drawRectangle(scene, ellipsoid) {
-        Sandcastle.declare(drawRectangle);    // For highlighting in Sandcastle.
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
 
-        var DrawRectangleHelper = function(scene, handler) {
-            this._canvas = scene.canvas;
-            this._scene = scene;
-            this._ellipsoid = scene.globe.ellipsoid;
-            this._finishHandler = handler;
-            this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
-            this._rectanglePrimitive = new Cesium.RectanglePrimitive();
-            this._rectanglePrimitive.asynchronous = false;
-            this._scene.primitives.add(this._rectanglePrimitive);
-        };
-
-        DrawRectangleHelper.prototype.enableInput = function() {
-            var controller = this._scene.screenSpaceCameraController;
-            controller.enableInputs = true;
-        };
-
-        DrawRectangleHelper.prototype.disableInput = function() {
-            var controller = this._scene.screenSpaceCameraController;
-            controller.enableInputs = false;
-        };
-
-        DrawRectangleHelper.prototype.getRectangle = function(mn, mx) {
-            var e = new Cesium.Rectangle();
-
-            // Re-order so west < east and south < north
-            e.west = Math.min(mn.longitude, mx.longitude);
-            e.east = Math.max(mn.longitude, mx.longitude);
-            e.south = Math.min(mn.latitude, mx.latitude);
-            e.north = Math.max(mn.latitude, mx.latitude);
-
-            // Check for approx equal (shouldn't require abs due to re-order)
-            var epsilon = Cesium.Math.EPSILON7;
-
-            if ((e.east - e.west) < epsilon) {
-                e.east += epsilon * 2.0;
-            }
-
-            if ((e.north - e.south) < epsilon) {
-                e.north += epsilon * 2.0;
-            }
-
-            return e;
-        };
-
-        DrawRectangleHelper.prototype.setPolyPts = function(mn, mx) {
-            this._rectanglePrimitive.rectangle = this.getRectangle(mn, mx);
-        };
-
-        DrawRectangleHelper.prototype.setToDegrees = function(w, s, e, n) {
-            var toRad = Cesium.Math.toRadians;
-            var mn = new Cesium.Cartographic(toRad(w), toRad(s));
-            var mx = new Cesium.Cartographic(toRad(e), toRad(n));
-            this.setPolyPts(mn, mx);
-        };
-
-        DrawRectangleHelper.prototype.handleRegionStop = function(movement) {
-            this.enableInput();
-            var cartesian = this._scene.camera.pickEllipsoid(movement.position,
-                    this._ellipsoid);
-            if (cartesian) {
-                this._click2 = this._ellipsoid.cartesianToCartographic(cartesian);
-            }
-            this._mouseHandler.destroy();
-
-            this._finishHandler(this.getRectangle(this._click1, this._click2));
-        };
-
-        DrawRectangleHelper.prototype.handleRegionInter = function(movement) {
-            var cartesian = this._scene.camera.pickEllipsoid(movement.endPosition,
-                    this._ellipsoid);
-            if (cartesian) {
-                var cartographic = this._ellipsoid.cartesianToCartographic(cartesian);
-                this.setPolyPts(this._click1, cartographic);
-            }
-        };
-
-        DrawRectangleHelper.prototype.handleRegionStart = function(movement) {
-            var cartesian = this._scene.camera.pickEllipsoid(movement.position,
-                    this._ellipsoid);
-            if (cartesian) {
-                var that = this;
-                this._click1 = this._ellipsoid.cartesianToCartographic(cartesian);
-                this._mouseHandler.setInputAction(function(movement) {
-                    that.handleRegionStop(movement);
-                }, Cesium.ScreenSpaceEventType.LEFT_UP);
-                this._mouseHandler.setInputAction(function(movement) {
-                    that.handleRegionInter(movement);
-                }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-            }
-        };
-
-        DrawRectangleHelper.prototype.start = function() {
-            this.disableInput();
-
-            var that = this;
-
-            // Now wait for start
-            this._mouseHandler.setInputAction(function(movement) {
-                that.handleRegionStart(movement);
-            }, Cesium.ScreenSpaceEventType.LEFT_DOWN);
-        };
-
-        // Actual instantiation...
-        var myHandler = function(e) {
-            var labels = new Cesium.LabelCollection();
-            label = labels.add();
-            scene.primitives.add(labels);
-
-            label.show = true;
-            label.text = '(' +
-                Cesium.Math.toDegrees(e.west).toFixed(2) + ', ' +
-                Cesium.Math.toDegrees(e.south).toFixed(2) + ', ' +
-                Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
-                Cesium.Math.toDegrees(e.north).toFixed(2) + ')';
-            label.scale = 0.7;
-            label.position = widget.scene.globe.ellipsoid.cartographicToCartesian(Cesium.Rectangle.getCenter(e));
-            label.horizontalOrigin = Cesium.HorizontalOrigin.CENTER;
-        };
-        var drawRectangleHelper = new DrawRectangleHelper(scene, myHandler);
-        drawRectangleHelper.start();
-    }
-
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    var scene = widget.scene;
-    var ellipsoid = scene.globe.ellipsoid;
-
-    pickCartographicPosition(scene, ellipsoid);
+    pickCartographicPosition(scene);
 
     Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
         cleanup();
-        pickCartographicPosition(scene, ellipsoid);
+        pickCartographicPosition(scene);
         Sandcastle.highlight(pickCartographicPosition);
     });
 
     Sandcastle.addToolbarButton('Pick Billboard', function() {
         cleanup();
-        pickBillboard(scene, ellipsoid);
+        pickBillboard(scene);
         Sandcastle.highlight(pickBillboard);
     });
 
     Sandcastle.addToolbarButton('Animate Billboard on Pick', function() {
         cleanup();
-        animateBillboardOnPick(scene, ellipsoid);
+        animateBillboardOnPick(scene);
         Sandcastle.highlight(animateBillboardOnPick);
     });
 
     Sandcastle.addToolbarButton('Fade Sensor on Click', function() {
         cleanup();
-        fadeSensorOnClick(scene, ellipsoid);
+        fadeSensorOnClick(scene);
         Sandcastle.highlight(fadeSensorOnClick);
     });
 
     Sandcastle.addToolbarButton('Layer Primitives', function() {
         cleanup();
-        layerCompositePrimitive(scene, ellipsoid);
-        Sandcastle.highlight(layerCompositePrimitive);
+        layerPrimitiveCollection(scene);
+        Sandcastle.highlight(layerPrimitiveCollection);
     });
 
     Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         cleanup();
-        multiPickPrimitives(scene, ellipsoid);
+        multiPickPrimitives(scene);
         Sandcastle.highlight(multiPickPrimitives);
-    });
-
-    Sandcastle.addToolbarButton('Drag to Draw Rectangle', function() {
-        cleanup();
-        drawRectangle(scene, ellipsoid);
-        Sandcastle.highlight(drawRectangle);
     });
 
     Sandcastle.finishedLoading();

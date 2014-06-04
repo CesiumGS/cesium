@@ -1,16 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicModel',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Color',
-             'Core/Cartesian3'
-         ], function(
-             DynamicModel,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Color,
-             Cartesian3) {
+        'DynamicScene/DynamicModel',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicModel,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -74,6 +68,6 @@ defineSuite([
         var target = new DynamicModel();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

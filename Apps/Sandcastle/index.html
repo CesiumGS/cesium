@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -27,7 +27,7 @@
     <script src="../../ThirdParty/CodeMirror-2.24/mode/xml/xml.js"></script>
     <script src="../../ThirdParty/CodeMirror-2.24/mode/htmlmixed/htmlmixed.js"></script>
 
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.3/dojo/dojo.js"></script>
 
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
@@ -106,7 +106,7 @@
             <input data-dojo-type="dijit.form.TextBox" type="text" id="search" name="search" data-dojo-props="trim:true, placeHolder:'Search Gallery', intermediateChanges:true"/>            
         </div>
         <div id="codeContainer" data-dojo-type="dijit.layout.TabContainer" data-dojo-props="region: 'leading', splitter: true">
-            <script type='dojo/method' event='_onKeyPress'></script>
+            <script type='dojo/method' event='_onKeyDown'></script>
             <div id="jsContainer" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="title: 'JavaScript code'">
                 <textarea id="code" name="code">// Select a demo from the gallery to load.
                 </textarea>

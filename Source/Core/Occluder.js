@@ -7,8 +7,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
-        './Rectangle',
         './Math',
+        './Rectangle',
         './Visibility'
     ], function(
         BoundingSphere,
@@ -18,8 +18,8 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         CesiumMath,
+        Rectangle,
         Visibility) {
     "use strict";
 
@@ -167,7 +167,7 @@ define([
      *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      *
-     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -201,7 +201,7 @@ define([
     *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     *
-    * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+    * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -259,7 +259,7 @@ define([
      *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
      *
-     * @returns {Enumeration} Visibility.NONE if the occludee is not visible,
+     * @returns {Number} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
      * @example
@@ -334,7 +334,7 @@ define([
      *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
-     * @param {Array} positions List of altitude points on the horizon near the surface of the occluder.
+     * @param {Cartesian3[]} positions List of altitude points on the horizon near the surface of the occluder.
      *
      * @exception {DeveloperError} <code>positions</code> must contain at least one element.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.

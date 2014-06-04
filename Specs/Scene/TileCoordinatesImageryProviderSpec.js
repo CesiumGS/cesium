@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TileCoordinatesImageryProvider',
-         'Scene/GeographicTilingScheme',
-         'Scene/ImageryProvider',
-         'Scene/WebMercatorTilingScheme',
-         'Core/defined',
-         'ThirdParty/when'
-     ], function(
-         TileCoordinatesImageryProvider,
-         GeographicTilingScheme,
-         ImageryProvider,
-         WebMercatorTilingScheme,
-         defined,
-         when) {
+        'Scene/TileCoordinatesImageryProvider',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/WebMercatorTilingScheme',
+        'Scene/ImageryProvider',
+        'ThirdParty/when'
+    ], function(
+        TileCoordinatesImageryProvider,
+        defined,
+        GeographicTilingScheme,
+        WebMercatorTilingScheme,
+        ImageryProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -11,9 +11,9 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
+        '../Core/PixelFormat',
         '../Renderer/RenderbufferFormat',
-        '../Renderer/BlendingState',
+        '../Scene/BlendingState',
         '../Shaders/PostProcessFilters/PassThrough',
         '../Shaders/ViewportQuadVS'
     ], function(

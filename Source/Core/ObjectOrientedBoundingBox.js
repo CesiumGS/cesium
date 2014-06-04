@@ -74,9 +74,9 @@ define([
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
      * @memberof ObjectOrientedBoundingBox
      *
-     * @param {Array} positions List of {@link Cartesian3} points that the bounding box will enclose.
+     * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
-     * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
+     * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
@@ -173,7 +173,7 @@ define([
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
      * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
-     * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
+     * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      *
      * @example
      * // Compute an object oriented bounding box enclosing two points.
@@ -214,7 +214,7 @@ define([
      *
      * @param {ObjectOrientedBoundingBox} box The bounding box to duplicate.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
-     * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
+     * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
      */
     ObjectOrientedBoundingBox.clone = function(box, result) {
         if (!defined(box)) {
@@ -276,7 +276,7 @@ define([
      *
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
-     * @return {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they intersects each other <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.intersect = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
@@ -360,7 +360,7 @@ define([
      *
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.equals = function(left, right) {
         return (left === right) ||
@@ -376,7 +376,7 @@ define([
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
-     * @return {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
+     * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
      */
     ObjectOrientedBoundingBox.prototype.clone = function(result) {
         return ObjectOrientedBoundingBox.clone(this, result);
@@ -388,7 +388,7 @@ define([
      * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} [right] The right hand side ObjectOrientedBoundingBox.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     ObjectOrientedBoundingBox.prototype.equals = function(right) {
         return ObjectOrientedBoundingBox.equals(this, right);

@@ -3,8 +3,8 @@ define([
         '../Core/BoundingSphere',
         '../Core/Color',
         '../Core/ComponentDatatype',
-        '../Core/defined',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
@@ -19,8 +19,8 @@ define([
         BoundingSphere,
         Color,
         ComponentDatatype,
-        defined,
         defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
@@ -115,7 +115,7 @@ define([
                     var otherAttribute = instances[i].attributes[name];
 
                     if (!defined(otherAttribute) ||
-                        (attribute.componentDatatype.value !== otherAttribute.componentDatatype.value) ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
 
@@ -221,7 +221,7 @@ define([
         var name;
         if (!allow3DOnly) {
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
                     var name3D = name + '3D';
                     var name2D = name + '2D';
 
@@ -234,7 +234,7 @@ define([
             }
         } else {
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                if (attributes.hasOwnProperty(name) && attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
                     GeometryPipeline.encodeAttribute(geometry, name, name + '3DHigh', name + '3DLow');
                 }
             }
@@ -259,7 +259,7 @@ define([
             var attribute = attributes[name];
 
             var componentDatatype = attribute.componentDatatype;
-            if (componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+            if (componentDatatype === ComponentDatatype.DOUBLE) {
                 componentDatatype = ComponentDatatype.FLOAT;
             }
 
@@ -442,7 +442,7 @@ define([
             var geometry = items[i];
             var attributes = geometry.attributes;
 
-            count += 3 + BoundingSphere.packedLength + geometry.indices.length;
+            count += 3 + BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
@@ -491,7 +491,7 @@ define([
                 var name = attributesToWrite[q];
                 var attribute = attributes[name];
                 packedData[count++] = stringHash[name];
-                packedData[count++] = attribute.componentDatatype.value;
+                packedData[count++] = attribute.componentDatatype;
                 packedData[count++] = attribute.componentsPerAttribute;
                 packedData[count++] = attribute.normalize ? 1 : 0;
                 packedData[count++] = attribute.values.length;
@@ -499,9 +499,13 @@ define([
                 count += attribute.values.length;
             }
 
-            packedData[count++] = geometry.indices.length;
-            packedData.set(geometry.indices, count);
-            count += geometry.indices.length;
+            var indicesLength = defined(geometry.indices) ? geometry.indices.length : 0;
+            packedData[count++] = indicesLength;
+
+            if (indicesLength > 0) {
+                packedData.set(geometry.indices, count);
+                count += indicesLength;
+            }
         }
 
         transferableObjects.push(packedData.buffer);
@@ -537,7 +541,7 @@ define([
             var numAttributes = packedGeometry[packedGeometryIndex++];
             for (i = 0; i < numAttributes; i++) {
                 var name = stringTable[packedGeometry[packedGeometryIndex++]];
-                var componentDatatype = ComponentDatatype.fromValue(packedGeometry[packedGeometryIndex++]);
+                var componentDatatype = packedGeometry[packedGeometryIndex++];
                 componentsPerAttribute = packedGeometry[packedGeometryIndex++];
                 var normalize = packedGeometry[packedGeometryIndex++] !== 0;
 
@@ -555,11 +559,15 @@ define([
                 });
             }
 
-            var numberOfVertices = values.length / componentsPerAttribute;
+            var indices;
             length = packedGeometry[packedGeometryIndex++];
-            var indices = IndexDatatype.createTypedArray(numberOfVertices, length);
-            for (i = 0; i < length; i++) {
-                indices[i] = packedGeometry[packedGeometryIndex++];
+
+            if (length > 0) {
+                var numberOfVertices = values.length / componentsPerAttribute;
+                indices = IndexDatatype.createTypedArray(numberOfVertices, length);
+                for (i = 0; i < length; i++) {
+                    indices[i] = packedGeometry[packedGeometryIndex++];
+                }
             }
 
             result[resultIndex++] = new Geometry({
@@ -639,7 +647,7 @@ define([
                 var name = attributesToWrite[q];
                 var attribute = attributes[name];
                 packedData[count++] = stringHash[name];
-                packedData[count++] = attribute.componentDatatype.value;
+                packedData[count++] = attribute.componentDatatype;
                 packedData[count++] = attribute.componentsPerAttribute;
                 packedData[count++] = attribute.normalize;
                 packedData[count++] = attribute.value.length;
@@ -670,7 +678,7 @@ define([
             var numAttributes = packedInstances[i++];
             for (var x = 0; x < numAttributes; x++) {
                 var name = stringTable[packedInstances[i++]];
-                var componentDatatype = ComponentDatatype.fromValue(packedInstances[i++]);
+                var componentDatatype = packedInstances[i++];
                 var componentsPerAttribute = packedInstances[i++];
                 var normalize = packedInstances[i++] !== 0;
                 var length = packedInstances[i++];

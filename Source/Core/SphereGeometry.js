@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './defaultValue',
         './Cartesian3',
+        './defaultValue',
         './EllipsoidGeometry'
     ], function(
-        defaultValue,
         Cartesian3,
+        defaultValue,
         EllipsoidGeometry) {
     "use strict";
 

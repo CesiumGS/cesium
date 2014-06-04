@@ -1,25 +1,25 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Scene/HorizontalOrigin',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
-        '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
-        DeveloperError,
-        defined,
-        destroyObject,
-        Color,
         Cartesian2,
         Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
+        HorizontalOrigin,
         LabelCollection,
         LabelStyle,
-        HorizontalOrigin,
         VerticalOrigin) {
     "use strict";
 
