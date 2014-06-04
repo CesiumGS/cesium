@@ -125,20 +125,20 @@ define([
             }
         });
 
-        /**
-         * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
-         * @param {Number} offset The offset in pixels.
-         * @returns {String}
-         */
-        InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
-            return (this.maxHeight - offset) + 'px';
-        };
-
         knockout.defineProperty(this, '_bodyless', {
             get : function() {
                 return !this._descriptionSanitizedHtml;
             }
         });
+    };
+
+    /**
+     * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.
+     * @param {Number} offset The offset in pixels.
+     * @returns {String}
+     */
+    InfoBoxViewModel.prototype.maxHeightOffset = function(offset) {
+        return (this.maxHeight - offset) + 'px';
     };
 
     var sanitizerTaskProcessor;
@@ -163,6 +163,8 @@ define([
     defineProperties(InfoBoxViewModel.prototype, {
         /**
          * Gets an {@link Event} that is fired when the user clicks the camera icon.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Event}
          */
         cameraClicked : {
             get : function() {
@@ -171,6 +173,8 @@ define([
         },
         /**
          * Gets an {@link Event} that is fired when the user closes the info box.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Event}
          */
         closeClicked : {
             get : function() {
@@ -179,6 +183,8 @@ define([
         },
         /**
          * Gets the HTML sanitization function to use for the selection description.
+         * @memberof InfoBoxViewModel.prototype
+         * @type {Function}
          */
         sanitizer : {
             get : function() {

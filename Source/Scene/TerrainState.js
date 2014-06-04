@@ -1,18 +1,18 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
      * @private
      */
     var TerrainState = {
-        FAILED : new Enumeration(0, 'FAILED'),
-        UNLOADED : new Enumeration(1, 'UNLOADED'),
-        RECEIVING : new Enumeration(2, 'RECEIVING'),
-        RECEIVED : new Enumeration(3, 'RECEIVED'),
-        TRANSFORMING : new Enumeration(4, 'TRANSFORMING'),
-        TRANSFORMED : new Enumeration(5, 'TRANSFORMED'),
-        READY : new Enumeration(6, 'READY')
+        FAILED : 0,
+        UNLOADED : 1,
+        RECEIVING : 2,
+        RECEIVED : 3,
+        TRANSFORMING : 4,
+        TRANSFORMED : 5,
+        READY : 6
     };
 
     return TerrainState;

@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/requestAnimationFrame',
-         'Core/cancelAnimationFrame'
-     ], function(
-         requestAnimationFrame,
-         cancelAnimationFrame) {
+        'Core/requestAnimationFrame',
+        'Core/cancelAnimationFrame'
+    ], function(
+        requestAnimationFrame,
+        cancelAnimationFrame) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

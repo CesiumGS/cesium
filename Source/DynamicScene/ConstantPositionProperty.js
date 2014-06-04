@@ -1,21 +1,22 @@
 /*global define*/
-define(['./PositionProperty',
+define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/ReferenceFrame'
+        '../Core/ReferenceFrame',
+        './PositionProperty'
     ], function(
-        PositionProperty,
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ReferenceFrame) {
+        ReferenceFrame,
+        PositionProperty) {
     "use strict";
 
     /**
@@ -61,7 +62,7 @@ define(['./PositionProperty',
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof ConstantPositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {

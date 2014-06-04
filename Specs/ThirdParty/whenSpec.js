@@ -1,5 +1,8 @@
 /*global defineSuite */
-defineSuite(['ThirdParty/when'], function(when) {
+defineSuite([
+        'ThirdParty/when'
+    ], function(
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

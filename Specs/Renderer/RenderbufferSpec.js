@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Renderer/RenderbufferFormat'
-     ], 'Renderer/Renderbuffer', function(
-         createContext,
-         destroyContext,
-         RenderbufferFormat) {
+        'Renderer/RenderbufferFormat',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Renderbuffer', function(
+        RenderbufferFormat,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -98,6 +98,6 @@ defineSuite([
 
         expect(function() {
             r.destroy();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

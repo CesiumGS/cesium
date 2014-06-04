@@ -1,26 +1,26 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType',
         './defaultValue',
-        './BoundingSphere',
+        './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './PrimitiveType'
     ], function(
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType,
         defaultValue,
-        BoundingSphere,
+        defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        PrimitiveType) {
     "use strict";
 
     var diffScratch = new Cartesian3();
@@ -34,8 +34,8 @@ define([
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      *
-     * @see BoxOutlineGeometry#fromDimensions
-     * @see BoxOutlineGeometry#createGeometry
+     * @see BoxOutlineGeometry.fromDimensions
+     * @see BoxOutlineGeometry.createGeometry
      *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
@@ -72,7 +72,7 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxOutlineGeometry#createGeometry
+     * @see BoxOutlineGeometry.createGeometry
      *
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({

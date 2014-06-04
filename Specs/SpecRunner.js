@@ -35,11 +35,11 @@ var afterAll;
 
     function getQueryParameter(name) {
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+        return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+    }
 
-        if (match) {
-            return decodeURIComponent(match[1].replace(/\+/g, ' '));
-        }
-        return null;
+    function defined(value) {
+        return value !== undefined;
     }
 
     // patch in beforeAll/afterAll functions
@@ -63,7 +63,7 @@ var afterAll;
 
     jasmine.Suite.prototype.beforeAll = function(beforeAllFunction) {
         beforeAllFunction.typeName = 'beforeAll';
-        if (typeof this.beforeAll_ === 'undefined') {
+        if (!defined(this.beforeAll_)) {
             this.beforeAll_ = [];
         }
         this.beforeAll_.unshift(beforeAllFunction);
@@ -71,7 +71,7 @@ var afterAll;
 
     jasmine.Suite.prototype.afterAll = function(afterAllFunction) {
         afterAllFunction.typeName = 'afterAll';
-        if (typeof this.afterAll_ === 'undefined') {
+        if (!defined(this.afterAll_)) {
             this.afterAll_ = [];
         }
         this.afterAll_.unshift(afterAllFunction);
@@ -109,7 +109,7 @@ var afterAll;
                 var results;
 
                 var beforeAll = this.beforeAll_;
-                if (typeof beforeAll !== 'undefined') {
+                if (defined(beforeAll)) {
                     var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
                     this.beforeSpec_ = beforeSpec;
                     results = function() {
@@ -123,7 +123,7 @@ var afterAll;
                 }
 
                 var afterAll = this.afterAll_;
-                if (typeof afterAll !== 'undefined') {
+                if (defined(afterAll)) {
                     var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
                     this.afterSpec_ = afterSpec;
                     results = function() {
@@ -279,12 +279,8 @@ var afterAll;
 
     function requireTests() {
         //specs is an array defined by SpecList.js
-        require([
-                 'Specs/addDefaultMatchers',
-                 'Specs/equalsMethodEqualityTester'
-             ].concat(specs), function(
-                 addDefaultMatchers,
-                 equalsMethodEqualityTester) {
+        var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
+        require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
             var env = jasmine.getEnv();
 
             env.beforeEach(addDefaultMatchers(!release));
@@ -292,19 +288,6 @@ var afterAll;
 
             createTests = function() {
                 var reporter = new jasmine.HtmlReporter();
-                var isSuiteFocused = jasmine.HtmlReporterHelpers.isSuiteFocused;
-                var suites = jasmine.getEnv().currentRunner().suites();
-
-                for ( var i = 1, insertPoint = 0, len = suites.length; i < len; i++) {
-                    var suite = suites[i];
-                    if (isSuiteFocused(suite)) {
-                        suites.splice(i, 1);
-                        suites.splice(insertPoint, 0, suite);
-                        insertPoint++;
-                        i--;
-                    }
-                }
-
                 env.addReporter(reporter);
                 env.specFilter = reporter.specFilter;
                 env.execute();

@@ -1,41 +1,42 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/EllipseGeometryUpdater',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/DynamicEllipse',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection',
-             'Core/ColorGeometryInstanceAttribute',
-             'Core/ShowGeometryInstanceAttribute',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/GridMaterialProperty',
-             'DynamicScene/SampledProperty',
-             'DynamicScene/SampledPositionProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Scene/CompositePrimitive'
-         ], function(
-             EllipseGeometryUpdater,
-             DynamicObject,
-             DynamicEllipse,
-             Cartesian3,
-             Color,
-             JulianDate,
-             TimeInterval,
-             TimeIntervalCollection,
-             ColorGeometryInstanceAttribute,
-             ShowGeometryInstanceAttribute,
-             ColorMaterialProperty,
-             ConstantProperty,
-             ConstantPositionProperty,
-             GridMaterialProperty,
-             SampledProperty,
-             SampledPositionProperty,
-             TimeIntervalCollectionProperty,
-             CompositePrimitive) {
+defineSuite([
+        'DynamicScene/EllipseGeometryUpdater',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/JulianDate',
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicEllipse',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/GridMaterialProperty',
+        'DynamicScene/SampledPositionProperty',
+        'DynamicScene/SampledProperty',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Scene/PrimitiveCollection'
+    ], function(
+        EllipseGeometryUpdater,
+        Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
+        JulianDate,
+        ShowGeometryInstanceAttribute,
+        TimeInterval,
+        TimeIntervalCollection,
+        ColorMaterialProperty,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicEllipse,
+        DynamicObject,
+        GridMaterialProperty,
+        SampledPositionProperty,
+        SampledProperty,
+        TimeIntervalCollectionProperty,
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -385,7 +386,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         dynamicObject.ellipse = ellipse;
 
         var updater = new EllipseGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -463,7 +464,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         var dynamicObject = createBasicEllipse();
         var updater = new EllipseGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -483,7 +484,7 @@ defineSuite(['DynamicScene/EllipseGeometryUpdater',
         dynamicObject.ellipse.semiMajorAxis = new SampledProperty(Number);
         dynamicObject.ellipse.semiMajorAxis.addSample(time, 4);
         var updater = new EllipseGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

@@ -1,25 +1,26 @@
 /*global define*/
-define(['./PositionProperty',
-        './Property',
-        './SampledProperty',
+define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/ReferenceFrame'
-       ], function(
-        PositionProperty,
-        Property,
-        SampledProperty,
+        '../Core/ReferenceFrame',
+        './PositionProperty',
+        './Property',
+        './SampledProperty'
+    ], function(
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ReferenceFrame) {
+        ReferenceFrame,
+        PositionProperty,
+        Property,
+        SampledProperty) {
     "use strict";
 
     /**
@@ -67,7 +68,7 @@ define(['./PositionProperty',
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof SampledPositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {
@@ -166,8 +167,8 @@ define(['./PositionProperty',
      * Adds an array of samples
      * @memberof SampledPositionProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Cartesian3[]} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
      *
      * @exception {DeveloperError} times and values must be the same length..
      */
@@ -179,7 +180,7 @@ define(['./PositionProperty',
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledPositionProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {

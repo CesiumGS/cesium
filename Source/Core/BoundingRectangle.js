@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        './Cartesian2',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartographic',
-        './Rectangle',
         './GeographicProjection',
-        './Intersect'
+        './Intersect',
+        './Rectangle'
     ], function(
+        Cartesian2,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartographic,
-        Rectangle,
         GeographicProjection,
-        Intersect) {
+        Intersect,
+        Rectangle) {
     "use strict";
 
     /**
@@ -66,7 +66,7 @@ define([
      * The rectangle is oriented with the corner at the bottom left.
      * @memberof BoundingRectangle
      *
-     * @param {Array} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
+     * @param {Cartesian2[]} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */

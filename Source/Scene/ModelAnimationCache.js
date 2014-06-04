@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        '../Core/defined',
         '../Core/Cartesian3',
-        '../Core/Quaternion',
+        '../Core/defined',
         '../Core/LinearSpline',
+        '../Core/Quaternion',
         '../Core/QuaternionSpline',
         './ModelTypes'
     ], function(
-        defined,
         Cartesian3,
-        Quaternion,
+        defined,
         LinearSpline,
+        Quaternion,
         QuaternionSpline,
         ModelTypes) {
     "use strict";

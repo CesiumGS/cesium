@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Animation/AnimationViewModel',
-         'Widgets/ClockViewModel',
-         'Core/JulianDate',
-         'Core/ClockStep',
-         'Core/ClockRange'
-     ], function(
-         AnimationViewModel,
-         ClockViewModel,
-         JulianDate,
-         ClockStep,
-         ClockRange) {
+        'Widgets/Animation/AnimationViewModel',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/JulianDate',
+        'Widgets/ClockViewModel'
+    ], function(
+        AnimationViewModel,
+        ClockRange,
+        ClockStep,
+        JulianDate,
+        ClockViewModel) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/CesiumInspector/CesiumInspectorViewModel',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/Rectangle',
-         'Core/defined',
-         'Scene/RectanglePrimitive',
-         'Scene/Tile',
-         'Scene/WebMercatorTilingScheme',
-         'Scene/Material',
-         'Scene/Globe',
-         'Core/Math'
-     ], function(
-         CesiumInspectorViewModel,
-         createScene,
-         destroyScene,
-         Rectangle,
-         defined,
-         RectanglePrimitive,
-         Tile,
-         WebMercatorTilingScheme,
-         Material,
-         Globe,
-         CesiumMath) {
+        'Widgets/CesiumInspector/CesiumInspectorViewModel',
+        'Core/defined',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Globe',
+        'Scene/Material',
+        'Scene/RectanglePrimitive',
+        'Scene/Tile',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        CesiumInspectorViewModel,
+        defined,
+        CesiumMath,
+        Rectangle,
+        WebMercatorTilingScheme,
+        Globe,
+        Material,
+        RectanglePrimitive,
+        Tile,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,7 +52,7 @@ defineSuite([
     it('throws if scene is undefined', function() {
         expect(function() {
             return new CesiumInspectorViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('show frustums', function() {

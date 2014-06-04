@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/ComponentDatatype',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/PrimitiveType'
-     ], function(
-         Geometry,
-         GeometryAttribute,
-         ComponentDatatype,
-         BoundingSphere,
-         Cartesian3,
-         PrimitiveType) {
+        'Core/Geometry',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/ComponentDatatype',
+        'Core/GeometryAttribute',
+        'Core/PrimitiveType'
+    ], function(
+        Geometry,
+        BoundingSphere,
+        Cartesian3,
+        ComponentDatatype,
+        GeometryAttribute,
+        PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -126,7 +126,7 @@ defineSuite([
 
         expect(function() {
             Geometry.computeNumberOfVertices(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computeNumberOfVertices throws without geometry', function() {

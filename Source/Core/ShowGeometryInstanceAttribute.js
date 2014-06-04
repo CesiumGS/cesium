@@ -1,13 +1,15 @@
 /*global define*/
 define([
+        './ComponentDatatype',
         './defaultValue',
         './defined',
-        './ComponentDatatype',
+        './defineProperties',
         './DeveloperError'
     ], function(
+        ComponentDatatype,
         defaultValue,
         defined,
-        ComponentDatatype,
+        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -26,7 +28,7 @@ define([
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883))), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
+     *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883), new Cesium.Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
      *     show : new Cesium.ShowGeometryInstanceAttribute(false)
@@ -40,42 +42,6 @@ define([
         show = defaultValue(show, true);
 
         /**
-         * The datatype of each component in the attribute, e.g., individual elements in
-         * {@link ShowGeometryInstanceAttribute#value}.
-         *
-         * @type ComponentDatatype
-         *
-         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
-         *
-         * @readonly
-         */
-        this.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
-
-        /**
-         * The number of components in the attributes, i.e., {@link ShowGeometryInstanceAttribute#value}.
-         *
-         * @type Number
-         *
-         * @default 1
-         *
-         * @readonly
-         */
-        this.componentsPerAttribute = 1;
-
-        /**
-         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
-         * indicate that the components should be mapped to the range [0, 1] (unsigned)
-         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
-         *
-         * @type Boolean
-         *
-         * @default true
-         *
-         * @readonly
-         */
-        this.normalize = true;
-
-        /**
          * The values for the attributes stored in a typed array.
          *
          * @type Uint8Array
@@ -84,6 +50,59 @@ define([
          */
         this.value = ShowGeometryInstanceAttribute.toValue(show);
     };
+
+    defineProperties(ShowGeometryInstanceAttribute.prototype, {
+        /**
+         * The datatype of each component in the attribute, e.g., individual elements in
+         * {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @memberof ShowGeometryInstanceAttribute.prototype
+         *
+         * @type {ComponentDatatype}
+         * @readonly
+         *
+         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
+         */
+        componentDatatype : {
+            get : function() {
+                return ComponentDatatype.UNSIGNED_BYTE;
+            }
+        },
+
+        /**
+         * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @memberof ShowGeometryInstanceAttribute.prototype
+         *
+         * @type {Number}
+         * @readonly
+         *
+         * @default 1
+         */
+        componentsPerAttribute : {
+            get : function() {
+                return 1;
+            }
+        },
+
+        /**
+         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
+         * indicate that the components should be mapped to the range [0, 1] (unsigned)
+         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+         *
+         * @memberof ShowGeometryInstanceAttribute.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default true
+         */
+        normalize : {
+            get : function() {
+                return true;
+            }
+        }
+    });
 
     /**
      * Converts a boolean show to a typed array that can be used to assign a show attribute.

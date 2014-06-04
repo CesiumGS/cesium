@@ -1,12 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Math',
-         'Core/Cartesian3',
-         'Core/Cartographic'
-     ], function(
-         CesiumMath,
-         Cartesian3,
-         Cartographic) {
+        'Core/Math'
+    ], function(
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -74,8 +70,20 @@ defineSuite([
         expect(CesiumMath.toRadians(360.0)).toEqual(2 * Math.PI);
     });
 
+    it('toRadians throws for undefined', function() {
+        expect(function() {
+            CesiumMath.toRadians();
+        }).toThrowDeveloperError();
+    });
+
     it('toDegrees', function() {
         expect(CesiumMath.toDegrees(Math.PI)).toEqual(180.0);
+    });
+
+    it('toDegrees throws for undefined', function() {
+        expect(function() {
+            CesiumMath.toDegrees();
+        }).toThrowDeveloperError();
     });
 
     it('convertLongitudeRange (1)', function() {
@@ -88,6 +96,12 @@ defineSuite([
 
     it('convertLongitudeRange (3)', function() {
         expect(CesiumMath.convertLongitudeRange(Math.PI)).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON16);
+    });
+
+    it('convertLongitudeRange throws for undefined', function() {
+        expect(function() {
+            CesiumMath.convertLongitudeRange();
+        }).toThrowDeveloperError();
     });
 
     it('negativePiToPi positive', function() {
@@ -107,6 +121,36 @@ defineSuite([
         expect(CesiumMath.negativePiToPi(-Math.PI + 1)).toEqualEpsilon(-Math.PI + 1, CesiumMath.EPSILON16);
     });
 
+    it('negativePiToPi throws for undefined', function() {
+        expect(function() {
+            CesiumMath.negativePiToPi();
+        }).toThrowDeveloperError();
+    });
+
+    it('zeroToTwoPi throws for undefined', function() {
+        expect(function() {
+            CesiumMath.zeroToTwoPi();
+        }).toThrowDeveloperError();
+    });
+
+    it('equalsEpsilon throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.equalsEpsilon(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('equalsEpsilon throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.equalsEpsilon(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('equalsEpsilon throws for undefined', function() {
+        expect(function() {
+            CesiumMath.equalsEpsilon();
+        }).toThrowDeveloperError();
+    });
+
     it('factorial produces the correct results', function() {
         var factorials = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000,
                           121645100408832000, 2432902008176640000, 51090942171709440000, 1124000727777607680000, 25852016738884976640000, 620448401733239439360000];
@@ -120,6 +164,12 @@ defineSuite([
         expect(CesiumMath.incrementWrap(5, 10, 0)).toEqual(6);
         expect(CesiumMath.incrementWrap(10, 10, 0)).toEqual(0);
         expect(CesiumMath.incrementWrap(10, 10)).toEqual(0);
+    });
+
+    it('incrementWrap throws for undefined', function() {
+        expect(function() {
+            CesiumMath.incrementWrap();
+        }).toThrowDeveloperError();
     });
 
     it('isPowerOfTwo finds powers of two', function() {
@@ -207,6 +257,12 @@ defineSuite([
     it('nextPowerOfTwo throws for undefined', function() {
         expect(function() {
             CesiumMath.nextPowerOfTwo();
+        }).toThrowDeveloperError();
+    });
+
+    it('clamp throws for undefined', function() {
+        expect(function() {
+            CesiumMath.clamp();
         }).toThrowDeveloperError();
     });
 });

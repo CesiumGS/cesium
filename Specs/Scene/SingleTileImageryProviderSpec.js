@@ -1,30 +1,30 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/SingleTileImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Rectangle',
-         'Scene/GeographicTilingScheme',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'ThirdParty/when'
-     ], function(
-         SingleTileImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         DefaultProxy,
-         Rectangle,
-         GeographicTilingScheme,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         when) {
+        'Scene/SingleTileImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/Rectangle',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        SingleTileImageryProvider,
+        DefaultProxy,
+        defined,
+        GeographicTilingScheme,
+        jsonp,
+        loadImage,
+        Rectangle,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

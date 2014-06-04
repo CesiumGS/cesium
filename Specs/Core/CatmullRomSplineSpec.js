@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CatmullRomSpline',
-         'Core/Cartesian3',
-         'Core/HermiteSpline',
-         'Core/Math'
-     ], function(
-         CatmullRomSpline,
-         Cartesian3,
-         HermiteSpline,
-         CesiumMath) {
+        'Core/CatmullRomSpline',
+        'Core/Cartesian3',
+        'Core/HermiteSpline',
+        'Core/Math'
+    ], function(
+        CatmullRomSpline,
+        Cartesian3,
+        HermiteSpline,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -92,7 +92,7 @@ defineSuite([
 
         expect(function() {
             crs.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('evaluate throws when time is out of range', function() {
@@ -103,7 +103,7 @@ defineSuite([
 
         expect(function() {
             crs.evaluate(times[0] - 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('check Catmull-Rom spline against a Hermite spline', function() {

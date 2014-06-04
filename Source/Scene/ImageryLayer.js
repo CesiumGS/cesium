@@ -1,68 +1,70 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
+        '../Core/Cartesian2',
+        '../Core/Cartesian4',
+        '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/BoundingRectangle',
-        '../Core/ComponentDatatype',
-        '../Core/Cartesian2',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/Rectangle',
         '../Core/FeatureDetection',
-        '../Core/Math',
-        '../Core/PrimitiveType',
+        '../Core/GeographicTilingScheme',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/Math',
+        '../Core/PixelFormat',
+        '../Core/PrimitiveType',
+        '../Core/Rectangle',
+        '../Core/TerrainProvider',
+        '../Core/TileProviderError',
         '../Renderer/BufferUsage',
+        '../Renderer/ClearCommand',
+        '../Renderer/DrawCommand',
         '../Renderer/MipmapHint',
-        '../Renderer/PixelFormat',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
-        '../Renderer/ClearCommand',
-        './GeographicTilingScheme',
-        './Imagery',
-        './TileProviderError',
-        './ImageryState',
-        './TileImagery',
-        './TerrainProvider',
-        '../ThirdParty/when',
         '../Shaders/ReprojectWebMercatorFS',
-        '../Shaders/ReprojectWebMercatorVS'
+        '../Shaders/ReprojectWebMercatorVS',
+        '../ThirdParty/when',
+        './Imagery',
+        './ImageryState',
+        './TileImagery'
     ], function(
+        BoundingRectangle,
+        Cartesian2,
+        Cartesian4,
+        Color,
+        ComponentDatatype,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        BoundingRectangle,
-        ComponentDatatype,
-        Cartesian2,
-        Cartesian4,
-        Color,
-        Rectangle,
         FeatureDetection,
-        CesiumMath,
-        PrimitiveType,
+        GeographicTilingScheme,
         Geometry,
         GeometryAttribute,
-        BufferUsage,
-        MipmapHint,
+        CesiumMath,
         PixelFormat,
+        PrimitiveType,
+        Rectangle,
+        TerrainProvider,
+        TileProviderError,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        MipmapHint,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
-        ClearCommand,
-        GeographicTilingScheme,
-        Imagery,
-        TileProviderError,
-        ImageryState,
-        TileImagery,
-        TerrainProvider,
-        when,
         ReprojectWebMercatorFS,
-        ReprojectWebMercatorVS) {
+        ReprojectWebMercatorVS,
+        when,
+        Imagery,
+        ImageryState,
+        TileImagery) {
     "use strict";
 
     /**
@@ -73,15 +75,15 @@ define([
      * @constructor
      *
      * @param {ImageryProvider} imageryProvider The imagery provider to use.
-     * @param {Rectangle} [description.rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
+     * @param {Rectangle} [options.rectangle=imageryProvider.rectangle] The rectangle of the layer.  This rectangle
      *        can limit the visible portion of the imagery provider.
-     * @param {Number|Function} [description.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
+     * @param {Number|Function} [options.alpha=1.0] The alpha blending value of this layer, from 0.0 to 1.0.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
      *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
      *                          imagery tile for which the alpha is required, and it is expected to return
      *                          the alpha value to use for the tile.
-     * @param {Number|Function} [description.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
+     * @param {Number|Function} [options.brightness=1.0] The brightness of this layer.  1.0 uses the unmodified imagery
      *                          color.  Less than 1.0 makes the imagery darker while greater than 1.0 makes it brighter.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -89,7 +91,7 @@ define([
      *                          imagery tile for which the brightness is required, and it is expected to return
      *                          the brightness value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Number|Function} [description.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
+     * @param {Number|Function} [options.contrast=1.0] The contrast of this layer.  1.0 uses the unmodified imagery color.
      *                          Less than 1.0 reduces the contrast while greater than 1.0 increases it.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -97,14 +99,14 @@ define([
      *                          imagery tile for which the contrast is required, and it is expected to return
      *                          the contrast value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Number|Function} [description.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
+     * @param {Number|Function} [options.hue=0.0] The hue of this layer.  0.0 uses the unmodified imagery color.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
      *                          current {@link FrameState}, this layer, and the x, y, and level coordinates
      *                          of the imagery tile for which the hue is required, and it is expected to return
      *                          the contrast value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Number|Function} [description.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
+     * @param {Number|Function} [options.saturation=1.0] The saturation of this layer.  1.0 uses the unmodified imagery color.
      *                          Less than 1.0 reduces the saturation while greater than 1.0 increases it.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
@@ -112,27 +114,27 @@ define([
      *                          of the imagery tile for which the saturation is required, and it is expected to return
      *                          the contrast value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Number|Function} [description.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
+     * @param {Number|Function} [options.gamma=1.0] The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
      *                          This can either be a simple number or a function with the signature
      *                          <code>function(frameState, layer, x, y, level)</code>.  The function is passed the
      *                          current {@link FrameState}, this layer, and the x, y, and level coordinates of the
      *                          imagery tile for which the gamma is required, and it is expected to return
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
-     * @param {Boolean} [description.show=true] True if the layer is shown; otherwise, false.
-     * @param {Number} [description.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
+     * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
+     * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
      *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
      *        views.
-     * @param {Number} [description.minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
+     * @param {Number} [options.minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
-     * @param {Number} [description.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
+     * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
-    var ImageryLayer = function ImageryLayer(imageryProvider, description) {
+    var ImageryLayer = function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
-        description = defaultValue(description, {});
+        options = defaultValue(options, {});
 
         /**
          * The alpha blending value of this layer, usually from 0.0 to 1.0.
@@ -146,7 +148,7 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.alpha = defaultValue(description.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
+        this.alpha = defaultValue(options.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
 
         /**
          * The brightness of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0
@@ -161,7 +163,7 @@ define([
          * @type {Number}
          * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
          */
-        this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
+        this.brightness = defaultValue(options.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
 
         /**
          * The contrast of this layer.  1.0 uses the unmodified imagery color.  Less than 1.0 reduces
@@ -176,7 +178,7 @@ define([
          * @type {Number}
          * @default {@link ImageryLayer.DEFAULT_CONTRAST}
          */
-        this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
+        this.contrast = defaultValue(options.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
 
         /**
          * The hue of this layer in radians. 0.0 uses the unmodified imagery color. This can either be a
@@ -189,7 +191,7 @@ define([
          * @type {Number}
          * @default {@link ImageryLayer.DEFAULT_HUE}
          */
-        this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
+        this.hue = defaultValue(options.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
 
         /**
          * The saturation of this layer. 1.0 uses the unmodified imagery color. Less than 1.0 reduces the
@@ -203,7 +205,7 @@ define([
          * @type {Number}
          * @default {@link ImageryLayer.DEFAULT_SATURATION}
          */
-        this.saturation = defaultValue(description.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
+        this.saturation = defaultValue(options.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
 
         /**
          * The gamma correction to apply to this layer.  1.0 uses the unmodified imagery color.
@@ -217,7 +219,7 @@ define([
          * @type {Number}
          * @default {@link ImageryLayer.DEFAULT_GAMMA}
          */
-        this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
+        this.gamma = defaultValue(options.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 
         /**
          * Determines if this layer is shown.
@@ -225,13 +227,13 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.show = defaultValue(description.show, true);
+        this.show = defaultValue(options.show, true);
 
-        this._minimumTerrainLevel = description.minimumTerrainLevel;
-        this._maximumTerrainLevel = description.maximumTerrainLevel;
+        this._minimumTerrainLevel = options.minimumTerrainLevel;
+        this._maximumTerrainLevel = options.maximumTerrainLevel;
 
-        this._rectangle = defaultValue(description.rectangle, Rectangle.MAX_VALUE);
-        this._maximumAnisotropy = description.maximumAnisotropy;
+        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
+        this._maximumAnisotropy = options.maximumAnisotropy;
 
         this._imageryCache = {};
 
@@ -281,7 +283,7 @@ define([
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.
-     * @type {number}
+     * @type {Number}
      * @default 1.0
      */
     ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;
@@ -816,7 +818,7 @@ define([
                         this.vertexArray.destroy();
                     }
                     if (defined(this.shaderProgram)) {
-                        this.shaderProgram.release();
+                        this.shaderProgram.destroy();
                     }
                 }
             };
@@ -862,7 +864,7 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            reproject.shaderProgram = context.shaderCache.getShaderProgram(
+            reproject.shaderProgram = context.createShaderProgram(
                 ReprojectWebMercatorVS,
                 ReprojectWebMercatorFS,
                 reprojectAttribInds);
@@ -923,9 +925,10 @@ define([
         });
         reproject.framebuffer.destroyAttachments = false;
 
-        var command = new ClearCommand();
-        command.color = Color.BLACK;
-        command.framebuffer = reproject.framebuffer;
+        var command = new ClearCommand({
+            color : Color.BLACK,
+            framebuffer : reproject.framebuffer
+        });
         command.execute(context);
 
         if ((!defined(reproject.renderState)) ||
@@ -937,7 +940,7 @@ define([
             });
         }
 
-        context.draw({
+        var drawCommand = new DrawCommand({
             framebuffer : reproject.framebuffer,
             shaderProgram : reproject.shaderProgram,
             renderState : reproject.renderState,
@@ -945,6 +948,7 @@ define([
             vertexArray : reproject.vertexArray,
             uniformMap : uniformMap
         });
+        drawCommand.execute(context);
 
         return outputTexture;
     }

@@ -2,16 +2,16 @@
 define([
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
         './FeatureDetection',
+        './freezeObject',
         './Math'
     ], function(
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
         FeatureDetection,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -159,7 +159,7 @@ define([
      * @param {Number} [alpha=1.0] The alpha component 0...1
      * @returns {Color} The color object.
      *
-     * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
      */
     Color.fromHsl = function(hue, saturation, lightness, alpha) {
         hue = defaultValue(hue, 0.0) % 1.0;
@@ -324,7 +324,7 @@ define([
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
      *
-     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -373,7 +373,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Color.packedLength = 4;
 
@@ -382,7 +382,7 @@ define([
      * @memberof Color
      *
      * @param {Color} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Color.pack = function(value, array, startingIndex) {
@@ -406,7 +406,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Color
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
      */
@@ -434,7 +434,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -446,7 +446,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -546,7 +546,7 @@ define([
      * @memberof Color
      *
      * @returns {String} The CSS equivalent of this color.
-     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
      */
     Color.prototype.toCssColorString = function() {
         var red = Color.floatToByte(this.red);
@@ -563,8 +563,8 @@ define([
      * that are in the range of 0 to 255.
      * @memberof Color
      *
-     * @param {Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Array} The modified result parameter or a new instance if result was undefined.
+     * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
+     * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
      */
     Color.prototype.toBytes = function(result) {
         var red = Color.floatToByte(this.red);

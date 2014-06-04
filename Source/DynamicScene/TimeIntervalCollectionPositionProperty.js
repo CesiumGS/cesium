@@ -1,23 +1,24 @@
 /*global define*/
-define(['./PositionProperty',
-        './Property',
+define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/ReferenceFrame',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './PositionProperty',
+        './Property'
     ], function(
-        PositionProperty,
-        Property,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
         ReferenceFrame,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        PositionProperty,
+        Property) {
     "use strict";
 
     /**
@@ -72,7 +73,7 @@ define(['./PositionProperty',
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof TimeIntervalCollectionPositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {

@@ -1,54 +1,61 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
-     * DOC_TBA
+     * Indicates if the scene is viewed in 3D, 2D, or 2.5D Columbus view.
      *
      * @exports SceneMode
+     *
+     * @see Scene#mode
      */
     var SceneMode = {
         /**
-         * DOC_TBA
+         * 2D mode.  The map is viewed top-down with an orthographic projection.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        SCENE2D : new Enumeration(0, 'SCENE2D', {
-            morphTime : 0.0
-        }),
+        SCENE2D : 0,
 
         /**
-         * DOC_TBA
+         * Columbus View mode.  A 2.5D perspective view where the map is laid out
+         * flat and objects with non-zero height are drawn above it.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        COLUMBUS_VIEW : new Enumeration(1, 'COLUMBUS_VIEW', {
-            morphTime : 0.0
-        }),
+        COLUMBUS_VIEW : 1,
 
         /**
-         * DOC_TBA
+         * 3D mode.  A traditional 3D perspective view of the globe.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2
          */
-        SCENE3D : new Enumeration(2, 'SCENE3D', {
-            morphTime : 1.0
-        }),
+        SCENE3D : 2,
 
         /**
-         * DOC_TBA
+         * Morphing between mode, e.g., 3D to 2D.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 3
          */
-        MORPHING : new Enumeration(3, 'MORPHING')
+        MORPHING : 3
+    };
+
+    /**
+     * Returns the morph time for the given scene mode
+     * @param {SceneMode} value The scene mode
+     * @returns {Number} The morph time
+     */
+    SceneMode.getMorphTime = function(value) {
+        if (value === SceneMode.SCENE3D) {
+            return 1.0;
+        } else if (value === SceneMode.MORPHING) {
+            return undefined;
+        }
+        return 0.0;
     };
 
     return SceneMode;

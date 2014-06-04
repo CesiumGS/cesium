@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -119,7 +120,7 @@ define(['../Core/createGuid',
      * @alias CompositeDynamicObjectCollection
      * @constructor
      *
-     * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
+     * @param {DynamicObjectCollection[]} [collections] The initial list of DynamicObjectCollection instances to merge.
      */
     var CompositeDynamicObjectCollection = function(collections) {
         this._composite = new DynamicObjectCollection();
@@ -438,7 +439,7 @@ define(['../Core/createGuid',
      * The array should not be modified directly.
      * @memberof CompositeDynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
         return this._composite.getObjects();

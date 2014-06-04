@@ -178,24 +178,33 @@ define([
      * @alias PolylineVolumeGeometry
      * @constructor
      *
-     * @param {Array} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
+     * @param {Cartesian3[]} options.polylinePositions An array of {@link Cartesain3} positions that define the center of the polyline volume.
      * @param {Number} options.shapePositions An array of {@link Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
      * @example
+     * function computeCircle(radius) {
+     *   var positions = [];
+     *   for (var i = 0; i < 360; i++) {
+     *     var radians = Cesium.Math.toRadians(i);
+     *     positions.push(new Cesium.Cartesian2(radius * Math.cos(radians), radius * Math.sin(radians)));
+     *   }
+     *   return positions;
+     * }
+     *
      * var volume = new Cesium.PolylineVolumeGeometry({
-     *     vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
-     *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0)
-     *     ]),
-     *     shapePositions : Cesium.Shapes.compute2DCircle(100000.0)
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+     *   polylinePositions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0
+     *   ]),
+     *   shapePositions : computeCircle(100000.0)
      * });
      */
     var PolylineVolumeGeometry = function(options) {
@@ -222,6 +231,8 @@ define([
         this._workerName = 'createPolylineVolumeGeometry';
     };
 
+    var brScratch = new BoundingRectangle();
+
     /**
      * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      * @memberof PolylineVolumeGeometry
@@ -233,7 +244,6 @@ define([
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.
      * @exception {DeveloperError} Count of unique shape positions must be at least 3.
      */
-    var brScratch = new BoundingRectangle();
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
         var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeGeometry._ellipsoid);
@@ -249,7 +259,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
+        if (PolygonPipeline.computeWindingOrder2D(shape2D) === WindingOrder.CLOCKWISE) {
             shape2D.reverse();
         }
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);

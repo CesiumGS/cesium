@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CameraEventAggregator',
-         'Scene/CameraEventType',
-         'Core/Cartesian2',
-         'Core/KeyboardEventModifier',
-         'Core/ScreenSpaceEventType',
-         'Specs/MockCanvas'
-     ], function(
-         CameraEventAggregator,
-         CameraEventType,
-         Cartesian2,
-         KeyboardEventModifier,
-         ScreenSpaceEventType,
-         MockCanvas) {
+        'Scene/CameraEventAggregator',
+        'Core/Cartesian2',
+        'Core/KeyboardEventModifier',
+        'Scene/CameraEventType',
+        'Specs/MockCanvas'
+    ], function(
+        CameraEventAggregator,
+        Cartesian2,
+        KeyboardEventModifier,
+        CameraEventType,
+        MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

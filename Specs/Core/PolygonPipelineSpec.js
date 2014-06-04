@@ -1,22 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolygonPipeline',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/WindingOrder',
-         'Core/Math',
-         'Core/Shapes'
-     ], function(
-         PolygonPipeline,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         WindingOrder,
-         CesiumMath,
-         Shapes) {
+        'Core/PolygonPipeline',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/WindingOrder'
+    ], function(
+        PolygonPipeline,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        WindingOrder) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -556,16 +552,4 @@ defineSuite([
         expect(positions.length).toEqual(28);
     });
 
-    it('elimitate holes does not add undefined to returned positions', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
-        var radius = 10000;
-        var outer = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), radius);
-        var inner = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), radius * 0.8);
-
-        var positions = PolygonPipeline.eliminateHoles(outer, [inner], ellipsoid);
-        expect(function() {
-            PolygonPipeline.removeDuplicates(positions);
-        }).not.toThrow();
-    });
 });

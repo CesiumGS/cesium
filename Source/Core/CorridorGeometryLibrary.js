@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        './defined',
         './Cartesian3',
         './CornerType',
+        './defined',
+        './Math',
+        './Matrix3',
         './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
-        './Matrix3',
-        './Quaternion',
-        './Math'
+        './Quaternion'
     ], function(
-        defined,
         Cartesian3,
         CornerType,
+        defined,
+        CesiumMath,
+        Matrix3,
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
-        Matrix3,
-        Quaternion,
-        CesiumMath) {
+        Quaternion) {
     "use strict";
 
     /**
@@ -46,7 +46,7 @@ define([
     var rotMatrix = new Matrix3();
     function computeRoundCorner(cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
         var angle = Cartesian3.angleBetween(Cartesian3.subtract(startPoint, cornerPoint, scratch1), Cartesian3.subtract(endPoint, cornerPoint, scratch2));
-        var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
+        var granularity = (cornerType === CornerType.BEVELED) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
         var size = granularity * 3;
         var array = new Array(size);
@@ -228,7 +228,7 @@ define([
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     leftPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width * 2, leftPos), leftPos);
                     previousPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width, previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
+                    if (cornerType === CornerType.ROUNDED || cornerType === CornerType.BEVELED) {
                         corners.push({
                             leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside)
                         });
@@ -253,7 +253,7 @@ define([
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width * 2, rightPos), rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width, previousPos), previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
+                    if (cornerType === CornerType.ROUNDED || cornerType === CornerType.BEVELED) {
                         corners.push({
                             rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside)
                         });
@@ -279,7 +279,7 @@ define([
         }
 
         var endPositions;
-        if (cornerType.value === CornerType.ROUNDED.value) {
+        if (cornerType === CornerType.ROUNDED) {
             endPositions = addEndCaps(calculatedPositions);
         }
 

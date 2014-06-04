@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './SceneModePickerViewModel',
-        '../../ThirdParty/knockout'
+        './SceneModePickerViewModel'
     ], function(
-        defineProperties,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        SceneModePickerViewModel,
-        knockout) {
+        SceneModePickerViewModel) {
     "use strict";
 
     var globePath = 'm 32.401392,4.9330437 c -7.087603,0 -14.096095,2.884602 -19.10793,7.8946843 -5.0118352,5.010083 -7.9296167,11.987468 -7.9296167,19.072999 0,7.085531 2.9177815,14.097848 7.9296167,19.107931 4.837653,4.835961 11.541408,7.631372 18.374354,7.82482 0.05712,0.01231 0.454119,0.139729 0.454119,0.139729 l 0.03493,-0.104797 c 0.08246,7.84e-4 0.162033,0.03493 0.244525,0.03493 0.08304,0 0.161515,-0.03414 0.244526,-0.03493 l 0.03493,0.104797 c 0,0 0.309474,-0.129487 0.349323,-0.139729 6.867765,-0.168094 13.582903,-2.965206 18.444218,-7.82482 2.558195,-2.5573 4.551081,-5.638134 5.903547,-8.977584 1.297191,-3.202966 2.02607,-6.661489 2.02607,-10.130347 0,-6.237309 -2.366261,-12.31219 -6.322734,-17.116794 -0.0034,-0.02316 0.0049,-0.04488 0,-0.06986 -0.01733,-0.08745 -0.104529,-0.278855 -0.104797,-0.279458 -5.31e-4,-0.0012 -0.522988,-0.628147 -0.523984,-0.62878 \
@@ -45,10 +45,9 @@ define([
      *
      * @example
      * // In HTML head, include a link to the SceneModePicker.css stylesheet,
-     * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
-     * // Note: This code assumed you already have a Scene instance.
+     * // and in the body, include: <div id="sceneModePickerContainer"></div>
+     * // Note: This code assumes you already have a Scene instance.
      *
-     * var scene = viewer.scene;
      * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', scene);
      */
     var SceneModePicker = function(container, scene, duration) {

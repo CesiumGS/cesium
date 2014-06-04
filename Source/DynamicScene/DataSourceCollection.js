@@ -1,15 +1,17 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Event'
     ], function(
-        DeveloperError,
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event) {
     "use strict";
 
@@ -20,38 +22,52 @@ define([
      */
     var DataSourceCollection = function() {
         this._dataSources = [];
-
-        /**
-         * An event that is raised when a data source is added to the collection.  Event handlers are passed the data source that
-         * was added.
-         * @type {Event}
-         */
-        this.dataSourceAdded = new Event();
-
-        /**
-         * An event that is raised when a data source is removed from the collection.  Event handlers are passed the data source that
-         * was removed.
-         * @type {Event}
-         */
-        this.dataSourceRemoved = new Event();
+        this._dataSourceAdded = new Event();
+        this._dataSourceRemoved = new Event();
     };
 
     defineProperties(DataSourceCollection.prototype, {
         /**
          * Gets the number of data sources in this collection.
          * @memberof DataSourceCollection.prototype
-         * @type {Event}
+         * @type {Number}
+         * @readonly
          */
         length : {
             get : function() {
                 return this._dataSources.length;
+            }
+        },
+
+        /**
+         * An event that is raised when a data source is added to the collection.
+         * Event handlers are passed the data source that was added.
+         * @memberof DataSourceCollection.prototype
+         * @type {Event}
+         * @readonly
+         */
+        dataSourceAdded : {
+            get : function() {
+                return this._dataSourceAdded;
+            }
+        },
+
+        /**
+         * An event that is raised when a data source is removed from the collection.
+         * Event handlers are passed the data source that was removed.
+         * @memberof DataSourceCollection.prototype
+         * @type {Event}
+         * @readonly
+         */
+        dataSourceRemoved : {
+            get : function() {
+                return this._dataSourceRemoved;
             }
         }
     });
 
     /**
      * Adds a data source to the collection.
-     * @memberof DataSourceCollection
      *
      * @param {DataSource} dataSource The data source to add.
      */
@@ -63,27 +79,27 @@ define([
         //>>includeEnd('debug');
 
         this._dataSources.push(dataSource);
-        this.dataSourceAdded.raiseEvent(this, dataSource);
+        this._dataSourceAdded.raiseEvent(this, dataSource);
     };
 
     /**
      * Removes a data source from this collection, if present.
      *
-     * @memberof DataSourceCollection
-     *
      * @param {DataSource} dataSource The data source to remove.
-     * @param {Boolean} [destroy=true] whether to destroy the data sources in addition to removing them.
+     * @param {Boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
      *
      * @returns {Boolean} true if the data source was in the collection and was removed,
      *                    false if the data source was not in the collection.
      */
     DataSourceCollection.prototype.remove = function(dataSource, destroy) {
+        destroy = defaultValue(destroy, false);
+
         var index = this._dataSources.indexOf(dataSource);
         if (index !== -1) {
             this._dataSources.splice(index, 1);
-            this.dataSourceRemoved.raiseEvent(this, dataSource);
+            this._dataSourceRemoved.raiseEvent(this, dataSource);
 
-            if (typeof dataSource.destroy === 'function' && destroy) {
+            if (destroy && typeof dataSource.destroy === 'function') {
                 dataSource.destroy();
             }
 
@@ -96,21 +112,25 @@ define([
     /**
      * Removes all data sources from this collection.
      *
-     * @memberof DataSourceCollection
-     *
-     * @param {Boolean} [destroy=true] whether to destroy the data sources in addition to removing them.
+     * @param {Boolean} [destroy=false] whether to destroy the data sources in addition to removing them.
      */
     DataSourceCollection.prototype.removeAll = function(destroy) {
+        destroy = defaultValue(destroy, false);
+
         var dataSources = this._dataSources;
-        for ( var i = dataSources.length - 1; i >= 0; i--) {
-            this.remove(dataSources[i], destroy);
+        for (var i = 0, len = dataSources.length; i < len; ++i) {
+            var dataSource = dataSources[i];
+            this._dataSourceRemoved.raiseEvent(this, dataSource);
+
+            if (destroy && typeof dataSource.destroy === 'function') {
+                dataSource.destroy();
+            }
         }
+        dataSources.length = 0;
     };
 
     /**
      * Checks to see if the collection contains a given data source.
-     *
-     * @memberof DataSourceCollection
      *
      * @param {DataSource} dataSource The data source to check for.
      *
@@ -123,8 +143,6 @@ define([
     /**
      * Determines the index of a given data source in the collection.
      *
-     * @memberof DataSourceCollection
-     *
      * @param {DataSource} dataSource The data source to find the index of.
      *
      * @returns {Number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
@@ -136,11 +154,7 @@ define([
     /**
      * Gets a data source by index from the collection.
      *
-     * @memberof DataSourceCollection
-     *
      * @param {Number} index the index to retrieve.
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     DataSourceCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -154,11 +168,8 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DataSourceCollection
      *
      * @returns {Boolean} true if this object was destroyed; otherwise, false.
      *
@@ -169,15 +180,11 @@ define([
     };
 
     /**
-     * Destroys the WebGL resources held by all data sources in this collection.  Explicitly destroying this
+     * Destroys the resources held by all data sources in this collection.  Explicitly destroying this
      * object allows for deterministic release of WebGL resources, instead of relying on the garbage
-     * collector.
-     * <br /><br />
-     * Once this object is destroyed, it should not be used; calling any function other than
+     * collector. Once this object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DataSourceCollection
      *
      * @returns {undefined}
      *

@@ -1,16 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolylineGeometry',
-         'Core/Cartesian3',
-         'Core/PrimitiveType',
-         'Core/VertexFormat',
-         'Core/Color'
-     ], function(
-         PolylineGeometry,
-         Cartesian3,
-         PrimitiveType,
-         VertexFormat,
-         Color) {
+        'Core/PolylineGeometry',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/VertexFormat'
+    ], function(
+        PolylineGeometry,
+        Cartesian3,
+        Color,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,24 +1,25 @@
 /*global define*/
-define(['../Core/AssociativeArray',
+define([
+        '../Core/AssociativeArray',
         '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/TimeInterval',
-        '../Core/Iso8601',
         '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/Iso8601',
         '../Core/RuntimeError',
+        '../Core/TimeInterval',
         './DynamicObject'
     ], function(
         AssociativeArray,
         createGuid,
         defined,
         defineProperties,
-        Event,
-        TimeInterval,
-        Iso8601,
         DeveloperError,
+        Event,
+        Iso8601,
         RuntimeError,
+        TimeInterval,
         DynamicObject) {
     "use strict";
 
@@ -88,8 +89,8 @@ define(['../Core/AssociativeArray',
      * @function
      *
      * @param {DynamicObjectCollection} collection The collection that triggered the event.
-     * @param {Array} added The array of {@link DynamicObject} instances that have been added to the collection.
-     * @param {Array} removed The array of {@link DynamicObject} instances that have been removed from the collection.
+     * @param {DynamicObject[]} added The array of {@link DynamicObject} instances that have been added to the collection.
+     * @param {DynamicObject[]} removed The array of {@link DynamicObject} instances that have been removed from the collection.
      */
     DynamicObjectCollection.collectionChangedEventCallback = undefined;
 
@@ -280,7 +281,7 @@ define(['../Core/AssociativeArray',
      * The array should not be modified directly.
      * @memberof DynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     DynamicObjectCollection.prototype.getObjects = function() {
         return this._objects.values;
