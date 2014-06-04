@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Spline',
-         'Core/HermiteSpline',
-         'Core/Cartesian3'
-     ], function(
-         Spline,
-         HermiteSpline,
-         Cartesian3) {
+        'Core/Spline',
+        'Core/Cartesian3',
+        'Core/HermiteSpline'
+    ], function(
+        Spline,
+        Cartesian3,
+        HermiteSpline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -14,16 +14,6 @@ defineSuite([
         expect(function() {
             return new Spline();
         }).toThrowDeveloperError();
-    });
-
-    it('evaluate throws', function() {
-        var Spline2 = function() {};
-        Spline2.prototype.evaluate = Spline.prototype.eavaluate;
-        var spline = new Spline2();
-
-        expect(function() {
-            return spline.evaluate();
-        }).toThrow();
     });
 
     it('findTimeInterval throws without a time', function() {

@@ -1,5 +1,8 @@
 /*global define*/
-define(['../Core/BoxGeometry'], function(BoxGeometry) {
+define([
+        '../Core/BoxGeometry'
+    ], function(
+        BoxGeometry) {
     "use strict";
 
     return BoxGeometry.createGeometry;

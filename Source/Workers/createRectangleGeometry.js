@@ -1,11 +1,12 @@
 /*global define*/
-define(['../Core/RectangleGeometry',
+define([
         '../Core/Ellipsoid',
-        '../Core/Rectangle'
+        '../Core/Rectangle',
+        '../Core/RectangleGeometry'
     ], function(
-        RectangleGeometry,
         Ellipsoid,
-        Rectangle) {
+        Rectangle,
+        RectangleGeometry) {
     "use strict";
 
     function createRectangleGeometry(rectangleGeometry) {

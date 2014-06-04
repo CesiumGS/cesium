@@ -1,21 +1,22 @@
 /*global define*/
-define(['./PositionProperty',
+define([
         '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/ReferenceFrame'
+        '../Core/ReferenceFrame',
+        './PositionProperty'
     ], function(
-        PositionProperty,
         Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ReferenceFrame) {
+        ReferenceFrame,
+        PositionProperty) {
     "use strict";
 
     /**
@@ -39,7 +40,9 @@ define(['./PositionProperty',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof ConstantPositionProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -51,7 +54,9 @@ define(['./PositionProperty',
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof ConstantPositionProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -61,7 +66,7 @@ define(['./PositionProperty',
         /**
          * Gets the reference frame in which the position is defined.
          * @memberof ConstantPositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {
@@ -73,7 +78,6 @@ define(['./PositionProperty',
 
     /**
      * Gets the value of the property at the provided time in the fixed frame.
-     * @memberof ConstantPositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -85,7 +89,6 @@ define(['./PositionProperty',
 
     /**
      * Sets the value of the property.
-     * @memberof ConstantPositionProperty
      *
      * @param {Cartesian3} value The property value.
      * @param {ReferenceFrame} [referenceFrame=this.referenceFrame] The reference frame in which the position is defined.
@@ -107,7 +110,6 @@ define(['./PositionProperty',
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
-     * @memberof ConstantPositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
@@ -130,7 +132,6 @@ define(['./PositionProperty',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ConstantPositionProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

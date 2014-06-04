@@ -1,29 +1,20 @@
 /*global define*/
 define([
-        '../../Core/Cartesian3',
-        '../../Core/defaultValue',
-        '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../createCommand',
-        '../../ThirdParty/knockout'
-], function (
-        Cartesian3,
-        defaultValue,
-        defined,
+        '../../ThirdParty/knockout',
+        '../createCommand'
+    ], function(
         defineProperties,
-        DeveloperError,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
      * The view model for {@link NavigationHelpButton}.
      * @alias NavigationHelpButtonViewModel
      * @constructor
-     *
      */
-    var NavigationHelpButtonViewModel = function () {
+    var NavigationHelpButtonViewModel = function() {
         /**
          * Gets or sets whether the instructions are currently shown.  This property is observable.
          * @type {Boolean}
@@ -32,7 +23,7 @@ define([
         this.showInstructions = false;
 
         var that = this;
-        this._command = createCommand(function () {
+        this._command = createCommand(function() {
             that.showInstructions = !that.showInstructions;
         });
 
@@ -53,8 +44,8 @@ define([
          *
          * @type {Command}
          */
-        command: {
-            get: function () {
+        command : {
+            get : function() {
                 return this._command;
             }
         }

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -52,7 +53,9 @@ define(['../Core/defaultValue',
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicEllipse.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -160,7 +163,6 @@ define(['../Core/defaultValue',
 
     /**
      * Duplicates a DynamicEllipse instance.
-     * @memberof DynamicEllipse
      *
      * @param {DynamicEllipse} [result] The object onto which to store the result.
      * @returns {DynamicEllipse} The modified result parameter or a new instance if one was not provided.
@@ -188,7 +190,6 @@ define(['../Core/defaultValue',
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicEllipse
      *
      * @param {DynamicEllipse} source The object to be merged into this object.
      */

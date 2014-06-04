@@ -6,11 +6,11 @@ define([
         './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Rectangle',
         './GeographicProjection',
         './Intersect',
         './Interval',
-        './Matrix4'
+        './Matrix4',
+        './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
@@ -18,11 +18,11 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
         GeographicProjection,
         Intersect,
         Interval,
-        Matrix4) {
+        Matrix4,
+        Rectangle) {
     "use strict";
 
     /**
@@ -70,13 +70,12 @@ define([
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
      * The bounding sphere is computed by running two algorithms, a naive algorithm and
      * Ritter's algorithm. The smaller of the two spheres is used to ensure a tight fit.
-     * @memberof BoundingSphere
      *
-     * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {Cartesian3[]} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
+     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      */
     BoundingSphere.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -222,8 +221,6 @@ define([
     /**
      * Computes a bounding sphere from an rectangle projected in 2D.
      *
-     * @memberof BoundingSphere
-     *
      * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -236,8 +233,6 @@ define([
     /**
      * Computes a bounding sphere from an rectangle projected in 2D.  The bounding sphere accounts for the
      * object's minimum and maximum heights over the rectangle.
-     *
-     * @memberof BoundingSphere
      *
      * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
@@ -284,7 +279,6 @@ define([
     /**
      * Computes a bounding sphere from an rectangle in 3D. The bounding sphere is created using a subsample of points
      * on the ellipsoid and contained in the rectangle. It may not be accurate for all rectangles on all types of ellipsoids.
-     * @memberof BoundingSphere
      *
      * @param {Rectangle} rectangle The valid rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
@@ -310,9 +304,7 @@ define([
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.
      *
-     * @memberof BoundingSphere
-     *
-     * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point
+     * @param {Cartesian3[]} positions An array of points that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
      * @param {Cartesian3} [center=Cartesian3.ZERO] The position to which the positions are relative, which need not be the
      *        origin of the coordinate system.  This is useful when the positions are to be used for
@@ -326,7 +318,7 @@ define([
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
+     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      *
      * @example
      * // Compute the bounding sphere from 3 positions, each specified relative to a center.
@@ -494,8 +486,6 @@ define([
      * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
      * tighly and fully encompases the box.
      *
-     * @memberof BoundingSphere
-     *
      * @param {Number} [corner] The minimum height over the rectangle.
      * @param {Number} [oppositeCorner] The maximum height over the rectangle.
      * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -527,8 +517,6 @@ define([
     /**
      * Creates a bounding sphere encompassing an ellipsoid.
      *
-     * @memberof BoundingSphere
-     *
      * @param {Ellipsoid} ellipsoid The ellipsoid around which to create a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
@@ -555,7 +543,6 @@ define([
 
     /**
      * Duplicates a BoundingSphere instance.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -577,16 +564,15 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     BoundingSphere.packedLength = 4;
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     BoundingSphere.pack = function(value, array, startingIndex) {
@@ -611,9 +597,8 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof BoundingSphere
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian3} [result] The object into which to store the result.
      */
@@ -642,7 +627,6 @@ define([
     var unionScratchCenter = new Cartesian3();
     /**
      * Computes a bounding sphere that contains both the left and right bounding spheres.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
@@ -682,7 +666,6 @@ define([
     var expandScratch = new Cartesian3();
     /**
      * Computes a bounding sphere by enlarging the provided sphere to contain the provided point.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere A sphere to expand.
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
@@ -712,15 +695,15 @@ define([
 
     /**
      * Determines which side of a plane a sphere is located.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to test.
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
-     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
-     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
+     *                           and w of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
      */
     BoundingSphere.intersect = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
@@ -749,7 +732,6 @@ define([
 
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
@@ -781,7 +763,6 @@ define([
 
     /**
      * Computes the estimated distance squared from the closest point on a bounding sphere to a point.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The sphere.
      * @param {Cartesian3} cartesian The point
@@ -810,8 +791,7 @@ define([
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
      * The transformation matrix is not verified to have a uniform scale of 1.
-     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
-     * @memberof BoundingSphere
+     * This method is faster than computing the general bounding sphere transform using {@link BoundingSphere.transform}.
      *
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
@@ -851,7 +831,6 @@ define([
      * <br>
      * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
      * closest and farthest planes from position that intersect the bounding sphere.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to calculate the distance to.
      * @param {Cartesian3} position The position to calculate the distance from.
@@ -900,7 +879,6 @@ define([
     var projectTo2DProjection = new GeographicProjection();
     /**
      * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
@@ -1002,7 +980,6 @@ define([
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [left] The first BoundingSphere.
      * @param {BoundingSphere} [right] The second BoundingSphere.
@@ -1018,14 +995,14 @@ define([
 
     /**
      * Determines which side of a plane the sphere is located.
-     * @memberof BoundingSphere
      *
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
-     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
-     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
+     *                           and w of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
@@ -1034,7 +1011,6 @@ define([
     /**
      * Compares this BoundingSphere against the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [right] The right hand side BoundingSphere.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -1045,7 +1021,6 @@ define([
 
     /**
      * Duplicates this BoundingSphere instance.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.

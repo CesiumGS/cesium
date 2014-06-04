@@ -1,17 +1,19 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './defineProperties',
-        './Cartesian3',
-        './Cartographic',
+        './DeveloperError',
         './Ellipsoid'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian3,
-        Cartographic,
+        DeveloperError,
         Ellipsoid) {
     "use strict";
 
@@ -38,8 +40,11 @@ define([
     defineProperties(GeographicProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof GeographicProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -52,8 +57,6 @@ define([
      * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters.
      * X and Y are the longitude and latitude, respectively, multiplied by the maximum radius of the
      * ellipsoid.  Z is the unmodified height.
-     *
-     * @memberof GeographicProjection
      *
      * @param {Cartographic} cartographic The coordinates to project.
      * @param {Cartesian3} [result] An instance into which to copy the result.  If this parameter is
@@ -84,9 +87,7 @@ define([
      * coordinates, in radians.  Longitude and Latitude are the X and Y coordinates, respectively,
      * divided by the maximum radius of the ellipsoid.  Height is the unmodified Z coordinate.
      *
-     * @memberof GeographicProjection
-     *
-     * @param {Cartesian3} cartesian The coordinate to unproject.
+     * @param {Cartesian3} cartesian The Cartesian position to unproject with height (z) in meters.
      * @param {Cartographic} [result] An instance into which to copy the result.  If this parameter is
      *        undefined, a new instance is created and returned.
      * @returns {Cartographic} The unprojected coordinates.  If the result parameter is not undefined, the
@@ -94,6 +95,12 @@ define([
      *          created and returned.
      */
     GeographicProjection.prototype.unproject = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = cartesian.y * oneOverEarthSemimajorAxis;

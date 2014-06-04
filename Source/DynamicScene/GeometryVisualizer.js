@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/AssociativeArray',
+define([
+        '../Core/AssociativeArray',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -141,7 +142,6 @@ define(['../Core/AssociativeArray',
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof GeometryVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} True if the visualizer successfully updated to the provided time,
@@ -209,7 +209,6 @@ define(['../Core/AssociativeArray',
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof GeometryVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -219,7 +218,6 @@ define(['../Core/AssociativeArray',
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof GeometryVisualizer
      */
     GeometryVisualizer.prototype.destroy = function() {
         this._addedObjects.removeAll();

@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,
@@ -26,14 +26,14 @@ define([
     var Spline = function() {
         /**
          * An array of times for the control points.
-         * @type {Array}
+         * @type {Number[]}
          * @default undefined
          */
         this.times = undefined;
 
         /**
          * An array of control points.
-         * @type {Array}
+         * @type {Cartesian3[]|Quaternion[]}
          * @default undefined
          */
         this.points = undefined;
@@ -43,7 +43,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof Spline
      * @function
      *
      * @param {Number} time The time at which to evaluate the curve.
@@ -60,7 +59,6 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof Spline
      *
      * @param {Number} time The time.
      * @param {Number} startIndex The index from which to start the search.

@@ -1,26 +1,28 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
-        '../Scene/VerticalOrigin',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlas',
+        '../Scene/TextureAtlasBuilder',
+        '../Scene/VerticalOrigin'
     ], function(
-        DeveloperError,
-        defined,
-        destroyObject,
-        Color,
         Cartesian2,
         Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
         BillboardCollection,
         HorizontalOrigin,
-        VerticalOrigin,
-        TextureAtlasBuilder) {
+        TextureAtlas,
+        TextureAtlasBuilder,
+        VerticalOrigin) {
     "use strict";
 
     function textureReady(dynamicObject, billboardCollection, textureValue) {
@@ -58,7 +60,9 @@ define([
         //>>includeEnd('debug');
 
         var billboardCollection = new BillboardCollection();
-        var atlas = scene.createTextureAtlas();
+        var atlas = new TextureAtlas({
+            scene : scene
+        });
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicBillboardVisualizer.prototype._onObjectsRemoved, this);
@@ -74,7 +78,6 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicBillboardVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -95,7 +98,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicBillboardVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -105,7 +107,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicBillboardVisualizer
      */
     DynamicBillboardVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

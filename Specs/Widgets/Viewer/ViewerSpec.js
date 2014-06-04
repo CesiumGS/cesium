@@ -1,46 +1,48 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/Viewer',
-         'Widgets/Animation/Animation',
-         'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Widgets/BaseLayerPicker/ProviderViewModel',
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Widgets/FullscreenButton/FullscreenButton',
-         'Widgets/HomeButton/HomeButton',
-         'Widgets/Geocoder/Geocoder',
-         'Widgets/SceneModePicker/SceneModePicker',
-         'Widgets/Timeline/Timeline',
-         'Core/ClockRange',
-         'Core/ClockStep',
-         'Core/JulianDate',
-         'DynamicScene/DataSourceDisplay',
-         'DynamicScene/DataSourceCollection',
-         'DynamicScene/DynamicClock',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/SceneMode',
-         'Specs/EventHelper',
-         'Specs/MockDataSource'
-     ], function(
-         Viewer,
-         Animation,
-         BaseLayerPicker,
-         ProviderViewModel,
-         CesiumWidget,
-         FullscreenButton,
-         HomeButton,
-         Geocoder,
-         SceneModePicker,
-         Timeline,
-         ClockRange,
-         ClockStep,
-         JulianDate,
-         DataSourceDisplay,
-         DataSourceCollection,
-         DynamicClock,
-         EllipsoidTerrainProvider,
-         SceneMode,
-         EventHelper,
-         MockDataSource) {
+        'Widgets/Viewer/Viewer',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/EllipsoidTerrainProvider',
+        'Core/JulianDate',
+        'Core/WebMercatorProjection',
+        'DynamicScene/DataSourceCollection',
+        'DynamicScene/DataSourceDisplay',
+        'DynamicScene/DynamicClock',
+        'Scene/SceneMode',
+        'Specs/EventHelper',
+        'Specs/MockDataSource',
+        'Widgets/Animation/Animation',
+        'Widgets/BaseLayerPicker/BaseLayerPicker',
+        'Widgets/BaseLayerPicker/ProviderViewModel',
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Widgets/FullscreenButton/FullscreenButton',
+        'Widgets/Geocoder/Geocoder',
+        'Widgets/HomeButton/HomeButton',
+        'Widgets/SceneModePicker/SceneModePicker',
+        'Widgets/Timeline/Timeline'
+    ], function(
+        Viewer,
+        ClockRange,
+        ClockStep,
+        EllipsoidTerrainProvider,
+        JulianDate,
+        WebMercatorProjection,
+        DataSourceCollection,
+        DataSourceDisplay,
+        DynamicClock,
+        SceneMode,
+        EventHelper,
+        MockDataSource,
+        Animation,
+        BaseLayerPicker,
+        ProviderViewModel,
+        CesiumWidget,
+        FullscreenButton,
+        Geocoder,
+        HomeButton,
+        SceneModePicker,
+        Timeline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -286,7 +288,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -298,7 +300,7 @@ defineSuite([
             contextOptions : contextOptions
         });
 
-        var context = viewer.scene._context;
+        var context = viewer.scene.context;
         var contextAttributes = context._gl.getContextAttributes();
 
         expect(context.options.allowTextureFilterAnisotropic).toEqual(false);
@@ -316,6 +318,15 @@ defineSuite([
         });
         viewer.scene.completeMorph();
         expect(viewer.scene.mode).toBe(SceneMode.SCENE2D);
+    });
+
+    it('can set map projection', function() {
+        var mapProjection = new WebMercatorProjection();
+
+        viewer = new Viewer(container, {
+            mapProjection : mapProjection
+        });
+        expect(viewer.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set selectedImageryProviderViewModel', function() {
@@ -353,6 +364,33 @@ defineSuite([
             useDefaultRenderLoop : false
         });
         expect(viewer.useDefaultRenderLoop).toBe(false);
+    });
+
+    it('can set target frame rate', function() {
+        viewer = new Viewer(container, {
+            targetFrameRate : 23
+        });
+        expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        viewer = new Viewer(container);
+        viewer.resolutionScale = 0.5;
+        expect(viewer.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.resolutionScale = -1;
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined container', function() {

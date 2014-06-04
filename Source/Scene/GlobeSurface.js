@@ -10,23 +10,27 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidalOccluder',
-        '../Core/Rectangle',
         '../Core/FeatureDetection',
+        '../Core/GeometryPipeline',
         '../Core/getTimestamp',
+        '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/Rectangle',
+        '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
+        '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/Pass',
+        '../ThirdParty/when',
         './ImageryLayer',
         './ImageryState',
+        './Pass',
         './SceneMode',
-        './TerrainProvider',
+        './Tile',
         './TileReplacementQueue',
-        './TileState',
-        '../ThirdParty/when'
+        './TileState'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -38,23 +42,27 @@ define([
         destroyObject,
         DeveloperError,
         EllipsoidalOccluder,
-        Rectangle,
         FeatureDetection,
+        GeometryPipeline,
         getTimestamp,
+        IndexDatatype,
         Intersect,
         Matrix4,
         PrimitiveType,
         Queue,
+        Rectangle,
+        TerrainProvider,
         WebMercatorProjection,
+        BufferUsage,
         DrawCommand,
-        Pass,
+        when,
         ImageryLayer,
         ImageryState,
+        Pass,
         SceneMode,
-        TerrainProvider,
+        Tile,
         TileReplacementQueue,
-        TileState,
-        when) {
+        TileState) {
     "use strict";
 
     /**
@@ -261,8 +269,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof GlobeSurface
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see GlobeSurface#destroy
@@ -278,8 +284,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof GlobeSurface
      *
      * @returns {undefined}
      *
@@ -366,7 +370,7 @@ define([
         if (!defined(surface._levelZeroTiles)) {
             if (surface._terrainProvider.ready) {
                 var terrainTilingScheme = surface._terrainProvider.tilingScheme;
-                surface._levelZeroTiles = terrainTilingScheme.createLevelZeroTiles();
+                surface._levelZeroTiles = Tile.createLevelZeroTiles(terrainTilingScheme);
             } else {
                 // Nothing to do until the terrain provider is ready.
                 return;
@@ -387,7 +391,7 @@ define([
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
             tile = levelZeroTiles[i];
             surface._tileReplacementQueue.markTileRendered(tile);
-            if (tile.state.value < TileState.READY.value) {
+            if (tile.state < TileState.READY) {
                 queueTileLoad(surface, tile);
             }
             if (tile.isRenderable && isTileVisible(surface, frameState, tile)) {
@@ -522,7 +526,7 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
@@ -562,11 +566,11 @@ define([
         var maximumHeight = tile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.scene2D.projection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
+            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.scene2D.projection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
+            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
@@ -627,7 +631,7 @@ define([
             allUpsampledOnly = allUpsampledOnly && child.state === TileState.UPSAMPLED_ONLY;
             allRenderable = allRenderable && child.isRenderable;
 
-            if (child.state.value < TileState.READY.value) {
+            if (child.state < TileState.READY) {
                 queueTileLoad(surface, child);
             }
         }
@@ -896,10 +900,10 @@ define([
                     ++tileCommandIndex;
                     var command = tileCommands[tileCommandIndex];
                     if (!defined(command)) {
-                        command = new DrawCommand();
-                        command.owner = tile;
-                        command.cull = false;
-                        command.boundingVolume = new BoundingSphere();
+                        command = new DrawCommand({
+                            cull : false,
+                            boundingVolume : new BoundingSphere()
+                        });
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap(globeUniformMap);
                     }
@@ -1024,7 +1028,7 @@ define([
                     var boundingVolume = command.boundingVolume;
 
                     if (frameState.mode !== SceneMode.SCENE3D) {
-                        BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                        BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                         Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                         if (frameState.mode === SceneMode.MORPHING) {
@@ -1061,7 +1065,7 @@ define([
 
         when(tile.meshForWireframePromise, function(mesh) {
             if (tile.vertexArray === vertexArray) {
-                tile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, tile.vertexArray, mesh);
+                tile.wireframeVertexArray = createWireframeVertexArray(context, tile.vertexArray, mesh);
             }
             tile.meshForWireframePromise = undefined;
         });
@@ -1090,6 +1094,30 @@ define([
                 }
             }
         }
+    }
+
+    /**
+     * Creates a vertex array for wireframe rendering of a terrain tile.
+     *
+     * @private
+     *
+     * @param {Context} context The context in which to create the vertex array.
+     * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
+     *                      will share vertex buffers with this existing one.
+     * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
+     * @returns {VertexArray} The vertex array for wireframe rendering.
+     */
+    function createWireframeVertexArray(context, vertexArray, terrainMesh) {
+        var geometry = {
+            indices : terrainMesh.indices,
+            primitiveType : PrimitiveType.TRIANGLES
+        };
+
+        GeometryPipeline.toWireframe(geometry);
+
+        var wireframeIndices = geometry.indices;
+        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     }
 
     return GlobeSurface;

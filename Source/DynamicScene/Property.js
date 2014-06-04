@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define([
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
@@ -32,7 +33,9 @@ define(['../Core/defined',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof Property.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : DeveloperError.throwInstantiationError
@@ -42,7 +45,9 @@ define(['../Core/defined',
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof Property.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : DeveloperError.throwInstantiationError
@@ -51,7 +56,6 @@ define(['../Core/defined',
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof Property
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -63,7 +67,7 @@ define(['../Core/defined',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Property
+     * @function
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

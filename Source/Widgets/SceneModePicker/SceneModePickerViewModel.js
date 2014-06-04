@@ -1,24 +1,24 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
-        '../../Core/defined',
         '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Scene/SceneMode',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
-        defineProperties,
-        defined,
         defaultValue,
+        defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EventHelper,
         SceneMode,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
@@ -205,7 +205,6 @@ define([
     });
 
     /**
-     * @memberof SceneModePickerViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SceneModePickerViewModel.prototype.isDestroyed = function() {
@@ -214,7 +213,6 @@ define([
 
     /**
      * Destroys the view model.
-     * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

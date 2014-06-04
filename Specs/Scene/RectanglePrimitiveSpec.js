@@ -1,44 +1,42 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/RectanglePrimitive',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/frameState',
-         'Specs/pick',
-         'Specs/render',
-         'Core/defaultValue',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Rectangle',
-         'Core/Math',
-         'Renderer/ClearCommand',
-         'Scene/SceneMode'
-     ], function(
-         RectanglePrimitive,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         frameState,
-         pick,
-         render,
-         defaultValue,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         Rectangle,
-         CesiumMath,
-         ClearCommand,
-         SceneMode) {
+        'Scene/RectanglePrimitive',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/defaultValue',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Renderer/ClearCommand',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/frameState',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        RectanglePrimitive,
+        BoundingSphere,
+        Cartesian3,
+        defaultValue,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        ClearCommand,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        frameState,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -58,7 +56,11 @@ defineSuite([
         rectangle = new RectanglePrimitive();
 
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        })));
     });
 
     afterEach(function() {
@@ -148,7 +150,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -202,7 +204,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
+        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.mapProjection));
     });
 
     it('test 2D bounding sphere', function() {
@@ -216,7 +218,7 @@ defineSuite([
         frameState.mode = mode;
 
         var b3D = BoundingSphere.fromRectangle3D(rectangle.rectangle, Ellipsoid.UNIT_SPHERE);
-        var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
+        var b2D = BoundingSphere.projectTo2D(b3D, frameState.mapProjection);
         b2D.center.x = 0.0;
         expect(boundingVolume).toEqual(b2D);
     });

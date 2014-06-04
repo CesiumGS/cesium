@@ -1,20 +1,20 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Scene/Material',
         '../Scene/PolylineCollection'
-       ], function(
-         DeveloperError,
-         defined,
-         destroyObject,
-         Cartesian3,
-         Color,
-         Material,
-         PolylineCollection) {
+    ], function(
+        Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
+        Material,
+        PolylineCollection) {
     "use strict";
 
     /**
@@ -49,7 +49,6 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicVectorVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -70,7 +69,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicVectorVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -80,7 +78,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicVectorVisualizer
      */
     DynamicVectorVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

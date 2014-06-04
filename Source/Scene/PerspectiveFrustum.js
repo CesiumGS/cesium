@@ -3,7 +3,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Scene/PerspectiveOffCenterFrustum'
+        './PerspectiveOffCenterFrustum'
     ], function(
         defined,
         defineProperties,
@@ -13,7 +13,7 @@ define([
 
     /**
      * The viewing frustum is defined by 6 planes.
-     * Each plane is represented by a {Cartesian4} object, where the x, y, and z components
+     * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
@@ -121,7 +121,7 @@ define([
 
         /**
          * The perspective projection matrix computed from the view frustum with an infinite far plane.
-         * @memberof PerspectiveFrustum
+         * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveFrustum#projectionMatrix
@@ -136,8 +136,6 @@ define([
 
     /**
      * Creates a culling volume for this frustum.
-     *
-     * @memberof PerspectiveFrustum
      *
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
@@ -157,8 +155,6 @@ define([
 
     /**
      * Returns the pixel's width and height in meters.
-     *
-     * @memberof PerspectiveFrustum
      *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
@@ -196,7 +192,6 @@ define([
 
     /**
      * Returns a duplicate of a PerspectiveFrustum instance.
-     * @memberof PerspectiveFrustum
      *
      * @param {PerspectiveFrustum} [result] The object onto which to store the result.
      * @returns {PerspectiveFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
@@ -225,8 +220,6 @@ define([
     /**
      * Compares the provided PerspectiveFrustum componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @memberof PerspectiveFrustum
      *
      * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

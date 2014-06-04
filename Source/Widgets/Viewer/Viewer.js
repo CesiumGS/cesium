@@ -2,15 +2,13 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
-        '../../Core/Event',
+        '../../Core/DeveloperError',
         '../../Core/EventHelper',
-        '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
         '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
+        '../../ThirdParty/knockout',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
@@ -27,20 +25,17 @@ define([
         '../SceneModePicker/SceneModePicker',
         '../SelectionIndicator/SelectionIndicator',
         '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../../ThirdParty/knockout'
+        '../Timeline/Timeline'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
         destroyObject,
-        Event,
+        DeveloperError,
         EventHelper,
-        formatError,
-        requestAnimationFrame,
         DataSourceCollection,
         DataSourceDisplay,
+        knockout,
         Animation,
         AnimationViewModel,
         BaseLayerPicker,
@@ -57,8 +52,7 @@ define([
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline,
-        knockout) {
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -75,7 +69,7 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Configuration options for the widget.
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
@@ -88,18 +82,20 @@ define([
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {Array} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
-     * @param {Array} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ProviderViewModel[]} [options.terrainProviderViewModels=createDefaultTerrainProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {Element} [options.fullscreenElement=document.body] The element to make full screen when the full screen button is pressed.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
-     * @param {Object} [options.contextOptions=undefined] Context and WebGL creation properties corresponding to {@link Context#options}.
+     * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -143,7 +139,10 @@ define([
      *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
      *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
      *         }
-     *     })
+     *     }),
+     *     // Show Columbus View map with Web Mercator projection
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      *
      * //Add basic drag and drop functionality
@@ -209,8 +208,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             skyBox : options.skyBox,
             sceneMode : options.sceneMode,
+            mapProjection : options.mapProjection,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : options.useDefaultRenderLoop,
+            targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors
         });
 
@@ -644,6 +645,24 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
+         * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
+         * determines the frame rate.  This value must be greater than 0 and a value higher than
+         * the underlying requestAnimationFrame implementatin will have no effect.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         */
+        targetFrameRate : {
+            get : function() {
+                return this._cesiumWidget.targetFrameRate;
+            },
+            set : function(value) {
+                this._cesiumWidget.targetFrameRate = value;
+            }
+        },
+
+        /**
          * Gets or sets whether or not this widget should control the render loop.
          * If set to true the widget will use {@link requestAnimationFrame} to
          * perform rendering and resizing of the widget, as well as drive the
@@ -663,6 +682,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget.useDefaultRenderLoop = value;
+            }
+        },
+
+        /**
+         * Gets or sets a scaling factor for rendering resolution.  Values less than 1.0 can improve
+         * performance on less powerful devices while values greater than 1.0 will render at a higher
+         * resolution and then scale down, resulting in improved visual fidelity.
+         * For example, if the widget is laid out at a size of 640x480, setting this value to 0.5
+         * will cause the scene to be rendered at 320x240 and then scaled up while setting
+         * it to 2.0 will cause the scene to be rendered at 1280x960 and then scaled down.
+         * @memberof Viewer.prototype
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        resolutionScale : {
+            get : function() {
+                return this._cesiumWidget.resolutionScale;
+            },
+            set : function(value) {
+                this._cesiumWidget.resolutionScale = value;
             }
         },
 
@@ -690,10 +730,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Extends the base viewer functionality with the provided mixin.
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
-     * @memberof Viewer
      *
-     * @param mixin The Viewer mixin to add to this instance.
-     * @param options The options object to be passed to the mixin function.
+     * @param {Function} mixin The Viewer mixin to add to this instance.
+     * @param {Object} options The options object to be passed to the mixin function.
      *
      * @see viewerDragDropMixin
      * @see viewerDynamicObjectMixin
@@ -712,7 +751,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * Resizes the widget to match the container size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof Viewer
      */
     Viewer.prototype.resize = function() {
         var cesiumWidget = this._cesiumWidget;
@@ -723,14 +761,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof Viewer
      */
     Viewer.prototype.render = function() {
         this._cesiumWidget.render();
     };
 
     /**
-     * @memberof Viewer
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     Viewer.prototype.isDestroyed = function() {
@@ -740,7 +776,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
         var i;

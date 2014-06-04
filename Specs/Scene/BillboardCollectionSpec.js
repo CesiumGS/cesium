@@ -1,62 +1,56 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/BillboardCollection',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/frameState',
-         'Specs/pick',
-         'Specs/render',
-         'Core/BoundingSphere',
-         'Core/Color',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Matrix4',
-         'Core/Math',
-         'Core/NearFarScalar',
-         'Renderer/ClearCommand',
-         'Renderer/TextureMinificationFilter',
-         'Renderer/TextureMagnificationFilter',
-         'Renderer/PixelFormat',
-         'Renderer/TextureAtlas',
-         'Scene/HorizontalOrigin',
-         'Scene/VerticalOrigin',
-         'Scene/SceneMode',
-         'Scene/OrthographicFrustum',
-         'Scene/Camera'
-     ], function(
-         BillboardCollection,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         frameState,
-         pick,
-         render,
-         BoundingSphere,
-         Color,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Matrix4,
-         CesiumMath,
-         NearFarScalar,
-         ClearCommand,
-         TextureMinificationFilter,
-         TextureMagnificationFilter,
-         PixelFormat,
-         TextureAtlas,
-         HorizontalOrigin,
-         VerticalOrigin,
-         SceneMode,
-         OrthographicFrustum,
-         Camera) {
+        'Scene/BillboardCollection',
+        'Core/BoundingSphere',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Color',
+        'Core/Math',
+        'Core/NearFarScalar',
+        'Renderer/ClearCommand',
+        'Renderer/TextureMagnificationFilter',
+        'Renderer/TextureMinificationFilter',
+        'Scene/HorizontalOrigin',
+        'Scene/OrthographicFrustum',
+        'Scene/SceneMode',
+        'Scene/TextureAtlas',
+        'Scene/VerticalOrigin',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/frameState',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        BillboardCollection,
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Color,
+        CesiumMath,
+        NearFarScalar,
+        ClearCommand,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        HorizontalOrigin,
+        OrthographicFrustum,
+        SceneMode,
+        TextureAtlas,
+        VerticalOrigin,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        frameState,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -71,7 +65,7 @@ defineSuite([
         context = createContext();
 
         var us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     afterAll(function() {
@@ -87,7 +81,11 @@ defineSuite([
     });
 
     function createTextureAtlas(context, images) {
-        var atlas = context.createTextureAtlas({
+        var mockScene = {
+            context : context
+        };
+        var atlas = new TextureAtlas({
+            scene : mockScene,
             images : images,
             borderWidthInPixels : 1,
             initialSize : new Cartesian2(3, 3)
@@ -262,17 +260,25 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('render billboard with translucencyByDistance', function() {
@@ -290,14 +296,22 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         us.update(context, createFrameState(createCamera(context)));
@@ -318,17 +332,25 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, billboards);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('throws scaleByDistance with nearDistance === farDistance', function() {
@@ -995,7 +1017,7 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -1147,7 +1169,7 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(0.5, 0.5));
     });
 
@@ -1158,7 +1180,7 @@ defineSuite([
             pixelOffset : new Cartesian2(1.0, 2.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(b.computeScreenSpacePosition(fakeScene)).toEqual(new Cartesian2(1.5, 2.5));
     });
 
@@ -1169,7 +1191,7 @@ defineSuite([
             eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
         });
         billboards.update(context, frameState, []);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         var p = b.computeScreenSpacePosition(fakeScene);
         expect(p.x).toBeGreaterThan(0.5);
         expect(p.y).toBeGreaterThan(0.5);
@@ -1180,7 +1202,7 @@ defineSuite([
             position : Cartesian3.ZERO
         });
         billboards.remove(b);
-        var fakeScene = {_context : context, frameState : frameState, canvas: context._canvas};
+        var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
         expect(function() {
             b.computeScreenSpacePosition(fakeScene);
         }).toThrowDeveloperError();
@@ -1243,7 +1265,7 @@ defineSuite([
         var atlas = createTextureAtlas(context, [greenImage]);
         billboards.textureAtlas = atlas;
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
@@ -1269,7 +1291,7 @@ defineSuite([
         var atlas = createTextureAtlas(context, [greenImage]);
         billboards.textureAtlas = atlas;
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({
@@ -1302,7 +1324,7 @@ defineSuite([
         var atlas = createTextureAtlas(context, [greenImage]);
         billboards.textureAtlas = atlas;
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = billboards.add({

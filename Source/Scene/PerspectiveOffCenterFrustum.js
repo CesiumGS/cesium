@@ -1,29 +1,29 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Scene/CullingVolume'
+        './CullingVolume'
     ], function(
-        DeveloperError,
-        defaultValue,
-        defined,
-        defineProperties,
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
         Matrix4,
         CullingVolume) {
     "use strict";
 
     /**
      * The viewing frustum is defined by 6 planes.
-     * Each plane is represented by a {Cartesian4} object, where the x, y, and z components
+     * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
@@ -169,8 +169,6 @@ define([
     /**
      * Creates a culling volume for this frustum.
      *
-     * @memberof PerspectiveOffCenterFrustum
-     *
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
@@ -310,8 +308,6 @@ define([
     /**
      * Returns the pixel's width and height in meters.
      *
-     * @memberof PerspectiveOffCenterFrustum
-     *
      * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
      * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
      * @param {Cartesian2} [result] The object onto which to store the result.
@@ -376,7 +372,6 @@ define([
 
     /**
      * Returns a duplicate of a PerspectiveOffCenterFrustum instance.
-     * @memberof PerspectiveOffCenterFrustum
      *
      * @param {PerspectiveOffCenterFrustum} [result] The object onto which to store the result.
      * @returns {PerspectiveOffCenterFrustum} The modified result parameter or a new PerspectiveFrustum instance if one was not provided.
@@ -407,8 +402,6 @@ define([
     /**
      * Compares the provided PerspectiveOffCenterFrustum componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     *
-     * @memberof PerspectiveOffCenterFrustum
      *
      * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

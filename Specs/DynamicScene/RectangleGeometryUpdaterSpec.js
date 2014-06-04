@@ -1,47 +1,40 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/RectangleGeometryUpdater',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/DynamicRectangle',
-             'Core/Cartesian3',
-             'Core/Cartographic',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/Rectangle',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection',
-             'Core/ColorGeometryInstanceAttribute',
-             'Core/ShowGeometryInstanceAttribute',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/GridMaterialProperty',
-             'DynamicScene/PropertyArray',
-             'DynamicScene/SampledProperty',
-             'DynamicScene/SampledPositionProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Scene/CompositePrimitive'
-         ], function(
-             RectangleGeometryUpdater,
-             DynamicObject,
-             DynamicRectangle,
-             Cartesian3,
-             Cartographic,
-             Color,
-             JulianDate,
-             Rectangle,
-             TimeInterval,
-             TimeIntervalCollection,
-             ColorGeometryInstanceAttribute,
-             ShowGeometryInstanceAttribute,
-             ColorMaterialProperty,
-             ConstantProperty,
-             ConstantPositionProperty,
-             GridMaterialProperty,
-             PropertyArray,
-             SampledProperty,
-             SampledPositionProperty,
-             TimeIntervalCollectionProperty,
-             CompositePrimitive) {
+defineSuite([
+        'DynamicScene/RectangleGeometryUpdater',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/JulianDate',
+        'Core/Rectangle',
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicRectangle',
+        'DynamicScene/GridMaterialProperty',
+        'DynamicScene/SampledProperty',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Scene/PrimitiveCollection'
+    ], function(
+        RectangleGeometryUpdater,
+        Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
+        JulianDate,
+        Rectangle,
+        ShowGeometryInstanceAttribute,
+        TimeInterval,
+        TimeIntervalCollection,
+        ColorMaterialProperty,
+        ConstantProperty,
+        DynamicObject,
+        DynamicRectangle,
+        GridMaterialProperty,
+        SampledProperty,
+        TimeIntervalCollectionProperty,
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -339,7 +332,7 @@ defineSuite(['DynamicScene/RectangleGeometryUpdater',
         dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
 
         var updater = new RectangleGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -410,7 +403,7 @@ defineSuite(['DynamicScene/RectangleGeometryUpdater',
         var dynamicObject = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -430,7 +423,7 @@ defineSuite(['DynamicScene/RectangleGeometryUpdater',
         dynamicObject.rectangle.height = new SampledProperty(Number);
         dynamicObject.rectangle.height.addSample(time, 4);
         var updater = new RectangleGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

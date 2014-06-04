@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicRectangle',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Color',
-             'Core/Rectangle',
-             'Specs/testDefinitionChanged',
-             'Specs/testMaterialDefinitionChanged'
-         ], function(
-             DynamicRectangle,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Color,
-             Rectangle,
-             testDefinitionChanged,
-             testMaterialDefinitionChanged) {
+        'DynamicScene/DynamicRectangle',
+        'Core/Color',
+        'Core/Rectangle',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty',
+        'Specs/testDefinitionChanged',
+        'Specs/testMaterialDefinitionChanged'
+    ], function(
+        DynamicRectangle,
+        Color,
+        Rectangle,
+        ColorMaterialProperty,
+        ConstantProperty,
+        testDefinitionChanged,
+        testMaterialDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

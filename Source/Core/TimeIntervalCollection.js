@@ -1,20 +1,20 @@
 /*global define*/
 define([
+        './binarySearch',
         './defined',
         './defineProperties',
         './DeveloperError',
         './Event',
-        './binarySearch',
-        './TimeInterval',
-        './JulianDate'
+        './JulianDate',
+        './TimeInterval'
     ], function(
+        binarySearch,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        binarySearch,
-        TimeInterval,
-        JulianDate) {
+        JulianDate,
+        TimeInterval) {
     "use strict";
 
     function compareIntervalStartTimes(left, right) {
@@ -99,7 +99,6 @@ define([
     /**
      * Compares the provided TimeIntervalCollections and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeIntervalCollection
      *
      * @param {TimeInterval} [right] The right hand side collection.
      * @param {Function} [dataComparer] A function which compares the data for each interval in the collection.  If ommitted, reference equality is used.
@@ -129,7 +128,6 @@ define([
     /**
      * Gets the interval at the specified index.
      *
-     * @memberof TimeIntervalCollection
      * @param {Number} index The index of the interval to retrieve.
      * @returns {TimeInterval} The TimeInterval at the specified index, or undefined if no such index exists.
      * @exception {DeveloperError} index must be a number.
@@ -146,8 +144,6 @@ define([
 
     /**
      * Removes all intervals from the collection.
-     *
-     * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.removeAll = function() {
         if (this._intervals.length > 0) {
@@ -161,8 +157,6 @@ define([
      *
      * @param {JulianDate} date The date to search for.
      *
-     * @memberof TimeIntervalCollection
-     *
      * @returns The interval containing the specified date, undefined if no such interval exists.
      */
     TimeIntervalCollection.prototype.findIntervalContainingDate = function(date) {
@@ -174,8 +168,6 @@ define([
      * Returns the data for the interval which contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
-     *
-     * @memberof TimeIntervalCollection
      *
      * @returns The data for the interval containing the specified date, or undefined if no such interval exists.
      */
@@ -189,8 +181,6 @@ define([
      *
      * @param {JulianDate} date The date to search for.
      *
-     * @memberof TimeIntervalCollection
-     *
      * @returns True if the specified date is contained in the interval collection, undefined otherwise.
      */
     TimeIntervalCollection.prototype.contains = function(date) {
@@ -201,8 +191,6 @@ define([
      * Returns the index of the interval in the collection that contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
-     *
-     * @memberof TimeIntervalCollection
      *
      * @returns The index of the interval which contains the specified date, if no such interval exists,
      * it returns a negative number which is the bitwise complement of the index of the next interval that
@@ -247,8 +235,6 @@ define([
      * @param {JulianDate} [isStartIncluded] True if the start date is included.
      * @param {JulianDate} [isStopIncluded] True if the stop date is included.
      *
-     * @memberof TimeIntervalCollection
-     *
      * @returns The first interval in the collection that matches the specified parameters.
      */
     TimeIntervalCollection.prototype.findInterval = function(start, stop, isStartIncluded, isStopIncluded) {
@@ -274,8 +260,6 @@ define([
      * @param {Function} [equalsCallback] An optional function which takes the data from two
      * TimeIntervals and returns true if they are equal, false otherwise.  If this function
      * is not provided, the Javascript equality operator is used.
-     *
-     * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.addInterval = function(interval, equalsCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -418,8 +402,6 @@ define([
      *
      * @param {TimeInterval} interval The interval to remove.
      *
-     * @memberof TimeIntervalCollection
-     *
      * @returns true if the interval was removed, false if no part of the interval was in the collection.
      */
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
@@ -536,8 +518,6 @@ define([
      * the interval data from <code>this</code> collection will be used.
      *
      * @returns A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
-     *
-     * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.intersect = function(timeIntervalCollection, equalsCallback, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);
@@ -562,8 +542,6 @@ define([
      * the interval data from <code>this</code> collection will be used.
      *
      * @returns A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
-     *
-     * @memberof TimeIntervalCollection
      */
     TimeIntervalCollection.prototype.intersectInterval = function(interval, equalsCallback, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/binarySearch',
+define([
+        '../Core/binarySearch',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,7 +8,7 @@ define(['../Core/binarySearch',
         '../Core/Event',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
-       ], function(
+    ], function(
         binarySearch,
         defaultValue,
         defined,
@@ -195,7 +196,9 @@ define(['../Core/binarySearch',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof SampledProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -207,7 +210,9 @@ define(['../Core/binarySearch',
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof SampledProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -250,7 +255,6 @@ define(['../Core/binarySearch',
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof SampledProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -352,9 +356,8 @@ define(['../Core/binarySearch',
 
     /**
      * Sets the algorithm and degree to use when interpolating a value.
-     * @memberof SampledProperty
      *
-     * @param {Object} options The options
+     * @param {Object} [options] Object with the following properties:
      * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
      * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
      */
@@ -388,7 +391,6 @@ define(['../Core/binarySearch',
 
     /**
      * Adds a new sample
-     * @memberof SampledProperty
      *
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
@@ -413,10 +415,9 @@ define(['../Core/binarySearch',
 
     /**
      * Adds an array of samples
-     * @memberof SampledProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of values, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
      *
      * @exception {DeveloperError} times and values must be the same length..
      */
@@ -447,9 +448,8 @@ define(['../Core/binarySearch',
 
     /**
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
-     * @memberof SampledProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
@@ -467,7 +467,6 @@ define(['../Core/binarySearch',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof SampledProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

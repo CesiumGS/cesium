@@ -2,8 +2,8 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
+        '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
@@ -13,8 +13,8 @@ define([
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
+        DeveloperError,
         Event,
         wrapFunction,
         CzmlDataSource,
@@ -30,7 +30,7 @@ define([
      * @exports viewerDragDropMixin
      *
      * @param {Viewer} viewer The viewer instance.
-     * @param {Object} [options] Configuration options for the mixin.
+     * @param {Object} [options] Object with the following properties:
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *

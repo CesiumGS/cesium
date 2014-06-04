@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './defaultValue',
         './Cartesian3',
+        './defaultValue',
         './EllipsoidGeometry'
     ], function(
-        defaultValue,
         Cartesian3,
+        defaultValue,
         EllipsoidGeometry) {
     "use strict";
 
@@ -15,6 +15,7 @@ define([
      * @alias SphereGeometry
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.radius=1.0] The radius of the sphere.
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.

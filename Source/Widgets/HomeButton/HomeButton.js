@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './HomeButtonViewModel',
-        '../../ThirdParty/knockout'
+        './HomeButtonViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        HomeButtonViewModel,
-        knockout) {
+        HomeButtonViewModel) {
     "use strict";
 
     /**
@@ -85,7 +85,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     });
 
     /**
-     * @memberof HomeButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     HomeButton.prototype.isDestroyed = function() {
@@ -95,7 +94,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof HomeButton
      */
     HomeButton.prototype.destroy = function() {
         knockout.cleanNode(this._element);

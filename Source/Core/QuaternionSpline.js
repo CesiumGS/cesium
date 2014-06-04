@@ -2,15 +2,17 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
-        './Spline',
-        './Quaternion'
+        './Quaternion',
+        './Spline'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
-        Spline,
-        Quaternion) {
+        Quaternion,
+        Spline) {
     "use strict";
 
     function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {
@@ -67,9 +69,10 @@ define([
      * @alias QuaternionSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Object} options Object with the following properties:
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Quaternion} control points.
+     * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
      * @param {Quaternion} [options.firstInnerQuadrangle] The inner quadrangle of the curve at the first control point.
      *                     If the inner quadrangle is not given, it will be estimated.
      * @param {Quaternion} [options.lastInnerQuadrangle] The inner quadrangle of the curve at the last control point.
@@ -106,35 +109,62 @@ define([
 
         var innerQuadrangles = computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle);
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Quaternion} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * An array of {@link Quaternion} inner qradrangles for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.innerQuadrangles = innerQuadrangles;
+        this._times = times;
+        this._points = points;
+        this._innerQuadrangles = innerQuadrangles;
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
 
+    defineProperties(QuaternionSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Number[]}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Quaternion} control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Quaternion[]}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * An array of {@link Quaternion} inner quadrangles for the control points.
+         *
+         * @memberof QuaternionSpline.prototype
+         *
+         * @type {Quaternion[]}
+         * @readonly
+         */
+        innerQuadrangles : {
+            get : function() {
+                return this._innerQuadrangles;
+            }
+        }
+    });
+
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof QuaternionSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -147,7 +177,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof QuaternionSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Quaternion} [result] The object onto which to store the result.

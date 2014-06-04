@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -80,8 +81,6 @@ define(['../Core/defaultValue',
      * Gets or sets the default function which takes a scene and dataSource and returns the
      * array of visualizers used for visualization.  By default, this function uses all standard visualizers.
      *
-     * @memberof DataSourceDisplay
-     *
      * @type {Function}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
@@ -105,8 +104,6 @@ define(['../Core/defaultValue',
     /**
      * Gets the scene being used for display.
      *
-     * @memberof DataSourceDisplay
-     *
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
@@ -115,8 +112,6 @@ define(['../Core/defaultValue',
 
     /**
      * Gets the collection of data sources to be displayed.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {DataSourceCollection} The collection of data sources.
      */
@@ -129,8 +124,6 @@ define(['../Core/defaultValue',
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -147,8 +140,6 @@ define(['../Core/defaultValue',
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {undefined}
      *
@@ -172,8 +163,6 @@ define(['../Core/defaultValue',
 
     /**
      * Updates the display to the provided time.
-     *
-     * @memberof DataSourceDisplay
      *
      * @param {JulianDate} time The simulation time.
      *

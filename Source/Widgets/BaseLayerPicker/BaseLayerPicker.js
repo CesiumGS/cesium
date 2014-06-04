@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './BaseLayerPickerViewModel',
-        '../../ThirdParty/knockout'
+        './BaseLayerPickerViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        BaseLayerPickerViewModel,
-        knockout) {
+        BaseLayerPickerViewModel) {
     "use strict";
 
     /**
@@ -34,6 +34,7 @@ define([
      * @constructor
      *
      * @param {Element} container The parent HTML container node for this widget.
+     * @param {Object} options Object with the following properties:
      * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -48,8 +49,8 @@ define([
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
-     * // and in the body, include: &lt;div id="baseLayerPickerContainer"
-     * //   style="position:absolute;top:24px;right:24px;width:38px;height:38px;"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="baseLayerPickerContainer"
+     * //   style="position:absolute;top:24px;right:24px;width:38px;height:38px;"></div>
      *
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
@@ -240,7 +241,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     });
 
     /**
-     * @memberof BaseLayerPicker
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     BaseLayerPicker.prototype.isDestroyed = function() {
@@ -250,7 +250,6 @@ click: function($data) { $parent.selectedTerrain = $data; }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown, true);

@@ -5,16 +5,16 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
-        './ScreenSpaceEventType',
-        './KeyboardEventModifier'
+        './KeyboardEventModifier',
+        './ScreenSpaceEventType'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         destroyObject,
         DeveloperError,
-        ScreenSpaceEventType,
-        KeyboardEventModifier) {
+        KeyboardEventModifier,
+        ScreenSpaceEventType) {
     "use strict";
 
     /**
@@ -23,7 +23,7 @@ define([
      *
      * @alias ScreenSpaceEventHandler
      *
-     * @param {DOC_TBA} element The element to add events to. Defaults to document.
+     * @param {Canvas} [element=document] The element to add events to.
      * @constructor
      */
     var ScreenSpaceEventHandler = function(element) {
@@ -62,9 +62,9 @@ define([
     }
 
     function getMouseEventsKey(type, modifier) {
-        var key = type.name;
+        var key = type;
         if (defined(modifier)) {
-            key += '+' + modifier.name;
+            key += '+' + modifier;
         }
         return key;
     }
@@ -72,11 +72,9 @@ define([
     /**
      * Set a function to be executed on an input event.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
      * @param {Function} action Function to be executed when the input event occurs.
-     * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Number} type The ScreenSpaceEventType of input event.
+     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @see ScreenSpaceEventHandler#getInputAction
@@ -99,10 +97,8 @@ define([
     /**
      * Returns the function to be executed on an input event.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
-     * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Number} type The ScreenSpaceEventType of input event.
+     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @see ScreenSpaceEventHandler#setInputAction
@@ -122,10 +118,8 @@ define([
     /**
      * Removes the function to be executed on an input event.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
-     * @param {Enumeration} type The ScreenSpaceEventType of input event.
-     * @param {Enumeration} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
+     * @param {Number} type The ScreenSpaceEventType of input event.
+     * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
      *
      * @see ScreenSpaceEventHandler#getInputAction
@@ -582,8 +576,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see ScreenSpaceEventHandler#destroy
@@ -598,8 +590,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof ScreenSpaceEventHandler
      *
      * @returns {undefined}
      *

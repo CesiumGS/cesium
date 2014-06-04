@@ -1,16 +1,14 @@
 /*global define*/
 define([
-        '../BaseLayerPicker/ProviderViewModel',
         '../../Core/buildModuleUrl',
-        '../../Scene/ArcGisImageServerTerrainProvider',
-        '../../Scene/CesiumTerrainProvider',
-        '../../Scene/EllipsoidTerrainProvider'
+        '../../Core/CesiumTerrainProvider',
+        '../../Core/EllipsoidTerrainProvider',
+        '../BaseLayerPicker/ProviderViewModel'
     ], function(
-        ProviderViewModel,
         buildModuleUrl,
-        ArcGisImageServerTerrainProvider,
         CesiumTerrainProvider,
-        EllipsoidTerrainProvider) {
+        EllipsoidTerrainProvider,
+        ProviderViewModel) {
     "use strict";
 
     /**
@@ -34,8 +32,7 @@ define([
             tooltip : 'High-resolution, mesh-based terrain for the entire globe. Free for use on the Internet. Closed-network options are available.\nhttp://www.agi.com',
             creationFunction : function() {
                 return new CesiumTerrainProvider({
-                    url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles',
-                    credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+                    url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles'
                 });
             }
         }));

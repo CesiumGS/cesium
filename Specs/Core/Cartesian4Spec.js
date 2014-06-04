@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Cartesian4',
-         'Core/Color',
-         'Specs/createPackableSpecs'
-     ], function(
-         Cartesian4,
-         Color,
-         createPackableSpecs) {
+        'Core/Cartesian4',
+        'Core/Color',
+        'Specs/createPackableSpecs'
+    ], function(
+        Cartesian4,
+        Color,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

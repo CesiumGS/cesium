@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        './freezeObject',
+        './Cartographic',
         './defaultValue',
         './defined',
-        './Ellipsoid',
-        './Cartographic',
         './DeveloperError',
+        './Ellipsoid',
+        './freezeObject',
         './Math'
     ], function(
-        freezeObject,
+        Cartographic,
         defaultValue,
         defined,
-        Ellipsoid,
-        Cartographic,
         DeveloperError,
+        Ellipsoid,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -67,8 +67,6 @@ define([
     /**
      * Creates an rectangle given the boundary longitude and latitude in degrees.
      *
-     * @memberof Rectangle
-     *
      * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Number} [east=0.0] The easternmost longitude in degrees in the range [-180.0, 180.0].
@@ -100,9 +98,8 @@ define([
 
     /**
      * Creates the smallest possible Rectangle that encloses all positions in the provided array.
-     * @memberof Rectangle
      *
-     * @param {Array} cartographics The list of Cartographic instances.
+     * @param {Cartographic[]} cartographics The list of Cartographic instances.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
@@ -139,16 +136,15 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Rectangle.packedLength = 4;
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Rectangle
      *
      * @param {Rectangle} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Rectangle.pack = function(value, array, startingIndex) {
@@ -172,9 +168,8 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Rectangle
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Rectangle} [result] The object into which to store the result.
      */
@@ -200,8 +195,6 @@ define([
     /**
      * Duplicates an Rectangle.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} rectangle The rectangle to clone.
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided. (Returns undefined if rectangle is undefined)
@@ -225,8 +218,6 @@ define([
     /**
      * Duplicates this Rectangle.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} [result] The object onto which to store the result.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
@@ -237,7 +228,6 @@ define([
     /**
      * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} [other] The Rectangle to compare.
      * @returns {Boolean} <code>true</code> if the Rectangles are equal, <code>false</code> otherwise.
@@ -249,8 +239,6 @@ define([
     /**
      * Compares the provided rectangles and returns <code>true</code> if they are equal,
      * <code>false</code> otherwise.
-     *
-     * @memberof Rectangle
      *
      * @param {Rectangle} [left] The first Rectangle.
      * @param {Rectangle} [right] The second Rectangle.
@@ -271,7 +259,6 @@ define([
      * Compares the provided Rectangle with this Rectangle componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} [other] The Rectangle to compare.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -347,7 +334,6 @@ define([
 
     /**
      * Computes the southwest corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -371,7 +357,6 @@ define([
 
     /**
      * Computes the northwest corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -395,7 +380,6 @@ define([
 
     /**
      * Computes the northeast corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -419,7 +403,6 @@ define([
 
     /**
      * Computes the southeast corner of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the corner
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -443,7 +426,6 @@ define([
 
     /**
      * Computes the center of an rectangle.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle for which to find the center
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -467,10 +449,9 @@ define([
 
     /**
      * Computes the intersection of two rectangles
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle On rectangle to find an intersection
-     * @param otherRectangle Another rectangle to find an intersection
+     * @param {Rectangle} otherRectangle Another rectangle to find an intersection
      * @param {Rectangle} [result] The object onto which to store the result.
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      */
@@ -500,7 +481,6 @@ define([
 
     /**
      * Returns true if the cartographic is on or inside the rectangle, false otherwise.
-     * @memberof Rectangle
      *
      * @param {Rectangle} rectangle The rectangle
      * @param {Cartographic} cartographic The cartographic to test.
@@ -526,8 +506,6 @@ define([
      * Determines if the rectangle is empty, i.e., if <code>west >= east</code>
      * or <code>south >= north</code>.
      *
-     * @memberof Rectangle
-     *
      * @param {Rectangle} rectangle The rectangle
      * @returns {Boolean} True if the rectangle is empty; otherwise, false.
      */
@@ -550,8 +528,8 @@ define([
      * @param {Rectangle} rectangle The rectangle to subsample.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
      * @param {Number} [surfaceHeight=0.0] The height of the rectangle above the ellipsoid.
-     * @param {Array} [result] The array of Cartesians onto which to store the result.
-     * @returns {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
+     * @param {Cartesian3[]} [result] The array of Cartesians onto which to store the result.
+     * @returns {Cartesian3[]} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
     Rectangle.subsample = function(rectangle, ellipsoid, surfaceHeight, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -624,8 +602,9 @@ define([
 
     /**
      * The largest possible rectangle.
-     * @memberof Rectangle
-     * @type Rectangle
+     *
+     * @type {Rectangle}
+     * @constant
     */
     Rectangle.MAX_VALUE = freezeObject(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
 

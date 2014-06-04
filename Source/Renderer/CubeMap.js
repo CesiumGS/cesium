@@ -1,40 +1,34 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/Math',
+        './CubeMapFace',
         './MipmapHint',
         './PixelDatatype',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap',
-        './CubeMapFace'
+        './TextureWrap'
     ], function(
+        defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
-        defaultValue,
+        DeveloperError,
         CesiumMath,
+        CubeMapFace,
         MipmapHint,
         PixelDatatype,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap,
-        CubeMapFace) {
+        TextureWrap) {
     "use strict";
 
     /**
-     * A cube map with faces +x, -x, +y, -y, +z, and -z.  Cube maps are used for environment techniques like
-     * approximate reflection and refraction as used in the Reflection and Refraction {@link Material}s.
-     *
-     * @alias CubeMap
-     * @internalConstructor
-     *
-     * @see Context#createCubeMap
+     * @private
      */
     var CubeMap = function(gl, textureFilterAnisotropic, textureTarget, texture, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
         this._gl = gl;
@@ -59,77 +53,36 @@ define([
     };
 
     defineProperties(CubeMap.prototype, {
-        /**
-         * The positive x face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         positiveX : {
             get : function() {
                 return this._positiveX;
             }
         },
-
-        /**
-         * The negative x face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         negativeX : {
             get : function() {
                 return this._negativeX;
             }
         },
-
-        /**
-         * The positive y face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         positiveY : {
             get : function() {
                 return this._positiveY;
             }
         },
-
-        /**
-         * The negative y face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         negativeY : {
             get : function() {
                 return this._negativeY;
             }
         },
-
-        /**
-         * The positive z face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         positiveZ : {
             get : function() {
                 return this._positiveZ;
             }
         },
-
-        /**
-         * The negative z face of this cube map for modification, rendering to, etc.
-         * @memberof CubeMap.prototype
-         * @type {CubeMapFace}
-         */
         negativeZ : {
             get : function() {
                 return this._negativeZ;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof CubeMap.prototype
-         * @type {Object}
-         */
         sampler : {
             get : function() {
                 return this._sampler;
@@ -188,68 +141,31 @@ define([
                 };
             }
         },
-
-        /**
-         * The pixel format of this cube map.  All faces in the same cube map have the same pixel format.
-         * @memberof CubeMap.prototype
-         * @type {PixelFormat}
-         */
         pixelFormat: {
             get : function() {
                 return this._pixelFormat;
             }
         },
-
-        /**
-         * The pixel datatype of this cube map.  All faces in the same cube map have the same pixel datatype.
-         * @memberof CubeMap.prototype
-         * @type {PixelDatatype}
-         */
         pixelDatatype : {
             get : function() {
                 return this._pixelDatatype;
             }
         },
-
-        /**
-         * The width, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
-         * @memberof CubeMap.prottoype
-         * @type {Number}
-         */
         width : {
             get : function() {
                 return this._size;
             }
         },
-
-        /**
-         * The height, in texels, of faces in this cube map.  All faces in the same cube map have the same width and height, and the width equals the height.
-         * @memberof CubeMap.prototype
-         * @type {Number}
-         */
         height: {
             get : function() {
                 return this._size;
             }
         },
-
-        /**
-         * True if the cubemap was created with premultiplied alpha (UNPACK_PREMULTIPLY_ALPHA_WEBGL).
-         * @memberof CubeMap.prototype
-         * @type {Boolean}
-         */
         preMultiplyAlpha : {
             get : function() {
                 return this._preMultiplyAlpha;
             }
         },
-
-        /**
-         * True if the source pixels are flipped vertically when cube-map faces are created or updated, i.e.,
-         * <code>UNPACK_FLIP_Y_WEBGL</code> is used.
-         * @memberof CubeMap.prototype
-         * @type {Boolean}
-         */
         flipY : {
             get : function() {
                 return this._flipY;
@@ -265,8 +181,6 @@ define([
 
     /**
      * Generates a complete mipmap chain for each cubemap face.
-     *
-     * @memberof CubeMap
      *
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] A performance vs. quality hint.
      *
@@ -304,42 +218,10 @@ define([
         gl.bindTexture(target, null);
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof CubeMap
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see CubeMap#destroy
-     */
     CubeMap.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof CubeMap
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
-     *
-     * @see CubeMap#isDestroyed
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
-     *
-     * @example
-     * cubeMap = cubeMap && cubeMap.destroy();
-     */
     CubeMap.prototype.destroy = function() {
         this._gl.deleteTexture(this._texture);
         this._positiveX = destroyObject(this._positiveX);

@@ -1,40 +1,38 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Matrix4',
         '../Core/GeometryPipeline',
+        '../Core/Matrix4',
         '../Core/VertexFormat',
-        '../Core/PrimitiveType',
-        '../Renderer/loadCubeMap',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
-        '../Renderer/BlendingState',
-        '../Scene/SceneMode',
+        '../Renderer/loadCubeMap',
+        '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
-        '../Shaders/SkyBoxFS'
+        './BlendingState',
+        './SceneMode'
     ], function(
-        defaultValue,
         BoxGeometry,
         Cartesian3,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
-        Matrix4,
         GeometryPipeline,
+        Matrix4,
         VertexFormat,
-        PrimitiveType,
-        loadCubeMap,
         BufferUsage,
         DrawCommand,
-        BlendingState,
-        SceneMode,
+        loadCubeMap,
+        SkyBoxFS,
         SkyBoxVS,
-        SkyBoxFS) {
+        BlendingState,
+        SceneMode) {
     "use strict";
 
     /**
@@ -46,6 +44,7 @@ define([
      * @alias SkyBox
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
@@ -85,8 +84,10 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this._command = new DrawCommand();
-        this._command.owner = this;
+        this._command = new DrawCommand({
+            modelMatrix : Matrix4.clone(Matrix4.IDENTITY),
+            owner : this
+        });
         this._cubeMap = undefined;
     };
 
@@ -165,14 +166,12 @@ define([
             }));
             var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
-            command.primitiveType = PrimitiveType.TRIANGLES;
-            command.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry: geometry,
                 attributeLocations: attributeLocations,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });
-            command.shaderProgram = context.shaderCache.getShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
+            command.shaderProgram = context.createShaderProgram(SkyBoxVS, SkyBoxFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
@@ -191,8 +190,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof SkyBox
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see SkyBox#destroy
@@ -209,8 +206,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof SkyBox
-     *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -223,7 +218,7 @@ define([
     SkyBox.prototype.destroy = function() {
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
-        command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+        command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
         this._cubeMap = this._cubeMap && this._cubeMap.destroy();
         return destroyObject(this);
     };

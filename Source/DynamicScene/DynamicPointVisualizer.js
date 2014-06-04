@@ -6,7 +6,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Scene/BillboardCollection',
-        '../Renderer/TextureAtlasBuilder'
+        '../Scene/TextureAtlas',
+        '../Scene/TextureAtlasBuilder'
     ], function(
         Color,
         defaultValue,
@@ -14,6 +15,7 @@ define([
         destroyObject,
         DeveloperError,
         BillboardCollection,
+        TextureAtlas,
         TextureAtlasBuilder) {
     "use strict";
 
@@ -37,7 +39,9 @@ define([
 
         dynamicObjectCollection.collectionChanged.addEventListener(DynamicPointVisualizer.prototype._onObjectsRemoved, this);
 
-        var atlas = scene.createTextureAtlas();
+        var atlas = new TextureAtlas({
+            scene : scene
+        });
         var billboardCollection = new BillboardCollection();
         billboardCollection.textureAtlas = atlas;
         scene.primitives.add(billboardCollection);
@@ -53,7 +57,6 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicPointVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -74,7 +77,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicPointVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -84,7 +86,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicPointVisualizer
      */
     DynamicPointVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

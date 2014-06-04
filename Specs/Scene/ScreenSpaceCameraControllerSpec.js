@@ -1,40 +1,42 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ScreenSpaceCameraController',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/GeographicProjection',
-         'Core/IntersectionTests',
-         'Core/KeyboardEventModifier',
-         'Core/Math',
-         'Core/Matrix4',
-         'Core/Ray',
-         'Scene/Camera',
-         'Scene/CameraColumbusViewMode',
-         'Scene/CameraEventType',
-         'Scene/OrthographicFrustum',
-         'Scene/SceneMode',
-         'ThirdParty/Tween',
-         'Specs/MockCanvas'
-     ], function(
-         ScreenSpaceCameraController,
-         Cartesian2,
-         Cartesian3,
-         Ellipsoid,
-         GeographicProjection,
-         IntersectionTests,
-         KeyboardEventModifier,
-         CesiumMath,
-         Matrix4,
-         Ray,
-         Camera,
-         CameraColumbusViewMode,
-         CameraEventType,
-         OrthographicFrustum,
-         SceneMode,
-         Tween,
-         MockCanvas) {
+        'Scene/ScreenSpaceCameraController',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicProjection',
+        'Core/IntersectionTests',
+        'Core/KeyboardEventModifier',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Ray',
+        'Core/Transforms',
+        'Scene/Camera',
+        'Scene/CameraEventType',
+        'Scene/OrthographicFrustum',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/MockCanvas'
+    ], function(
+        ScreenSpaceCameraController,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        GeographicProjection,
+        IntersectionTests,
+        KeyboardEventModifier,
+        CesiumMath,
+        Matrix4,
+        Ray,
+        Transforms,
+        Camera,
+        CameraEventType,
+        OrthographicFrustum,
+        SceneMode,
+        createCamera,
+        MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,10 +49,20 @@ defineSuite([
     beforeEach(function() {
         // create a mock canvas object to add events to so they are callable.
         canvas = new MockCanvas();
-        camera = new Camera({
-            canvas: canvas,
-            drawingBufferWidth : canvas.clientWidth * 2,
-            drawingBufferHeight: canvas.clientHeight * 2
+
+        var maxRadii = Ellipsoid.WGS84.maximumRadius;
+        var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
+        var direction = Cartesian3.normalize(Cartesian3.negate(position));
+        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
+        var up = Cartesian3.cross(right, direction);
+
+        camera = createCamera({
+            canvas : canvas,
+            eye : position,
+            target : Cartesian3.ZERO,
+            up : up,
+            near : 1.0,
+            far : 500000000.0
         });
         controller = new ScreenSpaceCameraController(canvas, camera);
     });
@@ -78,7 +90,7 @@ defineSuite([
     });
 
     function updateController(frameState) {
-        camera.update(frameState.mode, frameState.scene2D);
+        camera.update(frameState.mode);
         controller.update(frameState.mode);
     }
 
@@ -87,9 +99,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE2D,
-            scene2D : {
-                projection : projection
-            }
+            mapProjection : projection
         };
         var maxRadii = ellipsoid.maximumRadius;
         var frustum = new OrthographicFrustum();
@@ -105,10 +115,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         return frameState;
     }
@@ -398,9 +404,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.COLUMBUS_VIEW,
-            scene2D : {
-                projection : projection
-            }
+            mapProjection : projection
         };
 
         var maxRadii = ellipsoid.maximumRadius;
@@ -408,10 +412,6 @@ defineSuite([
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
-        camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                1.0, 0.0, 0.0, 0.0,
-                0.0, 1.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 1.0);
 
         return frameState;
     }
@@ -545,12 +545,14 @@ defineSuite([
         expect(Cartesian3.dot(Cartesian3.normalize(camera.position), Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
         expect(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z)).toBeLessThan(0.0);
         expect(Cartesian3.dot(camera.up, Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
-        expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
+        expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON7);
     });
 
-    it('rotates in Columus view locked mode', function() {
+    it('rotates in Columus view with camera transform set', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(0, 0);
@@ -565,9 +567,11 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
     });
 
-    it('zooms in Columus view locked mode', function() {
+    it('zooms in Columus view with camera transform set', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -580,9 +584,11 @@ defineSuite([
         expect(position.z).toBeGreaterThan(camera.position.z);
     });
 
-    it('zoom in Columbus view locked mode with wheel', function() {
+    it('zoom in Columbus view with camera transform set and with wheel', function() {
         var frameState = setUpCV();
-        controller.columbusViewMode = CameraColumbusViewMode.LOCKED;
+
+        var origin = Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-72.0, 40.0));
+        camera.transform = Transforms.eastNorthUpToFixedFrame(origin);
 
         var position = Cartesian3.clone(camera.position);
 
@@ -615,9 +621,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var frameState = {
             mode : SceneMode.SCENE3D,
-            scene2D : {
-                projection : projection
-            }
+            mapProjection : projection
         };
         return frameState;
     }
@@ -759,7 +763,7 @@ defineSuite([
         expect(Cartesian3.cross(camera.right, camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON14);
 
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.mapProjection.ellipsoid);
         expect(intersection).toBeDefined();
     });
 
@@ -771,7 +775,7 @@ defineSuite([
 
         camera.lookRight(CesiumMath.PI_OVER_TWO);
         var ray = new Ray(camera.positionWC, camera.directionWC);
-        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.scene2D.projection.ellipsoid);
+        var intersection = IntersectionTests.rayEllipsoid(ray, frameState.mapProjection.ellipsoid);
         expect(intersection).not.toBeDefined();
 
         MockCanvas.moveMouse(canvas, MouseButtons.MIDDLE, startPosition, endPosition);

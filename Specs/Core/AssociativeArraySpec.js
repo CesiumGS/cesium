@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/AssociativeArray'], function(AssociativeArray) {
+defineSuite([
+        'Core/AssociativeArray'
+    ], function(
+        AssociativeArray) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/VertexArrayFacade',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Renderer/BufferUsage'
-     ], function(
-         VertexArrayFacade,
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         BufferUsage) {
+        'Renderer/VertexArrayFacade',
+        'Core/ComponentDatatype',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        VertexArrayFacade,
+        ComponentDatatype,
+        BufferUsage,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -202,22 +202,22 @@ defineSuite([
         vaf.endSubCommits();
 
         // Position attribute
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * (3 * 4));
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
-
-        // Temperature attribute
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(2 * 4);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.usage).toEqual(BufferUsage.STREAM_DRAW);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentsPerAttribute).toEqual(1);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(2 * (3 * 4));
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).offsetInBytes).toEqual(0);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).strideInBytes).toEqual(1 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).strideInBytes).toEqual(3 * 4);
+
+        // Temperature attribute
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STREAM_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(1);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).strideInBytes).toEqual(1 * 4);
     });
 
     it('creates different vertex arrays for different purposes', function() {

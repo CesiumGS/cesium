@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -10,14 +10,14 @@ define(['../Core/Enumeration'], function(Enumeration) {
     var StripeOrientation = {
         /**
          * Horizontal orientation.
-         * @type {Enumeration}
+         * @type {Number}
          */
-        HORIZONTAL : new Enumeration(0, 'HORIZONTAL'),
+        HORIZONTAL : 0,
         /**
          * Vertical orientation.
-         * @type {Enumeration}
+         * @type {Number}
          */
-        VERTICAL : new Enumeration(1, 'VERTICAL')
+        VERTICAL : 1
     };
 
     return StripeOrientation;

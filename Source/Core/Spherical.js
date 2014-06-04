@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        './DeveloperError',
         './defaultValue',
-        './defined'
+        './defined',
+        './DeveloperError'
     ], function(
-        DeveloperError,
         defaultValue,
-        defined) {
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -27,7 +27,6 @@ define([
 
     /**
      * Converts the provided Cartesian3 into Spherical coordinates.
-     * @memberof Spherical
      *
      * @param {Cartesian3} cartesian3 The Cartesian3 to be converted to Spherical.
      * @param {Spherical} [spherical] The object in which the result will be stored, if undefined a new instance will be created.
@@ -58,7 +57,6 @@ define([
 
     /**
      * Creates a duplicate of a Spherical.
-     * @memberof Spherical
      *
      * @param {Spherical} spherical The spherical to clone.
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
@@ -82,7 +80,6 @@ define([
 
     /**
      * Computes the normalized version of the provided spherical.
-     * @memberof Spherical
      *
      * @param {Spherical} spherical The spherical to be normalized.
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
@@ -108,7 +105,6 @@ define([
 
     /**
      * Returns true if the first spherical is equal to the second spherical, false otherwise.
-     * @memberof Spherical
      *
      * @param {Spherical} left The first Spherical to be compared.
      * @param {Spherical} right The second Spherical to be compared.
@@ -126,7 +122,6 @@ define([
 
     /**
      * Returns true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
-     * @memberof Spherical
      *
      * @param {Spherical} left The first Spherical to be compared.
      * @param {Spherical} right The second Spherical to be compared.
@@ -146,7 +141,6 @@ define([
 
     /**
      * Returns a string representing the provided instance in the format (clock, cone, magnitude).
-     * @memberof Spherical
      *
      * @param {Spherical} spherical The object to be converted.
      *
@@ -158,7 +152,6 @@ define([
 
     /**
      * Returns true if this spherical is equal to the provided spherical, false otherwise.
-     * @memberof Spherical
      *
      * @param {Spherical} other The Spherical to be compared.
      *
@@ -170,7 +163,6 @@ define([
 
     /**
      * Creates a duplicate of this Spherical.
-     * @memberof Spherical
      *
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
@@ -182,7 +174,6 @@ define([
 
     /**
     * Returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
-    * @memberof Spherical
     *
     * @param {Spherical} other The Spherical to be compared.
     * @param {Number} epsilon The epsilon to compare against.
@@ -195,7 +186,6 @@ define([
 
     /**
     * Returns a string representing this instance in the format (clock, cone, magnitude).
-    * @memberof Spherical
     *
     * @returns A string representing this instance.
     */

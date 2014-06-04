@@ -1,47 +1,46 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/PolygonGeometryUpdater',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/DynamicPolygon',
-             'Core/Cartesian3',
-             'Core/Cartographic',
-             'Core/Color',
-             'Core/Ellipsoid',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection',
-             'Core/ColorGeometryInstanceAttribute',
-             'Core/ShowGeometryInstanceAttribute',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/GridMaterialProperty',
-             'DynamicScene/PropertyArray',
-             'DynamicScene/SampledProperty',
-             'DynamicScene/SampledPositionProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Scene/CompositePrimitive'
-         ], function(
-             PolygonGeometryUpdater,
-             DynamicObject,
-             DynamicPolygon,
-             Cartesian3,
-             Cartographic,
-             Color,
-             Ellipsoid,
-             JulianDate,
-             TimeInterval,
-             TimeIntervalCollection,
-             ColorGeometryInstanceAttribute,
-             ShowGeometryInstanceAttribute,
-             ColorMaterialProperty,
-             ConstantProperty,
-             ConstantPositionProperty,
-             GridMaterialProperty,
-             PropertyArray,
-             SampledProperty,
-             SampledPositionProperty,
-             TimeIntervalCollectionProperty,
-             CompositePrimitive) {
+defineSuite([
+        'DynamicScene/PolygonGeometryUpdater',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/Ellipsoid',
+        'Core/JulianDate',
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicPolygon',
+        'DynamicScene/GridMaterialProperty',
+        'DynamicScene/PropertyArray',
+        'DynamicScene/SampledPositionProperty',
+        'DynamicScene/SampledProperty',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Scene/PrimitiveCollection'
+    ], function(
+        PolygonGeometryUpdater,
+        Cartesian3,
+        Cartographic,
+        Color,
+        ColorGeometryInstanceAttribute,
+        Ellipsoid,
+        JulianDate,
+        ShowGeometryInstanceAttribute,
+        TimeInterval,
+        TimeIntervalCollection,
+        ColorMaterialProperty,
+        ConstantProperty,
+        DynamicObject,
+        DynamicPolygon,
+        GridMaterialProperty,
+        PropertyArray,
+        SampledPositionProperty,
+        SampledProperty,
+        TimeIntervalCollectionProperty,
+        PrimitiveCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -329,7 +328,7 @@ defineSuite(['DynamicScene/PolygonGeometryUpdater',
         dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
 
         var updater = new PolygonGeometryUpdater(dynamicObject);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -403,7 +402,7 @@ defineSuite(['DynamicScene/PolygonGeometryUpdater',
         var dynamicObject = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(dynamicObject);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -423,7 +422,7 @@ defineSuite(['DynamicScene/PolygonGeometryUpdater',
         dynamicObject.polygon.height = new SampledProperty(Number);
         dynamicObject.polygon.height.addSample(time, 4);
         var updater = new PolygonGeometryUpdater(dynamicObject);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

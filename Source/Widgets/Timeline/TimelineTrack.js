@@ -2,10 +2,9 @@
 define([
         '../../Core/Color',
         '../../Core/defined'
-       ],
-        function(
-         Color,
-         defined) {
+    ], function(
+        Color,
+        defined) {
     "use strict";
 
     function TimelineTrack(interval, pixelHeight, color, backgroundColor) {

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define([
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -21,7 +22,7 @@ define(['../Core/defined',
      * @alias PropertyArray
      * @constructor
      *
-     * @param {Array} [value] An array of Property instances.
+     * @param {Property[]} [value] An array of Property instances.
      */
     var PropertyArray = function(value) {
         this._value = undefined;
@@ -35,7 +36,9 @@ define(['../Core/defined',
          * Gets a value indicating if this property is constant.  This property
          * is considered constant if all property items in the array are constant.
          * @memberof PropertyArray.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -57,7 +60,9 @@ define(['../Core/defined',
          * The definition is changed whenever setValue is called with data different
          * than the current value or one of the properties in the array also changes.
          * @memberof PropertyArray.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -68,11 +73,10 @@ define(['../Core/defined',
 
     /**
      * Gets the value of the property.
-     * @memberof PropertyArray
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
-     * @param {Array} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Array} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {Object[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PropertyArray.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -107,9 +111,8 @@ define(['../Core/defined',
 
     /**
      * Sets the value of the property.
-     * @memberof PropertyArray
      *
-     * @param {Array} value An array of Property instances.
+     * @param {Property[]} value An array of Property instances.
      */
     PropertyArray.prototype.setValue = function(value) {
         var eventHelper = this._eventHelper;
@@ -133,7 +136,6 @@ define(['../Core/defined',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof PropertyArray
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

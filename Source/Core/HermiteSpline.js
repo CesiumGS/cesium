@@ -1,23 +1,25 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
-        './Cartesian3',
-        './Matrix4',
-        './Cartesian4',
-        './Spline',
         './LinearSpline',
+        './Matrix4',
+        './Spline',
         './TridiagonalSystemSolver'
     ], function(
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
-        Cartesian3,
-        Matrix4,
-        Cartesian4,
-        Spline,
         LinearSpline,
+        Matrix4,
+        Spline,
         TridiagonalSystemSolver) {
     "use strict";
 
@@ -132,11 +134,12 @@ define([
      * @alias HermiteSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Object} options Object with the following properties:
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Cartesian3} control points.
-     * @param {Array} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
-     * @param {Array} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
+     * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
+     * @param {Cartesian3[]} options.inTangents The array of {@link Cartesian3} incoming tangents at each control point.
+     * @param {Cartesian3[]} options.outTangents The array of {@link Cartesian3} outgoing tangents at each control point.
      *
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
@@ -199,45 +202,79 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * An array of {@link Cartesian3} incoming tangents at each control point.
-         * @type {Array}
-         * @readonly
-         */
-        this.inTangents = inTangents;
-
-        /**
-         * An array of {@link Cartesian3} outgoing tangents at each control point.
-         * @type {Array}
-         * @readonly
-         */
-        this.outTangents = outTangents;
+        this._times = times;
+        this._points = points;
+        this._inTangents = inTangents;
+        this._outTangents = outTangents;
 
         this._lastTimeIndex = 0;
     };
 
+    defineProperties(HermiteSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Number[]}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Cartesian3[]}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} incoming tangents at each control point.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Cartesian3[]}
+         * @readonly
+         */
+        inTangents : {
+            get : function() {
+                return this._inTangents;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} outgoing tangents at each control point.
+         *
+         * @memberof HermiteSpline.prototype
+         *
+         * @type {Cartesian3[]}
+         * @readonly
+         */
+        outTangents : {
+            get : function() {
+                return this._outTangents;
+            }
+        }
+    });
+
     /**
      * Creates a spline where the tangents at each control point are the same.
      * The curves are guaranteed to be at least in the class C<sup>1</sup>.
-     * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
-     * @param {Array} options.tangents The array of tangents at the control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
+     * @param {Cartesian3[]} options.tangents The array of tangents at the control points.
      * @returns {HermiteSpline} A hermite spline.
      *
      * @exception {DeveloperError} points, times and tangents are required.
@@ -300,10 +337,9 @@ define([
     /**
      * Creates a natural cubic spline. The tangents at the control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points and times are required.
@@ -363,12 +399,11 @@ define([
     /**
      * Creates a clamped cubic spline. The tangents at the interior control points are generated
      * to create a curve in the class C<sup>2</sup>.
-     * @memberof HermiteSpline
      *
-     * @param {Array} options.times The array of control point times.
-     * @param {Array} options.points The array of control points.
+     * @param {Number[]} options.times The array of control point times.
+     * @param {Cartesian3[]} options.points The array of control points.
      * @param {Cartesian3} options.firstTangent The outgoing tangent of the first control point.
-     * @para, {Cartesian3} options.lastTangent The incoming tangent of the last control point.
+     * @param {Cartesian3} options.lastTangent The incoming tangent of the last control point.
      * @returns {HermiteSpline|LinearSpline} A hermite spline or a linear spline if less than 3 control points were given.
      *
      * @exception {DeveloperError} points, times, firstTangent and lastTangent are required.
@@ -438,7 +473,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof HermiteSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -454,7 +489,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof HermiteSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.

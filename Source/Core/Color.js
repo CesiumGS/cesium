@@ -2,16 +2,16 @@
 define([
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
         './FeatureDetection',
+        './freezeObject',
         './Math'
     ], function(
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
         FeatureDetection,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -77,7 +77,6 @@ define([
     /**
      * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,
      * and <code>w</code> map to <code>red</code>, <code>green</code>, <code>blue</code>, and <code>alpha</code>, respectively.
-     * @memberof Color
      *
      * @param {Cartesian4} cartesian The source cartesian.
      * @param {Color} [result] The object onto which to store the result.
@@ -104,7 +103,6 @@ define([
     /**
      * Creates a new Color specified using red, green, blue, and alpha values
      * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
-     * @memberof Color
      *
      * @param {Number} [red=255] The red component.
      * @param {Number} [green=255] The green component.
@@ -133,8 +131,6 @@ define([
      * Creates a new Color from a single numeric unsigned 32-bit RGBA value, using the endianness
      * of the system.
      *
-     * @memberof Color
-     *
      * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
      * @returns {Color} A new color instance.
      *
@@ -151,7 +147,6 @@ define([
 
     /**
      * Creates a Color instance from hue, saturation, and lightness.
-     * @memberof Color
      *
      * @param {Number} [hue=0] The hue angle 0...1
      * @param {Number} [saturation=0] The saturation value 0...1
@@ -159,7 +154,7 @@ define([
      * @param {Number} [alpha=1.0] The alpha component 0...1
      * @returns {Color} The color object.
      *
-     * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
      */
     Color.fromHsl = function(hue, saturation, lightness, alpha) {
         hue = defaultValue(hue, 0.0) % 1.0;
@@ -191,9 +186,8 @@ define([
     /**
      * Creates a random color using the provided options. For reproducible random colors, you should
      * call {@link CesiumMath#setRandomNumberSeed} once at the beginning of your application.
-     * @memberof Color
      *
-     * @param {Object} [options] Object containing the options.
+     * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
      * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
      * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
@@ -315,7 +309,6 @@ define([
 
     /**
      * Creates a Color instance from a CSS color value.
-     * @memberof Color
      *
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
@@ -324,7 +317,7 @@ define([
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
      *
-     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -373,16 +366,15 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Color.packedLength = 4;
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Color
      *
      * @param {Color} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Color.pack = function(value, array, startingIndex) {
@@ -404,9 +396,8 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Color
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
      */
@@ -431,10 +422,9 @@ define([
     /**
      * Converts a 'byte' color component in the range of 0 to 255 into
      * a 'float' color component in the range of 0 to 1.0.
-     * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -443,10 +433,9 @@ define([
     /**
      * Converts a 'float' color component in the range of 0 to 1.0 into
      * a 'byte' color component in the range of 0 to 255.
-     * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -454,7 +443,6 @@ define([
 
     /**
      * Duplicates a Color.
-     * @memberof Color
      *
      * @param {Color} color The Color to duplicate.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
@@ -476,7 +464,6 @@ define([
 
     /**
      * Returns true if the first Color equals the second color.
-     * @memberof Color
      *
      * @param {Color} left The first Color to compare for equality.
      * @param {Color} right The second Color to compare for equality.
@@ -494,7 +481,6 @@ define([
 
     /**
      * Returns a duplicate of a Color instance.
-     * @memberof Color
      *
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
      * @returns {Color} The modified result parameter or a new instance if result was undefined.
@@ -505,7 +491,6 @@ define([
 
     /**
      * Returns true if this Color equals other.
-     * @memberof Color
      *
      * @param {Color} other The Color to compare for equality.
      * @returns {Boolean} <code>true</code> if the Colors are equal; otherwise, <code>false</code>.
@@ -516,7 +501,6 @@ define([
 
     /**
      * Returns <code>true</code> if this Color equals other componentwise within the specified epsilon.
-     * @memberof Color
      *
      * @param {Color} other The Color to compare for equality.
      * @param {Number} [epsilon=0.0] The epsilon to use for equality testing.
@@ -533,7 +517,6 @@ define([
 
     /**
      * Creates a string representing this Color in the format '(red, green, blue, alpha)'.
-     * @memberof Color
      *
      * @returns {String} A string representing this Color in the format '(red, green, blue, alpha)'.
      */
@@ -543,10 +526,9 @@ define([
 
     /**
      * Creates a string containing the CSS color value for this color.
-     * @memberof Color
      *
      * @returns {String} The CSS equivalent of this color.
-     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
      */
     Color.prototype.toCssColorString = function() {
         var red = Color.floatToByte(this.red);
@@ -561,10 +543,9 @@ define([
     /**
      * Converts this color to an array of red, green, blue, and alpha values
      * that are in the range of 0 to 255.
-     * @memberof Color
      *
-     * @param {Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Array} The modified result parameter or a new instance if result was undefined.
+     * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
+     * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
      */
     Color.prototype.toBytes = function(result) {
         var red = Color.floatToByte(this.red);
@@ -585,8 +566,6 @@ define([
     /**
      * Converts this color to a single numeric unsigned 32-bit RGBA value, using the endianness
      * of the system.
-     *
-     * @memberof Color
      *
      * @returns {Number} A single numeric unsigned 32-bit RGBA value.
      *

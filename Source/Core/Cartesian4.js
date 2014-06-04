@@ -57,7 +57,6 @@ define([
 
     /**
      * Creates a Cartesian4 instance from x, y, z and w coordinates.
-     * @memberof Cartesian4
      *
      * @param {Number} x The x coordinate.
      * @param {Number} y The y coordinate.
@@ -81,7 +80,6 @@ define([
     /**
      * Creates a Cartesian4 instance from a {@link Color}. <code>red</code>, <code>green</code>, <code>blue</code>,
      * and <code>alpha</code> map to <code>x</code>, <code>y</code>, <code>z</code>, and <code>w</code>, respectively.
-     * @memberof Cartesian4
      *
      * @param {Color} color The source color.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -107,7 +105,6 @@ define([
 
     /**
      * Duplicates a Cartesian4 instance.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to duplicate.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -132,16 +129,15 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Cartesian4.packedLength = 4;
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Cartesian4.pack = function(value, array, startingIndex) {
@@ -165,9 +161,8 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Cartesian4
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian4} [result] The object into which to store the result.
      */
@@ -190,13 +185,11 @@ define([
         return result;
     };
 
-
-
     /**
      * Creates a Cartesian4 from four consecutive elements in an array.
-     * @memberof Cartesian4
+     * @function
      *
-     * @param {Array} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
+     * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian4} [result] The object onto which to store the result.
      *
@@ -215,9 +208,8 @@ define([
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
-     * @memberof Cartesian4
      *
-     * @param {Cartesian4} The cartesian to use.
+     * @param {Cartesian4} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
     Cartesian4.getMaximumComponent = function(cartesian) {
@@ -232,9 +224,8 @@ define([
 
     /**
      * Computes the value of the minimum component for the supplied Cartesian.
-     * @memberof Cartesian4
      *
-     * @param {Cartesian4} The cartesian to use.
+     * @param {Cartesian4} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
     Cartesian4.getMinimumComponent = function(cartesian) {
@@ -249,7 +240,6 @@ define([
 
     /**
      * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} first A cartesian to compare.
      * @param {Cartesian4} second A cartesian to compare.
@@ -280,7 +270,6 @@ define([
 
     /**
      * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} first A cartesian to compare.
      * @param {Cartesian4} second A cartesian to compare.
@@ -311,7 +300,6 @@ define([
 
     /**
      * Computes the provided Cartesian's squared magnitude.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian instance whose squared magnitude is to be computed.
      * @returns {Number} The squared magnitude.
@@ -328,7 +316,6 @@ define([
 
     /**
      * Computes the Cartesian's magnitude (length).
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian instance whose magnitude is to be computed.
      * @returns {Number} The magnitude.
@@ -341,7 +328,6 @@ define([
 
     /**
      * Computes the 4-space distance between two points
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} left The first point to compute the distance from.
      * @param {Cartesian4} right The second point to compute the distance to.
@@ -365,7 +351,6 @@ define([
 
     /**
      * Computes the normalized form of the supplied Cartesian.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be normalized.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -391,7 +376,6 @@ define([
 
     /**
      * Computes the dot (scalar) product of two Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
@@ -412,7 +396,6 @@ define([
 
     /**
      * Computes the componentwise product of two Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
@@ -441,7 +424,6 @@ define([
 
     /**
      * Computes the componentwise sum of two Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
@@ -470,7 +452,6 @@ define([
 
     /**
      * Computes the componentwise difference of two Cartesians.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} left The first Cartesian.
      * @param {Cartesian4} right The second Cartesian.
@@ -499,7 +480,6 @@ define([
 
     /**
      * Multiplies the provided Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
@@ -528,7 +508,6 @@ define([
 
     /**
      * Divides the provided Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
@@ -557,7 +536,6 @@ define([
 
     /**
      * Negates the provided Cartesian.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian to be negated.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -582,7 +560,6 @@ define([
 
     /**
      * Computes the absolute value of the provided Cartesian.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -608,11 +585,10 @@ define([
     var lerpScratch = new Cartesian4();
     /**
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
-     * @memberof Cartesian4
      *
-     * @param start The value corresponding to t at 0.0.
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
+     * @param {Cartesian4} start The value corresponding to t at 0.0.
+     * @param {Cartesian4}end The value corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      */
@@ -637,7 +613,6 @@ define([
     var mostOrthogonalAxisScratch = new Cartesian4();
     /**
      * Returns the axis that is most orthogonal to the provided Cartesian.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} cartesian The Cartesian on which to find the most orthogonal axis.
      * @param {Cartesian4} [result] The object onto which to store the result.
@@ -683,7 +658,6 @@ define([
     /**
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
@@ -703,7 +677,6 @@ define([
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} [left] The first Cartesian.
      * @param {Cartesian4} [right] The second Cartesian.
@@ -728,37 +701,46 @@ define([
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 0.0).
-     * @memberof Cartesian4
+     *
+     * @type {Cartesian4}
+     * @constant
      */
     Cartesian4.ZERO = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (1.0, 0.0, 0.0, 0.0).
-     * @memberof Cartesian4
+     *
+     * @type {Cartesian4}
+     * @constant
      */
     Cartesian4.UNIT_X = freezeObject(new Cartesian4(1.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 1.0, 0.0, 0.0).
-     * @memberof Cartesian4
+     *
+     * @type {Cartesian4}
+     * @constant
      */
     Cartesian4.UNIT_Y = freezeObject(new Cartesian4(0.0, 1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 1.0, 0.0).
-     * @memberof Cartesian4
+     *
+     * @type {Cartesian4}
+     * @constant
      */
     Cartesian4.UNIT_Z = freezeObject(new Cartesian4(0.0, 0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian4 instance initialized to (0.0, 0.0, 0.0, 1.0).
-     * @memberof Cartesian4
+     *
+     * @type {Cartesian4}
+     * @constant
      */
     Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian4 instance.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
@@ -770,7 +752,6 @@ define([
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -783,7 +764,6 @@ define([
      * Compares this Cartesian against the provided Cartesian componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartesian4
      *
      * @param {Cartesian4} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -795,7 +775,6 @@ define([
 
     /**
      * Creates a string representing this Cartesian in the format '(x, y)'.
-     * @memberof Cartesian4
      *
      * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
      */

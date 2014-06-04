@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/LagrangePolynomialApproximation'
-            ], function(
-             LagrangePolynomialApproximation) {
+        'Core/LagrangePolynomialApproximation'
+    ], function(
+        LagrangePolynomialApproximation) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

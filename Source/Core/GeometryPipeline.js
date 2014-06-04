@@ -1,52 +1,52 @@
 /*global define*/
 define([
         './barycentricCoordinates',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './EncodedCartesian3',
+        './GeographicProjection',
+        './Geometry',
+        './GeometryAttribute',
+        './IndexDatatype',
         './Intersect',
         './IntersectionTests',
         './Math',
         './Matrix3',
         './Matrix4',
         './Plane',
-        './GeographicProjection',
-        './ComponentDatatype',
-        './IndexDatatype',
         './PrimitiveType',
-        './Tipsify',
-        './BoundingSphere',
-        './Geometry',
-        './GeometryAttribute'
+        './Tipsify'
     ], function(
         barycentricCoordinates,
-        defaultValue,
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         EncodedCartesian3,
+        GeographicProjection,
+        Geometry,
+        GeometryAttribute,
+        IndexDatatype,
         Intersect,
         IntersectionTests,
         CesiumMath,
         Matrix3,
         Matrix4,
         Plane,
-        GeographicProjection,
-        ComponentDatatype,
-        IndexDatatype,
         PrimitiveType,
-        Tipsify,
-        BoundingSphere,
-        Geometry,
-        GeometryAttribute) {
+        Tipsify) {
     "use strict";
 
     /**
@@ -55,7 +55,6 @@ define([
      * @exports GeometryPipeline
      *
      * @see Geometry
-     * @see Context#createVertexArrayFromGeometry
      */
     var GeometryPipeline = {};
 
@@ -250,9 +249,6 @@ define([
      * //   'position' : 0,
      * //   'normal' : 1
      * // }
-     *
-     * @see Context#createVertexArrayFromGeometry
-     * @see ShaderCache
      */
     GeometryPipeline.createAttributeLocations = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -409,8 +405,7 @@ define([
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
      *
      * @see GeometryPipeline.reorderForPreVertexCache
-     * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
-     * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
+     * @see {@link http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
      * by Sander, Nehab, and Barczak
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
@@ -478,14 +473,14 @@ define([
     /**
      * Splits a geometry into multiple geometries, if necessary, to ensure that indices in the
      * <code>indices</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
-     * when {@link Context#getElementIndexUint} is <code>false</code>.
+     * when unsigned int indices are not supported.
      * <p>
      * If the geometry does not have any <code>indices</code>, this function has no effect.
      * </p>
      *
      * @param {Geometry} geometry The geometry to be split into multiple geometries.
      *
-     * @returns {Array} An array of geometries, each with indices that fit into unsigned shorts.
+     * @returns {Geometry[]} An array of geometries, each with indices that fit into unsigned shorts.
      *
      * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
@@ -616,7 +611,7 @@ define([
         if (!defined(geometry.attributes[attributeName])) {
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
-        if (geometry.attributes[attributeName].componentDatatype.value !== ComponentDatatype.DOUBLE.value) {
+        if (geometry.attributes[attributeName].componentDatatype !== ComponentDatatype.DOUBLE) {
             throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
         //>>includeEnd('debug');
@@ -703,7 +698,7 @@ define([
         if (!defined(geometry.attributes[attributeName])) {
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
-        if (geometry.attributes[attributeName].componentDatatype.value !== ComponentDatatype.DOUBLE.value) {
+        if (geometry.attributes[attributeName].componentDatatype !== ComponentDatatype.DOUBLE) {
             throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
         //>>includeEnd('debug');
@@ -853,7 +848,7 @@ define([
                     var otherAttribute = instances[i].geometry.attributes[name];
 
                     if ((!defined(otherAttribute)) ||
-                        (attribute.componentDatatype.value !== otherAttribute.componentDatatype.value) ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
 
@@ -890,7 +885,7 @@ define([
      * This is used by {@link Primitive} to efficiently render a large amount of static data.
      * </p>
      *
-     * @param {Array} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
+     * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
      *
      * @returns {Geometry} A single geometry created from the provided geometry instances.
      *

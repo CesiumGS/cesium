@@ -1,25 +1,25 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Scene/HorizontalOrigin',
         '../Scene/LabelCollection',
         '../Scene/LabelStyle',
-        '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin'
     ], function(
-        DeveloperError,
-        defined,
-        destroyObject,
-        Color,
         Cartesian2,
         Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
+        HorizontalOrigin,
         LabelCollection,
         LabelStyle,
-        HorizontalOrigin,
         VerticalOrigin) {
     "use strict";
 
@@ -55,7 +55,6 @@ define([
     /**
      * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicLabelVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -76,7 +75,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicLabelVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -86,7 +84,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicLabelVisualizer
      */
     DynamicLabelVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

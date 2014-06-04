@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -106,7 +107,9 @@ define(['../Core/createGuid',
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicObject.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -267,7 +270,6 @@ define(['../Core/createGuid',
 
     /**
      * Given a time, returns true if this object should have data during that time.
-     * @memberof DynamicObject
      *
      * @param {JulianDate} time The time to check availability for.
      * @returns true if the object should have data during the provided time, false otherwise.
@@ -287,9 +289,8 @@ define(['../Core/createGuid',
      * Adds a property to this object.  Once a property is added, it can be
      * observed with {@link DynamicObject#definitionChanged} and composited
      * with {@link CompositeDynamicObjectCollection}
-     * @memberof DynamicObject
      *
-     * @param propertyName The name of the property to add.
+     * @param {String} propertyName The name of the property to add.
      *
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is already a registered property.
@@ -315,9 +316,8 @@ define(['../Core/createGuid',
 
     /**
      * Removed a property previously added with addProperty.
-     * @memberof DynamicObject
      *
-     * @param propertyName The name of the property to remove.
+     * @param {String} propertyName The name of the property to remove.
      *
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is not a registered property.
@@ -341,7 +341,6 @@ define(['../Core/createGuid',
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicObject
      *
      * @param {DynamicObject} source The object to be merged into this object.
      */

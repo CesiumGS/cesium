@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicObjectView',
-             'Core/Cartesian3',
-             'Core/Ellipsoid',
-             'Core/JulianDate',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/ConstantPositionProperty',
-             'Specs/createScene',
-             'Specs/destroyScene'
-            ], function(
-              DynamicObjectView,
-              Cartesian3,
-              Ellipsoid,
-              JulianDate,
-              DynamicObject,
-              ConstantPositionProperty,
-              createScene,
-              destroyScene) {
+        'DynamicScene/DynamicObjectView',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/DynamicObject',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicObjectView,
+        Cartesian3,
+        Ellipsoid,
+        JulianDate,
+        ConstantPositionProperty,
+        DynamicObject,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

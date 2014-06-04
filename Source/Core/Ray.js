@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './defined',
+        './Cartesian3',
         './defaultValue',
-        './Cartesian3'
-       ], function(
-         DeveloperError,
-         defined,
-         defaultValue,
-         Cartesian3) {
+        './defined',
+        './DeveloperError'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -42,7 +42,6 @@ define([
     /**
      * Computes the point along the ray given by r(t) = o + t*d,
      * where o is the origin of the ray and d is the direction.
-     * @memberof Ray
      *
      * @param {Number} t A scalar value.
      * @param {Cartesian3} [result] The object in which the result will be stored.

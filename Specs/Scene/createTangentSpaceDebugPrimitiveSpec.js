@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/createTangentSpaceDebugPrimitive',
-         'Core/EllipsoidGeometry',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Matrix4',
-         'Core/VertexFormat',
-         'Core/PrimitiveType'
-     ], function(
-         createTangentSpaceDebugPrimitive,
-         EllipsoidGeometry,
-         Cartesian3,
-         Ellipsoid,
-         Matrix4,
-         VertexFormat,
-         PrimitiveType) {
+        'Scene/createTangentSpaceDebugPrimitive',
+        'Core/Cartesian3',
+        'Core/EllipsoidGeometry',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Core/VertexFormat'
+    ], function(
+        createTangentSpaceDebugPrimitive,
+        Cartesian3,
+        EllipsoidGeometry,
+        Matrix4,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

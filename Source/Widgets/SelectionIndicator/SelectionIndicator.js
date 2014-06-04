@@ -2,19 +2,19 @@
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './SelectionIndicatorViewModel',
-        '../../ThirdParty/knockout'
+        './SelectionIndicatorViewModel'
     ], function(
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
+        knockout,
         getElement,
-        SelectionIndicatorViewModel,
-        knockout) {
+        SelectionIndicatorViewModel) {
     "use strict";
 
     /**
@@ -99,7 +99,6 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
     });
 
     /**
-     * @memberof SelectionIndicator
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SelectionIndicator.prototype.isDestroyed = function() {
@@ -109,7 +108,6 @@ css: { "cesium-selection-wrapper-visible" : isVisible }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof SelectionIndicator
      */
     SelectionIndicator.prototype.destroy = function() {
         var container = this._container;

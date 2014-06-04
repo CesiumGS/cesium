@@ -1,35 +1,35 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './ComponentDatatype',
+        './CylinderGeometryLibrary',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartesian3',
-        './CylinderGeometryLibrary',
-        './Math',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
+        './Math',
+        './PrimitiveType',
         './VertexFormat'
     ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        ComponentDatatype,
+        CylinderGeometryLibrary,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartesian3,
-        CylinderGeometryLibrary,
-        CesiumMath,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
+        CesiumMath,
+        PrimitiveType,
         VertexFormat) {
     "use strict";
 
@@ -46,10 +46,11 @@ define([
      * @alias CylinderGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
@@ -58,7 +59,7 @@ define([
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
-     * @see CylinderGeometry#createGeometry
+     * @see CylinderGeometry.createGeometry
      *
      * @example
      * // create cylinder geometry
@@ -106,7 +107,6 @@ define([
 
     /**
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
-     * @memberof CylinderGeometry
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
      * @returns {Geometry} The computed vertices and indices.

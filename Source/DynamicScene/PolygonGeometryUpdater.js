@@ -1,24 +1,25 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/PolygonGeometry',
-        '../Core/PolygonOutlineGeometry',
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/PolygonGeometry',
+        '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive'
+        '../Scene/Primitive',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Color,
         ColorGeometryInstanceAttribute,
@@ -27,19 +28,19 @@ define(['../Core/Color',
         defineProperties,
         destroyObject,
         DeveloperError,
-        PolygonGeometry,
-        PolygonOutlineGeometry,
         Event,
         GeometryInstance,
         Iso8601,
+        PolygonGeometry,
+        PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
+        MaterialAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
         ColorMaterialProperty,
         ConstantProperty,
         MaterialProperty,
-        Property,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive) {
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -115,7 +116,9 @@ define(['../Core/Color',
         /**
          * Gets the object associated with this geometry.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject :{
             get : function() {
@@ -125,7 +128,9 @@ define(['../Core/Color',
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : function() {
@@ -135,7 +140,9 @@ define(['../Core/Color',
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : function() {
@@ -148,7 +155,9 @@ define(['../Core/Color',
         /**
          * Gets the material property used to fill the geometry.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : function() {
@@ -158,7 +167,9 @@ define(['../Core/Color',
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             get : function() {
@@ -168,7 +179,9 @@ define(['../Core/Color',
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             get : function() {
@@ -181,7 +194,9 @@ define(['../Core/Color',
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             get : function() {
@@ -192,9 +207,10 @@ define(['../Core/Color',
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : function() {
@@ -205,7 +221,9 @@ define(['../Core/Color',
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             get : function() {
@@ -216,7 +234,9 @@ define(['../Core/Color',
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof PolygonGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : function() {
@@ -227,8 +247,6 @@ define(['../Core/Color',
 
     /**
      * Checks if the geometry is outlined at the provided time.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
@@ -240,8 +258,6 @@ define(['../Core/Color',
 
     /**
      * Checks if the geometry is filled at the provided time.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
@@ -253,8 +269,6 @@ define(['../Core/Color',
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
@@ -304,8 +318,6 @@ define(['../Core/Color',
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
@@ -338,8 +350,6 @@ define(['../Core/Color',
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -349,8 +359,6 @@ define(['../Core/Color',
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
@@ -450,10 +458,8 @@ define(['../Core/Color',
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     * @memberof PolygonGeometryUpdater
-     * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.

@@ -1,51 +1,51 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
-        './Rectangle',
-        './Geometry',
-        './GeometryInstance',
-        './GeometryPipeline',
         './GeographicProjection',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
+        './IndexDatatype',
         './Math',
         './Matrix2',
         './Matrix3',
         './PrimitiveType',
         './Quaternion',
+        './Rectangle',
         './VertexFormat'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
-        Rectangle,
-        Geometry,
-        GeometryInstance,
-        GeometryPipeline,
         GeographicProjection,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
+        IndexDatatype,
         CesiumMath,
         Matrix2,
         Matrix3,
         PrimitiveType,
         Quaternion,
+        Rectangle,
         VertexFormat) {
     "use strict";
 
@@ -621,6 +621,7 @@ define([
      * @alias RectangleGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
@@ -699,7 +700,6 @@ define([
 
     /**
      * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
-     * @memberof RectangleGeometry
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
      * @returns {Geometry} The computed vertices and indices.

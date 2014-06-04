@@ -1,7 +1,7 @@
 /**
  * Converts a CIE Yxy color to RGB.
  * <p>The conversion is described in
- * <a href="http://content.gpwiki.org/index.php/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform">Luminance Transform</a>
+ * {@link http://content.gpwiki.org/index.php/D3DBook:High-Dynamic_Range_Rendering#Luminance_Transform|Luminance Transform}
  * </p>
  * 
  * @name czm_XYZToRGB

@@ -4,19 +4,19 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EllipsoidTerrainProvider',
         '../../Core/isArray',
-        '../../Scene/EllipsoidTerrainProvider',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        isArray,
         EllipsoidTerrainProvider,
-        createCommand,
-        knockout) {
+        isArray,
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
@@ -24,6 +24,7 @@ define([
      * @alias BaseLayerPickerViewModel
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Globe} options.globe The Globe to use.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=[]] The array of ProviderViewModel instances to use for imagery.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available imagery layer is used.
@@ -51,14 +52,14 @@ define([
         /**
          * Gets or sets an array of ProviderViewModel instances available for imagery selection.
          * This property is observable.
-         * @type {Array}
+         * @type {ProviderViewModel[]}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
         /**
          * Gets or sets an array of ProviderViewModel instances available for terrain selection.
          * This property is observable.
-         * @type {Array}
+         * @type {ProviderViewModel[]}
          */
         this.terrainProviderViewModels = terrainProviderViewModels.slice(0);
 

@@ -1,5 +1,8 @@
 /*global define*/
-define(['DynamicScene/ConstantProperty'], function(ConstantProperty) {
+define([
+        'DynamicScene/ConstantProperty'
+    ], function(
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

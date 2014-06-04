@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/SphereOutlineGeometry'
-     ], function(
-         SphereOutlineGeometry) {
+        'Core/SphereOutlineGeometry'
+    ], function(
+        SphereOutlineGeometry) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     it('constructor throws if stackPartitions less than 1', function() {

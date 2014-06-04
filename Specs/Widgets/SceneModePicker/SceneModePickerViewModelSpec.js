@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/SceneModePicker/SceneModePickerViewModel',
-         'Core/Event',
-         'Core/Ellipsoid',
-         'Scene/Globe',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Scene/SceneMode'
-     ], function(
-         SceneModePickerViewModel,
-         Event,
-         Ellipsoid,
-         Globe,
-         createScene,
-         destroyScene,
-         SceneMode) {
+        'Widgets/SceneModePicker/SceneModePickerViewModel',
+        'Core/Ellipsoid',
+        'Scene/Globe',
+        'Scene/SceneMode',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        SceneModePickerViewModel,
+        Ellipsoid,
+        Globe,
+        SceneMode,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
     var scene;

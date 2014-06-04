@@ -1,40 +1,40 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/Cartesian3',
+        '../Core/Color',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Color',
+        '../Core/ReferenceFrame',
         '../Core/TimeInterval',
         '../Core/Transforms',
-        '../Core/ReferenceFrame',
+        '../Scene/Material',
+        '../Scene/PolylineCollection',
+        '../Scene/SceneMode',
+        './CompositePositionProperty',
         './ConstantPositionProperty',
         './SampledPositionProperty',
-        './CompositePositionProperty',
-        './TimeIntervalCollectionPositionProperty',
-        '../Scene/Material',
-        '../Scene/SceneMode',
-        '../Scene/PolylineCollection'
-       ], function(
-         defined,
-         DeveloperError,
-         destroyObject,
-         Cartesian3,
-         Matrix3,
-         Matrix4,
-         Color,
-         TimeInterval,
-         Transforms,
-         ReferenceFrame,
-         ConstantPositionProperty,
-         SampledPositionProperty,
-         CompositePositionProperty,
-         TimeIntervalCollectionPositionProperty,
-         Material,
-         SceneMode,
-         PolylineCollection) {
+        './TimeIntervalCollectionPositionProperty'
+    ], function(
+        Cartesian3,
+        Color,
+        defined,
+        destroyObject,
+        DeveloperError,
+        Matrix3,
+        Matrix4,
+        ReferenceFrame,
+        TimeInterval,
+        Transforms,
+        Material,
+        PolylineCollection,
+        SceneMode,
+        CompositePositionProperty,
+        ConstantPositionProperty,
+        SampledPositionProperty,
+        TimeIntervalCollectionPositionProperty) {
     "use strict";
 
     function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
@@ -449,7 +449,6 @@ define([
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicPathVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -515,7 +514,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicPathVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -525,7 +523,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicPathVisualizer
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

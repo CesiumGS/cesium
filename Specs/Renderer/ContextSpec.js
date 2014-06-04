@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/Context',
-         'Core/Color',
-         'Core/IndexDatatype',
-         'Renderer/BufferUsage',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/renderFragment'
-     ], function(
-         Context,
-         Color,
-         IndexDatatype,
-         BufferUsage,
-         createContext,
-         destroyContext,
-         renderFragment) {
+        'Renderer/Context',
+        'Core/Color',
+        'Core/IndexDatatype',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext',
+        'Specs/renderFragment'
+    ], function(
+        Context,
+        Color,
+        IndexDatatype,
+        BufferUsage,
+        createContext,
+        destroyContext,
+        renderFragment) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -184,7 +184,7 @@ defineSuite([
         } else {
             expect(function() {
                 context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 

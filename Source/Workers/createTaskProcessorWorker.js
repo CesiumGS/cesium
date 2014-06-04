@@ -31,8 +31,8 @@ define([
      * // the resulting function is compatible with TaskProcessor
      *
      * @see TaskProcessor
-     * @see <a href='http://www.w3.org/TR/workers/'>Web Workers</a>
-     * @see <a href='http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects'>Transferable objects</a>
+     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
+     * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
      */
     var createTaskProcessorWorker = function(workerFunction) {
         var postMessage;

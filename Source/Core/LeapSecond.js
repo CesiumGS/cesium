@@ -66,7 +66,7 @@ define([
         /**
          * The list of leap seconds used throughout Cesium.
          * @memberof LeapSecond
-         * @type {Array}
+         * @type {LeapSecond[]}
          */
         leapSeconds: {
             get: function() {
@@ -88,8 +88,6 @@ define([
     /**
      * Checks whether two leap seconds are equivalent to each other.
      *
-     * @memberof LeapSecond
-     *
      * @param {LeapSecond} other The leap second to compare against.
      *
      * @returns {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
@@ -107,8 +105,6 @@ define([
     /**
      * Given two leap seconds, determines which comes before the other by comparing
      * their respective Julian dates.
-     *
-     * @memberof LeapSecond
      *
      * @param {LeapSecond} leapSecond1 The first leap second to be compared.
      * @param {LeapSecond} leapSecond2 The second leap second to be compared.

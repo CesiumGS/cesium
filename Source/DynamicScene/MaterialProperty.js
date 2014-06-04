@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define([
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
@@ -31,7 +32,9 @@ define(['../Core/defined',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof MaterialProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : DeveloperError.throwInstantiationError
@@ -41,7 +44,9 @@ define(['../Core/defined',
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof MaterialProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : DeveloperError.throwInstantiationError
@@ -50,17 +55,15 @@ define(['../Core/defined',
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof MaterialProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof MaterialProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -72,7 +75,6 @@ define(['../Core/defined',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof MaterialProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
