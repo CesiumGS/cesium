@@ -3,6 +3,7 @@ define([
         '../../Core/ClockRange',
         '../../Core/defined',
         '../../Core/destroyObject',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/JulianDate',
         '../getElement',
@@ -12,6 +13,7 @@ define([
         ClockRange,
         defined,
         destroyObject,
+        defineProperties,
         DeveloperError,
         JulianDate,
         getElement,
@@ -96,6 +98,7 @@ define([
         container.appendChild(topDiv);
         this._topDiv = topDiv;
 
+        this._show = true;
         this._endJulian = undefined;
         this._epochJulian = undefined;
         this._lastXPos = undefined;
@@ -157,6 +160,26 @@ define([
         clock.onTick.addEventListener(this.updateFromClock, this);
         this.updateFromClock();
     }
+
+    defineProperties(Timeline.prototype, {
+        /**
+         * Gets or sets a value indicating whether the widget is shown.
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._show;
+            },
+            set : function(value) {
+                this._show = value;
+                if (value) {
+                    this._topDiv.style.display = 'block';
+                } else {
+                    this._topDiv.style.display = 'none';
+                }
+            }
+        }
+    });
 
     Timeline.prototype.addEventListener = function(type, listener, useCapture) {
         this._topDiv.addEventListener(type, listener, useCapture);

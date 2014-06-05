@@ -134,7 +134,15 @@ define([
          */
         this.snapToTicks = false;
 
-        knockout.track(this, ['_allShuttleRingTicks', '_dateFormatter', '_timeFormatter', 'shuttleRingDragging', 'snapToTicks']);
+        /**
+         * Gets or sets whether the widget is visible.
+         * This property is observable.
+         * @type {Boolean}
+         * @default true
+         */
+        this.show = true;
+
+        knockout.track(this, ['_allShuttleRingTicks', '_dateFormatter', '_timeFormatter', 'shuttleRingDragging', 'snapToTicks', 'show']);
 
         this._sortedFilteredPositiveTicks = [];
 

@@ -871,8 +871,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var container = viewer._container;
         var width = container.clientWidth;
         var height = container.clientHeight;
-        var animationShown = defined(viewer._animation);
-        var timelineShown = defined(viewer._timeline);
+        var animationShown = defined(viewer._animation) && viewer._animation.show;
+        var timelineShown = defined(viewer._timeline) && viewer._timeline.show;
 
         if (width === viewer._lastWidth && height === viewer._lastHeight &&
             animationShown === viewer._lastAnimationShown &&
