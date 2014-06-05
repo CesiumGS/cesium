@@ -820,16 +820,21 @@ define([
 
         var q = r0Sqrd - r1 * r1 + y1 * y1 - y0Sqrd + x1 * x1 - x0Sqrd;
 
+        var a;
+        var b;
+        var c;
+        var roots;
+
         if (!CesiumMath.equalsEpsilon(y1, y0, CesiumMath.EPSILON6)) {
             var invYDiff = 1.0 / (y1 - y0);
             q *= 0.5 * invYDiff;
             var r = (x1 - x0) * invYDiff;
 
-            var a = 1.0 + r * r;
-            var b = 2.0 * (r * y0 - q * r - x0);
-            var c = x0Sqrd + q * q - 2.0 * q * y0 + y0Sqrd - r0Sqrd;
+            a = 1.0 + r * r;
+            b = 2.0 * (r * y0 - q * r - x0);
+            c = x0Sqrd + q * q - 2.0 * q * y0 + y0Sqrd - r0Sqrd;
 
-            var roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
+            roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
             if (!defined(roots)) {
                 return undefined;
             }
@@ -846,7 +851,7 @@ define([
             b = -2.0 * y0;
             c = y0Sqrd - r0Sqrd + q * q - 2.0 * q * x0 + x0Sqrd;
 
-            var roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
+            roots = solveQuadratic(a, b, c, scratchCircleCircleRoots);
             if (!defined(roots)) {
                 return undefined;
             }
@@ -875,6 +880,143 @@ define([
 
         cartesian.x = x1;
         cartesian.y = y1;
+
+        return result;
+    };
+
+    var scratchDirection = new Cartesian3();
+    var xName = 'x';
+    var yName = 'y';
+    var zName = 'z';
+
+    IntersectionTests.planePlaneIntersection = function(p0, p1, result) {
+        var p0Normal = p0.normal;
+        var p1Normal = p1.normal;
+
+        var direction = Cartesian3.cross(p0Normal, p1Normal, scratchDirection);
+        if (Cartesian3.equalsEpsilon(direction, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            result = {
+                direction : new Cartesian3(),
+                point : new Cartesian3()
+            };
+        }
+
+        Cartesian3.normalize(direction, result.direction);
+
+        var absX = Math.abs(p0Normal.x);
+        var absY = Math.abs(p0Normal.y);
+        var absZ = Math.abs(p0Normal.z);
+
+        var a1;
+        var a2;
+        var b1;
+        var b2;
+
+        var aName;
+        var bName;
+        var zeroName;
+
+        if (absX < absY) {
+            if (absX < absZ) {
+                zeroName = xName;
+                aName = yName;
+                bName = zName;
+
+                a1 = p0Normal.y;
+                a2 = p1Normal.y;
+                b1 = p0Normal.z;
+                b2 = p1Normal.z;
+            } else {
+                zeroName = zName;
+                aName = xName;
+                bName = yName;
+
+                a1 = p0Normal.x;
+                a2 = p1Normal.x;
+                b1 = p0Normal.y;
+                b2 = p1Normal.y;
+            }
+        } else if (absY < absZ) {
+            zeroName = yName;
+            aName = xName;
+            bName = zName;
+
+            a1 = p0Normal.x;
+            a2 = p1Normal.x;
+            b1 = p0Normal.z;
+            b2 = p1Normal.z;
+        } else {
+            zeroName = zName;
+            aName = xName;
+            bName = yName;
+
+            a1 = p0Normal.x;
+            a2 = p1Normal.x;
+            b1 = p0Normal.y;
+            b2 = p1Normal.y;
+        }
+
+        var d1 = p0.distance;
+        var d2 = p1.distance;
+
+        var point = result.point;
+        point[zeroName] = 0.0;
+
+        if (CesiumMath.equalsEpsilon(a1, 0.0, CesiumMath.EPSILON6)) {
+            point[aName] = 0.0;
+            point[bName] = -d1 / b1;
+        } else if (CesiumMath.equalsEpsilon(b1, 0.0, CesiumMath.EPSILON6)) {
+            point[bName] = 0.0;
+            point[aName] = -d1 / a1;
+        } else {
+            var ratio = a2 / a1;
+            point[bName] = (ratio * d1 - d2) / (b2 - ratio * b1);
+            point[aName] = (-b1 * point[bName] - d1) / b1;
+        }
+    };
+
+    var scratchLineCircleDiff = new Cartesian2();
+    var scratchLineCircleRoots = {
+        root0 : 0.0,
+        root1 : 0.0
+    };
+
+    IntersectionTests.lineCircle = function(line, circle, result) {
+        var direction = line.direction;
+        var point = line.point;
+
+        var center = circle.center;
+        var radius = circle.radius;
+
+        var diff = Cartesian2.subtract(point, center, scratchLineCircleDiff);
+
+        var a = Cartesian2.magnitudeSquared(direction);
+        var b = 2.0 * Cartesian2.dot(direction, diff);
+        var c = Cartesian2.magnitudeSquared(diff) - radius * radius;
+
+        var roots = solveQuadratic(a, b, c, scratchLineCircleRoots);
+        if (!defined(roots)) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            result = {
+                intersection0 : new Cartesian2(),
+                intersection1 : new Cartesian2()
+            };
+        }
+
+        var pointOnCircle = result.intersection0;
+        Cartesian2.multiplyByScalar(direction, roots.root0, pointOnCircle);
+        Cartesian2.add(point, pointOnCircle, pointOnCircle);
+
+        pointOnCircle = result.intersection1;
+        Cartesian2.multiplyByScalar(direction, roots.root1, pointOnCircle);
+        Cartesian2.add(point, pointOnCircle, pointOnCircle);
 
         return result;
     };
