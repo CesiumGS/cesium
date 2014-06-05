@@ -10,7 +10,7 @@ Beta Releases
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
-   * Require result parameters for `Cartesain2`, `Cartesian3` and `Cartesian4` methods
+   * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 
 ### b29 - 2014-06-02
