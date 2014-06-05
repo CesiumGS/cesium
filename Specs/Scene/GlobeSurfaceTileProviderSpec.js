@@ -9,10 +9,12 @@ defineSuite([
         'Core/Rectangle',
         'Core/TerrainProvider',
         'Core/WebMercatorProjection',
+        'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/OrthographicFrustum',
+        'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
@@ -31,10 +33,12 @@ defineSuite([
         Rectangle,
         TerrainProvider,
         WebMercatorProjection,
+        BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         OrthographicFrustum,
+        QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
@@ -512,6 +516,61 @@ defineSuite([
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
+    it('can render more imagery layers than the available texture units', function() {
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+
+        for (var i = 0; i < context.maximumTextureImageUnits + 1; ++i) {
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        }
+
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(globe);
+
+        runs(function() {
+            var commandList = [];
+            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+
+            var renderStateWithAlphaBlending = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
+
+            var drawCommandsPerTile = {};
+
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
+
+                if (command.owner instanceof QuadtreeTile) {
+                    var tile = command.owner;
+                    var key = 'L' + tile.level + 'X' + tile.x + 'Y' + tile.y;
+                    if (!defined(drawCommandsPerTile[key])) {
+                        drawCommandsPerTile[key] = 0;
+
+                        // The first draw command for each tile should use a non-alpha-blending render state.
+                        expect(command.renderState.blending).not.toEqual(renderStateWithAlphaBlending.blending);
+                    } else {
+                        // Successive draw commands per tile should alpha blend.
+                        expect(command.renderState.blending).toEqual(renderStateWithAlphaBlending.blending);
+                        expect(command.uniformMap.u_initialColor().w).toEqual(0.0);
+                    }
+
+                    ++drawCommandsPerTile[key];
+                }
+            }
+
+            var tileCount = 0;
+            for (var tileID in drawCommandsPerTile) {
+                if (drawCommandsPerTile.hasOwnProperty(tileID)) {
+                    ++tileCount;
+                    expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
+                }
+            }
+
+            expect(tileCount).toBeGreaterThanOrEqualTo(1);
         });
     });
 
