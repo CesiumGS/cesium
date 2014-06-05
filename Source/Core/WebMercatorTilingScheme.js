@@ -157,7 +157,6 @@ define([
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
@@ -192,7 +191,6 @@ define([
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Object} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Rectangle} The specified 'result', or a new object containing the rectangle
      *          if 'result' is undefined.
      */
@@ -218,7 +216,6 @@ define([
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
      * @param {Cartesian} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
-     *
      * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates
      *          if 'result' is undefined.
      */

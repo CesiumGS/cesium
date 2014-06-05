@@ -30,7 +30,6 @@ define([
      * @param {String} vertexShaderSource The GLSL source for the vertex shader.
      * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
      * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
-     *
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
      * @see ShaderCache#getShaderProgram

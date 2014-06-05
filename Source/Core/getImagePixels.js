@@ -14,7 +14,6 @@ define([
      * @exports getImagePixels
      *
      * @param {Image} image The image to extract pixels from.
-     *
      * @returns {CanvasPixelArray} The pixels of the image.
      */
     var getImagePixels = function(image, width, height) {
