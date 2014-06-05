@@ -8,6 +8,8 @@ define([
         './DeveloperError',
         './Math',
         './Matrix3',
+        './Matrix4',
+        './Plane',
         './QuadraticRealPolynomial',
         './QuarticRealPolynomial'
     ], function(
@@ -19,6 +21,8 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix3,
+        Matrix4,
+        Plane,
         QuadraticRealPolynomial,
         QuarticRealPolynomial) {
     "use strict";
@@ -1018,6 +1022,107 @@ define([
         Cartesian2.add(point, pointOnCircle, pointOnCircle);
 
         return result;
+    };
+
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchTrianglePlane = new Plane(new Cartesian3(), 0.0);
+    var scratchCirclePlane = new Plane(new Cartesian3(), 0.0);
+    var scratchPlanePlaneIntersection = {
+        direction : new Cartesian3(),
+        point : new Cartesian3()
+    };
+    var scratchCircle = {
+        center : new Cartesian3(),
+        radius : 0.0
+    };
+    var scratchLineCircleIntersection = {
+        intersection0 : new Cartesian2(),
+        intersection1 : new Cartesian2()
+    };
+    var scratchTransform = new Matrix4();
+    var scratchInvTransform = new Matrix4();
+
+    IntersectionTests.triangleArc = function(p0, p1, p2, center, radius, v0, v1, result) {
+        Cartesian3.subtract(p1, p0, scratchCartesian1);
+        Cartesian3.subtract(p2, p0, scratchCartesian2);
+        var normal = Cartesian3.cross(scratchCartesian1, scratchCartesian3, scratchCartesian3);
+
+        if (Cartesian3.equalsEpsilon(normal, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            return undefined;
+        }
+
+        Cartesian3.normalize(normal, normal);
+        var trianglePlane = Plane.fromPointNormal(p0, normal, scratchTrianglePlane);
+
+        normal = Cartesian3.cross(v0, v1, normal);
+        if (Cartesian3.equalsEpsilon(normal, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            return undefined;
+        }
+
+        Cartesian3.normalize(normal, normal);
+        var circlePlane = Plane.fromPointNormal(center, normal, scratchCirclePlane);
+
+        var line = IntersectionTests.planePlane(trianglePlane, circlePlane, scratchPlanePlaneIntersection);
+        if (!defined(line)) {
+            return undefined;
+        }
+
+        var xBasis = Cartesian3.normalize(v0, scratchCartesian1);
+        var zBasis = circlePlane.normal;
+        var yBasis = Cartesian3.cross(zBasis, xBasis, scratchCartesian2);
+
+        var transform = scratchTransform;
+        transform[0]  = xBasis.x;
+        transform[1]  = xBasis.y;
+        transform[2]  = xBasis.z;
+        transform[3]  = 0.0;
+        transform[4]  = yBasis.x;
+        transform[5]  = yBasis.y;
+        transform[6]  = yBasis.z;
+        transform[7]  = 0.0;
+        transform[8]  = zBasis.x;
+        transform[9]  = zBasis.y;
+        transform[10] = zBasis.z;
+        transform[11] = 0.0;
+        transform[12]  = center.x;
+        transform[13]  = center.y;
+        transform[14] = center.z;
+        transform[15] = 0.0;
+
+        Matrix4.multiplyByPoint(transform, line.point, line.point);
+        Matrix4.mulitplyByPointAsVector(transform, line.direction, line.direction);
+        Matrix4.multiplyByPointAsVector(transform, v1, scratchCartesian1);
+
+        var circle = scratchCircle;
+        circle.radius = Cartesian3.magnitude(v0);
+
+        var intersections = IntersectionTests.lineCircle(line, circle, scratchLineCircleIntersection);
+        if (!defined(intersections)) {
+            return undefined;
+        }
+
+        var angle = Math.atan2(scratchCartesian1.y, scratchCartesian1.x);
+
+        var intersection = intersections.intersection0;
+        var intersectionAngle = Math.atan2(intersection.y, intersection.x);
+        if (((angle > 0 && intersectionAngle >= 0) || (angle < 0 && intersectionAngle <= 0)) && intersectionAngle <= angle) {
+            intersection = Cartesian2.clone(intersections.intersection0, scratchCartesian1);
+        } else {
+            intersection = intersections.intersection1;
+            intersectionAngle = Math.atan2(intersection.y, intersection.x);
+            if (((angle > 0 && intersectionAngle >= 0) || (angle < 0 && intersectionAngle <= 0)) && intersectionAngle <= angle) {
+                intersection = Cartesian2.clone(intersections.intersection1, scratchCartesian1);
+            } else {
+                return undefined;
+            }
+        }
+
+        intersection.z = 0.0;
+
+        var invTransform = Matrix4.inverseTransformation(transform, scratchInvTransform);
+        return Matrix4.multiplyByPoint(invTransform, intersection, result);
     };
 
     return IntersectionTests;
