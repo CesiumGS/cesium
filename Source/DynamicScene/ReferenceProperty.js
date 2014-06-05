@@ -95,7 +95,6 @@ define([
      *
      * @param {DynamicObject} dynamicObjectCollection
      * @param {String} referenceString
-     *
      * @returns A new instance of ReferenceProperty.
      *
      * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
@@ -126,7 +125,6 @@ define([
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     *
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {

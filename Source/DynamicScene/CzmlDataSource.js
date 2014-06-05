@@ -1691,7 +1691,6 @@ define([
      * Asynchronously processes the CZML at the provided url without clearing any existing data.
      *
      * @param {Object} url The url to be processed.
-     *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
@@ -1718,7 +1717,6 @@ define([
      * Asynchronously loads the CZML at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.
-     *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
