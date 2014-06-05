@@ -47,50 +47,6 @@ define([
         return targetProperty;
     }
 
-    function findUnescaped(value, start, delimiter) {
-        var index;
-        do {
-            index = value.indexOf(delimiter, start);
-            if (index === -1) {
-                break;
-            }
-
-            var count = 0;
-            var place = index - 1;
-            while (place !== -1 && value[place--] === '\\') {
-                count++;
-            }
-            if (count % 2 === 0) {
-                return index;
-            }
-            start = index + 1;
-        } while (index !== -1);
-        return -1;
-    }
-
-    function trySplit(value, delimiter) {
-        var indices = [];
-        var start = 0;
-        var index;
-        do {
-            index = findUnescaped(value, start, delimiter);
-            if (index !== -1) {
-                indices.push(index);
-                start = index + 1;
-            }
-        } while (index !== -1);
-
-        var lastIndex = 0;
-        var result = new Array(indices.length + 1);
-        for (var i = 0; i < indices.length; i++) {
-            index = indices[i];
-            result[i] = value.substring(lastIndex, index).replace('\\#', '#').replace('\\\\', '\\').replace('\\.', '.');
-            lastIndex = index + 1;
-        }
-        result[indices.length] = value.substring(lastIndex).replace('\\#', '#').replace('\\\\', '\\').replace('\\.', '.');
-        return result;
-    }
-
     /**
      * A {@link Property} which transparently links to another property on a provided object.
      *
@@ -130,7 +86,7 @@ define([
      *
      * var object5 = new Cesium.DynamicObject('object5');
      * object5.billboard = new Cesium.DynamicBillboard();
-     * object5.billboard.scale = new Cesium.ReferenceProperty.fromString(collection, '\#object\.4#billboard.scale']);
+     * object5.billboard.scale = Cesium.ReferenceProperty.fromString(collection, '\\#object\\.4#billboard.scale');
      * collection.add(object5);
      */
     var ReferenceProperty = function(targetCollection, targetId, targetPropertyNames) {
@@ -141,8 +97,8 @@ define([
         if (!defined(targetId)) {
             throw new DeveloperError('targetId is required.');
         }
-        if (!defined(targetPropertyNames)) {
-            throw new DeveloperError('targetPropertyName is required.');
+        if (!defined(targetPropertyNames) || targetPropertyNames.length === 0) {
+            throw new DeveloperError('targetPropertyNames is required.');
         }
         //>>includeEnd('debug');
 
@@ -250,20 +206,40 @@ define([
         }
         //>>includeEnd('debug');
 
-        var tmp = trySplit(referenceString, '#');
-        var identifier = tmp[0];
+        var identifier;
+        var values = [];
+
+        var inIdentifier = true;
+        var isEscaped = false;
+        var token = '';
+        var i;
+        for (i = 0; i < referenceString.length; ++i) {
+            var c = referenceString.charAt(i);
+
+            if (isEscaped) {
+                token += c;
+                isEscaped = false;
+            } else if (c === '\\') {
+                isEscaped = true;
+            } else if (inIdentifier && c === '#') {
+                identifier = token;
+                inIdentifier = false;
+                token = '';
+            } else if (!inIdentifier && c === '.') {
+                values.push(token);
+                token = '';
+            } else {
+                token += c;
+            }
+        }
+        values.push(token);
 
         //>>includeStart('debug', pragmas.debug);
-        if (tmp.length !== 2 || !defined(identifier) || identifier === '') {
+        if (identifier === '' || values.length === 0) {
             throw new DeveloperError('invalid referenceString.');
         }
-        //>>includeEnd('debug');
 
-        var index = findUnescaped(referenceString, 0, '#') + 1;
-        var values = trySplit(referenceString.substring(index), '.');
-
-        //>>includeStart('debug', pragmas.debug);
-        for (var i = 0; i < values.length; i++) {
+        for (i = 0; i < values.length; i++) {
             var item = values[i];
             if (!defined(item) || item === '') {
                 throw new DeveloperError('invalid referenceString.');
@@ -324,7 +300,6 @@ define([
 
         if (this._targetCollection !== other._targetCollection || //
             this._targetId !== other._targetId || //
-            defined(this._targetPropertyNames) !== defined(other._targetPropertyNames) || //
             this._targetPropertyNames.length !== other._targetPropertyNames.length) {
             return false;
         }
