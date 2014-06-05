@@ -1305,11 +1305,11 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.path).toBeDefined();
-        expect(dynamicObject.path.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.path.material.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.path.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.width);
         expect(dynamicObject.path.resolution.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.resolution);
-        expect(dynamicObject.path.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.path.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
+        expect(dynamicObject.path.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.path.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.outlineWidth);
         expect(dynamicObject.path.leadTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.leadTime);
         expect(dynamicObject.path.trailTime.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pathPacket.path.trailTime);
         expect(dynamicObject.path.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
@@ -1342,19 +1342,17 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.path).toBeDefined();
-        expect(dynamicObject.path.color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.path.width.getValue(validTime)).toEqual(pathPacket.path.width);
         expect(dynamicObject.path.resolution.getValue(validTime)).toEqual(pathPacket.path.resolution);
-        expect(dynamicObject.path.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.path.outlineWidth.getValue(validTime)).toEqual(pathPacket.path.outlineWidth);
         expect(dynamicObject.path.leadTime.getValue(validTime)).toEqual(pathPacket.path.leadTime);
         expect(dynamicObject.path.trailTime.getValue(validTime)).toEqual(pathPacket.path.trailTime);
         expect(dynamicObject.path.show.getValue(validTime)).toEqual(true);
+        expect(dynamicObject.path.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.path.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.path.material.getValue(validTime).outlineWidth).toEqual(pathPacket.path.outlineWidth);
 
-        expect(dynamicObject.path.color.getValue(invalidTime)).toBeUndefined();
+        expect(dynamicObject.path.material.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.path.width.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.outlineColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.path.outlineWidth.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.path.leadTime.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.path.trailTime.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.path.show.getValue(invalidTime)).toBeUndefined();
