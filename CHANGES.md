@@ -15,6 +15,8 @@ Beta Releases
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Fixed support for embedded resources in glTF models.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 
 ### b29 - 2014-06-02
 

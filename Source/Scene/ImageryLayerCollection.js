@@ -122,7 +122,6 @@ define([
      * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
-     *
      * @returns {ImageryLayer} The newly created layer.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
@@ -142,7 +141,6 @@ define([
      *
      * @param {ImageryLayer} layer The layer to remove.
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
-     *
      * @returns {Boolean} true if the layer was in the collection and was removed,
      *                    false if the layer was not in the collection.
      */

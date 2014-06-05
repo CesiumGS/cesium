@@ -66,8 +66,7 @@ define([
          * primitives = primitives.destroy();
          * var b = labels.isDestroyed(); // true
          *
-         * //////////////////////////////////////////////////////////////////
-         *
+         * @example
          * // Example 2. Do not destroy primitives in a collection.
          * var primitives = new Cesium.PrimitiveCollection();
          * primitives.destroyPrimitives = false;

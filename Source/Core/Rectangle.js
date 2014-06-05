@@ -72,7 +72,6 @@ define([
      * @param {Number} [east=0.0] The easternmost longitude in degrees in the range [-180.0, 180.0].
      * @param {Number} [north=0.0] The northernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     *
      * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
      *
      * @example
@@ -242,7 +241,6 @@ define([
      *
      * @param {Rectangle} [left] The first Rectangle.
      * @param {Rectangle} [right] The second Rectangle.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     Rectangle.equals = function(left, right) {

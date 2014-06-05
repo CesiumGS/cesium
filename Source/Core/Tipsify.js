@@ -34,11 +34,10 @@ define([
      * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
      * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+     * @returns {Number} The average cache miss ratio (ACMR).
      *
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
-     *
-     * @returns {Number} The average cache miss ratio (ACMR).
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
@@ -112,11 +111,10 @@ define([
      * @param {Number} [options.maximumIndex] The maximum value of the elements in <code>args.indices</code>.
      *                                     If not supplied, this value will be computed.
      * @param {Number} [options.cacheSize=24] The number of vertices that can be stored in the cache at any one time.
+     * @returns {Number[]} A list of the input indices in an optimized order.
      *
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
-     *
-     * @returns {Number[]} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];

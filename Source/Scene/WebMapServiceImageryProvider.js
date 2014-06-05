@@ -184,7 +184,7 @@ define([
         /**
          * Gets the names of the WMS layers, separated by commas.
          * @memberof WebMapServiceImageryProvider.prototype
-         * @returns {String}
+         * @type {String}
          */
         layers : {
             get : function() {
@@ -378,7 +378,6 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -394,7 +393,6 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -421,7 +419,7 @@ define([
      *    styles=
      *    format=image/jpeg
      *
-     * @readonly
+     * @constant
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',

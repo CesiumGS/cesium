@@ -20,7 +20,6 @@ define([
      *        second is <code>itemToFind</code>.  If the array item is less than <code>itemToFind</code>,
      *        the function should return a negative value.  If it is greater, the function should return
      *        a positive value.  If the items are equal, it should return 0.
-     *
      * @returns {Number} The index of <code>itemToFind</code> in the array, if it exists.  If <code>itemToFind</code>
      *        does not exist, the return value is a negative number which is the bitwise complement (~)
      *        of the index before which the itemToFind should be inserted in order to maintain the
