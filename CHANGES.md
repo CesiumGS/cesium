@@ -16,6 +16,10 @@ Beta Releases
 * Fixed support for embedded resources in glTF models.
 * Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
+* Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
+* `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
+* `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
+* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 
 ### b29 - 2014-06-02
 
@@ -60,10 +64,6 @@ Beta Releases
 * Added `interleave` option to `Primitive` constructor.
 * Upgraded JSDoc from 3.0 to 3.3.0-alpha5. The Cesium reference documentation now has a slightly different look and feel.
 * Upgraded Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
-* Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
-* `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
-* `CesiumWidget` now takes two new optional parameters, `creditContainer` and `creditCssClass`.
-* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 
 ### b28 - 2014-05-01
 
