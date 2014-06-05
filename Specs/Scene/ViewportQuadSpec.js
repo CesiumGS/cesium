@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ViewportQuad',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/frameState',
-         'Specs/render',
-         'Core/BoundingRectangle',
-         'Core/Color',
-         'Renderer/ClearCommand',
-         'Scene/Material'
-     ], function(
-         ViewportQuad,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         frameState,
-         render,
-         BoundingRectangle,
-         Color,
-         ClearCommand,
-         Material) {
+        'Scene/ViewportQuad',
+        'Core/BoundingRectangle',
+        'Core/Color',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/frameState',
+        'Specs/render'
+    ], function(
+        ViewportQuad,
+        BoundingRectangle,
+        Color,
+        ClearCommand,
+        Material,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext,
+        frameState,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -46,8 +46,8 @@ defineSuite([
         viewportQuad = new ViewportQuad();
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
 
-        us = context.getUniformState();
-        us.update(context, createFrameState(createCamera(context)));
+        us = context.uniformState;
+        us.update(context, createFrameState(createCamera()));
     });
 
     afterEach(function() {

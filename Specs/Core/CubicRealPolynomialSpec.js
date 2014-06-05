@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/CubicRealPolynomial',
-             'Core/Math'
-            ], function(
-              CubicRealPolynomial,
-              CesiumMath) {
+        'Core/CubicRealPolynomial',
+        'Core/Math'
+    ], function(
+        CubicRealPolynomial,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

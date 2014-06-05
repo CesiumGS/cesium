@@ -23,7 +23,7 @@ define([
      * @alias SensorVolumeCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sensors.html">Cesium Sandcastle Sensors Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sensors.html|Cesium Sandcastle Sensors Demo}
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];
@@ -45,8 +45,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof SensorVolumeCollection
-     *
      * @see SensorVolumeCollection#addCustom
      * @see SensorVolumeCollection#addComplexConic
      */
@@ -59,8 +57,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof SensorVolumeCollection
-     *
      * @see SensorVolumeCollection#addRectangularPyramid
      * @see SensorVolumeCollection#addComplexConic
      */
@@ -72,8 +68,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof SensorVolumeCollection
      *
      * @see SensorVolumeCollection#removeAll
      */
@@ -94,8 +88,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof SensorVolumeCollection
-     *
      * @see SensorVolumeCollection#remove
      */
     SensorVolumeCollection.prototype.removeAll = function() {
@@ -110,7 +102,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof SensorVolumeCollection
      */
     SensorVolumeCollection.prototype.contains = function(sensor) {
         if (sensor) {
@@ -123,9 +114,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof SensorVolumeCollection
-     *
-     * @see SensorVolumeCollection#getLength
+     * @see SensorVolumeCollection#length
      */
     SensorVolumeCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -155,7 +144,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof SensorVolumeCollection
      */
     SensorVolumeCollection.prototype.isDestroyed = function() {
         return false;
@@ -163,7 +151,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof SensorVolumeCollection
      */
     SensorVolumeCollection.prototype.destroy = function() {
         this.removeAll();

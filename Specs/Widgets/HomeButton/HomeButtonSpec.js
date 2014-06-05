@@ -1,28 +1,23 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/HomeButton/HomeButton',
-         'Core/Ellipsoid',
-         'Scene/SceneTransitioner',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         HomeButton,
-         Ellipsoid,
-         SceneTransitioner,
-         createScene,
-         destroyScene) {
+        'Widgets/HomeButton/HomeButton',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        HomeButton,
+        Ellipsoid,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var scene;
-    var transitioner;
     beforeAll(function() {
         scene = createScene();
-        transitioner = new SceneTransitioner(scene);
     });
 
     afterAll(function() {
-        transitioner.destroy();
         destroyScene(scene);
     });
 
@@ -30,7 +25,6 @@ defineSuite([
         var homeButton = new HomeButton(document.body, scene);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.sceneTransitioner).toBeUndefined();
         expect(homeButton.viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
         expect(homeButton.isDestroyed()).toEqual(false);
         homeButton.destroy();
@@ -39,10 +33,9 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         var ellipsoid = new Ellipsoid();
-        var homeButton = new HomeButton(document.body, scene, transitioner, ellipsoid);
+        var homeButton = new HomeButton(document.body, scene, ellipsoid);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.sceneTransitioner).toBe(transitioner);
         expect(homeButton.viewModel.ellipsoid).toBe(ellipsoid);
         homeButton.destroy();
     });

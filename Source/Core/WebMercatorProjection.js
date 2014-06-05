@@ -1,20 +1,22 @@
 /*global define*/
 define([
+        './Cartesian3',
+        './Cartographic',
         './defaultValue',
         './defined',
         './defineProperties',
-        './Cartesian3',
-        './Cartographic',
-        './Math',
-        './Ellipsoid'
+        './DeveloperError',
+        './Ellipsoid',
+        './Math'
     ], function(
+        Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         defineProperties,
-        Cartesian3,
-        Cartographic,
-        CesiumMath,
-        Ellipsoid) {
+        DeveloperError,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -39,8 +41,11 @@ define([
     defineProperties(WebMercatorProjection.prototype, {
         /**
          * Gets the {@link Ellipsoid}.
+         *
          * @memberof WebMercatorProjection.prototype
+         *
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -53,8 +58,6 @@ define([
      * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude
      * in the range -PI/2 to PI/2.
      *
-     * @memberof WebMercatorProjection
-     *
      * @param {Number} mercatorAngle The angle to convert.
      * @returns {Number} The geodetic latitude in radians.
      */
@@ -65,8 +68,6 @@ define([
     /**
      * Converts a geodetic latitude in radians, in the range -PI/2 to PI/2, to a Mercator
      * angle in the range -PI to PI.
-     *
-     * @memberof WebMercatorProjection
      *
      * @param {Number} latitude The geodetic latitude in radians.
      * @returns {Number} The Mercator angle.
@@ -89,12 +90,10 @@ define([
      * to cut it off sooner because it grows exponentially with increasing latitude.
      * The logic behind this particular cutoff value, which is the one used by
      * Google Maps, Bing Maps, and Esri, is that it makes the projection
-     * square.  That is, the extent is equal in the X and Y directions.
+     * square.  That is, the rectangle is equal in the X and Y directions.
      *
      * The constant value is computed by calling:
      *    WebMercatorProjection.mercatorAngleToGeodeticLatitude(Math.PI)
-     *
-     * @memberof WebMercatorProjection
      *
      * @type {Number}
      */
@@ -104,8 +103,6 @@ define([
      * Converts geodetic ellipsoid coordinates, in radians, to the equivalent Web Mercator
      * X, Y, Z coordinates expressed in meters and returned in a {@link Cartesian3}.  The height
      * is copied unmodified to the Z coordinate.
-     *
-     * @memberof WebMercatorProjection
      *
      * @param {Cartographic} cartographic The cartographic coordinates in radians.
      * @param {Cartesian3} [result] The instance to which to copy the result, or undefined if a
@@ -133,14 +130,18 @@ define([
      * containing geodetic ellipsoid coordinates.  The Z coordinate is copied unmodified to the
      * height.
      *
-     * @memberof WebMercatorProjection
-     *
-     * @param {Cartesian2} cartesian The web mercator coordinates in meters.
+     * @param {Cartesian3} cartesian The web mercator Cartesian position to unrproject with height (z) in meters.
      * @param {Cartographic} [result] The instance to which to copy the result, or undefined if a
      *        new instance should be created.
      * @returns {Cartographic} The equivalent cartographic coordinates.
      */
     WebMercatorProjection.prototype.unproject = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
         var oneOverEarthSemimajorAxis = this._oneOverSemimajorAxis;
         var longitude = cartesian.x * oneOverEarthSemimajorAxis;
         var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);

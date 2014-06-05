@@ -1,34 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicModelVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/DynamicModel',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-            DynamicModelVisualizer,
-            createScene,
-            destroyScene,
-            ConstantProperty,
-            ConstantPositionProperty,
-            DynamicEllipse,
-            DynamicModel,
-            DynamicObjectCollection,
-            DynamicObject,
-            JulianDate,
-            Cartesian2,
-            Cartesian3,
-            Color,
-            Scene) {
+        'DynamicScene/DynamicModelVisualizer',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicModel',
+        'DynamicScene/DynamicObjectCollection',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicModelVisualizer,
+        Cartesian3,
+        JulianDate,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicModel,
+        DynamicObjectCollection,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,13 +45,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
-    });
-
     it('update throws if no time specified.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
@@ -70,13 +53,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicModelVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicModelVisualizer(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -113,6 +92,7 @@ defineSuite([
         var model = new DynamicModel();
         model.show = new ConstantProperty(true);
         model.scale = new ConstantProperty(2);
+        model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(duckUrl);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
@@ -127,6 +107,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(true);
         expect(primitive.scale).toEqual(2);
+        expect(primitive.minimumPixelSize).toEqual(24.0);
     });
 
     it('removing removes primitives.', function() {

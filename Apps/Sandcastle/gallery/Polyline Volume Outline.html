@@ -30,7 +30,6 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     function starPositions(arms, rOuter, rInner) {
         var angle = Math.PI / arms;
@@ -51,10 +50,10 @@ require(['Cesium'], function(Cesium) {
         ];
     }
 
-    var positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-89.0, 32.0, 0.0),
-        Cesium.Cartographic.fromDegrees(-89.0, 36.0, 100000.0),
-        Cesium.Cartographic.fromDegrees(-93.0, 36.0, 0.0)
+    var positions = Cesium.Cartesian3.fromDegreesArrayHeights([
+        -89.0, 32.0, 0.0,
+        -89.0, 36.0, 100000.0,
+        -93.0, 36.0, 0.0
     ]);
     var shapePositions = boxPositions();
     
@@ -83,9 +82,9 @@ require(['Cesium'], function(Cesium) {
         }
     });
 
-    positions = ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-95.0, 32.0, 0.0),
-        Cesium.Cartographic.fromDegrees(-95.0, 36.0, 0.0)
+    positions = Cesium.Cartesian3.fromDegreesArray([
+        -95.0, 32.0,
+        -95.0, 36.0
     ]);
     shapePositions = starPositions(5, 70000, 40000);
     // Outline of blue extruded star
@@ -130,7 +129,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(4.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(4.0, scene.maximumAliasedLineWidth)
             }
         })
     }));

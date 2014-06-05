@@ -2,20 +2,22 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/DeveloperError',
+        '../Core/defineProperties',
         '../Core/destroyObject',
-        './PixelFormat'
+        '../Core/DeveloperError',
+        '../Core/PixelFormat'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
+        defineProperties,
         destroyObject,
+        DeveloperError,
         PixelFormat) {
     "use strict";
 
     function attachTexture(framebuffer, attachment, texture) {
         var gl = framebuffer._gl;
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._getTarget(), texture._getTexture(), 0);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachment, texture._target, texture._texture, 0);
     }
 
     function attachRenderbuffer(framebuffer, attachment, renderbuffer) {
@@ -24,18 +26,10 @@ define([
     }
 
     /**
-     * A framebuffer is a target for draw and clear calls.  It can contain color, depth, and stencil attachments
-     * that are written to in response to these calls.  If the attachments are textures, they can be read in
-     * later rendering passes.
-     *
-     * @alias Framebuffer
-     *
-     * @see Context#createFramebuffer
-     *
-     * @internalConstructor
+     * @private
      */
-    var Framebuffer = function(gl, maximumColorAttachments, description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var Framebuffer = function(gl, maximumColorAttachments, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._gl = gl;
         this._framebuffer = gl.createFramebuffer();
@@ -60,35 +54,35 @@ define([
          *
          * @see Framebuffer#destroy
          */
-        this.destroyAttachments = true;
+        this.destroyAttachments = defaultValue(options.destroyAttachments, true);
 
         // Throw if a texture and renderbuffer are attached to the same point.  This won't
         // cause a WebGL error (because only one will be attached), but is likely a developer error.
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(description.colorTextures) && defined(description.colorRenderbuffers)) {
+        if (defined(options.colorTextures) && defined(options.colorRenderbuffers)) {
             throw new DeveloperError('Cannot have both color texture and color renderbuffer attachments.');
         }
-        if (defined(description.depthTexture) && defined(description.depthRenderbuffer)) {
+        if (defined(options.depthTexture) && defined(options.depthRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth texture and depth renderbuffer attachment.');
         }
-        if (defined(description.depthStencilTexture) && defined(description.depthStencilRenderbuffer)) {
+        if (defined(options.depthStencilTexture) && defined(options.depthStencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth-stencil texture and depth-stencil renderbuffer attachment.');
         }
         //>>includeEnd('debug');
 
         // Avoid errors defined in Section 6.5 of the WebGL spec
-        var depthAttachment = (defined(description.depthTexture) || defined(description.depthRenderbuffer));
-        var depthStencilAttachment = (defined(description.depthStencilTexture) || defined(description.depthStencilRenderbuffer));
+        var depthAttachment = (defined(options.depthTexture) || defined(options.depthRenderbuffer));
+        var depthStencilAttachment = (defined(options.depthStencilTexture) || defined(options.depthStencilRenderbuffer));
 
         //>>includeStart('debug', pragmas.debug);
         if (depthAttachment && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a depth and depth-stencil attachment.');
         }
-        if (defined(description.stencilRenderbuffer) && depthStencilAttachment) {
+        if (defined(options.stencilRenderbuffer) && depthStencilAttachment) {
             throw new DeveloperError('Cannot have both a stencil and depth-stencil attachment.');
         }
-        if (depthAttachment && defined(description.stencilRenderbuffer)) {
+        if (depthAttachment && defined(options.stencilRenderbuffer)) {
             throw new DeveloperError('Cannot have both a depth and stencil attachment.');
         }
         //>>includeEnd('debug');
@@ -103,8 +97,8 @@ define([
         var length;
         var attachmentEnum;
 
-        if (defined(description.colorTextures)) {
-            var textures = description.colorTextures;
+        if (defined(options.colorTextures)) {
+            var textures = options.colorTextures;
             length = this._colorTextures.length = this._activeColorAttachments.length = textures.length;
 
             //>>includeStart('debug', pragmas.debug);
@@ -117,7 +111,7 @@ define([
                 texture = textures[i];
 
                 //>>includeStart('debug', pragmas.debug);
-                if (!PixelFormat.isColorFormat(texture.getPixelFormat())) {
+                if (!PixelFormat.isColorFormat(texture.pixelFormat)) {
                     throw new DeveloperError('The color-texture pixel-format must be a color format.');
                 }
                 //>>includeEnd('debug');
@@ -129,8 +123,8 @@ define([
             }
         }
 
-        if (defined(description.colorRenderbuffers)) {
-            var renderbuffers = description.colorRenderbuffers;
+        if (defined(options.colorRenderbuffers)) {
+            var renderbuffers = options.colorRenderbuffers;
             length = this._colorRenderbuffers.length = this._activeColorAttachments.length = renderbuffers.length;
 
             //>>includeStart('debug', pragmas.debug);
@@ -148,11 +142,11 @@ define([
             }
         }
 
-        if (defined(description.depthTexture)) {
-            texture = description.depthTexture;
+        if (defined(options.depthTexture)) {
+            texture = options.depthTexture;
 
             //>>includeStart('debug', pragmas.debug);
-            if (texture.getPixelFormat() !== PixelFormat.DEPTH_COMPONENT) {
+            if (texture.pixelFormat !== PixelFormat.DEPTH_COMPONENT) {
                 throw new DeveloperError('The depth-texture pixel-format must be DEPTH_COMPONENT.');
             }
             //>>includeEnd('debug');
@@ -161,23 +155,23 @@ define([
             this._depthTexture = texture;
         }
 
-        if (defined(description.depthRenderbuffer)) {
-            renderbuffer = description.depthRenderbuffer;
+        if (defined(options.depthRenderbuffer)) {
+            renderbuffer = options.depthRenderbuffer;
             attachRenderbuffer(this, this._gl.DEPTH_ATTACHMENT, renderbuffer);
             this._depthRenderbuffer = renderbuffer;
         }
 
-        if (defined(description.stencilRenderbuffer)) {
-            renderbuffer = description.stencilRenderbuffer;
+        if (defined(options.stencilRenderbuffer)) {
+            renderbuffer = options.stencilRenderbuffer;
             attachRenderbuffer(this, this._gl.STENCIL_ATTACHMENT, renderbuffer);
             this._stencilRenderbuffer = renderbuffer;
         }
 
-        if (defined(description.depthStencilTexture)) {
-            texture = description.depthStencilTexture;
+        if (defined(options.depthStencilTexture)) {
+            texture = options.depthStencilTexture;
 
             //>>includeStart('debug', pragmas.debug);
-            if (texture.getPixelFormat() !== PixelFormat.DEPTH_STENCIL) {
+            if (texture.pixelFormat !== PixelFormat.DEPTH_STENCIL) {
                 throw new DeveloperError('The depth-stencil pixel-format must be DEPTH_STENCIL.');
             }
             //>>includeEnd('debug');
@@ -186,14 +180,74 @@ define([
             this._depthStencilTexture = texture;
         }
 
-        if (defined(description.depthStencilRenderbuffer)) {
-            renderbuffer = description.depthStencilRenderbuffer;
+        if (defined(options.depthStencilRenderbuffer)) {
+            renderbuffer = options.depthStencilRenderbuffer;
             attachRenderbuffer(this, this._gl.DEPTH_STENCIL_ATTACHMENT, renderbuffer);
             this._depthStencilRenderbuffer = renderbuffer;
         }
 
         this._unBind();
     };
+
+    defineProperties(Framebuffer.prototype, {
+        /**
+         * The status of the framebuffer. If the status is not WebGLRenderingContext.COMPLETE,
+         * a {@link DeveloperError} will be thrown when attempting to render to the framebuffer.
+         * @memberof Framebuffer.prototype
+         * @type {Number}
+         */
+        status : {
+            get : function() {
+                this._bind();
+                var status = this._gl.checkFramebufferStatus(this._gl.FRAMEBUFFER);
+                this._unBind();
+                return status;
+            }
+        },
+        numberOfColorAttachments : {
+            get : function() {
+                return this._activeColorAttachments.length;
+            }
+        },
+        depthTexture: {
+            get : function() {
+                return this._depthTexture;
+            }
+        },
+        depthRenderbuffer: {
+            get : function() {
+                return this._depthRenderbuffer;
+            }
+        },
+        stencilRenderbuffer : {
+            get : function() {
+                return this._stencilRenderbuffer;
+            }
+        },
+        depthStencilTexture : {
+            get : function() {
+                return this._depthStencilTexture;
+            }
+        },
+        depthStencilRenderbuffer : {
+            get : function() {
+                return this._depthStencilRenderbuffer;
+            }
+        },
+
+        /**
+         * True if the framebuffer has a depth attachment.  Depth attachments include
+         * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
+         * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
+         * @memberof Framebuffer.prototype
+         * @type {Boolean}
+         */
+        hasDepthAttachment : {
+            get : function() {
+                return !!(this.depthTexture || this.depthRenderbuffer || this.depthStencilTexture || this.depthStencilRenderbuffer);
+            }
+        }
+    });
 
     Framebuffer.prototype._bind = function() {
         var gl = this._gl;
@@ -209,29 +263,6 @@ define([
         return this._activeColorAttachments;
     };
 
-    /**
-     * Returns the number of color textures or renderbuffers attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Number} The number of color attachments.
-     */
-    Framebuffer.prototype.getNumberOfColorAttachments = function() {
-        return this._activeColorAttachments.length;
-    };
-
-    /**
-     * Returns a color texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @param {Number} index The index of the color texture attachment.
-     *
-     * @returns {Texture} The color texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} index is required, must be greater than or equal to zero and must be less than the number of color attachments.
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
     Framebuffer.prototype.getColorTexture = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorTextures.length) {
@@ -242,18 +273,6 @@ define([
         return this._colorTextures[index];
     };
 
-    /**
-     * Returns a color renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @param {Number} index The index of the color renderbuffer attachment.
-     *
-     * @returns {Texture} The color renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} index is required, must be greater than or equal to zero and must be less than the number of color attachments.
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
     Framebuffer.prototype.getColorRenderbuffer = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || index < 0 || index >= this._colorRenderbuffers.length) {
@@ -264,132 +283,10 @@ define([
         return this._colorRenderbuffers[index];
     };
 
-    /**
-     * Returns the depth texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthTexture = function() {
-        return this._depthTexture;
-    };
-
-    /**
-     * Returns the depth renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthRenderbuffer = function() {
-        return this._depthRenderbuffer;
-    };
-
-    /**
-     * Returns the stencil renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The stencil renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getStencilRenderbuffer = function() {
-        return this._stencilRenderbuffer;
-    };
-
-    /**
-     * Returns the depth-stencil texture attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth-stencil texture attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthStencilTexture = function() {
-        return this._depthStencilTexture;
-    };
-
-    /**
-     * Returns the depth-stencil renderbuffer attached to this framebuffer.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Texture} The depth-stencil renderbuffer attached to this framebuffer.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.getDepthStencilRenderbuffer = function() {
-        return this._depthStencilRenderbuffer;
-    };
-
-    /**
-     * Returns true if the framebuffer has a depth attachment.  Depth attachments include
-     * depth and depth-stencil textures, and depth and depth-stencil renderbuffers.  When
-     * rendering to a framebuffer, a depth attachment is required for the depth test to have effect.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     */
-    Framebuffer.prototype.hasDepthAttachment = function() {
-        return !!(this.getDepthTexture() || this.getDepthRenderbuffer() || this.getDepthStencilTexture() || this.getDepthStencilRenderbuffer());
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see Framebuffer#destroy
-     */
     Framebuffer.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Framebuffer attachments are only destoryed if the framebuffer owns them, i.e., {@link destroyAttachments}
-     * is true.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Framebuffer
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
-     *
-     * @see Framebuffer#isDestroyed
-     * @see Framebuffer#destroyAttachments
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteFramebuffers.xml'>glDeleteFramebuffers</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteTextures.xml'>glDeleteTextures</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteRenderbuffers.xml'>glDeleteRenderbuffers</a>
-     *
-     * @example
-     * var texture = context.createTexture2D({ width : 1, height : 1 });
-     * framebuffer = context.createFramebuffer({ colorTextures : [texture] });
-     * // ...
-     * framebuffer = framebuffer.destroy();
-     * // texture is also destroyed.
-     */
     Framebuffer.prototype.destroy = function() {
         if (this.destroyAttachments) {
             // If the color texture is a cube map face, it is owned by the cube map, and will not be destroyed.

@@ -1,5 +1,10 @@
 /*global define*/
-define(['./defined'], function(defined) {
+define([
+        './defined',
+        './defineProperties'
+    ], function(
+        defined,
+        defineProperties) {
     "use strict";
 
     var _supportsFullscreen;
@@ -17,9 +22,93 @@ define(['./defined'], function(defined) {
      *
      * @exports Fullscreen
      *
-     * @see <a href='http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html'>W3C Fullscreen Living Specification</a>
+     * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
      */
     var Fullscreen = {};
+
+    defineProperties(Fullscreen, {
+        /**
+         * The element that is currently fullscreen, if any.  To simply check if the
+         * browser is in fullscreen mode or not, use {@link Fullscreen#fullscreen}.
+         * @memberof Fullscreen
+         * @type {Object}
+         */
+        element: {
+            get : function() {
+                if (!Fullscreen.supportsFullscreen()) {
+                    return undefined;
+                }
+
+                return document[_names.fullscreenElement];
+            }
+        },
+
+        /**
+         * The name of the event on the document that is fired when fullscreen is
+         * entered or exited.  This event name is intended for use with addEventListener.
+         * In your event handler, to determine if the browser is in fullscreen mode or not,
+         * use {@link Fullscreen#fullscreen}.
+         * @memberof Fullscreen
+         * @type {String}
+         */
+        changeEventName : {
+            get : function() {
+                if (!Fullscreen.supportsFullscreen()) {
+                    return undefined;
+                }
+
+                return _names.fullscreenchange;
+            }
+        },
+
+        /**
+         * The name of the event that is fired when a fullscreen error
+         * occurs.  This event name is intended for use with addEventListener.
+         * @memberof Fullscreen
+         * @type {String}
+         */
+        errorEventName : {
+            get : function() {
+                if (!Fullscreen.supportsFullscreen()) {
+                    return undefined;
+                }
+
+                return _names.fullscreenerror;
+            }
+        },
+
+        /**
+         * Determine whether the browser will allow an element to be made fullscreen, or not.
+         * For example, by default, iframes cannot go fullscreen unless the containing page
+         * adds an "allowfullscreen" attribute (or prefixed equivalent).
+         * @memberof Fullscreen
+         * @type {Boolean}
+         */
+        enabled : {
+            get : function() {
+                if (!Fullscreen.supportsFullscreen()) {
+                    return undefined;
+                }
+
+                return document[_names.fullscreenEnabled];
+            }
+        },
+
+        /**
+         * Determines if the browser is currently in fullscreen mode.
+         * @memberof Fullscreen
+         * @type {Boolean}
+         */
+        fullscreen : {
+            get : function() {
+                if (!Fullscreen.supportsFullscreen()) {
+                    return undefined;
+                }
+
+                return Fullscreen.element !== null;
+            }
+        }
+    });
 
     /**
      * Detects whether the browser supports the standard fullscreen API.
@@ -154,86 +243,6 @@ define(['./defined'], function(defined) {
         }
 
         document[_names.exitFullscreen]();
-    };
-
-    /**
-     * Determine whether the browser will allow an element to be made fullscreen, or not.
-     * For example, by default, iframes cannot go fullscreen unless the containing page
-     * adds an "allowfullscreen" attribute (or prefixed equivalent).
-     *
-     * @returns {Boolean} <code>true</code> if the browser is able to enter fullscreen mode,
-     * <code>false</code> if not, and <code>undefined</code> if the browser does not
-     * support fullscreen mode.
-     */
-    Fullscreen.isFullscreenEnabled = function() {
-        if (!Fullscreen.supportsFullscreen()) {
-            return undefined;
-        }
-
-        return document[_names.fullscreenEnabled];
-    };
-
-    /**
-     * Gets the element that is currently fullscreen, if any.  To simply check if the
-     * browser is in fullscreen mode or not, use {@link Fullscreen#isFullscreen}.
-     *
-     * @returns {Object} the element that is currently fullscreen, or <code>null</code> if the browser is
-     * not in fullscreen mode, or <code>undefined</code> if the browser does not support fullscreen
-     * mode.
-     */
-    Fullscreen.getFullscreenElement = function() {
-        if (!Fullscreen.supportsFullscreen()) {
-            return undefined;
-        }
-
-        return document[_names.fullscreenElement];
-    };
-
-    /**
-     * Determines if the browser is currently in fullscreen mode.
-     *
-     * @returns {Boolean} <code>true</code> if the browser is currently in fullscreen mode, <code>false</code>
-     * if it is not, or <code>undefined</code> if the browser does not support fullscreen mode.
-     */
-    Fullscreen.isFullscreen = function() {
-        if (!Fullscreen.supportsFullscreen()) {
-            return undefined;
-        }
-
-        return Fullscreen.getFullscreenElement() !== null;
-    };
-
-    /**
-     * Gets the name of the event on the document that is fired when fullscreen is
-     * entered or exited.  This event name is intended for use with addEventListener.
-     *
-     * In your event handler, to determine if the browser is in fullscreen mode or not,
-     * use {@link Fullscreen#isFullscreen}.
-     *
-     * @returns {String} the name of the event that is fired when fullscreen is entered or
-     * exited, or <code>undefined</code> if fullscreen is not supported.
-     */
-    Fullscreen.getFullscreenChangeEventName = function() {
-        if (!Fullscreen.supportsFullscreen()) {
-            return undefined;
-        }
-
-        return _names.fullscreenchange;
-    };
-
-    /**
-     * Gets the name of the event that is fired when a fullscreen error
-     * occurs.  This event name is intended for use with addEventListener.
-     *
-     * @returns {String} the name of the event that is fired when a fullscreen error occurs,
-     * or <code>undefined</code> if fullscreen is not supported.
-     */
-    Fullscreen.getFullscreenErrorEventName = function() {
-        if (!Fullscreen.supportsFullscreen()) {
-            return undefined;
-        }
-
-        return _names.fullscreenerror;
     };
 
     return Fullscreen;

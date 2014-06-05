@@ -1,19 +1,20 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CompositeMaterialProperty',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/GridMaterialProperty',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             CompositeMaterialProperty,
-             ColorMaterialProperty,
-             GridMaterialProperty,
-             Color,
-             JulianDate,
-             TimeInterval,
-             TimeIntervalCollection) {
+defineSuite([
+        'DynamicScene/CompositeMaterialProperty',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/GridMaterialProperty'
+    ], function(
+        CompositeMaterialProperty,
+        Color,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        ColorMaterialProperty,
+        GridMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -105,7 +106,7 @@ defineSuite(['DynamicScene/CompositeMaterialProperty',
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
-        property.intervals.clear();
+        property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
     });

@@ -1,36 +1,36 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicLabelVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicLabel',
-             'DynamicScene/DynamicObjectCollection',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Core/NearFarScalar',
-             'Scene/LabelCollection',
-             'Scene/HorizontalOrigin',
-             'Scene/VerticalOrigin',
-             'Scene/LabelStyle'
-            ], function(
-              DynamicLabelVisualizer,
-              createScene,
-              destroyScene,
-              ConstantProperty,
-              DynamicLabel,
-              DynamicObjectCollection,
-              JulianDate,
-              Cartesian2,
-              Cartesian3,
-              Color,
-              NearFarScalar,
-              LabelCollection,
-              HorizontalOrigin,
-              VerticalOrigin,
-              LabelStyle) {
+        'DynamicScene/DynamicLabelVisualizer',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/NearFarScalar',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicLabel',
+        'DynamicScene/DynamicObjectCollection',
+        'Scene/HorizontalOrigin',
+        'Scene/LabelCollection',
+        'Scene/LabelStyle',
+        'Scene/VerticalOrigin',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicLabelVisualizer,
+        Cartesian2,
+        Cartesian3,
+        Color,
+        JulianDate,
+        NearFarScalar,
+        ConstantProperty,
+        DynamicLabel,
+        DynamicObjectCollection,
+        HorizontalOrigin,
+        LabelCollection,
+        LabelStyle,
+        VerticalOrigin,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,11 +55,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor sets expected parameters and adds collection to scene.', function() {
+    it('constructor adds collection to scene.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection instanceof LabelCollection).toEqual(true);
     });
@@ -72,13 +70,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicLabelVisualizer(scene);
-        visualizer.update(new JulianDate());
-    });
-
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicLabelVisualizer(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -160,21 +154,21 @@ defineSuite([
         l = labelCollection.get(0);
 
         visualizer.update(time);
-        expect(l.getPosition()).toEqual(testObject.position.getValue(time));
-        expect(l.getText()).toEqual(testObject.label.text.getValue(time));
-        expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
-        expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
-        expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
-        expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
-        expect(l.getOutlineWidth()).toEqual(testObject.label.outlineWidth.getValue(time));
-        expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
-        expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
-        expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));
-        expect(l.getPixelOffset()).toEqual(testObject.label.pixelOffset.getValue(time));
-        expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
-        expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
-        expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
-        expect(l.getPixelOffsetScaleByDistance()).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.position).toEqual(testObject.position.getValue(time));
+        expect(l.text).toEqual(testObject.label.text.getValue(time));
+        expect(l.font).toEqual(testObject.label.font.getValue(time));
+        expect(l.style).toEqual(testObject.label.style.getValue(time));
+        expect(l.fillColor).toEqual(testObject.label.fillColor.getValue(time));
+        expect(l.outlineColor).toEqual(testObject.label.outlineColor.getValue(time));
+        expect(l.outlineWidth).toEqual(testObject.label.outlineWidth.getValue(time));
+        expect(l.horizontalOrigin).toEqual(testObject.label.horizontalOrigin.getValue(time));
+        expect(l.verticalOrigin).toEqual(testObject.label.verticalOrigin.getValue(time));
+        expect(l.eyeOffset).toEqual(testObject.label.eyeOffset.getValue(time));
+        expect(l.pixelOffset).toEqual(testObject.label.pixelOffset.getValue(time));
+        expect(l.scale).toEqual(testObject.label.scale.getValue(time));
+        expect(l.show).toEqual(testObject.label.show.getValue(time));
+        expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
+        expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
         label.text = new ConstantProperty('b');
@@ -193,21 +187,21 @@ defineSuite([
         label.pixelOffsetScaleByDistance = new ConstantProperty(new NearFarScalar());
 
         visualizer.update(time);
-        expect(l.getPosition()).toEqual(testObject.position.getValue(time));
-        expect(l.getText()).toEqual(testObject.label.text.getValue(time));
-        expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
-        expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
-        expect(l.getFillColor()).toEqual(testObject.label.fillColor.getValue(time));
-        expect(l.getOutlineColor()).toEqual(testObject.label.outlineColor.getValue(time));
-        expect(l.getOutlineWidth()).toEqual(testObject.label.outlineWidth.getValue(time));
-        expect(l.getHorizontalOrigin()).toEqual(testObject.label.horizontalOrigin.getValue(time));
-        expect(l.getVerticalOrigin()).toEqual(testObject.label.verticalOrigin.getValue(time));
-        expect(l.getEyeOffset()).toEqual(testObject.label.eyeOffset.getValue(time));
-        expect(l.getPixelOffset()).toEqual(testObject.label.pixelOffset.getValue(time));
-        expect(l.getScale()).toEqual(testObject.label.scale.getValue(time));
-        expect(l.getShow()).toEqual(testObject.label.show.getValue(time));
-        expect(l.getTranslucencyByDistance()).toEqual(testObject.label.translucencyByDistance.getValue(time));
-        expect(l.getPixelOffsetScaleByDistance()).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
+        expect(l.position).toEqual(testObject.position.getValue(time));
+        expect(l.text).toEqual(testObject.label.text.getValue(time));
+        expect(l.font).toEqual(testObject.label.font.getValue(time));
+        expect(l.style).toEqual(testObject.label.style.getValue(time));
+        expect(l.fillColor).toEqual(testObject.label.fillColor.getValue(time));
+        expect(l.outlineColor).toEqual(testObject.label.outlineColor.getValue(time));
+        expect(l.outlineWidth).toEqual(testObject.label.outlineWidth.getValue(time));
+        expect(l.horizontalOrigin).toEqual(testObject.label.horizontalOrigin.getValue(time));
+        expect(l.verticalOrigin).toEqual(testObject.label.verticalOrigin.getValue(time));
+        expect(l.eyeOffset).toEqual(testObject.label.eyeOffset.getValue(time));
+        expect(l.pixelOffset).toEqual(testObject.label.pixelOffset.getValue(time));
+        expect(l.scale).toEqual(testObject.label.scale.getValue(time));
+        expect(l.show).toEqual(testObject.label.show.getValue(time));
+        expect(l.translucencyByDistance).toEqual(testObject.label.translucencyByDistance.getValue(time));
+        expect(l.pixelOffsetScaleByDistance).toEqual(testObject.label.pixelOffsetScaleByDistance.getValue(time));
 
         label.show = new ConstantProperty(false);
         visualizer.update(time);
@@ -232,13 +226,13 @@ defineSuite([
 
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
-        expect(l.getShow()).toEqual(true);
+        expect(l.show).toEqual(true);
 
         //Clearing won't actually remove the label because of the
         //internal cache used by the visualizer, instead it just hides it.
         dynamicObjectCollection.removeAll();
         visualizer.update(time);
-        expect(l.getShow()).toEqual(false);
+        expect(l.show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
@@ -260,37 +254,5 @@ defineSuite([
         expect(labelCollection.length).toEqual(1);
         var l = labelCollection.get(0);
         expect(l.id).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.label = new DynamicLabel();
-        testObject.label.show = new ConstantProperty(true);
-        testObject.label.text = new ConstantProperty('lorum ipsum');
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.label = new DynamicLabel();
-        testObject2.label.show = new ConstantProperty(true);
-        testObject2.label.text = new ConstantProperty('the quick brown');
-
-        visualizer = new DynamicLabelVisualizer(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-        var labelCollection = scene.primitives.get(0);
-
-        visualizer.update(time);
-        expect(labelCollection.length).toEqual(1);
-        var l = labelCollection.get(0);
-        expect(l.id).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(labelCollection.length).toEqual(1);
-        l = labelCollection.get(0);
-        expect(l.id).toEqual(testObject2);
     });
 }, 'WebGL');

@@ -63,7 +63,6 @@ define([
 
     /**
      * Creates a plane from a normal and a point on the plane.
-     * @memberof Plane
      *
      * @param {Cartesian3} point The point on the plane.
      * @param {Cartesian3} normal The plane's normal (normalized).
@@ -71,7 +70,7 @@ define([
      * @returns {Plane} A new plane instance or the modified result parameter.
      *
      * @example
-     * var point = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 40.0));
+     * var point = Cesium.Cartesian3.fromDegrees(-72.0, 40.0);
      * var normal = ellipsoid.geodeticSurfaceNormal(point);
      * var tangentPlane = Cesium.Plane.fromPointNormal(point, normal);
      */
@@ -102,7 +101,6 @@ define([
      * is on.  If the distance is positive, the point is in the half-space
      * in the direction of the normal; if negative, the point is in the half-space
      * opposite to the normal; if zero, the plane passes through the point.
-     * @memberof Plane
      *
      * @param {Plane} plane The plane.
      * @param {Cartesian3} point The point.
@@ -119,22 +117,6 @@ define([
         //>>includeEnd('debug');
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
-    };
-
-
-    /**
-     * Computes the signed shortest distance of a point to this plane.
-     * The sign of the distance determines which side of this plane the point
-     * is on.  If the distance is positive, the point is in the half-space
-     * in the direction of the normal; if negative, the point is in the half-space
-     * opposite to the normal; if zero, this plane passes through the point.
-     * @memberof Plane
-     *
-     * @param {Cartesian3} point The point.
-     * @returns {Number} The signed shortest distance of the point to this plane.
-     */
-    Plane.prototype.getPointDistance = function(point) {
-        return Plane.getPointDistance(this, point);
     };
 
     return Plane;

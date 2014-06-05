@@ -1,21 +1,22 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CompositePositionProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/PositionProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/ReferenceFrame',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             CompositePositionProperty,
-             ConstantPositionProperty,
-             PositionProperty,
-             Cartesian3,
-             JulianDate,
-             ReferenceFrame,
-             TimeInterval,
-             TimeIntervalCollection) {
+defineSuite([
+        'DynamicScene/CompositePositionProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/ReferenceFrame',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/PositionProperty'
+    ], function(
+        CompositePositionProperty,
+        Cartesian3,
+        JulianDate,
+        ReferenceFrame,
+        TimeInterval,
+        TimeIntervalCollection,
+        ConstantPositionProperty,
+        PositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -200,7 +201,7 @@ defineSuite(['DynamicScene/CompositePositionProperty',
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
-        property.intervals.clear();
+        property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
     });

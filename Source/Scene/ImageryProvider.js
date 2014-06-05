@@ -2,16 +2,16 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
         defined,
         defineProperties,
+        DeveloperError,
         loadImage,
         loadImageViaBlob,
-        DeveloperError,
         throttleRequestByServer) {
     "use strict";
 
@@ -29,8 +29,8 @@ define([
      * @see OpenStreetMapImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html">Cesium Sandcastle Imagery Layers Demo</a>
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     var ImageryProvider = function ImageryProvider() {
         /**
@@ -132,12 +132,12 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by the instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
          * not be called before {@link ImageryProvider#ready} returns true.
          * @memberof ImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent: {
+        rectangle: {
             get : DeveloperError.throwInstantiationError
         },
 
@@ -174,7 +174,7 @@ define([
         /**
          * Gets the minimum level-of-detail that can be requested.  This function should
          * not be called before {@link ImageryProvider#ready} returns true. Generally,
-         * a minimum level should only be used when the extent of the imagery is small
+         * a minimum level should only be used when the rectangle of the imagery is small
          * enough that the number of tiles at the minimum level is small.  An imagery
          * provider with more than a few tiles at the minimum level will lead to
          * rendering problems.
@@ -236,12 +236,24 @@ define([
          */
         proxy : {
             get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @memberof ImageryProvider.prototype
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     * @memberof ImageryProvider
      * @function
      *
      * @param {Number} x The tile X coordinate.
@@ -257,7 +269,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
-     * @memberof ImageryProvider
      * @function
      *
      * @param {Number} x The tile X coordinate.
@@ -277,9 +288,8 @@ define([
      * Loads an image from a given URL.  If the server referenced by the URL already has
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
-     * @memberof ImageryProvider
      *
-     * @param url {String} The URL of the image.
+     * @param {String} url The URL of the image.
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

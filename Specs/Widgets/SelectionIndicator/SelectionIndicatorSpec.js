@@ -1,16 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/SelectionIndicator/SelectionIndicator',
-         'Core/Ellipsoid',
-         'Scene/SceneTransitioner',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         SelectionIndicator,
-         Ellipsoid,
-         SceneTransitioner,
-         createScene,
-         destroyScene) {
+        'Widgets/SelectionIndicator/SelectionIndicator',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        SelectionIndicator,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

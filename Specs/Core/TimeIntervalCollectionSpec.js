@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/TimeIntervalCollection',
-         'Core/JulianDate',
-         'Core/TimeInterval'
-     ], function(
-         TimeIntervalCollection,
-         JulianDate,
-         TimeInterval) {
+        'Core/TimeIntervalCollection',
+        'Core/JulianDate',
+        'Core/TimeInterval'
+    ], function(
+        TimeIntervalCollection,
+        JulianDate,
+        TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -140,11 +140,11 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2), true, false));
         expect(intervals.empty).toEqual(false);
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.empty).toEqual(true);
     });
 
-    it('getLength returns the correct interval length when adding intervals with different data', function() {
+    it('length returns the correct interval length when adding intervals with different data', function() {
         var intervals = new TimeIntervalCollection();
         expect(intervals.length).toEqual(0);
 
@@ -154,11 +154,11 @@ defineSuite([
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 2));
         expect(intervals.length).toEqual(3);
 
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.length).toEqual(0);
     });
 
-    it('getLength returns the correct length after two intervals with the same data are merged.', function() {
+    it('length returns the correct length after two intervals with the same data are merged.', function() {
         var intervals = new TimeIntervalCollection();
 
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(4), true, true, 1));
@@ -167,7 +167,7 @@ defineSuite([
         intervals.addInterval(new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), true, true, 1));
         expect(intervals.length).toEqual(1);
 
-        intervals.clear();
+        intervals.removeAll();
         expect(intervals.length).toEqual(0);
     });
 
@@ -586,7 +586,7 @@ defineSuite([
 
         intervals.addInterval(interval);
         listener.reset();
-        intervals.clear();
+        intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(intervals);
     });
 });

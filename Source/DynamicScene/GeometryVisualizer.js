@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/AssociativeArray',
+define([
+        '../Core/AssociativeArray',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -43,6 +44,7 @@ define(['../Core/AssociativeArray',
         for (var i = 0, len = geometries.length; i < len; i++) {
             geometries[i].update(time);
         }
+        return true;
     };
 
     DynamicGeometryBatch.prototype.removeAllPrimitives = function() {
@@ -51,89 +53,6 @@ define(['../Core/AssociativeArray',
             geometries[i].destroy();
         }
         this._dynamicUpdaters.removeAll();
-    };
-
-    /**
-     * A general purpose visualizer for all graphics that can be represented by {@link Primitive} instances.
-     * @alias GeometryVisualizer
-     * @constructor
-     *
-     * @param {GeometryUpdater} type The updater to be used for creating the geometry.
-     * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     */
-    var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        //>>includeEnd('debug');
-
-        this._type = type;
-
-        var primitives = scene.primitives;
-        this._scene = scene;
-        this._primitives = primitives;
-        this._dynamicObjectCollection = undefined;
-        this._addedObjects = new AssociativeArray();
-        this._removedObjects = new AssociativeArray();
-        this._changedObjects = new AssociativeArray();
-
-        this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
-        this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true);
-        this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
-        this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
-        this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
-        this._dynamicBatch = new DynamicGeometryBatch(primitives);
-
-        this._subscriptions = new AssociativeArray();
-        this._updaters = new AssociativeArray();
-        this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Returns the scene being used by this visualizer.
-     * @memberof GeometryVisualizer
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    GeometryVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     * @memberof GeometryVisualizer
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    GeometryVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     * @memberof GeometryVisualizer
-     *
-     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    GeometryVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
-                //Add all existing items to the collection.
-                this._onCollectionChanged(dynamicObjectCollection, dynamicObjectCollection.getObjects(), emptyArray);
-            }
-        }
     };
 
     function removeUpdater(that, updater) {
@@ -174,11 +93,59 @@ define(['../Core/AssociativeArray',
     }
 
     /**
+     * A general purpose visualizer for geometry represented by {@link Primitive} instances.
+     * @alias GeometryVisualizer
+     * @constructor
+     *
+     * @param {GeometryUpdater} type The updater to be used for creating the geometry.
+     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
+     */
+    var GeometryVisualizer = function(type, scene, dynamicObjectCollection) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(type)) {
+            throw new DeveloperError('type is required.');
+        }
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
+        //>>includeEnd('debug');
+
+        this._type = type;
+
+        var primitives = scene.primitives;
+        this._scene = scene;
+        this._primitives = primitives;
+        this._dynamicObjectCollection = undefined;
+        this._addedObjects = new AssociativeArray();
+        this._removedObjects = new AssociativeArray();
+        this._changedObjects = new AssociativeArray();
+
+        this._outlineBatch = new StaticOutlineGeometryBatch(primitives);
+        this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true);
+        this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
+        this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
+        this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
+        this._dynamicBatch = new DynamicGeometryBatch(primitives);
+
+        this._subscriptions = new AssociativeArray();
+        this._updaters = new AssociativeArray();
+
+        this._dynamicObjectCollection = dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
+        this._onCollectionChanged(dynamicObjectCollection, dynamicObjectCollection.getObjects(), emptyArray);
+    };
+
+    /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof GeometryVisualizer
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} True if the visualizer successfully updated to the provided time,
+     * false if the visualizer is waiting for asynchronous primitives to be created.
      */
     GeometryVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -186,7 +153,6 @@ define(['../Core/AssociativeArray',
             throw new DeveloperError('time is required.');
         }
         //>>includeEnd('debug');
-
 
         var addedObjects = this._addedObjects;
         var added = addedObjects.values;
@@ -232,19 +198,28 @@ define(['../Core/AssociativeArray',
         removedObjects.removeAll();
         changedObjects.removeAll();
 
-        this._outlineBatch.update(time);
-        this._closedColorBatch.update(time);
-        this._closedMaterialBatch.update(time);
-        this._openColorBatch.update(time);
-        this._openMaterialBatch.update(time);
-        this._dynamicBatch.update(time);
+        var isUpdated = this._outlineBatch.update(time);
+        isUpdated = this._closedColorBatch.update(time) && isUpdated;
+        isUpdated = this._closedMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._openColorBatch.update(time) && isUpdated;
+        isUpdated = this._openMaterialBatch.update(time) && isUpdated;
+        isUpdated = this._dynamicBatch.update(time) && isUpdated;
+        return isUpdated;
     };
 
     /**
-     * Removes all primitives from the scene.
-     * @memberof GeometryVisualizer
+     * Returns true if this object was destroyed; otherwise, false.
+     *
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
-    GeometryVisualizer.prototype.removeAllPrimitives = function() {
+    GeometryVisualizer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Removes and destroys all primitives created by this instance.
+     */
+    GeometryVisualizer.prototype.destroy = function() {
         this._addedObjects.removeAll();
         this._removedObjects.removeAll();
 
@@ -261,34 +236,6 @@ define(['../Core/AssociativeArray',
             subscriptions[i]();
         }
         this._subscriptions.removeAll();
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     * @memberof GeometryVisualizer
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    GeometryVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * @memberof GeometryVisualizer
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     */
-    GeometryVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
         return destroyObject(this);
     };
 

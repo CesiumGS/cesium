@@ -1,5 +1,5 @@
 /*global define*/
-define(['./Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -14,29 +14,26 @@ define(['./Enumeration'], function(Enumeration) {
         /**
          * Represents that an object is not contained within the frustum.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default -1
          */
-        OUTSIDE : new Enumeration(-1, 'OUTSIDE'),
+        OUTSIDE : -1,
 
         /**
          * Represents that an object intersects one of the frustum's planes.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        INTERSECTING : new Enumeration(0, 'INTERSECTING'),
+        INTERSECTING : 0,
 
         /**
          * Represents that an object is fully within the frustum.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        INSIDE : new Enumeration(1, 'INSIDE')
+        INSIDE : 1
     };
 
     return Intersect;

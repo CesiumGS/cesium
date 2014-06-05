@@ -65,7 +65,6 @@ define([
 
     /**
      * Computes a quaternion representing a rotation around an axis.
-     * @memberof Quaternion
      *
      * @param {Cartesian3} axis The axis of rotation.
      * @param {Number} angle The angle in radians to rotate around the axis.
@@ -104,7 +103,6 @@ define([
     var fromRotationMatrixQuat = new Array(3);
     /**
      * Computes a Quaternion from the provided Matrix3 instance.
-     * @memberof Quaternion
      *
      * @param {Matrix3} matrix The rotation matrix.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -185,16 +183,15 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Quaternion.packedLength = 4;
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Quaternion
      *
      * @param {Quaternion} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Quaternion.pack = function(value, array, startingIndex) {
@@ -218,9 +215,8 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Quaternion
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Quaternion} [result] The object into which to store the result.
      */
@@ -245,18 +241,17 @@ define([
 
     /**
      * The number of elements used to store the object into an array in its interpolatable form.
-     * @Type {Number}
+     * @type {Number}
      */
     Quaternion.packedInterpolationLength = 3;
 
     /**
      * Converts a packed array into a form suitable for interpolation.
-     * @memberof Quaternion
      *
-     * @param {Array} packedArray The packed array.
+     * @param {Number[]} packedArray The packed array.
      * @param {Number} [startingIndex=0] The index of the first element to be converted.
      * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-     * @param {Array} [result] The object into which to store the result.
+     * @param {Number[]} [result] The object into which to store the result.
      */
     Quaternion.convertPackedArrayForInterpolation = function(packedArray, startingIndex, lastIndex, result) {
         Quaternion.unpack(packedArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
@@ -282,10 +277,9 @@ define([
 
     /**
      * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
-     * @memberof Quaternion
      *
-     * @param {Array} array The original packed array.
-     * @param {Array} sourceArray The converted array.
+     * @param {Number[]} array The original packed array.
+     * @param {Number[]} sourceArray The converted array.
      * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
      * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
      * @param {Quaternion} [result] The object into which to store the result.
@@ -310,7 +304,6 @@ define([
 
     /**
      * Duplicates a Quaternion instance.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to duplicate.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -334,7 +327,6 @@ define([
 
     /**
      * Computes the conjugate of the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -359,7 +351,6 @@ define([
 
     /**
      * Computes magnitude squared for the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
      * @returns {Number} The magnitude squared.
@@ -376,7 +367,6 @@ define([
 
     /**
      * Computes magnitude for the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to conjugate.
      * @returns {Number} The magnitude.
@@ -387,7 +377,6 @@ define([
 
     /**
      * Computes the normalized form of the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -412,7 +401,6 @@ define([
 
     /**
      * Computes the inverse of the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to normalize.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -426,7 +414,6 @@ define([
 
     /**
      * Computes the componentwise sum of two quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
@@ -455,7 +442,6 @@ define([
 
     /**
      * Computes the componentwise difference of two quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
@@ -484,7 +470,6 @@ define([
 
     /**
      * Negates the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to be negated.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -509,7 +494,6 @@ define([
 
     /**
      * Computes the dot (scalar) product of two quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
@@ -530,7 +514,6 @@ define([
 
     /**
      * Computes the product of two quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} left The first quaternion.
      * @param {Quaternion} right The second quaternion.
@@ -574,7 +557,6 @@ define([
 
     /**
      * Multiplies the provided quaternion componentwise by the provided scalar.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to be scaled.
      * @param {Number} scalar The scalar to multiply with.
@@ -603,7 +585,6 @@ define([
 
     /**
      * Divides the provided quaternion componentwise by the provided scalar.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to be divided.
      * @param {Number} scalar The scalar to divide by.
@@ -632,7 +613,6 @@ define([
 
     /**
      * Computes the axis of rotation of the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to use.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -666,7 +646,6 @@ define([
 
     /**
      * Computes the angle of rotation of the provided quaternion.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The quaternion to use.
      * @returns {Number} The angle of rotation.
@@ -687,7 +666,6 @@ define([
     var lerpScratch;
     /**
      * Computes the linear interpolation or extrapolation at t using the provided quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
@@ -718,7 +696,6 @@ define([
     var slerpScaledR;
     /**
      * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
@@ -766,7 +743,6 @@ define([
 
     /**
      * The logarithmic quaternion function.
-     * @memberof Quaternion
      *
      * @param {Quaternion} quaternion The unit quaternion.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -795,7 +771,6 @@ define([
 
     /**
      * The exponential quaternion function.
-     * @memberof Quaternion
      *
      * @param {Cartesian3} cartesian The cartesian.
      * @param {Quaternion} [result] The object onto which to store the result.
@@ -835,7 +810,6 @@ define([
     /**
      * Computes an inner quadrangle point.
      * <p>This will compute quaternions that ensure a squad curve is C<sup>1</sup>.</p>
-     * @memberof Quaternion
      *
      * @param {Quaternion} q0 The first quaternion.
      * @param {Quaternion} q1 The second quaternion.
@@ -869,7 +843,6 @@ define([
 
     /**
      * Computes the spherical quadrangle interpolation between quaternions.
-     * @memberof Quaternion
      *
      * @param {Quaternion} q0 The first quaternion.
      * @param {Quaternion} q1 The second quaternion.
@@ -927,7 +900,6 @@ define([
     /**
      * Computes the spherical linear interpolation or extrapolation at t using the provided quaternions.
      * This implementation is faster than {@link Quaternion#slerp}, but is only accurate up to 10<sup>-6</sup>.
-     * @memberof Quaternion
      *
      * @param {Quaternion} start The value corresponding to t at 0.0.
      * @param {Quaternion} end The value corresponding to t at 1.0.
@@ -991,7 +963,6 @@ define([
     /**
      * Computes the spherical quadrangle interpolation between quaternions.
      * An implementation that is faster than {@link Quaternion#squad}, but less accurate.
-     * @memberof Quaternion
      *
      * @param {Quaternion} q0 The first quaternion.
      * @param {Quaternion} q1 The second quaternion.
@@ -1022,7 +993,6 @@ define([
     /**
      * Compares the provided quaternions componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Quaternion
      *
      * @param {Quaternion} [left] The first quaternion.
      * @param {Quaternion} [right] The second quaternion.
@@ -1042,7 +1012,6 @@ define([
      * Compares the provided quaternions componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Quaternion
      *
      * @param {Quaternion} [left] The first quaternion.
      * @param {Quaternion} [right] The second quaternion.
@@ -1067,19 +1036,22 @@ define([
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 0.0).
-     * @memberof Quaternion
+     *
+     * @type {Quaternion}
+     * @constant
      */
     Quaternion.ZERO = freezeObject(new Quaternion(0.0, 0.0, 0.0, 0.0));
 
     /**
      * An immutable Quaternion instance initialized to (0.0, 0.0, 0.0, 1.0).
-     * @memberof Quaternion
+     *
+     * @type {Quaternion}
+     * @constant
      */
     Quaternion.IDENTITY = freezeObject(new Quaternion(0.0, 0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Quaternion instance.
-     * @memberof Quaternion
      *
      * @param {Quaternion} [result] The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
@@ -1091,7 +1063,6 @@ define([
     /**
      * Compares this and the provided quaternion componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Quaternion
      *
      * @param {Quaternion} [right] The right hand side quaternion.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -1104,7 +1075,6 @@ define([
      * Compares this and the provided quaternion componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Quaternion
      *
      * @param {Quaternion} [right] The right hand side quaternion.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -1116,7 +1086,6 @@ define([
 
     /**
      * Returns a string representing this quaternion in the format (x, y, z, w).
-     * @memberof Quaternion
      *
      * @returns {String} A string representing this Quaternion.
      */

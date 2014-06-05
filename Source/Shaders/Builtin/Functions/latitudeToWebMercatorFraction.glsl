@@ -1,16 +1,16 @@
 /**
- * Computes the fraction of a Web Wercator extent at which a given geodetic latitude is located.
+ * Computes the fraction of a Web Wercator rectangle at which a given geodetic latitude is located.
  *
  * @name czm_latitudeToWebMercatorFraction
  * @glslFunction
  *
- * @param {float} The geodetic latitude, in radians.
- * @param {float} The low portion of the Web Mercator coordinate of the southern boundary of the extent.
- * @param {float} The high portion of the Web Mercator coordinate of the southern boundary of the extent.
- * @param {float} The total height of the extent in Web Mercator coordinates.
+ * @param {float} latitude The geodetic latitude, in radians.
+ * @param {float} southMercatorYLow The low portion of the Web Mercator coordinate of the southern boundary of the rectangle.
+ * @param {float} southMercatorYHigh The high portion of the Web Mercator coordinate of the southern boundary of the rectangle.
+ * @param {float} oneOverMercatorHeight The total height of the rectangle in Web Mercator coordinates.
  *
- * @returns {float} The fraction of the extent at which the latitude occurs.  If the latitude is the southern
- *          boundary of the extent, the return value will be zero.  If it is the northern boundary, the return
+ * @returns {float} The fraction of the rectangle at which the latitude occurs.  If the latitude is the southern
+ *          boundary of the rectangle, the return value will be zero.  If it is the northern boundary, the return
  *          value will be 1.0.  Latitudes in between are mapped according to the Web Mercator projection.
  */ 
 float czm_latitudeToWebMercatorFraction(float latitude, float southMercatorYLow, float southMercatorYHigh, float oneOverMercatorHeight)

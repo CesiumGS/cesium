@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/EllipsoidOutlineGeometry'
-     ], function(
-         EllipsoidOutlineGeometry) {
+        'Core/EllipsoidOutlineGeometry'
+    ], function(
+        EllipsoidOutlineGeometry) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

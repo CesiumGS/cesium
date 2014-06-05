@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        './defineProperties',
         './DeveloperError'
-       ], function(
-         DeveloperError) {
+    ], function(
+        defineProperties,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -30,22 +32,23 @@ define([
         this._scopes = [];
     };
 
-    /**
-     * Gets the number of listeners currently subscribed to the event.
-     *
-     * @memberof Event
-     *
-     * @returns {Number} The number of subscribed listeners.
-     */
-    Event.prototype.getNumberOfListeners = function() {
-        return this._listeners.length;
-    };
+    defineProperties(Event.prototype, {
+        /**
+         * The number of listeners currently subscribed to the event.
+         * @memberof Event.prototype
+         * @type {Number}
+         */
+        numberOfListeners: {
+            get : function() {
+                return this._listeners.length;
+            }
+        }
+    });
 
     /**
      * Registers a callback function to be executed whenever the event is raised.
      * An optional scope can be provided to serve as the <code>this</code> pointer
      * in which the function will execute.
-     * @memberof Event
      *
      * @param {Function} listener The function to be executed when the event is raised.
      * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
@@ -74,7 +77,6 @@ define([
 
     /**
      * Unregisters a previously registered callback.
-     * @memberof Event
      *
      * @param {Function} listener The function to be unregistered.
      * @param {Object} [scope] The scope that was originally passed to addEventListener.
@@ -114,7 +116,6 @@ define([
 
     /**
      * Raises the event by calling each registered listener with all supplied arguments.
-     * @memberof Event
      *
      * @param {*} arguments This method takes any number of parameters and passes them through to the listener functions.
      *

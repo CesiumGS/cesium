@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/WebMapServiceImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Extent',
-         'Core/Math',
-         'Scene/GeographicTilingScheme',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'ThirdParty/when'
-     ], function(
-         WebMapServiceImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         DefaultProxy,
-         Extent,
-         CesiumMath,
-         GeographicTilingScheme,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         when) {
+        'Scene/WebMapServiceImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        WebMapServiceImageryProvider,
+        DefaultProxy,
+        defined,
+        GeographicTilingScheme,
+        jsonp,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,6 +55,21 @@ defineSuite([
             });
         }
         expect(createWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new WebMapServiceImageryProvider({
+            url : 'made/up/wms/server',
+            layers : 'someLayer'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
     });
 
     it('includes specified parameters in URL', function() {
@@ -199,7 +214,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -300,12 +315,12 @@ defineSuite([
         });
     });
 
-    it('uses extent passed to constructor', function() {
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+    it('uses rectangle passed to constructor', function() {
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server',
             layers : 'someLayer',
-            extent : extent
+            rectangle : rectangle
         });
 
         waitsFor(function() {
@@ -317,16 +332,16 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.extent).toEqual(extent);
+            expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 var bbox = 'bbox=' +
-                            CesiumMath.toDegrees(extent.west) + ',' +
-                            CesiumMath.toDegrees(extent.south) + ',' +
-                            CesiumMath.toDegrees((extent.west + extent.east) / 2.0) + ',' +
-                            CesiumMath.toDegrees(extent.north);
+                            CesiumMath.toDegrees(rectangle.west) + ',' +
+                            CesiumMath.toDegrees(rectangle.south) + ',' +
+                            CesiumMath.toDegrees((rectangle.west + rectangle.east) / 2.0) + ',' +
+                            CesiumMath.toDegrees(rectangle.north);
                 expect(url.indexOf(bbox)).not.toBeLessThan(0);
                 calledLoadImage = true;
                 deferred.resolve();

@@ -4,21 +4,23 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Rectangle',
         '../../Scene/DebugModelMatrixPrimitive',
         '../../Scene/PerformanceDisplay',
         '../../Scene/TileCoordinatesImageryProvider',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         Color,
         defined,
         defineProperties,
         DeveloperError,
+        Rectangle,
         DebugModelMatrixPrimitive,
         PerformanceDisplay,
         TileCoordinatesImageryProvider,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     function frustumStatsToString(stats) {
@@ -81,8 +83,8 @@ define([
         this._modelMatrixPrimitive = undefined;
         this._performanceDisplay = undefined;
 
-        var centralBody = this._scene.primitives.centralBody;
-        centralBody.depthTestAgainstTerrain = true;
+        var globe = this._scene.globe;
+        globe.depthTestAgainstTerrain = true;
 
         /**
          * Gets or sets the show frustums state.  This property is observable.
@@ -327,12 +329,12 @@ define([
         });
 
         this._showWireframe = createCommand(function() {
-            centralBody._surface._debug.wireframe = that.wireframe;
+            globe._surface._debug.wireframe = that.wireframe;
             return true;
         });
 
         this._doSuspendUpdates = createCommand(function() {
-            centralBody._surface._debug.suspendLodUpdate = that.suspendUpdates;
+            globe._surface._debug.suspendLodUpdate = that.suspendUpdates;
             if (!that.suspendUpdates) {
                 that.filterTile = false;
             }
@@ -342,11 +344,11 @@ define([
         var tileBoundariesLayer;
         this._showTileCoordinates = createCommand(function() {
             if (that.tileCoordinates && !defined(tileBoundariesLayer)) {
-                tileBoundariesLayer = centralBody.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
-                    tilingScheme : centralBody.terrainProvider.tilingScheme
+                tileBoundariesLayer = scene.imageryLayers.addImageryProvider(new TileCoordinatesImageryProvider({
+                    tilingScheme : scene.terrainProvider.tilingScheme
                 }));
             } else if (!that.tileCoordinates && defined(tileBoundariesLayer)) {
-                centralBody.imageryLayers.remove(tileBoundariesLayer);
+                scene.imageryLayers.remove(tileBoundariesLayer);
                 tileBoundariesLayer = undefined;
             }
             return true;
@@ -354,9 +356,9 @@ define([
 
         this._showTileBoundingSphere = createCommand(function() {
             if (that.tileBoundingSphere) {
-                centralBody._surface._debug.boundingSphereTile = that._tile;
+                globe._surface._debug.boundingSphereTile = that._tile;
             } else {
-                centralBody._surface._debug.boundingSphereTile = undefined;
+                globe._surface._debug.boundingSphereTile = undefined;
             }
             return true;
         });
@@ -369,7 +371,7 @@ define([
                 that.suspendUpdates = true;
                 that.doSuspendUpdates();
 
-                centralBody._surface._tilesToRenderByTextureCount = [];
+                globe._surface._tilesToRenderByTextureCount = [];
 
                 if (defined(that._tile)) {
                     var readyTextureCount = 0;
@@ -381,8 +383,8 @@ define([
                         }
                     }
 
-                    centralBody._surface._tilesToRenderByTextureCount[readyTextureCount] = [that._tile];
-                    centralBody._surface._tileLoadQueue.push(that._tile);
+                    globe._surface._tilesToRenderByTextureCount[readyTextureCount] = [that._tile];
+                    globe._surface._tileLoadQueue.push(that._tile);
 
                 }
             }
@@ -412,7 +414,7 @@ define([
 
         var selectTile = function(e) {
             var selectedTile;
-            var ellipsoid = centralBody.ellipsoid;
+            var ellipsoid = globe.ellipsoid;
             var cartesian = that._scene.camera.pickEllipsoid({
                 x : e.clientX,
                 y : e.clientY
@@ -420,7 +422,7 @@ define([
 
             if (defined(cartesian)) {
                 var cartographic = ellipsoid.cartesianToCartographic(cartesian);
-                var tilesRendered = centralBody._surface._tilesToRenderByTextureCount;
+                var tilesRendered = globe._surface._tilesToRenderByTextureCount;
                 for (var textureCount = 0; !selectedTile && textureCount < tilesRendered.length; ++textureCount) {
                     var tilesRenderedByTextureCount = tilesRendered[textureCount];
                     if (!defined(tilesRenderedByTextureCount)) {
@@ -429,7 +431,7 @@ define([
 
                     for (var tileIndex = 0; !selectedTile && tileIndex < tilesRenderedByTextureCount.length; ++tileIndex) {
                         var tile = tilesRenderedByTextureCount[tileIndex];
-                        if (tile.extent.contains(cartographic)) {
+                        if (Rectangle.contains(tile.rectangle, cartographic)) {
                             selectedTile = tile;
                         }
                     }
@@ -539,7 +541,7 @@ define([
         },
 
         /**
-         * Gets the command to toggle the view of the CentralBody as a wireframe
+         * Gets the command to toggle the view of the Globe as a wireframe
          * @memberof CesiumInspectorViewModel.prototype
          *
          * @type {Command}
@@ -683,7 +685,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[0];
+                    that.tile = that.tile.children[0];
                 });
             }
         },
@@ -698,7 +700,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[1];
+                    that.tile = that.tile.children[1];
                 });
             }
         },
@@ -713,7 +715,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[2];
+                    that.tile = that.tile.children[2];
                 });
             }
         },
@@ -728,7 +730,7 @@ define([
             get : function() {
                 var that = this;
                 return createCommand(function() {
-                    that.tile = that.tile.getChildren()[3];
+                    that.tile = that.tile.children[3];
                 });
             }
         },
@@ -781,8 +783,8 @@ define([
                     var oldTile = this._tile;
                     if (newTile !== oldTile) {
                         this.tileText = 'L: ' + newTile.level + ' X: ' + newTile.x + ' Y: ' + newTile.y;
-                        this.tileText += '<br>SW corner: ' + newTile.extent.west + ', ' + newTile.extent.south;
-                        this.tileText += '<br>NE corner: ' + newTile.extent.east + ', ' + newTile.extent.north;
+                        this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
+                        this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
                         this.tileText += '<br>Min: ' + newTile.minimumHeight + ' Max: ' + newTile.maximumHeight;
                     }
                     this._tile = newTile;

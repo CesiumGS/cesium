@@ -1,30 +1,30 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/SingleTileImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Extent',
-         'Scene/GeographicTilingScheme',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'ThirdParty/when'
-     ], function(
-         SingleTileImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         DefaultProxy,
-         Extent,
-         GeographicTilingScheme,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         when) {
+        'Scene/SingleTileImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/Rectangle',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        SingleTileImageryProvider,
+        DefaultProxy,
+        defined,
+        GeographicTilingScheme,
+        jsonp,
+        loadImage,
+        Rectangle,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -37,18 +37,33 @@ defineSuite([
         expect(SingleTileImageryProvider).toConformToInterface(ImageryProvider);
     });
 
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
     it('properties are gettable', function() {
         var url = 'Data/Images/Red16x16.png';
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var credit = 'hi';
         var provider = new SingleTileImageryProvider({
             url : url,
-            extent : extent,
+            rectangle : rectangle,
             credit : credit
         });
 
         expect(provider.url).toEqual(url);
-        expect(provider.extent).toEqual(extent);
+        expect(provider.rectangle).toEqual(rectangle);
+        expect(provider.hasAlphaChannel).toEqual(true);
 
         waitsFor(function() {
             return provider.ready;
@@ -56,7 +71,7 @@ defineSuite([
 
         runs(function() {
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.tilingScheme.extent).toEqual(extent);
+            expect(provider.tilingScheme.rectangle).toEqual(rectangle);
             expect(provider.tileWidth).toEqual(16);
             expect(provider.tileHeight).toEqual(16);
             expect(provider.maximumLevel).toEqual(0);

@@ -9,7 +9,8 @@ define([
         './GeographicProjection',
         './Intersect',
         './Interval',
-        './Matrix4'
+        './Matrix4',
+        './Rectangle'
     ], function(
         Cartesian3,
         Cartographic,
@@ -20,7 +21,8 @@ define([
         GeographicProjection,
         Intersect,
         Interval,
-        Matrix4) {
+        Matrix4,
+        Rectangle) {
     "use strict";
 
     /**
@@ -33,6 +35,7 @@ define([
      *
      * @see AxisAlignedBoundingBox
      * @see BoundingRectangle
+     * @see Packable
      */
     var BoundingSphere = function(center, radius) {
         /**
@@ -67,13 +70,12 @@ define([
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
      * The bounding sphere is computed by running two algorithms, a naive algorithm and
      * Ritter's algorithm. The smaller of the two spheres is used to ensure a tight fit.
-     * @memberof BoundingSphere
      *
-     * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
+     * @param {Cartesian3[]} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
+     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      */
     BoundingSphere.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -211,44 +213,40 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtent2DLowerLeft = new Cartesian3();
-    var fromExtent2DUpperRight = new Cartesian3();
-    var fromExtent2DSouthwest = new Cartographic();
-    var fromExtent2DNortheast = new Cartographic();
+    var fromRectangle2DLowerLeft = new Cartesian3();
+    var fromRectangle2DUpperRight = new Cartesian3();
+    var fromRectangle2DSouthwest = new Cartographic();
+    var fromRectangle2DNortheast = new Cartographic();
 
     /**
-     * Computes a bounding sphere from an extent projected in 2D.
+     * Computes a bounding sphere from an rectangle projected in 2D.
      *
-     * @memberof BoundingSphere
-     *
-     * @param {Extent} extent The extent around which to create a bounding sphere.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
+     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent2D = function(extent, projection, result) {
-        return BoundingSphere.fromExtentWithHeights2D(extent, projection, 0.0, 0.0, result);
+    BoundingSphere.fromRectangle2D = function(rectangle, projection, result) {
+        return BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, 0.0, 0.0, result);
     };
 
     /**
-     * Computes a bounding sphere from an extent projected in 2D.  The bounding sphere accounts for the
-     * object's minimum and maximum heights over the extent.
+     * Computes a bounding sphere from an rectangle projected in 2D.  The bounding sphere accounts for the
+     * object's minimum and maximum heights over the rectangle.
      *
-     * @memberof BoundingSphere
-     *
-     * @param {Extent} extent The extent around which to create a bounding sphere.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
-     * @param {Number} [minimumHeight=0.0] The minimum height over the extent.
-     * @param {Number} [maximumHeight=0.0] The maximum height over the extent.
+     * @param {Rectangle} rectangle The rectangle around which to create a bounding sphere.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+     * @param {Number} [minimumHeight=0.0] The minimum height over the rectangle.
+     * @param {Number} [maximumHeight=0.0] The maximum height over the rectangle.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
+    BoundingSphere.fromRectangleWithHeights2D = function(rectangle, projection, minimumHeight, maximumHeight, result) {
         if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (!defined(extent)) {
+        if (!defined(rectangle)) {
             result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
             result.radius = 0.0;
             return result;
@@ -256,13 +254,13 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        extent.getSouthwest(fromExtent2DSouthwest);
-        fromExtent2DSouthwest.height = minimumHeight;
-        extent.getNortheast(fromExtent2DNortheast);
-        fromExtent2DNortheast.height = maximumHeight;
+        Rectangle.getSouthwest(rectangle, fromRectangle2DSouthwest);
+        fromRectangle2DSouthwest.height = minimumHeight;
+        Rectangle.getNortheast(rectangle, fromRectangle2DNortheast);
+        fromRectangle2DNortheast.height = maximumHeight;
 
-        var lowerLeft = projection.project(fromExtent2DSouthwest, fromExtent2DLowerLeft);
-        var upperRight = projection.project(fromExtent2DNortheast, fromExtent2DUpperRight);
+        var lowerLeft = projection.project(fromRectangle2DSouthwest, fromRectangle2DLowerLeft);
+        var upperRight = projection.project(fromRectangle2DNortheast, fromRectangle2DUpperRight);
 
         var width = upperRight.x - lowerLeft.x;
         var height = upperRight.y - lowerLeft.y;
@@ -276,26 +274,25 @@ define([
         return result;
     };
 
-    var fromExtent3DScratch = [];
+    var fromRectangle3DScratch = [];
 
     /**
-     * Computes a bounding sphere from an extent in 3D. The bounding sphere is created using a subsample of points
-     * on the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
-     * @memberof BoundingSphere
+     * Computes a bounding sphere from an rectangle in 3D. The bounding sphere is created using a subsample of points
+     * on the ellipsoid and contained in the rectangle. It may not be accurate for all rectangles on all types of ellipsoids.
      *
-     * @param {Extent} extent The valid extent used to create a bounding sphere.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     * @param {Rectangle} rectangle The valid rectangle used to create a bounding sphere.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
+    BoundingSphere.fromRectangle3D = function(rectangle, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
-        if (defined(extent)) {
-            positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
+        if (defined(rectangle)) {
+            positions = Rectangle.subsample(rectangle, ellipsoid, surfaceHeight, fromRectangle3DScratch);
         }
 
         return BoundingSphere.fromPoints(positions, result);
@@ -307,9 +304,7 @@ define([
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.
      *
-     * @memberof BoundingSphere
-     *
-     * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point
+     * @param {Cartesian3[]} positions An array of points that the bounding sphere will enclose.  Each point
      *        is formed from three elements in the array in the order X, Y, Z.
      * @param {Cartesian3} [center=Cartesian3.ZERO] The position to which the positions are relative, which need not be the
      *        origin of the coordinate system.  This is useful when the positions are to be used for
@@ -323,7 +318,7 @@ define([
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
+     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      *
      * @example
      * // Compute the bounding sphere from 3 positions, each specified relative to a center.
@@ -491,10 +486,8 @@ define([
      * Computes a bounding sphere from the corner points of an axis-aligned bounding box.  The sphere
      * tighly and fully encompases the box.
      *
-     * @memberof BoundingSphere
-     *
-     * @param {Number} [corner] The minimum height over the extent.
-     * @param {Number} [oppositeCorner] The maximum height over the extent.
+     * @param {Number} [corner] The minimum height over the rectangle.
+     * @param {Number} [oppositeCorner] The maximum height over the rectangle.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
@@ -524,8 +517,6 @@ define([
     /**
      * Creates a bounding sphere encompassing an ellipsoid.
      *
-     * @memberof BoundingSphere
-     *
      * @param {Ellipsoid} ellipsoid The ellipsoid around which to create a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
@@ -552,7 +543,6 @@ define([
 
     /**
      * Duplicates a BoundingSphere instance.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
@@ -572,11 +562,71 @@ define([
         return result;
     };
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    BoundingSphere.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {BoundingSphere} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    BoundingSphere.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        var center = value.center;
+        array[startingIndex++] = center.x;
+        array[startingIndex++] = center.y;
+        array[startingIndex++] = center.z;
+        array[startingIndex] = value.radius;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     */
+    BoundingSphere.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new BoundingSphere();
+        }
+
+        var center = result.center;
+        center.x = array[startingIndex++];
+        center.y = array[startingIndex++];
+        center.z = array[startingIndex++];
+        result.radius = array[startingIndex];
+        return result;
+    };
+
     var unionScratch = new Cartesian3();
     var unionScratchCenter = new Cartesian3();
     /**
      * Computes a bounding sphere that contains both the left and right bounding spheres.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
@@ -616,7 +666,6 @@ define([
     var expandScratch = new Cartesian3();
     /**
      * Computes a bounding sphere by enlarging the provided sphere to contain the provided point.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere A sphere to expand.
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
@@ -646,15 +695,15 @@ define([
 
     /**
      * Determines which side of a plane a sphere is located.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to test.
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
-     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
-     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
+     *                           and w of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
      */
     BoundingSphere.intersect = function(sphere, plane) {
         //>>includeStart('debug', pragmas.debug);
@@ -681,11 +730,8 @@ define([
         return Intersect.INSIDE;
     };
 
-    var columnScratch = new Cartesian3();
-
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
@@ -708,18 +754,44 @@ define([
         }
 
         result.center = Matrix4.multiplyByPoint(transform, sphere.center, result.center);
-        result.radius = Math.max(Cartesian3.magnitude(Matrix4.getColumn(transform, 0, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 1, columnScratch)),
-                Cartesian3.magnitude(Matrix4.getColumn(transform, 2, columnScratch))) * sphere.radius;
+        result.radius = Matrix4.getMaximumScale(transform) * sphere.radius;
 
         return result;
+    };
+
+    var distanceSquaredToScratch = new Cartesian3();
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding sphere to a point.
+     *
+     * @param {BoundingSphere} sphere The sphere.
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding spheres from back to front
+     * spheres.sort(function(a, b) {
+     *     return BoundingSphere.distanceSquaredTo(b, camera.positionWC) - BoundingSphere.distanceSquaredTo(a, camera.positionWC);
+     * });
+     */
+    BoundingSphere.distanceSquaredTo = function(sphere, cartesian) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        var diff = Cartesian3.subtract(sphere.center, cartesian, distanceSquaredToScratch);
+        return Cartesian3.magnitudeSquared(diff) - sphere.radius * sphere.radius;
     };
 
     /**
      * Applies a 4x4 affine transformation matrix to a bounding sphere where there is no scale
      * The transformation matrix is not verified to have a uniform scale of 1.
-     * This method is faster than computing the general bounding sphere transform using {@link #transform}.
-     * @memberof BoundingSphere
+     * This method is faster than computing the general bounding sphere transform using {@link BoundingSphere.transform}.
      *
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
@@ -759,7 +831,6 @@ define([
      * <br>
      * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
      * closest and farthest planes from position that intersect the bounding sphere.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to calculate the distance to.
      * @param {Cartesian3} position The position to calculate the distance from.
@@ -808,7 +879,6 @@ define([
     var projectTo2DProjection = new GeographicProjection();
     /**
      * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
@@ -910,7 +980,6 @@ define([
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [left] The first BoundingSphere.
      * @param {BoundingSphere} [right] The second BoundingSphere.
@@ -925,94 +994,39 @@ define([
     };
 
     /**
-     * Duplicates this BoundingSphere instance.
-     * @memberof BoundingSphere
-     *
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     */
-    BoundingSphere.prototype.clone = function(result) {
-        return BoundingSphere.clone(this, result);
-    };
-
-    /**
-     * Computes a bounding sphere that contains both this bounding sphere and the argument sphere.
-     * @memberof BoundingSphere
-     *
-     * @param {BoundingSphere} right The sphere to enclose in this bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     */
-    BoundingSphere.prototype.union = function(right, result) {
-        return BoundingSphere.union(this, right, result);
-    };
-
-    /**
-     * Computes a bounding sphere that is sphere expanded to contain point.
-     * @memberof BoundingSphere
-     *
-     * @param {Cartesian3} point A point to enclose in a bounding sphere.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
-     */
-    BoundingSphere.prototype.expand = function(point, result) {
-        return BoundingSphere.expand(this, point, result);
-    };
-
-    /**
      * Determines which side of a plane the sphere is located.
-     * @memberof BoundingSphere
      *
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
-     *                           and w of the {Cartesian4}, respectively.
-     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
-     *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
-     *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
+     *                           and w of the {@link Cartesian4}, respectively.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
+     *                      intersects the plane.
      */
     BoundingSphere.prototype.intersect = function(plane) {
         return BoundingSphere.intersect(this, plane);
     };
 
     /**
-     * The distances calculated by the vector from the center of the bounding sphere to position projected onto direction
-     * plus/minus the radius of the bounding sphere.
-     * <br>
-     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
-     * closest and farthest planes from position that intersect the bounding sphere.
-     * @memberof BoundingSphere
-     *
-     * @param {Cartesian3} position The position to calculate the distance from.
-     * @param {Cartesian3} direction The direction from position.
-     * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
-     * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
-     */
-    BoundingSphere.prototype.getPlaneDistances = function(position, direction, result) {
-        return BoundingSphere.getPlaneDistances(this, position, direction, result);
-    };
-
-    /**
-     * Creates a bounding sphere in 2D from this bounding sphere. This bounding sphere must be in 3D world coordinates.
-     * @memberof BoundingSphere
-     *
-     * @param {Object} [projection=GeographicProjection] The projection to 2D.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     */
-    BoundingSphere.prototype.projectTo2D = function(projection, result) {
-        return BoundingSphere.projectTo2D(this, projection, result);
-    };
-
-    /**
      * Compares this BoundingSphere against the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [right] The right hand side BoundingSphere.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     BoundingSphere.prototype.equals = function(right) {
         return BoundingSphere.equals(this, right);
+    };
+
+    /**
+     * Duplicates this BoundingSphere instance.
+     *
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     */
+    BoundingSphere.prototype.clone = function(result) {
+        return BoundingSphere.clone(this, result);
     };
 
     return BoundingSphere;

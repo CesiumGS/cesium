@@ -30,11 +30,10 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Green Cylinder
     var length = 400000.0;
-    var positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, length * 0.5)
@@ -56,7 +55,7 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Red Cone
-    positionOnEllipsoid = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 40.0));
+    positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 40.0);
     modelMatrix = Cesium.Matrix4.multiplyByTranslation(
         Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid),
         new Cesium.Cartesian3(0.0, 0.0, length * 0.5)

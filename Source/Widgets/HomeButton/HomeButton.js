@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './HomeButtonViewModel',
-        '../../ThirdParty/knockout'
+        './HomeButtonViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        HomeButtonViewModel,
-        knockout) {
+        HomeButtonViewModel) {
     "use strict";
 
     /**
@@ -25,10 +25,10 @@ define([
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
-     * @param {SceneTransitioner} [transitioner] The SceneTransitioner instance to use.
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
+     * @param {Number} [duration] The time, in milliseconds, it takes to complete the camera flight home.
      */
-    var HomeButton = function(container, scene, transitioner, ellipsoid, flightDuration) {
+    var HomeButton = function(container, scene, ellipsoid, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -37,7 +37,7 @@ define([
 
         container = getElement(container);
 
-        var viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, flightDuration);
+        var viewModel = new HomeButtonViewModel(scene, ellipsoid, duration);
 
         viewModel._svgPath = 'M14,4l-10,8.75h20l-4.25-3.7188v-4.6562h-2.812v2.1875l-2.938-2.5625zm-7.0938,9.906v10.094h14.094v-10.094h-14.094zm2.1876,2.313h3.3122v4.25h-3.3122v-4.25zm5.8442,1.281h3.406v6.438h-3.406v-6.438z';
 
@@ -85,7 +85,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     });
 
     /**
-     * @memberof HomeButton
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     HomeButton.prototype.isDestroyed = function() {
@@ -95,7 +94,6 @@ cesiumSvgPath: { path: _svgPath, width: 28, height: 28 }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof HomeButton
      */
     HomeButton.prototype.destroy = function() {
         knockout.cleanNode(this._element);

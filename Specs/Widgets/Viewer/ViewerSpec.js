@@ -1,46 +1,48 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/Viewer',
-         'Widgets/Animation/Animation',
-         'Widgets/BaseLayerPicker/BaseLayerPicker',
-         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
-         'Widgets/CesiumWidget/CesiumWidget',
-         'Widgets/FullscreenButton/FullscreenButton',
-         'Widgets/HomeButton/HomeButton',
-         'Widgets/Geocoder/Geocoder',
-         'Widgets/SceneModePicker/SceneModePicker',
-         'Widgets/Timeline/Timeline',
-         'Core/ClockRange',
-         'Core/ClockStep',
-         'Core/JulianDate',
-         'DynamicScene/DataSourceDisplay',
-         'DynamicScene/DataSourceCollection',
-         'DynamicScene/DynamicClock',
-         'Scene/EllipsoidTerrainProvider',
-         'Scene/SceneMode',
-         'Specs/EventHelper',
-         'Specs/MockDataSource'
-     ], function(
-         Viewer,
-         Animation,
-         BaseLayerPicker,
-         ImageryProviderViewModel,
-         CesiumWidget,
-         FullscreenButton,
-         HomeButton,
-         Geocoder,
-         SceneModePicker,
-         Timeline,
-         ClockRange,
-         ClockStep,
-         JulianDate,
-         DataSourceDisplay,
-         DataSourceCollection,
-         DynamicClock,
-         EllipsoidTerrainProvider,
-         SceneMode,
-         EventHelper,
-         MockDataSource) {
+        'Widgets/Viewer/Viewer',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/EllipsoidTerrainProvider',
+        'Core/JulianDate',
+        'Core/WebMercatorProjection',
+        'DynamicScene/DataSourceCollection',
+        'DynamicScene/DataSourceDisplay',
+        'DynamicScene/DynamicClock',
+        'Scene/SceneMode',
+        'Specs/EventHelper',
+        'Specs/MockDataSource',
+        'Widgets/Animation/Animation',
+        'Widgets/BaseLayerPicker/BaseLayerPicker',
+        'Widgets/BaseLayerPicker/ProviderViewModel',
+        'Widgets/CesiumWidget/CesiumWidget',
+        'Widgets/FullscreenButton/FullscreenButton',
+        'Widgets/Geocoder/Geocoder',
+        'Widgets/HomeButton/HomeButton',
+        'Widgets/SceneModePicker/SceneModePicker',
+        'Widgets/Timeline/Timeline'
+    ], function(
+        Viewer,
+        ClockRange,
+        ClockStep,
+        EllipsoidTerrainProvider,
+        JulianDate,
+        WebMercatorProjection,
+        DataSourceCollection,
+        DataSourceDisplay,
+        DynamicClock,
+        SceneMode,
+        EventHelper,
+        MockDataSource,
+        Animation,
+        BaseLayerPicker,
+        ProviderViewModel,
+        CesiumWidget,
+        FullscreenButton,
+        Geocoder,
+        HomeButton,
+        SceneModePicker,
+        Timeline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -50,7 +52,7 @@ defineSuite([
         }
     };
 
-    var testProviderViewModel = new ImageryProviderViewModel({
+    var testProviderViewModel = new ProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -94,7 +96,6 @@ defineSuite([
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
         expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
-        expect(viewer.sceneTransitioner).toBe(viewer.cesiumWidget.sceneTransitioner);
         expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
         expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
@@ -266,9 +267,10 @@ defineSuite([
         var provider = new EllipsoidTerrainProvider();
 
         viewer = new Viewer(container, {
+            baseLayerPicker : false,
             terrainProvider : provider
         });
-        expect(viewer.centralBody.terrainProvider).toBe(provider);
+        expect(viewer.scene.terrainProvider).toBe(provider);
     });
 
     it('can set fullScreenElement', function() {
@@ -286,7 +288,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -314,16 +316,26 @@ defineSuite([
         viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
+        viewer.scene.completeMorph();
         expect(viewer.scene.mode).toBe(SceneMode.SCENE2D);
+    });
+
+    it('can set map projection', function() {
+        var mapProjection = new WebMercatorProjection();
+
+        viewer = new Viewer(container, {
+            mapProjection : mapProjection
+        });
+        expect(viewer.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set selectedImageryProviderViewModel', function() {
         viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
     });
 
     it('can set imageryProvider when BaseLayerPicker is disabled', function() {
@@ -331,8 +343,8 @@ defineSuite([
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
     });
 
     it('can set imageryProviderViewModels', function() {
@@ -341,9 +353,9 @@ defineSuite([
         viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.centralBody.imageryLayers.length).toEqual(1);
-        expect(viewer.centralBody.imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        expect(viewer.scene.imageryLayers.length).toEqual(1);
+        expect(viewer.scene.imageryLayers.get(0).imageryProvider).toBe(testProvider);
+        expect(viewer.baseLayerPicker.viewModel.selectedImagery).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
     });
 
@@ -352,6 +364,33 @@ defineSuite([
             useDefaultRenderLoop : false
         });
         expect(viewer.useDefaultRenderLoop).toBe(false);
+    });
+
+    it('can set target frame rate', function() {
+        viewer = new Viewer(container, {
+            targetFrameRate : 23
+        });
+        expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('throws if targetFrameRate less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.targetFrameRate = -1;
+        }).toThrowDeveloperError();
+    });
+
+    it('can set resolutionScale', function() {
+        viewer = new Viewer(container);
+        viewer.resolutionScale = 0.5;
+        expect(viewer.resolutionScale).toBe(0.5);
+    });
+
+    it('throws if resolutionScale is less than 0', function() {
+        viewer = new Viewer(container);
+        expect(function() {
+            viewer.resolutionScale = -1;
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with undefined container', function() {
@@ -390,26 +429,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('raises renderLoopError and stops the render loop when render throws', function() {
+    it('stops the render loop when render throws', function() {
         viewer = new Viewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
-        var spyListener = jasmine.createSpy('listener');
-        viewer.renderLoopError.addEventListener(spyListener);
-
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
         waitsFor(function() {
-            return spyListener.wasCalled;
-        });
-
-        runs(function() {
-            expect(spyListener).toHaveBeenCalledWith(viewer, error);
-            expect(viewer.useDefaultRenderLoop).toEqual(false);
-        });
+            return !viewer.useDefaultRenderLoop;
+        }, 'render loop to be disabled.');
     });
 
     it('sets the clock and timeline based on the first data source', function() {
@@ -549,7 +580,7 @@ defineSuite([
         viewer = new Viewer(container);
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 
@@ -574,7 +605,7 @@ defineSuite([
         });
 
         var error = 'foo';
-        viewer.render = function() {
+        viewer.scene.primitives.update = function() {
             throw error;
         };
 

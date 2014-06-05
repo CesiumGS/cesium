@@ -3,12 +3,14 @@ define([
         'Core/defaultValue',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
-        'Renderer/ClearCommand'
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand'
     ], function(
         defaultValue,
         PrimitiveType,
         BufferUsage,
-        ClearCommand) {
+        ClearCommand,
+        DrawCommand) {
     "use strict";
     /*global expect*/
 
@@ -18,7 +20,7 @@ define([
 
         depth = defaultValue(depth, 0.0);
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0.0, 0.0, depth, 1.0]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -34,12 +36,13 @@ define([
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         }
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
         });
+        command.execute(context);
 
         sp = sp.destroy();
         va = va.destroy();

@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/PrimitiveType',
-         'Core/Color',
-         'Renderer/PixelFormat',
-         'Renderer/PixelDatatype',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand',
-         'Renderer/DepthFunction',
-         'Renderer/RenderbufferFormat'
-     ], 'Renderer/Framebuffer', function(
-         createContext,
-         destroyContext,
-         PrimitiveType,
-         Color,
-         PixelFormat,
-         PixelDatatype,
-         BufferUsage,
-         ClearCommand,
-         DepthFunction,
-         RenderbufferFormat) {
+        'Core/Color',
+        'Core/PixelFormat',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Renderer/PixelDatatype',
+        'Renderer/RenderbufferFormat',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], 'Renderer/Framebuffer', function(
+        Color,
+        PixelFormat,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        PixelDatatype,
+        RenderbufferFormat,
+        createContext,
+        destroyContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var context;
     var sp;
@@ -63,7 +63,7 @@ defineSuite([
     });
 
     it('has a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthTexture : context.createTexture2D({
                     width : 1,
@@ -72,7 +72,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 })
             });
-            expect(framebuffer.getDepthTexture()).toBeDefined();
+            expect(framebuffer.depthTexture).toBeDefined();
         }
     });
 
@@ -82,7 +82,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.getDepthRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthRenderbuffer).toBeDefined();
     });
 
     it('has a stencil renderbuffer attachment', function() {
@@ -91,11 +91,11 @@ defineSuite([
                 format : RenderbufferFormat.STENCIL_INDEX8
             })
         });
-        expect(framebuffer.getStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.stencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 depthStencilTexture : context.createTexture2D({
                     width : 1,
@@ -104,7 +104,7 @@ defineSuite([
                     pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8_WEBGL
                 })
             });
-            expect(framebuffer.getDepthStencilTexture()).toBeDefined();
+            expect(framebuffer.depthStencilTexture).toBeDefined();
         }
     });
 
@@ -114,12 +114,12 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_STENCIL
             })
         });
-        expect(framebuffer.getDepthStencilRenderbuffer()).toBeDefined();
+        expect(framebuffer.depthStencilRenderbuffer).toBeDefined();
     });
 
     it('has a depth attachment', function() {
         framebuffer = context.createFramebuffer();
-        expect(framebuffer.hasDepthAttachment()).toEqual(false);
+        expect(framebuffer.hasDepthAttachment).toEqual(false);
         framebuffer.destroy();
 
         framebuffer = context.createFramebuffer({
@@ -127,7 +127,7 @@ defineSuite([
                 format : RenderbufferFormat.DEPTH_COMPONENT16
             })
         });
-        expect(framebuffer.hasDepthAttachment()).toEqual(true);
+        expect(framebuffer.hasDepthAttachment).toEqual(true);
     });
 
     it('clears a color attachment', function() {
@@ -144,10 +144,11 @@ defineSuite([
             colorTextures : [colorTexture]
         });
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 1.0, 0.0, 1.0);
-        command.framebuffer = framebuffer;
-        command.execute(context);
+        var clearCommand = new ClearCommand({
+            color : new Color (0.0, 1.0, 0.0, 1.0),
+            framebuffer : framebuffer
+        });
+        clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -158,19 +159,20 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_texture.value = colorTexture;
+        sp.allUniforms.u_texture.value = colorTexture;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
     });
 
@@ -186,14 +188,15 @@ defineSuite([
 
         // 2 of 4.  Clear framebuffer color attachment to green.
         framebuffer = context.createFramebuffer({
-            colorTextures : [cubeMap.getPositiveX()]
+            colorTextures : [cubeMap.positiveX]
         });
         framebuffer.destroyAttachments = false;
 
-        var command = new ClearCommand();
-        command.color = new Color (0.0, 1.0, 0.0, 1.0);
-        command.framebuffer = framebuffer;
-        command.execute(context);
+        var clearCommand = new ClearCommand({
+            color : new Color (0.0, 1.0, 0.0, 1.0),
+            framebuffer : framebuffer
+        });
+        clearCommand.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -204,19 +207,20 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs, {
             position : 0
         });
-        sp.getAllUniforms().u_cubeMap.value = cubeMap;
+        sp.allUniforms.u_cubeMap.value = cubeMap;
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         cubeMap = cubeMap.destroy();
@@ -241,17 +245,18 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             framebuffer : framebuffer
         });
+        command.execute(context);
 
         // 3 of 4.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -262,13 +267,14 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = colorTexture;
+        sp2.allUniforms.u_texture.value = colorTexture;
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
             vertexArray : va
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([0, 255, 0, 255]);
 
         sp2 = sp2.destroy();
@@ -283,12 +289,12 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -299,6 +305,7 @@ defineSuite([
                 }
             })
         });
+        command.execute(context);
 
         // 2 of 3.  Verify default color buffer is still black.
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -309,13 +316,14 @@ defineSuite([
         var sp2 = context.createShaderProgram(vs2, fs2, {
             position : 0
         });
-        sp2.getAllUniforms().u_texture.value = texture;
+        sp2.allUniforms.u_texture.value = texture;
 
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp2,
             vertexArray : va
         });
+        command.execute(context);
 
         sp2 = sp2.destroy();
 
@@ -323,7 +331,7 @@ defineSuite([
     }
 
     it('draws to a depth texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -337,12 +345,14 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            }
         }
     });
 
     it('draws to a depth-stencil texture attachment', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             framebuffer = context.createFramebuffer({
                 colorTextures : [context.createTexture2D({
                     width : 1,
@@ -356,7 +366,9 @@ defineSuite([
                 })
             });
 
-            expect(renderDepthAttachment(framebuffer, framebuffer.getDepthStencilTexture())).toEqualEpsilon([128, 128, 128, 128], 1);
+            if (framebuffer.status === WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                expect(renderDepthAttachment(framebuffer, framebuffer.depthStencilTexture)).toEqualEpsilon([128, 128, 128, 128], 1);
+            }
         }
     });
 
@@ -378,23 +390,24 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
         // 1 of 3.  Clear framebuffer
-        var command = new ClearCommand();
-        command.color = new Color(0.0, 0.0, 0.0, 0.0);
-        command.depth = 1.0;
-        command.framebuffer = framebuffer;
-        command.execute(context);
+        var clearCommand = new ClearCommand({
+            color : new Color(0.0, 0.0, 0.0, 0.0),
+            depth : 1.0,
+            framebuffer : framebuffer
+        });
+        clearCommand.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);
 
         // 2 of 3.  Does not pass depth test
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -402,16 +415,17 @@ defineSuite([
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.NEVER
+                    func : WebGLRenderingContext.NEVER
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([0, 0, 0, 0]);
 
         // 3 of 3.  Passes depth test
-        context.draw({
+        command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
@@ -419,17 +433,18 @@ defineSuite([
             renderState : context.createRenderState({
                 depthTest : {
                     enabled : true,
-                    func : DepthFunction.ALWAYS
+                    func : WebGLRenderingContext.ALWAYS
                 }
             })
         });
+        command.execute(context);
         expect(context.readPixels({
             framebuffer : framebuffer
         })).toEqual([255, 255, 255, 255]);
     });
 
     it('draws with multiple render targets', function() {
-        if (context.getDrawBuffers()) {
+        if (context.drawBuffers) {
             var colorTexture0 = context.createTexture2D({
                 width : 1,
                 height : 1
@@ -452,17 +467,18 @@ defineSuite([
             sp = context.createShaderProgram(vs, fs);
 
             va = context.createVertexArray([{
-                index : sp.getVertexAttributes().position.index,
+                index : sp.vertexAttributes.position.index,
                 vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
             }]);
 
-            context.draw({
+            var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
                 vertexArray : va,
                 framebuffer : framebuffer
             });
+            command.execute(context);
 
             // 3 of 5.  Verify default color buffer is still black.
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -473,32 +489,66 @@ defineSuite([
             var sp2 = context.createShaderProgram(vs2, fs2, {
                 position : 0
             });
-            sp2.getAllUniforms().u_texture0.value = colorTexture0;
-            sp2.getAllUniforms().u_texture1.value = colorTexture1;
+            sp2.allUniforms.u_texture0.value = colorTexture0;
+            sp2.allUniforms.u_texture1.value = colorTexture1;
 
-            context.draw({
+            command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp2,
                 vertexArray : va
             });
+            command.execute(context);
             expect(context.readPixels()).toEqual([255, 255, 0, 255]);
 
             // 5 of 5. Verify clearing multiple color attachments
-            var command = new ClearCommand();
-            command.color = new Color (0.0, 0.0, 0.0, 0.0);
-            command.framebuffer = framebuffer;
-            command.execute(context);
+            var clearCommand = new ClearCommand({
+                color : new Color (0.0, 0.0, 0.0, 0.0),
+                framebuffer : framebuffer
+            });
+            clearCommand.execute(context);
 
-            context.draw({
+            command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp2,
                 vertexArray : va
             });
+            command.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
             sp2 = sp2.destroy();
         }
     });
+
+    it('gets the status of a complete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 1,
+                height : 1
+            })
+        });
+        expect(framebuffer.status).toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
+    it('gets the status of a incomplete framebuffer', function() {
+        framebuffer = context.createFramebuffer({
+            colorTextures : [context.createTexture2D({
+                width : 1,
+                height : 1
+            })],
+            depthRenderbuffer : context.createRenderbuffer({
+                format : RenderbufferFormat.DEPTH_COMPONENT16,
+                width : 2,
+                height : 2
+            })
+        });
+        expect(framebuffer.status).not.toEqual(WebGLRenderingContext.FRAMEBUFFER_COMPLETE);
+    });
+
 
     it('destroys', function() {
         var f = context.createFramebuffer();
@@ -562,7 +612,7 @@ defineSuite([
     });
 
     it('throws when created with a color texture with a non-color pixel format', function() {
-        if (context.getDepthTexture()) {
+        if (context.depthTexture) {
             expect(function() {
                 framebuffer = context.createFramebuffer({
                     colorTextures : [context.createTexture2D({
@@ -611,13 +661,13 @@ defineSuite([
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
         expect(function() {
-            context.draw({
+            var command = new DrawCommand({
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp,
                 vertexArray : va,
@@ -628,53 +678,54 @@ defineSuite([
                     }
                 })
             });
+            command.execute(context);
         }).toThrowDeveloperError();
     });
 
     it('throws when the number of color texture exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorTextures : new Array(context.getMaximumColorAttachments() + 1)
+                colorTextures : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when the number of color renderbuffers exceeds the number color attachments supported', function() {
         expect(function() {
             context.createFramebuffer({
-                colorRenderbuffers : new Array(context.getMaximumColorAttachments() + 1)
+                colorRenderbuffers : new Array(context.maximumColorAttachments + 1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
-    it('throws when the index to setColorTexture is out of bounds', function(){
+    it('throws when the index to getColorTexture is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorTexture();
-        }).toThrow();
+            framebuffer.getColorTexture();
+        }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.setColorTexture(-1);
-        }).toThrow();
+            framebuffer.getColorTexture(-1);
+        }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.setColorTexture(context.getMaximumColorAttachments() + 1);
-        }).toThrow();
+            framebuffer.getColorTexture(context.maximumColorAttachments + 1);
+        }).toThrowDeveloperError();
     });
 
-    it('throws when the index to setColorRenderbuffer is out of bounds', function(){
+    it('throws when the index to getColorRenderbuffer is out of bounds', function(){
         framebuffer = context.createFramebuffer();
         expect(function() {
-            framebuffer.setColorRenderbuffer();
-        }).toThrow();
+            framebuffer.getColorRenderbuffer();
+        }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(-1);
-        }).toThrow();
+            framebuffer.getColorRenderbuffer(-1);
+        }).toThrowDeveloperError();
 
         expect(function() {
-            framebuffer.setColorRenderbuffer(context.getMaximumColorAttachments() + 1);
-        }).toThrow();
+            framebuffer.getColorRenderbuffer(context.maximumColorAttachments + 1);
+        }).toThrowDeveloperError();
     });
 
     it('fails to destroy', function() {

@@ -1,10 +1,10 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -21,11 +21,11 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -193,6 +193,7 @@ define([
      * @alias PolygonOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
@@ -207,65 +208,65 @@ define([
      * @example
      * // 1. create a polygon outline from points
      * var polygon = new Cesium.PolygonOutlineGeometry({
-     *     polygonHierarchy : {
-     *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *             Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *             Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *         ])
-     *     }
+     *   polygonHierarchy : {
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -72.0, 40.0,
+     *       -70.0, 35.0,
+     *       -75.0, 30.0,
+     *       -70.0, 30.0,
+     *       -68.0, 40.0
+     *     ])
+     *   }
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
      *
      * // 2. create a nested polygon with holes outline
      * var polygonWithHole = new Cesium.PolygonOutlineGeometry({
-     *     polygonHierarchy : {
-     *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-     *             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+     *   polygonHierarchy : {
+     *     positions : Cesium.Cartesian3.fromDegreesArray([
+     *       -109.0, 30.0,
+     *       -95.0, 30.0,
+     *       -95.0, 40.0,
+     *       -109.0, 40.0
+     *     ]),
+     *     holes : [{
+     *       positions : Cesium.Cartesian3.fromDegreesArray([
+     *         -107.0, 31.0,
+     *         -107.0, 39.0,
+     *         -97.0, 39.0,
+     *         -97.0, 31.0
+     *       ]),
+     *       holes : [{
+     *         positions : Cesium.Cartesian3.fromDegreesArray([
+     *           -105.0, 33.0,
+     *           -99.0, 33.0,
+     *           -99.0, 37.0,
+     *           -105.0, 37.0
      *         ]),
      *         holes : [{
-     *             positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
-     *             ]),
-     *             holes : [{
-     *                 positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
-     *                     ]),
-     *                 holes : [{
-     *                     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
-     *                     ])
-     *                 }]
-     *              }]
+     *           positions : Cesium.Cartesian3.fromDegreesArray([
+     *             -103.0, 34.0,
+     *             -101.0, 34.0,
+     *             -101.0, 36.0,
+     *             -103.0, 36.0
+     *           ])
      *         }]
-     *     }
+     *       }]
+     *     }]
+     *   }
      * });
      * var geometry = PolygonOutlineGeometry.createGeometry(polygonWithHole);
      *
      * // 3. create extruded polygon outline
      * var extrudedPolygon = new PolygonOutlineGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *     ]),
-     *     extrudedHeight: 300000
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0,
+     *     -75.0, 30.0,
+     *     -70.0, 30.0,
+     *     -68.0, 40.0
+     *   ]),
+     *   extrudedHeight: 300000
      * });
      * var geometry = PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
@@ -305,9 +306,7 @@ define([
     /**
      * A description of a polygon outline from an array of positions.
      *
-     * @memberof PolygonOutlineGeometry
-     *
-     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
@@ -319,13 +318,13 @@ define([
      * @example
      * // create a polygon from points
      * var polygon = Cesium.PolygonOutlineGeometry.fromPositions({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     -72.0, 40.0,
+     *     -70.0, 35.0,
+     *     -75.0, 30.0,
+     *     -70.0, 30.0,
+     *     -68.0, 40.0
+     *   ])
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
      */
@@ -353,7 +352,6 @@ define([
 
     /**
      * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
-     * @memberof PolygonOutlineGeometry
      *
      * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
      * @returns {Geometry} The computed vertices and indices.
@@ -369,9 +367,6 @@ define([
         var extrude = polygonGeometry._extrude;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
-
-        var boundingSphere;
-        var outerPositions;
 
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -406,12 +401,6 @@ define([
             polygons.push(outerRing);
         }
 
-        outerPositions = polygons[0];
-        // The bounding volume is just around the boundary points, so there could be cases for
-        // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-        // volume doesn't cover the polygon.
-        boundingSphere = BoundingSphere.fromPoints(outerPositions);
-
         var geometry;
         var geometries = [];
 
@@ -434,19 +423,7 @@ define([
         }
 
         geometry = GeometryPipeline.combine(geometries);
-
-        var center = boundingSphere.center;
-        scratchNormal = ellipsoid.geodeticSurfaceNormal(center, scratchNormal);
-        scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, height, scratchPosition);
-        center = Cartesian3.add(center, scratchPosition, center);
-
-        if (extrude) {
-            scratchBoundingSphere = BoundingSphere.clone(boundingSphere, scratchBoundingSphere);
-            center = scratchBoundingSphere.center;
-            scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, extrudedHeight, scratchPosition);
-            center = Cartesian3.add(ellipsoid.scaleToGeodeticSurface(center, center), scratchPosition, center);
-            boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
-        }
+        var boundingSphere = BoundingSphere.fromVertices(geometry.attributes.position.values);
 
         return new Geometry({
             attributes : geometry.attributes,

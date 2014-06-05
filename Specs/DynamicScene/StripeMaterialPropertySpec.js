@@ -1,21 +1,22 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/StripeMaterialProperty',
-             'DynamicScene/StripeOrientation',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Specs/testDefinitionChanged'
-     ], function(
-             StripeMaterialProperty,
-             StripeOrientation,
-             ConstantProperty,
-             TimeIntervalCollectionProperty,
-             Color,
-             JulianDate,
-             TimeInterval,
-             testDefinitionChanged) {
+defineSuite([
+        'DynamicScene/StripeMaterialProperty',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/StripeOrientation',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Specs/testDefinitionChanged'
+    ], function(
+        StripeMaterialProperty,
+        Color,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty,
+        StripeOrientation,
+        TimeIntervalCollectionProperty,
+        testDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

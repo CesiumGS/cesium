@@ -1,23 +1,35 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TileCoordinatesImageryProvider',
-         'Scene/GeographicTilingScheme',
-         'Scene/ImageryProvider',
-         'Scene/WebMercatorTilingScheme',
-         'Core/defined',
-         'ThirdParty/when'
-     ], function(
-         TileCoordinatesImageryProvider,
-         GeographicTilingScheme,
-         ImageryProvider,
-         WebMercatorTilingScheme,
-         defined,
-         when) {
+        'Scene/TileCoordinatesImageryProvider',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/WebMercatorTilingScheme',
+        'Scene/ImageryProvider',
+        'ThirdParty/when'
+    ], function(
+        TileCoordinatesImageryProvider,
+        defined,
+        GeographicTilingScheme,
+        WebMercatorTilingScheme,
+        ImageryProvider,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new TileCoordinatesImageryProvider();
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
     });
 
     it('can provide a root tile', function() {
@@ -35,7 +47,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
             expect(provider.tileDiscardPolicy).toBeUndefined();
-            expect(provider.extent).toEqual(new GeographicTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
 
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;

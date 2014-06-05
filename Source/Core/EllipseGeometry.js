@@ -1,45 +1,45 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
-        './IndexDatatype',
+        './defaultValue',
+        './defined',
         './DeveloperError',
-        './Ellipsoid',
         './EllipseGeometryLibrary',
+        './Ellipsoid',
         './GeographicProjection',
         './Geometry',
-        './GeometryPipeline',
-        './GeometryInstance',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryInstance',
+        './GeometryPipeline',
+        './IndexDatatype',
         './Math',
         './Matrix3',
         './PrimitiveType',
         './Quaternion',
         './VertexFormat'
     ], function(
-        defaultValue,
-        defined,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
-        IndexDatatype,
+        defaultValue,
+        defined,
         DeveloperError,
-        Ellipsoid,
         EllipseGeometryLibrary,
+        Ellipsoid,
         GeographicProjection,
         Geometry,
-        GeometryPipeline,
-        GeometryInstance,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryInstance,
+        GeometryPipeline,
+        IndexDatatype,
         CesiumMath,
         Matrix3,
         PrimitiveType,
@@ -571,6 +571,7 @@ define([
      * @alias EllipseGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
@@ -586,14 +587,12 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseGeometry#createGeometry
+     * @see EllipseGeometry.createGeometry
      *
      * @example
      * // Create an ellipse.
-     * var ellipsoid = Cesium.Ellipsoid.WGS84;
      * var ellipse = new Cesium.EllipseGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
      *   rotation : Cesium.Math.toRadians(60.0)
@@ -648,7 +647,6 @@ define([
 
     /**
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipseGeometry
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

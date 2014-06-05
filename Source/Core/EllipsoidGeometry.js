@@ -1,33 +1,33 @@
 /*global define*/
 define([
-        './defaultValue',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
-        './Math',
-        './Ellipsoid',
         './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './BoundingSphere',
+        './defaultValue',
+        './DeveloperError',
+        './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
+        './Math',
+        './PrimitiveType',
         './VertexFormat'
     ], function(
-        defaultValue,
-        DeveloperError,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
-        CesiumMath,
-        Ellipsoid,
         ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
+        defaultValue,
+        DeveloperError,
+        Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
+        CesiumMath,
+        PrimitiveType,
         VertexFormat) {
     "use strict";
 
@@ -47,6 +47,7 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
      * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
@@ -90,7 +91,6 @@ define([
 
     /**
      * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
-     * @memberof EllipsoidGeometry
      *
      * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
      * @returns {Geometry} The computed vertices and indices.

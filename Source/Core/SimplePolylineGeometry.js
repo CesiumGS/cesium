@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
         './defined',
         './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color',
-        './Cartesian3'
+        './IndexDatatype',
+        './PrimitiveType'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color,
-        Cartesian3) {
+        IndexDatatype,
+        PrimitiveType) {
     "use strict";
 
     /**
@@ -34,8 +34,9 @@ define([
      * @alias SimplePolylineGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
-     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -46,10 +47,10 @@ define([
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.SimplePolylineGeometry({
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *     Cesium.Cartographic.fromDegrees(0.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 5.0)
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     0.0, 0.0,
+     *     5.0, 0.0,
+     *     5.0, 5.0
      *   ])
      * });
      * var geometry = Cesium.SimplePolylineGeometry.createGeometry(polyline);

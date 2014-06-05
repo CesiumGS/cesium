@@ -130,7 +130,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b26" />
+	<property name="version" value="b29" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -153,10 +153,6 @@
 	<property name="clocPath" location="${toolsDirectory}/cloc-1.60/cloc-1.60.pl" />
 	<property name="clocDefinitionsPath" location="${toolsDirectory}/cloc-1.60/cloc_definitions" />
 	<property name="jsHintOptionsPath" location=".jshintrc" />
-
-	<!-- properties controlling documentation source-->
-	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />
-	<property name="githubLinkExt" value="blob/" />
 
 	<!-- Outputs -->
 	<property name="buildDirectory" location="Build" />
@@ -198,11 +194,6 @@
 		<element name="existingjsfiles" type="fileset" />
 	</scriptdef>
 
-	<scriptdef name="extractShaderComments" language="javascript" src="${tasksDirectory}/extractShaderComments.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
-		<attribute name="output" />
-		<element name="glslfiles" type="fileset" />
-	</scriptdef>
-
 	<scriptdef name="createCesiumJs" language="javascript" src="${tasksDirectory}/createCesiumJs.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="output" />
 		<element name="sourcefiles" type="resources" />
@@ -237,6 +228,10 @@
 		<element name="sourcefiles" type="resources" />
 	</scriptdef>
 
+	<scriptdef name="sortRequires" language="javascript" src="${tasksDirectory}/sortRequires.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
+		<element name="sourcefiles" type="fileset" />
+	</scriptdef>
+
 	<target name="jsHint" depends="build" description="Runs JSHint on the entire source tree.">
 		<runJsHint jshintpath="${jsHintPath}" jshintoptionspath="${jsHintOptionsPath}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
 			<sourcefiles dir="${basedir}">
@@ -256,6 +251,35 @@
 			</sourcefiles>
 		</runJsHint>
 		<fail if="jsHint.failure" message="JSHint failed!" />
+	</target>
+
+	<target name="sortRequires" description="Sorts the list of requires in all source files">
+		<sortRequires>
+			<sourcefiles dir="${basedir}">
+				<include name="Source/**/*.js" />
+				<exclude name="Source/Shaders/**" />
+				<exclude name="Source/ThirdParty/**" />
+				<exclude name="Source/Workers/cesiumWorkerBootstrapper.js" />
+				<exclude name="Source/copyrightHeader.js" />
+				<exclude name="Source/Workers/transferTypedArrayTest.js" />
+
+				<include name="Apps/**/*.js" />
+				<exclude name="Apps/Sandcastle/ThirdParty/**" />
+				<exclude name="Apps/server.js" />
+
+				<include name="Specs/**/*.js" />
+				<exclude name="Specs/SpecRunner.js" />
+				<exclude name="Specs/SpecList.js" />
+
+				<exclude name="Apps/Sandcastle/Sandcastle-client.js" />
+				<exclude name="Apps/Sandcastle/Sandcastle-header.js" />
+				<exclude name="Apps/Sandcastle/Sandcastle-warn.js" />
+				<exclude name="Apps/Sandcastle/gallery/gallery-index.js" />
+				<exclude name="Apps/Sandcastle/jsHintOptions.js" />
+
+				<exclude name="**/*.profile.js" />
+			</sourcefiles>
+		</sortRequires>
 	</target>
 
 	<target name="cloc" depends="build" description="Runs cloc to count lines of code for Source and Specs directories.">
@@ -297,11 +321,47 @@
 		</condition>
 	</target>
 
-	<target name="setNodePathLocation" if="nodePathValue">
-		<property name="nodePath" location="${nodePathValue}" />
-	</target>
+	<target name="setNodePath">
+		<exec executable="node" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
+			<arg value="--version" />
+		</exec>
 
-	<target name="setNodePath" depends="setNodePathValue,setNodePathLocation">
+		<!-- use node from path if return code is zero -->
+		<condition property="nodePath" value="node">
+			<equals arg1="${node.exec.result}" arg2="0" />
+		</condition>
+
+		<!-- otherwise on windows use the windows binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
+			<and>
+				<os family="windows" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise on mac use the mac binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
+			<and>
+				<os family="mac" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise on linux use the linux binary -->
+		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
+			<and>
+				<os family="unix" />
+				<not>
+					<isset property="nodePath" />
+				</not>
+			</and>
+		</condition>
+
+		<!-- otherwise use node from path -->
 		<condition property="nodePath" value="node">
 			<not>
 				<isset property="nodePath" />
@@ -365,8 +425,8 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
-		<!-- create cesiumWorkerBootstrapper -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
+		<!-- create standalone worker files -->
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -375,11 +435,22 @@
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
-		</exec>
+			<srcfile prefix="include=Workers/" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/Workers">
+					<include name="cesiumWorkerBootstrapper.js" />
+					<include name="transferTypedArrayTest.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
 
-		<!-- create each combined worker layer -->
+		<!-- create combined worker layer files -->
 		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
@@ -396,6 +467,7 @@
 					<include name="*.js" />
 					<exclude name="*.profile.js" />
 					<exclude name="cesiumWorkerBootstrapper.js" />
+					<exclude name="transferTypedArrayTest.js" />
 					<exclude name="createTaskProcessorWorker.js" />
 				</fileset>
 				<chainedmapper>
@@ -468,31 +540,12 @@
 		</apply>
 	</target>
 
-	<target name="generateDocumentation" description="Generates HTML documentation.">
-		<extractShaderComments output="${shadersDirectory}/glslComments.js">
-			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
-		</extractShaderComments>
-
-		<!--
-		These needs to be a relative path because Rhino doesn't work properly with Windows
-		absolute paths:
-		https://github.com/mozilla/rhino/issues/10
-		-->
-		<property name="relativeDocOutputDirectory" location="${buildDocumentationDirectory}" relative="true" basedir="${jsdoc3Directory}" />
-		<property name="relativeSourceFilesPath" location="${sourceDirectory}" relative="true" basedir="${jsdoc3Directory}" />
-
-		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true" failonerror="true" maxmemory="1024m">
-			<arg line="-modules node_modules" />
-			<arg line="-modules rhino_modules" />
-			<arg line="-modules ." />
-			<arg value="jsdoc.js" />
-			<arg value="-r" />
-			<arg line="-d ${relativeDocOutputDirectory}" />
-			<arg value="${relativeSourceFilesPath}" />
-			<arg value="${version}" />
-			<arg value="${githubRepoLink}" />
-			<arg value="${githubLinkExt}" />
-		</java>
+	<target name="generateDocumentation" depends="setNodePath" description="Generates HTML documentation.">
+		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
+			<env key="CESIUM_VERSION" value="${version}" />
+			<arg value="node_modules/jsdoc/jsdoc.js" />
+			<arg line="--configure Tools/jsdoc/conf.json" />
+		</exec>
 
 		<copy todir="${buildDocumentationImagesDirectory}">
 			<fileset dir="${documentationImagesDirectory}" />

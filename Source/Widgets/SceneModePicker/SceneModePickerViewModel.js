@@ -1,22 +1,24 @@
 /*global define*/
 define([
-        '../../Core/defineProperties',
+        '../../Core/defaultValue',
         '../../Core/defined',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
         '../../Scene/SceneMode',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
-        defineProperties,
+        defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         EventHelper,
         SceneMode,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
@@ -24,32 +26,35 @@ define([
      * @alias SceneModePickerViewModel
      * @constructor
      *
-     * @param {SceneTransitioner} transitioner The SceneTransitioner instance to use.
+     * @param {Scene} scene The Scene to morph
+     * @param {Number} [duration=2000] The duration of scene morph animations, in milliseconds
      */
-    var SceneModePickerViewModel = function(transitioner) {
+    var SceneModePickerViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(transitioner)) {
-            throw new DeveloperError('transitioner is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._transitioner = transitioner;
+        this._scene = scene;
 
         var that = this;
 
-        var transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
+        var morphStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
             that.dropDownVisible = false;
         };
 
         this._eventHelper = new EventHelper();
-        this._eventHelper.add(transitioner.transitionStart, transitionStart);
+        this._eventHelper.add(scene.morphStart, morphStart);
+
+        this._duration = defaultValue(duration, 2000);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
          * @type {SceneMode}
         */
-        this.sceneMode = transitioner.scene.mode;
+        this.sceneMode = scene.mode;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.
@@ -102,15 +107,15 @@ define([
         });
 
         this._morphTo2D = createCommand(function() {
-            transitioner.morphTo2D();
+            scene.morphTo2D(that._duration);
         });
 
         this._morphTo3D = createCommand(function() {
-            transitioner.morphTo3D();
+            scene.morphTo3D(that._duration);
         });
 
         this._morphToColumbusView = createCommand(function() {
-            transitioner.morphToColumbusView();
+            scene.morphToColumbusView(that._duration);
         });
 
         //Used by knockout
@@ -119,14 +124,34 @@ define([
 
     defineProperties(SceneModePickerViewModel.prototype, {
         /**
-         * Gets the scene transitioner.
+         * Gets the scene
          * @memberof SceneModePickerViewModel.prototype
-         *
-         * @type {SceneTransitioner}
+         * @type {Scene}
          */
-        sceneTransitioner : {
+        scene : {
             get : function() {
-                return this._transitioner;
+                return this._scene;
+            }
+        },
+
+        /**
+         * Gets or sets the the duration of scene mode transition animations in milliseconds.
+         * A value of zero causes the scene to instantly change modes.
+         * @memberof SceneModePickerViewModel.prototype
+         * @type {Number}
+         */
+        duration : {
+            get : function() {
+                return this._duration;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (value < 0) {
+                    throw new DeveloperError('duration value must be positive.');
+                }
+                //>>includeEnd('debug');
+
+                this._duration = value;
             }
         },
 
@@ -180,7 +205,6 @@ define([
     });
 
     /**
-     * @memberof SceneModePickerViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     SceneModePickerViewModel.prototype.isDestroyed = function() {
@@ -189,7 +213,6 @@ define([
 
     /**
      * Destroys the view model.
-     * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

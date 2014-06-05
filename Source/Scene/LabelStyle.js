@@ -1,41 +1,38 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
-     * An enumeration describing how to draw a label.
+     * Describes how to draw a label.
      *
      * @exports LabelStyle
      *
-     * @see Label#setStyle
+     * @see Label#style
      */
     var LabelStyle = {
         /**
          * Fill the text of the label, but do not outline.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        FILL : new Enumeration(0, 'FILL'),
+        FILL : 0,
 
         /**
          * Outline the text of the label, but do not fill.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        OUTLINE : new Enumeration(1, 'OUTLINE'),
+        OUTLINE : 1,
 
         /**
          * Fill and outline the text of the label.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2
          */
-        FILL_AND_OUTLINE : new Enumeration(2, 'FILL_AND_OUTLINE')
+        FILL_AND_OUTLINE : 2
     };
 
     return LabelStyle;

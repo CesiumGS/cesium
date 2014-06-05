@@ -1,34 +1,34 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/loadText',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/Event',
-        '../Core/Extent',
-        './ImageryProvider',
-        './TileProviderError',
-        './WebMercatorTilingScheme',
-        './GeographicTilingScheme',
-        './Credit',
-        '../ThirdParty/when'
+        '../Core/GeographicTilingScheme',
+        '../Core/loadText',
+        '../Core/Rectangle',
+        '../Core/RuntimeError',
+        '../Core/TileProviderError',
+        '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
-        loadText,
         DeveloperError,
-        RuntimeError,
         Event,
-        Extent,
-        ImageryProvider,
+        GeographicTilingScheme,
+        loadText,
+        Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
-        GeographicTilingScheme,
-        Credit,
-        when) {
+        when,
+        ImageryProvider) {
     "use strict";
 
     /**
@@ -38,7 +38,7 @@ define([
      *        Google Earth Enterprise Server.
      *
      *        By default the Google Earth Enterprise server does not set the
-     *        <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a> headers. You can either
+     *        {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing} headers. You can either
      *        use a proxy server which adds these headers, or in the /opt/google/gehttpd/conf/gehttpd.conf
      *        and add the 'Header set Access-Control-Allow-Origin "*"' option to the '&lt;Directory /&gt;' and
      *        '&lt;Directory "/opt/google/gehttpd/htdocs"&gt;' directives.
@@ -46,8 +46,9 @@ define([
      * @alias GoogleEarthImageryProvider
      * @constructor
      *
-     * @param {String} description.url The url of the Google Earth server hosting the imagery.
-     * @param {Number} description.channel The channel (id) to be used when requesting data from the server.
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.url The url of the Google Earth server hosting the imagery.
+     * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
      *        The channel number can be found by looking at the json file located at:
      *        earth.localdomain/default_map/query?request=Json&vars=geeServerDefs The /default_map path may
      *        differ depending on your Google Earth Enterprise server configuration. Look for the "id" that
@@ -65,17 +66,17 @@ define([
      *            }
      *          ]
      *        }
-     * @param {String} [description.path="/default_map"] The path of the Google Earth server hosting the imagery.
-     * @param {Number} [description.maximumLevel=23] The maximum level-of-detail supported by the Google Earth
+     * @param {String} [options.path="/default_map"] The path of the Google Earth server hosting the imagery.
+     * @param {Number} [options.maximumLevel=23] The maximum level-of-detail supported by the Google Earth
      *        Enterprise server.
-     * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
+     * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. To ensure that no tiles are discarded, construct and pass
      *        a {@link NeverTileDiscardPolicy} for this parameter.
-     * @param {Proxy} [description.proxy] A proxy to use for requests. This object is
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
-     * @exception {RuntimeError} Could not find layer with channel (id) of <code>description.channel</code>.
-     * @exception {RuntimeError} Could not find a version in channel (id) <code>description.channel</code>.
+     * @exception {RuntimeError} Could not find layer with channel (id) of <code>options.channel</code>.
+     * @exception {RuntimeError} Could not find a version in channel (id) <code>options.channel</code>.
      * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
      *
      * @see ArcGisMapServerImageryProvider
@@ -85,31 +86,31 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
-     *     url : 'http://earth.localdomain',
+     *     url : '//earth.localdomain',
      *     channel : 1008
      * });
      */
-    var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(description) {
-        description = defaultValue(description, {});
+    var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(options) {
+        options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description.url)) {
-            throw new DeveloperError('description.url is required.');
+        if (!defined(options.url)) {
+            throw new DeveloperError('options.url is required.');
         }
-        if (!defined(description.channel)) {
-            throw new DeveloperError('description.channel is required.');
+        if (!defined(options.channel)) {
+            throw new DeveloperError('options.channel is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = description.url;
-        this._path = defaultValue(description.path, '/default_map');
-        this._tileDiscardPolicy = description.tileDiscardPolicy;
-        this._proxy = description.proxy;
-        this._channel = description.channel;
+        this._url = options.url;
+        this._path = defaultValue(options.path, '/default_map');
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._proxy = options.proxy;
+        this._channel = options.channel;
         this._requestType = 'ImageryMaps';
         this._credit = new Credit('Google Imagery', GoogleEarthImageryProvider._logoData, 'http://www.google.com/enterprise/mapsearth/products/earthenterprise.html');
 
@@ -130,7 +131,7 @@ define([
 
         this._tileWidth = 256;
         this._tileHeight = 256;
-        this._maximumLevel = defaultValue(description.maximumLevel, 23);
+        this._maximumLevel = defaultValue(options.maximumLevel, 23);
         this._imageUrlTemplate = this._url + this._path + '/query?request={request}&channel={channel}&version={version}&x={x}&y={y}&z={zoom}';
 
         this._errorEvent = new Event();
@@ -180,7 +181,7 @@ define([
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2,
-                  extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
+                  rectangle: new Rectangle(-Math.PI, -Math.PI, Math.PI, Math.PI)
               });
             // Default to mercator projection when projection is undefined
             } else if(!defined(data.projection) || data.projection === 'mercator') {
@@ -388,20 +389,20 @@ define([
             }
         },
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
          * @memberof GoogleEarthImageryProvider.prototype
-         * @type {Extent}
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.extent;
+                return this._tilingScheme.rectangle;
             }
         },
 
@@ -459,13 +460,26 @@ define([
             get : function() {
                 return this._credit;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @memberof GoogleEarthImageryProvider.prototype
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
+            }
         }
     });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @memberof GoogleEarthImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -482,8 +496,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
-     *
-     * @memberof GoogleEarthImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

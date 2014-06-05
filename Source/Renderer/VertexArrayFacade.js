@@ -18,16 +18,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @alias VertexArrayFacade
-     *
-     * @constructor
-     *
-     * @exception {DeveloperError} Attribute must have a componentsPerAttribute.
-     * @exception {DeveloperError} Attribute must have a valid componentDatatype or not specify it.
-     * @exception {DeveloperError} Attribute must have a valid usage or not specify it.
-     * @exception {DeveloperError} Index n is used by more than one attribute.
+     * @private
      */
     var VertexArrayFacade = function(context, attributes, sizeInVertices) {
         //>>includeStart('debug', pragmas.debug);
@@ -66,7 +57,7 @@ define([
                 attributesByUsage = attributesByPurposeAndUsage[purpose] = {};
             }
 
-            usage = attribute.usage.toString();
+            usage = attribute.usage;
             attributesForUsage = attributesByUsage[usage];
             if (!defined(attributesForUsage)) {
                 attributesForUsage = attributesByUsage[usage] = [];
@@ -78,7 +69,7 @@ define([
         // A function to sort attributes by the size of their components.  From left to right, a vertex
         // stores floats, shorts, and then bytes.
         function compare(left, right) {
-            return right.componentDatatype.sizeInBytes - left.componentDatatype.sizeInBytes;
+            return ComponentDatatype.getSizeInBytes(right.componentDatatype) - ComponentDatatype.getSizeInBytes(left.componentDatatype);
         }
 
         // Create a buffer description for each purpose/usage combination.
@@ -102,14 +93,14 @@ define([
                         var vertexSizeInBytes = VertexArrayFacade._vertexSizeInBytes(attributesForUsage);
 
                         var usageEnum;
-                        switch (usage) {
-                        case BufferUsage.STATIC_DRAW.toString():
+                        switch (Number(usage)) {
+                        case BufferUsage.STATIC_DRAW:
                             usageEnum = BufferUsage.STATIC_DRAW;
                             break;
-                        case BufferUsage.STREAM_DRAW.toString():
+                        case BufferUsage.STREAM_DRAW:
                             usageEnum = BufferUsage.STREAM_DRAW;
                             break;
-                        case BufferUsage.DYNAMIC_DRAW.toString():
+                        case BufferUsage.DYNAMIC_DRAW:
                             usageEnum = BufferUsage.DYNAMIC_DRAW;
                             break;
                         }
@@ -139,14 +130,7 @@ define([
         this._precreated = precreatedAttributes;
         this._context = context;
 
-        /**
-         * DOC_TBA
-         */
         this.writers = undefined;
-
-        /**
-         * DOC_TBA
-         */
         this.vaByPurpose = undefined;
 
         this.resize(sizeInVertices);
@@ -224,10 +208,10 @@ define([
         var length = attributes.length;
         for ( var i = 0; i < length; ++i) {
             var attribute = attributes[i];
-            sizeInBytes += (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
+            sizeInBytes += (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(attribute.componentDatatype));
         }
 
-        var maxComponentSizeInBytes = (length > 0) ? attributes[0].componentDatatype.sizeInBytes : 0; // Sorted by size
+        var maxComponentSizeInBytes = (length > 0) ? ComponentDatatype.getSizeInBytes(attributes[0].componentDatatype) : 0; // Sorted by size
         var remainder = (maxComponentSizeInBytes > 0) ? (sizeInBytes % maxComponentSizeInBytes) : 0;
         var padding = (remainder === 0) ? 0 : (maxComponentSizeInBytes - remainder);
         sizeInBytes += padding;
@@ -252,23 +236,19 @@ define([
                 normalize : attribute.normalize,
 
                 offsetInBytes : offsetInBytes,
-                vertexSizeInComponentType : vertexSizeInBytes / componentDatatype.sizeInBytes,
+                vertexSizeInComponentType : vertexSizeInBytes / ComponentDatatype.getSizeInBytes(componentDatatype),
 
                 view : undefined
             });
 
-            offsetInBytes += (attribute.componentsPerAttribute * componentDatatype.sizeInBytes);
+            offsetInBytes += (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype));
         }
 
         return views;
     };
 
     /**
-     * DOC_TBA
-     *
      * Invalidates writers.  Can't render again until commit is called.
-     *
-     * @memberof VertexArrayFacade
      */
     VertexArrayFacade.prototype.resize = function(sizeInVertices) {
         this._size = sizeInVertices;
@@ -299,7 +279,7 @@ define([
             var arrayBuffer = new ArrayBuffer(size * buffer.vertexSizeInBytes);
 
             // Copy contents from previous array buffer
-            if (buffer.arrayBuffer) {
+            if (defined(buffer.arrayBuffer)) {
                 var destView = new Uint8Array(arrayBuffer);
                 var sourceView = new Uint8Array(buffer.arrayBuffer);
                 var sourceLength = sourceView.length;
@@ -371,11 +351,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.commit = function(indexBuffer) {
         var recreateVA = false;
 
@@ -445,12 +420,12 @@ define([
             var vertexBuffer = buffer.vertexBuffer;
             var vertexBufferSizeInBytes = vertexArrayFacade._size * buffer.vertexSizeInBytes;
             var vertexBufferDefined = defined(vertexBuffer);
-            if (!vertexBufferDefined || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
+            if (!vertexBufferDefined || (vertexBuffer.sizeInBytes < vertexBufferSizeInBytes)) {
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
                 }
                 buffer.vertexBuffer = vertexArrayFacade._context.createVertexBuffer(buffer.arrayBuffer, buffer.usage);
-                buffer.vertexBuffer.setVertexArrayDestroyable(false);
+                buffer.vertexBuffer.vertexArrayDestroyable = false;
 
                 return true; // Created new vertex buffer
             }
@@ -480,10 +455,6 @@ define([
         }
     };
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.subCommit = function(offsetInVertices, lengthInVertices) {
         //>>includeStart('debug', pragmas.debug);
         if (offsetInVertices < 0 || offsetInVertices >= this._size) {
@@ -513,10 +484,6 @@ define([
         }
     }
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.endSubCommits = function() {
         var allBuffers = this._allBuffers;
 
@@ -544,18 +511,10 @@ define([
         vertexArrayFacade.vaByPurpose = undefined;
     }
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof VertexArrayFacade
-     */
     VertexArrayFacade.prototype.destroy = function() {
         var allBuffers = this._allBuffers;
         for (var i = 0, len = allBuffers.length; i < len; ++i) {

@@ -4,55 +4,41 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/Color',
-        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/PrimitiveType',
+        '../Core/PixelFormat',
         '../Core/Transforms',
-        '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
         '../Renderer/RenderbufferFormat',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
-        '../Shaders/PostProcessFilters/PassThrough',
-        '../Shaders/ViewportQuadVS'
+        '../Shaders/PostProcessFilters/PassThrough'
     ], function(
         BoundingRectangle,
         Cartesian2,
         Cartesian4,
         Color,
-        ComponentDatatype,
         defaultValue,
         defined,
         destroyObject,
-        Geometry,
-        GeometryAttribute,
         CesiumMath,
         Matrix4,
-        PrimitiveType,
+        PixelFormat,
         Transforms,
-        BufferUsage,
         ClearCommand,
-        DrawCommand,
         PassState,
         PixelDatatype,
-        PixelFormat,
         RenderbufferFormat,
         AdditiveBlend,
         BrightPass,
         GaussianBlur1D,
-        PassThrough,
-        ViewportQuadVS) {
+        PassThrough) {
     "use strict";
 
     var SunPostProcess = function() {
@@ -99,64 +85,18 @@ define([
         clear.execute(context);
     };
 
-    SunPostProcess.prototype.execute = function(context) {
+    SunPostProcess.prototype.execute = function(context, framebuffer) {
         this._downSampleCommand.execute(context, this._downSamplePassState);
         this._brightPassCommand.execute(context, this._downSamplePassState);
         this._blurXCommand.execute(context, this._downSamplePassState);
         this._blurYCommand.execute(context, this._downSamplePassState);
+
+        this._fullScreenCommand.framebuffer = framebuffer;
+        this._blendCommand.framebuffer = framebuffer;
+
         this._fullScreenCommand.execute(context);
         this._blendCommand.execute(context, this._upSamplePassState);
     };
-
-    var attributeLocations = {
-        position : 0,
-        textureCoordinates : 1
-    };
-
-    function getVertexArray(context) {
-        // Per-context cache for viewport quads
-        var vertexArray = context.cache.viewportQuad_vertexArray;
-
-        if (defined(vertexArray)) {
-            return vertexArray;
-        }
-
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                       -1.0, -1.0,
-                        1.0, -1.0,
-                        1.0,  1.0,
-                       -1.0,  1.0
-                    ]
-                }),
-
-                textureCoordinates : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : [
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        vertexArray = context.createVertexArrayFromGeometry({
-            geometry : geometry,
-            attributeLocations : attributeLocations,
-            bufferUsage : BufferUsage.STATIC_DRAW
-        });
-
-        context.cache.viewportQuad_vertexArray = vertexArray;
-        return vertexArray;
-    }
 
     var viewportBoundingRectangle  = new BoundingRectangle();
     var downSampleViewportBoundingRectangle = new BoundingRectangle();
@@ -165,34 +105,29 @@ define([
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
     SunPostProcess.prototype.update = function(context) {
-        var width = context.getDrawingBufferWidth();
-        var height = context.getDrawingBufferHeight();
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
 
         var that = this;
 
         if (!defined(this._downSampleCommand)) {
-            this._clearFBO1Command = new ClearCommand();
-            this._clearFBO1Command.color = new Color();
+            this._clearFBO1Command = new ClearCommand({
+                color : new Color()
+            });
+            this._clearFBO2Command = new ClearCommand({
+                color : new Color()
+            });
 
-            this._clearFBO2Command = new ClearCommand();
-            this._clearFBO2Command.color = new Color();
+            var rs;
+            var uniformMap = {};
 
-            var primitiveType = PrimitiveType.TRIANGLE_FAN;
-            var vertexArray = getVertexArray(context);
+            var downSampleCommand = this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
 
-            var downSampleCommand = this._downSampleCommand = new DrawCommand();
-            downSampleCommand.owner = this;
-            downSampleCommand.primitiveType = primitiveType;
-            downSampleCommand.vertexArray = vertexArray;
-            downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
-            downSampleCommand.uniformMap = {};
-
-            var brightPassCommand = this._brightPassCommand = new DrawCommand();
-            brightPassCommand.owner = this;
-            brightPassCommand.primitiveType = primitiveType;
-            brightPassCommand.vertexArray = vertexArray;
-            brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeLocations);
-            brightPassCommand.uniformMap = {
+            uniformMap = {
                 u_avgLuminance : function() {
                     // A guess at the average luminance across the entire scene
                     return 0.5;
@@ -205,15 +140,16 @@ define([
                 }
             };
 
+            var brightPassCommand = this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
+
             var delta = 1.0;
             var sigma = 2.0;
 
-            var blurXCommand = this._blurXCommand = new DrawCommand();
-            blurXCommand.owner = this;
-            blurXCommand.primitiveType = primitiveType;
-            blurXCommand.vertexArray = vertexArray;
-            blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
-            blurXCommand.uniformMap = {
+            uniformMap = {
                 delta : function() {
                     return delta;
                 },
@@ -225,12 +161,13 @@ define([
                 }
             };
 
-            var blurYCommand = this._blurYCommand = new DrawCommand();
-            blurYCommand.owner = this;
-            blurYCommand.primitiveType = primitiveType;
-            blurYCommand.vertexArray = vertexArray;
-            blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeLocations);
-            blurYCommand.uniformMap = {
+            var blurXCommand = this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
+
+            uniformMap = {
                 delta : function() {
                     return delta;
                 },
@@ -242,12 +179,13 @@ define([
                 }
             };
 
-            var additiveBlendCommand = this._blendCommand = new DrawCommand();
-            additiveBlendCommand.owner = this;
-            additiveBlendCommand.primitiveType = primitiveType;
-            additiveBlendCommand.vertexArray = vertexArray;
-            additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeLocations);
-            additiveBlendCommand.uniformMap = {
+            var blurYCommand = this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
+
+            uniformMap = {
                 u_center : function() {
                     return that._uCenter;
                 },
@@ -256,12 +194,19 @@ define([
                 }
             };
 
-            var fullScreenCommand = this._fullScreenCommand = new DrawCommand();
-            fullScreenCommand.owner = this;
-            fullScreenCommand.primitiveType = primitiveType;
-            fullScreenCommand.vertexArray = vertexArray;
-            fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeLocations);
-            fullScreenCommand.uniformMap = {};
+            var additiveBlendCommand = this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
+
+            uniformMap = {};
+
+            var fullScreenCommand = this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
+                renderState : rs,
+                uniformMap : uniformMap,
+                owner : this
+            });
         }
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
@@ -278,7 +223,7 @@ define([
 
         var fbo = this._fbo;
         var colorTexture = (defined(fbo) && fbo.getColorTexture(0)) || undefined;
-        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+        if (!defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height) {
             fbo = fbo && fbo.destroy();
             this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
             this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
@@ -290,7 +235,7 @@ define([
                 height : height
             })];
 
-            if (context.getDepthTexture()) {
+            if (context.depthTexture) {
                 fbo = this._fbo = context.createFramebuffer({
                     colorTextures :colorTextures,
                     depthTexture : context.createTexture2D({
@@ -374,11 +319,11 @@ define([
             this._fullScreenCommand.renderState = upSampleRenderState;
         }
 
-        var us = context.getUniformState();
-        var sunPosition = us.getSunPositionWC();
-        var viewMatrix = us.getView();
-        var viewProjectionMatrix = us.getViewProjection();
-        var projectionMatrix = us.getProjection();
+        var us = context.uniformState;
+        var sunPosition = us.sunPositionWC;
+        var viewMatrix = us.view;
+        var viewProjectionMatrix = us.viewProjection;
+        var projectionMatrix = us.projection;
 
         // create up sampled render state
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, postProcessMatrix4Scratch);
@@ -429,12 +374,12 @@ define([
         this._fbo = this._fbo && this._fbo.destroy();
         this._downSampleFBO1 = this._downSampleFBO1 && this._downSampleFBO1.destroy();
         this._downSampleFBO2 = this._downSampleFBO2 && this._downSampleFBO2.destroy();
-        this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.shaderProgram.release();
-        this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.shaderProgram.release();
-        this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.shaderProgram.release();
-        this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.shaderProgram.release();
-        this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.shaderProgram.release();
-        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.shaderProgram.release();
+        this._downSampleCommand = this._downSampleCommand && this._downSampleCommand.shaderProgram && this._downSampleCommand.shaderProgram.destroy();
+        this._brightPassCommand = this._brightPassCommand && this._brightPassCommand.shaderProgram && this._brightPassCommand.shaderProgram.destroy();
+        this._blurXCommand = this._blurXCommand && this._blurXCommand.shaderProgram && this._blurXCommand.shaderProgram.destroy();
+        this._blurYCommand = this._blurYCommand && this._blurYCommand.shaderProgram && this._blurYCommand.shaderProgram.destroy();
+        this._blendCommand = this._blendCommand && this._blendCommand.shaderProgram && this._blendCommand.shaderProgram.destroy();
+        this._fullScreenCommand = this._fullScreenCommand && this._fullScreenCommand.shaderProgram && this._fullScreenCommand.shaderProgram.destroy();
         return destroyObject(this);
     };
 

@@ -92,7 +92,6 @@ define([
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model.
      * This function should be called as part of the render loop.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.update = function() {
         if (this.showSelection && defined(this.position)) {
@@ -113,7 +112,6 @@ define([
 
     /**
      * Animate the indicator to draw attention to the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
         var viewModel = this;
@@ -134,7 +132,6 @@ define([
 
     /**
      * Animate the indicator to release the selection.
-     * @memberof SelectionIndicatorViewModel
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
         var viewModel = this;
@@ -189,8 +186,8 @@ define([
         },
         /**
          * Gets or sets the function for converting the world position of the object to the screen space position.
-         * Expects the {Cartesian3} parameter for the position and the optional {Cartesian2} parameter for the result.
-         * Should return a {Cartesian2}.
+         * Expects the {@link Cartesian3} parameter for the position and the optional {@link Cartesian2} parameter for the result.
+         * Should return a {@link Cartesian2}.
          *
          * Defaults to SceneTransforms.wgs84ToWindowCoordinates
          *

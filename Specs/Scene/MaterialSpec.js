@@ -1,36 +1,36 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Material',
-        'Scene/Polygon',
-        'Scene/PolylineCollection',
-        'Specs/createContext',
-        'Specs/destroyContext',
-        'Specs/createCamera',
-        'Specs/createFrameState',
-        'Specs/frameState',
-        'Specs/render',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
         'Core/Math',
-        'Renderer/ClearCommand'
+        'Renderer/ClearCommand',
+        'Scene/Polygon',
+        'Scene/PolylineCollection',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/frameState',
+        'Specs/render'
     ], function(
         Material,
-        Polygon,
-        PolylineCollection,
-        createContext,
-        destroyContext,
-        createCamera,
-        createFrameState,
-        frameState,
-        render,
         Cartesian3,
         Cartographic,
         Color,
         Ellipsoid,
         CesiumMath,
-        ClearCommand) {
+        ClearCommand,
+        Polygon,
+        PolylineCollection,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext,
+        frameState,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -49,19 +49,21 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.getUniformState();
-        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us = context.uniformState;
+        us.update(context, createFrameState(createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        })));
 
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions([
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, -50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
-        ]);
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))];
         polygon.asynchronous = false;
 
         polylines = new PolylineCollection();
@@ -91,7 +93,7 @@ defineSuite([
     }
 
     function renderPolylineMaterial(material) {
-        polyline.setMaterial(material);
+        polyline.material = material;
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

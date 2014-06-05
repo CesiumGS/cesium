@@ -1,49 +1,49 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Model',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/defaultValue',
-         'Core/Math',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Matrix4',
-         'Core/BoundingSphere',
-         'Core/Ellipsoid',
-         'Core/Transforms',
-         'Core/Event',
-         'Core/JulianDate',
-         'Core/PrimitiveType',
-         'Scene/ModelAnimationLoop'
-     ], function(
-         Model,
-         createScene,
-         destroyScene,
-         defaultValue,
-         CesiumMath,
-         Cartesian2,
-         Cartesian3,
-         Cartographic,
-         Matrix4,
-         BoundingSphere,
-         Ellipsoid,
-         Transforms,
-         Event,
-         JulianDate,
-         PrimitiveType,
-         ModelAnimationLoop) {
+        'Scene/Model',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Cartographic',
+        'Core/defaultValue',
+        'Core/Ellipsoid',
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Core/Transforms',
+        'Scene/ModelAnimationLoop',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Model,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        defaultValue,
+        Ellipsoid,
+        JulianDate,
+        CesiumMath,
+        Matrix4,
+        PrimitiveType,
+        Transforms,
+        ModelAnimationLoop,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var duckUrl = './Data/Models/duck/duck.json';
     var customDuckUrl = './Data/Models/customDuck/duck.json';
+    var embeddedDuckUrl = './Data/Models/embeddedDuck/duck.json';
     var cesiumAirUrl = './Data/Models/CesiumAir/CesiumAir.json';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.json';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.json';
 
     var duckModel;
     var customDuckModel;
+    var embeddedDuckModel;
     var cesiumAirModel;
     var animBoxesModel;
     var riggedFigureModel;
@@ -71,18 +71,14 @@ defineSuite([
             modelMatrix : modelMatrix,
             show : false,
             scale : options.scale,
-            id : url        // for picking tests
+            minimumPixelSize : options.minimumPixelSize,
+            id : url,        // for picking tests
+            asynchronous : options.asynchronous
         }));
 
-        var readyToRender = false;
         model.readyToRender.addEventListener(function(model) {
-            readyToRender = true;
-
-            // Always use initial bounding sphere, ignoring animations
-            var worldBoundingSphere = model.computeWorldBoundingSphere();
-
             model.zoomTo = function() {
-                var center = worldBoundingSphere.center;
+                var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
                 var transform = Transforms.eastNorthUpToFixedFrame(center);
 
                 // View in east-north-up frame
@@ -95,7 +91,7 @@ defineSuite([
                 controller.enableTilt = false;
 
                 // Zoom in
-                var r = Math.max(worldBoundingSphere.radius, camera.frustum.near);
+                var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
                 camera.lookAt(
                     new Cartesian3(0.0, -r, r),
                     Cartesian3.ZERO,
@@ -106,7 +102,7 @@ defineSuite([
         waitsFor(function() {
             // Render scene to progressively load the model
             scene.renderForSpecs();
-            return readyToRender;
+            return model.ready;
         }, url + ' readyToRender', 10000);
 
         return model;
@@ -137,9 +133,12 @@ defineSuite([
        expect(duckModel.show).toEqual(false);
        expect(duckModel.modelMatrix).toEqual(modelMatrix);
        expect(duckModel.scale).toEqual(1.0);
+       expect(duckModel.minimumPixelSize).toEqual(0.0);
        expect(duckModel.id).toEqual(duckUrl);
        expect(duckModel.allowPicking).toEqual(true);
        expect(duckModel.activeAnimations).toBeDefined();
+       expect(duckModel.ready).toEqual(true);
+       expect(duckModel.asynchronous).toEqual(true);
        expect(duckModel.debugShowBoundingVolume).toEqual(false);
        expect(duckModel.debugWireframe).toEqual(false);
     });
@@ -235,6 +234,7 @@ defineSuite([
         var node = duckModel.getNode('LOD3sp');
         expect(node).toBeDefined();
         expect(node.name).toEqual('LOD3sp');
+        expect(node.id).toEqual('LOD3sp');
 
         // Change node transform and render
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
@@ -248,6 +248,8 @@ defineSuite([
         duckModel.show = false;
 
         expect(duckModel._cesiumAnimationsDirty).toEqual(false);
+
+        node.matrix = Matrix4.fromUniformScale(1.0);
     });
 
     it('getMesh throws when model is not loaded', function() {
@@ -271,25 +273,84 @@ defineSuite([
         var mesh = duckModel.getMesh('LOD3spShape');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('LOD3spShape');
+        expect(mesh.id).toEqual('LOD3spShape-lib');
+        expect(mesh.materials[0].name).toEqual('blinn3');
     });
 
-    it('computeWorldBoundingSphere throws when model is not loaded', function() {
+    it('getMaterial throws when model is not loaded', function() {
         var m = new Model();
         expect(function() {
-            return m.computeWorldBoundingSphere();
+            return m.getMaterial('gltf-material-name');
         }).toThrowDeveloperError();
     });
 
-    it('computeWorldBoundingSphere computes a bounding sphere', function() {
-        var radius = duckModel.computeWorldBoundingSphere().radius;
-        expect(radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
+    it('getMaterial throws when name is not provided', function() {
+        expect(function() {
+            return duckModel.getMaterial();
+        }).toThrowDeveloperError();
     });
 
-    it('computeWorldBoundingSphere uses a result parameter', function() {
-        var result = new BoundingSphere();
-        var sphere = duckModel.computeWorldBoundingSphere(result);
-        expect(sphere).toBe(result);
-        expect(sphere.radius).toEqualEpsilon(158.601, CesiumMath.EPSILON3);
+    it('getMaterial returns undefined when mesh does not exist', function() {
+        expect(duckModel.getNode('name-of-material-that-does-not-exist')).not.toBeDefined();
+    });
+
+    it('getMaterial returns returns a material', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(material).toBeDefined();
+        expect(material.name).toEqual('blinn3');
+        expect(material.id).toEqual('blinn3-fx');
+    });
+
+    it('ModelMaterial.setValue throws when name is not provided', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(function() {
+            material.setValue();
+        }).toThrowDeveloperError();
+    });
+
+    it('ModelMaterial.setValue sets a scalar parameter', function() {
+        var material = duckModel.getMaterial('blinn3');
+        material.setValue('shininess', 12.34);
+        expect(material.getValue('shininess')).toEqual(12.34);
+    });
+
+    it('ModelMaterial.setValue sets a Cartesian3 parameter not overriden in the material (defined in technique only)', function() {
+        var material = duckModel.getMaterial('blinn3');
+        var light0Color = new Cartesian3(0.33, 0.66, 1.0);
+        material.setValue('light0Color', light0Color);
+        expect(material.getValue('light0Color')).toEqual(light0Color);
+    });
+
+    it('ModelMaterial.setValue sets a Cartesian4 parameter', function() {
+        var material = duckModel.getMaterial('blinn3');
+        var specular = new Cartesian4(0.25, 0.5, 0.75, 1.0);
+        material.setValue('specular', specular);
+        expect(material.getValue('specular')).toEqual(specular);
+    });
+
+    it('ModelMaterial.getValue throws when name is not provided', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(function() {
+            material.getValue();
+        }).toThrowDeveloperError();
+    });
+
+    it('ModelMaterial.getValue returns undefined when parameter does not exist', function() {
+        var material = duckModel.getMaterial('blinn3');
+        expect(material.getValue('name-of-parameter-that-does-not-exist')).not.toBeDefined();
+    });
+
+    it('boundingSphere throws when model is not loaded', function() {
+        var m = new Model();
+        expect(function() {
+            return m.boundingSphere;
+        }).toThrowDeveloperError();
+    });
+
+    it('boundingSphere returns the bounding sphere', function() {
+        var boundingSphere = duckModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(13.440, 86.949, -3.701), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(126.880, CesiumMath.EPSILON3);
     });
 
     it('destroys', function() {
@@ -319,8 +380,28 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    it('loads embeddedDuck', function() {
+        embeddedDuckModel = loadModel(embeddedDuckUrl);
+    });
+
+    it('renders embeddedDuckModel (NPOT textures and all uniform semantics)', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        embeddedDuckModel.show = true;
+        embeddedDuckModel.zoomTo();
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        embeddedDuckModel.show = false;
+    });
+
+    ///////////////////////////////////////////////////////////////////////////
+
     it('loads cesiumAir', function() {
-        cesiumAirModel = loadModel(cesiumAirUrl);
+        cesiumAirModel = loadModel(cesiumAirUrl, {
+            minimumPixelSize : 1,
+            asynchronous : false
+        });
+        expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+        expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
     it('renders cesiumAir (has translucency)', function() {

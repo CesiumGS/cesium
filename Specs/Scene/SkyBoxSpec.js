@@ -1,24 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/SkyBox',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Core/Cartesian3',
-         'Renderer/ClearCommand',
-         'Scene/SceneMode',
-         'ThirdParty/when'
-     ], function(
-         SkyBox,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         Cartesian3,
-         ClearCommand,
-         SceneMode,
-         when) {
+        'Scene/SkyBox',
+        'Core/Cartesian3',
+        'Renderer/ClearCommand',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext'
+    ], function(
+        SkyBox,
+        Cartesian3,
+        ClearCommand,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -57,9 +55,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        var us = context.getUniformState();
-        var frameState = createFrameState(createCamera(
-            context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 20000000.0));
+        var us = context.uniformState;
+        var frameState = createFrameState(createCamera({
+            eye : new Cartesian3(7000000.0, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z,
+            near : 1.0,
+            far : 20000000.0
+        }));
         us.update(context, frameState);
 
         var command = s.update(context, frameState);
@@ -82,9 +85,14 @@ defineSuite([
             show : false
         });
 
-        var us = context.getUniformState();
-        var frameState = createFrameState(createCamera(
-            context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
+        var us = context.uniformState;
+        var frameState = createFrameState(createCamera({
+            eye : new Cartesian3(7000000.0, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z,
+            near : 1.0,
+            far : 20000000.0
+        }));
         us.update(context, frameState);
 
         var command = s.update(context, frameState);
@@ -103,9 +111,14 @@ defineSuite([
             }
         });
 
-        var us = context.getUniformState();
-        var frameState = createFrameState(createCamera(
-            context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
+        var us = context.uniformState;
+        var frameState = createFrameState(createCamera({
+            eye : new Cartesian3(7000000.0, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z,
+            near : 1.0,
+            far : 20000000.0
+        }));
         frameState.mode = SceneMode.SCENE2D;
         us.update(context, frameState);
 
@@ -125,9 +138,14 @@ defineSuite([
             }
         });
 
-        var us = context.getUniformState();
-        var frameState = createFrameState(createCamera(
-            context, new Cartesian3(7000000.0, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z, 1.0, 10000000.0));
+        var us = context.uniformState;
+        var frameState = createFrameState(createCamera({
+            eye : new Cartesian3(7000000.0, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z,
+            near : 1.0,
+            far : 20000000.0
+        }));
         frameState.passes.render = false;
         us.update(context, frameState);
 

@@ -1,21 +1,20 @@
 /*global define*/
-define(['./Property',
+define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/isArray',
-        '../Core/TimeIntervalCollection'
+        '../Core/TimeIntervalCollection',
+        './Property'
     ], function(
-        Property,
         defined,
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         isArray,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        Property) {
     "use strict";
 
     /**
@@ -66,7 +65,9 @@ define(['./Property',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof TimeIntervalCollectionProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -78,7 +79,9 @@ define(['./Property',
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof TimeIntervalCollectionProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -100,7 +103,6 @@ define(['./Property',
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof TimeIntervalCollectionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -116,7 +118,7 @@ define(['./Property',
         //>>includeEnd('debug');
 
         var value = this._intervals.findDataForIntervalContainingDate(time);
-        if (defined(value) && (typeof value === 'object' && !isArray(value) && !(value instanceof Enumeration))) {
+        if (defined(value) && (typeof value === 'object' && !isArray(value))) {
             return value.clone(result);
         }
         return value;
@@ -125,7 +127,6 @@ define(['./Property',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeIntervalCollectionProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

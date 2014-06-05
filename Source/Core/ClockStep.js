@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        './Enumeration'
-       ], function(
-         Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -19,31 +16,28 @@ define([
          * {@link Clock#tick} advances the current time by a fixed step,
          * which is the number of seconds specified by {@link Clock#multiplier}.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        TICK_DEPENDENT : new Enumeration(0, 'TICK_DEPENDENT'),
+        TICK_DEPENDENT : 0,
 
         /**
          * {@link Clock#tick} advances the current time by the amount of system
          * time elapsed since the previous call multiplied by {@link Clock#multiplier}.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1 
          */
-        SYSTEM_CLOCK_MULTIPLIER : new Enumeration(1, 'SYSTEM_CLOCK_MULTIPLIER'),
+        SYSTEM_CLOCK_MULTIPLIER : 1,
 
         /**
          * {@link Clock#tick} sets the clock to the current system time;
          * ignoring all other settings.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2 
          */
-        SYSTEM_CLOCK : new Enumeration(2, 'SYSTEM_CLOCK')
+        SYSTEM_CLOCK : 2
     };
 
     return ClockStep;

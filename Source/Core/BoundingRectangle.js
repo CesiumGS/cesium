@@ -1,20 +1,22 @@
 /*global define*/
 define([
+        './Cartesian2',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartographic',
         './GeographicProjection',
-        './Intersect'
+        './Intersect',
+        './Rectangle'
     ], function(
+        Cartesian2,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartographic,
         GeographicProjection,
-        Intersect) {
+        Intersect,
+        Rectangle) {
     "use strict";
 
     /**
@@ -62,9 +64,8 @@ define([
     /**
      * Computes a bounding rectangle enclosing the list of 2D points.
      * The rectangle is oriented with the corner at the bottom left.
-     * @memberof BoundingRectangle
      *
-     * @param {Array} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
+     * @param {Cartesian2[]} positions List of points that the bounding rectangle will enclose.  Each point must have <code>x</code> and <code>y</code> properties.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
@@ -108,23 +109,22 @@ define([
     };
 
     var defaultProjection = new GeographicProjection();
-    var fromExtentLowerLeft = new Cartographic();
-    var fromExtentUpperRight = new Cartographic();
+    var fromRectangleLowerLeft = new Cartographic();
+    var fromRectangleUpperRight = new Cartographic();
     /**
-     * Computes a bounding rectangle from an extent.
-     * @memberof BoundingRectangle
+     * Computes a bounding rectangle from an rectangle.
      *
-     * @param {Extent} extent The valid extent used to create a bounding rectangle.
-     * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
+     * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
+     * @param {Object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
-    BoundingRectangle.fromExtent = function(extent, projection, result) {
+    BoundingRectangle.fromRectangle = function(rectangle, projection, result) {
         if (!defined(result)) {
             result = new BoundingRectangle();
         }
 
-        if (!defined(extent)) {
+        if (!defined(rectangle)) {
             result.x = 0;
             result.y = 0;
             result.width = 0;
@@ -134,8 +134,8 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
-        var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));
+        var lowerLeft = projection.project(Rectangle.getSouthwest(rectangle, fromRectangleLowerLeft));
+        var upperRight = projection.project(Rectangle.getNortheast(rectangle, fromRectangleUpperRight));
 
         Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 
@@ -148,7 +148,6 @@ define([
 
     /**
      * Duplicates a BoundingRectangle instance.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} rectangle The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
@@ -172,7 +171,6 @@ define([
 
     /**
      * Computes a bounding rectangle that is the union of the left and right bounding rectangles.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} left A rectangle to enclose in bounding rectangle.
      * @param {BoundingRectangle} right A rectangle to enclose in a bounding rectangle.
@@ -207,7 +205,6 @@ define([
 
     /**
      * Computes a bounding rectangle by enlarging the provided rectangle until it contains the provided point.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} rectangle A rectangle to expand.
      * @param {Cartesian2} point A point to enclose in a bounding rectangle.
@@ -248,7 +245,6 @@ define([
 
     /**
      * Determines if two rectangles intersect.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} left A rectangle to check for intersection.
      * @param {BoundingRectangle} right The other rectangle to check for intersection.
@@ -281,7 +277,6 @@ define([
     /**
      * Compares the provided BoundingRectangles componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [left] The first BoundingRectangle.
      * @param {BoundingRectangle} [right] The second BoundingRectangle.
@@ -299,7 +294,6 @@ define([
 
     /**
      * Duplicates this BoundingRectangle instance.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [result] The object onto which to store the result.
      * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
@@ -309,31 +303,7 @@ define([
     };
 
     /**
-     * Computes a bounding rectangle that contains both this bounding rectangle and the argument rectangle.
-     * @memberof BoundingRectangle
-     *
-     * @param {BoundingRectangle} right The rectangle to enclose in this bounding rectangle.
-     * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.union = function(right, result) {
-        return BoundingRectangle.union(this, right, result);
-    };
-
-    /**
-     * Computes a bounding rectangle that is rectangle expanded to contain point.
-     * @memberof BoundingRectangle
-     *
-     * @param {Cartesian2} point A point to enclose in a bounding rectangle.
-     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     */
-    BoundingRectangle.prototype.expand = function(point, result) {
-        return BoundingRectangle.expand(this, point, result);
-    };
-
-    /**
      * Determines if this rectangle intersects with another.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} right A rectangle to check for intersection.
      * @returns {Intersect} <code>Intersect.INTESECTING</code> if the rectangles intersect, <code>Intersect.OUTSIDE</code> otherwise.
@@ -345,7 +315,6 @@ define([
     /**
      * Compares this BoundingRectangle against the provided BoundingRectangle componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof BoundingRectangle
      *
      * @param {BoundingRectangle} [right] The right hand side BoundingRectangle.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

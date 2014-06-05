@@ -1,5 +1,8 @@
 /*global define*/
-define(['./defined'], function(defined) {
+define([
+        './defined'
+    ], function(
+        defined) {
     "use strict";
 
     var implementation = window.cancelAnimationFrame;
@@ -25,13 +28,13 @@ define(['./defined'], function(defined) {
     })();
 
     /**
-     * A browser-independent function to cancel an animation frame requested using @{link requestAnimationFrame}.
+     * A browser-independent function to cancel an animation frame requested using {@link requestAnimationFrame}.
      *
      * @exports cancelAnimationFrame
      *
-     * @param requestID The value returned by @{link requestAnimationFrame}.
+     * @param requestID The value returned by {@link requestAnimationFrame}.
      *
-     * @see <a href='http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface'>The WindowAnimationTiming interface</a>
+     * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */
     var cancelAnimationFrame = function(requestID) {
         // we need this extra wrapper function because the native cancelAnimationFrame

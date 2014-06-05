@@ -29,14 +29,13 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     var instances = [];
     
     for (var i = 0; i < 4; i++) {
         instances.push(new Cesium.GeometryInstance({
-            geometry : new Cesium.ExtentGeometry({
-                extent : Cesium.Extent.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-120.0 + i * 10, 30.0, -110.0 + i * 10, 40.0),
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {

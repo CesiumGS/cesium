@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolygonOutlineGeometry',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Shapes'
-     ], function(
-         PolygonOutlineGeometry,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         Shapes) {
+        'Core/PolygonOutlineGeometry',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        PolygonOutlineGeometry,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -209,16 +207,43 @@ defineSuite([
     });
 
     it('computes correct bounding sphere at height 0', function() {
-        var ellipsoid = Ellipsoid.WGS84;
-        var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
-        var positions = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), 10000);
-
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
-            positions : positions,
+            positions : Cartesian3.fromDegreesArray([
+                -108.0, 1.0,
+                -108.0, -1.0,
+                -106.0, -1.0,
+                -106.0, 1.0
+            ]),
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
+        var bs = BoundingSphere.fromVertices(p.attributes.position.values);
+        expect(p.boundingSphere.center).toEqualEpsilon(bs.center, CesiumMath.EPSILON9);
+        expect(p.boundingSphere.radius).toEqualEpsilon(bs.radius, CesiumMath.EPSILON9);
+    });
+
+    it('computes correct bounding sphere at height >>> 0', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var height = 40000000.0;
+        var positions = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-108.0, 1.0),
+            Cartographic.fromDegrees(-108.0, -1.0),
+            Cartographic.fromDegrees(-106.0, -1.0),
+            Cartographic.fromDegrees(-106.0, 1.0)
+        ]);
+
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            height : height
+        }));
+
+        var bs = BoundingSphere.fromPoints(ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-108.0, 1.0, height),
+            Cartographic.fromDegrees(-108.0, -1.0, height),
+            Cartographic.fromDegrees(-106.0, -1.0, height),
+            Cartographic.fromDegrees(-106.0, 1.0, height)
+        ]));
+        expect(Math.abs(p.boundingSphere.radius - bs.radius)).toBeLessThan(100.0);
     });
 
     it('computes positions extruded', function() {

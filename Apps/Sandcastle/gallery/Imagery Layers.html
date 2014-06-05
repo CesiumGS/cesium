@@ -22,19 +22,21 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require(['Cesium'], function(Cesium) {
     "use strict";
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer', {
+    var viewer = new Cesium.Viewer('cesiumContainer', {
         imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
-            url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
-        })
+            url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+        }),
+        baseLayerPicker : false
     });
 
-    var layers = widget.centralBody.imageryLayers;
+    var layers = viewer.scene.imageryLayers;
     var blackMarble = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
-        url : 'http://cesiumjs.org/blackmarble',
+        url : '//cesiumjs.org/blackmarble',
         maximumLevel : 8,
         credit : 'Black Marble imagery courtesy NASA Earth Observatory'
     }));
@@ -42,11 +44,7 @@ require(['Cesium'], function(Cesium) {
     blackMarble.brightness = 2.0;
     layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
         url : '../images/Cesium_Logo_overlay.png',
-        extent : new Cesium.Extent(
-            Cesium.Math.toRadians(-75.0),
-            Cesium.Math.toRadians(28.0),
-            Cesium.Math.toRadians(-67.0),
-            Cesium.Math.toRadians(29.75))
+        rectangle : Cesium.Rectangle.fromDegrees(-75.0, 28.0, -67.0, 29.75)
     }));
 
     Sandcastle.finishedLoading();

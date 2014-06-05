@@ -1,26 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Core/BoundingRectangle',
-         'Core/PrimitiveType',
-         'Core/Cartesian3',
-         'Core/EncodedCartesian3',
-         'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
-     ], 'Renderer/BuiltinFunctions', function(
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         BoundingRectangle,
-         PrimitiveType,
-         Cartesian3,
-         EncodedCartesian3,
-         BufferUsage,
-         ClearCommand) {
+        'Core/BoundingRectangle',
+        'Core/Cartesian3',
+        'Core/EncodedCartesian3',
+        'Core/PrimitiveType',
+        'Renderer/BufferUsage',
+        'Renderer/ClearCommand',
+        'Renderer/DrawCommand',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext'
+    ], 'Renderer/BuiltinFunctions', function(
+        BoundingRectangle,
+        Cartesian3,
+        EncodedCartesian3,
+        PrimitiveType,
+        BufferUsage,
+        ClearCommand,
+        DrawCommand,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -39,7 +41,7 @@ defineSuite([
         var sp = context.createShaderProgram(vs, fs);
 
         var va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
+            index : sp.vertexAttributes.position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
@@ -47,12 +49,13 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        context.draw({
+        var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va,
             uniformMap : uniformMap
         });
+        command.execute(context);
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
 
         sp = sp.destroy();
@@ -93,15 +96,15 @@ defineSuite([
     });
 
     it('has czm_eyeToWindowCoordinates', function() {
-        var camera = createCamera(context);
+        var camera = createCamera();
         camera.frustum.near = 1.0;
 
-        var canvas = context.getCanvas();
+        var canvas = context.canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
-        context.getUniformState().update(context, createFrameState(camera));
+        context.uniformState.viewport = vp;
+        context.uniformState.update(context, createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -119,15 +122,15 @@ defineSuite([
     });
 
     it('has czm_windowToEyeCoordinates', function() {
-        var camera = createCamera(context);
+        var camera = createCamera();
         camera.frustum.near = 1.0;
 
-        var canvas = context.getCanvas();
+        var canvas = context.canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
-        context.getUniformState().setViewport(vp);
-        context.getUniformState().update(context, createFrameState(camera));
+        context.uniformState.viewport = vp;
+        context.uniformState.update(context, createFrameState(camera));
 
         var fs =
             'void main() { ' +
@@ -158,8 +161,10 @@ defineSuite([
     });
 
     it('has czm_translateRelativeToEye', function() {
-        var camera = createCamera(context, new Cartesian3(1.0, 2.0, 3.0));
-        context.getUniformState().update(context, createFrameState(camera));
+        var camera = createCamera({
+            eye : new Cartesian3(1.0, 2.0, 3.0)
+        });
+        context.uniformState.update(context, createFrameState(camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);

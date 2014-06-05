@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/PolylineColorAppearance',
-         'Scene/Appearance',
-         'Scene/Primitive',
-         'Core/Cartesian3',
-         'Core/Color',
-         'Core/GeometryInstance',
-         'Core/ColorGeometryInstanceAttribute',
-         'Core/PolylineGeometry',
-         'Renderer/ClearCommand',
-         'Specs/render',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/createCamera'
-     ], function(
-         PolylineColorAppearance,
-         Appearance,
-         Primitive,
-         Cartesian3,
-         Color,
-         GeometryInstance,
-         ColorGeometryInstanceAttribute,
-         PolylineGeometry,
-         ClearCommand,
-         render,
-         createContext,
-         destroyContext,
-         createFrameState,
-         createCamera) {
+        'Scene/PolylineColorAppearance',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/GeometryInstance',
+        'Core/PolylineGeometry',
+        'Renderer/ClearCommand',
+        'Scene/Appearance',
+        'Scene/Primitive',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/render'
+    ], function(
+        PolylineColorAppearance,
+        Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
+        GeometryInstance,
+        PolylineGeometry,
+        ClearCommand,
+        Appearance,
+        Primitive,
+        createCamera,
+        createContext,
+        createFrameState,
+        destroyContext,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -45,8 +45,8 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState(createCamera(context));
-        us = context.getUniformState();
+        frameState = createFrameState(createCamera());
+        us = context.uniformState;
         us.update(context, frameState);
     });
 

@@ -1,18 +1,20 @@
 /*global define*/
 define([
-        '../Core/defined',
-        '../Core/DeveloperError',
         '../Core/clone',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/getTimestamp',
-        '../ThirdParty/Tween',
-        '../Core/defaultValue'
+        '../ThirdParty/Tween'
     ], function(
-        defined,
-        DeveloperError,
         clone,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
         getTimestamp,
-        Tween,
-        defaultValue) {
+        Tween) {
     "use strict";
 
     /**
@@ -21,7 +23,7 @@ define([
      * @alias AnimationCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html">Cesium Sandcastle Animation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
      */
     var AnimationCollection = function() {
         this._tweens = [];
@@ -29,15 +31,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
-     */
-    AnimationCollection.prototype.getAll = function() {
-        return this._tweens;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof AnimationCollection
      */
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -79,9 +72,20 @@ define([
         }
     };
 
+    defineProperties(AnimationCollection.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof AnimationCollection.prototype
+         */
+        all : {
+            get : function() {
+                return this._tweens;
+            }
+        }
+    });
+
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      *
      * @exception {DeveloperError} material has no properties with alpha components.
      */
@@ -145,9 +149,8 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      *
-     * @exception {DeveloperError} pbject must have the specified property.
+     * @exception {DeveloperError} object must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -192,7 +195,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      *
      * @exception {DeveloperError} material must have an offset property.
      */
@@ -237,7 +239,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      */
     AnimationCollection.prototype.remove = function(animation) {
         if (!defined(animation)) {
@@ -259,7 +260,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      */
     AnimationCollection.prototype.removeAll = function() {
         for (var i = 0; i < this._tweens.length; ++i) {
@@ -273,7 +273,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof Animationcollection
      */
     AnimationCollection.prototype.contains = function(animation) {
         if (!defined(animation)) {
@@ -285,7 +284,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof AnimationCollection
      */
     AnimationCollection.prototype.update = function() {
         var tweens = this._tweens;

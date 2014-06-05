@@ -1,36 +1,36 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/TileMapServiceImageryProvider',
-         'Core/defined',
-         'Core/jsonp',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'Core/DefaultProxy',
-         'Core/Extent',
-         'Core/Math',
-         'Core/WebMercatorProjection',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         TileMapServiceImageryProvider,
-         defined,
-         jsonp,
-         loadImage,
-         loadWithXhr,
-         DefaultProxy,
-         Extent,
-         CesiumMath,
-         WebMercatorProjection,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/TileMapServiceImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        TileMapServiceImageryProvider,
+        DefaultProxy,
+        defined,
+        jsonp,
+        loadImage,
+        loadWithXhr,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -49,6 +49,20 @@ defineSuite([
             return new TileMapServiceImageryProvider({});
         }
         expect(createWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server/'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
     });
 
     it('supports a slash at the end of the URL', function() {
@@ -119,7 +133,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -191,11 +205,11 @@ defineSuite([
         });
     });
 
-    it('extent passed to constructor does not affect tile numbering', function() {
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+    it('rectangle passed to constructor does not affect tile numbering', function() {
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
-            extent : extent
+            rectangle : rectangle
         });
 
         waitsFor(function() {
@@ -207,7 +221,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(extent);
+            expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
@@ -287,7 +301,7 @@ defineSuite([
         });
     });
 
-    it('keeps the extent within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
+    it('keeps the rectangle within the bounds allowed by the tiling scheme no matter what the tilemapresource.xml says.', function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             var parser = new DOMParser();
             var xmlString =
@@ -315,14 +329,14 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(provider.extent.west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
-            expect(provider.extent.west).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.west);
-            expect(provider.extent.east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
-            expect(provider.extent.east).toBeLessThanOrEqualTo(provider.tilingScheme.extent.east);
-            expect(provider.extent.south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.extent.south).toBeGreaterThanOrEqualTo(provider.tilingScheme.extent.south);
-            expect(provider.extent.north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
-            expect(provider.extent.north).toBeLessThanOrEqualTo(provider.tilingScheme.extent.north);
+            expect(provider.rectangle.west).toEqualEpsilon(CesiumMath.toRadians(-180.0), CesiumMath.EPSILON14);
+            expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(provider.tilingScheme.rectangle.west);
+            expect(provider.rectangle.east).toEqualEpsilon(CesiumMath.toRadians(180.0), CesiumMath.EPSILON14);
+            expect(provider.rectangle.east).toBeLessThanOrEqualTo(provider.tilingScheme.rectangle.east);
+            expect(provider.rectangle.south).toEqualEpsilon(-WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
+            expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(provider.tilingScheme.rectangle.south);
+            expect(provider.rectangle.north).toEqualEpsilon(WebMercatorProjection.MaximumLatitude, CesiumMath.EPSILON14);
+            expect(provider.rectangle.north).toBeLessThanOrEqualTo(provider.tilingScheme.rectangle.north);
         });
     });
 

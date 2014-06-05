@@ -1,44 +1,44 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Polygon',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/frameState',
-         'Specs/pick',
-         'Specs/render',
-         'Core/defaultValue',
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Renderer/ClearCommand',
-         'Scene/Material',
-         'Scene/SceneMode'
-     ], function(
-         Polygon,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         frameState,
-         pick,
-         render,
-         defaultValue,
-         BoundingSphere,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         ClearCommand,
-         Material,
-         SceneMode) {
+        'Scene/Polygon',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/defaultValue',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Scene/SceneMode',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/frameState',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        Polygon,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
+        defaultValue,
+        Ellipsoid,
+        CesiumMath,
+        ClearCommand,
+        Material,
+        SceneMode,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        frameState,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,8 +55,12 @@ defineSuite([
     });
 
     beforeEach(function() {
-        us = context.getUniformState();
-        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us = context.uniformState;
+        us.update(context, createFrameState(createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        })));
     });
 
     afterEach(function() {
@@ -108,7 +112,7 @@ defineSuite([
         });
 
         expect(polygon.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
-        expect(polygon.getPositions()).toEqual(positions);
+        expect(polygon.positions).toEqual(positions);
         expect(polygon.granularity).toEqual(CesiumMath.toRadians(10.0));
         expect(polygon.height).toEqual(100.0);
         expect(polygon.textureRotationAngle).toEqual(CesiumMath.toRadians(45.0));
@@ -159,17 +163,17 @@ defineSuite([
             new Cartesian3(7.0, 8.0, 9.0)
         ];
 
-        expect(polygon.getPositions()).not.toBeDefined();
+        expect(polygon.positions).not.toBeDefined();
 
-        polygon.setPositions(positions);
-        expect(polygon.getPositions()).toEqual(positions);
+        polygon.positions = positions;
+        expect(polygon.positions).toEqual(positions);
     });
 
-    it('setPositions throws with less than three positions', function() {
+    it('positions throws with less than three positions', function() {
         polygon = new Polygon();
 
         expect(function() {
-            polygon.setPositions([new Cartesian3()]);
+            polygon.positions = [new Cartesian3()];
         }).toThrowDeveloperError();
     });
 
@@ -201,7 +205,7 @@ defineSuite([
 
         polygon = createPolygon();
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon.getPositions()).not.toBeDefined();
+        expect(polygon.positions).not.toBeDefined();
     });
 
     it('configure polygon from clockwise hierarchy', function() {
@@ -232,7 +236,7 @@ defineSuite([
 
         polygon = createPolygon();
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(polygon.getPositions()).not.toBeDefined();
+        expect(polygon.positions).not.toBeDefined();
     });
 
     it('configureFromPolygonHierarchy throws with less than three positions', function() {
@@ -333,11 +337,9 @@ defineSuite([
 
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
-        polygon.setPositions([
+        polygon.positions = [ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
-            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
-        ]);
+            ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))];
         polygon.asynchronous = false;
 
         expect(function() {
@@ -403,11 +405,13 @@ defineSuite([
         var commandList = [];
         polygon.update(context, frameState, commandList);
         var boundingVolume = commandList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
+        var sphere = BoundingSphere.fromPoints(polygon.positions);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON1);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var positions = [
             Cartographic.fromDegrees(-1.0, -1.0, 0.0),
@@ -419,7 +423,7 @@ defineSuite([
         var polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
+        polygon.positions = ellipsoid.cartographicArrayToCartesianArray(positions);
         polygon.asynchronous = false;
         polygon.material.translucent = false;
 
@@ -430,7 +434,7 @@ defineSuite([
         var boundingVolume = commandList[0].boundingVolume;
         frameState.mode = mode;
 
-        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
+        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.positions));
         sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);

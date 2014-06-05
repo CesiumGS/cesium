@@ -40,7 +40,6 @@ define([
 
     /**
      * Duplicates a Matrix2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to duplicate.
      * @param {Matrix2} [result] The object onto which to store the result.
@@ -63,9 +62,8 @@ define([
 
     /**
      * Creates a Matrix2 from 4 consecutive elements in an array.
-     * @memberof Matrix2
      *
-     * @param {Array} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number[]} array The array whose 4 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix2} [result] The object onto which to store the result.
      *
@@ -105,10 +103,8 @@ define([
 
     /**
      * Creates a Matrix2 instance from a column-major order array.
-     * @memberof Matrix2
-     * @function
      *
-     * @param {Array} values The column-major order array.
+     * @param {Number[]} values The column-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
@@ -125,9 +121,8 @@ define([
     /**
      * Creates a Matrix2 instance from a row-major order array.
      * The resulting matrix will be in column-major order.
-     * @memberof Matrix2
      *
-     * @param {Array} values The row-major order array.
+     * @param {Number[]} values The row-major order array.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix2 instance if one was not provided.
      */
@@ -151,7 +146,6 @@ define([
 
     /**
      * Computes a Matrix2 instance representing a non-uniform scale.
-     * @memberof Matrix2
      *
      * @param {Cartesian2} scale The x and y scale factors.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -185,7 +179,6 @@ define([
 
     /**
      * Computes a Matrix2 instance representing a uniform scale.
-     * @memberof Matrix2
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix2} [result] The object in which the result will be stored, if undefined a new instance will be created.
@@ -256,11 +249,10 @@ define([
     /**
      * Creates an Array from the provided Matrix2 instance.
      * The array will be in column-major order.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use..
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @param {Number[]} [result] The Array onto which to store the result.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix2.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -281,7 +273,6 @@ define([
 
     /**
      * Computes the array index of the element at the provided row and column.
-     * @memberof Matrix2
      *
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
@@ -311,7 +302,6 @@ define([
 
     /**
      * Retrieves a copy of the matrix column at the provided index as a Cartesian2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
@@ -319,8 +309,6 @@ define([
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0 or 1.
-     *
-     * @see Cartesian2
      */
     Matrix2.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -347,7 +335,6 @@ define([
 
     /**
      * Computes a new matrix that replaces the specified column in the provided matrix with the provided Cartesian2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to set.
@@ -356,8 +343,6 @@ define([
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0 or 1.
-     *
-     * @see Cartesian2
      */
     Matrix2.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -381,7 +366,6 @@ define([
 
     /**
      * Retrieves a copy of the matrix row at the provided index as a Cartesian2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
@@ -389,8 +373,6 @@ define([
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0 or 1.
-     *
-     * @see Cartesian2
      */
     Matrix2.getRow = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -416,7 +398,6 @@ define([
 
     /**
      * Computes a new matrix that replaces the specified row in the provided matrix with the provided Cartesian2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to set.
@@ -425,8 +406,6 @@ define([
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0 or 1.
-     *
-     * @see Cartesian2
      */
     Matrix2.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -447,9 +426,47 @@ define([
         return result;
     };
 
+    var scratchColumn = new Cartesian2();
+
+    /**
+     * Extracts the non-uniform scale assuming the matrix is an affine transformation.
+     *
+     * @param {Matrix2} matrix The matrix.
+     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     */
+    Matrix2.getScale = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+
+        result.x = Cartesian2.magnitude(Cartesian2.fromElements(matrix[0], matrix[1], scratchColumn));
+        result.y = Cartesian2.magnitude(Cartesian2.fromElements(matrix[2], matrix[3], scratchColumn));
+        return result;
+    };
+
+    var scratchScale = new Cartesian2();
+
+    /**
+     * Computes the maximum scale assuming the matrix is an affine transformation.
+     * The maximum scale is the maximum length of the column vectors.
+     *
+     * @param {Matrix2} matrix The matrix.
+     * @returns {Number} The maximum scale.
+     */
+    Matrix2.getMaximumScale = function(matrix) {
+        Matrix2.getScale(matrix, scratchScale);
+        return Cartesian2.getMaximumComponent(scratchScale);
+    };
+
     /**
      * Computes the product of two matrices.
-     * @memberof Matrix2
      *
      * @param {Matrix2} left The first matrix.
      * @param {Matrix2} right The second matrix.
@@ -484,7 +501,6 @@ define([
 
     /**
      * Computes the product of a matrix and a column vector.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix.
      * @param {Cartesian2} cartesian The column.
@@ -514,7 +530,6 @@ define([
 
     /**
      * Computes the product of a matrix and a scalar.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
@@ -544,7 +559,6 @@ define([
 
     /**
      * Creates a negated copy of the provided matrix.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to negate.
      * @param {Matrix2} [result] The object onto which to store the result.
@@ -570,7 +584,6 @@ define([
 
     /**
      * Computes the transpose of the provided matrix.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix to transpose.
      * @param {Matrix2} [result] The object onto which to store the result.
@@ -601,7 +614,6 @@ define([
 
     /**
      * Computes a matrix, which contains the absolute (unsigned) values of the provided matrix's elements.
-     * @memberof Matrix2
      *
      * @param {Matrix2} matrix The matrix with signed elements.
      * @param {Matrix2} [result] The object onto which to store the result.
@@ -629,7 +641,6 @@ define([
     /**
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Matrix2
      *
      * @param {Matrix2} [left] The first matrix.
      * @param {Matrix2} [right] The second matrix.
@@ -649,7 +660,6 @@ define([
      * Compares the provided matrices componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Matrix2
      *
      * @param {Matrix2} [left] The first matrix.
      * @param {Matrix2} [right] The second matrix.
@@ -674,54 +684,63 @@ define([
 
     /**
      * An immutable Matrix2 instance initialized to the identity matrix.
-     * @memberof Matrix2
+     *
+     * @type {Matrix2}
+     * @constant
      */
     Matrix2.IDENTITY = freezeObject(new Matrix2(1.0, 0.0,
                                                 0.0, 1.0));
 
     /**
      * The index into Matrix2 for column 0, row 0.
-     * @memberof Matrix2
+     *
+     * @type {Number}
+     * @constant
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN0ROW0] = 5.0; //set column 0, row 0 to 5.0
+     * matrix[Matrix2.COLUMN0ROW0] = 5.0; // set column 0, row 0 to 5.0
      */
     Matrix2.COLUMN0ROW0 = 0;
 
     /**
      * The index into Matrix2 for column 0, row 1.
-     * @memberof Matrix2
+     *
+     * @type {Number}
+     * @constant
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN0ROW1] = 5.0; //set column 0, row 1 to 5.0
+     * matrix[Matrix2.COLUMN0ROW1] = 5.0; // set column 0, row 1 to 5.0
      */
     Matrix2.COLUMN0ROW1 = 1;
 
     /**
      * The index into Matrix2 for column 1, row 0.
-     * @memberof Matrix2
+     *
+     * @type {Number}
+     * @constant
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN1ROW0] = 5.0; //set column 1, row 0 to 5.0
+     * matrix[Matrix2.COLUMN1ROW0] = 5.0; // set column 1, row 0 to 5.0
      */
     Matrix2.COLUMN1ROW0 = 2;
 
     /**
      * The index into Matrix2 for column 1, row 1.
-     * @memberof Matrix2
+     *
+     * @type {Number}
+     * @constant
      *
      * @example
      * var matrix = new Cesium.Matrix2();
-     * matrix[Matrix2.COLUMN1ROW1] = 5.0; //set column 1, row 1 to 5.0
+     * matrix[Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;
 
     /**
      * Duplicates the provided Matrix2 instance.
-     * @memberof Matrix2
      *
      * @param {Matrix2} [result] The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
@@ -733,7 +752,6 @@ define([
     /**
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Matrix2
      *
      * @param {Matrix2} [right] The right hand side matrix.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -746,7 +764,6 @@ define([
      * Compares this matrix to the provided matrix componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Matrix2
      *
      * @param {Matrix2} [right] The right hand side matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -759,7 +776,6 @@ define([
     /**
      * Creates a string representing this Matrix with each row being
      * on a separate line and in the format '(column0, column1)'.
-     * @memberof Matrix2
      *
      * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1)'.
      */

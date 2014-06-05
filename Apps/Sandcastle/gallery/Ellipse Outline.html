@@ -30,10 +30,9 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
 
     // Outline of red ellipse
-    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0, 40.0));
+    var center = Cesium.Cartesian3.fromDegrees(-100.0, 40.0);
     var semiMinorAxis = 200000.0;
     var semiMajorAxis = 300000.0;
     var ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
@@ -63,7 +62,7 @@ require(['Cesium'], function(Cesium) {
     });
     
     // Outline of green extruded ellipse
-    center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-95.0, 35.0));
+    center = Cesium.Cartesian3.fromDegrees(-95.0, 35.0);
     var extrudedHeight = 150000.0;
     var rotation = Cesium.Math.toRadians(45);
     ellipseOutlineGeometry = new Cesium.EllipseOutlineGeometry({
@@ -106,7 +105,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(3.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(3.0, scene.maximumAliasedLineWidth)
             }
         })
     }));

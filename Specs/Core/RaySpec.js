@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Ray',
-         'Core/Cartesian3'
-     ], function(
-         Ray,
-         Cartesian3) {
+        'Core/Ray',
+        'Core/Cartesian3'
+    ], function(
+        Ray,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -35,7 +35,7 @@ defineSuite([
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         for ( var i = -10; i < 11; i++) {
             var expectedResult = Cartesian3.add(Cartesian3.multiplyByScalar(direction, i), Cartesian3.UNIT_X);
-            var returnedResult = ray.getPoint(i);
+            var returnedResult = Ray.getPoint(ray, i);
             expect(returnedResult).toEqual(expectedResult);
         }
     });
@@ -46,7 +46,7 @@ defineSuite([
         var result = new Cartesian3();
         for ( var i = -10; i < 11; i++) {
             var expectedResult = Cartesian3.add(Cartesian3.multiplyByScalar(direction, i), Cartesian3.UNIT_X);
-            var returnedResult = ray.getPoint(i, result);
+            var returnedResult = Ray.getPoint(ray, i, result);
             expect(result).toBe(returnedResult);
             expect(returnedResult).toEqual(expectedResult);
         }
@@ -56,7 +56,7 @@ defineSuite([
         var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         expect(function() {
-            ray.getPoint(undefined);
+            Ray.getPoint(ray, undefined);
         }).toThrowDeveloperError();
     });
 });

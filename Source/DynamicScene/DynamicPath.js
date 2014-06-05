@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -44,7 +45,9 @@ define(['../Core/defaultValue',
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicPath.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -111,7 +114,6 @@ define(['../Core/defaultValue',
 
     /**
      * Duplicates a DynamicPath instance.
-     * @memberof DynamicPath
      *
      * @param {DynamicPath} [result] The object onto which to store the result.
      * @returns {DynamicPath} The modified result parameter or a new instance if one was not provided.
@@ -134,7 +136,6 @@ define(['../Core/defaultValue',
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicPath
      *
      * @param {DynamicPath} source The object to be merged into this object.
      */

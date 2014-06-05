@@ -24,70 +24,37 @@ define([
     var matrix3Scratch = new Matrix3();
 
     /**
-     * A {@link DynamicObject} visualizer which maps the {@link DynamicModel} instance
-     * in DynamicObject.model to a {@link Model} primitive.
+     * A {@link Visualizer} which maps {@link DynamicObject#model} to a {@link Model}.
      * @alias DynamicModelVisualizer
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicModelVisualizer = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._primitives = scene.primitives;
-        this._modelCollection = [];
         this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicModelVisualizer.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicModelVisualizer.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicModelVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
-            }
-        }
-    };
-
-    /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates models created this visualizer to match their
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicModelVisualizer.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -96,76 +63,47 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
-            }
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
+            this._updateObject(time, dynamicObjects[i]);
         }
-    };
-
-    /**
-     * Removes all primitives from the scene.
-     */
-    DynamicModelVisualizer.prototype.removeAllPrimitives = function() {
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (var i = dynamicObjects.length - 1; i > -1; i--) {
-                var model = dynamicObjects[i]._modelPrimitive;
-                if (defined(model)) {
-                    this._primitives.remove(model);
-                    if (!model.isDestroyed()) {
-                        model.destroy();
-                    }
-                    model = undefined;
-                }
-            }
-        }
+        return true;
     };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof DynamicModelVisualizer
-     *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicModelVisualizer#destroy
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
     DynamicModelVisualizer.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicModelVisualizer
-     *
-     * @return {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicModelVisualizer#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
+     * Removes and destroys all primitives created by this instance.
      */
     DynamicModelVisualizer.prototype.destroy = function() {
-        this.removeAllPrimitives();
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
+            var dynamicObject = dynamicObjects[i];
+            var model = dynamicObject._modelPrimitive;
+            if (defined(model)) {
+                this._primitives.remove(model);
+                if (!model.isDestroyed()) {
+                    model.destroy();
+                }
+                dynamicObject._modelPrimitive = undefined;
+            }
+        }
         return destroyObject(this);
     };
 
+    /**
+     * @private
+     */
     DynamicModelVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var context = this._scene.context;
-        var dynamicModel = dynamicObject.model;
+        var dynamicModel = dynamicObject._model;
         if (!defined(dynamicModel)) {
             return;
         }
@@ -175,7 +113,7 @@ define([
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
@@ -205,7 +143,6 @@ define([
 
             dynamicObject._modelPrimitiveUri = uri;
             model.id = dynamicObject;
-            model.scale = 1.0;
             model._visualizerOrientation = Quaternion.clone(Quaternion.IDENTITY);
             this._primitives.add(model);
             dynamicObject._modelPrimitive = model;
@@ -213,7 +150,7 @@ define([
         model.show = true;
 
         var position = defaultValue(positionProperty.getValue(time, position), model._visualizerPosition);
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         var orientation;
         if (defined(orientationProperty)) {
             orientation = defaultValue(orientationProperty.getValue(time, orientation), model._visualizerOrientation);
@@ -234,8 +171,19 @@ define([
                 model.scale = scale;
             }
         }
+
+        var minimumPixelSizeProperty = dynamicModel._minimumPixelSize;
+        if (defined(minimumPixelSizeProperty)) {
+            var minimumPixelSize = minimumPixelSizeProperty.getValue(time);
+            if (defined(minimumPixelSize)) {
+                model.minimumPixelSize = minimumPixelSize;
+            }
+        }
     };
 
+    /**
+     * @private
+     */
     DynamicModelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, removed) {
         for (var i = removed.length - 1; i > -1; i--) {
             var dynamicObject = removed[i];

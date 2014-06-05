@@ -2,19 +2,19 @@
 define([
         '../../Core/defined',
         '../../Core/defineProperties',
-        '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './InfoBoxViewModel',
-        '../../ThirdParty/knockout'
+        './InfoBoxViewModel'
     ], function(
         defined,
         defineProperties,
-        DeveloperError,
         destroyObject,
+        DeveloperError,
+        knockout,
         getElement,
-        InfoBoxViewModel,
-        knockout) {
+        InfoBoxViewModel) {
     "use strict";
 
     /**
@@ -112,7 +112,6 @@ style : { maxHeight : maxHeightOffset(40) }');
     });
 
     /**
-     * @memberof InfoBox
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     InfoBox.prototype.isDestroyed = function() {
@@ -122,7 +121,6 @@ style : { maxHeight : maxHeightOffset(40) }');
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof InfoBox
      */
     InfoBox.prototype.destroy = function() {
         var container = this._container;

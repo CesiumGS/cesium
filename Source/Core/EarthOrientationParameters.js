@@ -1,30 +1,30 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './binarySearch',
         './defaultValue',
         './defined',
         './EarthOrientationParametersSample',
         './freezeObject',
-        './loadJson',
         './JulianDate',
         './LeapSecond',
+        './loadJson',
         './RuntimeError',
         './TimeConstants',
-        './TimeStandard',
-        '../ThirdParty/when'
+        './TimeStandard'
     ], function(
+        when,
         binarySearch,
         defaultValue,
         defined,
         EarthOrientationParametersSample,
         freezeObject,
-        loadJson,
         JulianDate,
         LeapSecond,
+        loadJson,
         RuntimeError,
         TimeConstants,
-        TimeStandard,
-        when) {
+        TimeStandard) {
     "use strict";
 
     /**
@@ -36,14 +36,15 @@ define([
      * @alias EarthOrientationParameters
      * @constructor
      *
-     * @param {String} [description.url] The URL from which to obtain EOP data.  If neither this
-     *                 parameter nor description.data is specified, all EOP values are assumed
-     *                 to be 0.0.  If description.data is specified, this parameter is
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.url] The URL from which to obtain EOP data.  If neither this
+     *                 parameter nor options.data is specified, all EOP values are assumed
+     *                 to be 0.0.  If options.data is specified, this parameter is
      *                 ignored.
-     * @param {Object} [description.data] The actual EOP data.  If neither this
-     *                 parameter nor description.data is specified, all EOP values are assumed
+     * @param {Object} [options.data] The actual EOP data.  If neither this
+     *                 parameter nor options.data is specified, all EOP values are assumed
      *                 to be 0.0.
-     * @param {Boolean} [description.addNewLeapSeconds=true] True if leap seconds that
+     * @param {Boolean} [options.addNewLeapSeconds=true] True if leap seconds that
      *                  are specified in the EOP data but not in {@link LeapSecond#getLeapSeconds}
      *                  should be added to {@link LeapSecond#getLeapSeconds}.  False if
      *                  new leap seconds should be handled correctly in the context
@@ -65,8 +66,8 @@ define([
      * var eop = new Cesium.EarthOrientationParameters({ url : 'Data/EOP.json' });
      * Cesium.Transforms.earthOrientationParameters = eop;
      */
-    var EarthOrientationParameters = function EarthOrientationParameters(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var EarthOrientationParameters = function EarthOrientationParameters(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._dates = undefined;
         this._samples = undefined;
@@ -85,18 +86,18 @@ define([
         this._downloadPromise = undefined;
         this._dataError = undefined;
 
-        this._addNewLeapSeconds = defaultValue(description.addNewLeapSeconds, true);
+        this._addNewLeapSeconds = defaultValue(options.addNewLeapSeconds, true);
 
-        if (defined(description.data)) {
+        if (defined(options.data)) {
             // Use supplied EOP data.
-            onDataReady(this, description.data);
-        } else if (defined(description.url)) {
+            onDataReady(this, options.data);
+        } else if (defined(options.url)) {
             // Download EOP data.
             var that = this;
-            this._downloadPromise = when(loadJson(description.url), function(eopData) {
+            this._downloadPromise = when(loadJson(options.url), function(eopData) {
                 onDataReady(that, eopData);
             }, function() {
-                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + description.url + '.';
+                that._dataError = 'An error occurred while retrieving the EOP data from the URL ' + options.url + '.';
             });
         } else {
             // Use all zeros for EOP data.
@@ -132,8 +133,6 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @memberof EarthOrientationParameters
-     *
      * @returns {Promise} The promise.
      *
      * @see when
@@ -145,8 +144,6 @@ define([
     /**
      * Computes the Earth Orientation Parameters (EOP) for a given date by interpolating.
      * If the EOP data has not yet been download, this method returns undefined.
-     *
-     * @memberof EarthOrientationParameters
      *
      * @param {JulianDate} date The date for each to evaluate the EOP.
      * @param {EarthOrientationParametersSample} [result] The instance to which to copy the result.
@@ -291,7 +288,7 @@ define([
                 if (taiMinusUtc !== lastTaiMinusUtc && defined(lastTaiMinusUtc)) {
                     // We crossed a leap second boundary, so add the leap second
                     // if it does not already exist.
-                    var leapSeconds = LeapSecond.getLeapSeconds();
+                    var leapSeconds = LeapSecond._leapSeconds;
                     var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
                     if (leapSecondIndex < 0) {
                         var leapSecond = new LeapSecond(date, taiMinusUtc);

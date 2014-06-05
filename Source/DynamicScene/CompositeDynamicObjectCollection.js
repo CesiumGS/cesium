@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -119,7 +120,7 @@ define(['../Core/createGuid',
      * @alias CompositeDynamicObjectCollection
      * @constructor
      *
-     * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
+     * @param {DynamicObjectCollection[]} [collections] The initial list of DynamicObjectCollection instances to merge.
      */
     var CompositeDynamicObjectCollection = function(collections) {
         this._composite = new DynamicObjectCollection();
@@ -160,7 +161,6 @@ define(['../Core/createGuid',
 
     /**
      * Adds a collection to the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to add.
      * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
@@ -195,7 +195,6 @@ define(['../Core/createGuid',
 
     /**
      * Removes a collection from this composite, if present.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection The collection to remove.
      *
@@ -214,7 +213,6 @@ define(['../Core/createGuid',
 
     /**
      * Removes all collections from this composite.
-     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.removeAllCollections = function() {
         this._collections.length = 0;
@@ -223,7 +221,6 @@ define(['../Core/createGuid',
 
     /**
      * Checks to see if the composite contains a given collection.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to check for.
      * @returns {Boolean} true if the composite contains the collection, false otherwise.
@@ -234,7 +231,6 @@ define(['../Core/createGuid',
 
     /**
      * Determines the index of a given collection in the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection The collection to find the index of.
      * @returns {Number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
@@ -245,7 +241,6 @@ define(['../Core/createGuid',
 
     /**
      * Gets a collection by index from the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {Number} index the index to retrieve.
      */
@@ -261,7 +256,6 @@ define(['../Core/createGuid',
 
     /**
      * Gets the number of collections in this composite.
-     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.getCollectionsLength = function() {
         return this._collections.length;
@@ -303,7 +297,6 @@ define(['../Core/createGuid',
 
     /**
      * Raises a collection up one position in the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to move.
      *
@@ -316,7 +309,6 @@ define(['../Core/createGuid',
 
     /**
      * Lowers a collection down one position in the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to move.
      *
@@ -329,7 +321,6 @@ define(['../Core/createGuid',
 
     /**
      * Raises a collection to the top of the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to move.
      *
@@ -348,7 +339,6 @@ define(['../Core/createGuid',
 
     /**
      * Lowers a collection to the bottom of the composite.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {DynamicObjectCollection} collection the collection to move.
      *
@@ -374,7 +364,6 @@ define(['../Core/createGuid',
      * also be suspended, as this can be a costly operation.
      * This function can be safely called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
-     * @memberof CompositeDynamicObjectCollection
      */
     CompositeDynamicObjectCollection.prototype.suspendEvents = function() {
         this._suspendCount++;
@@ -388,7 +377,6 @@ define(['../Core/createGuid',
      * the collection is recomposited if events are also resumed.
      * This function is reference counted and can safely be called multiple times as long as there
      * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
      */
@@ -414,7 +402,6 @@ define(['../Core/createGuid',
      * If the collection contains a mix of infinitely available data and non-infinite data,
      * It will return the interval pertaining to the non-infinite data only.  If all
      * data is infinite, an infinite interval will be returned.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
@@ -424,7 +411,6 @@ define(['../Core/createGuid',
 
     /**
      * Gets an object with the specified id.
-     * @memberof CompositeDynamicObjectCollection
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
@@ -436,9 +422,8 @@ define(['../Core/createGuid',
     /**
      * Gets the array of DynamicObject instances in the collection.
      * The array should not be modified directly.
-     * @memberof CompositeDynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
         return this._composite.getObjects();

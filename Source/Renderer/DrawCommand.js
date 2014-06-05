@@ -1,17 +1,20 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defaultValue',
+        '../Core/PrimitiveType'
+    ], function(
+        defaultValue,
+        PrimitiveType) {
     "use strict";
 
     /**
      * Represents a command to the renderer for drawing.
      *
-     * @alias DrawCommand
-     * @constructor
-     *
-     * @see ClearCommand
-     * @see PassState
+     * @private
      */
-    var DrawCommand = function() {
+    var DrawCommand = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         /**
          * The bounding volume of the geometry in world space.  This is used for culling and frustum selection.
          * <p>
@@ -26,7 +29,7 @@ define(function() {
          *
          * @see DrawCommand#debugShowBoundingVolume
          */
-        this.boundingVolume = undefined;
+        this.boundingVolume = options.boundingVolume;
 
         /**
          * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.
@@ -35,7 +38,7 @@ define(function() {
          * @type {Boolean}
          * @default true
          */
-        this.cull = true;
+        this.cull = defaultValue(options.cull, true);
 
         /**
          * The transformation from the geometry in model space to world space.
@@ -46,15 +49,15 @@ define(function() {
          * @type {Matrix4}
          * @default undefined
          */
-        this.modelMatrix = undefined;
+        this.modelMatrix = options.modelMatrix;
 
         /**
          * The type of geometry in the vertex array.
          *
          * @type {PrimitiveType}
-         * @default undefined
+         * @default PrimitiveType.TRIANGLES
          */
-        this.primitiveType = undefined;
+        this.primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
 
         /**
          * The vertex array.
@@ -62,7 +65,7 @@ define(function() {
          * @type {VertexArray}
          * @default undefined
          */
-        this.vertexArray = undefined;
+        this.vertexArray = options.vertexArray;
 
         /**
          * The number of vertices to draw in the vertex array.
@@ -70,15 +73,15 @@ define(function() {
          * @type {Number}
          * @default undefined
          */
-        this.count = undefined;
+        this.count = options.count;
 
         /**
          * The offset to start drawing in the vertex array.
          *
          * @type {Number}
-         * @default undefined
+         * @default 0
          */
-        this.offset = 0;
+        this.offset = defaultValue(options.offset, 0);
 
         /**
          * The shader program to apply.
@@ -86,7 +89,7 @@ define(function() {
          * @type {ShaderProgram}
          * @default undefined
          */
-        this.shaderProgram = undefined;
+        this.shaderProgram = options.shaderProgram;
 
         /**
          * An object with functions whose names match the uniforms in the shader program
@@ -95,7 +98,7 @@ define(function() {
          * @type {Object}
          * @default undefined
          */
-        this.uniformMap = undefined;
+        this.uniformMap = options.uniformMap;
 
         /**
          * The render state.
@@ -105,7 +108,7 @@ define(function() {
          *
          * @see Context#createRenderState
          */
-        this.renderState = undefined;
+        this.renderState = options.renderState;
 
         /**
          * The framebuffer to draw to.
@@ -113,7 +116,7 @@ define(function() {
          * @type {Framebuffer}
          * @default undefined
          */
-        this.framebuffer = undefined;
+        this.framebuffer = options.framebuffer;
 
         /**
          * The pass when to render.
@@ -121,7 +124,7 @@ define(function() {
          * @type {Pass}
          * @default undefined
          */
-        this.pass = undefined;
+        this.pass = options.pass;
 
         /**
          * Specifies if this command is only to be executed in the frustum closest
@@ -130,7 +133,7 @@ define(function() {
          * @type {Boolean}
          * @default false
          */
-        this.executeInClosestFrustum = false;
+        this.executeInClosestFrustum = defaultValue(options.executeInClosestFrustum, false);
 
         /**
          * The object who created this command.  This is useful for debugging command
@@ -143,7 +146,7 @@ define(function() {
          *
          * @see Scene#debugCommandFilter
          */
-        this.owner = undefined;
+        this.owner = options.owner;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -156,25 +159,30 @@ define(function() {
          *
          * @see DrawCommand#boundingVolume
          */
-        this.debugShowBoundingVolume = false;
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
          * Used to implement Scene.debugShowFrustums.
          * @private
          */
         this.debugOverlappingFrustums = 0;
+
+        /**
+         * @private
+         */
+        this.oit = undefined;
     };
 
     /**
      * Executes the draw command.
      *
-     * @memberof DrawCommand
-     *
      * @param {Context} context The renderer context in which to draw.
-     * @param {PassState} [passState] TBA.
+     * @param {PassState} [passState] The state for the current render pass.
+     * @param {RenderState} [renderState] The render state that will override the render state of the command.
+     * @param {ShaderProgram} [shaderProgram] The shader program that will override the shader program of the command.
      */
-    DrawCommand.prototype.execute = function(context, passState) {
-        context.draw(this, passState);
+    DrawCommand.prototype.execute = function(context, passState, renderState, shaderProgram) {
+        context.draw(this, passState, renderState, shaderProgram);
     };
 
     return DrawCommand;

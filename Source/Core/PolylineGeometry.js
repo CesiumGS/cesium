@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
         './BoundingSphere',
         './Cartesian3',
-        './PolylinePipeline',
-        './VertexFormat',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color'
+        './IndexDatatype',
+        './PolylinePipeline',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
         BoundingSphere,
         Cartesian3,
-        PolylinePipeline,
-        VertexFormat,
+        Color,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color) {
+        IndexDatatype,
+        PolylinePipeline,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -39,9 +39,10 @@ define([
      * @alias PolylineGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
-     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -53,10 +54,10 @@ define([
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.PolylineGeometry({
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *     Cesium.Cartographic.fromDegrees(0.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 0.0),
-     *     Cesium.Cartographic.fromDegrees(5.0, 5.0)
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     0.0, 0.0,
+     *     5.0, 0.0,
+     *     5.0, 5.0
      *   ]),
      *   width : 10.0
      * });

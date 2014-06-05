@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
         'Core/TaskProcessor',
-        'Core/FeatureDetection',
         'require',
         'Specs/waitsForPromise'
     ], function(
         TaskProcessor,
-        FeatureDetection,
         require,
         waitsForPromise) {
     "use strict";
@@ -65,34 +63,28 @@ defineSuite([
     });
 
     it('can transfer array buffer', function() {
-        if (!FeatureDetection.supportsTransferringArrayBuffers()) {
-            // This browser cannot transer array buffers at all.
-            return;
-        }
-
         taskProcessor = new TaskProcessor('returnByteLength');
 
         var byteLength = 100;
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        var promise = taskProcessor.scheduleTask(parameters, [parameters]);
+        waitsForPromise(TaskProcessor._canTransferArrayBuffer).then(function(canTransferArrayBuffer) {
+            var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
-        // array buffer should be neutered when transferred
-        expect(parameters.byteLength).toEqual(0);
+            if (canTransferArrayBuffer) {
+                // array buffer should be neutered when transferred
+                expect(parameters.byteLength).toEqual(0);
+            }
 
-        // the worker should see the array with proper byte length
-        waitsForPromise(promise).then(function(result) {
-            expect(result).toEqual(byteLength);
+            // the worker should see the array with proper byte length
+            waitsForPromise(promise).then(function(result) {
+                expect(result).toEqual(byteLength);
+            });
         });
     });
 
     it('can transfer array buffer back from worker', function() {
-        if (!FeatureDetection.supportsTransferringArrayBuffers()) {
-            // This browser cannot transer array buffers at all.
-            return;
-        }
-
         taskProcessor = new TaskProcessor('transferArrayBuffer');
 
         var byteLength = 100;

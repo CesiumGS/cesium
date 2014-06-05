@@ -1,17 +1,18 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CompositeProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             CompositeProperty,
-             ConstantProperty,
-             Cartesian3,
-             JulianDate,
-             TimeInterval,
-             TimeIntervalCollection) {
+defineSuite([
+        'DynamicScene/CompositeProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        CompositeProperty,
+        Cartesian3,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -99,7 +100,7 @@ defineSuite(['DynamicScene/CompositeProperty',
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
 
-        property.intervals.clear();
+        property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
         listener.reset();
     });

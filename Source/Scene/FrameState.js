@@ -27,9 +27,8 @@ define([
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type {Number}
-         * @default {@link SceneMode.SCENE3D.morphTime}
          */
-        this.morphTime = SceneMode.SCENE3D.morphTime;
+        this.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
         /**
          * The current frame number.
@@ -47,13 +46,13 @@ define([
          */
         this.time = undefined;
 
-        this.scene2D = {
-            /**
-             * The projection to use in 2D mode.
-             * @default undefined
-             */
-            projection : undefined
-        };
+        /**
+         * The map projection to use in 2D and Columbus View modes.
+         *
+         * @type {MapProjection}
+         * @default undefined
+         */
+        this.mapProjection = undefined;
 
         /**
          * The current camera.
@@ -107,7 +106,7 @@ define([
          * directly in <code>update</code> functions.
          * </p>
          *
-         * @type {Array}
+         * @type {Function[]}
          *
          * @example
          * frameState.afterRender.push(function() {

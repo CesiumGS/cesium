@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/RuntimeError'
-     ], function(
-         RuntimeError) {
+        'Core/RuntimeError'
+    ], function(
+        RuntimeError) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

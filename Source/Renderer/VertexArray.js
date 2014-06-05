@@ -1,16 +1,18 @@
 /*global define*/
 define([
+        '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/ComponentDatatype'
+        '../Core/DeveloperError'
     ], function(
+        ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
-        DeveloperError,
-        ComponentDatatype) {
+        DeveloperError) {
     "use strict";
 
     function addAttribute(attributes, attribute, index) {
@@ -61,7 +63,7 @@ define([
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype.value, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(this.index);
             };
 
@@ -114,14 +116,7 @@ define([
     }
 
     /**
-     * DOC_TBA
-     *
-     * @alias VertexArray
-     *
-     * @internalConstructor
-     *
-     * @see {@link Context#createVertexArray}
-     * @see {@link Context#createVertexArrayFromGeometry}
+     * @private
      */
     var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
         //>>includeStart('debug', pragmas.debug
@@ -143,8 +138,8 @@ define([
 
             if (defined(attribute.vertexBuffer)) {
                 // This assumes that each vertex buffer in the vertex array has the same number of vertices.
-                var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * attribute.componentDatatype.sizeInBytes);
-                numberOfVertices = attribute.vertexBuffer.getSizeInBytes() / bytes;
+                var bytes = attribute.strideInBytes || (attribute.componentsPerAttribute * ComponentDatatype.getSizeInBytes(attribute.componentDatatype));
+                numberOfVertices = attribute.vertexBuffer.sizeInBytes / bytes;
                 break;
             }
         }
@@ -170,12 +165,7 @@ define([
             vertexArrayObject.bindVertexArrayOES(null);
         }
 
-        /**
-         * @readonly
-         * @private
-         */
-        this.numberOfVertices = numberOfVertices;
-
+        this._numberOfVertices = numberOfVertices;
         this._gl = gl;
         this._vaoExtension = vertexArrayObject;
         this._vao = vao;
@@ -183,14 +173,26 @@ define([
         this._indexBuffer = indexBuffer;
     };
 
+    defineProperties(VertexArray.prototype, {
+        numberOfAttributes : {
+            get : function() {
+                return this._attributes.length;
+            }
+        },
+        numberOfVertices : {
+            get : function() {
+                return this._numberOfVertices;
+            }
+        },
+        indexBuffer : {
+            get : function() {
+                return this._indexBuffer;
+            }
+        }
+    });
+
     /**
-     * DOC_TBA
-     *
      * index is the location in the array of attributes, not the index property of an attribute.
-     *
-     * @memberof VertexArray
-     *
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getAttribute = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -200,29 +202,6 @@ define([
         //>>includeEnd('debug');
 
         return this._attributes[index];
-    };
-
-    /**
-    * DOC_TBA
-    *
-    * @memberof VertexArray
-    *
-    * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-    */
-    VertexArray.prototype.getNumberOfAttributes = function() {
-        return this._attributes.length;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @returns {Buffer} DOC_TBA.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.getIndexBuffer = function() {
-        return this._indexBuffer;
     };
 
     VertexArray.prototype._bind = function() {
@@ -252,70 +231,21 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof VertexArray
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see VertexArray#destroy
-     */
     VertexArray.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Only call this if the vertex array owns the vertex buffers referenced by the attributes and owns its
-     * index buffer; otherwise, the owner of the buffers is responsible for destroying them.  A vertex or
-     * index buffer is only destroyed if it's <code>getVertexArrayDestroyable</code> function returns
-     * <code>true</code> (the default).  This allows combining destroyable and non-destroyable buffers
-     * in the same vertex array.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof VertexArray
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     *
-     * @see VertexArray#isDestroyed
-     * @see Buffer#getVertexArrayDestroyable
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteBuffers.xml'>glDeleteBuffers</a>
-     *
-     * @example
-     * // Destroying the vertex array implicitly calls destroy for each of its vertex
-     * // buffers and its index buffer.
-     * var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
-     *     Cesium.BufferUsage.STATIC_DRAW);
-     * var vertexArray = context.createVertexArray({
-     *     vertexBuffer : vertexBuffer,
-     *     componentsPerAttribute : 3
-     * });
-     * // ...
-     * vertexArray = vertexArray.destroy();
-     * // Calling vertexBuffer.destroy() would throw DeveloperError at this point.
-     */
     VertexArray.prototype.destroy = function() {
         var attributes = this._attributes;
         for ( var i = 0; i < attributes.length; ++i) {
             var vertexBuffer = attributes[i].vertexBuffer;
-            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.getVertexArrayDestroyable()) {
+            if (defined(vertexBuffer) && !vertexBuffer.isDestroyed() && vertexBuffer.vertexArrayDestroyable) {
                 vertexBuffer.destroy();
             }
         }
 
         var indexBuffer = this._indexBuffer;
-        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
+        if (defined(indexBuffer) && !indexBuffer.isDestroyed() && indexBuffer.vertexArrayDestroyable) {
             indexBuffer.destroy();
         }
 

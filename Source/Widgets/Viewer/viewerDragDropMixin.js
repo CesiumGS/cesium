@@ -2,24 +2,22 @@
 define([
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/DeveloperError',
         '../../Core/defineProperties',
+        '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
-        '../../ThirdParty/when',
         '../getElement'
     ], function(
         defaultValue,
         defined,
-        DeveloperError,
         defineProperties,
+        DeveloperError,
         Event,
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
-        when,
         getElement) {
     "use strict";
 
@@ -30,7 +28,7 @@ define([
      * @exports viewerDragDropMixin
      *
      * @param {Viewer} viewer The viewer instance.
-     * @param {Object} [options] Configuration options for the mixin.
+     * @param {Object} [options] Object with the following properties:
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *
@@ -157,12 +155,12 @@ define([
 
             var files = event.dataTransfer.files;
             var length = files.length;
-            for ( var i = 0; i < length; i++) {
-                var f = files[i];
+            for (var i = 0; i < length; i++) {
+                var file = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f.name);
-                reader.onerror = createDropErrorCallback(viewer, f.name);
-                reader.readAsText(f);
+                reader.onload = createOnLoadCallback(viewer, file);
+                reader.onerror = createDropErrorCallback(viewer, file);
+                reader.readAsText(file);
             }
         }
 
@@ -200,43 +198,40 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
-    function endsWith(str, suffix) {
-        var strLength = str.length;
-        var suffixLength = suffix.length;
-        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
-    }
-
-    function createOnLoadCallback(viewer, source) {
-        var DataSource;
-        var sourceUpperCase = source.toUpperCase();
-        if (endsWith(sourceUpperCase, ".CZML")) {
-            DataSource = CzmlDataSource;
-        } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
-        endsWith(sourceUpperCase, ".JSON") || //
-        endsWith(sourceUpperCase, ".TOPOJSON")) {
-            DataSource = GeoJsonDataSource;
-        } else {
-            viewer.dropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-            return undefined;
-        }
-
+    function createOnLoadCallback(viewer, file) {
         return function(evt) {
-            var dataSource = new DataSource();
+            var fileName = file.name;
             try {
-                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
-                    viewer.dataSources.add(dataSource);
-                }, function(error) {
-                    viewer.dropError.raiseEvent(viewer, source, error);
-                });
+                var dataSource;
+                var loadPromise;
+
+                if (/\.czml$/i.test(fileName)) {
+                    dataSource = new CzmlDataSource(fileName);
+                    dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
+                    dataSource = new GeoJsonDataSource(fileName);
+                    loadPromise = dataSource.load(JSON.parse(evt.target.result), fileName);
+                } else {
+                    viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);
+                    return;
+                }
+
+                viewer.dataSources.add(dataSource);
+
+                if (defined(loadPromise)) {
+                    loadPromise.otherwise(function(error) {
+                        viewer.dropError.raiseEvent(viewer, fileName, error);
+                    });
+                }
             } catch (error) {
-                viewer.dropError.raiseEvent(viewer, source, error);
+                viewer.dropError.raiseEvent(viewer, fileName, error);
             }
         };
     }
 
-    function createDropErrorCallback(viewer, name) {
+    function createDropErrorCallback(viewer, file) {
         return function(evt) {
-            viewer.dropError.raiseEvent(viewer, name, evt.target.error);
+            viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
         };
     }
 

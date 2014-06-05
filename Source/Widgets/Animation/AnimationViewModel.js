@@ -1,26 +1,26 @@
 /*global define*/
 define([
         '../../Core/binarySearch',
-        '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/ClockStep',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../ToggleButtonViewModel',
+        '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
-        '../../ThirdParty/knockout'
+        '../createCommand',
+        '../ToggleButtonViewModel'
     ], function(
         binarySearch,
-        ClockStep,
         ClockRange,
+        ClockStep,
         defined,
         defineProperties,
         DeveloperError,
-        createCommand,
-        ToggleButtonViewModel,
+        knockout,
         sprintf,
-        knockout) {
+        createCommand,
+        ToggleButtonViewModel) {
     "use strict";
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -364,7 +364,6 @@ define([
 
     /**
      * The default date formatter used by new instances.
-     * @memberof AnimationViewModel
      *
      * @param {JulianDate} date The date to be formatted
      * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
@@ -377,7 +376,6 @@ define([
 
     /**
      * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
-     * @memberof AnimationViewModel
      */
     AnimationViewModel.defaultTicks = [//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
@@ -386,7 +384,6 @@ define([
 
     /**
      * The default time formatter used by new instances.
-     * @memberof AnimationViewModel
      *
      * @param {JulianDate} date The date to be formatted
      * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
@@ -404,7 +401,6 @@ define([
     /**
      * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
      *
-     * @memberof AnimationViewModel
      * @returns The array of known clock multipliers associated with the shuttle ring.
      */
     AnimationViewModel.prototype.getShuttleRingTicks = function() {
@@ -417,9 +413,8 @@ define([
      * and maximum range of values for the shuttle ring as well as the values that are snapped
      * to when a single click is made.  The values need not be in order, as they will be sorted
      * automatically, and duplicate values will be removed.
-     * @memberof AnimationViewModel
      *
-     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
+     * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
         //>>includeStart('debug', pragmas.debug);

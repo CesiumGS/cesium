@@ -1,30 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Moon',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Matrix3',
-         'Core/Simon1994PlanetaryPositions',
-         'Core/Transforms',
-         'Scene/SceneMode'
-     ], function(
-         Moon,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         Cartesian3,
-         defined,
-         Ellipsoid,
-         Matrix3,
-         Simon1994PlanetaryPositions,
-         Transforms,
-         SceneMode) {
+        'Scene/Moon',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Ellipsoid',
+        'Core/Matrix3',
+        'Core/Simon1994PlanetaryPositions',
+        'Core/Transforms',
+        'Specs/createCamera',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        Moon,
+        Cartesian3,
+        defined,
+        Ellipsoid,
+        Matrix3,
+        Simon1994PlanetaryPositions,
+        Transforms,
+        createCamera,
+        createFrameState,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -44,7 +42,7 @@ defineSuite([
             Transforms.computeTemeToPseudoFixedMatrix(date, icrfToFixed);
         }
 
-        var moonPosition = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(date);
+        var moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
         var cameraPosition = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition), 1e7);
 
@@ -77,10 +75,12 @@ defineSuite([
         var moon = new Moon();
         moon.show = false;
 
+        var frameState = createFrameState(createCamera({
+            near : 1.0,
+            far : 1.0e10
+        }));
         var context = scene.context;
-
-        var frameState = createFrameState(createCamera(context, undefined, undefined, undefined, 1.0, 1.0e10));
-        var us = context.getUniformState();
+        var us = context.uniformState;
         us.update(context, frameState);
 
         lookAtMoon(scene.camera, frameState.time);

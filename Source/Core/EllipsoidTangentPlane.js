@@ -1,32 +1,32 @@
 /*global define*/
 define([
+        './AxisAlignedBoundingBox',
+        './Cartesian2',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Transforms',
-        './AxisAlignedBoundingBox',
-        './IntersectionTests',
-        './Cartesian2',
-        './Cartesian3',
         './Ellipsoid',
+        './IntersectionTests',
         './Matrix4',
+        './Plane',
         './Ray',
-        './Plane'
+        './Transforms'
     ], function(
+        AxisAlignedBoundingBox,
+        Cartesian2,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Transforms,
-        AxisAlignedBoundingBox,
-        IntersectionTests,
-        Cartesian2,
-        Cartesian3,
         Ellipsoid,
+        IntersectionTests,
         Matrix4,
+        Plane,
         Ray,
-        Plane) {
+        Transforms) {
     "use strict";
 
     /**
@@ -59,7 +59,7 @@ define([
 
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         this._ellipsoid = ellipsoid;
-        this._origin = Cartesian3.clone(origin);
+        this._origin = origin;
         this._xAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 0));
         this._yAxis = Cartesian3.fromCartesian4(Matrix4.getColumn(eastNorthUp, 1));
 
@@ -95,7 +95,6 @@ define([
     /**
      * Creates a new instance from the provided ellipsoid and the center
      * point of the provided Cartesians.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Ellipsoid} ellipsoid The ellipsoid to use.
      * @param {Cartesian3} cartesians The list of positions surrounding the center point.
@@ -116,7 +115,6 @@ define([
 
     /**
      * Computes the projection of the provided 3D position onto the 2D plane.
-     * @memberof EllipsoidTangentPlane
      *
      * @param {Cartesian3} cartesian The point to project.
      * @param {Cartesian2} [result] The object onto which to store the result.
@@ -156,11 +154,10 @@ define([
 
     /**
      * Computes the projection of the provided 3D positions onto the 2D plane.
-     * @memberof EllipsoidTangentPlane
      *
-     * @param {Array} cartesians The array of points to project.
-     * @param {Array} [result] The array of Cartesian2 instances onto which to store results.
-     * @returns {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
+     * @param {Cartesian3[]} cartesians The array of points to project.
+     * @param {Cartesian2[]} [result] The array of Cartesian2 instances onto which to store results.
+     * @returns {Cartesian2[]} The modified result parameter or a new array of Cartesian2 instances if none was provided.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -190,11 +187,10 @@ define([
     var projectPointsOntoEllipsoidScratch = new Cartesian3();
     /**
      * Computes the projection of the provided 2D positions onto the 3D ellipsoid.
-     * @memberof EllipsoidTangentPlane
      *
-     * @param {Array} cartesians The array of points to project.
-     * @param {Array} [result] The array of Cartesian3 instances onto which to store results.
-     * @returns {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
+     * @param {Cartesian2[]} cartesians The array of points to project.
+     * @param {Cartesian3[]} [result] The array of Cartesian3 instances onto which to store results.
+     * @returns {Cartesian3[]} The modified result parameter or a new array of Cartesian3 instances if none was provided.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
         //>>includeStart('debug', pragmas.debug);

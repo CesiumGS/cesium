@@ -30,13 +30,12 @@ require(['Cesium'], function(Cesium) {
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
     var primitives = scene.primitives;
-    var ellipsoid = viewer.centralBody.ellipsoid;
            
     // Create a simple polyline
     
     var positions = [];
     for (var i = 0; i <= 10; ++i) {
-        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 30.0 + 3 * i / 2 * (i % 2))));
+        positions.push(Cesium.Cartesian3.fromDegrees(-100.0 + i, 30.0 + 3 * i / 2 * (i % 2)));
     }
 
     primitives.add(new Cesium.Primitive({
@@ -54,7 +53,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : Math.min(2.0, scene.context.getMaximumAliasedLineWidth())
+                lineWidth : Math.min(2.0, scene.maximumAliasedLineWidth)
             }
         })
     }));

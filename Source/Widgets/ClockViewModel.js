@@ -154,10 +154,30 @@ define([
             }
         });
 
+        var canAnimate = knockout.observable(clock.canAnimate);
+
+        /**
+         * Gets or sets whether or not <code>Clock.tick</code> can advance time.
+         * This could be false if data is being buffered, for example.
+         * The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
+         * This property is observable.
+         * @type {Boolean}
+         * @default undefined
+         */
+        this.canAnimate = undefined;
+        knockout.defineProperty(this, 'canAnimate', {
+            get : canAnimate,
+            set : function(value) {
+                canAnimate(value);
+                clock.canAnimate = value;
+            }
+        });
+
         var shouldAnimate = knockout.observable(clock.shouldAnimate);
 
         /**
-         * Gets or sets whether or not <code>Clock.tick</code> should actually advance time.
+         * Gets or sets whether or not <code>Clock.tick</code> should attempt to advance time.
+         * The clock will only tick when both <code>canAnimate</code> and <code>shouldAnimate</code> are true.
          * This property is observable.
          * @type {Boolean}
          * @default undefined
@@ -190,9 +210,8 @@ define([
      * Updates the view model with the contents of the underlying clock.
      * Can be called to force an update of the viewModel if the underlying
      * clock has changed and <code>Clock.tick</code> has not yet been called.
-     * @memberof ClockViewModel
      */
-     ClockViewModel.prototype.synchronize = function() {
+    ClockViewModel.prototype.synchronize = function() {
         var clock = this._clock;
 
         var startTime = clock.startTime;
@@ -201,6 +220,7 @@ define([
         var multiplier = clock.multiplier;
         var clockStep = clock.clockStep;
         var clockRange = clock.clockRange;
+        var canAnimate = clock.canAnimate;
         var shouldAnimate = clock.shouldAnimate;
 
         this.systemTime = new JulianDate();
@@ -210,11 +230,11 @@ define([
         this.multiplier = multiplier;
         this.clockStep = clockStep;
         this.clockRange = clockRange;
+        this.canAnimate = canAnimate;
         this.shouldAnimate = shouldAnimate;
     };
 
     /**
-     * @memberof ClockViewModel
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     ClockViewModel.prototype.isDestroyed = function() {
@@ -224,7 +244,6 @@ define([
     /**
      * Destroys the view model.  Should be called to
      * properly clean up the view model when it is no longer needed.
-     * @memberof ClockViewModel
      */
     ClockViewModel.prototype.destroy = function() {
         this._eventHelper.removeAll();

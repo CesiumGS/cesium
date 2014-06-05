@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Cartesian3',
+define([
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
@@ -15,15 +16,15 @@ define(['../Core/Cartesian3',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ShowGeometryInstanceAttribute',
-        '../DynamicScene/ColorMaterialProperty',
-        '../DynamicScene/ConstantProperty',
-        '../DynamicScene/MaterialProperty',
-        '../DynamicScene/Property',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/PrimitiveState',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './ColorMaterialProperty',
+        './ConstantProperty',
+        './MaterialProperty',
+        './Property'
     ], function(
         Cartesian3,
         Color,
@@ -41,15 +42,15 @@ define(['../Core/Cartesian3',
         Matrix3,
         Matrix4,
         ShowGeometryInstanceAttribute,
-        ColorMaterialProperty,
-        ConstantProperty,
-        MaterialProperty,
-        Property,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ColorMaterialProperty,
+        ConstantProperty,
+        MaterialProperty,
+        Property) {
     "use strict";
 
     var defaultMaterial = ColorMaterialProperty.fromColor(Color.WHITE);
@@ -131,7 +132,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets the object associated with this geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {DynamicObject}
+         * @readonly
          */
         dynamicObject : {
             get : function() {
@@ -141,7 +144,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets a value indicating if the geometry has a fill component.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         fillEnabled : {
             get : function() {
@@ -151,7 +156,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets a value indicating if fill visibility varies with simulation time.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantFill : {
             get : function() {
@@ -164,7 +171,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets the material property used to fill the geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {MaterialProperty}
+         * @readonly
          */
         fillMaterialProperty : {
             get : function() {
@@ -174,7 +183,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets a value indicating if the geometry has an outline component.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         outlineEnabled : {
             get : function() {
@@ -184,7 +195,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets a value indicating if outline visibility varies with simulation time.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         hasConstantOutline : {
             get : function() {
@@ -197,7 +210,9 @@ define(['../Core/Cartesian3',
         /**
          * Gets the {@link Color} property for the geometry outline.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Property}
+         * @readonly
          */
         outlineColorProperty : {
             get : function() {
@@ -208,9 +223,10 @@ define(['../Core/Cartesian3',
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
-         *
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isDynamic : {
             get : function() {
@@ -221,7 +237,9 @@ define(['../Core/Cartesian3',
          * Gets a value indicating if the geometry is closed.
          * This property is only valid for static geometry.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isClosed : {
             value : true
@@ -230,7 +248,9 @@ define(['../Core/Cartesian3',
          * Gets an event that is raised whenever the public properties
          * of this updater change.
          * @memberof EllipsoidGeometryUpdater.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         geometryChanged : {
             get : function() {
@@ -241,8 +261,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Checks if the geometry is outlined at the provided time.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is outlined at the provided time, false otherwise.
@@ -254,8 +272,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Checks if the geometry is filled at the provided time.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time for which to retrieve visibility.
      * @returns {Boolean} true if geometry is filled at the provided time, false otherwise.
@@ -267,8 +283,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
@@ -323,8 +337,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Creates the geometry instance which represents the outline of the geometry.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
@@ -362,8 +374,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -373,8 +383,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
@@ -470,10 +478,8 @@ define(['../Core/Cartesian3',
 
     /**
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
-     * @memberof EllipsoidGeometryUpdater
-     * @function
      *
-     * @param {CompositePrimitive} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
@@ -590,13 +596,13 @@ define(['../Core/Cartesian3',
                 geometryInstances : new GeometryInstance({
                     id : dynamicObject,
                     geometry : new EllipsoidGeometry(options),
-                    modelMatrix : !in3D ? modelMatrix : undefined
+                    modelMatrix : !in3D ? modelMatrix : undefined,
+                    attributes : {
+                        show : new ShowGeometryInstanceAttribute(showFill)
+                    }
                 }),
                 appearance : appearance,
-                asynchronous : false,
-                attributes : {
-                    show : new ShowGeometryInstanceAttribute(showFill)
-                }
+                asynchronous : false
             });
             this._primitives.add(this._primitive);
 

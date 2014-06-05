@@ -1,22 +1,24 @@
 /*global define*/
 define([
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './ImageryProvider',
-        './WebMercatorTilingScheme',
-        './Credit'
+        '../Core/Rectangle',
+        '../Core/WebMercatorTilingScheme',
+        './ImageryProvider'
     ], function(
+        Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ImageryProvider,
+        Rectangle,
         WebMercatorTilingScheme,
-        Credit) {
+        ImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -26,18 +28,19 @@ define([
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware
      * that a default-constructed instance of this class will connect to OpenStreetMap's volunteer-run
      * servers, so you must conform to their
-     * <a href='http://wiki.openstreetmap.org/wiki/Tile_usage_policy'>Tile Usage Policy</a>.
+     * {@link http://wiki.openstreetmap.org/wiki/Tile_usage_policy|Tile Usage Policy}.
      *
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
-     * @param {String} [description.url='http://tile.openstreetmap.org'] The OpenStreetMap server url.
-     * @param {String} [description.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
-     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
-     * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @param {Object} [options] Object with the following properties:
+     * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
+     * @param {String} [options.fileExtension='png'] The file extension for images on the server.
+     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
+     * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
+     * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -45,54 +48,54 @@ define([
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      *
-     * @see <a href='http://wiki.openstreetmap.org/wiki/Main_Page'>OpenStreetMap Wiki</a>
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // OpenStreetMap tile provider
      * var osm = new Cesium.OpenStreetMapImageryProvider({
-     *     url : 'http://tile.openstreetmap.org/'
+     *     url : '//a.tile.openstreetmap.org/'
      * });
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(description) {
-        description = defaultValue(description, {});
+    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+        options = defaultValue(options, {});
 
-        var url = defaultValue(description.url, 'http://tile.openstreetmap.org/');
+        var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';
         }
 
         this._url = url;
-        this._fileExtension = defaultValue(description.fileExtension, 'png');
-        this._proxy = description.proxy;
-        this._tileDiscardPolicy = description.tileDiscardPolicy;
+        this._fileExtension = defaultValue(options.fileExtension, 'png');
+        this._proxy = options.proxy;
+        this._tileDiscardPolicy = options.tileDiscardPolicy;
 
         this._tilingScheme = new WebMercatorTilingScheme();
 
         this._tileWidth = 256;
         this._tileHeight = 256;
 
-        this._minimumLevel = defaultValue(description.minimumLevel, 0);
-        this._maximumLevel = defaultValue(description.maximumLevel, 18);
+        this._minimumLevel = defaultValue(options.minimumLevel, 0);
+        this._maximumLevel = defaultValue(options.maximumLevel, 18);
 
-        this._extent = defaultValue(description.extent, this._tilingScheme.extent);
+        this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
-        var swTile = this._tilingScheme.positionToTileXY(this._extent.getSouthwest(), this._minimumLevel);
-        var neTile = this._tilingScheme.positionToTileXY(this._extent.getNortheast(), this._minimumLevel);
+        var swTile = this._tilingScheme.positionToTileXY(Rectangle.getSouthwest(this._rectangle), this._minimumLevel);
+        var neTile = this._tilingScheme.positionToTileXY(Rectangle.getNortheast(this._rectangle), this._minimumLevel);
         var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
         if (tileCount > 4) {
-            throw new DeveloperError('The imagery provider\'s extent and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
+            throw new DeveloperError('The imagery provider\'s rectangle and minimumLevel indicate that there are ' + tileCount + ' tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.');
         }
 
         this._errorEvent = new Event();
 
         this._ready = true;
 
-        var credit = defaultValue(description.credit, defaultCredit);
+        var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
@@ -124,7 +127,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof OpenStreetMapImageryProvider
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -224,20 +227,20 @@ define([
         },
 
         /**
-         * Gets the extent, in radians, of the imagery provided by this instance.  This function should
+         * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProviderr.prototype
-         * @type {Extent}
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Rectangle}
          */
-        extent : {
+        rectangle : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this._ready) {
-                    throw new DeveloperError('extent must not be called before the imagery provider is ready.');
+                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
                 }
                 //>>includeEnd('debug');
 
-                return this._extent;
+                return this._rectangle;
             }
         },
 
@@ -295,13 +298,26 @@ define([
             get : function() {
                 return this._credit;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the images provided by this imagery provider
+         * include an alpha channel.  If this property is false, an alpha channel, if present, will
+         * be ignored.  If this property is true, any images without an alpha channel will be treated
+         * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
+         * and texture upload time are reduced.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         */
+        hasAlphaChannel : {
+            get : function() {
+                return true;
+            }
         }
     });
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
-     *
-     * @memberof OpenStreetMapImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -318,8 +334,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-     *
-     * @memberof OpenStreetMapImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

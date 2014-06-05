@@ -16,8 +16,7 @@
     });
     </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
-
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -40,7 +39,7 @@ require(['Cesium'], function(Cesium) {
         });
 
         Sandcastle.addToolbarMenu(terrainProviderOptions, function() {
-            centralBody.terrainProvider = terrainProviders[this.selectedIndex].provider;
+            scene.terrainProvider = terrainProviders[this.selectedIndex].provider;
         }, 'terrainMenu');
 
         Sandcastle.addToolbarButton('Mount Everest', function() {
@@ -57,7 +56,7 @@ require(['Cesium'], function(Cesium) {
                 up = new Cesium.Cartesian3(-0.4501898855076042, -0.0000291369789812141, 0.8929328452557279);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewExtent(new Cesium.Extent(1.516102969, 0.48744464, 1.518102969, 0.48944464));
+                scene.camera.viewRectangle(new Cesium.Rectangle(1.516102969, 0.48744464, 1.518102969, 0.48944464));
             }
         }, 'zoomButtons');
 
@@ -75,7 +74,7 @@ require(['Cesium'], function(Cesium) {
                 up = new Cesium.Cartesian3(0.2679197697914868, 0.011480478929947842, 0.9633728227203466);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewExtent(new Cesium.Extent(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
+                scene.camera.viewRectangle(new Cesium.Rectangle(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
             }
         }, 'zoomButtons');
 
@@ -93,7 +92,7 @@ require(['Cesium'], function(Cesium) {
                 up = new Cesium.Cartesian3(-0.3806859699462094, 0.18891270085627615, 0.905201736488051);
                 scene.camera.lookAt(eye, target, up);
             } else {
-                scene.camera.viewExtent(new Cesium.Extent(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
+                scene.camera.viewRectangle(new Cesium.Rectangle(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
             }
         }, 'zoomButtons');
 
@@ -108,7 +107,10 @@ require(['Cesium'], function(Cesium) {
                 billboards = new Cesium.BillboardCollection();
 
                 Cesium.when(Cesium.loadImage('../images/facility.gif'), function(image) {
-                    var textureAtlas = scene.context.createTextureAtlas({images : [image]});
+                    var textureAtlas = new Cesium.TextureAtlas({
+                        scene : scene,
+                        images : [image]
+                    });
                     billboards.textureAtlas = textureAtlas;
                 });
             } else {
@@ -150,8 +152,8 @@ require(['Cesium'], function(Cesium) {
             var gridHeight = 41;
             var everestLatitude = Cesium.Math.toRadians(27.988257);
             var everestLongitude = Cesium.Math.toRadians(86.925145);
-            var extentHalfSize = 0.005;
-            var e = new Cesium.Extent(everestLongitude - extentHalfSize,everestLatitude - extentHalfSize,everestLongitude + extentHalfSize,everestLatitude + extentHalfSize);
+            var rectangleHalfSize = 0.005;
+            var e = new Cesium.Rectangle(everestLongitude - rectangleHalfSize,everestLatitude - rectangleHalfSize,everestLongitude + rectangleHalfSize,everestLatitude + rectangleHalfSize);
             terrainSamplePositions = [];
             for (var y = 0; y < gridHeight; ++y) {
                 for (var x = 0; x < gridWidth; ++x) {
@@ -162,41 +164,40 @@ require(['Cesium'], function(Cesium) {
                 }
             }
 
-            Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
+            Cesium.when(Cesium.sampleTerrain(scene.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
         }, 'sampleButtons');
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
 
     var scene = viewer.scene;
-    var centralBody = scene.primitives.centralBody;
-    centralBody.depthTestAgainstTerrain = true;
+    var globe = scene.globe;
+    globe.depthTestAgainstTerrain = true;
 
     var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesiumjs.org/smallterrain',
+        url : '//cesiumjs.org/smallterrain',
         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
     });
 
     var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-        url : 'http://cesiumjs.org/stk-terrain/tilesets/GTOPO30/tiles',
-        credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+        url : '//cesiumjs.org/stk-terrain/tilesets/world/tiles'
     });
 
     var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
 
     var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
-        url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
+        url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
         credit : 'Terrain data courtesy VT MÄK'
     });
     
     var terrainProviders = [
-        { name : 'CesiumTerrainProvider - GTOPO30+SRTM heightmaps', provider : cesiumTerrainProviderHeightmaps },
-        { name : 'CesiumTerrainProvider - GTOPO30 meshes', provider : cesiumTerrainProviderMeshes },
+        { name : 'CesiumTerrainProvider - STK World Terrain meshes', provider : cesiumTerrainProviderMeshes },
+        { name : 'CesiumTerrainProvider - Small Terrain heightmaps and water mask', provider : cesiumTerrainProviderHeightmaps },
         { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
         { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
     ];
 
-    centralBody.terrainProvider = cesiumTerrainProviderHeightmaps;
+    scene.terrainProvider = cesiumTerrainProviderMeshes;
 
     createTerrainMenu(terrainProviders);
 

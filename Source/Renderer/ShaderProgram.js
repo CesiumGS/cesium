@@ -1,105 +1,30 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/RuntimeError',
-        '../Core/destroyObject',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        './AutomaticUniforms',
-        './UniformDatatype',
-        '../Shaders/Builtin/CzmBuiltins'
+        '../Core/RuntimeError',
+        '../Shaders/Builtin/CzmBuiltins',
+        './AutomaticUniforms'
     ], function(
         defined,
+        defineProperties,
+        destroyObject,
         DeveloperError,
         FeatureDetection,
-        RuntimeError,
-        destroyObject,
         Matrix2,
         Matrix3,
         Matrix4,
-        AutomaticUniforms,
-        UniformDatatype,
-        CzmBuiltins) {
+        RuntimeError,
+        CzmBuiltins,
+        AutomaticUniforms) {
     "use strict";
     /*global console*/
-
-    function getUniformDatatype(gl, activeUniformType) {
-        switch (activeUniformType) {
-        case gl.FLOAT:
-            return function() {
-                return UniformDatatype.FLOAT;
-            };
-        case gl.FLOAT_VEC2:
-            return function() {
-                return UniformDatatype.FLOAT_VEC2;
-            };
-        case gl.FLOAT_VEC3:
-            return function() {
-                return UniformDatatype.FLOAT_VEC3;
-            };
-        case gl.FLOAT_VEC4:
-            return function() {
-                return UniformDatatype.FLOAT_VEC4;
-            };
-        case gl.INT:
-            return function() {
-                return UniformDatatype.INT;
-            };
-        case gl.INT_VEC2:
-            return function() {
-                return UniformDatatype.INT_VEC2;
-            };
-        case gl.INT_VEC3:
-            return function() {
-                return UniformDatatype.INT_VEC3;
-            };
-        case gl.INT_VEC4:
-            return function() {
-                return UniformDatatype.INT_VEC4;
-            };
-        case gl.BOOL:
-            return function() {
-                return UniformDatatype.BOOL;
-            };
-        case gl.BOOL_VEC2:
-            return function() {
-                return UniformDatatype.BOOL_VEC2;
-            };
-        case gl.BOOL_VEC3:
-            return function() {
-                return UniformDatatype.BOOL_VEC3;
-            };
-        case gl.BOOL_VEC4:
-            return function() {
-                return UniformDatatype.BOOL_VEC4;
-            };
-        case gl.FLOAT_MAT2:
-            return function() {
-                return UniformDatatype.FLOAT_MAT2;
-            };
-        case gl.FLOAT_MAT3:
-            return function() {
-                return UniformDatatype.FLOAT_MAT3;
-            };
-        case gl.FLOAT_MAT4:
-            return function() {
-                return UniformDatatype.FLOAT_MAT4;
-            };
-        case gl.SAMPLER_2D:
-            return function() {
-                return UniformDatatype.SAMPLER_2D;
-            };
-        case gl.SAMPLER_CUBE:
-            return function() {
-                return UniformDatatype.SAMPLER_CUBE;
-            };
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + activeUniformType);
-        }
-    }
 
     var scratchUniformMatrix2;
     var scratchUniformMatrix3;
@@ -109,480 +34,292 @@ define([
         scratchUniformMatrix3 = new Float32Array(9);
         scratchUniformMatrix4 = new Float32Array(16);
     }
+    function setUniform (uniform) {
+        var gl = uniform._gl;
+        var location = uniform._location;
+        switch (uniform._activeUniform.type) {
+        case gl.FLOAT:
+            return function() {
+                gl.uniform1f(location, uniform.value);
+            };
+        case gl.FLOAT_VEC2:
+            return function() {
+                var v = uniform.value;
+                gl.uniform2f(location, v.x, v.y);
+            };
+        case gl.FLOAT_VEC3:
+            return function() {
+                var v = uniform.value;
+                gl.uniform3f(location, v.x, v.y, v.z);
+            };
+        case gl.FLOAT_VEC4:
+            return function() {
+                var v = uniform.value;
+
+                if (defined(v.red)) {
+                    gl.uniform4f(location, v.red, v.green, v.blue, v.alpha);
+                } else if (defined(v.x)) {
+                    gl.uniform4f(location, v.x, v.y, v.z, v.w);
+                } else {
+                    throw new DeveloperError('Invalid vec4 value for uniform "' + uniform._activeUniform.name + '".');
+                }
+            };
+        case gl.SAMPLER_2D:
+        case gl.SAMPLER_CUBE:
+            return function() {
+                gl.activeTexture(gl.TEXTURE0 + uniform.textureUnitIndex);
+                gl.bindTexture(uniform.value._target, uniform.value._texture);
+            };
+        case gl.INT:
+        case gl.BOOL:
+            return function() {
+                gl.uniform1i(location, uniform.value);
+            };
+        case gl.INT_VEC2:
+        case gl.BOOL_VEC2:
+            return function() {
+                var v = uniform.value;
+                gl.uniform2i(location, v.x, v.y);
+            };
+        case gl.INT_VEC3:
+        case gl.BOOL_VEC3:
+            return function() {
+                var v = uniform.value;
+                gl.uniform3i(location, v.x, v.y, v.z);
+            };
+        case gl.INT_VEC4:
+        case gl.BOOL_VEC4:
+            return function() {
+                var v = uniform.value;
+                gl.uniform4i(location, v.x, v.y, v.z, v.w);
+            };
+        case gl.FLOAT_MAT2:
+            return function() {
+                gl.uniformMatrix2fv(location, false, Matrix2.toArray(uniform.value, scratchUniformMatrix2));
+            };
+        case gl.FLOAT_MAT3:
+            return function() {
+                gl.uniformMatrix3fv(location, false, Matrix3.toArray(uniform.value, scratchUniformMatrix3));
+            };
+        case gl.FLOAT_MAT4:
+            return function() {
+                gl.uniformMatrix4fv(location, false, Matrix4.toArray(uniform.value, scratchUniformMatrix4));
+            };
+        default:
+            throw new RuntimeError('Unrecognized uniform type: ' + uniform._activeUniform.type + ' for uniform "' + uniform._activeUniform.name + '".');
+        }
+    }
 
     /**
-     * A shader program's uniform, including the uniform's value.  This is most commonly used to change
-     * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
-     * which is useful for creating user interfaces for tweaking shaders.
-     * <br /><br />
-     * Do not create a uniform object with the <code>new</code> keyword; a shader program's uniforms
-     * are available via {@link ShaderProgram#getAllUniforms}.
-     * <br /><br />
-     * Changing a uniform's value will affect future calls to {@link Context#draw}
-     * that use the corresponding shader program.
-     * <br /><br />
-     * The datatype of the <code>value</code> property depends on the datatype
-     * used in the GLSL declaration as shown in the examples in the table below.
-     * <br /><br />
-     * <table border='1'>
-     * <tr>
-     * <td>GLSL</td>
-     * <td>JavaScript</td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform float u_float; </code></td>
-     * <td><code> sp.getAllUniforms().u_float.value = 1.0;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec2 u_vec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec2.value = new Cartesian2(1.0, 2.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec3 u_vec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec3.value = new Cartesian3(1.0, 2.0, 3.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec4 u_vec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_vec4.value = new Cartesian4(1.0, 2.0, 3.0, 4.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform int u_int; </code></td>
-     * <td><code> sp.getAllUniforms().u_int.value = 1;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec2 u_ivec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec2.value = new Cartesian2(1, 2);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec3 u_ivec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec3.value = new Cartesian3(1, 2, 3);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec4 u_ivec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_ivec4.value = new Cartesian4(1, 2, 3, 4);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bool u_bool; </code></td>
-     * <td><code> sp.getAllUniforms().u_bool.value = true;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec2 u_bvec2; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec2.value = new Cartesian2(true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec3 u_bvec3; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec3.value = new Cartesian3(true, true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec4 u_bvec4; </code></td>
-     * <td><code> sp.getAllUniforms().u_bvec4.value = new Cartesian4(true, true, true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat2 u_mat2; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat3 u_mat3; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat3.value = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat4 u_mat4; </code></td>
-     * <td><code> sp.getAllUniforms().u_mat4.value = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform sampler2D u_texture; </code></td>
-     * <td><code> sp.getAllUniforms().u_texture.value = context.createTexture2D(...);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform samplerCube u_cubeMap; </code></td>
-     * <td><code> sp.getAllUniforms().u_cubeMap.value = context.createCubeMap(...);</code></td>
-     * </tr>
-     * </table>
-     * <br />
-     * When the GLSL uniform is declared as an array, <code>value</code> is also an array as shown in Example 2.
-     * Individual members of a <code>struct uniform</code> can be accessed as done in Example 3.
-     * <br /><br />
-     * Uniforms whose names starting with <code>czm_</code>, such as {@link czm_viewProjection}, are called
-     * automatic uniforms; they are implicitly declared and automatically assigned to in
-     * <code>Context.draw</code> based on the {@link UniformState}.
-     *
-     * @alias Uniform
-     * @internalConstructor
-     *
-     * @see Uniform#value
-     * @see UniformDatatype
-     * @see ShaderProgram#getAllUniforms
-     * @see UniformState
-     * @see Context#draw
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     *
-     * @example
-     * // Example 1. Create a shader program and set its
-     * // one uniform, a 4x4 matrix, to the identity matrix
-     * var vs =
-     *   'attribute vec4 position; ' +
-     *   'uniform mat4 u_mvp; ' +
-     *   'void main() { gl_Position = u_mvp * position; }';
-     * var fs = // ...
-     * var sp = context.createShaderProgram(vs, fs);
-     *
-     * var mvp = sp.getAllUniforms().u_mvp;
-     * console.log(mvp.getName());           // 'u_mvp'
-     * console.log(mvp.getDatatype().name);  // 'FLOAT_MAT4'
-     * mvp.value = Cesium.Matrix4.IDENTITY;
-     *
-     * //////////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Setting values for a GLSL array uniform
-     * // GLSL:  uniform float u_float[2];
-     * sp.getAllUniforms().u_float.value = new Cesium.Cartesian2(1.0, 2.0);
-     *
-     * // GLSL:  uniform vec4 u_vec4[2];
-     * sp.getAllUniforms().u_vec4.value = [
-     *   Cesium.Cartesian4.UNIT_X,
-     *   Cesium.Cartesian4.UNIT_Y
-     * ];
-     *
-     * //////////////////////////////////////////////////////////////////////
-     *
-     * // Example 3. Setting values for members of a GLSL struct
-     * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-     * sp.getAllUniforms()['u_struct.f'].value = 1.0;
-     * sp.getAllUniforms()['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+     * @private
      */
-    var Uniform = function(_gl, activeUniform, _uniformName, _location, uniformValue) {
-        /**
-         * The value of the uniform.  The datatype depends on the datatype used in the
-         * GLSL declaration as explained in the {@link Uniform} help and shown
-         * in the examples below.
-         *
-         * @field
-         * @alias Uniform#value
-         *
-         * @see Context#createTexture2D
-         *
-         * @example
-         * // GLSL:  uniform float u_float;
-         * sp.getAllUniforms().u_float.value = 1.0;
-         *
-         * // GLSL:  uniform vec4 u_vec4;
-         * sp.getAllUniforms().u_vec4.value = Cesium.Cartesian4.ZERO;
-         *
-         * // GLSL:  uniform bvec4 u_bvec4;
-         * sp.getAllUniforms().u_bvec4.value = new Cesium.Cartesian4(true, true, true, true);
-         *
-         * // GLSL:  uniform mat4 u_mat4;
-         * sp.getAllUniforms().u_mat4.value = Cesium.Matrix4.IDENTITY;
-         *
-         * // GLSL:  uniform sampler2D u_texture;
-         * sp.getAllUniforms().u_texture.value = context.createTexture2D(...);
-         *
-         * // GLSL:  uniform vec2 u_vec2[2];
-         * sp.getAllUniforms().u_vec2.value = [
-         *   new Cesium.Cartesian2(1.0, 2.0),
-         *   new Cesium.Cartesian2(3.0, 4.0)
-         * ];
-         *
-         * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-         * sp.getAllUniforms()['u_struct.f'].value = 1.0;
-         * sp.getAllUniforms()['u_struct.v'].value = new Cesium.Cartesian4(1.0, 2.0, 3.0, 4.0);
-         */
-        this.value = uniformValue;
+    var Uniform = function(gl, activeUniform, uniformName, location, value) {
+        this.value = value;
 
-        /**
-         * Returns the case-sensitive name of the GLSL uniform.
-         *
-         * @returns {String} The name of the uniform.
-         * @function
-         * @alias Uniform#getName
-         *
-         * @example
-         * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getName());  // 'u_mvp'
-         */
-        this.getName = function() {
-            return _uniformName;
-        };
-
-        /**
-         * Returns the datatype of the uniform.  This is useful when dynamically
-         * creating a user interface to tweak shader uniform values.
-         *
-         * @returns {UniformDatatype} The datatype of the uniform.
-         * @function
-         * @alias Uniform#getDatatype
-         *
-         * @see UniformDatatype
-         *
-         * @example
-         * // GLSL: uniform mat4 u_mvp;
-         * console.log(sp.getAllUniforms().u_mvp.getDatatype().name);  // 'FLOAT_MAT4'
-         */
-        this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
-
-        this._getLocation = function() {
-            return _location;
-        };
+        this._gl = gl;
+        this._activeUniform = activeUniform;
+        this._uniformName = uniformName;
+        this._location = location;
 
         /**
          * @private
          */
         this.textureUnitIndex = undefined;
 
-        this._set = (function() {
-            switch (activeUniform.type) {
-            case _gl.FLOAT:
-                return function() {
-                    _gl.uniform1f(_location, this.value);
-                };
-            case _gl.FLOAT_VEC2:
-                return function() {
-                    var v = this.value;
-                    _gl.uniform2f(_location, v.x, v.y);
-                };
-            case _gl.FLOAT_VEC3:
-                return function() {
-                    var v = this.value;
-                    _gl.uniform3f(_location, v.x, v.y, v.z);
-                };
-            case _gl.FLOAT_VEC4:
-                return function() {
-                    var v = this.value;
+        this._set = setUniform(this);
 
-                    if (defined(v.red)) {
-                        _gl.uniform4f(_location, v.red, v.green, v.blue, v.alpha);
-                    } else if (defined(v.x)) {
-                        _gl.uniform4f(_location, v.x, v.y, v.z, v.w);
-                    } else {
-                        throw new DeveloperError('Invalid vec4 value for uniform "' + activeUniform.name + '".');
-                    }
-                };
-            case _gl.SAMPLER_2D:
-            case _gl.SAMPLER_CUBE:
-                return function() {
-                    _gl.activeTexture(_gl.TEXTURE0 + this.textureUnitIndex);
-                    _gl.bindTexture(this.value._getTarget(), this.value._getTexture());
-                };
-            case _gl.INT:
-            case _gl.BOOL:
-                return function() {
-                    _gl.uniform1i(_location, this.value);
-                };
-            case _gl.INT_VEC2:
-            case _gl.BOOL_VEC2:
-                return function() {
-                    var v = this.value;
-                    _gl.uniform2i(_location, v.x, v.y);
-                };
-            case _gl.INT_VEC3:
-            case _gl.BOOL_VEC3:
-                return function() {
-                    var v = this.value;
-                    _gl.uniform3i(_location, v.x, v.y, v.z);
-                };
-            case _gl.INT_VEC4:
-            case _gl.BOOL_VEC4:
-                return function() {
-                    var v = this.value;
-                    _gl.uniform4i(_location, v.x, v.y, v.z, v.w);
-                };
-            case _gl.FLOAT_MAT2:
-                return function() {
-                    _gl.uniformMatrix2fv(_location, false, Matrix2.toArray(this.value, scratchUniformMatrix2));
-                };
-            case _gl.FLOAT_MAT3:
-                return function() {
-                    _gl.uniformMatrix3fv(_location, false, Matrix3.toArray(this.value, scratchUniformMatrix3));
-                };
-            case _gl.FLOAT_MAT4:
-                return function() {
-                    _gl.uniformMatrix4fv(_location, false, Matrix4.toArray(this.value, scratchUniformMatrix4));
-                };
-            default:
-                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type + ' for uniform "' + activeUniform.name + '".');
-            }
-        })();
-
-        if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
+        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
-                _gl.uniform1i(_location, textureUnitIndex);
+                gl.uniform1i(location, textureUnitIndex);
                 return textureUnitIndex + 1;
             };
         }
     };
 
+    defineProperties(Uniform.prototype, {
+        name : {
+            get : function() {
+                return this._uniformName;
+            }
+        },
+        datatype : {
+            get : function() {
+                return this._activeUniform.type;
+            }
+        }
+    });
+
+    function setUniformArray(uniformArray) {
+        var gl = uniformArray._gl;
+        var locations = uniformArray._locations;
+        switch (uniformArray._activeUniform.type) {
+        case gl.FLOAT:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    gl.uniform1f(locations[i], value[i]);
+                }
+            };
+        case gl.FLOAT_VEC2:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    gl.uniform2f(locations[i], v.x, v.y);
+                }
+            };
+        case gl.FLOAT_VEC3:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    gl.uniform3f(locations[i], v.x, v.y, v.z);
+                }
+            };
+        case gl.FLOAT_VEC4:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+
+                    if (defined(v.red)) {
+                        gl.uniform4f(locations[i], v.red, v.green, v.blue, v.alpha);
+                    } else if (defined(v.x)) {
+                        gl.uniform4f(locations[i], v.x, v.y, v.z, v.w);
+                    } else {
+                        throw new DeveloperError('Invalid vec4 value.');
+                    }
+                }
+            };
+        case gl.SAMPLER_2D:
+        case gl.SAMPLER_CUBE:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    var index = uniformArray.textureUnitIndex + i;
+                    gl.activeTexture(gl.TEXTURE0 + index);
+                    gl.bindTexture(v._target, v._texture);
+                }
+            };
+        case gl.INT:
+        case gl.BOOL:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    gl.uniform1i(locations[i], value[i]);
+                }
+            };
+        case gl.INT_VEC2:
+        case gl.BOOL_VEC2:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    gl.uniform2i(locations[i], v.x, v.y);
+                }
+            };
+        case gl.INT_VEC3:
+        case gl.BOOL_VEC3:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    gl.uniform3i(locations[i], v.x, v.y, v.z);
+                }
+            };
+        case gl.INT_VEC4:
+        case gl.BOOL_VEC4:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    var v = value[i];
+                    gl.uniform4i(locations[i], v.x, v.y, v.z, v.w);
+                }
+            };
+        case gl.FLOAT_MAT2:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    gl.uniformMatrix2fv(locations[i], false, Matrix2.toArray(value[i], scratchUniformMatrix2));
+                }
+            };
+        case gl.FLOAT_MAT3:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    gl.uniformMatrix3fv(locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
+                }
+            };
+        case gl.FLOAT_MAT4:
+            return function() {
+                var value = uniformArray.value;
+                var length = value.length;
+                for (var i = 0; i < length; ++i) {
+                    gl.uniformMatrix4fv(locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
+                }
+            };
+        default:
+            throw new RuntimeError('Unrecognized uniform type: ' + uniformArray._activeUniform.type);
+        }
+    }
+
     /**
-     * Uniform and UniformArray have the same documentation.  It is just an implementation
-     * detail that they are two different types.
-     *
-     * @alias UniformArray
-     * @constructor
-     *
-     * @see Uniform
+     * @private
      */
-    var UniformArray = function(_gl, activeUniform, _uniformName, locations, value) {
+    var UniformArray = function(gl, activeUniform, uniformName, locations, value) {
+        this._gl = gl;
+        this._activeUniform = activeUniform;
+        this._uniformName = uniformName;
         this.value = value;
-
-        var _locations = locations;
-
-        /**
-         * @private
-         */
-        this.getName = function() {
-            return _uniformName;
-        };
-
-        this.getDatatype = getUniformDatatype(_gl, activeUniform.type);
-
-        this._getLocations = function() {
-            return _locations;
-        };
+        this._locations = locations;
 
         /**
          * @private
          */
         this.textureUnitIndex = undefined;
 
-        this._set = (function() {
-            switch (activeUniform.type) {
-            case _gl.FLOAT:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        _gl.uniform1f(_locations[i], value[i]);
-                    }
-                };
-            case _gl.FLOAT_VEC2:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        _gl.uniform2f(_locations[i], v.x, v.y);
-                    }
-                };
-            case _gl.FLOAT_VEC3:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        _gl.uniform3f(_locations[i], v.x, v.y, v.z);
-                    }
-                };
-            case _gl.FLOAT_VEC4:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
+        this._set = setUniformArray(this);
 
-                        if (defined(v.red)) {
-                            _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
-                        } else if (defined(v.x)) {
-                            _gl.uniform4f(_locations[i], v.x, v.y, v.z, v.w);
-                        } else {
-                            throw new DeveloperError('Invalid vec4 value.');
-                        }
-                    }
-                };
-            case _gl.SAMPLER_2D:
-            case _gl.SAMPLER_CUBE:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        var index = this.textureUnitIndex + i;
-                        _gl.activeTexture(_gl.TEXTURE0 + index);
-                        _gl.bindTexture(v._getTarget(), v._getTexture());
-                    }
-                };
-            case _gl.INT:
-            case _gl.BOOL:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        _gl.uniform1i(_locations[i], value[i]);
-                    }
-                };
-            case _gl.INT_VEC2:
-            case _gl.BOOL_VEC2:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        _gl.uniform2i(_locations[i], v.x, v.y);
-                    }
-                };
-            case _gl.INT_VEC3:
-            case _gl.BOOL_VEC3:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        _gl.uniform3i(_locations[i], v.x, v.y, v.z);
-                    }
-                };
-            case _gl.INT_VEC4:
-            case _gl.BOOL_VEC4:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        var v = value[i];
-                        _gl.uniform4i(_locations[i], v.x, v.y, v.z, v.w);
-                    }
-                };
-            case _gl.FLOAT_MAT2:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        _gl.uniformMatrix2fv(_locations[i], false, Matrix2.toArray(value[i], scratchUniformMatrix2));
-                    }
-                };
-            case _gl.FLOAT_MAT3:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        _gl.uniformMatrix3fv(_locations[i], false, Matrix3.toArray(value[i], scratchUniformMatrix3));
-                    }
-                };
-            case _gl.FLOAT_MAT4:
-                return function() {
-                    var value = this.value;
-                    var length = value.length;
-                    for (var i = 0; i < length; ++i) {
-                        _gl.uniformMatrix4fv(_locations[i], false, Matrix4.toArray(value[i], scratchUniformMatrix4));
-                    }
-                };
-            default:
-                throw new RuntimeError('Unrecognized uniform type: ' + activeUniform.type);
-            }
-        })();
-
-        if ((activeUniform.type === _gl.SAMPLER_2D) || (activeUniform.type === _gl.SAMPLER_CUBE)) {
+        if ((activeUniform.type === gl.SAMPLER_2D) || (activeUniform.type === gl.SAMPLER_CUBE)) {
             this._setSampler = function(textureUnitIndex) {
                 this.textureUnitIndex = textureUnitIndex;
 
-                var length = _locations.length;
+                var length = locations.length;
                 for (var i = 0; i < length; ++i) {
                     var index = textureUnitIndex + i;
-                    _gl.uniform1i(_locations[i], index);
+                    gl.uniform1i(locations[i], index);
                 }
 
                 return textureUnitIndex + length;
             };
         }
     };
+
+    defineProperties(UniformArray.prototype, {
+        name : {
+            get : function() {
+                return this._uniformName;
+            }
+        },
+        datatype : {
+            get : function() {
+                return this._activeUniform.type;
+            }
+        }
+    });
 
     function setSamplerUniforms(gl, program, samplerUniforms) {
         gl.useProgram(program);
@@ -598,58 +335,95 @@ define([
         return textureUnitIndex;
     }
 
+    var nextShaderProgramId = 0;
+
     /**
-     * DOC_TBA
-     *
-     * @alias ShaderProgram
-     * @internalConstructor
-     *
-     * @exception {DeveloperError} A circular dependency was found in the Cesium built-in functions/structs/constants.
-     *
-     * @see Context#createShaderProgram
+     * @private
      */
     var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
-        var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
-        var uniforms = findUniforms(gl, program);
-        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
-
         this._gl = gl;
-        this._program = program;
-        this._numberOfVertexAttributes = numberOfVertexAttributes;
-        this._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
-        this._uniformsByName = uniforms.uniformsByName;
-        this._uniforms = uniforms.uniforms;
-        this._automaticUniforms = partitionedUniforms.automaticUniforms;
-        this._manualUniforms = partitionedUniforms.manualUniforms;
+        this._logShaderCompilation = logShaderCompilation;
+        this._attributeLocations = attributeLocations;
+
+        this._program = undefined;
+        this._numberOfVertexAttributes = undefined;
+        this._vertexAttributes = undefined;
+        this._uniformsByName = undefined;
+        this._uniforms = undefined;
+        this._automaticUniforms = undefined;
+        this._manualUniforms = undefined;
+        this._cachedShader = undefined;  // Used by ShaderCache
 
         /**
          * @private
          */
-        this.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+        this.maximumTextureUnitIndex = undefined;
 
+        this._vertexShaderSource = vertexShaderSource;
+        this._fragmentShaderSource = fragmentShaderSource;
+
+        /**
+         * @private
+         */
+        this.id = nextShaderProgramId++;
+    };
+
+    defineProperties(ShaderProgram.prototype, {
         /**
          * GLSL source for the shader program's vertex shader.  This is the version of
          * the source provided when the shader program was created, not the final
          * source provided to WebGL, which includes Cesium bulit-ins.
          *
-         * @type {String}
+         * @memberof ShaderProgram.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.vertexShaderSource = vertexShaderSource;
-
+        vertexShaderSource: {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
         /**
          * GLSL source for the shader program's fragment shader.  This is the version of
          * the source provided when the shader program was created, not the final
          * source provided to WebGL, which includes Cesium bulit-ins.
          *
-         * @type {String}
+         * @memberof ShaderProgram.prototype
          *
+         * @type {String}
          * @readonly
          */
-        this.fragmentShaderSource = fragmentShaderSource;
-    };
+        fragmentShaderSource: {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
+        vertexAttributes: {
+            get : function() {
+                initialize(this);
+                return this._vertexAttributes;
+            }
+        },
+        numberOfVertexAttributes : {
+            get : function() {
+                initialize(this);
+                return this._numberOfVertexAttributes;
+            }
+        },
+        allUniforms: {
+            get : function() {
+                initialize(this);
+                return this._uniformsByName;
+            }
+        },
+        manualUniforms: {
+            get : function() {
+                initialize(this);
+                return this._manualUniforms;
+            }
+        }
+    });
 
     /**
      * For ShaderProgram testing
@@ -996,12 +770,12 @@ define([
                         uniformArray = uniformsByName[uniformName.slice(0, indexOfBracket)];
 
                         // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
-                        // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
+                        // with the strange name webgl_3467e0265d05c3c1[1] in our globe surface shader.
                         if (typeof uniformArray === 'undefined') {
                             continue;
                         }
 
-                        locations = uniformArray._getLocations();
+                        locations = uniformArray._locations;
 
                         // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
                         // but the size is not 1 like it is in Firefox.  So if we push locations here,
@@ -1064,55 +838,30 @@ define([
         };
     }
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getVertexAttributes = function() {
-        return this._vertexAttributes;
-    };
+    function initialize(shader) {
+        if (defined(shader._program)) {
+            return;
+        }
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Number} DOC_TBA
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     */
-    ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
-        return this._numberOfVertexAttributes;
-    };
+        var gl = shader._gl;
+        var program = createAndLinkProgram(gl, shader._logShaderCompilation, shader.vertexShaderSource, shader.fragmentShaderSource, shader._attributeLocations);
+        var numberOfVertexAttributes = gl.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES);
+        var uniforms = findUniforms(gl, program);
+        var partitionedUniforms = partitionUniforms(uniforms.uniformsByName);
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @returns {Object} DOC_TBA
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getManualUniforms
-     */
-    ShaderProgram.prototype.getAllUniforms = function() {
-        return this._uniformsByName;
-    };
+        shader._program = program;
+        shader._numberOfVertexAttributes = numberOfVertexAttributes;
+        shader._vertexAttributes = findVertexAttributes(gl, program, numberOfVertexAttributes);
+        shader._uniformsByName = uniforms.uniformsByName;
+        shader._uniforms = uniforms.uniforms;
+        shader._automaticUniforms = partitionedUniforms.automaticUniforms;
+        shader._manualUniforms = partitionedUniforms.manualUniforms;
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#getAllUniforms
-     */
-    ShaderProgram.prototype.getManualUniforms = function() {
-        return this._manualUniforms;
-    };
+        shader.maximumTextureUnitIndex = setSamplerUniforms(gl, program, uniforms.samplerUniforms);
+    }
 
     ShaderProgram.prototype._bind = function() {
+        initialize(this);
         this._gl.useProgram(this._program);
     };
 
@@ -1157,56 +906,18 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     * @memberof ShaderProgram
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see ShaderProgram#destroy
-     */
     ShaderProgram.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * @memberof ShaderProgram
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#isDestroyed
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml'>glDeleteShader</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml'>glDeleteProgram</a>
-     *
-     * @example
-     * shaderProgram = shaderProgram && shaderProgram.destroy();
-     */
     ShaderProgram.prototype.destroy = function() {
-        this._gl.deleteProgram(this._program);
-        return destroyObject(this);
+        this._cachedShader.cache.releaseShaderProgram(this);
+        return undefined;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     */
-    ShaderProgram.prototype.release = function() {
-        if (this._cachedShader) {
-            return this._cachedShader.cache.releaseShaderProgram(this);
-        }
-
-        return this.destroy();
+    ShaderProgram.prototype.finalDestroy = function() {
+        this._gl.deleteProgram(this._program);
+        return destroyObject(this);
     };
 
     return ShaderProgram;

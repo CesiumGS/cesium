@@ -28,9 +28,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @exports PolylinePipeline
+     * @private
      */
     var PolylinePipeline = {};
 
@@ -62,7 +60,7 @@ define([
         var end = ellipsoid.cartesianToCartographic(last, carto2);
 
         ellipsoidGeodesic.setEndPoints(start, end);
-        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.getSurfaceDistance() / (numPoints);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.surfaceDistance / (numPoints);
 
         var index = 0;
         start.height = 0;
@@ -96,9 +94,8 @@ define([
 
     /**
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
-     * @memberof PolylinePipeline
      *
-     * @param {Array} positions The polyline's Cartesian positions.
+     * @param {Cartesian3[]} positions The polyline's Cartesian positions.
      * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
      * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
      * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
@@ -114,7 +111,7 @@ define([
      * @example
      * var polylines = new Cesium.PolylineCollection();
      * var polyline = polylines.add(...);
-     * var positions = polyline.getPositions();
+     * var positions = polyline.positions;
      * var modelMatrix = polylines.modelMatrix;
      * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
      */
@@ -178,11 +175,9 @@ define([
     /**
      * Removes adjacent duplicate positions in an array of positions.
      *
-     * @memberof PolylinePipeline
+     * @param {Cartesian3[]} positions The array of positions.
      *
-     * @param {Array} positions The array of {Cartesian3} positions.
-     *
-     * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
@@ -222,21 +217,19 @@ define([
     /**
      * Subdivides polyline and raises all points to the ellipsoid surface
      *
-     * @memberof PolylinePipeline
-     *
-     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
-     * @returns {Array} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+     * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
-     * var positions = ellipsoid.cartographicArrayToCartesianArray([
-     *      Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-     *      Cesium.Cartographic.fromDegrees(-100.0, 38.0),
-     *      Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-     *      Cesium.Cartographic.fromDegrees(-100.0, 32.0)
-     * ]));
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -105.0, 40.0,
+     *   -100.0, 38.0,
+     *   -105.0, 35.0,
+     *   -100.0, 32.0
+     * ]);
      * var surfacePositions = Cesium.PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
@@ -269,14 +262,12 @@ define([
     /**
      * Raises the positions to the given height.
      *
-     * @memberof PolylinePipeline
+     * @param {Number[]} positions The array of type {Number} representing positions.
+     * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Number[]} [result] An array to place the resultant positions in.
      *
-     * @param {Array} positions The array of type {Number} representing positions.
-     * @param {Number|Array} height A number or array of numbers representing the heights of each position.
-     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
-     * @param {Array} [result] An array to place the resultant positions in.
-     *
-     * @returns {Array} The array of positions scaled to height.
+     * @returns {Number[]} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
      * @exception {DeveloperError} height must be defined.
@@ -284,8 +275,8 @@ define([
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
-     * var p1 = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-105.0, 40.0));
-     * var p2 = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100.0, 38.0));
+     * var p1 = Cesium.Cartesian3.fromDegrees(-105.0, 40.0);
+     * var p2 = Cesium.Cartesian3.fromDegrees(-100.0, 38.0);
      * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
      * var heights = [1000, 1000, 2000, 2000];
      *
@@ -315,7 +306,7 @@ define([
             newPositions = new Array(positions.length);
         }
 
-        if (height === 0) {
+        if (height === 0.0) {
             for (i = 0; i < length; i += 3) {
                 p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
                 newPositions[i] = p.x;

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Cartesian3',
+define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -38,7 +39,9 @@ define(['../Core/Cartesian3',
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof PositionProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : DeveloperError.throwInstantiationError
@@ -48,7 +51,9 @@ define(['../Core/Cartesian3',
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof PositionProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : DeveloperError.throwInstantiationError
@@ -56,7 +61,7 @@ define(['../Core/Cartesian3',
         /**
          * Gets the reference frame that the position is defined in.
          * @memberof PositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          */
         referenceFrame : {
             get : DeveloperError.throwInstantiationError
@@ -65,7 +70,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Gets the value of the property at the provided time in the fixed frame.
-     * @memberof PositionProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -76,7 +80,6 @@ define(['../Core/Cartesian3',
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
-     * @memberof PositionProperty
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
@@ -89,7 +92,6 @@ define(['../Core/Cartesian3',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof PositionProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        './defined',
+        '../ThirdParty/when',
         './defaultValue',
+        './defined',
         './DeveloperError',
-        './RequestErrorEvent',
-        '../ThirdParty/when'
+        './RequestErrorEvent'
     ], function(
-        defined,
+        when,
         defaultValue,
+        defined,
         DeveloperError,
-        RequestErrorEvent,
-        when) {
+        RequestErrorEvent) {
     "use strict";
 
     /**
@@ -21,7 +21,7 @@ define([
      *
      * @exports loadWithXhr
      *
-     * @param {Object} options Options for the request.
+     * @param {Object} options Object with the following properties:
      * @param {String|Promise} options.url The URL of the data, or a promise for the URL.
      * @param {String} [options.responseType] The type of response.  This controls the type of item returned.
      * @param {String} [options.method='GET'] The HTTP method to use.
@@ -31,8 +31,8 @@ define([
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @see loadArrayBuffer
      * @see loadBlob

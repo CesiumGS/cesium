@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Cartesian4',
-         'Specs/createPackableSpecs'
-     ], function(
-         Cartesian4,
-         createPackableSpecs) {
+        'Core/Cartesian4',
+        'Core/Color',
+        'Specs/createPackableSpecs'
+    ], function(
+        Cartesian4,
+        Color,
+        createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -44,6 +46,37 @@ defineSuite([
     it('fromArray throws without values', function() {
         expect(function() {
             Cartesian4.fromArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromElements returns a cartesian4 with corrrect coordinates', function(){
+        var cartesian4 = Cartesian4.fromElements(2, 2, 4, 7);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
+
+    it('fromElements result param returns cartesian4 with correct coordinates', function(){
+        var cartesian4 = new Cartesian4();
+        Cartesian4.fromElements(2, 2, 4, 7, cartesian4);
+        var expectedResult = new Cartesian4(2, 2, 4, 7);
+        expect(cartesian4).toEqual(expectedResult);
+    });
+
+    it('fromColor returns a cartesian4 with corrrect coordinates', function(){
+        var cartesian4 = Cartesian4.fromColor(new Color(1.0, 2.0, 3.0, 4.0));
+        expect(cartesian4).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+    });
+
+    it('fromColor result param returns cartesian4 with correct coordinates', function(){
+        var cartesian4 = new Cartesian4();
+        var result = Cartesian4.fromColor(new Color(1.0, 2.0, 3.0, 4.0), cartesian4);
+        expect(cartesian4).toBe(result);
+        expect(cartesian4).toEqual(new Cartesian4(1.0, 2.0, 3.0, 4.0));
+    });
+
+    it('fromColor throws without color', function() {
+        expect(function() {
+            Cartesian4.fromColor();
         }).toThrowDeveloperError();
     });
 
@@ -693,127 +726,127 @@ defineSuite([
         expect(cartesian.toString()).toEqual('(1.123, 2.345, 6.789, 6.123)');
     });
 
-    it('static clone returns undefined with no parameter', function() {
+    it('clone returns undefined with no parameter', function() {
         expect(Cartesian4.clone()).toBeUndefined();
     });
 
-    it('static getMaximumComponent throws with no parameter', function() {
+    it('getMaximumComponent throws with no parameter', function() {
         expect(function() {
             Cartesian4.getMaximumComponent();
         }).toThrowDeveloperError();
     });
 
-    it('static getMinimumComponent throws with no parameter', function() {
+    it('getMinimumComponent throws with no parameter', function() {
         expect(function() {
             Cartesian4.getMinimumComponent();
         }).toThrowDeveloperError();
     });
 
-    it('static magnitudeSquared throws with no parameter', function() {
+    it('magnitudeSquared throws with no parameter', function() {
         expect(function() {
             Cartesian4.magnitudeSquared();
         }).toThrowDeveloperError();
     });
 
-    it('static magnitude throws with no parameter', function() {
+    it('magnitude throws with no parameter', function() {
         expect(function() {
             Cartesian4.magnitude();
         }).toThrowDeveloperError();
     });
 
-    it('static normalize throws with no parameter', function() {
+    it('normalize throws with no parameter', function() {
         expect(function() {
             Cartesian4.normalize();
         }).toThrowDeveloperError();
     });
 
-    it('static dot throws with no left parameter', function() {
+    it('dot throws with no left parameter', function() {
         expect(function() {
             Cartesian4.dot(undefined, new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('static multiplyComponents throw with no left parameter', function() {
+    it('multiplyComponents throw with no left parameter', function() {
         var right = new Cartesian4(4.0, 5.0, 6.0, 7.0);
         expect(function() {
             Cartesian4.multiplyComponents(undefined, right);
         }).toThrowDeveloperError();
     });
 
-    it('static multiplyComponents throw with no right parameter', function() {
+    it('multiplyComponents throw with no right parameter', function() {
         var left = new Cartesian4(4.0, 5.0, 6.0, 7.0);
         expect(function() {
             Cartesian4.multiplyComponents(left, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static dot throws with no right parameter', function() {
+    it('dot throws with no right parameter', function() {
         expect(function() {
             Cartesian4.dot(new Cartesian4(), undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static add throws with no left parameter', function() {
+    it('add throws with no left parameter', function() {
         expect(function() {
             Cartesian4.add(undefined, new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('static add throws with no right parameter', function() {
+    it('add throws with no right parameter', function() {
         expect(function() {
             Cartesian4.add(new Cartesian4(), undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static subtract throws with no left parameter', function() {
+    it('subtract throws with no left parameter', function() {
         expect(function() {
             Cartesian4.subtract(undefined, new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('static subtract throws with no right parameter', function() {
+    it('subtract throws with no right parameter', function() {
         expect(function() {
             Cartesian4.subtract(new Cartesian4(), undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static multiplyByScalar throws with no cartesian parameter', function() {
+    it('multiplyByScalar throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian4.multiplyByScalar(undefined, 2.0);
         }).toThrowDeveloperError();
     });
 
-    it('static multiplyByScalar throws with no scalar parameter', function() {
+    it('multiplyByScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian4.multiplyByScalar(new Cartesian4(), undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static divideByScalar throws with no cartesian parameter', function() {
+    it('divideByScalar throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian4.divideByScalar(undefined, 2.0);
         }).toThrowDeveloperError();
     });
 
-    it('static divideByScalar throws with no scalar parameter', function() {
+    it('divideByScalar throws with no scalar parameter', function() {
         expect(function() {
             Cartesian4.divideByScalar(new Cartesian4(), undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static negate throws with no cartesian parameter', function() {
+    it('negate throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian4.negate(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static abs throws with no cartesian parameter', function() {
+    it('abs throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian4.abs(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static lerp throws with no start parameter', function() {
+    it('lerp throws with no start parameter', function() {
         var end = new Cartesian4(8.0, 20.0, 6.0);
         var t = 0.25;
         expect(function() {
@@ -821,7 +854,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('static lerp throws with no end parameter', function() {
+    it('lerp throws with no end parameter', function() {
         var start = new Cartesian4(4.0, 8.0, 6.0);
         var t = 0.25;
         expect(function() {
@@ -829,7 +862,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('static lerp throws with no t parameter', function() {
+    it('lerp throws with no t parameter', function() {
         var start = new Cartesian4(4.0, 8.0, 6.0, 7.0);
         var end = new Cartesian4(8.0, 20.0, 6.0, 7.0);
         expect(function() {
@@ -837,29 +870,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('static mostOrthogonalAxis throws with no cartesian parameter', function() {
+    it('mostOrthogonalAxis throws with no cartesian parameter', function() {
         expect(function() {
             Cartesian4.mostOrthogonalAxis(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static equalsEpsilon throws with no epsilon', function() {
+    it('equalsEpsilon throws with no epsilon', function() {
         expect(function() {
             Cartesian4.equalsEpsilon(new Cartesian4(), new Cartesian4(), undefined);
         }).toThrowDeveloperError();
-    });
-
-    it('fromElements returns a cartesian4 with corrrect coordinates', function(){
-        var cartesian4 = Cartesian4.fromElements(2, 2, 4, 7);
-        var expectedResult = new Cartesian4(2, 2, 4, 7);
-        expect(cartesian4).toEqual(expectedResult);
-    });
-
-    it('fromElements result param returns cartesian4 with correct coordinates', function(){
-        var cartesian4 = new Cartesian4();
-        Cartesian4.fromElements(2, 2, 4, 7, cartesian4);
-        var expectedResult = new Cartesian4(2, 2, 4, 7);
-        expect(cartesian4).toEqual(expectedResult);
     });
 
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);

@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoundingSphere',
-         'Core/Cartesian3',
-         'Core/Cartesian4',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/GeographicProjection',
-         'Core/Extent',
-         'Core/Intersect',
-         'Core/Interval',
-         'Core/Math',
-         'Core/Matrix4'
-     ], function(
-         BoundingSphere,
-         Cartesian3,
-         Cartesian4,
-         Cartographic,
-         Ellipsoid,
-         GeographicProjection,
-         Extent,
-         Intersect,
-         Interval,
-         CesiumMath,
-         Matrix4) {
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartesian4',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/GeographicProjection',
+        'Core/Intersect',
+        'Core/Interval',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle'
+    ], function(
+        BoundingSphere,
+        Cartesian3,
+        Cartesian4,
+        Cartographic,
+        Ellipsoid,
+        GeographicProjection,
+        Intersect,
+        Interval,
+        CesiumMath,
+        Matrix4,
+        Rectangle) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -107,7 +107,7 @@ defineSuite([
         expect(sphere.radius).toEqual(expectedRadius);
     });
 
-    it('static clone clones undefined', function() {
+    it('clone clones undefined', function() {
         expect(BoundingSphere.clone(undefined)).toBe(undefined);
     });
 
@@ -265,39 +265,39 @@ defineSuite([
         expect(result.radius).toEqual(positionsRadius);
     });
 
-    it('fromExtent2D creates an empty sphere if no extent provided', function() {
-        var sphere = BoundingSphere.fromExtent2D();
+    it('fromRectangle2D creates an empty sphere if no rectangle provided', function() {
+        var sphere = BoundingSphere.fromRectangle2D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
         expect(sphere.radius).toEqual(0.0);
     });
 
-    it('fromExtent2D', function() {
-        var extent = Extent.MAX_VALUE;
+    it('fromRectangle2D', function() {
+        var rectangle = Rectangle.MAX_VALUE;
         var projection = new GeographicProjection(Ellipsoid.UNIT_SPHERE);
-        var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(extent.east * extent.east + extent.north * extent.north));
-        expect(BoundingSphere.fromExtent2D(extent, projection)).toEqual(expected);
+        var expected = new BoundingSphere(Cartesian3.ZERO, Math.sqrt(rectangle.east * rectangle.east + rectangle.north * rectangle.north));
+        expect(BoundingSphere.fromRectangle2D(rectangle, projection)).toEqual(expected);
     });
 
-    it('fromExtent3D creates an empty sphere if no extent provided', function() {
-        var sphere = BoundingSphere.fromExtent3D();
+    it('fromRectangle3D creates an empty sphere if no rectangle provided', function() {
+        var sphere = BoundingSphere.fromRectangle3D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
         expect(sphere.radius).toEqual(0.0);
     });
 
-    it('fromExtent3D', function() {
-        var extent = Extent.MAX_VALUE;
+    it('fromRectangle3D', function() {
+        var rectangle = Rectangle.MAX_VALUE;
         var ellipsoid = Ellipsoid.WGS84;
         var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
-        expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
+        expect(BoundingSphere.fromRectangle3D(rectangle, ellipsoid)).toEqual(expected);
     });
 
-    it('fromExtent3D with height', function() {
-        var extent = new Extent(0.1, -0.3, 0.2, -0.4);
+    it('fromRectangle3D with height', function() {
+        var rectangle = new Rectangle(0.1, -0.3, 0.2, -0.4);
         var height = 100000.0;
         var ellipsoid = Ellipsoid.WGS84;
-        var points = extent.subsample(ellipsoid, height);
+        var points = Rectangle.subsample(rectangle, ellipsoid, height);
         var expected = BoundingSphere.fromPoints(points);
-        expect(BoundingSphere.fromExtent3D(extent, ellipsoid, height)).toEqual(expected);
+        expect(BoundingSphere.fromRectangle3D(rectangle, ellipsoid, height)).toEqual(expected);
     });
 
     it('fromCornerPoints', function() {
@@ -373,14 +373,14 @@ defineSuite([
         var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
-        expect(bs1.union(bs2)).toEqual(expected);
+        expect(BoundingSphere.union(bs1, bs2)).toEqual(expected);
     });
 
     it('union result parameter is caller', function() {
         var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X), 3.0), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 5.0);
-        bs1.union(bs2, bs1);
+        BoundingSphere.union(bs1, bs2, bs1);
         expect(bs1).toEqual(expected);
     });
 
@@ -388,7 +388,7 @@ defineSuite([
         var bs = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var point = Cartesian3.UNIT_X;
         var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 2.0);
-        expect(bs.expand(point)).toEqual(expected);
+        expect(BoundingSphere.expand(bs, point)).toEqual(expected);
     });
 
     it('applies transform', function() {
@@ -424,7 +424,14 @@ defineSuite([
         var position = new Cartesian3(-2.0, 1.0, 0.0);
         var direction = Cartesian3.UNIT_X;
         var expected = new Interval(1.0, 3.0);
-        expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
+        expect(BoundingSphere.getPlaneDistances(bs, position, direction)).toEqual(expected);
+    });
+
+    it('estimated distance squared to point', function() {
+        var bs = new BoundingSphere(Cartesian3.ZERO, 1.0);
+        var position = new Cartesian3(-2.0, 1.0, 0.0);
+        var expected = Cartesian3.magnitudeSquared(position) - 1.0;
+        expect(BoundingSphere.distanceSquaredTo(bs, position)).toEqual(expected);
     });
 
     it('projectTo2D', function() {
@@ -439,7 +446,7 @@ defineSuite([
         }
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
-        var boundingSphere2D = boundingSphere3D.projectTo2D(projection);
+        var boundingSphere2D = BoundingSphere.projectTo2D(boundingSphere3D, projection);
         var actualSphere = BoundingSphere.fromPoints(positions2D);
         actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
 
@@ -460,7 +467,7 @@ defineSuite([
         }
 
         var boundingSphere3D = BoundingSphere.fromPoints(positions);
-        var boundingSphere2D = boundingSphere3D.projectTo2D(projection, sphere);
+        var boundingSphere2D = BoundingSphere.projectTo2D(boundingSphere3D, projection, sphere);
         var actualSphere = BoundingSphere.fromPoints(positions2D);
         actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
 
@@ -469,97 +476,155 @@ defineSuite([
         expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
     });
 
+    it('can pack and unpack', function() {
+        var array = [];
+        var boundingSphere = new BoundingSphere();
+        boundingSphere.center = new Cartesian3(1, 2, 3);
+        boundingSphere.radius = 4;
+        BoundingSphere.pack(boundingSphere, array);
+        expect(array.length).toEqual(BoundingSphere.packedLength);
+        expect(BoundingSphere.unpack(array)).toEqual(boundingSphere);
+    });
+
+    it('can pack and unpack with offset', function() {
+        var packed = new Array(3);
+        var offset = 3;
+        var boundingSphere = new BoundingSphere();
+        boundingSphere.center = new Cartesian3(1, 2, 3);
+        boundingSphere.radius = 4;
+
+        BoundingSphere.pack(boundingSphere, packed, offset);
+        expect(packed.length).toEqual(offset + BoundingSphere.packedLength);
+
+        var result = new BoundingSphere();
+        var returnedResult = BoundingSphere.unpack(packed, offset, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(boundingSphere);
+    });
+
+    it('pack throws with undefined boundingSphere', function() {
+        var array = [];
+        expect(function() {
+            BoundingSphere.pack(undefined, array);
+        }).toThrowDeveloperError();
+    });
+
+    it('pack throws with undefined array', function() {
+        var boundingSphere = new BoundingSphere();
+        expect(function() {
+            BoundingSphere.pack(boundingSphere, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('unpack throws with undefined array', function() {
+        expect(function() {
+            BoundingSphere.unpack(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('static projectTo2D throws without sphere', function() {
         expect(function() {
             BoundingSphere.projectTo2D();
         }).toThrowDeveloperError();
     });
 
-    it('static clone returns undefined with no parameter', function() {
+    it('clone returns undefined with no parameter', function() {
         expect(BoundingSphere.clone()).toBeUndefined();
     });
 
-    it('static union throws with no left parameter', function() {
+    it('union throws with no left parameter', function() {
         var right = new BoundingSphere();
         expect(function() {
             BoundingSphere.union(undefined, right);
         }).toThrowDeveloperError();
     });
 
-    it('static union throws with no right parameter', function() {
+    it('union throws with no right parameter', function() {
         var left = new BoundingSphere();
         expect(function() {
             BoundingSphere.union(left, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws without a sphere', function() {
+    it('expand throws without a sphere', function() {
         var plane = new Cartesian3();
         expect(function() {
             BoundingSphere.expand(undefined, plane);
         }).toThrowDeveloperError();
     });
 
-    it('static expand throws without a point', function() {
+    it('expand throws without a point', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.expand(sphere, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect throws without a sphere', function() {
+    it('intersect throws without a sphere', function() {
         var plane = new Cartesian4();
         expect(function() {
             BoundingSphere.intersect(undefined, plane);
         }).toThrowDeveloperError();
     });
 
-    it('static intersect throws without a plane', function() {
+    it('intersect throws without a plane', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.intersect(sphere, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('static transform throws without a sphere', function() {
+    it('transform throws without a sphere', function() {
         expect(function() {
             BoundingSphere.transform();
         }).toThrowDeveloperError();
     });
 
-    it('static transform throws without a transform', function() {
+    it('transform throws without a transform', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transform(sphere);
         }).toThrowDeveloperError();
     });
 
-    it('static transformWithoutScale throws without a sphere', function() {
+    it('distanceSquaredTo throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.distanceSquaredTo();
+        }).toThrowDeveloperError();
+    });
+
+    it('distanceSquaredTo throws without a cartesian', function() {
+        expect(function() {
+            BoundingSphere.distanceSquaredTo(new BoundingSphere());
+        }).toThrowDeveloperError();
+    });
+
+    it('transformWithoutScale throws without a sphere', function() {
         expect(function() {
             BoundingSphere.transformWithoutScale();
         }).toThrowDeveloperError();
     });
 
-    it('static transformWithoutScale throws without a transform', function() {
+    it('transformWithoutScale throws without a transform', function() {
         var sphere = new BoundingSphere();
         expect(function() {
             BoundingSphere.transformWithoutScale(sphere);
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a sphere', function() {
+    it('getPlaneDistances throws without a sphere', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances();
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a position', function() {
+    it('getPlaneDistances throws without a position', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances(new BoundingSphere());
         }).toThrowDeveloperError();
     });
 
-    it('static getPlaneDistances throws without a direction', function() {
+    it('getPlaneDistances throws without a direction', function() {
         expect(function() {
             BoundingSphere.getPlaneDistances(new BoundingSphere(), new Cartesian3());
         }).toThrowDeveloperError();
@@ -578,78 +643,78 @@ defineSuite([
         expect(distanceFromCenter).toBeLessThanOrEqualTo(boundingSphere.radius);
     }
 
-    it('fromExtentWithHeights2D includes specified min and max heights', function() {
-        var extent = new Extent(0.1, 0.5, 0.2, 0.6);
+    it('fromRectangleWithHeights2D includes specified min and max heights', function() {
+        var rectangle = new Rectangle(0.1, 0.5, 0.2, 0.6);
         var projection = new GeographicProjection();
         var minHeight = -327.0;
         var maxHeight = 2456.0;
-        var boundingSphere = BoundingSphere.fromExtentWithHeights2D(extent, projection, minHeight, maxHeight);
+        var boundingSphere = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, minHeight, maxHeight);
 
         // Test that the corners are inside the bounding sphere.
-        var point = extent.getSouthwest().clone();
+        var point = Rectangle.getSouthwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSouthwest().clone();
+        point = Rectangle.getSouthwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNortheast().clone();
+        point = Rectangle.getNortheast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNortheast().clone();
+        point = Rectangle.getNortheast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSoutheast().clone();
+        point = Rectangle.getSoutheast(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getSoutheast().clone();
+        point = Rectangle.getSoutheast(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNorthwest().clone();
+        point = Rectangle.getNorthwest(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getNorthwest().clone();
+        point = Rectangle.getNorthwest(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the center is inside the bounding sphere
-        point = extent.getCenter().clone();
+        point = Rectangle.getCenter(rectangle).clone();
         point.height = minHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = extent.getCenter().clone();
+        point = Rectangle.getCenter(rectangle).clone();
         point.height = maxHeight;
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
         // Test that the edge midpoints are inside the bounding sphere.
-        point = new Cartographic(extent.getCenter().longitude, extent.south, minHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.south, maxHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.south, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.north, minHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.getCenter().longitude, extent.north, maxHeight);
+        point = new Cartographic(Rectangle.getCenter(rectangle).longitude, rectangle.north, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, extent.getCenter().latitude, minHeight);
+        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.west, extent.getCenter().latitude, maxHeight);
+        point = new Cartographic(rectangle.west, Rectangle.getCenter(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, extent.getCenter().latitude, minHeight);
+        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, minHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
 
-        point = new Cartographic(extent.east, extent.getCenter().latitude, maxHeight);
+        point = new Cartographic(rectangle.east, Rectangle.getCenter(rectangle).latitude, maxHeight);
         expectBoundingSphereToContainPoint(boundingSphere, point, projection);
     });
 });

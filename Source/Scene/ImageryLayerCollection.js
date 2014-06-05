@@ -1,19 +1,19 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Math',
         './ImageryLayer'
     ], function(
-        DeveloperError,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Event,
         CesiumMath,
         ImageryLayer) {
@@ -25,8 +25,8 @@ define([
      * @alias ImageryLayerCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html">Cesium Sandcastle Imagery Adjustment Demo</a>
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html">Cesium Sandcastle Imagery Manipulation Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     var ImageryLayerCollection = function ImageryLayerCollection() {
         this._layers = [];
@@ -83,8 +83,6 @@ define([
     /**
      * Adds a layer to the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to add.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
@@ -121,8 +119,6 @@ define([
     /**
      * Creates a new layer using the given ImageryProvider and adds it to the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryProvider} imageryProvider the imagery provider to create a new layer for.
      * @param {Number} [index] the index to add the layer at.  If omitted, the layer will
      *                         added on top of all existing layers.
@@ -143,8 +139,6 @@ define([
 
     /**
      * Removes a layer from this collection, if present.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {ImageryLayer} layer The layer to remove.
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
@@ -176,8 +170,6 @@ define([
     /**
      * Removes all layers from this collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {Boolean} [destroy=true] whether to destroy the layers in addition to removing them.
      */
     ImageryLayerCollection.prototype.removeAll = function(destroy) {
@@ -199,8 +191,6 @@ define([
     /**
      * Checks to see if the collection contains a given layer.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to check for.
      *
      * @returns {Boolean} true if the collection contains the layer, false otherwise.
@@ -212,8 +202,6 @@ define([
     /**
      * Determines the index of a given layer in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer The layer to find the index of.
      *
      * @returns {Number} The index of the layer in the collection, or -1 if the layer does not exist in the collection.
@@ -224,8 +212,6 @@ define([
 
     /**
      * Gets a layer by index from the collection.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {Number} index the index to retrieve.
      *
@@ -280,8 +266,6 @@ define([
     /**
      * Raises a layer up one position in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
@@ -295,8 +279,6 @@ define([
     /**
      * Lowers a layer down one position in the collection.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @param {ImageryLayer} layer the layer to move.
      *
      * @exception {DeveloperError} layer is not in this collection.
@@ -309,8 +291,6 @@ define([
 
     /**
      * Raises a layer to the top of the collection.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {ImageryLayer} layer the layer to move.
      *
@@ -332,8 +312,6 @@ define([
 
     /**
      * Lowers a layer to the bottom of the collection.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @param {ImageryLayer} layer the layer to move.
      *
@@ -359,8 +337,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof ImageryLayerCollection
-     *
      * @returns {Boolean} true if this object was destroyed; otherwise, false.
      *
      * @see ImageryLayerCollection#destroy
@@ -377,8 +353,6 @@ define([
      * Once this object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof ImageryLayerCollection
      *
      * @returns {undefined}
      *

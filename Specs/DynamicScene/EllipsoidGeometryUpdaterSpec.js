@@ -1,47 +1,48 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/DynamicEllipsoid',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/Quaternion',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection',
-             'Core/ColorGeometryInstanceAttribute',
-             'Core/ShowGeometryInstanceAttribute',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/ConstantPositionProperty',
-             'DynamicScene/GridMaterialProperty',
-             'DynamicScene/SampledProperty',
-             'DynamicScene/SampledPositionProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Scene/CompositePrimitive',
-             'Specs/createScene',
-             'Specs/destroyScene'
-         ], function(
-             EllipsoidGeometryUpdater,
-             DynamicObject,
-             DynamicEllipsoid,
-             Cartesian3,
-             Color,
-             JulianDate,
-             Quaternion,
-             TimeInterval,
-             TimeIntervalCollection,
-             ColorGeometryInstanceAttribute,
-             ShowGeometryInstanceAttribute,
-             ColorMaterialProperty,
-             ConstantProperty,
-             ConstantPositionProperty,
-             GridMaterialProperty,
-             SampledProperty,
-             SampledPositionProperty,
-             TimeIntervalCollectionProperty,
-             CompositePrimitive,
-             createScene,
-             destroyScene) {
+defineSuite([
+        'DynamicScene/EllipsoidGeometryUpdater',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/JulianDate',
+        'Core/Quaternion',
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicEllipsoid',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/GridMaterialProperty',
+        'DynamicScene/SampledPositionProperty',
+        'DynamicScene/SampledProperty',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Scene/PrimitiveCollection',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        EllipsoidGeometryUpdater,
+        Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
+        JulianDate,
+        Quaternion,
+        ShowGeometryInstanceAttribute,
+        TimeInterval,
+        TimeIntervalCollection,
+        ColorMaterialProperty,
+        ConstantPositionProperty,
+        ConstantProperty,
+        DynamicEllipsoid,
+        DynamicObject,
+        GridMaterialProperty,
+        SampledPositionProperty,
+        SampledProperty,
+        TimeIntervalCollectionProperty,
+        PrimitiveCollection,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -332,7 +333,7 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
         dynamicObject.ellipsoid = ellipsoid;
 
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
-        var primitives = new CompositePrimitive();
+        var primitives = new PrimitiveCollection();
         var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
@@ -407,7 +408,7 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
         var dynamicObject = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
         expect(function() {
-            return updater.createDynamicUpdater(new CompositePrimitive());
+            return updater.createDynamicUpdater(new PrimitiveCollection());
         }).toThrowDeveloperError();
     });
 
@@ -427,7 +428,7 @@ defineSuite(['DynamicScene/EllipsoidGeometryUpdater',
         dynamicObject.ellipsoid.radii = new SampledProperty(Number);
         dynamicObject.ellipsoid.radii.addSample(time, 4);
         var updater = new EllipsoidGeometryUpdater(dynamicObject, scene);
-        var dynamicUpdater = updater.createDynamicUpdater(new CompositePrimitive());
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
         expect(function() {
             dynamicUpdater.update(undefined);
         }).toThrowDeveloperError();

@@ -1,19 +1,20 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/TimeIntervalCollectionPositionProperty',
-             'DynamicScene/PositionProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/ReferenceFrame',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             TimeIntervalCollectionPositionProperty,
-             PositionProperty,
-             Cartesian3,
-             JulianDate,
-             ReferenceFrame,
-             TimeInterval,
-             TimeIntervalCollection) {
+defineSuite([
+        'DynamicScene/TimeIntervalCollectionPositionProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/ReferenceFrame',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/PositionProperty'
+    ], function(
+        TimeIntervalCollectionPositionProperty,
+        Cartesian3,
+        JulianDate,
+        ReferenceFrame,
+        TimeInterval,
+        TimeIntervalCollection,
+        PositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -175,7 +176,7 @@ defineSuite(['DynamicScene/TimeIntervalCollectionPositionProperty',
 
         property.intervals.addInterval(interval);
         listener.reset();
-        property.intervals.clear();
+        property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
     });
 });

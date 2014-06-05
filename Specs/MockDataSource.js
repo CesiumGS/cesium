@@ -1,45 +1,31 @@
 /*global define*/
-define(['Core/Event',
+define([
+        'Core/Event',
         'DynamicScene/DynamicObjectCollection'
-        ], function(
-                Event,
-                DynamicObjectCollection) {
+    ], function(
+        Event,
+        DynamicObjectCollection) {
     "use strict";
 
     var MockDataSource = function() {
         //Values to be fiddled with by the test
         this.changedEvent = new Event();
         this.errorEvent = new Event();
+        this.dynamicObjects = new DynamicObjectCollection();
+        this.name = 'Mock Data';
         this.clock = undefined;
-        this.dynamicObjectCollection = new DynamicObjectCollection();
         this.isTimeVarying = false;
+        this.isLoading = false;
+        this.loadingEvent = new Event();
         this.destroyed = false;
+    };
 
-        var that = this;
-        //The actual DataSource interface.
-        this.getChangedEvent = function() {
-            return that.changedEvent;
-        };
+    MockDataSource.prototype.update = function() {
+        return true;
+    };
 
-        this.getErrorEvent = function() {
-            return that.errorEvent;
-        };
-
-        this.getClock = function() {
-            return that.clock;
-        };
-
-        this.getDynamicObjectCollection = function() {
-            return that.dynamicObjectCollection;
-        };
-
-        this.getIsTimeVarying = function() {
-            return that.isTimeVarying;
-        };
-
-        this.destroy = function() {
-            that.destroyed = true;
-        };
+    MockDataSource.prototype.destroy = function() {
+        this.destroyed = true;
     };
 
     return MockDataSource;

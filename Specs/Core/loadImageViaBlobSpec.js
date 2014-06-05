@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadImageViaBlob',
-             'Core/defined',
-             'ThirdParty/when'
-            ], function(
-             loadImageViaBlob,
-             defined,
-             when) {
+        'Core/loadImageViaBlob',
+        'Core/defined',
+        'ThirdParty/when'
+    ], function(
+        loadImageViaBlob,
+        defined,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

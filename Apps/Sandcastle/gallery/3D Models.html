@@ -29,17 +29,17 @@ require(['Cesium'], function(Cesium) {
 
     var viewer = new Cesium.Viewer('cesiumContainer');
     var scene = viewer.scene;
-    var ellipsoid = scene.primitives.centralBody.ellipsoid;
     
     function createModel(url, height) {
         height = Cesium.defaultValue(height, 0.0);
 
-        var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-123.0744619, 44.0503706, height)));
+        var modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, height));
         
         scene.primitives.removeAll(); // Remove previous model
         var model = scene.primitives.add(Cesium.Model.fromGltf({
             url : url,
-            modelMatrix : modelMatrix
+            modelMatrix : modelMatrix,
+            minimumPixelSize : 128
         }));
         
         model.readyToRender.addEventListener(function(model) {
@@ -50,8 +50,7 @@ require(['Cesium'], function(Cesium) {
             });
     
             // Zoom to model
-            var worldBoundingSphere = model.computeWorldBoundingSphere();
-            var center = worldBoundingSphere.center;
+            var center = Cesium.Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center);
             var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
             var camera = scene.camera;
             camera.transform = transform;
@@ -59,7 +58,7 @@ require(['Cesium'], function(Cesium) {
             var controller = scene.screenSpaceCameraController;
             controller.ellipsoid = Cesium.Ellipsoid.UNIT_SPHERE;
             controller.enableTilt = false;
-            var r = 1.25 * Math.max(worldBoundingSphere.radius, camera.frustum.near);
+            var r = 1.25 * Math.max(model.boundingSphere.radius, camera.frustum.near);
             controller.minimumZoomDistance = r * 0.25;
             camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });

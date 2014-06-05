@@ -5,10 +5,10 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Quaternion',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
         '../Scene/Material',
@@ -19,21 +19,15 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        Quaternion,
         CesiumMath,
         Matrix3,
         Matrix4,
+        Quaternion,
         Spherical,
         CustomSensorVolume,
         Material,
         MaterialProperty) {
     "use strict";
-
-    //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
-    //because ComplexConicSensor has major performance issues.  As soon as
-    //ComplexConicSensor is working, this class can be deleted and
-    //DynamicConeVisualizer is a drop in replacement that already does things
-    //"the right way".
 
     var matrix3Scratch = new Matrix3();
 
@@ -77,81 +71,38 @@ define([
     }
 
     /**
-     * A DynamicObject visualizer which maps the DynamicCone instance
-     * in DynamicObject.cone to a CustomSensor primitive.
+     * A {@link Visualizer} which maps {@link DynamicObject#cone} to a {@link CustomSensor}.
      * @alias DynamicConeVisualizerUsingCustomSensor
      * @constructor
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The dynamicObjectCollection to visualize.
-     *
-     * @see DynamicCone
-     * @see DynamicObject
-     * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see DynamicConeVisualizer
-     * @see DynamicLabelVisualizer
-     * @see DynamicPointVisualizer
-     * @see DynamicPyramidVisualizer
+     * @param {DynamicObjectCollection} dynamicObjectCollection The dynamicObjectCollection to visualize.
      */
     var DynamicConeVisualizerUsingCustomSensor = function(scene, dynamicObjectCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
+        if (!defined(dynamicObjectCollection)) {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
         //>>includeEnd('debug');
+
+        dynamicObjectCollection.collectionChanged.addEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
 
         this._scene = scene;
         this._unusedIndexes = [];
         this._primitives = scene.primitives;
         this._coneCollection = [];
-        this._dynamicObjectCollection = undefined;
-        this.setDynamicObjectCollection(dynamicObjectCollection);
+        this._dynamicObjectCollection = dynamicObjectCollection;
     };
 
     /**
-     * Returns the scene being used by this visualizer.
-     *
-     * @returns {Scene} The scene being used by this visualizer.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.getScene = function() {
-        return this._scene;
-    };
-
-    /**
-     * Gets the DynamicObjectCollection being visualized.
-     *
-     * @returns {DynamicObjectCollection} The DynamicObjectCollection being visualized.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.getDynamicObjectCollection = function() {
-        return this._dynamicObjectCollection;
-    };
-
-    /**
-     * Sets the DynamicObjectCollection to visualize.
-     *
-     * @param dynamicObjectCollection The DynamicObjectCollection to visualizer.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
-        var oldCollection = this._dynamicObjectCollection;
-        if (oldCollection !== dynamicObjectCollection) {
-            if (defined(oldCollection)) {
-                oldCollection.collectionChanged.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
-                this.removeAllPrimitives();
-            }
-            this._dynamicObjectCollection = dynamicObjectCollection;
-            if (defined(dynamicObjectCollection)) {
-                dynamicObjectCollection.collectionChanged.addEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
-            }
-        }
-    };
-
-    /**
-     * Updates all of the primitives created by this visualizer to match their
+     * Updates the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
      *
      * @param {JulianDate} time The time to update to.
+     * @returns {Boolean} This function always returns true.
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -160,71 +111,41 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                updateObject(this, time, dynamicObjects[i]);
-            }
+        var dynamicObjects = this._dynamicObjectCollection.getObjects();
+        for (var i = 0, len = dynamicObjects.length; i < len; i++) {
+            updateObject(this, time, dynamicObjects[i]);
         }
-    };
-
-    /**
-     * Removes all primitives from the scene.
-     */
-    DynamicConeVisualizerUsingCustomSensor.prototype.removeAllPrimitives = function() {
-        var i, len;
-        for (i = 0, len = this._coneCollection.length; i < len; i++) {
-            this._primitives.remove(this._coneCollection[i]);
-        }
-
-        if (defined(this._dynamicObjectCollection)) {
-            var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (i = dynamicObjects.length - 1; i > -1; i--) {
-                dynamicObjects[i]._coneVisualizerIndex = undefined;
-            }
-        }
-
-        this._unusedIndexes = [];
-        this._coneCollection = [];
+        return true;
     };
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#destroy
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DynamicConeVisualizerUsingCustomSensor
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     * @see DynamicConeVisualizerUsingCustomSensor#isDestroyed
-     *
-     * @example
-     * visualizer = visualizer && visualizer.destroy();
+     * Removes and destroys all primitives created by this instance.
      */
     DynamicConeVisualizerUsingCustomSensor.prototype.destroy = function() {
-        this.setDynamicObjectCollection(undefined);
+        var dynamicObjectCollection = this._dynamicObjectCollection;
+        dynamicObjectCollection.collectionChanged.removeEventListener(DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved, this);
+
+        var i;
+        var dynamicObjects = dynamicObjectCollection.getObjects();
+        var length = dynamicObjects.length;
+        for (i = 0; i < length; i++) {
+            dynamicObjects[i]._coneVisualizerIndex = undefined;
+        }
+
+        length = this._coneCollection.length;
+        for (i = 0; i < length; i++) {
+            this._primitives.remove(this._coneCollection[i]);
+        }
+
         return destroyObject(this);
     };
 
@@ -278,7 +199,6 @@ define([
             dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.id = dynamicObject;
 
-            // CZML_TODO Determine official defaults
             cone.material = Material.fromType(Material.ColorType);
             cone.intersectionColor = Color.clone(Color.YELLOW);
             cone.intersectionWidth = 5.0;
@@ -377,7 +297,7 @@ define([
     DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {
         var thisConeCollection = this._coneCollection;
         var thisUnusedIndexes = this._unusedIndexes;
-        for ( var i = dynamicObjects.length - 1; i > -1; i--) {
+        for (var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var coneVisualizerIndex = dynamicObject._coneVisualizerIndex;
             if (defined(coneVisualizerIndex)) {

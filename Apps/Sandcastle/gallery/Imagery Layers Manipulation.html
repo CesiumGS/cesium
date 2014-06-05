@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
@@ -12,13 +12,13 @@
     var dojoConfig = {
         baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.3/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.3/dijit' }
         ]
     };
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.3/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.3/dijit/themes/claro/claro.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -88,7 +88,7 @@ require([
         addBaseLayerOption(
                 'ArcGIS World Street Maps',
                 new Cesium.ArcGisMapServerImageryProvider({
-                    url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                    url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
                 }));
         addBaseLayerOption(
                 'OpenStreetMaps',
@@ -96,12 +96,12 @@ require([
         addBaseLayerOption(
                 'MapQuest OpenStreetMaps',
                 new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://otile1.mqcdn.com/tiles/1.0.0/osm/'
+                    url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 }));
         addBaseLayerOption(
                 'Stamen Maps',
                 new Cesium.OpenStreetMapImageryProvider({
-                    url: 'http://tile.stamen.com/watercolor/',
+                    url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                     fileExtension: 'jpg',
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
@@ -115,7 +115,7 @@ require([
         addAdditionalLayerOption(
                 'United States GOES infrared',
                 new Cesium.WebMapServiceImageryProvider({
-                    url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
+                    url : '//mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
                     layers : 'goes_conus_ir',
                     credit : 'Infrared data courtesy Iowa Environmental Mesonet',
                     parameters : {
@@ -127,7 +127,7 @@ require([
         addAdditionalLayerOption(
                 'United States weather radar',
                 new Cesium.WebMapServiceImageryProvider({
-                    url : 'http://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                    url : '//mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
                     layers : 'nexrad-n0r',
                     credit : 'Radar data courtesy Iowa Environmental Mesonet',
                     parameters : {
@@ -146,11 +146,7 @@ require([
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
                     url : '../images/Cesium_Logo_overlay.png',
-                    extent : new Cesium.Extent(
-                            Cesium.Math.toRadians(-115.0),
-                            Cesium.Math.toRadians(38.0),
-                            Cesium.Math.toRadians(-107),
-                            Cesium.Math.toRadians(39.75))
+                    rectangle : Cesium.Rectangle.fromDegrees(-115.0, 38.0, -107, 39.75)
                 }),
                 1.0);
         addAdditionalLayerOption(
@@ -283,9 +279,9 @@ require([
         });
     }
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
+    var viewer = new Cesium.Viewer('cesiumContainer');
 
-    imageryLayers = widget.centralBody.imageryLayers;
+    imageryLayers = viewer.scene.imageryLayers;
 
     setupLayers();
 

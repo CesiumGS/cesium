@@ -4,16 +4,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -36,7 +36,9 @@ define([
          * Gets a value indicating if this property is constant.  A property is considered
          * constant if getValue always returns the same result for the current definition.
          * @memberof ImageMaterialProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -48,7 +50,9 @@ define([
          * The definition is considered to have changed if a call to getValue would return
          * a different result for the same time.
          * @memberof ImageMaterialProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -72,10 +76,9 @@ define([
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof ImageMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     ImageMaterialProperty.prototype.getType = function(time) {
         return 'Image';
@@ -83,7 +86,6 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof ImageMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -102,7 +104,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ImageMaterialProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

@@ -1,22 +1,24 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Matrix4',
         './Cartesian3',
         './Cartesian4',
-        './Spline',
-        './HermiteSpline'
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError',
+        './HermiteSpline',
+        './Matrix4',
+        './Spline'
     ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        Matrix4,
         Cartesian3,
         Cartesian4,
-        Spline,
-        HermiteSpline) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        HermiteSpline,
+        Matrix4,
+        Spline) {
     "use strict";
 
     var scratchTimeVec = new Cartesian4();
@@ -102,9 +104,10 @@ define([
      * @alias CatmullRomSpline
      * @constructor
      *
-     * @param {Array} options.times An array of strictly increasing, unit-less, floating-point times at each point.
+     * @param {Object} options Object with the following properties:
+     * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
-     * @param {Array} options.points The array of {@link Cartesian3} control points.
+     * @param {Cartesian3[]} options.points The array of {@link Cartesian3} control points.
      * @param {Cartesian3} [options.firstTangent] The tangent of the curve at the first control point.
      *                     If the tangent is not given, it will be estimated.
      * @param {Cartesian3} [options.lastTangent] The tangent of the curve at the last control point.
@@ -174,37 +177,72 @@ define([
             }
         }
 
-        /**
-         * An array of times for the control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.times = times;
-
-        /**
-         * An array of {@link Cartesian3} control points.
-         * @type {Array}
-         * @readonly
-         */
-        this.points = points;
-
-        /**
-         * The tangent at the first control point.
-         * @type {Cartesian3}
-         * @readonly
-         */
-        this.firstTangent = Cartesian3.clone(firstTangent);
-
-        /**
-         * The tangent at the last control point.
-         * @type {Cartesian3}
-         * @readonly
-         */
-        this.lastTangent = Cartesian3.clone(lastTangent);
+        this._times = times;
+        this._points = points;
+        this._firstTangent = Cartesian3.clone(firstTangent);
+        this._lastTangent = Cartesian3.clone(lastTangent);
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
     };
+
+    defineProperties(CatmullRomSpline.prototype, {
+        /**
+         * An array of times for the control points.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Number[]}
+         * @readonly
+         */
+        times : {
+            get : function() {
+                return this._times;
+            }
+        },
+
+        /**
+         * An array of {@link Cartesian3} control points.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Cartesian3[]}
+         * @readonly
+         */
+        points : {
+            get : function() {
+                return this._points;
+            }
+        },
+
+        /**
+         * The tangent at the first control point.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Cartesian3}
+         * @readonly
+         */
+        firstTangent : {
+            get : function() {
+                return this._firstTangent;
+            }
+        },
+
+        /**
+         * The tangent at the last control point.
+         *
+         * @memberof CatmullRomSpline.prototype
+         *
+         * @type {Cartesian3}
+         * @readonly
+         */
+        lastTangent : {
+            get : function() {
+                return this._lastTangent;
+            }
+        }
+    });
 
     /**
      * @private
@@ -218,7 +256,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof CatmullRomSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -231,7 +269,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof CatmullRomSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3} [result] The object onto which to store the result.

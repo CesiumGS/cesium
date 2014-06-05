@@ -1,30 +1,30 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/OpenStreetMapImageryProvider',
-         'Core/jsonp',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/DefaultProxy',
-         'Core/Extent',
-         'Scene/Imagery',
-         'Scene/ImageryLayer',
-         'Scene/ImageryProvider',
-         'Scene/ImageryState',
-         'Scene/WebMercatorTilingScheme',
-         'ThirdParty/when'
-     ], function(
-         OpenStreetMapImageryProvider,
-         jsonp,
-         defined,
-         loadImage,
-         DefaultProxy,
-         Extent,
-         Imagery,
-         ImageryLayer,
-         ImageryProvider,
-         ImageryState,
-         WebMercatorTilingScheme,
-         when) {
+        'Scene/OpenStreetMapImageryProvider',
+        'Core/DefaultProxy',
+        'Core/defined',
+        'Core/jsonp',
+        'Core/loadImage',
+        'Core/Rectangle',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'ThirdParty/when'
+    ], function(
+        OpenStreetMapImageryProvider,
+        DefaultProxy,
+        defined,
+        jsonp,
+        loadImage,
+        Rectangle,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -38,10 +38,21 @@ defineSuite([
     });
 
     it('can be default constructed', function() {
-        function defaultConstruct() {
-            return new OpenStreetMapImageryProvider();
-        }
-        expect(defaultConstruct).not.toThrow();
+        return new OpenStreetMapImageryProvider();
+    });
+
+    it('returns valid value for hasAlphaChannel', function() {
+        var provider = new OpenStreetMapImageryProvider({
+            url : 'made/up/osm/server/'
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
     });
 
     it('supports a slash at the end of the URL', function() {
@@ -112,7 +123,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(new WebMercatorTilingScheme().extent);
+            expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 // Just return any old image.
@@ -184,11 +195,11 @@ defineSuite([
         });
     });
 
-    it('extent passed to constructor does not affect tile numbering', function() {
-        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+    it('rectangle passed to constructor does not affect tile numbering', function() {
+        var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
         var provider = new OpenStreetMapImageryProvider({
             url : 'made/up/osm/server',
-            extent : extent
+            rectangle : rectangle
         });
 
         waitsFor(function() {
@@ -200,7 +211,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(18);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.extent).toEqual(extent);
+            expect(provider.rectangle).toEqual(rectangle);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             var calledLoadImage = false;
