@@ -16,6 +16,7 @@ Beta Releases
 * Fixed support for embedded resources in glTF models.
 * Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
+* Added `show` property to `Timeline` and `Animation`, allowing them to be dynamically shown and hidden as needed.
 
 ### b29 - 2014-06-02
 
@@ -136,7 +137,6 @@ Beta Releases
 * Added `getScale` and `getMaximumScale` to `Matrix2`, `Matrix3`, and `Matrix4`.
 * Upgraded Knockout from version 3.0.0 to 3.1.0.
 * Upgraded TopoJSON from version 1.1.4 to 1.6.8.
-* Added `show` property to `Timeline` and `Animation`, allowing them to be dynamically shown and hidden as needed.
 
 ### b27 - 2014-04-01
 
