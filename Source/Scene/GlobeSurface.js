@@ -17,6 +17,7 @@ define([
         '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Core/Matrix4',
+        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/Rectangle',
@@ -50,6 +51,7 @@ define([
         Intersect,
         IntersectionTests,
         Matrix4,
+        Plane,
         PrimitiveType,
         Queue,
         Rectangle,
@@ -278,6 +280,85 @@ define([
     var scratchSphereIntersectionResult = {
         start : 0.0,
         stop : 0.0
+    };
+
+    GlobeSurface.prototype.intersectArc = function(center, radius, v0, v1, frameState, result) {
+        var stack = [];
+        var sphereIntersections = scratchSphereIntersections;
+        sphereIntersections.length = 0;
+
+        var tile;
+        var i;
+
+        var levelZeroTiles = this._levelZeroTiles;
+        var length = levelZeroTiles.length;
+        for (i = 0; i < length; ++i) {
+            stack.push(levelZeroTiles[i]);
+        }
+
+        var normal = Cartesian3.cross(v0 , v1);
+        Cartesian3.normalize(normal, normal);
+        var plane = Plane.fromPointNormal(center, normal);
+        var boundingVolume;
+
+        while (stack.length > 0) {
+            tile = stack.pop();
+            if (tile.state < TileState.READY) {
+                while (!defined(tile.pickTerrain) && defined(parent)) {
+                    tile = tile.parent;
+                }
+
+                sphereIntersections.push(tile);
+                continue;
+            }
+
+            boundingVolume = tile.pickBoundingSphere;
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+            } else {
+                BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
+            }
+
+            var sphereSphereIntersection = Cartesian3.distance(center, boundingVolume.center) <= radius + boundingVolume.radius;
+            //var spherePlaneIntersection = defined(IntersectionTests.spherePlane(boundingVolume, plane));
+            var spherePlaneIntersection = BoundingSphere.intersect(boundingVolume, plane) === Intersect.INTERSECTING;
+            if (sphereSphereIntersection && spherePlaneIntersection) {
+                var children = tile.children;
+                var childrenLength = children.length;
+                for (i = 0; i < childrenLength; ++i) {
+                    stack.push(children[i]);
+                }
+            }
+        }
+
+        length = sphereIntersections.length;
+        if (length === 0) {
+            return undefined;
+        }
+
+        sphereIntersections.sort(createComparePickTileFunction(frameState.camera.position));
+
+        var currentTile = sphereIntersections[0];
+        var uniqueIntersections = [currentTile];
+        for (i = 1; i < length; ++i) {
+            tile = sphereIntersections[i];
+            if (tile !== currentTile) {
+                uniqueIntersections.push(tile);
+                currentTile = tile;
+            }
+        }
+
+        var intersection;
+        length = uniqueIntersections.length;
+        for (i = 0; i < length; ++i) {
+            intersection = uniqueIntersections[i].intersectArc(center, radius, v0, v1, frameState, result);
+            if (defined(intersection)) {
+                break;
+            }
+        }
+
+        return intersection;
     };
 
     GlobeSurface.prototype.pick = function(ray, frameState, result) {

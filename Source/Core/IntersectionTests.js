@@ -1096,7 +1096,7 @@ define([
         Matrix4.multiplyByPointAsVector(transform, v1, scratchCartesian1);
 
         var circle = scratchCircle;
-        circle.radius = Cartesian3.magnitude(v0);
+        circle.radius = radius;
 
         var intersections = IntersectionTests.lineCircle(line, circle, scratchLineCircleIntersection);
         if (!defined(intersections)) {

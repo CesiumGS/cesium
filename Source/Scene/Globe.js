@@ -293,6 +293,10 @@ define([
         }
     });
 
+    Globe.prototype.intersectArc = function(center, radius, v0, v1, frameState, result) {
+        return this._surface.intersectArc(center, radius, v0, v1, frameState, result);
+    };
+
     Globe.prototype.pick = function(ray, frameState, result) {
         return this._surface.pick(ray, frameState, result);
     };

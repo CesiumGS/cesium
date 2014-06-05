@@ -362,6 +362,39 @@ define([
         return undefined;
     };
 
+    Tile.prototype.intersectArc = function(center, radius, v0, v1, frameState, result) {
+        var terrain = this.pickTerrain;
+        if (!defined(terrain)) {
+            return undefined;
+        }
+
+        var mesh = terrain.mesh;
+        if (!defined(mesh)) {
+            return undefined;
+        }
+
+        var vertices = mesh.vertices;
+        var indices = mesh.indices;
+
+        var length = indices.length;
+        for (var i = 0; i < length; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var p0 = getPosition(this, frameState, vertices, i0, scratchV0);
+            var p1 = getPosition(this, frameState, vertices, i1, scratchV1);
+            var p2 = getPosition(this, frameState, vertices, i2, scratchV2);
+
+            var intersection = IntersectionTests.triangleArc(p0, p1, p2, center, radius, v0, v1, result);
+            if (defined(intersection)) {
+                return intersection;
+            }
+        }
+
+        return undefined;
+    };
+
     Tile.prototype.freeResources = function() {
         if (defined(this.waterMaskTexture)) {
             --this.waterMaskTexture.referenceCount;
