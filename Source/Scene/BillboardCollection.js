@@ -197,14 +197,12 @@ define([
          * The 4x4 transformation matrix that transforms each billboard in this collection from model to world coordinates.
          * When this is the identity matrix, the billboards are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          *
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -350,7 +348,6 @@ define([
      * The added billboard is returned so it can be modified or removed from the collection later.
      *
      * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
-     *
      * @returns {Billboard} The billboard that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -396,7 +393,6 @@ define([
      * Removes a billboard from the collection.
      *
      * @param {Billboard} billboard The billboard to remove.
-     *
      * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, the collection's vertex buffer
@@ -484,7 +480,6 @@ define([
      * Check whether this collection contains a given billboard.
      *
      * @param {Billboard} [billboard] The billboard to check for.
-     *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see BillboardCollection#get
@@ -501,7 +496,6 @@ define([
      * in the collection.
      *
      * @param {Number} index The zero-based index of the billboard.
-     *
      * @returns {Billboard} The billboard at the specified index.
      *
      * @performance Expected constant time.  If billboards were removed from the collection and

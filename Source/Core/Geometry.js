@@ -26,7 +26,17 @@ define([
      * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
      * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
-
+     *
+     * @see PolygonGeometry
+     * @see RectangleGeometry
+     * @see EllipseGeometry
+     * @see CircleGeometry
+     * @see WallGeometry
+     * @see SimplePolylineGeometry
+     * @see BoxGeometry
+     * @see EllipsoidGeometry
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
@@ -48,17 +58,6 @@ define([
      *   primitiveType : Cesium.PrimitiveType.LINES,
      *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
      * });
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
-     *
-     * @see PolygonGeometry
-     * @see RectangleGeometry
-     * @see EllipseGeometry
-     * @see CircleGeometry
-     * @see WallGeometry
-     * @see SimplePolylineGeometry
-     * @see BoxGeometry
-     * @see EllipsoidGeometry
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -107,15 +106,15 @@ define([
          *
          * @default undefined
          *
+         * @see GeometryAttribute
+         * @see VertexFormat
+         *
          * @example
          * geometry.attributes.position = new Cesium.GeometryAttribute({
          *   componentDatatype : Cesium.ComponentDatatype.FLOAT,
          *   componentsPerAttribute : 3,
          *   values : new Float32Array()
          * });
-         *
-         * @see GeometryAttribute
-         * @see VertexFormat
          */
         this.attributes = options.attributes;
 
@@ -155,7 +154,6 @@ define([
      * respect to the number of attributes in a vertex, not the number of vertices.
      *
      * @param {Cartesian3} geometry The geometry.
-     *
      * @returns {Number} The number of vertices in the geometry.
      *
      * @example

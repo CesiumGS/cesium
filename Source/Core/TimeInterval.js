@@ -90,7 +90,6 @@ define([
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
      * @param {Object} [data] The data associated with this interval.
-     *
      * @returns {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
      *
      * @see TimeInterval
@@ -115,8 +114,7 @@ define([
      *
      * @param {TimeInterval} [left] The first interval.
      * @param {TimeInterval} [right] The second interval.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     TimeInterval.equals = function(left, right, dataComparer) {
@@ -141,7 +139,6 @@ define([
      * @param {TimeInterval} [right] The second TimeInterval.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
@@ -252,7 +249,6 @@ define([
      * Returns <code>true</code> if this interval contains the specified date.
      *
      * @param {JulianDate} date The date to check for.
-     *
      * @returns {Boolean} <code>true</code> if the TimeInterval contains the specified date, <code>false</code> otherwise.
      */
     TimeInterval.prototype.contains = function(date) {
@@ -282,7 +278,6 @@ define([
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equals = function(other, dataComparer) {
@@ -297,7 +292,6 @@ define([
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equalsEpsilon = function(other, epsilon, dataComparer) {

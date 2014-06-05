@@ -48,6 +48,9 @@ define([
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
+     * @see Scene#skyBox
+     * @see Transforms.computeTemeToPseudoFixedMatrix
+     *
      * @example
      * scene.skyBox = new Cesium.SkyBox({
      *   sources : {
@@ -59,9 +62,6 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
-     *
-     * @see Scene#skyBox
-     * @see Transforms.computeTemeToPseudoFixedMatrix
      */
     var SkyBox = function(options) {
         /**

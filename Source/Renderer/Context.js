@@ -974,7 +974,6 @@ define([
      *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
-     *
      * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
      *
      * @exception {DeveloperError} The size in bytes must be greater than zero.
@@ -1012,7 +1011,6 @@ define([
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
-     *
      * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
      * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
@@ -1201,7 +1199,6 @@ define([
      * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
      * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
      *        parameter is not specified, the default framebuffer is used.
-     *
      * @returns {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
@@ -1409,7 +1406,6 @@ define([
      * textures in one pass, and read from it in a later pass.
      *
      * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
-     *
      * @returns {Framebuffer} The created framebuffer.
      *
      * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
@@ -1520,6 +1516,9 @@ define([
      * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
      * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
      *
+     * @see DrawCommand
+     * @see ClearCommand
+     *
      * @example
      * var defaults = {
      *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
@@ -1599,9 +1598,6 @@ define([
      *
      * // Same as just context.createRenderState().
      * var rs = context.createRenderState(defaults);
-     *
-     * @see DrawCommand
-     * @see ClearCommand
      */
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);
@@ -2258,13 +2254,12 @@ define([
      * Gets the object associated with a pick color.
      *
      * @param {Color} pickColor The pick color.
-     *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+     *
+     * @see Context#createPickId
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     *
-     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
@@ -2304,7 +2299,6 @@ define([
      * on the pick ID when destroying the input object.
      *
      * @param {Object} object The object to associate with the pick ID.
-     *
      * @returns {Object} A PickId object with a <code>color</code> property.
      *
      * @exception {RuntimeError} Out of unique Pick IDs.

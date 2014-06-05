@@ -317,7 +317,6 @@ define([
      *
      * @param {Date} date The JavaScript Date object representing the time to be converted to a JulianDate.
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] Indicates the time standard in which this JulianDate is represented.
-     *
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
      * @exception {DeveloperError} date must be a valid JavaScript Date.
@@ -350,7 +349,6 @@ define([
      * specification.  It also properly handles leap seconds and sub-millisecond times.
      *
      * @param {String} iso8601String The ISO 8601 date string representing the time to be converted to a JulianDate.
-     *
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
      * @exception {DeveloperError} Valid ISO 8601 date string required.
@@ -615,7 +613,6 @@ define([
      *
      * @param {Number} totalDays The combined Julian Day Number and fractional day.
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] Indicates the time standard in which the first parameter is defined.
-     *
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
      * @see JulianDate
@@ -643,7 +640,6 @@ define([
      *
      * @param {JulianDate} a The first instance.
      * @param {JulianDate} b The second instance.
-     *
      * @returns {Number} A negative value if a is less than b,
      *                  a positive value if a is greater than b,
      *                  or zero if a and b are equal.
@@ -680,7 +676,6 @@ define([
      * @param {JulianDate} left The first JulianDate to be compared.
      * @param {JulianDate} right The second JulianDate to be compared.
      * @param {Number} epsilon The number of seconds that should separate the two JulianDates
-     *
      * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
      *
      * @see JulianDate#equals
@@ -858,7 +853,6 @@ define([
      * JulianDate.
      *
      * @param {JulianDate} other The other JulianDate, which is the end of the interval.
-     *
      * @returns {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
      *
      * @see JulianDate#getMinutesDifference
@@ -881,7 +875,6 @@ define([
      * JulianDate.
      *
      * @param {JulianDate} other The other JulianDate, which is the end of the interval.
-     *
      * @returns {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
      *
      * @see JulianDate#getSecondsDifference
@@ -901,7 +894,6 @@ define([
      * JulianDate.  A day is always exactly 86400.0 seconds.
      *
      * @param {JulianDate} other The other JulianDate, which is the end of the interval.
-     *
      * @returns {Number} The number of days that have elpased from this JulianDate to the other JulianDate.
      *
      * @see JulianDate#getSecondsDifference
@@ -953,7 +945,6 @@ define([
      *
      * @param {Number} seconds The number of seconds to add or subtract.
      * @param {JulianDate} [result] The JulianDate to store the result into.
-     *
      * @returns {JulianDate} The modified result parameter or a new JulianDate instance if it was not provided.
      *
      * @see JulianDate#addMinutes
@@ -982,7 +973,6 @@ define([
      * (or earlier in the case of a negative amount).
      *
      * @param {Number} duration An integer number of minutes to add or subtract.
-     *
      * @returns {JulianDate} A new JulianDate object
      *
      * @see JulianDate#addSeconds
@@ -1012,7 +1002,6 @@ define([
      * (or earlier in the case of a negative amount).
      *
      * @param {Number} duration An integer number of hours to add or subtract.
-     *
      * @returns {JulianDate} A new JulianDate object
      *
      * @see JulianDate#addSeconds
@@ -1042,7 +1031,6 @@ define([
      * (or earlier in the case of a negative amount).
      *
      * @param {Number} duration An integer number of days to add or subtract.
-     *
      * @returns {JulianDate} A new JulianDate object
      *
      * @see JulianDate#addSeconds
@@ -1071,7 +1059,6 @@ define([
      * Returns true if <code>other</code> occurs after this JulianDate.
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     *
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically earlier than <code>other</code>; otherwise, <code>false</code>.
      *
      * @see JulianDate#lessThanOrEquals
@@ -1091,7 +1078,6 @@ define([
      * Returns true if <code>other</code> occurs at or after this JulianDate.
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     *
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically less than or equal to<code>other</code>; otherwise, <code>false</code>.
      *
      * @see JulianDate#lessThan
@@ -1111,7 +1097,6 @@ define([
      * Returns true if <code>other</code> occurs before this JulianDate.
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     *
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically later than <code>other</code>; otherwise, <code>false</code>.
      *
      * @see JulianDate#lessThan
@@ -1131,7 +1116,6 @@ define([
      * Returns true if <code>other</code> occurs at or before this JulianDate.
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     *
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically later than or equal to <code>other</code>; otherwise, <code>false</code>.
      *
      * @see JulianDate#lessThan
@@ -1151,7 +1135,6 @@ define([
      * Compares this date to another date.
      *
      * @param {JulianDate} other The other JulianDate to compare to.
-     *
      * @returns {Number} A negative value if this instance is less than the other,
      *                  a positive value if this instance is greater than the other,
      *                  or zero if this instance and the other are equal.
@@ -1164,7 +1147,6 @@ define([
      * Returns <code>true</code> if this date is equivalent to the specified date.
      *
      * @param {JulianDate} other The JulianDate to be compared.
-     *
      * @returns {Boolean} <code>true</code> if the two JulianDates are equal; otherwise <code>false</code>.
      *
      * @see JulianDate#equalsEpsilon
@@ -1186,7 +1168,6 @@ define([
      *
      * @param {JulianDate} other The JulianDate to be compared.
      * @param {Number} epsilon The number of seconds that should separate the two JulianDates
-     *
      * @returns {Boolean} <code>true</code> if the two JulianDates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
      *
      * @see JulianDate#equals

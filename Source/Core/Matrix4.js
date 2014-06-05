@@ -209,7 +209,6 @@ define([
      * @param {Number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @example
@@ -899,8 +898,6 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
-     * @see czm_viewportTransformation
-     *
      * @example
      * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
      * var m = Cesium.Matrix4.computeViewportTransformation({
@@ -1049,8 +1046,6 @@ define([
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
-     * @see Cartesian4
-     *
      * @example
      * //returns a Cartesian4 instance with values from the specified column
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1105,8 +1100,6 @@ define([
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
-     * @see Cartesian4
-     *
      * @example
      * //creates a new Matrix4 instance with new column values from the Cartesian4 instance
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1153,8 +1146,6 @@ define([
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
      *
      * @example
      * //returns a Cartesian4 instance with values from the specified column
@@ -1208,8 +1199,6 @@ define([
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} index must be 0, 1, 2, or 3.
-     *
-     * @see Cartesian4
      *
      * @example
      * //create a new Matrix4 instance with new row values from the Cartesian4 instance
@@ -1489,7 +1478,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Cartesian3} translation The translation on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromTranslation
@@ -1552,7 +1540,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Number} scale The uniform scale on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromUniformScale
@@ -1583,7 +1570,6 @@ define([
      * @param {Matrix4} matrix The matrix on the left-hand side.
      * @param {Cartesian3} scale The non-uniform scale on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
-     *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.fromScale

@@ -143,14 +143,14 @@ define([
          *
          * @type Material
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * rectangle.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, material);
 
@@ -286,10 +286,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Rectangle#isDestroyed
-     *
      * @example
      * rectangle = rectangle && rectangle.destroy();
+     *
+     * @see Rectangle#isDestroyed
      */
     RectanglePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

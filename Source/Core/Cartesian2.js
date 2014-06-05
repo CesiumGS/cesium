@@ -19,9 +19,9 @@ define([
      * @param {Number} [x=0.0] The X component.
      * @param {Number} [y=0.0] The Y component.
      *
-     * @see Packable
      * @see Cartesian3
      * @see Cartesian4
+     * @see Packable
      */
     var Cartesian2 = function(x, y) {
         /**
@@ -161,7 +161,6 @@ define([
      * @param {Number[]} array The array whose two consecutive elements correspond to the x and y components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      *
      * @example
@@ -295,7 +294,6 @@ define([
      *
      * @param {Cartesian2} left The first point to compute the distance from.
      * @param {Cartesian2} right The second point to compute the distance to.
-     *
      * @returns {Number} The distance between two points.
      *
      * @example
