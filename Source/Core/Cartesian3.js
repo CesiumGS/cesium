@@ -124,7 +124,7 @@ define([
      * @function
      *
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian3 instance from.
-     * @param {Cartesian3} result The object onto which to store the result.
+     * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.fromCartesian4 = Cartesian3.clone;

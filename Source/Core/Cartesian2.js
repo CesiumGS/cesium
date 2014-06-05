@@ -83,7 +83,7 @@ define([
      * @function
      *
      * @param {Cartesian3} cartesian The Cartesian3 instance to create a Cartesian2 instance from.
-     * @param {Cartesian2} result The object onto which to store the result.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.fromCartesian3 = Cartesian2.clone;
@@ -94,7 +94,7 @@ define([
      * @function
      *
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian2 instance from.
-     * @param {Cartesian2} result The object onto which to store the result.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.fromCartesian4 = Cartesian2.clone;
