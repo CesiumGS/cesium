@@ -708,7 +708,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
                 var uri = new Uri(buffers[name].path);
-                var bufferPath = uri.resolve(model._baseUri);
+                var bufferPath = uri.resolve(model._baseUri).toString();
                 loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
@@ -737,7 +737,7 @@ define([
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var uri = new Uri(shaders[name].path);
-                var shaderPath = uri.resolve(model._baseUri);
+                var shaderPath = uri.resolve(model._baseUri).toString();
                 loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
@@ -770,7 +770,7 @@ define([
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
                 var uri = new Uri(images[textures[name].source].path);
-                var imagePath = uri.resolve(model._baseUri);
+                var imagePath = uri.resolve(model._baseUri).toString();
                 loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
             }
         }
