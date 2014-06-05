@@ -12,6 +12,7 @@ Beta Releases
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
    * Removed the following from the Cesium API: `Transforms.earthOrientationParameters`, `EarthOrientationParameters`, `EarthOrientationParametersSample`, `Transforms.iau2006XysData`, `Iau2006XysData`, `Iau2006XysSample`, `IauOrientationAxes`, `TimeConstants`, `Scene.frameState`, `FrameState`, `EncodedCartesian3`, `EllipsoidalOccluder`, and `FAR`.  These are still available but are not part of the official API and may change in future versions.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Fixed support for embedded resources in glTF models.
 
 ### b29 - 2014-06-02
 
