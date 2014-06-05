@@ -21,12 +21,8 @@ define([
      * @constructor
      */
     var DynamicPath = function() {
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._outlineColor = undefined;
-        this._outlineColorSubscription = undefined;
-        this._outlineWidth = undefined;
-        this._outlineWidthSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
         this._width = undefined;

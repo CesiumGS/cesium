@@ -1159,7 +1159,7 @@ define([
             dynamicObject.path = path = new DynamicPath();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map it's properties into one.
+        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
         var materialToProcess = path.material;
         if (defined(interval)) {
             var materialInterval;
@@ -1321,7 +1321,7 @@ define([
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map it's properties into one.
+        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
         var materialToProcess = polyline.material;
         if (defined(interval)) {
             var materialInterval;
