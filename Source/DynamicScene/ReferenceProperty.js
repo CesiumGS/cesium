@@ -103,7 +103,7 @@ define([
         for (var i = 0; i < targetPropertyNames.length; i++) {
             var item = targetPropertyNames[i];
             if (!defined(item) || item === '') {
-                throw new DeveloperError('invalid referenceString.');
+                throw new DeveloperError('reference contains invalid properties.');
             }
         }
         //>>includeEnd('debug');
