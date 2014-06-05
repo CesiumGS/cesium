@@ -217,7 +217,7 @@ define([
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.beginFrame = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
         function sortTileImageryByLayerIndex(a, b) {
             var aImagery = a.loadingImagery;
             if (!defined(aImagery)) {
@@ -263,7 +263,7 @@ define([
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.endFrame = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
             this._renderState = context.createRenderState({ // Write color and depth
                 cull : {

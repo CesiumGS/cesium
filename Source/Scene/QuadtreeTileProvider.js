@@ -88,7 +88,7 @@ define([
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    QuadtreeTileProvider.prototype.beginFrame = DeveloperError.throwInstantiationError;
+    QuadtreeTileProvider.prototype.beginUpdate = DeveloperError.throwInstantiationError;
 
     /**
      * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
@@ -101,7 +101,7 @@ define([
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    QuadtreeTileProvider.prototype.endFrame = DeveloperError.throwInstantiationError;
+    QuadtreeTileProvider.prototype.endUpdate = DeveloperError.throwInstantiationError;
 
     /**
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be

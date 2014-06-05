@@ -49,7 +49,7 @@ defineSuite([
     function createSpyTileProvider() {
         var result = jasmine.createSpyObj('tileProvider', [
             'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
-            'beginFrame', 'endFrame', 'getLevelMaximumGeometricError', 'loadTile',
+            'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
             'isTileVisible', 'showTileThisFrame', 'getDistanceToTile', 'isDestroyed', 'destroy']);
 
         defineProperties(result, {
@@ -74,7 +74,7 @@ defineSuite([
         return result;
     }
 
-    it('calls beginFrame, loadTile, and endFrame', function() {
+    it('calls beginUpdate, loadTile, and endUpdate', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
 
@@ -84,9 +84,9 @@ defineSuite([
 
         quadtree.update(context, frameState, []);
 
-        expect(tileProvider.beginFrame).toHaveBeenCalled();
+        expect(tileProvider.beginUpdate).toHaveBeenCalled();
         expect(tileProvider.loadTile).toHaveBeenCalled();
-        expect(tileProvider.endFrame).toHaveBeenCalled();
+        expect(tileProvider.endUpdate).toHaveBeenCalled();
     });
 
     it('shows the root tiles when they are ready and visible', function() {

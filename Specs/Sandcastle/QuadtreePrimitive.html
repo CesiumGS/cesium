@@ -69,10 +69,10 @@ require(['Cesium'], function(Cesium) {
         }
     });
 
-    DemoTileProvider.prototype.beginFrame = function(context, frameState, commandList) {
+    DemoTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
     };
 
-    DemoTileProvider.prototype.endFrame = function(context, frameState, commandList) {
+    DemoTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
     };
 
     DemoTileProvider.prototype.getLevelMaximumGeometricError = function(level) {

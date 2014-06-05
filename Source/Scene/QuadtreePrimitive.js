@@ -190,13 +190,13 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
-        this._tileProvider.beginFrame(context, frameState, commandList);
+        this._tileProvider.beginUpdate(context, frameState, commandList);
 
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
 
-        this._tileProvider.endFrame(context, frameState, commandList);
+        this._tileProvider.endUpdate(context, frameState, commandList);
     };
 
     /**
