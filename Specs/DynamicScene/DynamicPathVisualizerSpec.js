@@ -11,6 +11,7 @@ defineSuite([
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicObjectCollection',
         'DynamicScene/DynamicPath',
+        'DynamicScene/PolylineOutlineMaterialProperty',
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/TimeIntervalCollectionPositionProperty',
         'Specs/createScene',
@@ -27,6 +28,7 @@ defineSuite([
         ConstantProperty,
         DynamicObjectCollection,
         DynamicPath,
+        PolylineOutlineMaterialProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty,
         createScene,
@@ -111,10 +113,11 @@ defineSuite([
 
         var path = testObject.path = new DynamicPath();
         path.show = new ConstantProperty(true);
-        path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material = new PolylineOutlineMaterialProperty();
+        path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
-        path.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        path.outlineWidth = new ConstantProperty(2.5);
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -131,9 +134,9 @@ defineSuite([
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
 
         var material = primitive.material;
-        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(updateTime));
-        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(updateTime));
-        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(updateTime));
+        expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.material.outlineColor.getValue(updateTime));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.material.outlineWidth.getValue(updateTime));
 
         path.show = new ConstantProperty(false);
         visualizer.update(updateTime);
