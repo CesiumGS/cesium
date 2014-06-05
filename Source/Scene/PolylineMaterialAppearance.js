@@ -36,6 +36,8 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     *
      * @example
      * var primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
@@ -52,8 +54,6 @@ define([
      *     material : Cesium.Material.fromType('Color')
      *   })
      * }));
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var PolylineMaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

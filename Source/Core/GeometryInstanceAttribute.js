@@ -23,6 +23,9 @@ define([
      *
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
      *
+     * @see ColorGeometryInstanceAttribute
+     * @see ShowGeometryInstanceAttribute
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
@@ -40,9 +43,6 @@ define([
      *     }
      *   }
      * });
-     *
-     * @see ColorGeometryInstanceAttribute
-     * @see ShowGeometryInstanceAttribute
      */
     var GeometryInstanceAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

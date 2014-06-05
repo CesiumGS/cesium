@@ -21,12 +21,8 @@ define([
      * @constructor
      */
     var DynamicPath = function() {
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._outlineColor = undefined;
-        this._outlineColorSubscription = undefined;
-        this._outlineWidth = undefined;
-        this._outlineWidthSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._show = undefined;
         this._showSubscription = undefined;
         this._width = undefined;
@@ -56,25 +52,11 @@ define([
         },
 
         /**
-         * Gets or sets the {@link Color} {@link Property} specifying the the path's color.
+         * Gets or sets the {@link MaterialProperty} specifying the appearance of the path.
          * @memberof DynamicPath.prototype
-         * @type {Property}
+         * @type {MaterialProperty}
          */
-        color : createDynamicPropertyDescriptor('color'),
-
-        /**
-         * Gets or sets the {@link Color} {@link Property} specifying the the path's outline color.
-         * @memberof DynamicPath.prototype
-         * @type {Property}
-         */
-        outlineColor : createDynamicPropertyDescriptor('outlineColor'),
-
-        /**
-         * Gets or sets the numeric {@link Property} specifying the the path's outline width.
-         * @memberof DynamicPath.prototype
-         * @type {Property}
-         */
-        outlineWidth : createDynamicPropertyDescriptor('outlineWidth'),
+        material : createDynamicPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
@@ -122,11 +104,9 @@ define([
         if (!defined(result)) {
             result = new DynamicPath();
         }
-        result.color = this.color;
+        result.material = this.material;
         result.width = this.width;
         result.resolution = this.resolution;
-        result.outlineColor = this.outlineColor;
-        result.outlineWidth = this.outlineWidth;
         result.show = this.show;
         result.leadTime = this.leadTime;
         result.trailTime = this.trailTime;
@@ -146,11 +126,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.color = defaultValue(this.color, source.color);
+        this.material = defaultValue(this.material, source.material);
         this.width = defaultValue(this.width, source.width);
         this.resolution = defaultValue(this.resolution, source.resolution);
-        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.show = defaultValue(this.show, source.show);
         this.leadTime = defaultValue(this.leadTime, source.leadTime);
         this.trailTime = defaultValue(this.trailTime, source.trailTime);

@@ -11,6 +11,8 @@ defineSuite([
         'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicObjectCollection',
         'DynamicScene/DynamicPath',
+        'DynamicScene/PolylineGlowMaterialProperty',
+        'DynamicScene/PolylineOutlineMaterialProperty',
         'DynamicScene/SampledPositionProperty',
         'DynamicScene/TimeIntervalCollectionPositionProperty',
         'Specs/createScene',
@@ -27,6 +29,8 @@ defineSuite([
         ConstantProperty,
         DynamicObjectCollection,
         DynamicPath,
+        PolylineGlowMaterialProperty,
+        PolylineOutlineMaterialProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty,
         createScene,
@@ -111,10 +115,11 @@ defineSuite([
 
         var path = testObject.path = new DynamicPath();
         path.show = new ConstantProperty(true);
-        path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material = new PolylineOutlineMaterialProperty();
+        path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.material.outlineWidth = new ConstantProperty(2.5);
         path.width = new ConstantProperty(12.5);
-        path.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        path.outlineWidth = new ConstantProperty(2.5);
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
 
@@ -131,13 +136,49 @@ defineSuite([
         expect(primitive.width).toEqual(testObject.path.width.getValue(updateTime));
 
         var material = primitive.material;
-        expect(material.uniforms.color).toEqual(testObject.path.color.getValue(updateTime));
-        expect(material.uniforms.outlineColor).toEqual(testObject.path.outlineColor.getValue(updateTime));
-        expect(material.uniforms.outlineWidth).toEqual(testObject.path.outlineWidth.getValue(updateTime));
+        expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
+        expect(material.uniforms.outlineColor).toEqual(testObject.path.material.outlineColor.getValue(updateTime));
+        expect(material.uniforms.outlineWidth).toEqual(testObject.path.material.outlineWidth.getValue(updateTime));
 
         path.show = new ConstantProperty(false);
         visualizer.update(updateTime);
         expect(primitive.show).toEqual(testObject.path.show.getValue(updateTime));
+    });
+
+    it('A custom material can be used.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var updateTime = new JulianDate(0.5, 0);
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicPathVisualizer(scene, dynamicObjectCollection);
+
+        expect(scene.primitives.length).toEqual(0);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        var position = new SampledPositionProperty();
+        testObject.position = position;
+        position.addSamples(times, positions);
+
+        var path = testObject.path = new DynamicPath();
+        path.show = new ConstantProperty(true);
+        path.material = new PolylineGlowMaterialProperty();
+        path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.material.glowPower = new ConstantProperty(0.2);
+        path.width = new ConstantProperty(12.5);
+        path.leadTime = new ConstantProperty(25);
+        path.trailTime = new ConstantProperty(10);
+
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        var polylineCollection = scene.primitives.get(0);
+        var primitive = polylineCollection.get(0);
+
+        var material = primitive.material;
+        expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
+        expect(material.uniforms.glowPower).toEqual(testObject.path.material.glowPower.getValue(updateTime));
     });
 
     it('clear hides primitives.', function() {

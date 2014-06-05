@@ -974,7 +974,6 @@ define([
      *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
-     *
      * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
      *
      * @exception {DeveloperError} The size in bytes must be greater than zero.
@@ -990,8 +989,7 @@ define([
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
      * var buffer = context.createVertexBuffer(16, BufferUsage.DYNAMIC_DRAW);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a dynamic vertex buffer from three floating-point values.
      * // The data copied to the vertex buffer is considered raw bytes until it is
      * // interpreted as vertices using a vertex array.
@@ -1012,7 +1010,6 @@ define([
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
-     *
      * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
      * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
@@ -1034,8 +1031,7 @@ define([
      * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
      *     IndexDatatype.UNSIGNED_SHORT);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
@@ -1116,8 +1112,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a vertex array with vertices from two different vertex buffers.
      * // Each vertex has a three-component position and three-component normal.
      * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
@@ -1138,8 +1133,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3. Creates the same vertex layout as Example 2 using a single
      * // vertex buffer, instead of two.
      * var buffer = context.createVertexBuffer(24, BufferUsage.STATIC_DRAW);
@@ -1201,7 +1195,6 @@ define([
      * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
      * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
      *        parameter is not specified, the default framebuffer is used.
-     *
      * @returns {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
@@ -1409,7 +1402,6 @@ define([
      * textures in one pass, and read from it in a later pass.
      *
      * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
-     *
      * @returns {Framebuffer} The created framebuffer.
      *
      * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
@@ -1520,6 +1512,9 @@ define([
      * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
      * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
      *
+     * @see DrawCommand
+     * @see ClearCommand
+     *
      * @example
      * var defaults = {
      *     frontFace : WindingOrder.COUNTER_CLOCKWISE,
@@ -1599,9 +1594,6 @@ define([
      *
      * // Same as just context.createRenderState().
      * var rs = context.createRenderState(defaults);
-     *
-     * @see DrawCommand
-     * @see ClearCommand
      */
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);
@@ -2076,8 +2068,7 @@ define([
      *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
@@ -2087,8 +2078,7 @@ define([
      *     interleave         : true
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
@@ -2258,13 +2248,12 @@ define([
      * Gets the object associated with a pick color.
      *
      * @param {Color} pickColor The pick color.
-     *
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+     *
+     * @see Context#createPickId
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     *
-     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
@@ -2304,7 +2293,6 @@ define([
      * on the pick ID when destroying the input object.
      *
      * @param {Object} object The object to associate with the pick ID.
-     *
      * @returns {Object} A PickId object with a <code>color</code> property.
      *
      * @exception {RuntimeError} Out of unique Pick IDs.

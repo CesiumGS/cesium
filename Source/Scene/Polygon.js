@@ -51,6 +51,8 @@ define([
      * @exception {DeveloperError} Either options.positions or options.polygonHierarchy can be provided, but not both.
      * @exception {DeveloperError} When options.positions is provided, at least three positions are required.
      *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html|Cesium Sandcastle Polygons Demo}
+     *
      * @example
      * // Example 1
      * var polygon = new Cesium.Polygon({
@@ -61,6 +63,7 @@ define([
      *   ]
      * });
      *
+     * @example
      * // Example 2
      * var polygon = new Cesium.Polygon();
      * polygon.material.uniforms.color = {
@@ -72,8 +75,6 @@ define([
      * polygon.positions = [ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cesium.Cartographic(...))];
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygons.html|Cesium Sandcastle Polygons Demo}
      */
     var Polygon = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -143,14 +144,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * polygon.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * polygon.material = Cesium.Material.fromType( Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, material);
 
@@ -291,7 +292,16 @@ define([
     };
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.granularity must be defined.
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
         //>>includeStart('debug', pragmas.debug);
@@ -405,10 +415,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Polygon#isDestroyed
-     *
      * @example
      * polygon = polygon && polygon.destroy();
+     *
+     * @see Polygon#isDestroyed
      */
     Polygon.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

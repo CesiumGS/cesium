@@ -387,18 +387,13 @@ define([
      * @see Transforms.preloadIcrfFixed
      *
      * @example
-     * //Set the view to the inertial frame.
-     * function updateAndRender() {
-     *     var now = new Cesium.JulianDate();
-     *     scene.initializeFrame();
-     *     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     *     if (Cesium.defined(icrfToFixed)) {
-     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
-     *     }
-     *     scene.render();
-     *     Cesium.requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * var clock = viewer.clock;
+     * clock.onTick.addEventListener(function() {
+     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(clock.currentTime);
+     *   if (Cesium.defined(icrfToFixed)) {
+     *     viewer.scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *   }
+     * });
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -554,9 +549,6 @@ define([
      * @param {Cartesian3} point The point to transform.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @see czm_modelViewProjection
-     * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {
         //>>includeStart('debug', pragmas.debug);
