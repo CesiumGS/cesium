@@ -44,11 +44,11 @@ defineSuite([
     it('throws when constructed without a scene', function() {
         expect(function() {
             viewModel = new PerformanceWatchdogViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             viewModel = new PerformanceWatchdogViewModel({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can be constructed with just a scene', function() {

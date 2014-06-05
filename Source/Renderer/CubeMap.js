@@ -182,8 +182,6 @@ define([
     /**
      * Generates a complete mipmap chain for each cubemap face.
      *
-     * @memberof CubeMap
-     *
      * @param {MipmapHint} [hint=MipmapHint.DONT_CARE] A performance vs. quality hint.
      *
      * @exception {DeveloperError} hint is invalid.

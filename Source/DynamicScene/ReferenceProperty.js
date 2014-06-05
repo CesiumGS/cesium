@@ -63,7 +63,9 @@ define([
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -75,7 +77,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -91,7 +95,6 @@ define([
      *
      * @param {DynamicObject} dynamicObjectCollection
      * @param {String} referenceString
-     *
      * @returns A new instance of ReferenceProperty.
      *
      * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
@@ -119,11 +122,9 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     *
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
@@ -140,7 +141,6 @@ define([
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
      * This method is only valid if the property being referenced is a {@link PositionProperty}.
-     * @memberof ReferenceProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
@@ -161,7 +161,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ReferenceProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

@@ -17,14 +17,14 @@ define([
      * @alias VertexFormat
      * @constructor
      *
+     * @see Geometry#attributes
+     *
      * @example
      * // Create a vertex format with position and 2D texture coordinate attributes.
      * var format = new Cesium.VertexFormat({
      *   position : true,
      *   st : true
      * });
-     *
-     * @see Geometry#attributes
      */
     var VertexFormat = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -93,7 +93,8 @@ define([
     /**
      * An immutable vertex format with only a position attribute.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      */
@@ -105,7 +106,8 @@ define([
      * An immutable vertex format with position and normal attributes.
      * This is compatible with per-instance color appearances like {@link PerInstanceColorAppearance}.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      * @see VertexFormat#normal
@@ -120,7 +122,8 @@ define([
      * This is compatible with {@link MaterialAppearance} when {@link MaterialAppearance#materialSupport}
      * is <code>TEXTURED/code>.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      * @see VertexFormat#normal
@@ -136,7 +139,8 @@ define([
      * An immutable vertex format with position and st attributes.
      * This is compatible with {@link EllipsoidSurfaceAppearance}.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      * @see VertexFormat#st
@@ -149,7 +153,8 @@ define([
     /**
      * An immutable vertex format with all well-known attributes: position, normal, st, binormal, and tangent.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      * @see VertexFormat#normal
@@ -171,7 +176,8 @@ define([
      * normal and st attributes are not always required.  When this is
      * known in advance, another <code>VertexFormat</code> should be used.
      *
-     * @memberof VertexFormat
+     * @type {VertexFormat}
+     * @constant
      *
      * @see VertexFormat#position
      * @see VertexFormat#normal

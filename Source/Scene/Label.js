@@ -347,6 +347,7 @@ define([
          * translucencyByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's translucencyByDistance to 1.0 when the
@@ -354,6 +355,7 @@ define([
          * // the camera distance approaches 8.0e6 meters.
          * text.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
+         * @example
          * // Example 2.
          * // disable translucency by distance
          * text.translucencyByDistance = undefined;
@@ -387,6 +389,7 @@ define([
          * pixelOffsetScaleByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's pixel offset scale to 0.0 when the
@@ -395,6 +398,7 @@ define([
          * text.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
          * text.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
+         * @example
          * // Example 2.
          * // disable pixel offset by distance
          * text.pixelOffsetScaleByDistance = undefined;
@@ -602,10 +606,7 @@ define([
      * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
      * left to right, and <code>y</code> increases from bottom to top.
      *
-     * @memberof Label
-     *
      * @param {Scene} scene The scene the label is in.
-     *
      * @returns {Cartesian2} The screen-space position of the label.
      *
      * @see Label#eyeOffset
@@ -632,10 +633,7 @@ define([
      * Determines if this label equals another label.  Labels are equal if all their properties
      * are equal.  Labels in different collections can be equal.
      *
-     * @memberof Label
-     *
      * @param {Label} other The label to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {
@@ -663,8 +661,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof Label
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */

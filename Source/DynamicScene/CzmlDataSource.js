@@ -1159,14 +1159,42 @@ define([
             dynamicObject.path = path = new DynamicPath();
         }
 
-        processPacketData(Color, path, 'color', pathData.color, interval, sourceUri);
-        processPacketData(Number, path, 'width', pathData.width, interval, sourceUri);
-        processPacketData(Color, path, 'outlineColor', pathData.outlineColor, interval, sourceUri);
-        processPacketData(Number, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri);
+        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
+        var materialToProcess = path.material;
+        if (defined(interval)) {
+            var materialInterval;
+            var composite = materialToProcess;
+            if (!(composite instanceof CompositeMaterialProperty)) {
+                composite = new CompositeMaterialProperty();
+                path.material = composite;
+                if (defined(materialToProcess)) {
+                    materialInterval = Iso8601.MAXIMUM_INTERVAL.clone();
+                    materialInterval.data = materialToProcess;
+                    composite.intervals.addInterval(materialInterval);
+                }
+            }
+            materialInterval = composite.intervals.findInterval(interval.start, interval.stop, interval.isStartIncluded, interval.isStopIncluded);
+            if (defined(materialInterval)) {
+                materialToProcess = materialInterval.data;
+            } else {
+                materialToProcess = new PolylineOutlineMaterialProperty();
+                materialInterval = interval.clone();
+                materialInterval.data = materialToProcess;
+                composite.intervals.addInterval(materialInterval);
+            }
+        } else if (!(materialToProcess instanceof PolylineOutlineMaterialProperty)) {
+            materialToProcess = new PolylineOutlineMaterialProperty();
+            path.material = materialToProcess;
+        }
+
         processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri);
+        processPacketData(Number, path, 'width', pathData.width, interval, sourceUri);
         processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri);
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'color', pathData.color, interval, sourceUri);
+        processPacketData(Color, materialToProcess, 'outlineColor', pathData.outlineColor, interval, sourceUri);
+        processPacketData(Number, materialToProcess, 'outlineWidth', pathData.outlineWidth, interval, sourceUri);
     }
 
     function processPoint(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -1293,7 +1321,7 @@ define([
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        //Since CZML does not support PolylineOutlineMaterial, we map it's properties into one.
+        //Since CZML does not support PolylineOutlineMaterial, we map its properties into one.
         var materialToProcess = polyline.material;
         if (defined(interval)) {
             var materialInterval;
@@ -1663,7 +1691,6 @@ define([
      * Asynchronously processes the CZML at the provided url without clearing any existing data.
      *
      * @param {Object} url The url to be processed.
-     *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
@@ -1690,7 +1717,6 @@ define([
      * Asynchronously loads the CZML at the provided url, replacing any existing data.
      *
      * @param {Object} url The url to be processed.
-     *
      * @returns {Promise} a promise that will resolve when the CZML is processed.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {

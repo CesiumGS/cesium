@@ -199,7 +199,7 @@ define([
 
     function createUpdate3D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var start = camera.cameraToWorldCoordinatesPoint(camera.position, scratchStartPosition);
         var startDirection = camera.cameraToWorldCoordinatesVector(camera.direction, scratchStartDirection);
@@ -320,7 +320,7 @@ define([
 
     function createUpdateCV(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var path = createPath2D(camera, ellipsoid, Cartesian3.clone(camera.position), destination, duration);
         var orientations = createOrientations2D(camera, path, direction, up);
@@ -346,7 +346,7 @@ define([
 
     function createUpdate2D(frameState, destination, duration, direction, up) {
         var camera = frameState.camera;
-        var ellipsoid = frameState.scene2D.projection.ellipsoid;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
 
         var start = Cartesian3.clone(camera.position);
         start.z = camera.frustum.right - camera.frustum.left;
@@ -393,6 +393,7 @@ define([
      * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3} options.destination The final position of the camera.
      * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
@@ -402,7 +403,6 @@ define([
      * @param {Matrix4} [options.endReferenceFrame] The reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
-     *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
@@ -440,7 +440,7 @@ define([
 
         var frameState = scene.frameState;
         if (convert && frameState.mode !== SceneMode.SCENE3D) {
-            var projection = frameState.scene2D.projection;
+            var projection = frameState.mapProjection;
             var ellipsoid = projection.ellipsoid;
             ellipsoid.cartesianToCartographic(destination, scratchCartographic);
             destination = projection.project(scratchCartographic, scratchDestination);
@@ -569,7 +569,6 @@ define([
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
      * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
-     *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @see Scene#animations

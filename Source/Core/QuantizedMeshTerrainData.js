@@ -35,6 +35,7 @@ define([
      * @alias QuantizedMeshTerrainData
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
      * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
@@ -219,8 +220,6 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
-     * @memberof QuantizedMeshTerrainData
-     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -290,8 +289,6 @@ define([
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
      * vertices in this instance, interpolated if necessary.
      *
-     * @memberof QuantizedMeshTerrainData
-     *
      * @param {TilingScheme} tilingScheme The tiling scheme of this terrain data.
      * @param {Number} thisX The X coordinate of this tile in the tiling scheme.
      * @param {Number} thisY The Y coordinate of this tile in the tiling scheme.
@@ -299,7 +296,6 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     *
      * @returns {Promise|QuantizedMeshTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
@@ -392,8 +388,6 @@ define([
     /**
      * Computes the terrain height at a specified longitude and latitude.
      *
-     * @memberof QuantizedMeshTerrainData
-     *
      * @param {Rectangle} rectangle The rectangle covered by this terrain data.
      * @param {Number} longitude The longitude in radians.
      * @param {Number} latitude The latitude in radians.
@@ -444,8 +438,6 @@ define([
      * to be one of the four children of this tile.  If non-child tile coordinates are
      * given, the availability of the southeast child tile is returned.
      *
-     * @memberof QuantizedMeshTerrainData
-     *
      * @param {Number} thisX The tile X coordinate of this (the parent) tile.
      * @param {Number} thisY The tile Y coordinate of this (the parent) tile.
      * @param {Number} childX The tile X coordinate of the child tile to check for availability.
@@ -484,8 +476,6 @@ define([
      * terrain data.  If this value is false, the data was obtained from some other source, such
      * as by downloading it from a remote server.  This method should return true for instances
      * returned from a call to {@link HeightmapTerrainData#upsample}.
-     *
-     * @memberof QuantizedMeshTerrainData
      *
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
      */

@@ -49,12 +49,10 @@ define([
      * Registers a callback function to be executed whenever the event is raised.
      * An optional scope can be provided to serve as the <code>this</code> pointer
      * in which the function will execute.
-     * @memberof Event
      *
      * @param {Function} listener The function to be executed when the event is raised.
      * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
      * pointer in which the listener function will execute.
-     *
      * @returns {Function} A function that will remove this event listener when invoked.
      *
      * @see Event#raiseEvent
@@ -78,7 +76,6 @@ define([
 
     /**
      * Unregisters a previously registered callback.
-     * @memberof Event
      *
      * @param {Function} listener The function to be unregistered.
      * @param {Object} [scope] The scope that was originally passed to addEventListener.
@@ -118,7 +115,6 @@ define([
 
     /**
      * Raises the event by calling each registered listener with all supplied arguments.
-     * @memberof Event
      *
      * @param {*} arguments This method takes any number of parameters and passes them through to the listener functions.
      *

@@ -31,12 +31,15 @@ forEachFile('sourcefiles', function(relativePath, file) {
     assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
 });
 
+var version = project.getProperty('version');
+
 var contents = '\
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
   "use strict";\n\
   /*jshint sub:true*/\n\
   var Cesium = {\n\
+    VERSION : "' + version + '",\n\
     _shaders : {}\n\
   };\n\
   ' + assignments.join('\n  ') + '\n\

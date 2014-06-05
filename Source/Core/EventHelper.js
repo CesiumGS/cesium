@@ -32,13 +32,11 @@ define([
 
     /**
      * Adds a listener to an event, and records the registration to be cleaned up later.
-     * @memberof EventHelper
      *
      * @param {Event} event The event to attach to.
      * @param {Function} listener The function to be executed when the event is raised.
      * @param {Object} [scope] An optional object scope to serve as the <code>this</code>
      * pointer in which the listener function will execute.
-     *
      * @returns {Function} A function that will remove this event listener when invoked.
      *
      * @see Event#addEventListener
@@ -63,7 +61,6 @@ define([
 
     /**
      * Unregisters all previously added listeners.
-     * @memberof EventHelper
      *
      * @see Event#removeEventListener
      */

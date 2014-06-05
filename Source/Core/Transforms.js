@@ -55,8 +55,6 @@ define([
      * <li>The <code>z</code> axis points in the direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
-     * @memberof Transforms
-     *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -159,8 +157,6 @@ define([
      * <li>The <code>z</code> axis points in the opposite direction of the ellipsoid surface normal which passes through the position.</li>
      * </ul>
      *
-     * @memberof Transforms
-     *
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
@@ -261,8 +257,6 @@ define([
      * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
      * pseudo-fixed axes at a given time.  This method treats the UT1 time standard as equivalent to UTC.
      *
-     * @memberof Transforms
-     *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
@@ -327,8 +321,6 @@ define([
      * Fixed and ICRF axes.
      * @type {Iau2006XysData}
      *
-     * @memberof Transforms
-     *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
      */
@@ -339,8 +331,6 @@ define([
      * between the Fixed and ICRF axes.  By default, zero values are used for all EOP values,
      * yielding a reasonable but not completely accurate representation of the ICRF axes.
      * @type {EarthOrientationParameters}
-     *
-     * @memberof Transforms
      *
      * @see Transforms.computeIcrfToFixedMatrix
      * @see Transforms.computeFixedToIcrfMatrix
@@ -354,8 +344,6 @@ define([
      * Preloads the data necessary to transform between the ICRF and Fixed axes, in either
      * direction, over a given interval.  This function returns a promise that, when resolved,
      * indicates that the preload has completed.
-     *
-     * @memberof Transforms
      *
      * @param {TimeInterval} timeInterval The interval to preload.
      * @returns {Promise} A promise that, when resolved, indicates that the preload has completed
@@ -390,8 +378,6 @@ define([
      * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
      *
-     * @memberof Transforms
-     *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
      *                  not specified, a new instance is created and returned.
@@ -401,18 +387,13 @@ define([
      * @see Transforms.preloadIcrfFixed
      *
      * @example
-     * //Set the view to the inertial frame.
-     * function updateAndRender() {
-     *     var now = new Cesium.JulianDate();
-     *     scene.initializeFrame();
-     *     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     *     if (Cesium.defined(icrfToFixed)) {
-     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
-     *     }
-     *     scene.render();
-     *     Cesium.requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * var clock = viewer.clock;
+     * clock.onTick.addEventListener(function() {
+     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(clock.currentTime);
+     *   if (Cesium.defined(icrfToFixed)) {
+     *     viewer.scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *   }
+     * });
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -439,8 +420,6 @@ define([
      * to the International Celestial Reference Frame (GCRF/ICRF) inertial frame axes
      * at a given time.  This function may return undefined if the data necessary to
      * do the transformation is not yet loaded.
-     *
-     * @memberof Transforms
      *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
@@ -565,16 +544,11 @@ define([
     /**
      * Transform a point from model coordinates to window coordinates.
      *
-     * @memberof Transforms
-     *
      * @param {Matrix4} modelViewProjectionMatrix The 4x4 model-view-projection matrix.
      * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
      * @param {Cartesian3} point The point to transform.
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
-     *
-     * @see czm_modelViewProjection
-     * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -22,6 +22,7 @@ define([
      * @alias DiscardMissingTileImagePolicy
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.missingImageUrl The URL of the known missing image.
      * @param {Cartesian2[]} options.pixelsToCheck An array of {@link Cartesian2} pixel positions to
      *        compare against the missing image.
@@ -100,7 +101,6 @@ define([
      * Given a tile image, decide whether to discard that image.
      *
      * @param {Image} image An image to test.
-     *
      * @returns True if the image should be discarded; otherwise, false.
      *
      * @exception {DeveloperError} <code>shouldDiscardImage</code> must not be called before the discard policy is ready.

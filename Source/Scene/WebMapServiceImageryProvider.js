@@ -31,6 +31,7 @@ define([
      * @alias WebMapServiceImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the WMS service.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
@@ -183,7 +184,7 @@ define([
         /**
          * Gets the names of the WMS layers, separated by commas.
          * @memberof WebMapServiceImageryProvider.prototype
-         * @returns {String}
+         * @type {String}
          */
         layers : {
             get : function() {
@@ -194,7 +195,7 @@ define([
         /**
          * Gets the width of each tile, in pixels. This function should
          * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
-         * @memberof WebMapServiceImageryProviderr.prototype
+         * @memberof WebMapServiceImageryProvider.prototype
          * @type {Number}
          */
         tileWidth : {
@@ -374,12 +375,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof WebMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -392,12 +390,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link WebMapServiceImageryProvider#ready} returns true.
      *
-     * @memberof WebMapServiceImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -424,7 +419,7 @@ define([
      *    styles=
      *    format=image/jpeg
      *
-     * @memberof WebMapServiceImageryProvider
+     * @constant
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',

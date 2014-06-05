@@ -50,7 +50,6 @@ define([
 
     /**
      * Duplicates a NearFarScalar instance.
-     * @memberof NearFarScalar
      *
      * @param {NearFarScalar} nearFarScalar The NearFarScalar to duplicate.
      * @param {NearFarScalar} [result] The object onto which to store the result.
@@ -81,7 +80,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof NearFarScalar
      *
      * @param {NearFarScalar} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -107,7 +105,6 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof NearFarScalar
      *
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
@@ -135,11 +132,9 @@ define([
     /**
      * Compares the provided NearFarScalar and returns <code>true</code> if they are equal,
      * <code>false</code> otherwise.
-     * @memberof NearFarScalar
      *
      * @param {NearFarScalar} [left] The first NearFarScalar.
      * @param {NearFarScalar} [right] The second NearFarScalar.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     NearFarScalar.equals = function(left, right) {
@@ -154,7 +149,6 @@ define([
 
     /**
      * Duplicates this instance.
-     * @memberof NearFarScalar
      *
      * @param {NearFarScalar} [result] The object onto which to store the result.
      * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
@@ -166,10 +160,8 @@ define([
     /**
      * Compares this instance to the provided NearFarScalar and returns <code>true</code> if they are equal,
      * <code>false</code> otherwise.
-     * @memberof NearFarScalar
      *
      * @param {NearFarScalar} [right] The right hand side NearFarScalar.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     NearFarScalar.prototype.equals = function(right) {

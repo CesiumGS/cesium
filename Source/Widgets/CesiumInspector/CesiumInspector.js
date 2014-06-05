@@ -308,7 +308,6 @@ define([
     });
 
     /**
-     * @memberof CesiumInspector
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumInspector.prototype.isDestroyed = function() {
@@ -318,7 +317,6 @@ define([
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof CesiumInspector
      */
     CesiumInspector.prototype.destroy = function() {
         knockout.cleanNode(this._element);

@@ -81,8 +81,6 @@ define([
      * Gets or sets the default function which takes a scene and dataSource and returns the
      * array of visualizers used for visualization.  By default, this function uses all standard visualizers.
      *
-     * @memberof DataSourceDisplay
-     *
      * @type {Function}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, dataSource) {
@@ -106,8 +104,6 @@ define([
     /**
      * Gets the scene being used for display.
      *
-     * @memberof DataSourceDisplay
-     *
      * @returns {Scene} The scene.
      */
     DataSourceDisplay.prototype.getScene = function() {
@@ -116,8 +112,6 @@ define([
 
     /**
      * Gets the collection of data sources to be displayed.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {DataSourceCollection} The collection of data sources.
      */
@@ -130,8 +124,6 @@ define([
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
@@ -148,8 +140,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof DataSourceDisplay
      *
      * @returns {undefined}
      *
@@ -174,10 +164,7 @@ define([
     /**
      * Updates the display to the provided time.
      *
-     * @memberof DataSourceDisplay
-     *
      * @param {JulianDate} time The simulation time.
-     *
      * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {

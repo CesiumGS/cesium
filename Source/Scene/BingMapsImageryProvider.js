@@ -43,6 +43,7 @@ define([
      * @alias BingMapsImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
@@ -438,12 +439,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof BingMapsImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -461,12 +459,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link BingMapsImageryProvider#ready} returns true.
      *
-     * @memberof BingMapsImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
@@ -490,8 +485,6 @@ define([
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
      * from a Bing Maps server.
-     *
-     * @memberof BingMapsImageryProvider
      *
      * @param {Number} x The tile's x coordinate.
      * @param {Number} y The tile's y coordinate.
@@ -522,8 +515,6 @@ define([
     /**
      * Converts a tile's quadkey used to request an image from a Bing Maps server into the
      * (x, y, level) position.
-     *
-     * @memberof BingMapsImageryProvider
      *
      * @param {String} quadkey The tile's quad key
      *

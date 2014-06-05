@@ -29,8 +29,6 @@ define([
      * @exception {DeveloperError} lower and upper must have the same lengths.
      * @exception {DeveloperError} lower and upper must be one less than the length of diagonal.
      *
-     * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
-     *
      * @performance Linear time.
      *
      * @example
@@ -46,6 +44,8 @@ define([
      * ];
      *
      * var solution = Cesium.TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
+     *
+     * @returns {Cartesian3[]} An array of Cartesians with length <code>n</code> that is the solution to the tridiagonal system of equations.
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
         //>>includeStart('debug', pragmas.debug);

@@ -72,8 +72,6 @@ define([
     /**
      * Set a function to be executed on an input event.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
      * @param {Function} action Function to be executed when the input event occurs.
      * @param {Number} type The ScreenSpaceEventType of input event.
      * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
@@ -99,8 +97,6 @@ define([
     /**
      * Returns the function to be executed on an input event.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
      * @param {Number} type The ScreenSpaceEventType of input event.
      * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
      * event occurs.
@@ -121,8 +117,6 @@ define([
 
     /**
      * Removes the function to be executed on an input event.
-     *
-     * @memberof ScreenSpaceEventHandler
      *
      * @param {Number} type The ScreenSpaceEventType of input event.
      * @param {Number} [modifier] A KeyboardEventModifier key that is held when a <code>type</code>
@@ -582,8 +576,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof ScreenSpaceEventHandler
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see ScreenSpaceEventHandler#destroy
@@ -598,8 +590,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof ScreenSpaceEventHandler
      *
      * @returns {undefined}
      *

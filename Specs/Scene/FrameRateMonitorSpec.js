@@ -40,11 +40,11 @@ defineSuite([
     it('throws when constructed without a scene', function() {
         expect(function() {
             monitor = new FrameRateMonitor();
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             monitor = new FrameRateMonitor({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can be constructed with just a scene', function() {

@@ -9,7 +9,6 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
-        '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -30,7 +29,6 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -208,8 +206,9 @@ define([
 
         this._mode = SceneMode.SCENE3D;
         this._modeChanged = true;
-        this._projection = new GeographicProjection();
-        this._maxCoord = new Cartesian3();
+        var projection = scene.mapProjection;
+        this._projection = projection;
+        this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
     };
 
@@ -515,6 +514,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
+         *
          * @default {@link Matrix4.IDENTITY}
          */
         inverseTransform : {
@@ -529,8 +530,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_view
          * @see Camera#inverseViewMatrix
          */
         viewMatrix : {
@@ -545,8 +546,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_inverseView
          * @see Camera#viewMatrix
          */
         inverseViewMatrix : {
@@ -559,7 +560,9 @@ define([
         /**
          * Gets the position of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         positionWC : {
             get : function() {
@@ -571,7 +574,9 @@ define([
         /**
          * Gets the view direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         directionWC : {
             get : function() {
@@ -583,7 +588,9 @@ define([
         /**
          * Gets the up direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         upWC : {
             get : function() {
@@ -595,7 +602,9 @@ define([
         /**
          * Gets the right direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         rightWC : {
             get : function() {
@@ -607,6 +616,7 @@ define([
         /**
          * Gets or sets the camera heading in radians.
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         heading : {
@@ -639,6 +649,7 @@ define([
         /**
          * Gets or sets the camera tilt in radians
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         tilt : {
@@ -670,17 +681,13 @@ define([
         }
     });
 
-    var scratchUpdateCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
     /**
      * @private
      */
-    Camera.prototype.update = function(mode, scene2D) {
+    Camera.prototype.update = function(mode) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(mode)) {
             throw new DeveloperError('mode is required.');
-        }
-        if (!defined(scene2D)) {
-            throw new DeveloperError('scene2D is required.');
         }
         //>>includeEnd('debug');
 
@@ -689,12 +696,6 @@ define([
             this._mode = mode;
             this._modeChanged = mode !== SceneMode.MORPHING;
             updateFrustum = this._mode === SceneMode.SCENE2D;
-        }
-
-        var projection = scene2D.projection;
-        if (defined(projection) && projection !== this._projection) {
-            this._projection = projection;
-            this._maxCoord = projection.project(scratchUpdateCartographic, this._maxCoord);
         }
 
         if (updateFrustum) {
@@ -723,8 +724,6 @@ define([
     /**
      * Sets the camera's transform without changing the current view.
      *
-     * @memberof Camera
-     *
      * @param {Matrix4} transform The camera transform.
      */
     Camera.prototype.setTransform = function(transform) {
@@ -744,11 +743,9 @@ define([
 
     /**
      * Transform a vector or point from world coordinates to the camera's reference frame.
-     * @memberof Camera
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
@@ -764,11 +761,9 @@ define([
 
     /**
      * Transform a point from world coordinates to the camera's reference frame.
-     * @memberof Camera
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.worldToCameraCoordinatesPoint = function(cartesian, result) {
@@ -784,11 +779,9 @@ define([
 
     /**
      * Transform a vector from world coordinates to the camera's reference frame.
-     * @memberof Camera
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.worldToCameraCoordinatesVector = function(cartesian, result) {
@@ -804,11 +797,9 @@ define([
 
     /**
      * Transform a vector or point from the camera's reference frame to world coordinates.
-     * @memberof Camera
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
@@ -824,11 +815,9 @@ define([
 
     /**
      * Transform a point from the camera's reference frame to world coordinates.
-     * @memberof Camera
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.cameraToWorldCoordinatesPoint = function(cartesian, result) {
@@ -844,11 +833,9 @@ define([
 
     /**
      * Transform a vector from the camera's reference frame to world coordinates.
-     * @memberof Camera
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.cameraToWorldCoordinatesVector = function(cartesian, result) {
@@ -884,8 +871,6 @@ define([
     /**
      * Translates the camera's position by <code>amount</code> along <code>direction</code>.
      *
-     * @memberof Camera
-     *
      * @param {Cartesian3} direction The direction to move.
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -915,8 +900,6 @@ define([
     /**
      * Translates the camera's position by <code>amount</code> along the camera's view vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see Camera#moveBackward
@@ -930,8 +913,6 @@ define([
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's view vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see Camera#moveForward
@@ -943,8 +924,6 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's up vector.
-     *
-     * @memberof Camera
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -959,8 +938,6 @@ define([
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's up vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see Camera#moveUp
@@ -972,8 +949,6 @@ define([
 
     /**
      * Translates the camera's position by <code>amount</code> along the camera's right vector.
-     *
-     * @memberof Camera
      *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
@@ -988,8 +963,6 @@ define([
      * Translates the camera's position by <code>amount</code> along the opposite direction
      * of the camera's right vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in meters, to move. Defaults to <code>defaultMoveAmount</code>.
      *
      * @see Camera#moveRight
@@ -1002,8 +975,6 @@ define([
     /**
      * Rotates the camera around its up vector by amount, in radians, in the opposite direction
      * of its right vector.
-     *
-     * @memberof Camera
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1018,8 +989,6 @@ define([
      * Rotates the camera around its up vector by amount, in radians, in the direction
      * of its right vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see Camera#lookLeft
@@ -1032,8 +1001,6 @@ define([
     /**
      * Rotates the camera around its right vector by amount, in radians, in the direction
      * of its up vector.
-     *
-     * @memberof Camera
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1048,8 +1015,6 @@ define([
      * Rotates the camera around its right vector by amount, in radians, in the opposite direction
      * of its up vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see Camera#lookUp
@@ -1063,8 +1028,6 @@ define([
     var lookScratchMatrix = new Matrix3();
     /**
      * Rotate each of the camera's orientation vectors around <code>axis</code> by <code>angle</code>
-     *
-     * @memberof Camera
      *
      * @param {Cartesian3} axis The axis to rotate around.
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
@@ -1097,8 +1060,6 @@ define([
     /**
      * Rotate the camera counter-clockwise around its direction vector by amount, in radians.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
      * @see Camera#twistRight
@@ -1110,8 +1071,6 @@ define([
 
     /**
      * Rotate the camera clockwise around its direction vector by amount, in radians.
-     *
-     * @memberof Camera
      *
      * @param {Number} [amount] The amount, in radians, to rotate by. Defaults to <code>defaultLookAmount</code>.
      *
@@ -1144,8 +1103,6 @@ define([
     /**
      * Rotates the camera around <code>axis</code> by <code>angle</code>. The distance
      * of the camera's position to the center of the camera's reference frame remains the same.
-     *
-     * @memberof Camera
      *
      * @param {Cartesian3} axis The axis to rotate around given in world coordinates.
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
@@ -1184,8 +1141,6 @@ define([
     /**
      * Rotates the camera around the center of the camera's reference frame by angle downwards.
      *
-     * @memberof Camera
-     *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
      * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
@@ -1199,8 +1154,6 @@ define([
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle upwards.
-     *
-     * @memberof Camera
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
      * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
@@ -1255,8 +1208,6 @@ define([
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the right.
      *
-     * @memberof Camera
-     *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
      * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
      *
@@ -1270,8 +1221,6 @@ define([
 
     /**
      * Rotates the camera around the center of the camera's reference frame by angle to the left.
-     *
-     * @memberof Camera
      *
      * @param {Number} [angle] The angle, in radians, to rotate by. Defaults to <code>defaultRotateAmount</code>.
      * @param {Matrix4} [transform] A transform to append to the camera transform before the rotation. Does not alter the camera's transform.
@@ -1330,8 +1279,6 @@ define([
     /**
      * Zooms <code>amount</code> along the camera's view vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see Camera#zoomOut
@@ -1349,8 +1296,6 @@ define([
      * Zooms <code>amount</code> along the opposite direction of
      * the camera's view vector.
      *
-     * @memberof Camera
-     *
      * @param {Number} [amount] The amount to move. Defaults to <code>defaultZoomAmount</code>.
      *
      * @see Camera#zoomIn
@@ -1367,8 +1312,6 @@ define([
     /**
      * Gets the magnitude of the camera position. In 3D, this is the vector magnitude. In 2D and
      * Columbus view, this is the distance to the map.
-     *
-     * @memberof Camera
      *
      * @returns {Number} The magnitude of the position.
      */
@@ -1424,8 +1367,6 @@ define([
     /**
      * Moves the camera to the provided cartographic position.
      *
-     * @memberof Camera
-     *
      * @param {Cartographic} cartographic The new camera position.
      */
     Camera.prototype.setPositionCartographic = function(cartographic) {
@@ -1447,8 +1388,6 @@ define([
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.
-     *
-     * @memberof Camera
      *
      * @param {Cartesian3} eye The position of the camera.
      * @param {Cartesian3} target The position to look at.
@@ -1684,11 +1623,8 @@ define([
     /**
      * Get the camera position needed to view an rectangle on an ellipsoid or map
      *
-     * @memberof Camera
-     *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Cartesian3} [result] The camera position needed to view the rectangle
-     *
      * @returns {Cartesian3} The camera position needed to view the rectangle
      */
     Camera.prototype.getRectangleCameraCoordinates = function(rectangle, result) {
@@ -1711,8 +1647,6 @@ define([
 
     /**
      * View an rectangle on an ellipsoid or map.
-     *
-     * @memberof Camera
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to view.
@@ -1780,12 +1714,9 @@ define([
     /**
      * Pick an ellipsoid or map.
      *
-     * @memberof Camera
-     *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
@@ -1870,11 +1801,8 @@ define([
      * Create a ray from the camera position through the pixel at <code>windowPosition</code>
      * in world coordinates.
      *
-     * @memberof Camera
-     *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     *
      * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
@@ -2028,13 +1956,10 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
-     * @memberof Camera
-     *
      * @param {Number} duration The duration, in milliseconds, of the animation.
+     * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
-     *
-     * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      */
     Camera.prototype.createCorrectPositionAnimation = function(duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -2054,8 +1979,6 @@ define([
 
     /**
      * Returns a duplicate of a Camera instance.
-     *
-     * @memberof Camera
      *
      * @returns {Camera} A new copy of the Camera instance.
      */
