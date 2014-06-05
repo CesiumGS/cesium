@@ -415,10 +415,11 @@ define([
      *   scale : 1.0
      * });
      *
+     * @example
      * // Example 2:  Specify only the label's cartographic position,
      * // text, and font.
      * var l = labels.add({
-     *   position : ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, height)),
+     *   position : Cartesian3.fromRadians(longitude, latitude, height),
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });

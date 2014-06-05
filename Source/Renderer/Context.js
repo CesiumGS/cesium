@@ -989,8 +989,7 @@ define([
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
      * var buffer = context.createVertexBuffer(16, BufferUsage.DYNAMIC_DRAW);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a dynamic vertex buffer from three floating-point values.
      * // The data copied to the vertex buffer is considered raw bytes until it is
      * // interpreted as vertices using a vertex array.
@@ -1032,8 +1031,7 @@ define([
      * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
      *     IndexDatatype.UNSIGNED_SHORT);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
@@ -1114,8 +1112,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a vertex array with vertices from two different vertex buffers.
      * // Each vertex has a three-component position and three-component normal.
      * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
@@ -1136,8 +1133,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3. Creates the same vertex layout as Example 2 using a single
      * // vertex buffer, instead of two.
      * var buffer = context.createVertexBuffer(24, BufferUsage.STATIC_DRAW);
@@ -2072,8 +2068,7 @@ define([
      *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
@@ -2083,8 +2078,7 @@ define([
      *     interleave         : true
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();

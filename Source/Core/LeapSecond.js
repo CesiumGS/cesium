@@ -30,8 +30,7 @@ define([
      * var leapSecond = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 25.0);
      * var offset = leapSecond.offset;    // 25.0
      *
-     * //////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Construct a LeapSecond using a date string
      * var date = 'January 1, 1990 00:00:00 UTC';
      * var leapSecond = new LeapSecond(date, 25.0);

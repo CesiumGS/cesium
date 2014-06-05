@@ -244,6 +244,7 @@ define([
      * // Example 1. Construct a JulianDate representing the current system time.
      * var julianDate = new Cesium.JulianDate();
      *
+     * @example
      * // Example 2. Construct a JulianDate from a Julian day number and seconds of the day.
      * var julianDayNumber = 2448257;   // January 1, 1991
      * var secondsOfDay = 21600;        // 06:00:00
@@ -362,8 +363,12 @@ define([
      * @example
      * // Example 1. Construct a JulianDate in UTC at April 24th, 2012 6:08PM UTC
      * var julianDate = Cesium.JulianDate.fromIso8601('2012-04-24T18:08Z');
+     *
+     * @example
      * // Example 2. Construct a JulianDate in local time April 24th, 2012 12:00 AM
      * var localDay = Cesium.JulianDate.fromIso8601('2012-04-24');
+     *
+     * @example
      * // Example 3. Construct a JulianDate 5 hours behind UTC April 24th, 2012 5:00 pm UTC
      * var localDay = Cesium.JulianDate.fromIso8601('2012-04-24T12:00-05:00');
      */

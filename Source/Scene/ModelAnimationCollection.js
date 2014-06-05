@@ -111,6 +111,7 @@ define([
      *   name : 'animation name'
      * });
      *
+     * @example
      * // Example 2. Add an animation and provide all properties and events
      * var startTime = new JulianDate();
      *
