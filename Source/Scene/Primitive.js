@@ -980,7 +980,16 @@ define([
             }
         }
 
-        var boundingSphere = this.getBoundingSphere(frameState.mode);
+        var boundingSphere;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSphere = this._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSphere = this._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
+            boundingSphere = this._boundingSphere2D;
+        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
+            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
+        }
 
         var passes = frameState.passes;
         if (passes.render) {
@@ -1090,31 +1099,6 @@ define([
         this._lastPerInstanceAttributeIndex = index;
 
         return attributes;
-    };
-
-    /**
-     * Returns the bounding sphere for this primitive in the current scene mode.  This function may returned undefined
-     * before the primitive {@link Primitive#isReady}.
-     *
-     * @memberof Primitive
-     *
-     * @param {SceneMode} sceneMode The scene mode (3D, 2D, Columbus View) for which to obtain the bounding sphere.
-     *
-     * @returns {BoundingSphere} The bounding sphere of the primitive, or undefined if the primitive's bounding sphere
-     *          has not yet been computed.
-     */
-    Primitive.prototype.getBoundingSphere = function(sceneMode) {
-        var boundingSphere;
-        if (sceneMode === SceneMode.SCENE3D) {
-            boundingSphere = this._boundingSphereWC;
-        } else if (sceneMode === SceneMode.COLUMBUS_VIEW) {
-            boundingSphere = this._boundingSphereCV;
-        } else if (sceneMode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSphere = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
-            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
-        }
-        return boundingSphere;
     };
 
     /**

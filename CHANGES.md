@@ -49,8 +49,7 @@ Beta Releases
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size.
 * `Camera.transform` now works consistently across scene modes.
-* Added `QuadtreePrimitive`, a low-level feature that enables rendering of massive quantities of geometry using a quadtree-based level-of-detail and culling algorithm.
-* Added `Primitive.getBoundingSphere` and `Primitive.complete`.
+* Added `Primitive.ready`.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
