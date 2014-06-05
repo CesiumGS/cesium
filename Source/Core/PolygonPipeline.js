@@ -125,7 +125,6 @@ define([
         return -1;
     }
 
-
     /**
      * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
      *
