@@ -240,8 +240,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof CustomSensorVolume
-     *
      * @see CustomSensorVolume#getDirections
      */
     CustomSensorVolume.prototype.setDirections = function(directions) {
@@ -251,8 +249,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof CustomSensorVolume
      *
      * @see CustomSensorVolume#setDirections
      */
@@ -353,8 +349,6 @@ define([
 
     /**
      * DOC_TBA
-     *
-     * @memberof CustomSensorVolume
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      * @exception {DeveloperError} this.material must be defined.
@@ -551,7 +545,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.isDestroyed = function() {
         return false;
@@ -559,7 +552,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.destroy = function() {
         this._frontFaceColorCommand.vertexArray = this._frontFaceColorCommand.vertexArray && this._frontFaceColorCommand.vertexArray.destroy();

@@ -40,6 +40,7 @@ define([
      * @alias ArcGisImageServerTerrainProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS ImageServer service.
      * @param {String} [options.token] The authorization token to use to connect to the service.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
@@ -156,8 +157,6 @@ define([
      * {@link ArcGisImageServerTerrainProvider#ready} returns true.  The result includes terrain
      * data and indicates that all child tiles are available.
      *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
@@ -212,8 +211,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
-     * @memberof ArcGisImageServerTerrainProvider
-     *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
@@ -225,8 +222,6 @@ define([
      * Gets a value indicating whether or not the provider includes a water mask.  The water mask
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.
-     *
-     * @memberof ArcGisImageServerTerrainProvider
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      */

@@ -55,7 +55,7 @@ defineSuite([
         context = createContext();
 
         var us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     afterAll(function() {
@@ -587,17 +587,25 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('render label with pixelOffsetScaleByDistance', function() {
@@ -616,17 +624,25 @@ defineSuite([
         var eye = new Cartesian3(0.0, 0.0, 1.0);
         var target = Cartesian3.ZERO;
         var up = Cartesian3.UNIT_Y;
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, labels);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         eye = new Cartesian3(0.0, 0.0, 6.0);
-        us.update(context, createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        us.update(context, createFrameState(createCamera({
+            eye : eye,
+            target : target,
+            up : up
+        })));
         render(context, frameState, labels);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        us.update(context, createFrameState(createCamera(context)));
+        us.update(context, createFrameState(createCamera()));
     });
 
     it('can pick a label', function() {
@@ -988,6 +1004,68 @@ defineSuite([
             return Cartesian2.clone(label._glyphs[index].billboard._translate, new Cartesian2());
         }
 
+        it('sets billboard properties properly when they change on the label', function() {
+            var position1 = new Cartesian3(1.0, 2.0, 3.0);
+            var position2 = new Cartesian3(4.0, 5.0, 6.0);
+            var pixelOffset1 = new Cartesian2(4.0, 5.0);
+            var pixelOffset2 = new Cartesian2(6.0, 7.0);
+            var eyeOffset1 = new Cartesian3(6.0, 7.0, 8.0);
+            var eyeOffset2 = new Cartesian3(16.0, 17.0, 18.0);
+            var verticalOrigin1 = VerticalOrigin.TOP;
+            var verticalOrigin2 = VerticalOrigin.BOTTOM;
+            var scale1 = 2.0;
+            var scale2 = 3.0;
+            var id1 = 'id1';
+            var id2 = 'id2';
+            var translucency1 = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+            var translucency2 = new NearFarScalar(1.1e4, 1.2, 1.3e6, 4.0);
+            var pixelOffsetScale1 = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+            var pixelOffsetScale2 = new NearFarScalar(1.5e4, 1.6, 1.7e6, 8.0);
+
+            var label = labels.add({
+                position : position1,
+                text : 'abc',
+                pixelOffset : pixelOffset1,
+                eyeOffset : eyeOffset1,
+                verticalOrigin : verticalOrigin1,
+                scale : scale1,
+                id : id1,
+                translucencyByDistance : translucency1,
+                pixelOffsetScaleByDistance : pixelOffsetScale1
+            });
+
+            labels.update(context, frameState, []);
+
+            label.position = position2;
+            label.text = 'def';
+            label.pixelOffset = pixelOffset2;
+            label.eyeOffset = eyeOffset2;
+            label.verticalOrigin = verticalOrigin2;
+            label.scale = scale2;
+            label.id = id2;
+            label.translucencyByDistance = translucency2;
+            label.pixelOffsetScaleByDistance = pixelOffsetScale2;
+
+            labels.update(context, frameState, []);
+
+            for (var i = 0; i < label._glyphs.length; ++i) {
+                var glyph = label._glyphs[i];
+                var billboard = glyph.billboard;
+                expect(billboard.show).toEqual(label.show);
+                expect(billboard.position).toEqual(label.position);
+                expect(billboard.eyeOffset).toEqual(label.eyeOffset);
+                expect(billboard.pixelOffset).toEqual(label.pixelOffset);
+                expect(billboard.verticalOrigin).toEqual(label.verticalOrigin);
+                // glyph horizontal origin is always LEFT
+                expect(billboard.scale).toEqual(label.scale);
+                expect(billboard.id).toEqual(label.id);
+                expect(billboard.translucencyByDistance).toEqual(label.translucencyByDistance);
+                expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
+
+                expect(billboard.pickPrimitive).toEqual(label);
+            }
+        });
+
         it('should set vertexTranslate of billboards correctly when vertical origin is changed', function() {
             var label = labels.add({
                 text : 'apl',
@@ -1292,7 +1370,7 @@ defineSuite([
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
@@ -1315,7 +1393,7 @@ defineSuite([
     });
 
     it('computes bounding sphere in Columbus view', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({
@@ -1345,7 +1423,7 @@ defineSuite([
     });
 
     it('computes bounding sphere in 2D', function() {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = labels.add({

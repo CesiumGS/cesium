@@ -24,7 +24,9 @@
     canvas.className = "fullSize";
     document.getElementById('cesiumContainer').appendChild(canvas);
 
-    var scene = new Cesium.Scene(canvas);
+    var scene = new Cesium.Scene({
+        canvas : canvas
+    });
     var primitives = scene.primitives;
     scene.globe = new Cesium.Globe();
 

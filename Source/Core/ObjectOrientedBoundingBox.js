@@ -72,7 +72,6 @@ define([
      * Computes an instance of an ObjectOrientedBoundingBox of the given positions.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
      * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
@@ -169,7 +168,6 @@ define([
     /**
      * Computes an ObjectOrientedBoundingBox from a BoundingRectangle.
      * The BoundingRectangle is placed on the XY plane.
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {BoundingRectangle} boundingRectangle A bounding rectangle.
      * @param {Number} [rotation=0.0] The rotation of the bounding box in radians.
@@ -210,7 +208,6 @@ define([
 
     /**
      * Duplicates a ObjectOrientedBoundingBox instance.
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} box The bounding box to duplicate.
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
@@ -272,7 +269,6 @@ define([
     /**
      * Checks if two ObjectOrientedBoundingBoxes intersect.
      * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
@@ -356,7 +352,6 @@ define([
     /**
      * Compares the provided ObjectOrientedBoundingBox componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} left The first ObjectOrientedBoundingBox.
      * @param {ObjectOrientedBoundingBox} right The second ObjectOrientedBoundingBox.
@@ -373,7 +368,6 @@ define([
 
     /**
      * Duplicates this ObjectOrientedBoundingBox instance.
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {ObjectOrientedBoundingBox} The modified result parameter or a new ObjectOrientedBoundingBox instance if one was not provided.
@@ -385,7 +379,6 @@ define([
     /**
      * Compares this ObjectOrientedBoundingBox against the provided ObjectOrientedBoundingBox componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ObjectOrientedBoundingBox
      *
      * @param {ObjectOrientedBoundingBox} [right] The right hand side ObjectOrientedBoundingBox.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.

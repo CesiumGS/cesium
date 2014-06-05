@@ -913,7 +913,7 @@ defineSuite([
 
     it('has czm_eyeHeight2D in Scene2D', function() {
         var us = context.uniformState;
-        var camera = createCamera(context);
+        var camera = createCamera();
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;

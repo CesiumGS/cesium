@@ -152,8 +152,6 @@ define([
     /**
      * Duplicates an Ellipsoid instance.
      *
-     * @memberof Ellipsoid
-     *
      * @param {Ellipsoid} ellipsoid The ellipsoid to duplicate.
      * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
      *                    instance should be created.
@@ -201,28 +199,30 @@ define([
 
     /**
      * An Ellipsoid instance initialized to the WGS84 standard.
-     * @memberof Ellipsoid
      *
-     * @see czm_getWgs84EllipsoidEC
+     * @type {Ellipsoid}
+     * @constant
      */
     Ellipsoid.WGS84 = freezeObject(new Ellipsoid(6378137.0, 6378137.0, 6356752.3142451793));
 
     /**
      * An Ellipsoid instance initialized to radii of (1.0, 1.0, 1.0).
-     * @memberof Ellipsoid
+     *
+     * @type {Ellipsoid}
+     * @constant
      */
     Ellipsoid.UNIT_SPHERE = freezeObject(new Ellipsoid(1.0, 1.0, 1.0));
 
     /**
      * An Ellipsoid instance initialized to a sphere with the lunar radius.
-     * @memberof Ellipsoid
+     *
+     * @type {Ellipsoid}
+     * @constant
      */
     Ellipsoid.MOON = freezeObject(new Ellipsoid(CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS, CesiumMath.LUNAR_RADIUS));
 
     /**
      * Duplicates an Ellipsoid instance.
-     *
-     * @memberof Ellipsoid
      *
      * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
      *                    instance should be created.
@@ -234,7 +234,7 @@ define([
 
     /**
      * Computes the unit vector directed from the center of this ellipsoid toward the provided Cartesian position.
-     * @memberof Ellipsoid
+     * @function
      *
      * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -244,7 +244,6 @@ define([
 
     /**
      * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
-     * @memberof Ellipsoid
      *
      * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -276,7 +275,6 @@ define([
 
     /**
      * Computes the normal of the plane tangent to the surface of the ellipsoid at the provided position.
-     * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -295,7 +293,6 @@ define([
 
     /**
      * Converts the provided cartographic to Cartesian representation.
-     * @memberof Ellipsoid
      *
      * @param {Cartographic} cartographic The cartographic position.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -324,7 +321,6 @@ define([
 
     /**
      * Converts the provided array of cartographics to an array of Cartesians.
-     * @memberof Ellipsoid
      *
      * @param {Cartographic[]} cartographics An array of cartographic positions.
      * @param {Cartesian3[]} [result] The object onto which to store the result.
@@ -363,7 +359,6 @@ define([
     /**
      * Converts the provided cartesian to cartographic representation.
      * The cartesian is undefined at the center of the ellipsoid.
-     * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -400,7 +395,6 @@ define([
 
     /**
      * Converts the provided array of cartesians to an array of cartographics.
-     * @memberof Ellipsoid
      *
      * @param {Cartesian3[]} cartesians An array of Cartesian positions.
      * @param {Cartographic[]} [result] The object onto which to store the result.
@@ -439,7 +433,6 @@ define([
      * Scales the provided Cartesian position along the geodetic surface normal
      * so that it is on the surface of this ellipsoid.  If the position is
      * at the center of the ellipsoid, this function returns undefined.
-     * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -543,7 +536,6 @@ define([
     /**
      * Scales the provided Cartesian position along the geocentric surface normal
      * so that it is on the surface of this ellipsoid.
-     * @memberof Ellipsoid
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -576,8 +568,6 @@ define([
      * Transforms a Cartesian X, Y, Z position to the ellipsoid-scaled space by multiplying
      * its components by the result of {@link Ellipsoid#oneOverRadii}.
      *
-     * @memberof Ellipsoid
-     *
      * @param {Cartesian3} position The position to transform.
      * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
      *        return a new instance.
@@ -596,8 +586,6 @@ define([
      * Transforms a Cartesian X, Y, Z position from the ellipsoid-scaled space by multiplying
      * its components by the result of {@link Ellipsoid#radii}.
      *
-     * @memberof Ellipsoid
-     *
      * @param {Cartesian3} position The position to transform.
      * @param {Cartesian3} [result] The position to which to copy the result, or undefined to create and
      *        return a new instance.
@@ -615,7 +603,6 @@ define([
     /**
      * Compares this Ellipsoid against the provided Ellipsoid componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Ellipsoid
      *
      * @param {Ellipsoid} [right] The other Ellipsoid.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -628,7 +615,6 @@ define([
 
     /**
      * Creates a string representing this Ellipsoid in the format '(radii.x, radii.y, radii.z)'.
-     * @memberof Ellipsoid
      *
      * @returns {String} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
      */

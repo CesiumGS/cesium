@@ -22,6 +22,7 @@ defineSuite([
         'Scene/SceneMode',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
+        'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/destroyContext',
@@ -50,6 +51,7 @@ defineSuite([
         SceneMode,
         TextureAtlas,
         VerticalOrigin,
+        createCamera,
         createContext,
         createFrameState,
         destroyContext,
@@ -74,14 +76,11 @@ defineSuite([
     beforeEach(function() {
         primitives = new PrimitiveCollection();
 
-        camera = new Camera(context);
-        camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
-        camera.frustum.near = 0.01;
-        camera.frustum.far = 10.0;
-        camera.frustum.fovy = CesiumMath.toRadians(60.0);
-        camera.frustum.aspectRatio = 1.0;
+        camera = createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.UNIT_Z,
+            up : new Cartesian3(-1.0, 0.0, 0.0)
+        });
 
         us = context.uniformState;
         us.update(context, createFrameState(camera));

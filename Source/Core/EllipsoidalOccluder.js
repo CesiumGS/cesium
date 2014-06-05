@@ -94,8 +94,6 @@ define([
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
-     * @memberof EllipsoidalOccluder
-     *
      * @param {Cartesian3} occludee The point to test for visibility.
      *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
@@ -117,8 +115,6 @@ define([
      * Determines whether or not a point expressed in the ellipsoid scaled space, is hidden from view by the
      * occluder.  To transform a Cartesian X, Y, Z position in the coordinate system aligned with the ellipsoid
      * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
-     *
-     * @memberof EllipsoidalOccluder
      *
      * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
      *

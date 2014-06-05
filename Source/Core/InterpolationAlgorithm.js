@@ -23,7 +23,7 @@ define([
 
     /**
      * Given the desired degree, returns the number of data points required for interpolation.
-     * @memberof InterpolationAlgorithm
+     * @function
      *
      * @param {Number} degree The desired degree of interpolation.
      *
@@ -33,7 +33,7 @@ define([
 
     /**
      * Interpolates values.
-     * @memberof InterpolationAlgorithm
+     * @function
      *
      * @param {Number} x The independent variable for which the dependent variables will be interpolated.
      *

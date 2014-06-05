@@ -94,7 +94,6 @@ define([
 
     /**
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
-     * @memberof PolylinePipeline
      *
      * @param {Cartesian3[]} positions The polyline's Cartesian positions.
      * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
@@ -176,8 +175,6 @@ define([
     /**
      * Removes adjacent duplicate positions in an array of positions.
      *
-     * @memberof PolylinePipeline
-     *
      * @param {Cartesian3[]} positions The array of positions.
      *
      * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
@@ -219,8 +216,6 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the ellipsoid surface
-     *
-     * @memberof PolylinePipeline
      *
      * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -266,8 +261,6 @@ define([
 
     /**
      * Raises the positions to the given height.
-     *
-     * @memberof PolylinePipeline
      *
      * @param {Number[]} positions The array of type {Number} representing positions.
      * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.

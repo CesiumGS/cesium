@@ -39,6 +39,7 @@ define([
      * @alias PolylineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.

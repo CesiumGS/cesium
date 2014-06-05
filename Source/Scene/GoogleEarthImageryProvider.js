@@ -46,6 +46,7 @@ define([
      * @alias GoogleEarthImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url of the Google Earth server hosting the imagery.
      * @param {Number} options.channel The channel (id) to be used when requesting data from the server.
      *        The channel number can be found by looking at the json file located at:
@@ -480,8 +481,6 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof GoogleEarthImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
@@ -497,8 +496,6 @@ define([
     /**
      * Requests the image for a given tile.  This function should
      * not be called before {@link GoogleEarthImageryProvider#ready} returns true.
-     *
-     * @memberof GoogleEarthImageryProvider
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

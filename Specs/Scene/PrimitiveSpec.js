@@ -293,7 +293,7 @@ defineSuite([
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
-        frameState.camera.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode);
 
         frameState.camera.viewRectangle(rectangle1);
         us.update(context, frameState);
@@ -334,7 +334,7 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode);
 
         frameState.camera.viewRectangle(rectangle1);
         us.update(context, frameState);

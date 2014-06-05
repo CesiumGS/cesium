@@ -178,7 +178,6 @@ define([
 
     /**
      * Creates a typed array corresponding to component data type.
-     * @memberof ComponentDatatype
      *
      * @param {ComponentDatatype} componentDatatype The component data type.
      * @param {Number|Array} valuesOrLength The length of the array to create or an array.
@@ -221,7 +220,6 @@ define([
 
     /**
      * Creates a typed view of an array of bytes.
-     * @memberof ComponentDatatype
      *
      * @param {ComponentDatatype} componentDatatype The type of the view to create.
      * @param {ArrayBuffer} buffer The buffer storage to use for the view.
