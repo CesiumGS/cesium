@@ -188,6 +188,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('constructor throws with empty targetPropertyNames', function() {
+        expect(function() {
+            return new ReferenceProperty(new DynamicObjectCollection(), 'objectId', []);
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws with empty targetId', function() {
+        expect(function() {
+            return new ReferenceProperty(new DynamicObjectCollection(), '', ['property']);
+        }).toThrowDeveloperError();
+    });
+
     it('fromString throws with undefined targetCollection', function() {
         expect(function() {
             return ReferenceProperty.fromString(undefined, 'objectid#property');

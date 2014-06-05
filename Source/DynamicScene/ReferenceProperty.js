@@ -94,11 +94,17 @@ define([
         if (!defined(targetCollection)) {
             throw new DeveloperError('targetCollection is required.');
         }
-        if (!defined(targetId)) {
+        if (!defined(targetId) || targetId === '') {
             throw new DeveloperError('targetId is required.');
         }
         if (!defined(targetPropertyNames) || targetPropertyNames.length === 0) {
             throw new DeveloperError('targetPropertyNames is required.');
+        }
+        for (var i = 0; i < targetPropertyNames.length; i++) {
+            var item = targetPropertyNames[i];
+            if (!defined(item) || item === '') {
+                throw new DeveloperError('invalid referenceString.');
+            }
         }
         //>>includeEnd('debug');
 
@@ -212,8 +218,7 @@ define([
         var inIdentifier = true;
         var isEscaped = false;
         var token = '';
-        var i;
-        for (i = 0; i < referenceString.length; ++i) {
+        for (var i = 0; i < referenceString.length; ++i) {
             var c = referenceString.charAt(i);
 
             if (isEscaped) {
@@ -233,19 +238,6 @@ define([
             }
         }
         values.push(token);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (identifier === '' || values.length === 0) {
-            throw new DeveloperError('invalid referenceString.');
-        }
-
-        for (i = 0; i < values.length; i++) {
-            var item = values[i];
-            if (!defined(item) || item === '') {
-                throw new DeveloperError('invalid referenceString.');
-            }
-        }
-        //>>includeEnd('debug');
 
         return new ReferenceProperty(targetCollection, identifier, values);
     };
@@ -297,14 +289,14 @@ define([
             return true;
         }
 
-        if (this._targetCollection !== other._targetCollection || //
-            this._targetId !== other._targetId || //
-            this._targetPropertyNames.length !== other._targetPropertyNames.length) {
-            return false;
-        }
-
         var names = this._targetPropertyNames;
         var otherNames = other._targetPropertyNames;
+
+        if (this._targetCollection !== other._targetCollection || //
+            this._targetId !== other._targetId || //
+            names.length !== otherNames.length) {
+            return false;
+        }
 
         var length = this._targetPropertyNames.length;
         for (var i = 0; i < length; i++) {
