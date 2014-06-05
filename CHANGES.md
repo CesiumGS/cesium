@@ -11,6 +11,7 @@ Beta Releases
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Fixed support for embedded resources in glTF models.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 
 ### b29 - 2014-06-02
