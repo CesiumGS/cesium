@@ -16,7 +16,6 @@ Beta Releases
 * Fixed support for embedded resources in glTF models.
 * Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
-* Added `show` property to `Timeline` and `Animation`, allowing them to be dynamically shown and hidden as needed.
 
 ### b29 - 2014-06-02
 
