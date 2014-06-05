@@ -38,6 +38,7 @@ define([
      *
      * @alias QuadtreePrimitive
      * @constructor
+     * @private
      *
      * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
      *        the distance to individual tiles.

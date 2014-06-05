@@ -16,6 +16,7 @@ define([
      *
      * @alias QuadtreeTile
      * @constructor
+     * @private
      *
      * @param {Number} options.level The level of the tile in the quadtree.
      * @param {Number} options.x The X coordinate of the tile in the quadtree.  0 is the westernmost tile.

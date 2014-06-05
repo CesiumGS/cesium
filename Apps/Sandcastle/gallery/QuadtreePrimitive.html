@@ -34,7 +34,7 @@ require(['Cesium'], function(Cesium) {
         this._levelZeroMaximumError = Cesium.QuadtreeTileProvider.computeDefaultLevelZeroMaximumGeometricError(this._tilingScheme);
     };
 
-    Cesium.defineProperties(DemoTileProvider.prototype, {
+    Object.defineProperties(DemoTileProvider.prototype, {
         quadtree : {
             get : function() {
                 return this._quadtree;

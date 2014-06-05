@@ -16,6 +16,7 @@ define([
      *
      * @alias QuadtreeTileProvider
      * @constructor
+     * @private
      */
     var QuadtreeTileProvider = function QuadtreeTileProvider() {
         DeveloperError.throwInstantiationError();

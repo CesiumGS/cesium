@@ -5,6 +5,7 @@ define([], function() {
     /**
      * The state of a {@link QuadtreeTile} in the tile load pipeline.
      * @exports QuadtreeTileLoadState
+     * @private
      */
     var QuadtreeTileLoadState = {
         /**
