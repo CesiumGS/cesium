@@ -29,6 +29,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../ThirdParty/gltfDefaults',
+        '../ThirdParty/Uri',
         './BlendingState',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -68,6 +69,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         gltfDefaults,
+        Uri,
         BlendingState,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -173,6 +175,10 @@ define([
 
         this._gltf = gltfDefaults(options.gltf);
         this._basePath = defaultValue(options.basePath, '');
+
+        var docUri = new Uri(document.location.href);
+        var modelUri = new Uri(this._basePath);
+        this._baseUri = modelUri.resolve(docUri);
 
         /**
          * Determines if the model primitive will be shown.
@@ -528,6 +534,10 @@ define([
         loadText(url, options.headers).then(function(data) {
             model._gltf = gltfDefaults(JSON.parse(data));
             model._basePath = basePath;
+
+            var docUri = new Uri(document.location.href);
+            var modelUri = new Uri(model._basePath);
+            model._baseUri = modelUri.resolve(docUri);
         });
 
         return model;
@@ -693,7 +703,8 @@ define([
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
-                var bufferPath = model.basePath + buffers[name].path;
+                var uri = new Uri(buffers[name].path);
+                var bufferPath = uri.resolve(model._baseUri).toString();
                 loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction(model, 'buffer', bufferPath));
             }
         }
@@ -721,7 +732,8 @@ define([
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
-                var shaderPath = model.basePath + shaders[name].path;
+                var uri = new Uri(shaders[name].path);
+                var shaderPath = uri.resolve(model._baseUri).toString();
                 loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction(model, 'shader', shaderPath));
             }
         }
@@ -753,7 +765,8 @@ define([
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
-                var imagePath = model.basePath + images[textures[name].source].path;
+                var uri = new Uri(images[textures[name].source].path);
+                var imagePath = uri.resolve(model._baseUri).toString();
                 loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction(model, 'image', imagePath));
             }
         }
