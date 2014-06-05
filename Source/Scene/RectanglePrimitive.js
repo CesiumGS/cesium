@@ -192,7 +192,16 @@ define([
     };
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.granularity must be defined.
      */
     RectanglePrimitive.prototype.update = function(context, frameState, commandList) {
         //>>includeStart('debug', pragmas.debug);

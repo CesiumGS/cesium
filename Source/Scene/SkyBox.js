@@ -92,10 +92,15 @@ define([
     };
 
     /**
-     * @exception {DeveloperError} sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
-     * @exception {DeveloperError} sources properties must all be the same type.
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
-     * @private
+     * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
+     * @exception {DeveloperError} this.sources properties must all be the same type.
      */
     SkyBox.prototype.update = function(context, frameState) {
         if (!this.show) {
@@ -123,7 +128,7 @@ define([
                 (!defined(sources.negativeY)) ||
                 (!defined(sources.positiveZ)) ||
                 (!defined(sources.negativeZ))) {
-                throw new DeveloperError('sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
+                throw new DeveloperError('this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
             }
 
             if ((typeof sources.positiveX !== typeof sources.negativeX) ||
@@ -131,7 +136,7 @@ define([
                 (typeof sources.positiveX !== typeof sources.negativeY) ||
                 (typeof sources.positiveX !== typeof sources.positiveZ) ||
                 (typeof sources.positiveX !== typeof sources.negativeZ)) {
-                throw new DeveloperError('sources properties must all be the same type.');
+                throw new DeveloperError('this.sources properties must all be the same type.');
             }
             //>>includeEnd('debug');
 
