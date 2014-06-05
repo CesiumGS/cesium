@@ -149,7 +149,18 @@ define([
 
         xhr.onload = function(e) {
             if (xhr.status === 200) {
-                deferred.resolve(xhr.response);
+                if (defined(xhr.response)) {
+                    deferred.resolve(xhr.response);
+                } else {
+                    // busted old browsers.
+                    if (defined(xhr.responseText)) {
+                        deferred.resolve(xhr.responseText);
+                    } else if (defined(xhr.responseXML)) {
+                        deferred.resolve(xhr.responseXML);
+                    } else {
+                        throw new DeveloperError('unknown XMLHttpRequest response type.');
+                    }
+                }
             } else {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
             }
