@@ -2075,9 +2075,14 @@ define([
     }
 
     /**
-     * @exception {RuntimeError} Failed to load external reference.
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
-     * @private
+     * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(context, frameState, commandList) {
         if (frameState.mode !== SceneMode.SCENE3D) {
