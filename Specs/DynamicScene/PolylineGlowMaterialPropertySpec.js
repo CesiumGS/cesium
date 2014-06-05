@@ -1,17 +1,20 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/PolylineGlowMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Color',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-     ], function(
-             PolylineGlowMaterialProperty,
-             ConstantProperty,
-             TimeIntervalCollectionProperty,
-             Color,
-             JulianDate,
-             TimeInterval) {
+defineSuite([
+        'DynamicScene/PolylineGlowMaterialProperty',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Specs/testDefinitionChanged'
+    ], function(
+        PolylineGlowMaterialProperty,
+        Color,
+        JulianDate,
+        TimeInterval,
+        ConstantProperty,
+        TimeIntervalCollectionProperty,
+        testDefinitionChanged) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -116,20 +119,7 @@ defineSuite(['DynamicScene/PolylineGlowMaterialProperty',
 
     it('raises definitionChanged when glow property is assigned or modified', function() {
         var property = new PolylineGlowMaterialProperty();
-
-        var listener = jasmine.createSpy('listener');
-        property.definitionChanged.addEventListener(listener);
-
-        var oldValue = property.glowPower;
-        property.glowPower = new ConstantProperty(0.83);
-        expect(listener).toHaveBeenCalledWith(property, 'glowPower', property.glowPower, oldValue);
-        listener.reset();
-
-        property.glowPower.setValue(0.12);
-        expect(listener).toHaveBeenCalledWith(property, 'glowPower', property.glowPower, property.glowPower);
-        listener.reset();
-
-        property.glowPower = property.glowPower;
-        expect(listener.callCount).toEqual(0);
+        testDefinitionChanged(property, 'color', Color.RED, Color.BLUE);
+        testDefinitionChanged(property, 'glowPower', 0.25, 0.54);
     });
 });

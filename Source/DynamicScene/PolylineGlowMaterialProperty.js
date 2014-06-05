@@ -1,12 +1,13 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Color,
@@ -15,14 +16,13 @@ define(['../Core/Color',
         defineProperties,
         DeveloperError,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 
     /**
      * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
-     *
      * @alias PolylineGlowProperty
      * @constructor
      */
@@ -42,6 +42,7 @@ define(['../Core/Color',
          * constant if getValue always returns the same result for the current definition.
          * @memberof PolylineGlowProperty.prototype
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             get : function() {
@@ -54,6 +55,7 @@ define(['../Core/Color',
          * a different result for the same time.
          * @memberof PolylineGlowProperty.prototype
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -61,7 +63,7 @@ define(['../Core/Color',
             }
         },
         /**
-         * A {@link Color} {@link Property} which determines the material's color.
+         * A {@link Color} {@link Property} which determines the line's color.
          * @memberof PolylineGlowProperty.prototype
          * @type {Property}
          */
@@ -76,10 +78,9 @@ define(['../Core/Color',
 
     /**
      * Gets the {@link Material} type at the provided time.
-     * @memberof PolylineGlowProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     PolylineGlowProperty.prototype.getType = function(time) {
         return 'PolylineGlow';
@@ -87,7 +88,6 @@ define(['../Core/Color',
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof PolylineGlowProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -105,7 +105,6 @@ define(['../Core/Color',
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof PolylineGlowProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
