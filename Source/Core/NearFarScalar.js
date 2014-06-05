@@ -135,7 +135,6 @@ define([
      *
      * @param {NearFarScalar} [left] The first NearFarScalar.
      * @param {NearFarScalar} [right] The second NearFarScalar.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     NearFarScalar.equals = function(left, right) {
@@ -163,7 +162,6 @@ define([
      * <code>false</code> otherwise.
      *
      * @param {NearFarScalar} [right] The right hand side NearFarScalar.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     NearFarScalar.prototype.equals = function(right) {

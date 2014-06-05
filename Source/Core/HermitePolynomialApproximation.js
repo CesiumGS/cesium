@@ -69,7 +69,6 @@ define([
      * @param {Number} degree The desired degree of interpolation.
      * @param {Number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
      * @returns The number of required data points needed for the desired degree of interpolation.
-     *
      * @exception {DeveloperError} degree must be 0 or greater.
      * @exception {DeveloperError} inputOrder must be 0 or greater.
      */
@@ -102,7 +101,6 @@ define([
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
      * @param {Number[]} [result] An existing array into which to store the result.
-     *
      * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     HermitePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {

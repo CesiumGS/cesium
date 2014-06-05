@@ -15,6 +15,26 @@
     height: 100%;
 }
 
+.cesium-viewer-bottom {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding-right: 5px;
+}
+
+.cesium-viewer .cesium-widget-credits {
+    display: inline;
+    position: static;
+    bottom: auto;
+    left: auto;
+    padding-right: 0;
+    color: #ffffff;
+    font-size: 10px;
+    text-shadow: 0px 0px 2px #000000;
+}
+
 .cesium-viewer-timelineContainer {
     position: absolute;
     bottom: 0;

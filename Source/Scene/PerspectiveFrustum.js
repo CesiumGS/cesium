@@ -140,7 +140,6 @@ define([
      * @param {Cartesian3} position The eye position.
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
-     *
      * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
@@ -172,6 +171,7 @@ define([
      *     height : canvas.clientHeight
      * });
      *
+     * @example
      * // Example 2
      * // Get the width and height of a pixel if the near plane was set to 'distance'.
      * // For example, get the size of a pixel of an image on a billboard.

@@ -45,7 +45,8 @@ define(function() {
     };
 
     /**
-     * Returns the morph time for the given scene mode
+     * Returns the morph time for the given scene mode.
+     *
      * @param {SceneMode} value The scene mode
      * @returns {Number} The morph time
      */

@@ -26,7 +26,6 @@ define([
      * @function
      *
      * @param {Number} degree The desired degree of interpolation.
-     *
      * @returns The number of required data points needed for the desired degree of interpolation.
      */
     InterpolationAlgorithm.getRequiredDataPoints = DeveloperError.throwInstantiationError;
@@ -52,7 +51,6 @@ define([
      * Performs higher order interpolation.  Not all interpolators need to support high-order interpolation,
      * if this function remains undefined on implementing objects, interpolateOrderZero will be used instead.
      * @function
-     *
      * @param {Number} x The independent variable for which the dependent variables will be interpolated.
      * @param {Number[]} xTable The array of independent variables to use to interpolate.  The values
      * in this array must be in increasing order and the same value must not occur twice in the array.
@@ -63,7 +61,6 @@ define([
      * @param {Number} inputOrder The number of derivatives supplied for input.
      * @param {Number} outputOrder The number of derivatives desired for output.
      * @param {Number[]} [result] An existing array into which to store the result.
-     *
      * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     InterpolationAlgorithm.interpolate = DeveloperError.throwInstantiationError;

@@ -347,6 +347,7 @@ define([
          * translucencyByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's translucencyByDistance to 1.0 when the
@@ -354,6 +355,7 @@ define([
          * // the camera distance approaches 8.0e6 meters.
          * text.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
+         * @example
          * // Example 2.
          * // disable translucency by distance
          * text.translucencyByDistance = undefined;
@@ -387,6 +389,7 @@ define([
          * pixelOffsetScaleByDistance will be disabled.
          * @memberof Label.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a label's pixel offset scale to 0.0 when the
@@ -395,6 +398,7 @@ define([
          * text.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
          * text.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
+         * @example
          * // Example 2.
          * // disable pixel offset by distance
          * text.pixelOffsetScaleByDistance = undefined;
@@ -603,7 +607,6 @@ define([
      * left to right, and <code>y</code> increases from bottom to top.
      *
      * @param {Scene} scene The scene the label is in.
-     *
      * @returns {Cartesian2} The screen-space position of the label.
      *
      * @see Label#eyeOffset
@@ -631,7 +634,6 @@ define([
      * are equal.  Labels in different collections can be equal.
      *
      * @param {Label} other The label to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {

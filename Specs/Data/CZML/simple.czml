@@ -2798,8 +2798,8 @@
     },
     "vertexPositions":{
       "references":[
-        "/Application/STK/Scenario/simple/Facility/AGI.position",
-        "/Application/STK/Scenario/simple/Satellite/ISS.position"
+        "/Application/STK/Scenario/simple/Facility/AGI#position",
+        "/Application/STK/Scenario/simple/Satellite/ISS#position"
       ]
     }
   },
@@ -2903,8 +2903,8 @@
     },
     "vertexPositions":{
       "references":[
-        "/Application/STK/Scenario/simple/Satellite/Geoeye1.position",
-        "/Application/STK/Scenario/simple/Satellite/ISS.position"
+        "/Application/STK/Scenario/simple/Satellite/Geoeye1#position",
+        "/Application/STK/Scenario/simple/Satellite/ISS#position"
       ]
     }
   },
@@ -3016,8 +3016,8 @@
     },
     "vertexPositions":{
       "references":[
-        "/Application/STK/Scenario/simple/Satellite/ISS.position",
-        "/Application/STK/Scenario/simple/Satellite/Landsat7.position"
+        "/Application/STK/Scenario/simple/Satellite/ISS#position",
+        "/Application/STK/Scenario/simple/Satellite/Landsat7#position"
       ]
     }
   },

@@ -47,6 +47,8 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+     *
      * @example
      * var primitive = new Cesium.Primitive({
      *   geometryInstances : new Cesium.GeometryInstance({
@@ -61,7 +63,6 @@ define([
      *   })
      *
      * });
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -182,7 +183,7 @@ define([
          * @type {MaterialAppearance.MaterialSupport}
          * @readonly
          *
-         * @default @link MaterialAppearance.MaterialSupport.TEXTURED}
+         * @default {@link MaterialAppearance.MaterialSupport.TEXTURED}
          */
         materialSupport : {
             get : function() {
@@ -287,7 +288,7 @@ define([
          * Only basic materials, which require just <code>position</code> and
          * <code>normal</code> vertex attributes, are supported.
          *
-         * @readonly
+         * @constant
          */
         BASIC : freezeObject({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
@@ -299,7 +300,7 @@ define([
          * <code>normal</code>, and <code>st</code> vertex attributes,
          * are supported.  The vast majority of materials fall into this category.
          *
-         * @readonly
+         * @constant
          */
         TEXTURED : freezeObject({
             vertexFormat : VertexFormat.POSITION_NORMAL_AND_ST,
@@ -311,7 +312,7 @@ define([
          * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
          * <code>binormal</code>, and <code>tangent</code> vertex attributes.
          *
-         * @readonly
+         * @constant
          */
         ALL : freezeObject({
             vertexFormat : VertexFormat.ALL,
