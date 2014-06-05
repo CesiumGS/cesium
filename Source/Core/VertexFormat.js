@@ -17,14 +17,14 @@ define([
      * @alias VertexFormat
      * @constructor
      *
+     * @see Geometry#attributes
+     *
      * @example
      * // Create a vertex format with position and 2D texture coordinate attributes.
      * var format = new Cesium.VertexFormat({
      *   position : true,
      *   st : true
      * });
-     *
-     * @see Geometry#attributes
      */
     var VertexFormat = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

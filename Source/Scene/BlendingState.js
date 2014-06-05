@@ -24,7 +24,7 @@ define([
          * Blending is disabled.
          *
          * @type {Object}
-         * @readonly
+         * @constant
          */
         DISABLED : freezeObject({
             enabled : false
@@ -34,7 +34,7 @@ define([
          * Blending is enabled using alpha blending, <code>source(source.alpha) + destination(1 - source.alpha)</code>.
          *
          * @type {Object}
-         * @readonly
+         * @constant
          */
         ALPHA_BLEND : freezeObject({
             enabled : true,
@@ -50,7 +50,7 @@ define([
          * Blending is enabled using alpha blending with premultiplied alpha, <code>source + destination(1 - source.alpha)</code>.
          *
          * @type {Object}
-         * @readonly
+         * @constant
          */
         PRE_MULTIPLIED_ALPHA_BLEND : freezeObject({
             enabled : true,
@@ -66,7 +66,7 @@ define([
          * Blending is enabled using additive blending, <code>source(source.alpha) + destination</code>.
          *
          * @type {Object}
-         * @readonly
+         * @constant
          */
         ADDITIVE_BLEND : freezeObject({
             enabled : true,

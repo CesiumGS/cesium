@@ -25,6 +25,8 @@ define([
      *
      * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
      *
+     * @see Geometry
+     *
      * @example
      * var geometry = new Cesium.Geometry({
      *   attributes : {
@@ -40,8 +42,6 @@ define([
      *   },
      *   primitiveType : Cesium.PrimitiveType.LINE_LOOP
      * });
-     *
-     * @see Geometry
      */
     var GeometryAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

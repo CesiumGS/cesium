@@ -10,7 +10,14 @@ Beta Releases
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+* `DynamicObject.id` can now include period characters.
+* `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Fixed support for embedded resources in glTF models.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 
 ### b29 - 2014-06-02
 

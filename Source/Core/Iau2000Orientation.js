@@ -45,7 +45,6 @@ define([
      *
      * @param {JulianDate} [date=new JulianDate()] The date to evaluate the parameters.
      * @param {IauOrientationParameters} [result] The object onto which to store the result.
-     *
      * @returns {IauOrientationParameters} The modified result parameter or a new instance representing the orientation of the Earth's Moon.
      */
     Iau2000Orientation.ComputeMoon = function(date, result) {

@@ -25,6 +25,14 @@ define([
      * @alias Appearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link Appearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link lAppearance#renderState} has backface culling enabled.
+     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+     * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState] Optional render state to override the default render state.
+     *
      * @see MaterialAppearance
      * @see EllipsoidSurfaceAppearance
      * @see PerInstanceColorAppearance

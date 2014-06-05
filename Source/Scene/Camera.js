@@ -514,6 +514,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
+         *
          * @default {@link Matrix4.IDENTITY}
          */
         inverseTransform : {
@@ -528,8 +530,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_view
          * @see Camera#inverseViewMatrix
          */
         viewMatrix : {
@@ -544,8 +546,8 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Matrix4}
+         * @readonly
          *
-         * @see czm_inverseView
          * @see Camera#viewMatrix
          */
         inverseViewMatrix : {
@@ -558,7 +560,9 @@ define([
         /**
          * Gets the position of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         positionWC : {
             get : function() {
@@ -570,7 +574,9 @@ define([
         /**
          * Gets the view direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         directionWC : {
             get : function() {
@@ -582,7 +588,9 @@ define([
         /**
          * Gets the up direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         upWC : {
             get : function() {
@@ -594,7 +602,9 @@ define([
         /**
          * Gets the right direction of the camera in world coordinates.
          * @memberof Camera.prototype
+         *
          * @type {Cartesian3}
+         * @readonly
          */
         rightWC : {
             get : function() {
@@ -606,6 +616,7 @@ define([
         /**
          * Gets or sets the camera heading in radians.
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         heading : {
@@ -638,6 +649,7 @@ define([
         /**
          * Gets or sets the camera tilt in radians
          * @memberof Camera.prototype
+         *
          * @type {Number}
          */
         tilt : {
@@ -734,7 +746,6 @@ define([
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
@@ -753,7 +764,6 @@ define([
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.worldToCameraCoordinatesPoint = function(cartesian, result) {
@@ -772,7 +782,6 @@ define([
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.worldToCameraCoordinatesVector = function(cartesian, result) {
@@ -791,7 +800,6 @@ define([
      *
      * @param {Cartesian4} cartesian The vector or point to transform.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
@@ -810,7 +818,6 @@ define([
      *
      * @param {Cartesian3} cartesian The point to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed point.
      */
     Camera.prototype.cameraToWorldCoordinatesPoint = function(cartesian, result) {
@@ -829,7 +836,6 @@ define([
      *
      * @param {Cartesian3} cartesian The vector to transform.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The transformed vector.
      */
     Camera.prototype.cameraToWorldCoordinatesVector = function(cartesian, result) {
@@ -1619,7 +1625,6 @@ define([
      *
      * @param {Rectangle} rectangle The rectangle to view.
      * @param {Cartesian3} [result] The camera position needed to view the rectangle
-     *
      * @returns {Cartesian3} The camera position needed to view the rectangle
      */
     Camera.prototype.getRectangleCameraCoordinates = function(rectangle, result) {
@@ -1712,7 +1717,6 @@ define([
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to pick.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
@@ -1799,7 +1803,6 @@ define([
      *
      * @param {Cartesian2} windowPosition The x and y coordinates of a pixel.
      * @param {Ray} [result] The object onto which to store the result.
-     *
      * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     Camera.prototype.getPickRay = function(windowPosition, result) {
@@ -1954,7 +1957,6 @@ define([
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
      * @param {Number} duration The duration, in milliseconds, of the animation.
-     *
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
