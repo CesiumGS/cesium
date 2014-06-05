@@ -33,13 +33,9 @@ define([
 
             var names = that._targetPropertyNames;
 
-            targetProperty = targetObject[names[0]];
-            if (!defined(targetProperty)) {
-                throw new RuntimeError('targetProperty could not be resolved.');
-            }
-
+            targetProperty = targetObject;
             var length = names.length;
-            for (var i = 1; i < length; i++) {
+            for (var i = 0; i < length; i++) {
                 targetProperty = targetProperty[names[i]];
                 if (!defined(targetProperty)) {
                     throw new RuntimeError('targetProperty could not be resolved.');

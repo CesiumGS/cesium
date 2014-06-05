@@ -1758,11 +1758,10 @@ define([
      * @param {Function} type The constructor function for the property being processed.
      * @param {Object} object The object on which the property will be added or updated.
      * @param {String} propertyName The name of the property on the object.
-     * @param {Object} packetData The CZML packet being processed.y
-     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
-     * @param {String} [sourceUri] The originating uri of the data being processed.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection being processsed.
-     * @returns {Boolean} True if a new property was created, false otherwise.
+     * @param {Object} packetData The CZML packet being processed.
+     * @param {TimeInterval} interval A constraining interval for which the data is valid.
+     * @param {String} sourceUri The originating uri of the data being processed.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The collection being processsed.
      */
     CzmlDataSource.processPacketData = processPacketData;
 
@@ -1773,11 +1772,10 @@ define([
      *
      * @param {Object} object The object on which the property will be added or updated.
      * @param {String} propertyName The name of the property on the object.
-     * @param {Object} packetData The CZML packet being processed.y
-     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
-     * @param {String} [sourceUri] The originating uri of the data being processed.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection being processsed.
-     * @returns {Boolean} True if a new property was created, false otherwise.
+     * @param {Object} packetData The CZML packet being processed.
+     * @param {TimeInterval} interval A constraining interval for which the data is valid.
+     * @param {String} sourceUri The originating uri of the data being processed.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The collection being processsed.
      */
     CzmlDataSource.processPositionPacketData = processPositionPacketData;
 
@@ -1788,11 +1786,10 @@ define([
      *
      * @param {Object} object The object on which the property will be added or updated.
      * @param {String} propertyName The name of the property on the object.
-     * @param {Object} packetData The CZML packet being processed.y
-     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
-     * @param {String} [sourceUri] The originating uri of the data being processed.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection being processsed.
-     * @returns {Boolean} True if a new property was created, false otherwise.
+     * @param {Object} packetData The CZML packet being processed.
+     * @param {TimeInterval} interval A constraining interval for which the data is valid.
+     * @param {String} sourceUri The originating uri of the data being processed.
+     * @param {DynamicObjectCollection} dynamicObjectCollection The collection being processsed.
      */
     CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
