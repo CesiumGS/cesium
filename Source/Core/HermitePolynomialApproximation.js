@@ -177,6 +177,8 @@ define([
         return result;
     };
 
+    var arrayScratch = [];
+
     /**
      * Interpolates values using Hermite Polynomial Approximation.
      *
@@ -213,19 +215,20 @@ define([
             }
         }
 
-        var coefficientArraySize = Math.floor(yStride * zIndices.length * (zIndices.length + 1) / 2);
-        var coefficients = new Array(coefficientArraySize);
-
+        var zIndiceslength = zIndices.length;
+        var coefficients = arrayScratch;
         var highestNonZeroCoef = fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder);
+        var reserviedIndices = [];
 
-        for (var d = 0; d <= Math.min(highestNonZeroCoef, outputOrder); d++) {
+        var loopStop = Math.min(highestNonZeroCoef, outputOrder);
+        for (var d = 0; d <= loopStop; d++) {
             for (i = d; i <= highestNonZeroCoef; i++) {
-                var tempList = [];
-                var tempTerm = calculateCoefficientTerm(x, zIndices, xTable, d, i, tempList);
-                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndices.length * i);
+                reserviedIndices.length = 0;
+                var tempTerm = calculateCoefficientTerm(x, zIndices, xTable, d, i, reserviedIndices);
+                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndiceslength * i);
 
                 for (var s = 0; s < yStride; s++) {
-                    var dimOne = Math.floor(s * zIndices.length * (zIndices.length + 1) / 2);
+                    var dimOne = Math.floor(s * zIndiceslength * (zIndiceslength + 1) / 2);
                     var coef = coefficients[dimOne + dimTwo];
                     result[s + d * yStride] += coef * tempTerm;
                 }
@@ -236,22 +239,25 @@ define([
     };
 
     function fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder) {
+        var j;
+        var index;
         var highestNonZero = -1;
-        for (var s = 0; s < yStride; s++) {
-            var dimOne = Math.floor(s * zIndices.length * (zIndices.length + 1) / 2);
+        var zIndiceslength = zIndices.length;
 
-            var index;
-            var j;
-            for (j = 0; j < zIndices.length; j++) {
+        for (var s = 0; s < yStride; s++) {
+            var dimOne = Math.floor(s * zIndiceslength * (zIndiceslength + 1) / 2);
+
+            for (j = 0; j < zIndiceslength; j++) {
                 index = zIndices[j] * yStride * (inputOrder + 1) + s;
                 coefficients[dimOne + j] = yTable[index];
             }
 
-            for (var i = 1; i < zIndices.length; i++) {
+            for (var i = 1; i < zIndiceslength; i++) {
                 var coefIndex = 0;
-                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndices.length * i);
+                var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndiceslength * i);
                 var nonZeroCoefficients = false;
-                for (j = 0; j < zIndices.length - i; j++) {
+
+                for (j = 0; j < zIndiceslength - i; j++) {
                     var zj = xTable[zIndices[j]];
                     var zn = xTable[zIndices[j + i]];
 
@@ -264,7 +270,7 @@ define([
                         coefficients[dimOne + dimTwo + coefIndex] = coefficient;
                         coefIndex++;
                     } else {
-                        var dimTwoMinusOne = Math.floor((i - 1) * (2 - i) / 2) + (zIndices.length * (i - 1));
+                        var dimTwoMinusOne = Math.floor((i - 1) * (2 - i) / 2) + (zIndiceslength * (i - 1));
                         numerator = coefficients[dimOne + dimTwoMinusOne + j + 1] - coefficients[dimOne + dimTwoMinusOne + j];
                         coefficient = (numerator / (zn - zj));
                         coefficients[dimOne + dimTwo + coefIndex] = coefficient;

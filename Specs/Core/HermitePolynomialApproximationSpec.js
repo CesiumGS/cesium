@@ -46,7 +46,7 @@ defineSuite([
         // Since we want a zero order calculation we need to switch to a yStride of 4.
         var result = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 4);
         var expectedResult = 13367002.870928625;
-      //* The accuracy is lower because we are no longer using derivative info
+        //The accuracy is lower because we are no longer using derivative info
         expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
     });
 
@@ -56,7 +56,7 @@ defineSuite([
         var returnedResult = HermitePolynomialApproximation.interpolateOrderZero(x, xTable, yTableCombined, 4, result);
         var expectedResult = 13367002.870928625;
         expect(result).toBe(returnedResult);
-      //* The accuracy is lower because we are no longer using derivative info
+        //The accuracy is lower because we are no longer using derivative info
         expect(result[0]).toEqualEpsilon(expectedResult, 1e-6);
     });
 
