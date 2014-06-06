@@ -188,7 +188,7 @@ define([
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
      * @param {Number} inputOrder The number of derivatives supplied for input.
-     * @param {Number} outputOrder The number of derivatives desired for input.
+     * @param {Number} outputOrder The number of derivatives desired for output.
      * @param {Number[]} [result] An existing array into which to store the result.
      *
      * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
