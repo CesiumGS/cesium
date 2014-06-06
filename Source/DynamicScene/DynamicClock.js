@@ -39,7 +39,9 @@ define([
         /**
          * Gets the event that is raised whenever a new property is assigned.
          * @memberof DynamicClock.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -95,7 +97,6 @@ define([
 
     /**
      * Duplicates a DynamicClock instance.
-     * @memberof DynamicClock
      *
      * @param {DynamicClock} [result] The object onto which to store the result.
      * @returns {DynamicClock} The modified result parameter or a new instance if one was not provided.
@@ -115,7 +116,6 @@ define([
 
     /**
      * Returns true if this DynamicClock is equivalent to the other
-     * @memberof DynamicClock
      *
      * @param {DynamicClock} other The other DynamicClock to compare to.
      * @returns {Boolean} <code>true</code> if the DynamicClocks are equal; otherwise, <code>false</code>.
@@ -134,7 +134,6 @@ define([
     /**
      * Assigns each unassigned property on this object to the value
      * of the same property on the provided source object.
-     * @memberof DynamicClock
      *
      * @param {DynamicClock} source The object to be merged into this object.
      */
@@ -155,7 +154,6 @@ define([
 
     /**
      * Gets the value of this clock instance as a {@link Clock} object.
-     * @memberof DynamicClock
      *
      * @returns {Clock} The modified result parameter or a new instance if one was not provided.
      */

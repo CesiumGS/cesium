@@ -32,6 +32,7 @@ define([
      * @alias SingleTileImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The url for the tile.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -317,12 +318,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof SingleTileImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -335,12 +333,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link SingleTileImageryProvider#ready} returns true.
      *
-     * @memberof SingleTileImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

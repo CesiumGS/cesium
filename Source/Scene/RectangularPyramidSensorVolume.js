@@ -68,8 +68,7 @@ define([
          * The 4x4 transformation matrix that transforms this sensor from model to world coordinates.  In it's model
          * coordinates, the sensor's principal direction is along the positive z-axis.  Half angles measured from the
          * principal direction and in the direction of the x-axis and y-axis define the rectangle of the rectangular
-         * cross section.  This matrix is available to GLSL vertex and fragment shaders via
-         * {@link czm_model} and derived uniforms.
+         * cross section.
          * <br /><br />
          * <div align='center'>
          * <img src='images/RectangularPyramidSensorVolume.setModelMatrix.png' /><br />
@@ -78,8 +77,6 @@ define([
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -130,14 +127,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Cesium.Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
 
@@ -178,9 +175,12 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * @memberof RectangularPyramidSensorVolume
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
      * @exception {DeveloperError} this.xHalfAngle and this.yHalfAngle must each be less than 90 degrees.
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
@@ -235,7 +235,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.isDestroyed = function() {
         return false;
@@ -243,7 +242,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof RectangularPyramidSensorVolume
      */
     RectangularPyramidSensorVolume.prototype.destroy = function() {
         this._customSensor = this._customSensor && this._customSensor.destroy();

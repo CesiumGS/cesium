@@ -13,7 +13,6 @@ define([
      * The view model for {@link NavigationHelpButton}.
      * @alias NavigationHelpButtonViewModel
      * @constructor
-     *
      */
     var NavigationHelpButtonViewModel = function() {
         /**

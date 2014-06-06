@@ -49,19 +49,24 @@ define([
 
     /**
      * Creates a new Cartographic instance from longitude and latitude
-     * specified in degrees.  The values in the resulting object will
-     * be in radians.
-     * @memberof Cartographic
+     * specified in radians.
      *
-     * @param {Number} [longitude=0.0] The longitude, in degrees.
-     * @param {Number} [latitude=0.0] The latitude, in degrees.
+     * @param {Number} longitude The longitude, in radians.
+     * @param {Number} latitude The latitude, in radians.
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
      */
-    Cartographic.fromDegrees = function(longitude, latitude, height, result) {
-        longitude = CesiumMath.toRadians(defaultValue(longitude, 0.0));
-        latitude = CesiumMath.toRadians(defaultValue(latitude, 0.0));
+    Cartographic.fromRadians = function(longitude, latitude, height, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(longitude)) {
+            throw new DeveloperError('longitude is required.');
+        }
+        if (!defined(latitude)) {
+            throw new DeveloperError('latitude is required.');
+        }
+        //>>includeEnd('debug');
+
         height = defaultValue(height, 0.0);
 
         if (!defined(result)) {
@@ -75,8 +80,33 @@ define([
     };
 
     /**
+     * Creates a new Cartographic instance from longitude and latitude
+     * specified in degrees.  The values in the resulting object will
+     * be in radians.
+     *
+     * @param {Number} longitude The longitude, in degrees.
+     * @param {Number} latitude The latitude, in degrees.
+     * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
+     * @param {Cartographic} [result] The object onto which to store the result.
+     * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
+     */
+    Cartographic.fromDegrees = function(longitude, latitude, height, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(longitude)) {
+            throw new DeveloperError('longitude is required.');
+        }
+        if (!defined(latitude)) {
+            throw new DeveloperError('latitude is required.');
+        }
+        //>>includeEnd('debug');
+        longitude = CesiumMath.toRadians(longitude);
+        latitude = CesiumMath.toRadians(latitude);
+
+        return Cartographic.fromRadians(longitude, latitude, height, result);
+    };
+
+    /**
      * Duplicates a Cartographic instance.
-     * @memberof Cartographic
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
      * @param {Cartographic} [result] The object onto which to store the result.
@@ -98,7 +128,6 @@ define([
     /**
      * Compares the provided cartographics componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
@@ -117,7 +146,6 @@ define([
      * Compares the provided cartographics componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [left] The first cartographic.
      * @param {Cartographic} [right] The second cartographic.
@@ -141,7 +169,6 @@ define([
 
     /**
      * Creates a string representing the provided cartographic in the format '(longitude, latitude, height)'.
-     * @memberof Cartographic
      *
      * @param {Cartographic} cartographic The cartographic to stringify.
      * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
@@ -159,13 +186,13 @@ define([
     /**
      * An immutable Cartographic instance initialized to (0.0, 0.0, 0.0).
      *
-     * @memberof Cartographic
+     * @type {Cartographic}
+     * @constant
      */
     Cartographic.ZERO = freezeObject(new Cartographic(0.0, 0.0, 0.0));
 
     /**
      * Duplicates this instance.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [result] The object onto which to store the result.
      * @returns {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
@@ -177,7 +204,6 @@ define([
     /**
      * Compares the provided against this cartographic componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
@@ -190,7 +216,6 @@ define([
      * Compares the provided against this cartographic componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartographic
      *
      * @param {Cartographic} [right] The second cartographic.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -202,7 +227,6 @@ define([
 
     /**
      * Creates a string representing this cartographic in the format '(longitude, latitude, height)'.
-     * @memberof Cartographic
      *
      * @returns {String} A string representing the provided cartographic in the format '(longitude, latitude, height)'.
      */

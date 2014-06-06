@@ -51,7 +51,6 @@ define([
 
     /**
      * Converts the provided Spherical into Cartesian3 coordinates.
-     * @memberof Cartesian3
      *
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -79,7 +78,6 @@ define([
 
     /**
      * Creates a Cartesian3 instance from x, y and z coordinates.
-     * @memberof Cartesian3
      *
      * @param {Number} x The x coordinate.
      * @param {Number} y The y coordinate.
@@ -100,7 +98,6 @@ define([
 
     /**
      * Duplicates a Cartesian3 instance.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to duplicate.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -140,7 +137,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -166,7 +162,6 @@ define([
 
     /**
      * Retrieves an instance from a packed array.
-     * @memberof Cartesian3
      *
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
@@ -192,12 +187,11 @@ define([
 
     /**
      * Creates a Cartesian3 from three consecutive elements in an array.
-     * @memberof Cartesian3
+     * @function
      *
      * @param {Number[]} array The array whose three consecutive elements correspond to the x, y, and z components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @example
@@ -213,7 +207,6 @@ define([
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
@@ -230,7 +223,6 @@ define([
 
     /**
      * Computes the value of the minimum component for the supplied Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
@@ -247,7 +239,6 @@ define([
 
     /**
      * Compares two Cartesians and computes a Cartesian which contains the minimum components of the supplied Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
@@ -277,7 +268,6 @@ define([
 
     /**
      * Compares two Cartesians and computes a Cartesian which contains the maximum components of the supplied Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} first A cartesian to compare.
      * @param {Cartesian3} second A cartesian to compare.
@@ -306,7 +296,6 @@ define([
 
     /**
      * Computes the provided Cartesian's squared magnitude.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian instance whose squared magnitude is to be computed.
      * @returns {Number} The squared magnitude.
@@ -323,7 +312,6 @@ define([
 
     /**
      * Computes the Cartesian's magnitude (length).
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian instance whose magnitude is to be computed.
      * @returns {Number} The magnitude.
@@ -336,11 +324,9 @@ define([
 
     /**
      * Computes the distance between two points
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first point to compute the distance from.
      * @param {Cartesian3} right The second point to compute the distance to.
-     *
      * @returns {Number} The distance between two points.
      *
      * @example
@@ -360,7 +346,6 @@ define([
 
     /**
      * Computes the normalized form of the supplied Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to be normalized.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -385,7 +370,6 @@ define([
 
     /**
      * Computes the dot (scalar) product of two Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -406,7 +390,6 @@ define([
 
     /**
      * Computes the componentwise product of two Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -434,7 +417,6 @@ define([
 
     /**
      * Computes the componentwise sum of two Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -462,7 +444,6 @@ define([
 
     /**
      * Computes the componentwise difference of two Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -490,7 +471,6 @@ define([
 
     /**
      * Multiplies the provided Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
@@ -518,7 +498,6 @@ define([
 
     /**
      * Divides the provided Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
@@ -546,7 +525,6 @@ define([
 
     /**
      * Negates the provided Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian to be negated.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -570,7 +548,6 @@ define([
 
     /**
      * Computes the absolute value of the provided Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -595,7 +572,6 @@ define([
     var lerpScratch = new Cartesian3();
     /**
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} start The value corresponding to t at 0.0.
      * @param {Cartesian3} end The value corresponding to t at 1.0.
@@ -625,7 +601,6 @@ define([
     var angleBetweenScratch2 = new Cartesian3();
     /**
      * Returns the angle, in radians, between the provided Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -651,7 +626,6 @@ define([
     var mostOrthogonalAxisScratch = new Cartesian3();
     /**
      * Returns the axis that is most orthogonal to the provided Cartesian.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian on which to find the most orthogonal axis.
      * @param {Cartesian3} [result] The object onto which to store the result.
@@ -687,7 +661,6 @@ define([
     /**
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
@@ -706,7 +679,6 @@ define([
      * Compares the provided Cartesians componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
@@ -730,7 +702,6 @@ define([
 
     /**
      * Computes the cross (outer) product of two Cartesians.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
@@ -769,14 +740,12 @@ define([
 
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in degrees.
-     * @memberof Cartesian3
      *
      * @param {Number} longitude The longitude, in degrees
      * @param {Number} latitude The latitude, in degrees
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The position
      *
      * @example
@@ -803,14 +772,12 @@ define([
 
     /**
      * Returns a Cartesian3 position from longitude and latitude values given in radians.
-     * @memberof Cartesian3
      *
      * @param {Number} longitude The longitude, in radians
      * @param {Number} latitude The latitude, in radians
      * @param {Number} [height=0.0] The height, in meters, above the ellipsoid.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The position
      *
      * @example
@@ -844,12 +811,10 @@ define([
 
     /**
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in degrees.
-     * @memberof Cartesian3
      *
      * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -872,12 +837,10 @@ define([
 
     /**
      * Returns an array of Cartesian3 positions given an array of longitude and latitude values given in radians.
-     * @memberof Cartesian3
      *
      * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -914,12 +877,10 @@ define([
 
     /**
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in degrees.
-     * @memberof Cartesian3
      *
      * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -950,12 +911,10 @@ define([
 
     /**
      * Returns an array of Cartesian3 positions given an array of longitude, latitude and height values where longitude and latitude are given in radians.
-     * @memberof Cartesian3
      *
      * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -993,31 +952,38 @@ define([
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 0.0).
-     * @memberof Cartesian3
+     *
+     * @type {Cartesian3}
+     * @constant
      */
     Cartesian3.ZERO = freezeObject(new Cartesian3(0.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (1.0, 0.0, 0.0).
-     * @memberof Cartesian3
+     *
+     * @type {Cartesian3}
+     * @constant
      */
     Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 1.0, 0.0).
-     * @memberof Cartesian3
+     *
+     * @type {Cartesian3}
+     * @constant
      */
     Cartesian3.UNIT_Y = freezeObject(new Cartesian3(0.0, 1.0, 0.0));
 
     /**
      * An immutable Cartesian3 instance initialized to (0.0, 0.0, 1.0).
-     * @memberof Cartesian3
+     *
+     * @type {Cartesian3}
+     * @constant
      */
     Cartesian3.UNIT_Z = freezeObject(new Cartesian3(0.0, 0.0, 1.0));
 
     /**
      * Duplicates this Cartesian3 instance.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
@@ -1029,7 +995,6 @@ define([
     /**
      * Compares this Cartesian against the provided Cartesian componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -1042,7 +1007,6 @@ define([
      * Compares this Cartesian against the provided Cartesian componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof Cartesian3
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
@@ -1054,7 +1018,6 @@ define([
 
     /**
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
-     * @memberof Cartesian3
      *
      * @returns {String} A string representing this Cartesian in the format '(x, y, z)'.
      */

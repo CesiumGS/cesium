@@ -26,8 +26,6 @@ define([
 
     /**
      * Frees the resources held by this instance.
-     *
-     * @memberof TileImagery
      */
     TileImagery.prototype.freeResources = function() {
         if (defined(this.readyImagery)) {

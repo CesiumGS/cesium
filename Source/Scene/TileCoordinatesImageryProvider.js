@@ -21,6 +21,7 @@ define([
      * @alias TileCoordinatesImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
      * @param {Color} [options.color=Color.YELLOW] The color to draw the tile box and label.
      * @param {Number} [options.tileWidth=256] The width of the tile for level-of-detail selection purposes.
@@ -190,12 +191,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof TileCoordinatesImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -208,12 +206,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link TileCoordinatesImageryProvider#ready} returns true.
      *
-     * @memberof TileCoordinatesImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

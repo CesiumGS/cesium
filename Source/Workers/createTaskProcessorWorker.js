@@ -21,6 +21,10 @@ define([
      * @returns {Function} An adapter function that handles the interaction with TaskProcessor,
      * specifically, task ID management and posting a response message containing the result.
      *
+     * @see TaskProcessor
+     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
+     * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
+     *
      * @example
      * function doCalculation(parameters, transferableObjects) {
      *   // calculate some result using the inputs in parameters
@@ -29,10 +33,6 @@ define([
      *
      * return Cesium.createTaskProcessorWorker(doCalculation);
      * // the resulting function is compatible with TaskProcessor
-     *
-     * @see TaskProcessor
-     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
-     * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
      */
     var createTaskProcessorWorker = function(workerFunction) {
         var postMessage;

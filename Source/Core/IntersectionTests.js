@@ -30,7 +30,6 @@ define([
 
     /**
      * Computes the intersection of a ray and a plane.
-     * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
      * @param {Plane} plane The plane.
@@ -240,7 +239,6 @@ define([
 
     /**
      * Computes the intersection points of a ray with an ellipsoid.
-     * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
@@ -436,7 +434,6 @@ define([
 
     /**
      * Provides the point along the ray which is nearest to the ellipsoid.
-     * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
      * @param {Ellipsoid} ellipsoid The ellipsoid.
@@ -523,7 +520,6 @@ define([
 
     /**
      * Computes the intersection of a line segment and a plane.
-     * @memberof IntersectionTests
      *
      * @param {Cartesian3} endPoint0 An end point of the line segment.
      * @param {Cartesian3} endPoint1 The other end point of the line segment.
@@ -583,13 +579,11 @@ define([
 
     /**
      * Computes the intersection of a triangle and a plane
-     * @memberof IntersectionTests
      *
      * @param {Cartesian3} p0 First point of the triangle
      * @param {Cartesian3} p1 Second point of the triangle
      * @param {Cartesian3} p2 Third point of the triangle
      * @param {Plane} plane Intersection plane
-     *
      * @returns {Object} An object with properties <code>positions</code> and <code>indices</code>, which are arrays that represent three triangles that do not cross the plane. (Undefined if no intersection exists)
      *
      * @example

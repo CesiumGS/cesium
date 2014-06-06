@@ -79,7 +79,7 @@ define([
 
         /**
          * The radius of the occluder.
-         * @memberof Occluder.prrototype
+         * @memberof Occluder.prototype
          * @type {Number}
          */
         radius: {
@@ -130,7 +130,6 @@ define([
 
     /**
      * Creates an occluder from a bounding sphere and the camera position.
-     * @memberof Occluder
      *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} cameraPosition The coordinate of the viewer/camera.
@@ -163,11 +162,10 @@ define([
     /**
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
-     * @memberof Occluder
-     *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     *
+     * @see Occluder#getVisibility
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -175,8 +173,6 @@ define([
      * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
      * var point = new Cesium.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
-     *
-     * @see Occluder#getVisibility
      */
     Occluder.prototype.isPointVisible = function(occludee) {
         if (this._horizonDistance !== Number.MAX_VALUE) {
@@ -197,11 +193,10 @@ define([
     /**
     * Determines whether or not a sphere, the <code>occludee</code>, is hidden from view by the occluder.
     *
-    * @memberof Occluder
-    *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
-    *
     * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+    *
+    * @see Occluder#getVisibility
     *
     * @example
     * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -209,8 +204,6 @@ define([
     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
     * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
     * occluder.isBoundingSphereVisible(bigSphere); //returns true
-    *
-    * @see Occluder#getVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
         var occludeePosition = Cartesian3.clone(occludee.center, occludeePositionScratch);
@@ -255,21 +248,19 @@ define([
     /**
      * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
      *
-     * @memberof Occluder
-     *
      * @param {BoundingSphere} occludeeBS The bounding sphere of the occludee.
-     *
      * @returns {Number} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
+     *
+     * @see Occluder#isVisible
+     *
      * @example
      * var sphere1 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1.5), 0.5);
      * var sphere2 = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -2.5), 0.5);
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.getVisibility(sphere2); //returns Visibility.NONE
-     *
-     * @see Occluder#isVisible
      */
     Occluder.prototype.getVisibility = function(occludeeBS) {
         if (!defined(occludeeBS)) {
@@ -330,17 +321,14 @@ define([
      * terrain.  You are better off not calling this and using the object's bounding sphere for objects
      * such as a satellite or ground vehicle.
      *
-     * @memberof Occluder
-     *
      * @param {BoundingSphere} occluderBoundingSphere The bounding sphere surrounding the occluder.
      * @param {Cartesian3} occludeePosition The point where the occludee (bounding sphere of radius 0) is located.
      * @param {Cartesian3[]} positions List of altitude points on the horizon near the surface of the occluder.
+     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * which is a boolean value.
      *
      * @exception {DeveloperError} <code>positions</code> must contain at least one element.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
-     *
-     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
-     * which is a boolean value.
      *
      * @example
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
@@ -409,11 +397,8 @@ define([
     /**
      * Computes a point that can be used as the occludee position to the visibility functions from an rectangle.
      *
-     * @memberof Occluder
-     *
      * @param {Rectangle} rectangle The rectangle used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the rectangle.
-     *
      * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      */

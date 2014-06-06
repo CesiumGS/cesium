@@ -69,6 +69,7 @@ define([
      * @alias QuaternionSpline
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number[]} options.times An array of strictly increasing, unit-less, floating-point times at each point.
      *                The values are in no way connected to the clock time. They are the parameterization for the curve.
      * @param {Quaternion[]} options.points The array of {@link Quaternion} control points.
@@ -163,7 +164,7 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof QuaternionSpline
+     * @function
      *
      * @param {Number} time The time.
      * @returns {Number} The index for the element at the start of the interval.
@@ -176,7 +177,6 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof QuaternionSpline
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Quaternion} [result] The object onto which to store the result.

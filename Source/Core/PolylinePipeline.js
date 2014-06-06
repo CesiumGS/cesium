@@ -94,14 +94,12 @@ define([
 
     /**
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
-     * @memberof PolylinePipeline
      *
      * @param {Cartesian3[]} positions The polyline's Cartesian positions.
      * @param {Matrix4} [modelMatrix=Matrix4.IDENTITY] The polyline's model matrix. Assumed to be an affine
      * transformation matrix, where the upper left 3x3 elements are a rotation matrix, and
      * the upper three elements in the fourth column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
-     *
      * @returns {Object} An object with a <code>positions</code> property that is an array of positions and a
      * <code>segments</code> property.
      *
@@ -176,10 +174,7 @@ define([
     /**
      * Removes adjacent duplicate positions in an array of positions.
      *
-     * @memberof PolylinePipeline
-     *
      * @param {Cartesian3[]} positions The array of positions.
-     *
      * @returns {Cartesian3[]} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
      * @example
@@ -220,12 +215,9 @@ define([
     /**
      * Subdivides polyline and raises all points to the ellipsoid surface
      *
-     * @memberof PolylinePipeline
-     *
      * @param {Cartesian3[]} positions The array of positions of type {Cartesian3}.
      * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
-     *
      * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
      *
      * @example
@@ -267,13 +259,10 @@ define([
     /**
      * Raises the positions to the given height.
      *
-     * @memberof PolylinePipeline
-     *
      * @param {Number[]} positions The array of type {Number} representing positions.
      * @param {Number|Number[]} height A number or array of numbers representing the heights of each position.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @param {Number[]} [result] An array to place the resultant positions in.
-     *
      * @returns {Number[]} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.

@@ -54,6 +54,6 @@ defineSuite([
     it('throws with invalid qualifier', function() {
         expect(function() {
             createShaderSource({ pickColorQualifier : 'const' });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

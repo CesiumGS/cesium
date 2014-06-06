@@ -4,20 +4,26 @@ Change Log
 Beta Releases
 -------------
 
+### 1.0 - 2014-07-01
+
+* Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
+   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
+   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+* `DynamicObject.id` can now include period characters.
+* `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
+* Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Fixed support for embedded resources in glTF models.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
+
 ### b29 - 2014-06-02
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
-  * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
-  * Removed `Shapes.compute2DCircle`, `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
   * Replaced `Scene.createTextureAtlas` with `new TextureAtlas`.
-  * Removed `PolylinePipeline`, `PolygonPipeline`, `Tipsify`, `FrustumCommands`, and all `Renderer` types (except noted below) from the public Cesium API.  These are still available but are not part of the official API and may change in future versions.  `Renderer` types in particular are likely to change.
-  * Renamed `CompositePrimitive` to `PrimitiveCollection` and added an `options` parameter to the constructor function.
-  * For AMD users only:
-    * Moved `PixelFormat` from `Renderer` to `Core`.
-    * Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
-    * Moved the following from `Scene` to `Core`: `TerrainProvider`, `ArcGisImageServerTerrainProvider`,  `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `VRTheWorldTerrainProvider`, `TerrainData`, `HeightmapTerrainData`, `QuantizedMeshTerrainData`, `TerrainMesh`, `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingScheme`, `sampleTerrain`, `TileProviderError`, `Credit`.
-  * Removed `TilingScheme.createRectangleOfLevelZeroTiles`, `GeographicTilingScheme.createLevelZeroTiles` and `WebMercatorTilingScheme.createLevelZeroTiles`.
-  * Remove `CameraFlightPath.createAnimationCartographic`. Code that looked like:
+  * Removed `CameraFlightPath.createAnimationCartographic`. Code that looked like:
 
            var flight = CameraFlightPath.createAnimationCartographic(scene, {
                destination : cartographic
@@ -30,21 +36,30 @@ Beta Releases
                destination : ellipsoid.cartographicToCartesian(cartographic)
            });
            scene.animations.add(flight);
-           
-  * Removed `CameraColumbusViewMode` because it is no longer needed.
-  * Removed `Enumeration`
+
+  * Removed `CesiumWidget.onRenderLoopError` and `Viewer.renderLoopError`.  They have been replaced by `Scene.renderError`.
+  * Renamed `CompositePrimitive` to `PrimitiveCollection` and added an `options` parameter to the constructor function.
+  * Removed `Shapes.compute2DCircle`, `Shapes.computeCircleBoundary` and `Shapes.computeEllipseBoundary`.  Instead, use `CircleOutlineGeometry` and `EllipseOutlineGeometry`.  See the [tutorial](http://cesiumjs.org/2013/11/04/Geometry-and-Appearances/).
+  * Removed `PolylinePipeline`, `PolygonPipeline`, `Tipsify`, `FrustumCommands`, and all `Renderer` types (except noted below) from the public Cesium API.  These are still available but are not part of the official API and may change in future versions.  `Renderer` types in particular are likely to change.
+  * For AMD users only:
+    * Moved `PixelFormat` from `Renderer` to `Core`.
+    * Moved the following from `Renderer` to `Scene`: `TextureAtlas`, `TextureAtlasBuilder`, `BlendEquation`, `BlendFunction`, `BlendingState`, `CullFace`, `DepthFunction`, `StencilFunction`, and `StencilOperation`.
+    * Moved the following from `Scene` to `Core`: `TerrainProvider`, `ArcGisImageServerTerrainProvider`,  `CesiumTerrainProvider`, `EllipsoidTerrainProvider`, `VRTheWorldTerrainProvider`, `TerrainData`, `HeightmapTerrainData`, `QuantizedMeshTerrainData`, `TerrainMesh`, `TilingScheme`, `GeographicTilingScheme`, `WebMercatorTilingScheme`, `sampleTerrain`, `TileProviderError`, `Credit`.
+  * Removed `TilingScheme.createRectangleOfLevelZeroTiles`, `GeographicTilingScheme.createLevelZeroTiles` and `WebMercatorTilingScheme.createLevelZeroTiles`.
+  * Removed `CameraColumbusViewMode`.
+  * Removed `Enumeration`.
+* Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.  Added `fromRadians` to `Cartographic`.
+* Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
+* Improved Internet Explorer 11.0.8 support including workarounds for rendering labels, billboards, and the sun.
 * Improved terrain and imagery rendering performance when very close to the surface.
 * Added `preRender` and `postRender` events to `Scene`.
-* Fixed dark lighting in 3D and Columbus View when viewing a primitive edge on. ([#592](https://github.com/AnalyticalGraphicsInc/cesium/issues/592))
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
-* Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size. Also added `czm_resolutionScale` automatic GLSL uniform.
-* Added new functions to `Cartesian3`: `fromDegrees`, `fromRadians`, `fromDegreesArray`, `fromRadiansArray`, `fromDegreesArray3D` and `fromRadiansArray3D`.
-* Added `interleave` option to `Primitive` constructor.
-* Improved Internet Explorer 11.0.8 support including workarounds for rendering labels, billboards, and the sun.
+* Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size.
 * `Camera.transform` now works consistently across scene modes.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
 * Fixed problems that could occur when using `ArcGisMapServerImageryProvider` to access a tiled MapServer of non-global extent.
+* Added `interleave` option to `Primitive` constructor.
 * Upgraded JSDoc from 3.0 to 3.3.0-alpha5. The Cesium reference documentation now has a slightly different look and feel.
 * Upgraded Dojo from 1.9.1 to 1.9.3. NOTE: Dojo is only used in Sandcastle and not required by Cesium.
 

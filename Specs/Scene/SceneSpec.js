@@ -4,8 +4,11 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/PixelFormat',
         'Core/Rectangle',
+        'Core/RuntimeError',
+        'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
         'Scene/AnimationCollection',
@@ -15,6 +18,7 @@ defineSuite([
         'Scene/Pass',
         'Scene/PrimitiveCollection',
         'Scene/RectanglePrimitive',
+        'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Specs/createScene',
         'Specs/destroyScene',
@@ -25,8 +29,11 @@ defineSuite([
         Cartesian3,
         Color,
         Ellipsoid,
+        GeographicProjection,
         PixelFormat,
         Rectangle,
+        RuntimeError,
+        WebMercatorProjection,
         DrawCommand,
         PixelDatatype,
         AnimationCollection,
@@ -36,6 +43,7 @@ defineSuite([
         Pass,
         PrimitiveCollection,
         RectanglePrimitive,
+        Scene,
         ScreenSpaceCameraController,
         createScene,
         destroyScene,
@@ -67,6 +75,7 @@ defineSuite([
         expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
         expect(scene.camera).toBeInstanceOf(Camera);
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
+        expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
         expect(scene.animations).toBeInstanceOf(AnimationCollection);
 
@@ -78,30 +87,47 @@ defineSuite([
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
     });
 
-    it('constructor sets contextOptions', function() {
+    it('constructor sets options', function() {
         var webglOptions = {
             alpha : true,
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
+        var mapProjection = new WebMercatorProjection();
 
         var s = createScene({
-            webgl : webglOptions
+            contextOptions : {
+                webgl : webglOptions
+            },
+            mapProjection : mapProjection
         });
 
-        var contextAttributes = s._context._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
         expect(contextAttributes.antialias).toEqual(webglOptions.antialias);
         expect(contextAttributes.premultipliedAlpha).toEqual(webglOptions.premultipliedAlpha);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(webglOptions.preserveDrawingBuffer);
+        expect(s.mapProjection).toEqual(mapProjection);
 
         destroyScene(s);
     });
+
+    it('constructor throws without options', function() {
+        expect(function() {
+            return new Scene();
+        }).toThrowDeveloperError();
+    });
+
+    it('constructor throws without options.canvas', function() {
+      expect(function() {
+          return new Scene({});
+      }).toThrowDeveloperError();
+  });
 
     it('draws background color', function() {
         scene.initializeFrame();
@@ -533,14 +559,14 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.renderError.addEventListener(spyListener);
 
-        var error = 'foo';
+        var error = new RuntimeError('error');
         s.primitives.update = function() {
             throw error;
         };
 
         expect(function() {
             s.render();
-        }).toThrow();
+        }).toThrowRuntimeError();
 
         expect(spyListener).toHaveBeenCalledWith(s, error);
 

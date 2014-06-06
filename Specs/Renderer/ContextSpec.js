@@ -184,7 +184,7 @@ defineSuite([
         } else {
             expect(function() {
                 context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 

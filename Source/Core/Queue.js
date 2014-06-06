@@ -22,7 +22,6 @@ define(function() {
      * Enqueues the specified item.
      *
      * @param {Object} item The item to enqueue.
-     * @memberof Queue
      */
     Queue.prototype.enqueue = function(item) {
         this._array.push(item);
@@ -31,8 +30,6 @@ define(function() {
 
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
-     *
-     * @memberof Queue
      */
     Queue.prototype.dequeue = function() {
         if (this.length === 0) {
@@ -61,7 +58,6 @@ define(function() {
      * Check whether this queue contains the specified item.
      *
      * @param {Object} item the item to search for.
-     * @memberof Queue
      */
     Queue.prototype.contains = function(item) {
         return this._array.indexOf(item) !== -1;
@@ -69,7 +65,6 @@ define(function() {
 
     /**
      * Remove all items from the queue.
-     * @memberof Queue
      */
     Queue.prototype.clear = function() {
         this._array.length = this._offset = this.length = 0;
@@ -79,7 +74,6 @@ define(function() {
      * Sort the items in the queue in-place.
      *
      * @param {Function} compareFunction a function that defines the sort order.
-     * @memberof Queue
      */
     Queue.prototype.sort = function(compareFunction) {
         if (this._offset > 0) {

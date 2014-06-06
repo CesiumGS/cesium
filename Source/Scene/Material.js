@@ -241,6 +241,7 @@ define([
      *
      * @alias Material
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.strict=false] Throws errors for issues that would normally be ignored, including unused uniforms or materials.
      * @param {Boolean|Function} [options.translucent=true] When <code>true</code> or a function that returns <code>true</code>, the geometry
      *                           with this material is expected to appear translucent.
@@ -256,6 +257,10 @@ define([
      * @exception {DeveloperError} strict: shader source does not use string.
      * @exception {DeveloperError} strict: shader source does not use uniform.
      * @exception {DeveloperError} strict: shader source does not use material.
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -274,10 +279,6 @@ define([
      *         }
      *     }
      * });
-     *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      */
     var Material = function(options) {
         /**
@@ -353,7 +354,6 @@ define([
      *
      * @param {String} type The base material type.
      * @param {Object} [uniforms] Overrides for the default uniforms.
-     *
      * @returns {Material} New material object.
      *
      * @exception {DeveloperError} material with that type does not exist.
@@ -497,8 +497,6 @@ define([
     * If this object was destroyed, it should not be used; calling any function other than
     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
     *
-    * @memberof Material
-    *
     * @returns {Boolean} True if this object was destroyed; otherwise, false.
     *
     * @see Material#destroy
@@ -514,8 +512,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Material
      *
      * @returns {undefined}
      *

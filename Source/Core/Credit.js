@@ -12,16 +12,16 @@ define([
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      *
-     *  @param {String} [text] The text to be displayed on the screen if no imageUrl is specified.
-     *  @param {String} [imageUrl] The source location for an image
-     *  @param {String} [link] A URL location for which the credit will be hyperlinked
+     * @param {String} [text] The text to be displayed on the screen if no imageUrl is specified.
+     * @param {String} [imageUrl] The source location for an image
+     * @param {String} [link] A URL location for which the credit will be hyperlinked
      *
-     *  @alias Credit
-     *  @constructor
+     * @alias Credit
+     * @constructor
      *
-     *  @example
-     *  //Create a credit with a tooltip, image and link
-     *  var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
+     * @example
+     * //Create a credit with a tooltip, image and link
+     * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
 
     var Credit = function(text, imageUrl, link) {
@@ -106,11 +106,8 @@ define([
     /**
      * Returns true if the credits are equal
      *
-     * @memberof Credit
-     *
      * @param {Credit} left The first credit
      * @param {Credit} left The second credit
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
@@ -128,10 +125,7 @@ define([
     /**
      * Returns true if the credits are equal
      *
-     * @memberof Credit
-     *
      * @param {Credit} credits The credit to compare to.
-     *
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.prototype.equals = function(credit) {

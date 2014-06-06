@@ -20,8 +20,6 @@ define([
      * polygon on a given side of the threshold.  The resulting polygon may have 0, 1, 2,
      * 3, or 4 vertices.
      *
-     * @memberof Intersections2D
-     *
      * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
      * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
      *                            to keep the portion below.
@@ -39,9 +37,9 @@ define([
      *                     the new vertex lies on, and the fraction of the distance from the first
      *                     vertex to the second one.
      *
-     *  @example
-     *  var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
-     *  // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
+     * @example
+     * var result = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, false, 0.2, 0.6, 0.4);
+     * // result === [2, 0, -1, 1, 0, 0.25, -1, 1, 2, 0.5]
      */
     Intersections2D.clipTriangleAtAxisAlignedThreshold = function(threshold, keepAbove, u0, u1, u2, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -217,8 +215,6 @@ define([
     /**
      * Compute the barycentric coordinates of a 2D position within a 2D triangle.
      *
-     * @memberof Intersections2D
-     *
      * @param {Number} x The x coordinate of the position for which to find the barycentric coordinates.
      * @param {Number} y The y coordinate of the position for which to find the barycentric coordinates.
      * @param {Number} x1 The x coordinate of the triangle's first vertex.
@@ -229,7 +225,6 @@ define([
      * @param {Number} y3 The y coordinate of the triangle's third vertex.
      * @param {Cartesian3} [result] The instance into to which to copy the result.  If this parameter
      *                     is undefined, a new instance is created and returned.
-     *
      * @returns {Cartesian3} The barycentric coordinates of the position within the triangle.
      *
      * @example
