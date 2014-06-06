@@ -165,7 +165,6 @@ define([
      * Updates the display to the provided time.
      *
      * @param {JulianDate} time The simulation time.
-     *
      * @returns {Boolean} True if all data sources are ready to be displayed, false otherwise.
      */
     DataSourceDisplay.prototype.update = function(time) {

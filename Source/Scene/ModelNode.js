@@ -21,11 +21,11 @@ define([
      * @alias ModelNode
      * @internalConstructor
      *
+     * @see Model#getNode
+     *
      * @example
      * var node = model.getNode('LOD3sp');
      * node.matrix = Matrix4.fromScale(new Cartesian3(5.0, 1.0, 1.0), node.matrix);
-     *
-     * @see Model#getNode
      */
     var ModelNode = function(model, node, runtimeNode, id) {
         this._model = model;

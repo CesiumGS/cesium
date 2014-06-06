@@ -12,7 +12,6 @@ define([
      * @exports formatError
      *
      * @param {Object} object The item to find in the array.
-     *
      * @returns {String} A string containing the formatted error.
      */
     var formatError = function(object) {

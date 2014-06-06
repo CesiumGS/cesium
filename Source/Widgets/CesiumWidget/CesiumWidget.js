@@ -109,6 +109,8 @@ define([
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
+     *        to the bottom of the widget itself.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -172,7 +174,9 @@ define([
 
             var creditContainer = document.createElement('div');
             creditContainer.className = 'cesium-widget-credits';
-            widgetNode.appendChild(creditContainer);
+
+            var creditContainerContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : widgetNode;
+            creditContainerContainer.appendChild(creditContainer);
 
             var scene = new Scene({
                 canvas : canvas,
@@ -263,14 +267,14 @@ define([
                 that._renderLoopRunning = false;
                 if (that._showRenderLoopErrors) {
                     var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    that.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
+                    var message = 'This may indicate an incompatibility with your hardware or web browser, or it may indicate a bug in the application.  Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
+                    that.showErrorPanel(title, message, error);
                 }
             });
         } catch (error) {
-            var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
-            this.showErrorPanel(title, error);
+            var title = 'Error constructing CesiumWidget.';
+            var message = 'Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
+            this.showErrorPanel(title, message, error);
             throw error;
         }
     };
@@ -429,10 +433,11 @@ define([
      * when a render loop error occurs, if showRenderLoopErrors was not false when the
      * widget was constructed.
      *
-     * @param {String} title The title to be displayed on the error panel.
-     * @param {String} error The error to be displayed on the error panel.  Optional.
+     * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
+     * @param {String} message A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+     * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
      */
-    CesiumWidget.prototype.showErrorPanel = function(title, error) {
+    CesiumWidget.prototype.showErrorPanel = function(title, message, error) {
         var element = this._element;
         var overlay = document.createElement('div');
         overlay.className = 'cesium-widget-errorPanel';
@@ -446,24 +451,31 @@ define([
         errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
 
-        var resizeCallback;
-        if (defined(error)) {
-            var errorPanelScroller = document.createElement('div');
-            errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
-            content.appendChild(errorPanelScroller);
-            resizeCallback = function() {
-                errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
-            };
-            resizeCallback();
-            if (defined(window.addEventListener)) {
-                window.addEventListener('resize', resizeCallback, false);
-            }
-
-            var errorMessage = document.createElement('div');
-            errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.appendChild(document.createTextNode(error));
-            errorPanelScroller.appendChild(errorMessage);
+        var errorPanelScroller = document.createElement('div');
+        errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
+        content.appendChild(errorPanelScroller);
+        var resizeCallback = function() {
+            errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
+        };
+        resizeCallback();
+        if (defined(window.addEventListener)) {
+            window.addEventListener('resize', resizeCallback, false);
         }
+
+        var errorMessage = document.createElement('div');
+        errorMessage.className = 'cesium-widget-errorPanel-message';
+        errorMessage.innerHTML = '<p>' + message + '</p>';
+        errorPanelScroller.appendChild(errorMessage);
+
+        var errorDetails = '(no error details available)';
+        if (defined(error)) {
+            errorDetails = formatError(error);
+        }
+
+        var errorMessageDetails = document.createElement('div');
+        errorMessageDetails.className = 'cesium-widget-errorPanel-message';
+        errorMessageDetails.appendChild(document.createTextNode(errorDetails));
+        errorPanelScroller.appendChild(errorMessageDetails);
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
@@ -483,6 +495,8 @@ define([
         buttonPanel.appendChild(okButton);
 
         element.appendChild(overlay);
+
+        console.error(title + '\n' + message + '\n' + errorDetails);
     };
 
     /**

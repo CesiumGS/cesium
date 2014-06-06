@@ -197,7 +197,6 @@ define([
      * Removes a collection from this composite, if present.
      *
      * @param {DynamicObjectCollection} collection The collection to remove.
-     *
      * @returns {Boolean} true if the collection was in the composite and was removed,
      *                    false if the collection was not in the composite.
      */

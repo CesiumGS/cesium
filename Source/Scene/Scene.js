@@ -1460,7 +1460,6 @@ define([
      * potentially be set depending on the type of primitive.
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object} Object containing the picked primitive.
      *
      * @exception {DeveloperError} windowPosition is undefined.
@@ -1510,7 +1509,6 @@ define([
      * scene (front to back).
      *
      * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     *
      * @returns {Object[]} Array of objects, each containing 1 picked primitives.
      *
      * @exception {DeveloperError} windowPosition is undefined.

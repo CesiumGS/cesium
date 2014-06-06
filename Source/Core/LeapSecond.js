@@ -30,8 +30,7 @@ define([
      * var leapSecond = new Cesium.LeapSecond(Cesium.JulianDate.fromDate(date), 25.0);
      * var offset = leapSecond.offset;    // 25.0
      *
-     * //////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Construct a LeapSecond using a date string
      * var date = 'January 1, 1990 00:00:00 UTC';
      * var leapSecond = new LeapSecond(date, 25.0);
@@ -89,7 +88,6 @@ define([
      * Checks whether two leap seconds are equivalent to each other.
      *
      * @param {LeapSecond} other The leap second to compare against.
-     *
      * @returns {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
      *
      * @example
@@ -108,7 +106,6 @@ define([
      *
      * @param {LeapSecond} leapSecond1 The first leap second to be compared.
      * @param {LeapSecond} leapSecond2 The second leap second to be compared.
-     *
      * @returns {Number} A negative value if the first leap second is earlier than the second,
      *                  a positive value if the first leap second is later than the second, or
      *                  zero if the two leap seconds are equal (ignoring their offsets).

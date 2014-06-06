@@ -445,7 +445,6 @@ define([
      *
      * @param {Object} geoJson The object to be processed.
      * @param {String} [sourceUri] The base URI of any relative links in the geoJson object.
-     *
      * @returns {Promise} a promise that will resolve when the GeoJSON is loaded.
      *
      * @exception {DeveloperError} Unsupported GeoJSON object type.

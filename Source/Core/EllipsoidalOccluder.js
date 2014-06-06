@@ -97,7 +97,6 @@ define([
      * Determines whether or not a point, the <code>occludee</code>, is hidden from view by the occluder.
      *
      * @param {Cartesian3} occludee The point to test for visibility.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
@@ -119,7 +118,6 @@ define([
      * into the scaled space, call {@link Ellipsoid#transformPositionToScaledSpace}.
      *
      * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
-     *
      * @returns {Boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
