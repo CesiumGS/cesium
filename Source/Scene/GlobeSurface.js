@@ -296,9 +296,9 @@ define([
             stack.push(levelZeroTiles[i]);
         }
 
-        var normal = Cartesian3.cross(v0 , v1);
-        Cartesian3.normalize(normal, normal);
-        var plane = Plane.fromPointNormal(center, normal);
+        var plane = Cartesian3.cross(v0, v1, new Cartesian4());
+        Cartesian3.normalize(plane, plane);
+        plane.w = -Cartesian3.dot(center, plane);
         var boundingVolume;
 
         while (stack.length > 0) {
@@ -321,7 +321,6 @@ define([
             }
 
             var sphereSphereIntersection = Cartesian3.distance(center, boundingVolume.center) <= radius + boundingVolume.radius;
-            //var spherePlaneIntersection = defined(IntersectionTests.spherePlane(boundingVolume, plane));
             var spherePlaneIntersection = BoundingSphere.intersect(boundingVolume, plane) === Intersect.INTERSECTING;
             if (sphereSphereIntersection && spherePlaneIntersection) {
                 var children = tile.children;

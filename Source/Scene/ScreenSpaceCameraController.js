@@ -15,8 +15,10 @@ define([
         '../Core/isArray',
         '../Core/KeyboardEventModifier',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Plane',
+        '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
         './AnimationCollection',
@@ -39,8 +41,10 @@ define([
         isArray,
         KeyboardEventModifier,
         CesiumMath,
+        Matrix3,
         Matrix4,
         Plane,
+        Quaternion,
         Ray,
         Transforms,
         AnimationCollection,
@@ -464,7 +468,7 @@ define([
         return distance * ratio;
     }
 
-    function adjustRotateForTerrain(controller, frameState, radius, angle, direction, globeOverride) {
+    function adjustRotateForTerrain(controller, frameState, center, axis, angle, globeOverride) {
         var globe = defaultValue(globeOverride, controller._globe);
         if (!defined(globe)) {
             return angle;
@@ -472,28 +476,18 @@ define([
 
         var camera = controller._camera;
 
-        var distance = 2.0 * radius * Math.sin(Math.abs(angle) * 0.5);
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
+        var v0 = Cartesian3.subtract(camera.position, center);
+        var v1 = Matrix3.multiplyByVector(rotation, v0);
+        var radius = Cartesian3.magnitude(v0);
 
-        var ray = adjustForTerrainRay;
-        Cartesian3.clone(camera.position, ray.origin);
-        if (angle < 0.0) {
-            Cartesian3.negate(direction, ray.direction);
-        } else {
-            Cartesian3.clone(direction, ray.direction);
-        }
-
-        var intersection = globe.pick(ray, frameState, adjustForTerrainCartesian3);
+        var intersection = globe.intersectArc(center, radius, v0, v1, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
             return angle;
         }
 
-        var dist = Cartesian3.distance(ray.origin, intersection) - controller.minimumZoomDistance;
-        if (dist <= 0.0 || distance === 0.0) {
-            return 0.0;
-        }
-
-        var ratio = CesiumMath.clamp(dist / distance, 0.0, 1.0);
-        return angle * ratio;
+        var newAngle = Math.acos(Cartesian3.dot(intersection, v0) / (Cartesian3.magnitude(intersection) * radius));
+        return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle, 0.0, Math.abs(angle));
     }
 
     function handleZoom(object, startPosition, movement, frameState, zoomFactor, distanceMeasure, unitPositionDotDirection) {
@@ -917,12 +911,12 @@ define([
         var radius = Cartesian3.distance(camera.position, center);
 
         if (!rotateOnlyVertical) {
-            deltaPhi = adjustRotateForTerrain(controller, frameState, radius, deltaPhi, camera.right, globeOverride);
+            deltaPhi = adjustRotateForTerrain(controller, frameState, center, camera.right, deltaPhi, globeOverride);
             camera.rotateRight(deltaPhi, transform);
         }
 
         if (!rotateOnlyHorizontal) {
-            deltaTheta = adjustRotateForTerrain(controller, frameState, radius, deltaTheta, camera.up, globeOverride);
+            deltaTheta = adjustRotateForTerrain(controller, frameState, center, camera.up, deltaTheta, globeOverride);
             camera.rotateUp(deltaTheta, transform);
         }
 

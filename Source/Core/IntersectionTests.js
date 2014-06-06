@@ -892,7 +892,7 @@ define([
     var yName = 'y';
     var zName = 'z';
 
-    IntersectionTests.planePlaneIntersection = function(p0, p1, result) {
+    IntersectionTests.planePlane = function(p0, p1, result) {
         var p0Normal = p0.normal;
         var p1Normal = p1.normal;
 
@@ -980,6 +980,8 @@ define([
             point[bName] = (ratio * d1 - d2) / (b2 - ratio * b1);
             point[aName] = (-b1 * point[bName] - d1) / b1;
         }
+
+        return result;
     };
 
     var scratchLineCircleDiff = new Cartesian2();
@@ -1047,7 +1049,7 @@ define([
     IntersectionTests.triangleArc = function(p0, p1, p2, center, radius, v0, v1, result) {
         Cartesian3.subtract(p1, p0, scratchCartesian1);
         Cartesian3.subtract(p2, p0, scratchCartesian2);
-        var normal = Cartesian3.cross(scratchCartesian1, scratchCartesian3, scratchCartesian3);
+        var normal = Cartesian3.cross(scratchCartesian1, scratchCartesian2, scratchCartesian3);
 
         if (Cartesian3.equalsEpsilon(normal, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
             return undefined;
@@ -1092,7 +1094,7 @@ define([
         transform[15] = 0.0;
 
         Matrix4.multiplyByPoint(transform, line.point, line.point);
-        Matrix4.mulitplyByPointAsVector(transform, line.direction, line.direction);
+        Matrix4.multiplyByPointAsVector(transform, line.direction, line.direction);
         Matrix4.multiplyByPointAsVector(transform, v1, scratchCartesian1);
 
         var circle = scratchCircle;
