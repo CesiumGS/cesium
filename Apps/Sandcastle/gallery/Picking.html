@@ -217,59 +217,7 @@ require(['Cesium'], function(Cesium) {
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
 
-    function fadeSensorOnClick(scene) {
-        Sandcastle.declare(fadeSensorOnClick); // For highlighting in Sandcastle.
-
-        // Setup - Add the sensor.
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(Cesium.Cartesian3.fromDegrees(-90.0, 0.0));
-        modelMatrix = Cesium.Matrix4.multiply(modelMatrix, Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-        var sensors = new Cesium.SensorVolumeCollection();
-        var sensor = sensors.addRectangularPyramid({
-            modelMatrix : modelMatrix,
-            radius : 20000000.0,
-            xHalfAngle : Cesium.Math.toRadians(40.0),
-            yHalfAngle : Cesium.Math.toRadians(20.0),
-            showIntersection : false,
-            material : Cesium.Material.fromType('Color')
-        });
-        scene.primitives.add(sensors);
-
-        // If the mouse is over the sensor, change start the alpha animation.
-        var eroding = false;
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-        handler.setInputAction(
-            function (movement) {
-                var pickedObject = scene.pick(movement.position);
-                if (!eroding && Cesium.defined(pickedObject) && (pickedObject.primitive === sensor)) {
-                    // Prevent multiple animations
-                    eroding = true;
-                    scene.animations.addAlpha(sensor.material, sensor.material.uniforms.color.alpha, 0.0, {
-                        onComplete : function() {
-                            if (!sensors.isDestroyed()) {
-                                sensors.remove(sensor);
-                            }
-                        }
-                    });
-                }
-            }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    }
-
-    function layerPrimitiveCollection(scene) {
-        Sandcastle.declare(layerPrimitiveCollection);    // For highlighting in Sandcastle.
-        addOverlappingPolygons(scene);
-
-        var primitives = scene.primitives;
-        // Move the primitive that the mouse is over to the top.
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                var p = scene.pick(movement.endPosition);
-                if (Cesium.defined(p) && primitives.contains(p.primitive)) {
-                    primitives.raiseToTop(p.primitive);
-                }
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
-
-    var originalColor= {};
+    var originalColor = {};
     function multiPickPrimitives(scene) {
         Sandcastle.declare(multiPickPrimitives);    // For highlighting in Sandcastle.
         addOverlappingPolygons(scene);
@@ -340,18 +288,6 @@ require(['Cesium'], function(Cesium) {
         cleanup();
         animateBillboardOnPick(scene);
         Sandcastle.highlight(animateBillboardOnPick);
-    });
-
-    Sandcastle.addToolbarButton('Fade Sensor on Click', function() {
-        cleanup();
-        fadeSensorOnClick(scene);
-        Sandcastle.highlight(fadeSensorOnClick);
-    });
-
-    Sandcastle.addToolbarButton('Layer Primitives', function() {
-        cleanup();
-        layerPrimitiveCollection(scene);
-        Sandcastle.highlight(layerPrimitiveCollection);
     });
 
     Sandcastle.addToolbarButton('Drill-Down Picking', function() {
