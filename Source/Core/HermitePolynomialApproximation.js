@@ -220,6 +220,7 @@ define([
         var highestNonZeroCoef = fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder);
         var reserviedIndices = [];
 
+        var tmp = zIndiceslength * (zIndiceslength + 1) / 2;
         var loopStop = Math.min(highestNonZeroCoef, outputOrder);
         for (var d = 0; d <= loopStop; d++) {
             for (i = d; i <= highestNonZeroCoef; i++) {
@@ -228,7 +229,7 @@ define([
                 var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndiceslength * i);
 
                 for (var s = 0; s < yStride; s++) {
-                    var dimOne = Math.floor(s * zIndiceslength * (zIndiceslength + 1) / 2);
+                    var dimOne = Math.floor(s * tmp);
                     var coef = coefficients[dimOne + dimTwo];
                     result[s + d * yStride] += coef * tempTerm;
                 }
@@ -243,9 +244,10 @@ define([
         var index;
         var highestNonZero = -1;
         var zIndiceslength = zIndices.length;
+        var tmp = zIndiceslength * (zIndiceslength + 1) / 2;
 
         for (var s = 0; s < yStride; s++) {
-            var dimOne = Math.floor(s * zIndiceslength * (zIndiceslength + 1) / 2);
+            var dimOne = Math.floor(s * tmp);
 
             for (j = 0; j < zIndiceslength; j++) {
                 index = zIndices[j] * yStride * (inputOrder + 1) + s;
