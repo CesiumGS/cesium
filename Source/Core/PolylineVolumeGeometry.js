@@ -238,7 +238,6 @@ define([
      * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolylineVolumeGeometry} polylineVolumeGeometry A description of the polyline volume.
-     *
      * @returns {Geometry} The computed vertices and indices.
      *
      * @exception {DeveloperError} Count of unique polyline positions must be greater than 1.

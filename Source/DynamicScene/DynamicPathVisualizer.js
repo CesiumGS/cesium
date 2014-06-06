@@ -15,6 +15,7 @@ define([
         '../Scene/SceneMode',
         './CompositePositionProperty',
         './ConstantPositionProperty',
+        './MaterialProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
@@ -33,6 +34,7 @@ define([
         SceneMode,
         CompositePositionProperty,
         ConstantPositionProperty,
+        MaterialProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
@@ -340,7 +342,6 @@ define([
             return;
         }
 
-        var uniforms;
         if (!defined(pathVisualizerIndex)) {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -360,13 +361,12 @@ define([
                 material = Material.fromType(Material.PolylineOutlineType);
                 polyline.material = material;
             }
-            uniforms = material.uniforms;
+            var uniforms = material.uniforms;
             Color.clone(Color.WHITE, uniforms.color);
             Color.clone(Color.BLACK, uniforms.outlineColor);
             uniforms.outlineWidth = 0;
         } else {
             polyline = this._polylineCollection.get(pathVisualizerIndex);
-            uniforms = polyline.material.uniforms;
         }
 
         polyline.show = true;
@@ -381,21 +381,7 @@ define([
         }
 
         polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
-
-        property = dynamicPath._color;
-        if (defined(property)) {
-            uniforms.color = property.getValue(time, uniforms.color);
-        }
-
-        property = dynamicPath._outlineColor;
-        if (defined(property)) {
-            uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
-        }
-
-        property = dynamicPath._outlineWidth;
-        if (defined(property)) {
-            uniforms.outlineWidth = property.getValue(time);
-        }
+        polyline.material = MaterialProperty.getValue(time, dynamicPath._material, polyline.material);
 
         property = dynamicPath._width;
         if (defined(property)) {

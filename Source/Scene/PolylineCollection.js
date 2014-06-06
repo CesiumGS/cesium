@@ -140,14 +140,10 @@ define([
          * The 4x4 transformation matrix that transforms each polyline in this collection from model to world coordinates.
          * When this is the identity matrix, the polylines are drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -214,7 +210,6 @@ define([
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
      * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
-     *
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -249,7 +244,6 @@ define([
      * Removes a polyline from the collection.
      *
      * @param {Polyline} polyline The polyline to remove.
-     *
      * @returns {Boolean} <code>true</code> if the polyline was removed; <code>false</code> if the polyline was not found in the collection.
      *
      * @performance After calling <code>remove</code>, {@link PolylineCollection#update} is called and
@@ -317,7 +311,6 @@ define([
      * Determines if this collection contains the specified polyline.
      *
      * @param {Polyline} polyline The polyline to check for.
-     *
      * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see PolylineCollection#get
@@ -334,7 +327,6 @@ define([
      * in the collection.
      *
      * @param {Number} index The zero-based index of the polyline.
-     *
      * @returns {Polyline} The polyline at the specified index.
      *
      * @performance If polylines were removed from the collection and
