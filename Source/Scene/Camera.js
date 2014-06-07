@@ -583,6 +583,8 @@ define([
          * expressed in radians and height in meters.  In 2D and Columbus View, it is possible
          * for the returned longitude and latitude to be outside the range of valid longitudes
          * and latitudes when the camera is outside the map.
+         * @memberof Camera.prototype
+         * 
          * @type {Cartographic}
          */
         positionCartographic : {
