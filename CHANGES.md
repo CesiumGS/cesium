@@ -11,6 +11,8 @@ Beta Releases
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Added `Primitive.ready`.
+* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 
 ### b29 - 2014-06-02
 
@@ -49,8 +51,6 @@ Beta Releases
 * Added `Viewer.targetFrameRate` and `CesiumWidget.targetFrameRate` to allow for throttling of the requestAnimationFrame rate.
 * Added `Viewer.resolutionScale` and `CesiumWidget.resolutionScale` to allow the scene to be rendered at a resolution other than the canvas size.
 * `Camera.transform` now works consistently across scene modes.
-* Added `Primitive.ready`.
-* Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 * Fixed a bug that prevented `sampleTerrain` from working with STK World Terrain in Firefox.
 * `sampleTerrain` no longer fails when used with a `TerrainProvider` that is not yet ready.
 * Fixed problems that could occur when using `ArcGisMapServerImageryProvider` to access a tiled MapServer of non-global extent.
