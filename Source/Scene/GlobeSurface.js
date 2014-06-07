@@ -16,9 +16,11 @@ define([
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/IntersectionTests',
+        '../Core/isArray',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
         '../Core/Queue',
+        '../Core/Ray',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/WebMercatorProjection',
@@ -49,9 +51,11 @@ define([
         IndexDatatype,
         Intersect,
         IntersectionTests,
+        isArray,
         Matrix4,
         PrimitiveType,
         Queue,
+        Ray,
         Rectangle,
         TerrainProvider,
         WebMercatorProjection,
@@ -280,10 +284,15 @@ define([
         stop : 0.0
     };
 
-    GlobeSurface.prototype.pick = function(ray, frameState, result) {
+    GlobeSurface.prototype.pick = function(rays, frameState, result) {
+        if (!isArray(rays)) {
+            rays = [rays];
+        }
+
         var stack = [];
         var sphereIntersections = scratchSphereIntersections;
         sphereIntersections.length = 0;
+        var raysLength = rays.length;
 
         var tile;
         var i;
@@ -313,12 +322,20 @@ define([
                 BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
             }
 
-            var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
-            if (defined(boundingSphereIntersection)) {
-                var children = tile.children;
-                var childrenLength = children.length;
-                for (i = 0; i < childrenLength; ++i) {
-                    stack.push(children[i]);
+            for (i = 0; i < raysLength; ++i) {
+                var ray = new Ray();
+                Cartesian3.clone(rays[i].origin, ray.origin);
+                Cartesian3.normalize(rays[i].direction, ray.direction);
+
+                //var ray = rays[i];
+                var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+                if (defined(boundingSphereIntersection)) {
+                    var children = tile.children;
+                    var childrenLength = children.length;
+                    for (i = 0; i < childrenLength; ++i) {
+                        stack.push(children[i]);
+                    }
+                    break;
                 }
             }
         }
@@ -328,7 +345,7 @@ define([
             return undefined;
         }
 
-        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
+        sphereIntersections.sort(createComparePickTileFunction(rays[0].origin));
 
         var currentTile = sphereIntersections[0];
         var uniqueIntersections = [currentTile];
@@ -343,7 +360,7 @@ define([
         var intersection;
         length = uniqueIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = uniqueIntersections[i].pick(ray, frameState, result);
+            intersection = uniqueIntersections[i].pick(rays, frameState, result);
             if (defined(intersection)) {
                 break;
             }
@@ -401,10 +418,12 @@ define([
 
         sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
+        var rays = [ray];
+
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].pick(ray, frameState, result);
+            intersection = sphereIntersections[i].pick(rays, frameState, result);
             if (defined(intersection)) {
                 break;
             }
