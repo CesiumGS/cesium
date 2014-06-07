@@ -83,6 +83,7 @@ define([
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+     * @param {Boolean} [options.timeControlsInitiallyVisible=true] True if the animation and timeline controls should initially be visible, or false if they should not be shown until <code>showTimeControls</code> is set to true.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -222,10 +223,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this.clockTrackedDataSource = undefined;
 
         /**
-         * Gets or sets a flag that hides the time controls.
+         * Gets or sets a flag that indicates whether the animation and timeline controls are visible.
          * @type {Boolean}
          */
-        this.showTimeControls = true;
+        this.showTimeControls = defaultValue(options.timeControlsInitiallyVisible, true);
 
         knockout.track(this, ['clockTrackedDataSource', 'showTimeControls']);
         knockout.applyBindings(this, viewerContainer);
