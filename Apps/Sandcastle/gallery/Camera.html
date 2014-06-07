@@ -55,8 +55,8 @@ require(['Cesium'], function(Cesium) {
         navigator.geolocation.getCurrentPosition(fly);
     }
 
-    function viewAnRectangle() {
-        Sandcastle.declare(viewAnRectangle); // For highlighting in Sandcastle.
+    function viewARectangle() {
+        Sandcastle.declare(viewARectangle); // For highlighting in Sandcastle.
         var west = -77.0;
         var south = 38.0;
         var east = -72.0;
@@ -169,7 +169,7 @@ require(['Cesium'], function(Cesium) {
         }
     }
 
-    function viewIcRf() {
+    function viewIcrf() {
         var vm = viewer.homeButton.viewModel;
         vm.duration = 0.0;
         vm.command();
@@ -219,8 +219,8 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('View a Rectangle', function() {
         reset();
-        viewAnRectangle();
-        Sandcastle.highlight(viewAnRectangle);
+        viewARectangle();
+        Sandcastle.highlight(viewARectangle);
     });
 
     Sandcastle.addToolbarButton('Set camera reference frame', function() {
@@ -231,8 +231,8 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('View in ICRF', function() {
         reset();
-        viewIcRf();
-        Sandcastle.highlight(viewIcRf);
+        viewIcrf();
+        Sandcastle.highlight(viewIcrf);
     });
 
     Sandcastle.finishedLoading();
