@@ -91,6 +91,9 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
+     * @see GeometryInstance
+     * @see Appearance
+     *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
      * var instance = new Cesium.GeometryInstance({
@@ -162,9 +165,6 @@ define([
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      * scene.primitives.add(primitive);
-     *
-     * @see GeometryInstance
-     * @see Appearance
      */
     var Primitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -201,8 +201,7 @@ define([
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
          * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
          *
@@ -211,8 +210,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._modelMatrix = new Matrix4();
@@ -589,7 +586,14 @@ define([
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType..
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
@@ -1041,7 +1045,6 @@ define([
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
      * @param {Object} id The id of the {@link GeometryInstance}.
-     *
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.

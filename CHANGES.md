@@ -4,13 +4,25 @@ Change Log
 Beta Releases
 -------------
 
-### 1.0 - 2014-07-01
+### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
+   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
+* `DynamicObject.id` can now include period characters.
+* `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Fixed support for embedded resources in glTF models.
+* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
+* Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
+* `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
+* `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
+* Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Added `Primitive.ready`.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 

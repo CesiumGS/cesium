@@ -19,9 +19,6 @@ define([
      *
      * @alias EncodedCartesian3
      * @constructor
-     *
-     * @see czm_modelViewRelativeToEye
-     * @see czm_modelViewProjectionRelativeToEye
      */
     var EncodedCartesian3 = function() {
         /**
@@ -57,7 +54,6 @@ define([
      *
      * @param {Number} value The floating-point value to encode.
      * @param {Object} [result] The object onto which to store the result.
-     *
      * @returns {Object} The modified result parameter or a new instance if one was not provided.
      *
      * @example

@@ -109,11 +109,11 @@ define([
          * @type {Cartesian3}
          * @default undefined
          *
+         * @see EllipsoidPrimitive#modelMatrix
+         *
          * @example
          * // A sphere with a radius of 2.0
          * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
-         *
-         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
@@ -125,8 +125,7 @@ define([
          * The 4x4 transformation matrix that transforms the ellipsoid from model to world coordinates.
          * When this is the identity matrix, the ellipsoid is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
@@ -134,9 +133,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * e.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = new Matrix4();
@@ -160,14 +156,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * e.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -258,7 +254,12 @@ define([
     }
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
      * @exception {DeveloperError} this.material must be defined.
      */

@@ -143,14 +143,14 @@ define([
          *
          * @type Material
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * rectangle.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * rectangle.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, material);
 
@@ -192,7 +192,16 @@ define([
     };
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} this.ellipsoid must be defined.
+     * @exception {DeveloperError} this.material must be defined.
+     * @exception {DeveloperError} this.granularity must be defined.
      */
     RectanglePrimitive.prototype.update = function(context, frameState, commandList) {
         //>>includeStart('debug', pragmas.debug);
@@ -286,10 +295,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Rectangle#isDestroyed
-     *
      * @example
      * rectangle = rectangle && rectangle.destroy();
+     *
+     * @see Rectangle#isDestroyed
      */
     RectanglePrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
