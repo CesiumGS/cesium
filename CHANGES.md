@@ -24,6 +24,7 @@ Beta Releases
 * `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
+* Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
 
 ### b29 - 2014-06-02
 

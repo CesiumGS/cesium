@@ -127,7 +127,7 @@ define([
         } else {
             points = [ start ];
 
-            angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
+            angle = CesiumMath.acosClamped(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
             axis = Cartesian3.cross(aboveEnd, afterStart);
             if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;

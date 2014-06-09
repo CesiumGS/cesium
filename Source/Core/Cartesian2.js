@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './freezeObject'
+        './freezeObject',
+        './Math'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        freezeObject) {
+        freezeObject,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -577,7 +579,7 @@ define([
 
         Cartesian2.normalize(left, angleBetweenScratch);
         Cartesian2.normalize(right, angleBetweenScratch2);
-        return Math.acos(Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2));
+        return CesiumMath.acosClamped(Cartesian2.dot(angleBetweenScratch, angleBetweenScratch2));
     };
 
     var mostOrthogonalAxisScratch = new Cartesian2();
