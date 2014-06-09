@@ -142,6 +142,7 @@ require(['Cesium'], function(Cesium) {
 
         clock.multiplier = 3 * 60 * 60;
         scene.preRender.addEventListener(icrf);
+        scene.globe.enableLighting = true;
     }
 
     function reset() {
