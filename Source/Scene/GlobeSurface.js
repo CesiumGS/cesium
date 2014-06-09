@@ -399,6 +399,10 @@ define([
 
     /**
      * Find an intersection between a ray and the globe surface that was rendered.
+     * <p>
+     * Prefer this method over {@link GlobeSurface#intersect} when finding an intersection with the section of
+     * the globe surface that is rendered for better performance
+     * </p>
      * @memberof GlobeSurface
      *
      * @param {Ray} ray The ray to test for intersection.

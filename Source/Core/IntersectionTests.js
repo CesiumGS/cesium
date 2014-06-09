@@ -35,6 +35,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Plane} plane The plane.
+     * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.rayPlane = function(ray, plane, result) {
@@ -161,6 +162,7 @@ define([
      * @param {Cartesian3} p2 The third vertex of the triangle.
      * @param {Boolean} [cullBackFacing=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
      *                  and return undefined for intersections with the back face.
+     * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.rayTriangle = function(ray, p0, p1, p2, cullBackFacing, result) {
@@ -186,9 +188,19 @@ define([
      * @param {Cartesian3} p2 The third vertex of the triangle.
      * @param {Boolean} [cullBackFacing=false] If <code>true<code>, will only compute an intersection with the front face of the triangle
      *                  and return undefined for intersections with the back face.
+     * @param {Cartesian3} [result] The <code>Cartesian3</code> onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.lineSegmentTriangle = function(v0, v1, p0, p1, p2, cullBackFacing, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(v0)) {
+            throw new DeveloperError('v0 is required.');
+        }
+        if (!defined(v1)) {
+            throw new DeveloperError('v1 is required.');
+        }
+        //>>includeEnd('debug');
+
         var ray = scratchLineSegmentTriangleRay;
         Cartesian3.clone(v0, ray.origin);
         Cartesian3.subtract(v1, v0, ray.direction);
