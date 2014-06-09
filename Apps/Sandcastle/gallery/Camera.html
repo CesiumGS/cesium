@@ -124,7 +124,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function icrf(scene, time) {
-        if (scene.sceneMode !== Cesium.SceneMode.SCENE3D) {
+        if (scene.mode !== Cesium.SceneMode.SCENE3D) {
             return;
         }
 
