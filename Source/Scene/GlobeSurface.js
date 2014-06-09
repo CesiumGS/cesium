@@ -342,7 +342,7 @@ define([
 
             var boundingVolume = tile.pickBoundingSphere;
             if (frameState.mode !== SceneMode.SCENE3D) {
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
             } else {
                 BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
@@ -375,7 +375,7 @@ define([
         var currentTile = sphereIntersections[0];
         var uniqueIntersections = scratchArray1;
         uniqueIntersections.length = 0;
-        uniqueIntersections[0] = [currentTile];
+        uniqueIntersections[0] = currentTile;
 
         for (i = 1; i < length; ++i) {
             tile = sphereIntersections[i];
@@ -415,7 +415,7 @@ define([
      * var ray = scene.camera.getPickRay(windowCoordinates);
      * var intersection = surface.pick(ray, scene.frameState);
      */
-    GlobeSurface.prototype.pickRenderedSurface = function(ray, frameState, result) {
+    GlobeSurface.prototype.pick = function(ray, frameState, result) {
         var sphereIntersections = scratchArray1;
         sphereIntersections.length = 0;
 
@@ -435,7 +435,7 @@ define([
 
                 var boundingVolume = tile.pickBoundingSphere;
                 if (frameState.mode !== SceneMode.SCENE3D) {
-                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
+                    BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tile.minimumHeight, tile.maximumHeight, boundingVolume);
                     Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
                 } else {
                     BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);

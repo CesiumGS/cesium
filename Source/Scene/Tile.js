@@ -315,7 +315,7 @@ define([
         Cartesian3.add(tile.center, result, result);
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            var projection = frameState.scene2D.projection;
+            var projection = frameState.mapProjection;
             var ellipsoid = projection.ellipsoid;
             var positionCart = ellipsoid.cartesianToCartographic(result);
             projection.project(positionCart, result);
