@@ -468,7 +468,7 @@ define([
         return distance * ratio;
     }
 
-    function adjustRotateForTerrain(controller, frameState, center, axis, angle, globeOverride) {
+    function adjustRotateForTerrain(controller, frameState, center, radius, axis, angle, globeOverride) {
         var globe = defaultValue(globeOverride, controller._globe);
         if (!defined(globe)) {
             return angle;
@@ -476,18 +476,28 @@ define([
 
         var camera = controller._camera;
 
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle));
-        var v0 = Cartesian3.subtract(camera.position, center);
-        var v1 = Matrix3.multiplyByVector(rotation, v0);
-        var radius = Cartesian3.magnitude(v0);
+        var numRays = Math.min(Math.ceil(radius * Math.abs(angle) / 1000.0), 1.0);
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays));
+        var start = Cartesian3.subtract(camera.position, center);
 
-        var intersection = globe.intersectArc(center, radius, v0, v1, frameState, adjustForTerrainCartesian3);
+        var rays = [];
+        for (var i = 0; i < numRays; ++i) {
+            var stop = Matrix3.multiplyByVector(rotation, start);
+            var direction = Cartesian3.subtract(stop, start);
+            var origin = Cartesian3.add(center, start);
+            rays.push(new Ray(origin, direction));
+            start = stop;
+        }
+
+        var intersection = globe.pick(rays, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
             return angle;
         }
 
-        var newAngle = Math.acos(Cartesian3.dot(intersection, v0) / (Cartesian3.magnitude(intersection) * radius));
-        return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle, 0.0, Math.abs(angle));
+        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.position, center));
+        var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center));
+        var newAngle = Math.acos(Cartesian3.dot(startDirection, endDirection));
+        return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance / radius, 0.0, Math.abs(angle));
     }
 
     function handleZoom(object, startPosition, movement, frameState, zoomFactor, distanceMeasure, unitPositionDotDirection) {
@@ -911,12 +921,12 @@ define([
         var radius = Cartesian3.distance(camera.position, center);
 
         if (!rotateOnlyVertical) {
-            deltaPhi = adjustRotateForTerrain(controller, frameState, center, camera.right, deltaPhi, globeOverride);
+            deltaPhi = adjustRotateForTerrain(controller, frameState, center, radius, camera.up, deltaPhi, globeOverride);
             camera.rotateRight(deltaPhi, transform);
         }
 
         if (!rotateOnlyHorizontal) {
-            deltaTheta = adjustRotateForTerrain(controller, frameState, center, camera.up, deltaTheta, globeOverride);
+            deltaTheta = adjustRotateForTerrain(controller, frameState, center, radius, camera.right, deltaTheta, globeOverride);
             camera.rotateUp(deltaTheta, transform);
         }
 
@@ -955,6 +965,8 @@ define([
         p0 = camera.worldToCameraCoordinates(p0, p0);
         p1 = camera.worldToCameraCoordinates(p1, p1);
 
+        var cameraPosMag = Cartesian3.magnitude(camera.position);
+
         if (!defined(camera.constrainedAxis)) {
             Cartesian3.normalize(p0, p0);
             Cartesian3.normalize(p1, p1);
@@ -963,6 +975,7 @@ define([
 
             if (dot < 1.0 && !Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = Math.acos(dot);
+                angle = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, axis, angle);
                 camera.rotate(axis, angle);
             }
         } else {
@@ -1022,7 +1035,10 @@ define([
                 deltaTheta = startTheta - endTheta;
             }
 
+            deltaPhi = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.up, deltaPhi);
             camera.rotateRight(deltaPhi);
+
+            deltaTheta = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.right, deltaTheta);
             camera.rotateUp(deltaTheta);
         }
     }

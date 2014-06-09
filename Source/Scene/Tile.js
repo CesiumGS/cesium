@@ -329,7 +329,7 @@ define([
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
 
-    Tile.prototype.pick = function(ray, frameState, result) {
+    Tile.prototype.pick = function(rays, frameState, result) {
         var terrain = this.pickTerrain;
         if (!defined(terrain)) {
             return undefined;
@@ -344,6 +344,8 @@ define([
         var indices = mesh.indices;
 
         var length = indices.length;
+        var raysLength = rays.length;
+
         for (var i = 0; i < length; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
@@ -353,9 +355,19 @@ define([
             var v1 = getPosition(this, frameState, vertices, i1, scratchV1);
             var v2 = getPosition(this, frameState, vertices, i2, scratchV2);
 
-            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
-            if (defined(intersection)) {
-                return intersection;
+            for (var j = 0; j < raysLength; ++j) {
+                var ray = rays[j];
+                var intersection;
+                if (Cartesian3.magnitudeSquared(ray) > 1.0) {
+                    intersection = IntersectionTests.lineSegmentTriangle(ray.origin, Cartesian3.add(ray.origin, ray.direction), v0, v1, v2, true, result);
+                } else {
+                    intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
+                }
+
+                //var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
+                if (defined(intersection)) {
+                    return intersection;
+                }
             }
         }
 
