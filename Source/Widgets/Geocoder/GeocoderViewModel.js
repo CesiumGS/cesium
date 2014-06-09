@@ -262,7 +262,7 @@ define([
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                 },
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
             };
 

@@ -45,7 +45,7 @@ define([
             options = {
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
-                endReferenceFrame : Matrix4.IDENTITY
+                endTransform : Matrix4.IDENTITY
             };
             flight = CameraFlightPath.createAnimationRectangle(scene, options);
             scene.animations.add(flight);
@@ -56,7 +56,7 @@ define([
                 duration : duration,
                 up : defaultCamera.up,
                 direction : defaultCamera.direction,
-                endReferenceFrame : Matrix4.IDENTITY
+                endTransform : Matrix4.IDENTITY
             };
             flight = CameraFlightPath.createAnimation(scene, options);
             scene.animations.add(flight);
@@ -72,7 +72,7 @@ define([
                 duration : duration,
                 up : up,
                 direction : direction,
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
             };
 

@@ -389,7 +389,7 @@ define([
     var scratchDestination = new Cartesian3();
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
+     * Creates an animation to fly the camera from its current position to a position given by a Cartesian. All arguments should
      * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
@@ -400,7 +400,7 @@ define([
      * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [options.onComplete] The function to execute when the animation has completed.
      * @param {Function} [options.onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [options.endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
@@ -419,15 +419,6 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        //>>includeEnd('debug');
-
-        if (scene.frameState.mode === SceneMode.MORPHING) {
-            return {
-                duration : 0
-            };
-        }
-
-        //>>includeStart('debug', pragmas.debug);
         if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
@@ -435,6 +426,12 @@ define([
             throw new DeveloperError('If either direction or up is given, then both are required.');
         }
         //>>includeEnd('debug');
+
+        if (scene.frameState.mode === SceneMode.MORPHING) {
+            return {
+                duration : 0
+            };
+        }
 
         var convert = defaultValue(options.convert, true);
 
@@ -463,9 +460,9 @@ define([
         var onComplete = wrapCallback(options.onComplete);
         var onCancel = wrapCallback(options.onCancel);
 
-        var referenceFrame = options.endReferenceFrame;
-        if (defined(referenceFrame)) {
-            scene.camera.setTransform(referenceFrame);
+        var transform = options.endTransform;
+        if (defined(transform)) {
+            scene.camera.setTransform(transform);
         }
 
         var frustum = frameState.camera.frustum;
@@ -560,15 +557,16 @@ define([
     };
 
     /**
-     * Creates an animation to fly the camera from it's current position to a position in which the entire rectangle will be visible. All arguments should
+     * Creates an animation to fly the camera from its current position to a position in which the entire rectangle will be visible. All arguments should
      * be given in world coordinates.
      *
      * @param {Scene} scene The scene instance to use.
+     * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The final position of the camera.
      * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
      * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endReferenceFrame] The reference frame the camera will be in when the flight is completed.
+     * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
      * @see Scene#animations
@@ -580,9 +578,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
-        }
-        if (!defined(scene.frameState)) {
-            throw new DeveloperError('frameState is required.');
         }
         if (!defined(rectangle)) {
             throw new DeveloperError('options.destination is required.');

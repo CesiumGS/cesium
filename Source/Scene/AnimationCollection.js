@@ -70,6 +70,8 @@ define([
         } else if (typeof options.onComplete === 'function') {
             options.onComplete();
         }
+
+        return {};
     };
 
     defineProperties(AnimationCollection.prototype, {

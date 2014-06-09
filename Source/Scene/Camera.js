@@ -1748,8 +1748,9 @@ define([
     var pickPerspXDir = new Cartesian3();
     var pickPerspYDir = new Cartesian3();
     function getPickRayPerspective(camera, windowPosition, result) {
-        var width = camera._scene.canvas.clientWidth;
-        var height = camera._scene.canvas.clientHeight;
+        var canvas = camera._scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1776,8 +1777,9 @@ define([
     var scratchDirection = new Cartesian3();
 
     function getPickRayOrthographic(camera, windowPosition, result) {
-        var width = camera._scene.canvas.clientWidth;
-        var height = camera._scene.canvas.clientHeight;
+        var canvas = camera._scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
         var x = (2.0 / width) * windowPosition.x - 1.0;
         x *= (camera.frustum.right - camera.frustum.left) * 0.5;
