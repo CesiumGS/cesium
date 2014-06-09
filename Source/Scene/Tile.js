@@ -328,6 +328,8 @@ define([
     var scratchV0 = new Cartesian3();
     var scratchV1 = new Cartesian3();
     var scratchV2 = new Cartesian3();
+    var scratchCartesian = new Cartesian3();
+    var scratchResult = new Cartesian3();
 
     Tile.prototype.pick = function(rays, frameState, result) {
         var terrain = this.pickTerrain;
@@ -359,48 +361,16 @@ define([
                 var ray = rays[j];
                 var intersection;
                 if (Cartesian3.magnitudeSquared(ray) > 1.0) {
-                    intersection = IntersectionTests.lineSegmentTriangle(ray.origin, Cartesian3.add(ray.origin, ray.direction), v0, v1, v2, true, result);
+                    var p0 = ray.origin;
+                    var p1 = Cartesian3.add(p0, ray.direction, scratchCartesian);
+                    intersection = IntersectionTests.lineSegmentTriangle(p0, p1, v0, v1, v2, true, scratchResult);
                 } else {
-                    intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
+                    intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, scratchResult);
                 }
 
-                //var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, result);
                 if (defined(intersection)) {
-                    return intersection;
+                    return Cartesian3.clone(intersection, result);
                 }
-            }
-        }
-
-        return undefined;
-    };
-
-    Tile.prototype.intersectArc = function(center, radius, v0, v1, frameState, result) {
-        var terrain = this.pickTerrain;
-        if (!defined(terrain)) {
-            return undefined;
-        }
-
-        var mesh = terrain.mesh;
-        if (!defined(mesh)) {
-            return undefined;
-        }
-
-        var vertices = mesh.vertices;
-        var indices = mesh.indices;
-
-        var length = indices.length;
-        for (var i = 0; i < length; i += 3) {
-            var i0 = indices[i];
-            var i1 = indices[i + 1];
-            var i2 = indices[i + 2];
-
-            var p0 = getPosition(this, frameState, vertices, i0, scratchV0);
-            var p1 = getPosition(this, frameState, vertices, i1, scratchV1);
-            var p2 = getPosition(this, frameState, vertices, i2, scratchV2);
-
-            var intersection = IntersectionTests.triangleArc(p0, p1, p2, center, radius, v0, v1, result);
-            if (defined(intersection)) {
-                return intersection;
             }
         }
 

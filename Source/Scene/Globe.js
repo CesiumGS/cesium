@@ -293,12 +293,27 @@ define([
         }
     });
 
-    Globe.prototype.intersectArc = function(center, radius, v0, v1, frameState, result) {
-        return this._surface.intersectArc(center, radius, v0, v1, frameState, result);
-    };
-
-    Globe.prototype.pick = function(ray, frameState, result) {
-        return this._surface.pick(ray, frameState, result);
+    /**
+     * Find an intersection between rays or line segments and the globe surface.
+     * <p>
+     * If the rays direction has a magnitude greater than one, then the ray is assumed to be a line
+     * segment with end points at the ray origin and the ray origin plus the ray direction.
+     * </p>
+     *
+     * @memberof Globe
+     *
+     * @param {Ray|Ray[]} rays The rays or line segments to test for intersection.
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The first intersection or <code>undefined</code> if none were found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.rayIntersections(ray, scene.frameState);
+     */
+    Globe.prototype.intersect = function(rays, frameState, result) {
+        return this._surface.intersect(rays, frameState, result);
     };
 
     /**
@@ -308,15 +323,15 @@ define([
      * @param {Ray} ray The ray to test for intersection.
      * @param {FrameState} frameState The current frame state.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The intersection of <code>undefined</code> if none was found.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
      *
      * @example
      * // find intersection of ray through a pixel and the globe
      * var ray = scene.camera.getPickRay(windowCoordinates);
      * var intersection = globe.pick(ray, scene.frameState);
      */
-    Globe.prototype.pickRenderedSurface = function(ray, frameState, result) {
-        return this._surface.pickRenderedSurface(ray, frameState, result);
+    Globe.prototype.pick = function(ray, frameState, result) {
+        return this._surface.pick(ray, frameState, result);
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];

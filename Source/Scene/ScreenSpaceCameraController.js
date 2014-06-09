@@ -454,7 +454,7 @@ define([
             Cartesian3.clone(direction, ray.direction);
         }
 
-        var intersection = controller._globe.pick(ray, frameState, adjustForTerrainCartesian3);
+        var intersection = controller._globe.intersect(ray, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
             return distance;
         }
@@ -489,7 +489,7 @@ define([
             start = stop;
         }
 
-        var intersection = globe.pick(rays, frameState, adjustForTerrainCartesian3);
+        var intersection = globe.intersect(rays, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
             return angle;
         }

@@ -280,22 +280,46 @@ define([
         };
     }
 
-    var scratchSphereIntersections = [];
+    var scratchArray1 = [];
+    var scratchArray2 = [];
     var scratchSphereIntersectionResult = {
         start : 0.0,
         stop : 0.0
     };
+    var scratchArray = new Array(1);
+    var scratchRay = new Ray();
 
-    GlobeSurface.prototype.pick = function(rays, frameState, result) {
+    /**
+     * Find an intersection between rays or line segments and the globe surface.
+     * <p>
+     * If the rays direction has a magnitude greater than one, then the ray is assumed to be a line
+     * segment with end points at the ray origin and the ray origin plus the ray direction.
+     * </p>
+     *
+     * @memberof Globe
+     *
+     * @param {Ray|Ray[]} rays The rays or line segments to test for intersection.
+     * @param {FrameState} frameState The current frame state.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3|undefined} The first intersection or <code>undefined</code> if none were found.
+     *
+     * @example
+     * // find intersection of ray through a pixel and the globe
+     * var ray = scene.camera.getPickRay(windowCoordinates);
+     * var intersection = globe.rayIntersections(ray, scene.frameState);
+     */
+    GlobeSurface.prototype.intersect = function(rays, frameState, result) {
         if (!isArray(rays)) {
-            rays = [rays];
+            scratchArray[0] = rays;
+            rays = scratchArray;
         }
 
-        var stack = [];
-        var sphereIntersections = scratchSphereIntersections;
+        var stack = scratchArray1;
+        stack.length = 0;
+        var sphereIntersections = scratchArray2;
         sphereIntersections.length = 0;
-        var raysLength = rays.length;
 
+        var raysLength = rays.length;
         var tile;
         var i;
 
@@ -325,11 +349,10 @@ define([
             }
 
             for (i = 0; i < raysLength; ++i) {
-                var ray = new Ray();
+                var ray = scratchRay;
                 Cartesian3.clone(rays[i].origin, ray.origin);
                 Cartesian3.normalize(rays[i].direction, ray.direction);
 
-                //var ray = rays[i];
                 var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
                 if (defined(boundingSphereIntersection)) {
                     var children = tile.children;
@@ -350,7 +373,10 @@ define([
         sphereIntersections.sort(createComparePickTileFunction(rays[0].origin));
 
         var currentTile = sphereIntersections[0];
-        var uniqueIntersections = [currentTile];
+        var uniqueIntersections = scratchArray1;
+        uniqueIntersections.length = 0;
+        uniqueIntersections[0] = [currentTile];
+
         for (i = 1; i < length; ++i) {
             tile = sphereIntersections[i];
             if (tile !== currentTile) {
@@ -386,7 +412,7 @@ define([
      * var intersection = surface.pick(ray, scene.frameState);
      */
     GlobeSurface.prototype.pickRenderedSurface = function(ray, frameState, result) {
-        var sphereIntersections = scratchSphereIntersections;
+        var sphereIntersections = scratchArray1;
         sphereIntersections.length = 0;
 
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
@@ -420,7 +446,9 @@ define([
 
         sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
-        var rays = [ray];
+        var rays = scratchArray2;
+        rays.length = 1;
+        rays[0] = ray;
 
         var intersection;
         length = sphereIntersections.length;
