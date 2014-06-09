@@ -124,6 +124,10 @@ require(['Cesium'], function(Cesium) {
     }
 
     function icrf(scene, time) {
+        if (scene.sceneMode !== Cesium.SceneMode.SCENE3D) {
+            return;
+        }
+
         var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
         if (Cesium.defined(icrfToFixed)) {
             scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
