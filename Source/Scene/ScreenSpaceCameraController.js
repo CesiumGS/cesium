@@ -1126,13 +1126,14 @@ define([
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
         var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, newEllipsoid, tilt3DVerticalTransform);
 
+        var globeOverride = controller._globe;
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         var constrainedAxis = Cartesian3.UNIT_Z;
         var restrictedAngle = CesiumMath.PI_OVER_TWO - angle;
-        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true, oldGlobe);
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true, globeOverride);
 
         var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2, tilt3DNormal), Cartesian3.normalize(camera.position, tilt3DCartesian3), tilt3DCartesian3);
         if (Cartesian3.dot(camera.right, tangent) < 0.0) {
@@ -1145,11 +1146,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, oldGlobe);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, globeOverride);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, oldGlobe);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, globeOverride);
         }
 
         controller.globe = oldGlobe;
