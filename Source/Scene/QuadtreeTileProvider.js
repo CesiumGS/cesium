@@ -78,7 +78,7 @@ define([
     });
 
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#renderTile}
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      * @memberof QuadtreeTileProvider
      * @function
@@ -91,7 +91,7 @@ define([
     QuadtreeTileProvider.prototype.beginUpdate = DeveloperError.throwInstantiationError;
 
     /**
-     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
+     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
      * and any other functions.
      * @memberof QuadtreeTileProvider
      * @function
@@ -134,8 +134,9 @@ define([
     QuadtreeTileProvider.prototype.loadTile = DeveloperError.throwInstantiationError;
 
     /**
-     * Returns true if the tile is visible.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link QuadtreeTileProvider#renderTile}
+     * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
+     * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
+     * to {@link QuadtreeTileProvider#showTileThisFrame}.
      *
      * @memberof QuadtreeTileProvider
      *
@@ -143,9 +144,9 @@ define([
      * @param {FrameState} frameState The state information about the current frame.
      * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
      *
-     * @returns {Boolean} true if the tile is visible; otherwise, false.
+     * @returns {Visibility} The visibility of the tile.
      */
-    QuadtreeTileProvider.prototype.isTileVisible = DeveloperError.throwInstantiationError;
+    QuadtreeTileProvider.prototype.computeTileVisibility = DeveloperError.throwInstantiationError;
 
     /**
      * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
@@ -175,7 +176,7 @@ define([
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    QuadtreeTileProvider.prototype.getDistanceToTile = DeveloperError.throwInstantiationError;
+    QuadtreeTileProvider.prototype.computeDistanceToTile = DeveloperError.throwInstantiationError;
 
     /**
      * Returns true if this object was destroyed; otherwise, false.

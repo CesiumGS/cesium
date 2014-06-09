@@ -122,7 +122,7 @@ require(['Cesium'], function(Cesium) {
         }
     };
 
-    DemoTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
+    DemoTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         var boundingSphere;
         if (frameState.mode === Cesium.SceneMode.SCENE3D) {
             boundingSphere = tile.data.boundingSphere3D;
@@ -130,14 +130,14 @@ require(['Cesium'], function(Cesium) {
             boundingSphere = tile.data.boundingSphere2D;
         }
 
-        return frameState.cullingVolume.getVisibility(boundingSphere) !== Cesium.Intersect.OUTSIDE;
+        return frameState.cullingVolume.getVisibility(boundingSphere);
     };
 
     DemoTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         tile.data.primitive.update(context, frameState, commandList);
     };
 
-    DemoTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
+    DemoTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var boundingSphere;
 
         if (frameState.mode === Cesium.SceneMode.SCENE3D) {

@@ -3,6 +3,7 @@ defineSuite([
         'Scene/QuadtreePrimitive',
         'Core/defineProperties',
         'Core/GeographicTilingScheme',
+        'Core/Visibility',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -11,6 +12,7 @@ defineSuite([
         QuadtreePrimitive,
         defineProperties,
         GeographicTilingScheme,
+        Visibility,
         QuadtreeTileLoadState,
         createContext,
         createFrameState,
@@ -50,7 +52,7 @@ defineSuite([
         var result = jasmine.createSpyObj('tileProvider', [
             'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
             'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
-            'isTileVisible', 'showTileThisFrame', 'getDistanceToTile', 'isDestroyed', 'destroy']);
+            'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'isDestroyed', 'destroy']);
 
         defineProperties(result, {
             quadtree : {
@@ -92,7 +94,7 @@ defineSuite([
     it('shows the root tiles when they are ready and visible', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
-        tileProvider.isTileVisible.andReturn(true);
+        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
         tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
             tile.renderable = true;
         });
@@ -110,7 +112,7 @@ defineSuite([
     it('stops loading a tile that moves to the DONE state', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
-        tileProvider.isTileVisible.andReturn(true);
+        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
 
         var calls = 0;
         tileProvider.loadTile.andCallFake(function(context, frameState, tile) {

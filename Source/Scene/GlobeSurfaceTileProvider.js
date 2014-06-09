@@ -17,6 +17,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
+        '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -47,6 +48,7 @@ define([
         PrimitiveType,
         Rectangle,
         TerrainProvider,
+        Visibility,
         WebMercatorProjection,
         BufferUsage,
         DrawCommand,
@@ -209,7 +211,7 @@ define([
     });
 
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#renderTile}
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      *
      * @param {Context} context The rendering context.
@@ -255,7 +257,7 @@ define([
     };
 
     /**
-     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
+     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
      * and any other functions.
      *
      * @param {Context} context The rendering context.
@@ -334,16 +336,17 @@ define([
     var boundingSphereScratch = new BoundingSphere();
 
     /**
-     * Returns true if the tile is visible.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link GlobeSurfaceTileProvider#renderTile}
+     * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
+     * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
+     * to {@link GlobeSurfaceTileProvider#showTileThisFrame}.
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information about the current frame.
      * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
      *
-     * @returns {Boolean} true if the tile is visible; otherwise, false.
+     * @returns {Visibility} The visibility of the tile.
      */
-    GlobeSurfaceTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
+    GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         var surfaceTile = tile.data;
 
         var cullingVolume = frameState.cullingVolume;
@@ -360,20 +363,25 @@ define([
             }
         }
 
-        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-            return false;
+        var intersection = cullingVolume.getVisibility(boundingVolume);
+        if (intersection === Intersect.OUTSIDE) {
+            return Visibility.NONE;
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
-                return true;
+                return intersection;
             }
 
-            return occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace);
+            if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+                return intersection;
+            }
+
+            return Visibility.NONE;
         }
 
-        return true;
+        return intersection;
     };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
@@ -433,7 +441,7 @@ define([
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    GlobeSurfaceTileProvider.prototype.getDistanceToTile = function(tile, frameState) {
+    GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;

@@ -9,6 +9,7 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
         './SceneMode',
@@ -23,6 +24,7 @@ define([
         EllipsoidalOccluder,
         getTimestamp,
         Queue,
+        Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
         SceneMode,
@@ -280,6 +282,9 @@ define([
 
         primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
 
+        var tileProvider = primitive._tileProvider;
+        var occluders = primitive._occluders;
+
         var tile;
 
         // Enqueue the root tiles that are renderable and visible.
@@ -290,7 +295,7 @@ define([
             if (tile.needsLoading) {
                 queueTileLoad(primitive, tile);
             }
-            if (tile.renderable && isTileVisible(primitive, frameState, tile)) {
+            if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
@@ -325,7 +330,7 @@ define([
                 var children = tile.children;
                 // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
-                    if (isTileVisible(primitive, frameState, children[i])) {
+                    if (tileProvider.computeTileVisibility(children[i], frameState, occluders) !== Visibility.NONE) {
                         traversalQueue.enqueue(children[i]);
                     } else {
                         ++debug.tilesCulled;
@@ -364,7 +369,7 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.getDistanceToTile(tile, frameState);
+        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
         var height = context.drawingBufferHeight;
@@ -391,10 +396,6 @@ define([
     function addTileToRenderList(primitive, tile) {
         primitive._tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
-    }
-
-    function isTileVisible(primitive, frameState, tile) {
-        return primitive._tileProvider.isTileVisible(tile, frameState, primitive._occluders);
     }
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile) {

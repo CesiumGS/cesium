@@ -155,6 +155,8 @@ define([
                     var tileImagery = imagery[i];
                     shouldRemoveTile = !defined(tileImagery.loadingImagery) || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
                 }
+
+                return shouldRemoveTile;
             }
         }
     });
