@@ -218,14 +218,14 @@ define([
         var zIndiceslength = zIndices.length;
         var coefficients = arrayScratch;
         var highestNonZeroCoef = fillCoefficientList(coefficients, zIndices, xTable, yTable, yStride, inputOrder);
-        var reserviedIndices = [];
+        var reservedIndices = [];
 
         var tmp = zIndiceslength * (zIndiceslength + 1) / 2;
         var loopStop = Math.min(highestNonZeroCoef, outputOrder);
         for (var d = 0; d <= loopStop; d++) {
             for (i = d; i <= highestNonZeroCoef; i++) {
-                reserviedIndices.length = 0;
-                var tempTerm = calculateCoefficientTerm(x, zIndices, xTable, d, i, reserviedIndices);
+                reservedIndices.length = 0;
+                var tempTerm = calculateCoefficientTerm(x, zIndices, xTable, d, i, reservedIndices);
                 var dimTwo = Math.floor(i * (1 - i) / 2) + (zIndiceslength * i);
 
                 for (var s = 0; s < yStride; s++) {
