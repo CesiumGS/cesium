@@ -29,17 +29,17 @@ require(['Cesium'], function(Cesium) {
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
         
-        scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
+        scene.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
-        }));
+        });
     }
 
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
         function fly(position) {
-            scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
+            scene.camera.flyTo({
                 destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
-            }));
+            });
         }
 
         navigator.geolocation.getCurrentPosition(fly);
@@ -52,11 +52,10 @@ require(['Cesium'], function(Cesium) {
         var east = -72.0;
         var north = 42.0;
 
-        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-        scene.camera.viewRectangle(rectangle, scene.globe.ellipsoid);
+        scene.camera.viewRectangle(Cesium.Rectangle.fromDegrees(west, south, east, north));
 
         // Show the rectangle.  Not required; just for show.
-        var polylines = new Cesium.PolylineCollection();
+        var polylines = scene.primitives.add(new Cesium.PolylineCollection());
         polylines.add({
             positions : Cesium.Cartesian3.fromDegreesArray([
                 west, south,
@@ -66,7 +65,6 @@ require(['Cesium'], function(Cesium) {
                 west, south
             ])
         });
-        scene.primitives.add(polylines);
     }
 
     function flyToRectangle(scene) {
@@ -76,9 +74,9 @@ require(['Cesium'], function(Cesium) {
         var east = -87.0;
         var north = 40.0;
 
-        scene.animations.add(Cesium.CameraFlightPath.createAnimationRectangle(scene, {
+        scene.camera.flyToRectangle({
             destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
-        }));
+        });
 
         // Show the rectangle.  Not required; just for show.
         var polylines = scene.primitives.add(new Cesium.PolylineCollection());

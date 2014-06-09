@@ -44,7 +44,7 @@ define([
      * <br /><br />
      * Mouse interaction is disabled during flights.
      *
-     * @exports CameraFlightPath
+     * @private
      */
     var CameraFlightPath = {
     };
@@ -388,27 +388,6 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchDestination = new Cartesian3();
 
-    /**
-     * Creates an animation to fly the camera from its current position to a position given by a Cartesian. All arguments should
-     * be given in world coordinates.
-     *
-     * @param {Scene} scene The scene instance to use.
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.destination The final position of the camera.
-     * @param {Cartesian3} [options.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
-     * @param {Cartesian3} [options.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the animation has completed.
-     * @param {Function} [options.onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
-     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
-     *                  to be in the correct coordinate system.
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
-     *
-     * @exception {DeveloperError} If either direction or up is given, then both are required.
-     *
-     * @see Scene#animations
-     */
     CameraFlightPath.createAnimation = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
@@ -556,21 +535,6 @@ define([
         };
     };
 
-    /**
-     * Creates an animation to fly the camera from its current position to a position in which the entire rectangle will be visible. All arguments should
-     * be given in world coordinates.
-     *
-     * @param {Scene} scene The scene instance to use.
-     * @param {Object} options Object with the following properties:
-     * @param {Rectangle} options.destination The final position of the camera.
-     * @param {Number} [options.duration=3000] The duration of the animation in milliseconds.
-     * @param {Function} [onComplete] The function to execute when the animation has completed.
-     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
-     * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
-     * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
-     *
-     * @see Scene#animations
-     */
     CameraFlightPath.createAnimationRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
