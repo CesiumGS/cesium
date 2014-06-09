@@ -9,7 +9,6 @@ define([
         '../../Core/jsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
-        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -24,7 +23,6 @@ define([
         jsonp,
         Matrix4,
         Rectangle,
-        CameraFlightPath,
         SceneMode,
         knockout,
         when,
@@ -255,19 +253,16 @@ define([
                 return;
             }
 
-            var options = {
+            viewModel._scene.camera.flyTo({
                 destination : position,
                 duration : viewModel._flightDuration,
                 onComplete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                 },
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
-            };
-
-            var flight = CameraFlightPath.createAnimation(viewModel._scene, options);
-            viewModel._scene.animations.add(flight);
+            });
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

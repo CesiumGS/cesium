@@ -7,6 +7,19 @@ Beta Releases
 ### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
+   * Replaced `CameraFlightPath.createAnimation` with `Camera.flyTo` and replaced `CameraFlightPath.createAnimationRectangle` with `Camera.flyToRectangle`.  Code that looked like:
+
+            scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
+                destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+            }));
+
+    should now look like:
+
+            scene.camera.flyTo({
+                destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+            });
+
+   * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
@@ -25,6 +38,7 @@ Beta Releases
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 
 ### b29 - 2014-06-02
 
