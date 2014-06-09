@@ -497,8 +497,8 @@ define([
     }
 
     function getTiltCV(camera) {
-        // Math.acos(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
-        return CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
+        // CesiumMath.acosClamped(dot(camera.direction, Cartesian3.negate(Cartesian3.UNIT_Z))
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(-camera.direction.z);
     }
 
     var scratchTiltCartesian3 = new Cartesian3();
@@ -507,7 +507,7 @@ define([
         var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
         Cartesian3.negate(direction, direction);
 
-        return CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
+        return CesiumMath.PI_OVER_TWO - CesiumMath.acosClamped(Cartesian3.dot(camera.direction, direction));
     }
 
     defineProperties(Camera.prototype, {
@@ -1184,13 +1184,13 @@ define([
                 var constrainedAxis = Cartesian3.normalize(camera.constrainedAxis, rotateVertScratchA);
 
                 var dot = Cartesian3.dot(p, constrainedAxis);
-                var angleToAxis = Math.acos(dot);
+                var angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
-                angleToAxis = Math.acos(dot);
+                angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis;
                 }

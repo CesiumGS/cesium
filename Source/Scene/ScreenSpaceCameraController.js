@@ -478,11 +478,11 @@ define([
         end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
         Cartesian2.normalize(end, end);
 
-        var startTheta = Math.acos(start.x);
+        var startTheta = CesiumMath.acosClamped(start.x);
         if (start.y < 0) {
             startTheta = CesiumMath.TWO_PI - startTheta;
         }
-        var endTheta = Math.acos(end.x);
+        var endTheta = CesiumMath.acosClamped(end.x);
         if (end.y < 0) {
             endTheta = CesiumMath.TWO_PI - endTheta;
         }
