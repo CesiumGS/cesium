@@ -235,7 +235,7 @@ define([
                 var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
                 var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
                 if (denominator !== 0) {
-                    var angle = Math.abs(Math.acos(Cartesian2.dot(v1, v2) / denominator));
+                    var angle = Math.abs(CesiumMath.acosClamped(Cartesian2.dot(v1, v2) / denominator));
                     if (angle < minAngle) {
                         minAngle = angle;
                         p = pointsInside[i];

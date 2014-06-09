@@ -9,7 +9,6 @@ define([
         '../../Core/Matrix4',
         '../../Core/Rectangle',
         '../../Scene/Camera',
-        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../createCommand'
@@ -23,7 +22,6 @@ define([
         Matrix4,
         Rectangle,
         Camera,
-        CameraFlightPath,
         SceneMode,
         knockout,
         createCommand) {
@@ -38,28 +36,22 @@ define([
         if (defined(scene) && mode === SceneMode.MORPHING) {
             scene.completeMorph();
         }
-        var flight;
-        var options;
 
         if (mode === SceneMode.SCENE2D) {
-            options = {
+            scene.camera.flyToRectangle({
                 destination : Rectangle.MAX_VALUE,
                 duration : duration,
-                endReferenceFrame : Matrix4.IDENTITY
-            };
-            flight = CameraFlightPath.createAnimationRectangle(scene, options);
-            scene.animations.add(flight);
+                endTransform : Matrix4.IDENTITY
+            });
         } else if (mode === SceneMode.SCENE3D) {
             var defaultCamera = new Camera(scene);
-            options = {
+            scene.camera.flyTo({
                 destination : defaultCamera.position,
                 duration : duration,
                 up : defaultCamera.up,
                 direction : defaultCamera.direction,
-                endReferenceFrame : Matrix4.IDENTITY
-            };
-            flight = CameraFlightPath.createAnimation(scene, options);
-            scene.animations.add(flight);
+                endTransform : Matrix4.IDENTITY
+            });
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             var maxRadii = ellipsoid.maximumRadius;
             var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
@@ -67,17 +59,14 @@ define([
             var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
             var up = Cartesian3.cross(right, direction);
 
-            options = {
+            scene.camera.flyTo({
                 destination : position,
                 duration : duration,
                 up : up,
                 direction : direction,
-                endReferenceFrame : Matrix4.IDENTITY,
+                endTransform : Matrix4.IDENTITY,
                 convert : false
-            };
-
-            flight = CameraFlightPath.createAnimation(scene, options);
-            scene.animations.add(flight);
+            });
         }
     }
 

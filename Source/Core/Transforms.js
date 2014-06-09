@@ -391,11 +391,10 @@ define([
      * @see Transforms.preloadIcrfFixed
      *
      * @example
-     * var clock = viewer.clock;
-     * clock.onTick.addEventListener(function() {
-     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(clock.currentTime);
+     * scene.preRender.addEventListener(function(scene, time) {
+     *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
      *   if (Cesium.defined(icrfToFixed)) {
-     *     viewer.scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
      *   }
      * });
      */
