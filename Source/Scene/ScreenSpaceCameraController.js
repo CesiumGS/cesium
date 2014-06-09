@@ -476,7 +476,7 @@ define([
 
         var camera = controller._camera;
 
-        var numRays = Math.ceil(radius * angle / 1000.0);
+        var numRays = Math.min(Math.ceil(radius * Math.abs(angle) / 1000.0), 1.0);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays));
         var start = Cartesian3.subtract(camera.position, center);
 
@@ -484,7 +484,6 @@ define([
         for (var i = 0; i < numRays; ++i) {
             var stop = Matrix3.multiplyByVector(rotation, start);
             var direction = Cartesian3.subtract(stop, start);
-            //Cartesian3.normalize(direction, direction);
             var origin = Cartesian3.add(center, start);
             rays.push(new Ray(origin, direction));
             start = stop;
@@ -966,6 +965,8 @@ define([
         p0 = camera.worldToCameraCoordinates(p0, p0);
         p1 = camera.worldToCameraCoordinates(p1, p1);
 
+        var cameraPosMag = Cartesian3.magnitude(camera.position);
+
         if (!defined(camera.constrainedAxis)) {
             Cartesian3.normalize(p0, p0);
             Cartesian3.normalize(p1, p1);
@@ -974,6 +975,7 @@ define([
 
             if (dot < 1.0 && !Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = Math.acos(dot);
+                angle = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, axis, angle);
                 camera.rotate(axis, angle);
             }
         } else {
@@ -1033,7 +1035,10 @@ define([
                 deltaTheta = startTheta - endTheta;
             }
 
+            deltaPhi = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.up, deltaPhi);
             camera.rotateRight(deltaPhi);
+
+            deltaTheta = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.right, deltaTheta);
             camera.rotateUp(deltaTheta);
         }
     }
