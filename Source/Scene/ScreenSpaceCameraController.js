@@ -261,7 +261,7 @@ define([
         this._lastInertiaWheelZoomMovement = undefined;
         this._lastInertiaTiltMovement = undefined;
 
-        this._animationCollection = new AnimationCollection();
+        this._animations = new AnimationCollection();
         this._animation = undefined;
 
         this._horizontalRotationAxis = undefined;
@@ -520,11 +520,11 @@ define([
         end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
         Cartesian2.normalize(end, end);
 
-        var startTheta = Math.acos(start.x);
+        var startTheta = CesiumMath.acosClamped(start.x);
         if (start.y < 0) {
             startTheta = CesiumMath.TWO_PI - startTheta;
         }
-        var endTheta = Math.acos(end.x);
+        var endTheta = CesiumMath.acosClamped(end.x);
         if (end.y < 0) {
             endTheta = CesiumMath.TWO_PI - endTheta;
         }
@@ -553,8 +553,9 @@ define([
     }
 
     function update2D(controller, frameState) {
+        var animations = controller._animations;
         if (controller._aggregator.anyButtonDown()) {
-            controller._animationCollection.removeAll();
+            animations.removeAll();
         }
 
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
@@ -569,14 +570,14 @@ define([
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !controller._animationCollection.contains(controller._animation)) {
+                !animations.contains(controller._animation)) {
             var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (defined(animation)) {
-                controller._animation = controller._animationCollection.add(animation);
+                controller._animation = animations.add(animation);
             }
         }
 
-        controller._animationCollection.update();
+        animations.update();
     }
 
     var translateCVStartRay = new Ray();
@@ -759,11 +760,13 @@ define([
 
     function updateCV(controller, frameState) {
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
-                reactToInput(controller, frameState, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-                reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, frameState, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, frameState, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
+            var animations = controller._animations;
+
             if (controller._aggregator.anyButtonDown()) {
-                controller._animationCollection.removeAll();
+                animations.removeAll();
             }
 
             reactToInput(controller, frameState, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
@@ -773,14 +776,14 @@ define([
 
             if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                    !controller._animationCollection.contains(controller._animation)) {
+                    !animations.contains(controller._animation)) {
                 var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
-                    controller._animation = controller._animationCollection.add(animation);
+                    controller._animation = animations.add(animation);
                 }
             }
 
-            controller._animationCollection.update();
+            animations.update();
         }
     }
 
@@ -1176,7 +1179,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
-        this._animationCollection.removeAll();
+        this._animations.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
