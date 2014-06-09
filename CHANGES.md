@@ -23,6 +23,7 @@ Beta Releases
 * `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 
 ### b29 - 2014-06-02
 
