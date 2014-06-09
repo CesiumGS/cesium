@@ -5,6 +5,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './GregorianDate',
         './isLeapYear',
         './LeapSecond',
         './TimeConstants',
@@ -15,61 +16,12 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        GregorianDate,
         isLeapYear,
         LeapSecond,
         TimeConstants,
         TimeStandard) {
     "use strict";
-
-    /**
-     * The object returned by {@link JulianDate#toGregorianDate}.
-     *
-     * @alias GregorianDate
-     * @see JulianDate#toGregorianDate
-     * @constructor
-     */
-    var GregorianDate = function(year, month, day, hour, minute, second, millisecond, isLeapSecond) {
-        /**
-         * The year, a whole number.
-         * @type {Number}
-         */
-        this.year = year;
-        /**
-         * The month, a whole number with range [1, 12].
-         * @type {Number}
-         */
-        this.month = month;
-        /**
-         * The day, a whole number with range 1.
-         * @type {Number}
-         */
-        this.day = day;
-        /**
-         * The hour, a whole number with range [0, 23].
-         * @type {Number}
-         */
-        this.hour = hour;
-        /**
-         * The minute, a whole number with range [0, 59].
-         * @type {Number}
-         */
-        this.minute = minute;
-        /**
-         * The second, a whole number with range [0, 60], with 60 representing a leap second.
-         * @type {Number}
-         */
-        this.second = second;
-        /**
-         * The millisecond, a floating point number with range [0.0, 1000.0).
-         * @type {Number}
-         */
-        this.millisecond = millisecond;
-        /**
-         * True if this date is during a leap second.
-         * @type {Boolean}
-         */
-        this.isLeapSecond = isLeapSecond;
-    };
 
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var daysInLeapFeburary = 29;
@@ -78,6 +30,7 @@ define([
     var binarySearchScratchLeapSecond = {
         julianDate : undefined
     };
+
     function convertUtcToTai(julianDate) {
         //Even though julianDate is in UTC, we'll treat it as TAI and
         //search the leap second table for it.
@@ -99,14 +52,14 @@ define([
             //However, if the difference between the UTC date being converted and the TAI
             //defined leap second is greater than the offset, we are off by one and need to use
             //the previous leap second.
-            var difference = julianDate.getSecondsDifference(leapSeconds[index].julianDate);
+            var difference = JulianDate.getSecondsDifference(julianDate, leapSeconds[index].julianDate);
             if (difference > offset) {
                 index--;
                 offset = leapSeconds[index].offset;
             }
         }
 
-        julianDate.addSeconds(offset, julianDate);
+        JulianDate.addSeconds(julianDate, offset, julianDate);
     }
 
     function convertTaiToUtc(julianDate, result) {
@@ -119,20 +72,20 @@ define([
 
         //All times before our first leap second get the first offset.
         if (index === 0) {
-            return julianDate.addSeconds(-leapSeconds[0].offset, result);
+            return JulianDate.addSeconds(julianDate, -leapSeconds[0].offset, result);
         }
 
         //All times after our leap second get the last offset.
         if (index >= leapSeconds.length) {
-            return julianDate.addSeconds(-leapSeconds[index - 1].offset, result);
+            return JulianDate.addSeconds(julianDate, -leapSeconds[index - 1].offset, result);
         }
 
         //Compute the difference between the found leap second and the time we are converting.
-        var difference = julianDate.getSecondsDifference(leapSeconds[index].julianDate);
+        var difference = JulianDate.getSecondsDifference(julianDate, leapSeconds[index].julianDate);
 
         if (difference === 0) {
             //The date is in our leap second table.
-            return julianDate.addSeconds(-leapSeconds[index].offset, result);
+            return JulianDate.addSeconds(julianDate, -leapSeconds[index].offset, result);
         }
 
         if (difference <= 1.0) {
@@ -142,7 +95,7 @@ define([
 
         //The time is in between two leap seconds, index is the leap second after the date
         //we're converting, so we subtract one to get the correct LeapSecond instance.
-        return julianDate.addSeconds(-leapSeconds[--index].offset, result);
+        return JulianDate.addSeconds(julianDate, -leapSeconds[--index].offset, result);
     }
 
     function setComponents(wholeDays, secondsOfDay, julianDate) {
@@ -159,8 +112,8 @@ define([
             return new JulianDate(wholeDays, secondsOfDay, TimeStandard.TAI);
         }
 
-        julianDate._julianDayNumber = wholeDays;
-        julianDate._secondsOfDay = secondsOfDay;
+        julianDate.dayNumber = wholeDays;
+        julianDate.secondsOfDay = secondsOfDay;
         return julianDate;
     }
 
@@ -251,8 +204,8 @@ define([
      * var julianDate = new Cesium.JulianDate(julianDayNumber, secondsOfDay, Cesium.TimeStandard.UTC);
      */
     var JulianDate = function(julianDayNumber, julianSecondsOfDay, timeStandard) {
-        this._julianDayNumber = undefined;
-        this._secondsOfDay = undefined;
+        this.dayNumber = undefined;
+        this.secondsOfDay = undefined;
 
         var wholeDays;
         var secondsOfDay;
@@ -304,10 +257,10 @@ define([
             return undefined;
         }
         if (!defined(result)) {
-            return new JulianDate(date._julianDayNumber, date._secondsOfDay, TimeStandard.TAI);
+            return new JulianDate(date.dayNumber, date.secondsOfDay, TimeStandard.TAI);
         }
-        result._julianDayNumber = date._julianDayNumber;
-        result._secondsOfDay = date._secondsOfDay;
+        result.dayNumber = date.dayNumber;
+        result.secondsOfDay = date.secondsOfDay;
         return result;
     };
 
@@ -607,7 +560,7 @@ define([
 
         //If we were on a leap second, add it back.
         if (isLeapSecond) {
-            result.addSeconds(1, result);
+            JulianDate.addSeconds(result, 1, result);
         }
 
         return result;
@@ -650,11 +603,11 @@ define([
      *                  or zero if a and b are equal.
      */
     JulianDate.compare = function(a, b) {
-        var julianDayNumberDifference = a._julianDayNumber - b._julianDayNumber;
+        var julianDayNumberDifference = a.dayNumber - b.dayNumber;
         if (julianDayNumberDifference !== 0) {
             return julianDayNumberDifference;
         }
-        return a._secondsOfDay - b._secondsOfDay;
+        return a.secondsOfDay - b.secondsOfDay;
     };
 
     /**
@@ -668,8 +621,8 @@ define([
         return (left === right) ||
                (defined(left) &&
                 defined(right) &&
-                left._julianDayNumber === right._julianDayNumber &&
-                left._secondsOfDay === right._secondsOfDay);
+                left.dayNumber === right.dayNumber &&
+                left.secondsOfDay === right.secondsOfDay);
     };
 
     /**
@@ -692,7 +645,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        return Math.abs(left.getSecondsDifference(right)) <= epsilon;
+        return Math.abs(JulianDate.getSecondsDifference(left, right)) <= epsilon;
     };
 
     /**
@@ -709,47 +662,9 @@ define([
      * Returns the total number of whole and fractional days represented by this astronomical Julian date.
      *
      * @returns {Number} The Julian date as single floating point number.
-     *
-     * @see JulianDate#getJulianDayNumber
-     * @see JulianDate#getJulianTimeFraction
      */
-    JulianDate.prototype.getTotalDays = function() {
-        return this._julianDayNumber + (this._secondsOfDay / TimeConstants.SECONDS_PER_DAY);
-    };
-
-    /**
-     * Returns the whole number component of the Julian date.
-     *
-     * @returns {Number} A whole number representing the Julian day number.
-     *
-     * @see JulianDate#getTotalDays
-     * @see JulianDate#getJulianTimeFraction
-     */
-    JulianDate.prototype.getJulianDayNumber = function() {
-        return this._julianDayNumber;
-    };
-
-    /**
-     * Returns the floating point component of the Julian date representing the time of day.
-     *
-     * @returns {Number} The floating point component of the Julian date representing the time of day.
-     *
-     * @see JulianDate#getTotalDays
-     * @see JulianDate#getJulianDayNumber
-     */
-    JulianDate.prototype.getJulianTimeFraction = function() {
-        return this._secondsOfDay / TimeConstants.SECONDS_PER_DAY;
-    };
-
-    /**
-     * Return the number of seconds elapsed into the current Julian day (starting at noon).
-     *
-     * @returns {Number} The number of seconds elapsed into the current day.
-     *
-     * @see JulianDate#getJulianDayNumber
-     */
-    JulianDate.prototype.getSecondsOfDay = function() {
-        return this._secondsOfDay;
+    JulianDate.getTotalDays = function(value) {
+        return value.dayNumber + (value.secondsOfDay / TimeConstants.SECONDS_PER_DAY);
     };
 
     var toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
@@ -759,20 +674,20 @@ define([
      *
      * @returns {GregorianDate} A gregorian date.
      */
-    JulianDate.prototype.toGregorianDate = function() {
+    JulianDate.toGregorianDate = function(value) {
         var isLeapSecond = false;
-        var thisUtc = convertTaiToUtc(this, toGregorianDateScratch);
+        var thisUtc = convertTaiToUtc(value, toGregorianDateScratch);
         if (!defined(thisUtc)) {
             //Conversion to UTC will fail if we are during a leap second.
             //If that's the case, subtract a second and convert again.
             //JavaScript doesn't support leap seconds, so this results in second 59 being repeated twice.
-            this.addSeconds(-1, toGregorianDateScratch);
+            JulianDate.addSeconds(value, -1, toGregorianDateScratch);
             thisUtc = convertTaiToUtc(toGregorianDateScratch, toGregorianDateScratch);
             isLeapSecond = true;
         }
 
-        var julianDayNumber = thisUtc._julianDayNumber;
-        var secondsOfDay = thisUtc._secondsOfDay;
+        var julianDayNumber = thisUtc.dayNumber;
+        var secondsOfDay = thisUtc.secondsOfDay;
 
         if (secondsOfDay >= 43200.0) {
             julianDayNumber += 1;
@@ -818,8 +733,8 @@ define([
      *
      * @returns {Date} A new JavaScript Date equivalent to this JulianDate.
      */
-    JulianDate.prototype.toDate = function() {
-        var gDate = this.toGregorianDate();
+    JulianDate.toDate = function(value) {
+        var gDate = JulianDate.toGregorianDate(value);
         var second = gDate.second;
         if (gDate.isLeapSecond) {
             second -= 1;
@@ -833,8 +748,8 @@ define([
      * @param {Number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
      * @returns {String} An ISO8601 string represenation of this JulianDate.
      */
-    JulianDate.prototype.toIso8601 = function(precision) {
-        var gDate = this.toGregorianDate();
+    JulianDate.toIso8601 = function(value, precision) {
+        var gDate = JulianDate.toGregorianDate(value);
         var millisecondStr;
 
         if (!defined(precision) && gDate.millisecond !== 0) {
@@ -860,7 +775,6 @@ define([
      * @param {JulianDate} other The other JulianDate, which is the end of the interval.
      * @returns {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
      *
-     * @see JulianDate#getMinutesDifference
      * @see JulianDate#getDaysDifference
      *
      * @example
@@ -868,30 +782,9 @@ define([
      * var end = Cesium.JulianDate.fromDate(new Date('July 5, 2011 12:01:00'));
      * var difference = start.getSecondsDifference(end);    // 86460.0 seconds
      */
-    JulianDate.prototype.getSecondsDifference = function(other) {
-        var julianDate1 = this;
-        var julianDate2 = other;
-        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber) * TimeConstants.SECONDS_PER_DAY;
-        return (dayDifference + (julianDate2._secondsOfDay - julianDate1._secondsOfDay));
-    };
-
-    /**
-     * Computes the number of minutes that have elapsed from this JulianDate to the <code>other</code>
-     * JulianDate.
-     *
-     * @param {JulianDate} other The other JulianDate, which is the end of the interval.
-     * @returns {Number} The number of seconds that have elpased from this JulianDate to the other JulianDate.
-     *
-     * @see JulianDate#getSecondsDifference
-     * @see JulianDate#getDaysDifference
-     *
-     * @example
-     * var start = Cesium.JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
-     * var end = Cesium.JulianDate.fromDate(new Date('July 5, 2011 12:01:00'));
-     * var difference = start.getMinutesDifference(end);    // 1441.0 minutes
-     */
-    JulianDate.prototype.getMinutesDifference = function(other) {
-        return this.getSecondsDifference(other) / TimeConstants.SECONDS_PER_MINUTE;
+    JulianDate.getSecondsDifference = function(left, right) {
+        var dayDifference = (right.dayNumber - left.dayNumber) * TimeConstants.SECONDS_PER_DAY;
+        return (dayDifference + (right.secondsOfDay - left.secondsOfDay));
     };
 
     /**
@@ -901,19 +794,14 @@ define([
      * @param {JulianDate} other The other JulianDate, which is the end of the interval.
      * @returns {Number} The number of days that have elpased from this JulianDate to the other JulianDate.
      *
-     * @see JulianDate#getSecondsDifference
-     * @see JulianDate#getMinutesDifference
-     *
      * @example
      * var start = Cesium.JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
      * var end = Cesium.JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
-     * var difference = start.getDaysDifference(end);    // 1.1 days
+     * var difference = JulianDate.getDaysDifference(start, end);    // 1.1 days
      */
-    JulianDate.prototype.getDaysDifference = function(other) {
-        var julianDate1 = this;
-        var julianDate2 = other;
-        var dayDifference = (julianDate2._julianDayNumber - julianDate1._julianDayNumber);
-        var secondDifference = (julianDate2._secondsOfDay - julianDate1._secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
+    JulianDate.getDaysDifference = function(left, right) {
+        var dayDifference = (right.dayNumber - left.dayNumber);
+        var secondDifference = (right.secondsOfDay - left.secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
         return dayDifference + secondDifference;
     };
 
@@ -924,14 +812,9 @@ define([
      *
      * @see LeapSecond
      * @see TimeStandard
-     *
-     * @example
-     * var date = new Date('August 1, 2012 12:00:00 UTC');
-     * var julianDate = Cesium.JulianDate.fromDate(date);
-     * var difference = julianDate.getTaiMinusUtc(); //35
      */
-    JulianDate.prototype.getTaiMinusUtc = function() {
-        binarySearchScratchLeapSecond.julianDate = this;
+    JulianDate.getTaiMinusUtc = function(value) {
+        binarySearchScratchLeapSecond.julianDate = value;
         var leapSeconds = LeapSecond._leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
@@ -952,25 +835,21 @@ define([
      * @param {JulianDate} [result] The JulianDate to store the result into.
      * @returns {JulianDate} The modified result parameter or a new JulianDate instance if it was not provided.
      *
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addHours
-     * @see JulianDate#addDays
-     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00:00 UTC
      * date.setUTCHours(12, 0, 00, 0);
      * var start = Cesium.JulianDate.fromDate(date);
-     * var end = start.addSeconds(95);      // July 4, 2011 @ 12:01:35 UTC
+     * var end = JulianDate.addSeconds(start, 95);      // July 4, 2011 @ 12:01:35 UTC
      */
-    JulianDate.prototype.addSeconds = function(seconds, result) {
+    JulianDate.addSeconds = function(julianDate, seconds, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (seconds === null || isNaN(seconds)) {
-            throw new DeveloperError('seconds is required and must be a number.');
+        if (!defined(seconds)) {
+            throw new DeveloperError('seconds is required.');
         }
         //>>includeEnd('debug');
 
-        return setComponents(this._julianDayNumber, this._secondsOfDay + seconds, result);
+        return setComponents(julianDate.dayNumber, julianDate.secondsOfDay + seconds, result);
     };
 
     /**
@@ -980,10 +859,6 @@ define([
      * @param {Number} duration An integer number of minutes to add or subtract.
      * @returns {JulianDate} A new JulianDate object
      *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addHours
-     * @see JulianDate#addDays
-     *
      * @example
      * var date = new Date();
      * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
@@ -991,15 +866,15 @@ define([
      * var start = Cesium.JulianDate.fromDate(date);
      * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
-    JulianDate.prototype.addMinutes = function(duration) {
+    JulianDate.addMinutes = function(julianDate, duration) {
         //>>includeStart('debug', pragmas.debug);
-        if (duration === null || isNaN(duration)) {
+        if (!defined(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         //>>includeEnd('debug');
 
-        var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
+        var newSecondsOfDay = julianDate.secondsOfDay + (duration * TimeConstants.SECONDS_PER_MINUTE);
+        return new JulianDate(julianDate.dayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -1008,27 +883,16 @@ define([
      *
      * @param {Number} duration An integer number of hours to add or subtract.
      * @returns {JulianDate} A new JulianDate object
-     *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addDays
-     *
-     * @example
-     * var date = new Date();
-     * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
-     * date.setUTCHours(12, 0, 0, 0);
-     * var start = Cesium.JulianDate.fromDate(date);
-     * var end = start.addHours(6);         // July 4, 2011 @ 18:00 UTC
      */
-    JulianDate.prototype.addHours = function(duration) {
+    JulianDate.addHours = function(julianDate, value) {
         //>>includeStart('debug', pragmas.debug);
-        if (duration === null || isNaN(duration)) {
-            throw new DeveloperError('duration is required and must be a number.');
+        if (!defined(value)) {
+            throw new DeveloperError('duration is required.');
         }
         //>>includeEnd('debug');
 
-        var newSecondsOfDay = this._secondsOfDay + (duration * TimeConstants.SECONDS_PER_HOUR);
-        return new JulianDate(this._julianDayNumber, newSecondsOfDay, TimeStandard.TAI);
+        var newSecondsOfDay = julianDate.secondsOfDay + (value * TimeConstants.SECONDS_PER_HOUR);
+        return new JulianDate(julianDate.dayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -1037,27 +901,16 @@ define([
      *
      * @param {Number} duration An integer number of days to add or subtract.
      * @returns {JulianDate} A new JulianDate object
-     *
-     * @see JulianDate#addSeconds
-     * @see JulianDate#addMinutes
-     * @see JulianDate#addHours
-     *
-     * @example
-     * var date = new Date();
-     * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
-     * date.setUTCHours(12, 0, 0, 0);
-     * var start = Cesium.JulianDate.fromDate(date);
-     * var end = start.addDays(5);         // July 9, 2011 @ 12:00 UTC
      */
-    JulianDate.prototype.addDays = function(duration) {
+    JulianDate.addDays = function(julianDate, duration) {
         //>>includeStart('debug', pragmas.debug);
-        if (duration === null || isNaN(duration)) {
+        if (!defined(duration)) {
             throw new DeveloperError('duration is required and must be a number.');
         }
         //>>includeEnd('debug');
 
-        var newJulianDayNumber = this._julianDayNumber + duration;
-        return new JulianDate(newJulianDayNumber, this._secondsOfDay, TimeStandard.TAI);
+        var newJulianDayNumber = julianDate.dayNumber + duration;
+        return new JulianDate(newJulianDayNumber, julianDate.secondsOfDay, TimeStandard.TAI);
     };
 
     /**
@@ -1065,18 +918,9 @@ define([
      *
      * @param {JulianDate} other The JulianDate to be compared.
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically earlier than <code>other</code>; otherwise, <code>false</code>.
-     *
-     * @see JulianDate#lessThanOrEquals
-     * @see JulianDate#greaterThan
-     * @see JulianDate#greaterThanOrEquals
-     *
-     * @example
-     * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
-     * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:01:00'));
-     * start.lessThan(end);     // true
      */
-    JulianDate.prototype.lessThan = function(other) {
-        return JulianDate.compare(this, other) < 0;
+    JulianDate.lessThan = function(left, right) {
+        return JulianDate.compare(left, right) < 0;
     };
 
     /**
@@ -1092,10 +936,10 @@ define([
      * @example
      * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
      * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:00:00'));
-     * start.lessThanOrEquals(end);     // true
+     * JulianDate.lessThanOrEquals(start, end);     // true
      */
-    JulianDate.prototype.lessThanOrEquals = function(other) {
-        return JulianDate.compare(this, other) <= 0;
+    JulianDate.lessThanOrEquals = function(left, right) {
+        return JulianDate.compare(left, right) <= 0;
     };
 
     /**
@@ -1111,10 +955,10 @@ define([
      * @example
      * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
      * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:01:00'));
-     * end.greaterThan(start);      // true
+     * JulianDate.greaterThan(end, start);      // true
      */
-    JulianDate.prototype.greaterThan = function(other) {
-        return JulianDate.compare(this, other) > 0;
+    JulianDate.greaterThan = function(left, right) {
+        return JulianDate.compare(left, right) > 0;
     };
 
     /**
@@ -1122,18 +966,9 @@ define([
      *
      * @param {JulianDate} other The JulianDate to be compared.
      * @returns {Boolean} <code>true</code> if this JulianDate is chronologically later than or equal to <code>other</code>; otherwise, <code>false</code>.
-     *
-     * @see JulianDate#lessThan
-     * @see JulianDate#lessThanOrEquals
-     * @see JulianDate#greaterThan
-     *
-     * @example
-     * var start = Cesium.JulianDate.fromDate(new Date('July 6, 1991 12:00:00'));
-     * var end = Cesium.JulianDate.fromDate(new Date('July 6, 2011 12:00:00'));
-     * end.greaterThanOrEquals(start);      // true
      */
-    JulianDate.prototype.greaterThanOrEquals = function(other) {
-        return JulianDate.compare(this, other) >= 0;
+    JulianDate.greaterThanOrEquals = function(left, right) {
+        return JulianDate.compare(left, right) >= 0;
     };
 
     /**

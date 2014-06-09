@@ -52,8 +52,8 @@ define([
             date = new JulianDate();
         }
 
-        var dateTT = date.addSeconds(TdtMinusTai);
-        var d = dateTT.getTotalDays() - J2000d;
+        var dateTT = JulianDate.addSeconds(date, TdtMinusTai);
+        var d = JulianDate.getTotalDays(dateTT) - J2000d;
         var T = d / TimeConstants.DAYS_PER_JULIAN_CENTURY;
 
         var E1 = (125.045 + c1 * d) * CesiumMath.RADIANS_PER_DEGREE;

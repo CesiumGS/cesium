@@ -138,8 +138,8 @@ defineSuite([
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
         var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff);
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff);
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -151,7 +151,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
         var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
@@ -160,8 +160,8 @@ defineSuite([
 
     it('computeTemeToPseudoFixedMatrix works after noon', function() {
         var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -173,7 +173,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
         var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
@@ -182,8 +182,8 @@ defineSuite([
 
     it('computeTemeToPseudoFixedMatrix works with a result parameter', function() {
         var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff);
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff);
 
         var resultT = new Matrix3();
         var t = Transforms.computeTemeToPseudoFixedMatrix(time, resultT);
@@ -197,7 +197,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var resultU = new Matrix3();
         var u = Transforms.computeTemeToPseudoFixedMatrix(time, resultU);
         expect(u).toBe(resultU);
@@ -312,7 +312,7 @@ defineSuite([
                 var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
                 expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-                time = time.addHours(23.93447); // add one sidereal day
+                time = JulianDate.addHours(time, 23.93447); // add one sidereal day
                 var resultU = new Matrix3();
                 var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
                 expect(u).toBe(resultU);
@@ -414,7 +414,7 @@ defineSuite([
             // Purposefully do not load EOP!  EOP doesn't make a lot of sense before 1972.
             // Even though we are trying to load the data for 1970,
             // we don't have the data in Cesium to load.
-            preloadTransformationData(time, time.addDays(1));
+            preloadTransformationData(time, JulianDate.addDays(time, 1));
             var resultT = new Matrix3();
             var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
             // Check that we get undefined, since we don't have ICRF data
@@ -427,7 +427,7 @@ defineSuite([
             // Purposefully do not load EOP!  EOP doesn't exist yet that far into the future
             // Even though we are trying to load the data for 2030,
             // we don't have the data in Cesium to load.
-            preloadTransformationData(time, time.addDays(1));
+            preloadTransformationData(time, JulianDate.addDays(time, 1));
             var resultT = new Matrix3();
             var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
             // Check that we get undefined, since we don't have ICRF data

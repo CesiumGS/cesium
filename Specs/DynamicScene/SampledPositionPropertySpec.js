@@ -190,7 +190,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(time.addSeconds(4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4))).toBeUndefined();
     });
 
     it('throws with no time parameter', function() {

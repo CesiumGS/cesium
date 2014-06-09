@@ -187,9 +187,9 @@ define([
         if (defined(lastIndex)) {
             var previousIndexDate = dates[lastIndex];
             var nextIndexDate = dates[lastIndex + 1];
-            var isAfterPrevious = previousIndexDate.lessThanOrEquals(date);
+            var isAfterPrevious = JulianDate.lessThanOrEquals(previousIndexDate, date);
             var isAfterLastSample = !defined(nextIndexDate);
-            var isBeforeNext = isAfterLastSample || nextIndexDate.greaterThanOrEquals(date);
+            var isBeforeNext = isAfterLastSample || JulianDate.greaterThanOrEquals(nextIndexDate, date);
 
             if (isAfterPrevious && isBeforeNext) {
                 before = lastIndex;
@@ -338,7 +338,7 @@ define([
             return result;
         }
 
-        var factor = beforeDate.getSecondsDifference(date) / beforeDate.getSecondsDifference(afterDate);
+        var factor = JulianDate.getSecondsDifference(beforeDate, date) / JulianDate.getSecondsDifference(beforeDate, afterDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

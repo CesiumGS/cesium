@@ -192,7 +192,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(time.addSeconds(4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4))).toBeUndefined();
     });
 
     it('mergeNewSamples works with huge data sets.', function() {
@@ -207,7 +207,7 @@ defineSuite([
         for ( var i = 0; i < 200000; i++) {
             data.push(i);
             data.push(i);
-            expectedTimes.push(epoch.addSeconds(i));
+            expectedTimes.push(JulianDate.addSeconds(epoch, i));
             expectedValues.push(i);
         }
 
@@ -225,7 +225,7 @@ defineSuite([
         var newData = [0, 'a', 1, 'b', 2, 'c'];
         var newData2 = [3, 'd', 4, 'e', 5, 'f'];
 
-        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(2), epoch.addSeconds(3), epoch.addSeconds(4), epoch.addSeconds(5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
@@ -243,7 +243,7 @@ defineSuite([
         var newData = ['2010-01-01T12:00:00', 'a', '2010-01-01T12:00:01', 'b', '2010-01-01T12:00:02', 'c'];
         var newData2 = ['2010-01-01T12:00:03', 'd', '2010-01-01T12:00:04', 'e', '2010-01-01T12:00:05', 'f'];
 
-        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(2), epoch.addSeconds(3), epoch.addSeconds(4), epoch.addSeconds(5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(undefined, times, values, newData, 1);
@@ -261,7 +261,7 @@ defineSuite([
         var newData = [1, 'b', 'b', 4, 'e', 'e', 0, 'a', 'a'];
         var newData2 = [2, 'c', 'c', 3, 'd', 'd'];
 
-        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(2), epoch.addSeconds(3), epoch.addSeconds(4)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4)];
         var expectedValues = ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd', 'e', 'e'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 2);
@@ -279,7 +279,7 @@ defineSuite([
         var newData = [1, 'b', 4, 'e', 0, 'a'];
         var newData2 = [5, 'f', 2, 'c', 3, 'd'];
 
-        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(2), epoch.addSeconds(3), epoch.addSeconds(4), epoch.addSeconds(5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
@@ -295,7 +295,7 @@ defineSuite([
         var epoch = new JulianDate();
 
         var newData = [0, 'a', 1, 'b', 1, 'c', 0, 'd', 4, 'e', 5, 'f'];
-        var expectedTimes = [epoch.addSeconds(0), epoch.addSeconds(1), epoch.addSeconds(4), epoch.addSeconds(5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
         var expectedValues = ['d', 'c', 'e', 'f'];
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
 
