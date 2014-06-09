@@ -28,23 +28,18 @@ require(['Cesium'], function(Cesium) {
     "use strict";
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
-        var destination = Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0);
         
-        var flight = Cesium.CameraFlightPath.createAnimation(scene, {
-            destination : destination
-        });
-        scene.animations.add(flight);
+        scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
+            destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
+        }));
     }
 
     function flyToMyLocation(scene) {
         Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
         function fly(position) {
-            var destination = Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
-
-            var flight = Cesium.CameraFlightPath.createAnimation(scene, {
-                destination : destination
-            });
-            scene.animations.add(flight);
+            scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
+                destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
+            }));
         }
 
         navigator.geolocation.getCurrentPosition(fly);
@@ -64,12 +59,12 @@ require(['Cesium'], function(Cesium) {
         var polylines = new Cesium.PolylineCollection();
         polylines.add({
             positions : Cesium.Cartesian3.fromDegreesArray([
-                     west, south,
-                     west, north,
-                     east, north,
-                     east, south,
-                     west, south
-                    ])
+                west, south,
+                west, north,
+                east, north,
+                east, south,
+                west, south
+            ])
         });
         scene.primitives.add(polylines);
     }
@@ -81,25 +76,21 @@ require(['Cesium'], function(Cesium) {
         var east = -87.0;
         var north = 40.0;
 
-        var rectangle = Cesium.Rectangle.fromDegrees(west, south, east, north);
-
-        var flight = Cesium.CameraFlightPath.createAnimationRectangle(scene, {
-            destination : rectangle
-        });
-        scene.animations.add(flight);
+        scene.animations.add(Cesium.CameraFlightPath.createAnimationRectangle(scene, {
+            destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
+        }));
 
         // Show the rectangle.  Not required; just for show.
-        var polylines = new Cesium.PolylineCollection();
+        var polylines = scene.primitives.add(new Cesium.PolylineCollection());
         polylines.add({
             positions : Cesium.Cartesian3.fromDegreesArray([
-                     west, south,
-                     west, north,
-                     east, north,
-                     east, south,
-                     west, south
-                    ])
+                west, south,
+                west, north,
+                east, north,
+                east, south,
+                west, south
+            ])
         });
-        scene.primitives.add(polylines);
     }
 
     function eastNorthUp(scene) {
@@ -118,43 +109,15 @@ require(['Cesium'], function(Cesium) {
 
         // Zoom in
         camera.lookAt(
-                new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
-                Cesium.Cartesian3.ZERO,
-                Cesium.Cartesian3.UNIT_Z);
+            new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0),
+            Cesium.Cartesian3.ZERO,
+            Cesium.Cartesian3.UNIT_Z);
 
         // Show reference frame.  Not required.
-        var primitives = scene.primitives;
-        var polylines = new Cesium.PolylineCollection();
-        Cesium.Matrix4.clone(transform, polylines.modelMatrix);
-
-        var xAxis = {
-            color : Cesium.Color.RED,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(100000.0, 0.0, 0.0)
-                        ]
-        };
-        polylines.add(xAxis);
-
-        var yAxis = {
-            color : Cesium.Color.LIME,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(0.0, 100000.0, 0.0)
-                        ]
-        };
-        polylines.add(yAxis);
-
-        var zAxis = {
-            color : Cesium.Color.BLUE,
-            positions : [
-                         Cesium.Cartesian3.ZERO,
-                         new Cesium.Cartesian3(0.0, 0.0, 100000.0)
-                        ]
-        };
-        polylines.add(zAxis);
-
-        primitives.add(polylines);
+        scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+            modelMatrix : transform,
+            length : 100000.0
+        }));
     }
 
     function reset(scene) {
@@ -166,8 +129,7 @@ require(['Cesium'], function(Cesium) {
         controller.ellipsoid = ellipsoid;
         controller.enableTilt = true;
         
-        var camera = scene.camera;
-        camera.setTransform(Cesium.Matrix4.IDENTITY);
+        scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
