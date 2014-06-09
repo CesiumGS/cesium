@@ -265,4 +265,30 @@ defineSuite([
             CesiumMath.clamp();
         }).toThrowDeveloperError();
     });
+
+    it('acosClamped returns acos for normal values', function() {
+        expect(CesiumMath.acosClamped(0.5)).toBe(Math.acos(0.5));
+        expect(CesiumMath.acosClamped(0.123)).toBe(Math.acos(0.123));
+        expect(CesiumMath.acosClamped(-0.123)).toBe(Math.acos(-0.123));
+        expect(CesiumMath.acosClamped(-1.0)).toBe(Math.acos(-1.0));
+        expect(CesiumMath.acosClamped(1.0)).toBe(Math.acos(1.0));
+    });
+
+    it('acosClamped returns acos of clamped value when value is outside the valid range', function() {
+        expect(CesiumMath.acosClamped(-1.01)).toBe(Math.acos(-1.0));
+        expect(CesiumMath.acosClamped(1.01)).toBe(Math.acos(1.0));
+    });
+
+    it('asinClamped returns asin for normal values', function() {
+        expect(CesiumMath.asinClamped(0.5)).toBe(Math.asin(0.5));
+        expect(CesiumMath.asinClamped(0.123)).toBe(Math.asin(0.123));
+        expect(CesiumMath.asinClamped(-0.123)).toBe(Math.asin(-0.123));
+        expect(CesiumMath.asinClamped(-1.0)).toBe(Math.asin(-1.0));
+        expect(CesiumMath.asinClamped(1.0)).toBe(Math.asin(1.0));
+    });
+
+    it('asinClamped returns asin of clamped value when value is outside the valid range', function() {
+        expect(CesiumMath.asinClamped(-1.01)).toBe(Math.asin(-1.0));
+        expect(CesiumMath.asinClamped(1.01)).toBe(Math.asin(1.0));
+    });
 });

@@ -129,7 +129,6 @@ define([
      * @param {Cartesian2} point A point inside the polygon defined by <code>ring</code>.
      * @param {Cartesian2[]} ring A list of Cartesian points defining a polygon.
      * @param {Number[]} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
-     *
      * @returns {Cartesian2} The intersection point.
      *
      * @private
@@ -236,7 +235,7 @@ define([
                 var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
                 var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
                 if (denominator !== 0) {
-                    var angle = Math.abs(Math.acos(Cartesian2.dot(v1, v2) / denominator));
+                    var angle = Math.abs(CesiumMath.acosClamped(Cartesian2.dot(v1, v2) / denominator));
                     if (angle < minAngle) {
                         minAngle = angle;
                         p = pointsInside[i];
@@ -254,7 +253,6 @@ define([
      *
      * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
      * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-     *
      * @returns {Cartesian2[]} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
      *
      * @private
@@ -1063,7 +1061,6 @@ define([
          * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
          * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
          * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
-         *
          * @returns {Geometry} The same geometry whose positions where scaled.
          */
         scaleToGeodeticHeight : function(geometry, height, ellipsoid, scaleToSurface) {
@@ -1106,7 +1103,6 @@ define([
          *
          * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
          * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-         *
          * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
          *
          * @exception {DeveloperError} <code>outerRing</code> must not be empty.

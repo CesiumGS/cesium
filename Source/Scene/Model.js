@@ -202,8 +202,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
@@ -486,8 +484,9 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     *
      * @returns {Model} The newly created model.
+     *
+     * @see Model#readyToRender
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -495,6 +494,7 @@ define([
      *   url : './duck/duck.json'
      * }));
      *
+     * @example
      * // Example 2. Create model and provide all properties and events
      * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
      * var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
@@ -514,8 +514,6 @@ define([
      *   // Play all animations when the model is ready to render
      *   model.activeAnimations.addAll();
      * });
-     *
-     * @see Model#readyToRender
      */
     Model.fromGltf = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -564,7 +562,6 @@ define([
      * modify a node's transform for animation outside of glTF animations.
      *
      * @param {String} name The glTF name of the node.
-     *
      * @returns {ModelNode} The node or <code>undefined</code> if no node with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
@@ -596,7 +593,6 @@ define([
      * Returns the glTF material with the given <code>name</code> property.
      *
      * @param {String} name The glTF name of the material.
-     *
      * @returns {ModelMaterial} The material or <code>undefined</code> if no material with <code>name</code> exists.
      *
      * @exception {DeveloperError} The model is not loaded.  Wait for the model's readyToRender event or ready property.
@@ -2092,9 +2088,14 @@ define([
     }
 
     /**
-     * @exception {RuntimeError} Failed to load external reference.
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
-     * @private
+     * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(context, frameState, commandList) {
         if (frameState.mode !== SceneMode.SCENE3D) {

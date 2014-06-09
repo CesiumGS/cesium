@@ -190,10 +190,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DebugModelMatrixPrimitive#isDestroyed
-     *
      * @example
      * p = p && p.destroy();
+     *
+     * @see DebugModelMatrixPrimitive#isDestroyed
      */
     DebugModelMatrixPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

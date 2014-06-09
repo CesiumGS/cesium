@@ -87,7 +87,6 @@ define([
      *
      * @param {DataSource} dataSource The data source to remove.
      * @param {Boolean} [destroy=false] Whether to destroy the data source in addition to removing it.
-     *
      * @returns {Boolean} true if the data source was in the collection and was removed,
      *                    false if the data source was not in the collection.
      */
@@ -133,7 +132,6 @@ define([
      * Checks to see if the collection contains a given data source.
      *
      * @param {DataSource} dataSource The data source to check for.
-     *
      * @returns {Boolean} true if the collection contains the data source, false otherwise.
      */
     DataSourceCollection.prototype.contains = function(dataSource) {
@@ -144,7 +142,6 @@ define([
      * Determines the index of a given data source in the collection.
      *
      * @param {DataSource} dataSource The data source to find the index of.
-     *
      * @returns {Number} The index of the data source in the collection, or -1 if the data source does not exist in the collection.
      */
     DataSourceCollection.prototype.indexOf = function(dataSource) {
