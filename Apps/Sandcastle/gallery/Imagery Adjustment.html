@@ -36,7 +36,7 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
-<table id="layerTable">
+<table>
     <tr>
         <td>Brightness</td>
         <td>
@@ -90,12 +90,11 @@ require(['Cesium'], function(Cesium) {
         gamma: 0
     };
     // Convert the viewModel members into knockout observables.
-    Cesium.knockout.track(viewModel,
-        ['brightness', 'contrast', 'hue', 'saturation', 'gamma']);
+    Cesium.knockout.track(viewModel);
 
     // Bind the viewModel to the DOM elements of the UI that call for it.
     Cesium.knockout.applyBindings(viewModel,
-        document.getElementById('layerTable'));
+        document.getElementById('toolbar'));
 
     // Make the active imagery layer a subscriber of the viewModel.
     function subscribeLayerParameter(name) {
@@ -115,7 +114,7 @@ require(['Cesium'], function(Cesium) {
     subscribeLayerParameter('gamma');
 
     // Make the viewModel react to base layer changes.
-    function updateSliders() {
+    function updateViewModel() {
         if (imageryLayers.length > 0) {
             var layer = imageryLayers.get(0);
             viewModel.brightness = layer.brightness;
@@ -125,10 +124,10 @@ require(['Cesium'], function(Cesium) {
             viewModel.gamma = layer.gamma;
         }
     }
-    imageryLayers.layerAdded.addEventListener(updateSliders);
-    imageryLayers.layerRemoved.addEventListener(updateSliders);
-    imageryLayers.layerMoved.addEventListener(updateSliders);
-    updateSliders();
+    imageryLayers.layerAdded.addEventListener(updateViewModel);
+    imageryLayers.layerRemoved.addEventListener(updateViewModel);
+    imageryLayers.layerMoved.addEventListener(updateViewModel);
+    updateViewModel();
 
     Sandcastle.finishedLoading();
 });
