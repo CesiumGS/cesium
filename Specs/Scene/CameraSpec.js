@@ -1332,7 +1332,7 @@ defineSuite([
     });
 
     it('does not animate in 3D', function() {
-        expect(camera.createCorrectPositionAnimation(50.0)).not.toBeDefined();
+        expect(camera.createCorrectPositionAnimation(0.05)).not.toBeDefined();
     });
 
     it('animates position to visible map in 2D', function() {
@@ -1356,7 +1356,7 @@ defineSuite([
         camera.moveUp(dy);
         camera.moveRight(dx);
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1369,7 +1369,7 @@ defineSuite([
         camera.moveDown(dy);
         camera.moveLeft(dx);
 
-        correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        correctAnimation = camera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1402,7 +1402,7 @@ defineSuite([
         var right = frustum.right;
         var top = frustum.top;
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1438,7 +1438,7 @@ defineSuite([
         camera.moveUp(dy);
         camera.moveRight(dx);
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1451,7 +1451,7 @@ defineSuite([
         camera.moveDown(dy);
         camera.moveLeft(dx);
 
-        correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        correctAnimation = camera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1490,7 +1490,7 @@ defineSuite([
         mercatorCamera.moveUp(dy);
         mercatorCamera.moveRight(dx);
 
-        var correctAnimation = mercatorCamera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = mercatorCamera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         var animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1503,7 +1503,7 @@ defineSuite([
         mercatorCamera.moveDown(dy);
         mercatorCamera.moveLeft(dx);
 
-        correctAnimation = mercatorCamera.createCorrectPositionAnimation(50.0);
+        correctAnimation = mercatorCamera.createCorrectPositionAnimation(0.05);
         expect(correctAnimation).toBeDefined();
         animation = animationCollection.add(correctAnimation);
         while(animationCollection.contains(animation)) {
@@ -1516,7 +1516,7 @@ defineSuite([
 
     it('flyTo uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            duration : 0
+            duration : 0.0
         });
 
         var options = {
@@ -1529,7 +1529,7 @@ defineSuite([
 
     it('flyToRectangle uses createAnimationRectangle', function() {
         spyOn(CameraFlightPath, 'createAnimationRectangle').andReturn({
-            duration : 0
+            duration : 0.0
         });
 
         var options = {

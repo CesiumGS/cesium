@@ -408,7 +408,7 @@ define([
 
         if (scene.frameState.mode === SceneMode.MORPHING) {
             return {
-                duration : 0
+                duration : 0.0
             };
         }
 
@@ -422,7 +422,7 @@ define([
             destination = projection.project(scratchCartographic, scratchDestination);
         }
 
-        var duration = defaultValue(options.duration, 3000.0);
+        var duration = defaultValue(options.duration, 3.0);
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
 
@@ -448,20 +448,20 @@ define([
         if (frameState.mode === SceneMode.SCENE2D) {
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
-                    duration : 0,
+                    duration : 0.0,
                     complete : complete,
                     cancel: cancel
                 };
             }
         } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
-                duration : 0,
+                duration : 0.0,
                 complete : complete,
                 cancel: cancel
             };
         }
 
-        if (duration <= 0) {
+        if (duration <= 0.0) {
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
@@ -505,7 +505,7 @@ define([
                 }
             };
             return {
-                duration : 0,
+                duration : 0.0,
                 complete : newOnComplete,
                 cancel: cancel
             };

@@ -19,10 +19,22 @@ Beta Releases
                 destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
             });
 
-   * In `Camera.flyTo` and `Camera.flyToRectangle`, renamed:
-      * `options.endReferenceFrame` to `options.endTransform`.
-      * `options.onComplete` to `options.complete`.
-      * `options.onCancel` to `options.cancel`.
+   * In `Camera.flyTo` and `Camera.flyToRectangle`:
+      * `options.duration` is now in seconds, not milliseconds.
+      * Renamed `options.endReferenceFrame` to `options.endTransform`.
+      * Renamed `options.onComplete` to `options.complete`.
+      * Renamed `options.onCancel` to `options.cancel`.
+   * In `AnimationCollection.add`, `AnimationCollection.addAlpha`, and `AnimationCollection.addProperty`:
+      * `options.duration` is now in seconds, not milliseconds.
+      * Renamed `options.onComplete` to `options.complete` and `options.onCancel` to `options.cancel`.
+   * `AnimationCollection.add` renamed `options.onUpdate` to `options.update`.
+   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
+   * The following are now in seconds, not milliseconds.
+      * `Scene.morphToColumbusView`, `Scene.morphTo2D`, and `Scene.morphTo3D` parameter `duration`.
+      * `HomeButton` constructor parameter `options.duration`, `HomeButtonViewModel` constructor parameter `duration`, and `HomeButtonViewModel.duration`.
+      * `SceneModePicker` constructor parameter `duration`, `SceneModePickerViewModel` constructor parameter `duration`, and `SceneModePickerViewModel.duration`.
+      * `Geocoder` and `GeocoderViewModel` constructor parameter `options.flightDuration` and `GeocoderViewModel.flightDuration`.
+      * `ScreenSpaceCameraController.bounceAnimationTime`.
    * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
    * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
    * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
@@ -30,9 +42,7 @@ Beta Releases
    * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
    * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
    * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
-   * `AnimationCollection.add` renamed `options.onUpdate` to `options.update`.
-   * `AnimationCollection.add`, `AnimationCollection.addAlpha`, and `AnimationCollection.addProperty` renamed `options.onComplete` to `options.complete` and `options.onCancel` to `options.cancel`.
-   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
+   * Removed `Camera.createCorrectPositionAnimation` from the public Cesium API.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.

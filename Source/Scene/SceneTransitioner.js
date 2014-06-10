@@ -145,7 +145,7 @@ define([
             morphFrom3DTo2D(this, duration, ellipsoid, complete2DCallback);
         }
 
-        if (duration === 0 && defined(this._completeMorph)) {
+        if (duration === 0.0 && defined(this._completeMorph)) {
             this._completeMorph();
         }
     };
@@ -173,7 +173,7 @@ define([
             morphFrom3DToColumbusView(this, duration, this._cameraCV, completeColumbusViewCallback);
         }
 
-        if (duration === 0 && defined(this._completeMorph)) {
+        if (duration === 0.0 && defined(this._completeMorph)) {
             this._completeMorph();
         }
     };
@@ -201,7 +201,7 @@ define([
             morphFromColumbusViewTo3D(this, duration, ellipsoid, complete3DCallback);
         }
 
-        if (duration === 0 && defined(this._completeMorph)) {
+        if (duration === 0.0 && defined(this._completeMorph)) {
             this._completeMorph();
         }
     };
@@ -298,7 +298,7 @@ define([
     }
 
     function morphFrom2DTo3D(transitioner, duration, ellipsoid, complete) {
-        duration = duration * 0.5;
+        duration *= 0.5;
 
         var camera = transitioner._scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
@@ -375,7 +375,7 @@ define([
             Cartesian3.normalize(camera.right, camera.right);
         };
 
-        duration = duration * 0.5;
+        duration *= 0.5;
         var animation = scene.animations.add({
             duration : duration,
             easingFunction : Tween.Easing.Quartic.Out,
@@ -394,7 +394,7 @@ define([
     }
 
     function morphFrom3DTo2D(transitioner, duration, ellipsoid, complete) {
-        duration = duration * 0.5;
+        duration *= 0.5;
 
         var maxRadii = ellipsoid.maximumRadius;
 
@@ -486,7 +486,7 @@ define([
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
 
-        duration = duration * 0.5;
+        duration *= 0.5;
 
         var completeFrustumChange = function() {
             var startPos = Cartesian3.clone(camera.position);

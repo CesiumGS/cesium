@@ -143,11 +143,11 @@ define([
          */
         this.maximumMovementRatio = 0.1;
         /**
-         * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
+         * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
          * @type {Number}
-         * @default 3000.0
+         * @default 3.0
          */
-        this.bounceAnimationTime = 3000.0;
+        this.bounceAnimationTime = 3.0;
         /**
          * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
          * @type {Number}

@@ -43,7 +43,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (options.duration > 0) {
+        if (options.duration > 0.0) {
+            var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
             var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
             var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
@@ -52,7 +53,7 @@ define([
             // set the callback on the instance to avoid extra bookkeeping
             // or patching Tween.js
             tween.cancel = options.cancel;
-            tween.to(options.stopValue, options.duration);
+            tween.to(options.stopValue, duration);
             tween.delay(delay);
             tween.easing(easingFunction);
             if (typeof options.update === 'function') {
@@ -119,7 +120,7 @@ define([
         stop = defaultValue(stop, 1.0);
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3000);
+        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
@@ -168,7 +169,7 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3000);
+        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
@@ -211,7 +212,7 @@ define([
         //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3000);
+        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 

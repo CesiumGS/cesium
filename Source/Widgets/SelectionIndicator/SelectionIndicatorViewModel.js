@@ -115,7 +115,7 @@ define([
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
         this._animationCollection.addProperty(this, '_scale', 2, 1, {
-            duration : 800,
+            duration : 0.8,
             easingFunction : Tween.Easing.Exponential.Out
         });
     };
@@ -125,7 +125,7 @@ define([
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
         this._animationCollection.addProperty(this, '_scale', this._scale, 1.5, {
-            duration : 800,
+            duration : 0.8,
             easingFunction : Tween.Easing.Exponential.Out
         });
     };

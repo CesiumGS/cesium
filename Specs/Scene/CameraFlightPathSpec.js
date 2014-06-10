@@ -101,7 +101,7 @@ defineSuite([
 
     it('creates an animation', function() {
         var destination = new Cartesian3(1e9, 1e9, 1e9);
-        var duration = 5000.0;
+        var duration = 5.0;
         var complete = function() {
         };
         var cancel = function() {
@@ -125,7 +125,7 @@ defineSuite([
 
     it('creates an animation with rectangle', function() {
         var destination = new Rectangle(-1, -1, 1, 1);
-        var duration = 5000.0;
+        var duration = 5.0;
         var complete = function() {
         };
         var cancel = function() {
@@ -158,7 +158,7 @@ defineSuite([
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
@@ -191,7 +191,7 @@ defineSuite([
         var endDirection = Cartesian3.negate(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimationRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
@@ -229,7 +229,7 @@ defineSuite([
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
@@ -269,7 +269,7 @@ defineSuite([
 
         var endPosition = camera.getRectangleCameraCoordinates(rectangle);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimationRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
@@ -309,7 +309,7 @@ defineSuite([
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
             direction : endDirection,
@@ -354,7 +354,7 @@ defineSuite([
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp);
 
-        var duration = 5000.0;
+        var duration = 5.0;
         var flight = CameraFlightPath.createAnimationRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
@@ -382,7 +382,7 @@ defineSuite([
         var mag = Cartesian3.magnitude(start);
         var end = Cartesian3.multiplyByScalar(Cartesian3.normalize(start), mag - 1000000.0);
 
-        var duration = 3000.0;
+        var duration = 3.0;
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : end,
             duration : duration
@@ -406,7 +406,7 @@ defineSuite([
         var startDirection = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
 
-        var duration = 3000.0;
+        var duration = 3.0;
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : startPosition,
             direction : startDirection,
@@ -422,7 +422,7 @@ defineSuite([
 
     it('creates an animation with 0 duration', function() {
         var destination = new Cartesian3(1e9, 1e9, 1e9);
-        var duration = 0;
+        var duration = 0.0;
         var complete = function() {
             return true;
         };
@@ -461,7 +461,7 @@ defineSuite([
             destination : endPosition
         });
 
-        expect(flight.duration).toEqual(0);
+        expect(flight.duration).toEqual(0.0);
     });
 
     it('duration is 0 when destination is the same as camera position in 3D', function() {
@@ -478,7 +478,7 @@ defineSuite([
             destination : camera.position
         });
 
-        expect(flight.duration).toEqual(0);
+        expect(flight.duration).toEqual(0.0);
     });
 
     it('duration is 0 when destination is the same as camera position in CV', function() {
@@ -497,7 +497,7 @@ defineSuite([
             destination : endPosition
         });
 
-        expect(flight.duration).toEqual(0);
+        expect(flight.duration).toEqual(0.0);
     });
 
     it('creates an animation in 2D 0 duration', function() {
@@ -524,7 +524,7 @@ defineSuite([
             destination : endPosition,
             direction : endDirection,
             up : endUp,
-            duration : 0
+            duration : 0.0
         });
 
         expect(typeof flight.complete).toEqual('function');
@@ -553,7 +553,7 @@ defineSuite([
 
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,
-            duration : 0
+            duration : 0.0
         });
 
         expect(typeof flight.complete).toEqual('function');
@@ -576,7 +576,7 @@ defineSuite([
             destination : endPosition,
             direction : endDirection,
             up : endUp,
-            duration : 0
+            duration : 0.0
         });
 
         expect(typeof flight.complete).toEqual('function');

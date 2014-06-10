@@ -1570,36 +1570,36 @@ define([
 
     /**
      * Asynchronously transitions the scene to 2D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo2D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo2D(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to Columbus View.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphToColumbusView = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphToColumbusView(duration, globe.ellipsoid);
         }
     };
 
     /**
      * Asynchronously transitions the scene to 3D.
-     * @param {Number} [duration=2000] The amount of time, in milliseconds, for transition animations to complete.
+     * @param {Number} [duration=2.0] The amount of time, in seconds, for transition animations to complete.
      */
     Scene.prototype.morphTo3D = function(duration) {
         var globe = this.globe;
         if (defined(globe)) {
-            duration = defaultValue(duration, 2000);
+            duration = defaultValue(duration, 2.0);
             this._transitioner.morphTo3D(duration, globe.ellipsoid);
         }
     };

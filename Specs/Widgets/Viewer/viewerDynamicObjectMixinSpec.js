@@ -91,7 +91,7 @@ defineSuite([
 
         //Needed to avoid actually creating a flight when we issue the home command.
         spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            duration : 0
+            duration : 0.0
         });
 
         viewer.homeButton.viewModel.command();

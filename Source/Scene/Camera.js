@@ -1960,10 +1960,12 @@ define([
     /**
      * Create an animation to move the map into view. This method is only valid for 2D and Columbus modes.
      *
-     * @param {Number} duration The duration, in milliseconds, of the animation.
+     * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
      * @exception {DeveloperException} duration is required.
+     *
+     * @private
      */
     Camera.prototype.createCorrectPositionAnimation = function(duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -1988,7 +1990,7 @@ define([
      * @param {Cartesian3} options.destination The final position of the camera in WGS84 (world) coordinates.
      * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Function} [options.complete] The function to execute when the flight is complete.
      * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
@@ -2007,7 +2009,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
-     * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
+     * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Function} [options.complete] The function to execute when the flight is complete.
      * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
