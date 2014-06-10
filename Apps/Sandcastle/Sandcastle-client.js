@@ -133,7 +133,7 @@
     Sandcastle.highlight = function(obj) {
         if (typeof obj !== 'undefined') {
             for ( var i = 0, len = Sandcastle.registered.length; i < len; ++i) {
-                if (obj.primitive === Sandcastle.registered[i].obj) {
+                if (obj === Sandcastle.registered[i].obj || obj.primitive === Sandcastle.registered[i].obj) {
                     window.parent.postMessage({
                         'highlight' : Sandcastle.registered[i].lineNumber
                     }, '*');

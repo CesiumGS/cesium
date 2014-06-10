@@ -135,6 +135,7 @@ require(['Cesium'], function(Cesium) {
     }
 
     function viewIcrf() {
+        Sandcastle.declare(viewIcrf); // For highlighting in Sandcastle.
         var vm = viewer.homeButton.viewModel;
         vm.duration = 0.0;
         vm.command();
