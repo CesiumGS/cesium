@@ -502,6 +502,7 @@ define([
     var scratchAdjustForTerrainStart = new Cartesian3();
     var scratchAdjustForTerrainStop = new Cartesian3();
     var scratchRayArray = [];
+    var maxRayDistance = 10000.0;
 
     function adjustRotateForTerrain(controller, frameState, center, radius, axis, angle, globeOverride) {
         var mode = frameState.mode;
@@ -533,7 +534,8 @@ define([
             axis = Cartesian3.fromElements(axis.z, axis.x, axis.y, scratchAdjustForTerrainAxis);
         }
 
-        var numRays = Math.min(Math.ceil(radius * Math.abs(angle) / 1000.0), 1.0);
+        //var numRays = Math.min(Math.max(Math.ceil(radius * Math.abs(angle) / maxRayDistance), 1.0), 4.0);
+        var numRays = 1.0;
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays, scratchQuaternion), scratchRotation);
         var start = Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart);
 
@@ -561,7 +563,8 @@ define([
         var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart), scratchAdjustForTerrainStart);
         var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center, scratchAdjustForTerrainStop), scratchAdjustForTerrainStop);
         var newAngle = CesiumMath.acosClamped(Cartesian3.dot(startDirection, endDirection));
-        return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance / radius, 0.0, Math.abs(angle));
+        newAngle = CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance * 10.0 / radius, 0.0, Math.abs(angle));
+        return newAngle;
     }
 
     function handleZoom(object, startPosition, movement, frameState, zoomFactor, distanceMeasure, unitPositionDotDirection) {
