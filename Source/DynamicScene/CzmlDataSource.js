@@ -270,6 +270,10 @@ define([
             return czmlInterval.cartesian;
         }
 
+        if (defined(czmlInterval.cartesianVelocity)) {
+            return czmlInterval.cartesianVelocity;
+        }
+
         if (defined(czmlInterval.unitCartesian)) {
             return czmlInterval.unitCartesian;
         }
@@ -614,7 +618,8 @@ define([
         var unwrappedInterval;
         var isSampled = false;
         var unwrappedIntervalLength;
-        var packedLength = Cartesian3.packedLength;
+        var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
+        var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
         var isReference = defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
@@ -647,7 +652,7 @@ define([
         //replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
-                property = new SampledPositionProperty(referenceFrame);
+                property = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
                 object[propertyName] = property;
             }
             property.addSamplesPackedArray(unwrappedInterval, epoch);
@@ -732,7 +737,7 @@ define([
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
             //If not, create a SampledPositionProperty for it.
             interval = combinedInterval.clone();
-            interval.data = new SampledPositionProperty(referenceFrame);
+            interval.data = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
             intervals.addInterval(interval);
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);

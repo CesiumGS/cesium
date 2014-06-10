@@ -79,11 +79,10 @@ define([
      *
      * @param {Function} listener The function to be unregistered.
      * @param {Object} [scope] The scope that was originally passed to addEventListener.
+     * @returns {Boolean} <code>true</code> if the listener was removed; <code>false</code> if the listener and scope are not registered with the event.
      *
      * @see Event#addEventListener
      * @see Event#raiseEvent
-     *
-     * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener, scope) {
         //>>includeStart('debug', pragmas.debug);
@@ -103,14 +102,13 @@ define([
             }
         }
 
-        //>>includeStart('debug', pragmas.debug);
-        if (index === -1) {
-            throw new DeveloperError('listener is not subscribed.');
+        if (index !== -1) {
+            thisListeners.splice(index, 1);
+            this._scopes.splice(index, 1);
+            return true;
         }
-        //>>includeEnd('debug');
 
-        thisListeners.splice(index, 1);
-        this._scopes.splice(index, 1);
+        return false;
     };
 
     /**
