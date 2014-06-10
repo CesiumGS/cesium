@@ -114,19 +114,9 @@ define([
      * Animate the indicator to draw attention to the selection.
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : 2
-            },
-            stopValue : {
-                scale: 1
-            },
+        this._animationCollection.addProperty(this, '_scale', 2, 1, {
             duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+            easingFunction : Tween.Easing.Exponential.Out
         });
     };
 
@@ -134,19 +124,9 @@ define([
      * Animate the indicator to release the selection.
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
-        var viewModel = this;
-        this._animationCollection.add({
-            startValue : {
-                scale : viewModel._scale
-            },
-            stopValue : {
-                scale : 1.5
-            },
+        this._animationCollection.addProperty(this, '_scale', this._scale, 1.5, {
             duration : 800,
-            easingFunction : Tween.Easing.Exponential.Out,
-            onUpdate : function (value) {
-                viewModel._scale = value.scale;
-            }
+            easingFunction : Tween.Easing.Exponential.Out
         });
     };
 

@@ -145,7 +145,6 @@ require(['Cesium'], function(Cesium) {
     }
 
     function reset() {
-        var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
         
@@ -155,7 +154,7 @@ require(['Cesium'], function(Cesium) {
         
         scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
-        clock.multiplier = 1.0;
+        clock.multiplier = scene.globe.ellipsoid;
         scene.preRender.removeEventListener(icrf);
     }
 

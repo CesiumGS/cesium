@@ -77,8 +77,7 @@ defineSuite([
 
         waitsFor(function() {
             scene.animations.update();
-            var newCameraPosition = scene.camera.position;
-            return cameraPosition.x !== newCameraPosition.x || cameraPosition.y !== newCameraPosition.y || cameraPosition.z !== newCameraPosition.z;
+            return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });
     });
 

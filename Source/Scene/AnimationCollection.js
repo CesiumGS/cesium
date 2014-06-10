@@ -275,11 +275,7 @@ define([
      * DOC_TBA
      */
     AnimationCollection.prototype.contains = function(animation) {
-        if (!defined(animation)) {
-            return false;
-        }
-
-        return this._tweens.indexOf(animation._tween) !== -1;
+        return defined(animation) && (this._tweens.indexOf(animation._tween) !== -1);
     };
 
     /**
