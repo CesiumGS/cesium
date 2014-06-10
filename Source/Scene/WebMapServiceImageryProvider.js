@@ -9,6 +9,7 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
+        '../Core/loadJson',
         '../Core/Rectangle',
         './ImageryProvider'
     ], function(
@@ -21,6 +22,7 @@ define([
         Event,
         freezeObject,
         GeographicTilingScheme,
+        loadJson,
         Rectangle,
         ImageryProvider) {
     "use strict";
@@ -108,55 +110,6 @@ define([
 
         this._ready = true;
     };
-
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var url = imageryProvider._url;
-        var indexOfQuestionMark = url.indexOf('?');
-        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
-            if (url[url.length - 1] !== '&') {
-                url += '&';
-            }
-        } else if (indexOfQuestionMark < 0) {
-            url += '?';
-        }
-
-        var parameters = imageryProvider._parameters;
-        for (var parameter in parameters) {
-            if (parameters.hasOwnProperty(parameter)) {
-                url += parameter + '=' + parameters[parameter] + '&';
-            }
-        }
-
-        if (!defined(parameters.layers)) {
-            url += 'layers=' + imageryProvider._layers + '&';
-        }
-
-        if (!defined(parameters.srs)) {
-            url += 'srs=EPSG:4326&';
-        }
-
-        if (!defined(parameters.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-            url += 'bbox=' + bbox + '&';
-        }
-
-        if (!defined(parameters.width)) {
-            url += 'width=256&';
-        }
-
-        if (!defined(parameters.height)) {
-            url += 'height=256&';
-        }
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -407,8 +360,26 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = buildImageUrl(this, x, y, level);
+        var url = buildUrl(this, this._parameters, x, y, level);
         return ImageryProvider.loadImage(this, url);
+    };
+
+    WebMapServiceImageryProvider.prototype.getFeatureInfo = function(x, y, level, i, j) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('getFeatureInfo must not be called before the imagery provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        var parameters = clone(this._parameters);
+        parameters.request = 'GetFeatureInfo';
+        parameters.info_format = 'application/json';
+        parameters.query_layers = this._layers;
+        parameters.x = i;
+        parameters.y = j;
+
+        var url = buildUrl(this, parameters, x, y, level);
+        return loadJson(url);
     };
 
     /**
@@ -428,6 +399,53 @@ define([
         styles : '',
         format : 'image/jpeg'
     });
+
+    function buildUrl(imageryProvider, parameters, x, y, level) {
+        var url = imageryProvider._url;
+        var indexOfQuestionMark = url.indexOf('?');
+        if (indexOfQuestionMark >= 0 && indexOfQuestionMark < url.length - 1) {
+            if (url[url.length - 1] !== '&') {
+                url += '&';
+            }
+        } else if (indexOfQuestionMark < 0) {
+            url += '?';
+        }
+
+        for (var parameter in parameters) {
+            if (parameters.hasOwnProperty(parameter)) {
+                url += parameter + '=' + parameters[parameter] + '&';
+            }
+        }
+
+        if (!defined(parameters.layers)) {
+            url += 'layers=' + imageryProvider._layers + '&';
+        }
+
+        if (!defined(parameters.srs)) {
+            url += 'srs=EPSG:4326&';
+        }
+
+        if (!defined(parameters.bbox)) {
+            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
+            var bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
+            url += 'bbox=' + bbox + '&';
+        }
+
+        if (!defined(parameters.width)) {
+            url += 'width=256&';
+        }
+
+        if (!defined(parameters.height)) {
+            url += 'height=256&';
+        }
+
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            url = proxy.getURL(url);
+        }
+
+        return url;
+    }
 
     return WebMapServiceImageryProvider;
 });
