@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/getTimestamp',
+        '../Core/TimeConstants',
         '../ThirdParty/Tween'
     ], function(
         clone,
@@ -14,6 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         getTimestamp,
+        TimeConstants,
         Tween) {
     "use strict";
 
@@ -42,7 +44,7 @@ define([
         //>>includeEnd('debug');
 
         if (options.duration > 0) {
-            var delayDuration = defaultValue(options.delayDuration, 0);
+            var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
             var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
             var value = clone(options.startValue);
@@ -51,7 +53,7 @@ define([
             // or patching Tween.js
             tween.cancel = options.cancel;
             tween.to(options.stopValue, options.duration);
-            tween.delay(delayDuration);
+            tween.delay(delay);
             tween.easing(easingFunction);
             if (typeof options.update === 'function') {
                 tween.onUpdate(function() {
@@ -118,7 +120,7 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
-        var delayDuration = defaultValue(options.delayDuration, 0);
+        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
         var value = {
@@ -128,7 +130,7 @@ define([
         tween.to({
             alpha : stop
         }, duration);
-        tween.delay(delayDuration);
+        tween.delay(delay);
         tween.easing(easingFunction);
         tween.onUpdate(function() {
             var length = properties.length;
@@ -167,7 +169,7 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
-        var delayDuration = defaultValue(options.delayDuration, 0);
+        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
         var value = {
@@ -177,7 +179,7 @@ define([
         tween.to({
             value : stop
         }, duration);
-        tween.delay(delayDuration);
+        tween.delay(delay);
         tween.easing(easingFunction);
         tween.onUpdate(function() {
             object[property] = value.value;
@@ -210,7 +212,7 @@ define([
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3000);
-        var delayDuration = defaultValue(options.delayDuration, 0);
+        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
         var value = {
@@ -220,7 +222,7 @@ define([
         tween.to({
             offset : material.uniforms.offset + 1.0
         }, duration);
-        tween.delay(delayDuration);
+        tween.delay(delay);
         tween.easing(easingFunction);
         tween.onUpdate(function() {
             material.uniforms.offset = value.offset;
