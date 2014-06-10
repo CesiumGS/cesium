@@ -64,7 +64,7 @@ define([
         return result;
     }
 
-    var epoch = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI); //Actually TDB (not TAI)
+    var epoch = new JulianDate(2451545, 0, TimeStandard.TAI); //Actually TDB (not TAI)
     var GravitationalParameterOfEarth = 3.98600435e14;
     var GravitationalParameterOfSun = GravitationalParameterOfEarth * (1.0 + 0.012300034) * 328900.56;
     var MetersPerKilometer = 1000.0;

@@ -35,7 +35,7 @@ define([
      *
      * @example
      * // Construct an Timeinterval closed on one end with a Color payload.
-     * var interval = new Cesium.TimeInterval(Cesium.JulianDate.fromTotalDays(1000), Cesium.JulianDate.fromTotalDays(1001), true, false, Cesium.Color.WHITE);
+     * var interval = new Cesium.TimeInterval(Cesium.new JulianDate(1000), Cesium.new JulianDate(1001), true, false, Cesium.Color.WHITE);
      */
     var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
         //>>includeStart('debug', pragmas.debug);
