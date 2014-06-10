@@ -83,6 +83,7 @@ define([
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {Boolean} [options.navigationHelpButton=true] If set to the false, the navigation help button will not be created.
      * @param {Boolean} [options.navigationInstructionsInitiallyVisible=true] True if the navigation instructions should initially be visible, or false if the should not be shown until the user explicitly clicks the button.
+     * @param {Boolean} [options.timeControlsInitiallyVisible=true] True if the animation and timeline controls should initially be visible, or false if they should not be shown until <code>showTimeControls</code> is set to true.
      * @param {ProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel[]} [options.imageryProviderViewModels=createDefaultImageryProviderViewModels()] The array of ProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
      * @param {ProviderViewModel} [options.selectedTerrainProviderViewModel] The view model for the current base terrain layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
@@ -201,6 +202,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var viewerContainer = document.createElement('div');
         viewerContainer.className = 'cesium-viewer';
+        viewerContainer.setAttribute('data-bind', 'css: { "cesium-viewer-hideTimeControls" : !showTimeControls }');
         container.appendChild(viewerContainer);
 
         // Cesium widget container
@@ -213,6 +215,21 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         bottomContainer.className = 'cesium-viewer-bottom';
 
         viewerContainer.appendChild(bottomContainer);
+
+        /**
+         * Gets or sets the data source to track with the viewer's clock.
+         * @type {DataSource}
+         */
+        this.clockTrackedDataSource = undefined;
+
+        /**
+         * Gets or sets a flag that indicates whether the animation and timeline controls are visible.
+         * @type {Boolean}
+         */
+        this.showTimeControls = defaultValue(options.timeControlsInitiallyVisible, true);
+
+        knockout.track(this, ['clockTrackedDataSource', 'showTimeControls']);
+        knockout.applyBindings(this, viewerContainer);
 
         // Cesium widget
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
@@ -369,14 +386,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        /**
-         * Gets or sets the data source to track with the viewer's clock.
-         * @type {DataSource}
-         */
-        this.clockTrackedDataSource = undefined;
-
-        knockout.track(this, ['clockTrackedDataSource']);
-
         this._dataSourceChangedListeners = {};
         this._knockoutSubscriptions = [];
         var automaticallyTrackDataSourceClocks = defaultValue(options.automaticallyTrackDataSourceClocks, true);
@@ -451,6 +460,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
+        this._lastShowTimeControls = true;
         this._allowDataSourcesToSuspendAnimation = true;
 
         // Prior to each render, check if anything needs to be resized.
@@ -871,13 +881,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var container = viewer._container;
         var width = container.clientWidth;
         var height = container.clientHeight;
-        var animationShown = defined(viewer._animation);
-        var timelineShown = defined(viewer._timeline);
+        var animationExists = defined(viewer._animation);
+        var timelineExists = defined(viewer._timeline);
 
         if (width === viewer._lastWidth && height === viewer._lastHeight &&
-            animationShown === viewer._lastAnimationShown &&
-            timelineShown === viewer._lastTimelineShown) {
-
+                viewer.showTimeControls === viewer._lastShowTimeControls) {
             return;
         }
 
@@ -894,10 +902,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var timeline = viewer._timeline;
         var animationContainer;
-        var resizeWidgets = animationShown !== viewer._lastAnimationShown;
         var animationWidth = 0;
+        var creditLeft = 0;
+        var creditBottom = 0;
 
-        if (animationShown) {
+        if (animationExists && viewer.showTimeControls) {
             var lastWidth = viewer._lastWidth;
             animationContainer = viewer._animation.container;
             if (width > 900) {
@@ -905,7 +914,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth <= 900) {
                     animationContainer.style.width = '169px';
                     animationContainer.style.height = '112px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             } else if (width >= 600) {
@@ -913,7 +921,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth < 600 || lastWidth > 900) {
                     animationContainer.style.width = '136px';
                     animationContainer.style.height = '90px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             } else {
@@ -921,47 +928,32 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth > 600 || lastWidth === 0) {
                     animationContainer.style.width = '106px';
                     animationContainer.style.height = '70px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             }
+            creditLeft = animationWidth + 5;
         }
 
-        var logoBottom = 0;
+        if (timelineExists && viewer.showTimeControls) {
+            var fullscreenButton = viewer._fullscreenButton;
+            var timelineContainer = timeline.container;
+            var timelineStyle = timelineContainer.style;
 
-        if (resizeWidgets) {
-            var logoLeft = animationWidth + 5;
-            if (timelineShown) {
-                var fullscreenButton = viewer._fullscreenButton;
-                var timelineContainer = timeline.container;
-                var timelineStyle = timelineContainer.style;
+            creditBottom = timelineContainer.clientHeight + 3;
+            timelineStyle.left = animationWidth + 'px';
 
-                logoBottom = timelineContainer.clientHeight + 3;
-                timelineStyle.left = animationWidth + 'px';
-
-                if (defined(fullscreenButton)) {
-                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
-                }
+            if (defined(fullscreenButton)) {
+                timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
             }
-        }
-
-        if (animationShown) {
-            viewer._bottomContainer.style.left = (animationWidth + 5) + 'px';
-        } else {
-            viewer._bottomContainer.style.left = 0;
-        }
-
-        if (timelineShown) {
-            viewer._bottomContainer.style.bottom = logoBottom + 'px';
             timeline.resize();
-        } else {
-            viewer._bottomContainer.style.bottom = 0;
         }
+
+        viewer._bottomContainer.style.left = creditLeft + 'px';
+        viewer._bottomContainer.style.bottom = creditBottom + 'px';
 
         viewer._lastWidth = width;
         viewer._lastHeight = height;
-        viewer._lastAnimationShown = animationShown;
-        viewer._lastTimelineShown = timelineShown;
+        viewer._lastShowTimeControls = viewer.showTimeControls;
     }
 
     return Viewer;
