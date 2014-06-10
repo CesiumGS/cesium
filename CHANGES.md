@@ -32,6 +32,7 @@ Beta Releases
    * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
    * `AnimationCollection.add` renamed `options.onUpdate` to `options.update`.
    * `AnimationCollection.add`, `AnimationCollection.addAlpha`, and `AnimationCollection.addProperty` renamed `options.onComplete` to `options.complete` and `options.onCancel` to `options.cancel`.
+   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
