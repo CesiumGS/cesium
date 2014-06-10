@@ -169,8 +169,8 @@ require(['Cesium'], function(Cesium) {
                 if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard) && !billboard.highlighted) {
                     // on enter
                     animation = animation || scene.animations.add({
-                        onUpdate : update,
-                        onComplete : complete,
+                        update : update,
+                        complete : complete,
                         startValue : {
                             scale : billboard.scale,
                             red   : billboard.color.red,
@@ -192,8 +192,8 @@ require(['Cesium'], function(Cesium) {
                 else if ((pickedObject !== billboard) && billboard.highlighted) {
                     // on exit
                     animation = animation || scene.animations.add({
-                        onUpdate : update,
-                        onComplete : complete,
+                        update : update,
+                        complete : complete,
                         startValue : {
                             scale : billboard.scale,
                             red   : billboard.color.red,

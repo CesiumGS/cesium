@@ -1878,7 +1878,7 @@ define([
                     time : 1.0
                 },
                 duration : duration,
-                onUpdate : update2D
+                update : update2D
             };
         }
 
@@ -1914,7 +1914,7 @@ define([
                 time : 1.0
             },
             duration : duration,
-            onUpdate : updateCV
+            update : updateCV
         };
     }
 
@@ -1989,8 +1989,8 @@ define([
      * @param {Cartesian3} [options.direction] The final direction of the camera in WGS84 (world) coordinates. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [options.up] The final up direction in WGS84 (world) coordinates. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
      *                  to be in the correct coordinate system.
@@ -2008,8 +2008,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.destination The rectangle to view, in WGS84 (world) coordinates, which determines the final position of the camera.
      * @param {Number} [options.duration=3000] The duration of the flight in milliseconds.
-     * @param {Function} [options.onComplete] The function to execute when the flight is complete.
-     * @param {Function} [options.onCancel] The function to execute if the flight is cancelled.
+     * @param {Function} [options.complete] The function to execute when the flight is complete.
+     * @param {Function} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
      */
     Camera.prototype.flyToRectangle = function(options) {

@@ -149,12 +149,12 @@ require(['Cesium'], function(Cesium) {
         scene.animations.removeAll();
         
         var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = ellipsoid;
+        controller.ellipsoid = scene.globe.ellipsoid;
         controller.enableTilt = true;
         
         scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
-        clock.multiplier = scene.globe.ellipsoid;
+        clock.multiplier = 1.0;
         scene.preRender.removeEventListener(icrf);
     }
 

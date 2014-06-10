@@ -256,7 +256,7 @@ define([
             viewModel._scene.camera.flyTo({
                 destination : position,
                 duration : viewModel._flightDuration,
-                onComplete : function() {
+                complete : function() {
                     var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
                     screenSpaceCameraController.ellipsoid = viewModel._ellipsoid;
                 },

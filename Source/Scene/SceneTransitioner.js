@@ -259,7 +259,7 @@ define([
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
-    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, onComplete) {
+    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
 
         var camera = scene.camera;
@@ -290,14 +290,14 @@ define([
             stopValue : {
                 time : 1.0
             },
-            onUpdate : update
+            update : update
         });
         transitioner._currentAnimations.push(animation);
 
-        addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, onComplete);
+        addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
     }
 
-    function morphFrom2DTo3D(transitioner, duration, ellipsoid, onComplete) {
+    function morphFrom2DTo3D(transitioner, duration, ellipsoid, complete) {
         duration = duration * 0.5;
 
         var camera = transitioner._scene.camera;
@@ -305,7 +305,7 @@ define([
 
         morphOrthographicToPerspective(transitioner, duration, ellipsoid, function() {
             camera.frustum = transitioner._cameraCV.frustum.clone();
-            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, onComplete);
+            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete);
         });
     }
 
@@ -314,7 +314,7 @@ define([
         return Cartesian3.lerp(startPosition, endPosition, time);
     }
 
-    function morphPerspectiveToOrthographic(transitioner, duration, onComplete) {
+    function morphPerspectiveToOrthographic(transitioner, duration, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
 
@@ -340,16 +340,16 @@ define([
             stopValue : {
                 time : 1.0
             },
-            onUpdate : update,
-            onComplete : function() {
+            update : update,
+            complete : function() {
                 camera.frustum = transitioner._camera2D.frustum.clone();
-                onComplete(transitioner);
+                complete(transitioner);
             }
         });
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, onComplete) {
+    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
@@ -385,15 +385,15 @@ define([
             stopValue : {
                 time : 1.0
             },
-            onUpdate : updateCV,
-            onComplete : function() {
-                morphPerspectiveToOrthographic(transitioner, duration, onComplete);
+            update : updateCV,
+            complete : function() {
+                morphPerspectiveToOrthographic(transitioner, duration, complete);
             }
         });
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFrom3DTo2D(transitioner, duration, ellipsoid, onComplete) {
+    function morphFrom3DTo2D(transitioner, duration, ellipsoid, complete) {
         duration = duration * 0.5;
 
         var maxRadii = ellipsoid.maximumRadius;
@@ -407,13 +407,13 @@ define([
         camera3DTo2D.direction2D = Cartesian3.clone(transitioner._camera2D.direction2D);
         camera3DTo2D.up2D = Cartesian3.clone(transitioner._camera2D.up2D);
 
-        var complete = function() {
-            morphPerspectiveToOrthographic(transitioner, duration, onComplete);
+        var completeCallback = function() {
+            morphPerspectiveToOrthographic(transitioner, duration, complete);
         };
-        morphFrom3DToColumbusView(transitioner, duration, camera3DTo2D, complete);
+        morphFrom3DToColumbusView(transitioner, duration, camera3DTo2D, completeCallback);
     }
 
-    function morphOrthographicToPerspective(transitioner, duration, ellipsoid, onComplete) {
+    function morphOrthographicToPerspective(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         var maxRadii = ellipsoid.maximumRadius;
@@ -458,7 +458,7 @@ define([
                 // a perspective projection, nothing needs to be animated.
                 camera.position = endPos2D;
                 camera.frustum = frustumCV.clone();
-                onComplete(transitioner);
+                complete(transitioner);
                 return;
             }
         }
@@ -472,16 +472,16 @@ define([
             stopValue : {
                 time : endTime
             },
-            onUpdate : update2D,
-            onComplete : function() {
+            update : update2D,
+            complete : function() {
                 camera.frustum = frustumCV.clone();
-                onComplete(transitioner);
+                complete(transitioner);
             }
         });
         transitioner._currentAnimations.push(animation);
     }
 
-    function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, onComplete) {
+    function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
@@ -514,9 +514,9 @@ define([
                 stopValue : {
                     time : 1.0
                 },
-                onUpdate : updateCV,
-                onComplete : function() {
-                    onComplete(transitioner);
+                update : updateCV,
+                complete : function() {
+                    complete(transitioner);
                 }
             });
 
@@ -526,7 +526,7 @@ define([
         morphOrthographicToPerspective(transitioner, duration, ellipsoid, completeFrustumChange);
     }
 
-    function morphFrom3DToColumbusView(transitioner, duration, endCamera, onComplete) {
+    function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera.setTransform(Matrix4.IDENTITY);
@@ -556,8 +556,8 @@ define([
             stopValue : {
                 time : 1.0
             },
-            onUpdate : update,
-            onComplete : function() {
+            update : update,
+            complete : function() {
                 camera.position = endPos;
                 camera.direction = endDir;
                 camera.up = endUp;
@@ -567,19 +567,19 @@ define([
         });
         transitioner._currentAnimations.push(animation);
 
-        addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, onComplete);
+        addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, complete);
     }
 
-    function addMorphTimeAnimations(transitioner, scene, start, stop, duration, onComplete) {
+    function addMorphTimeAnimations(transitioner, scene, start, stop, duration, complete) {
         // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
         var template = {
             duration : duration,
             easingFunction : Tween.Easing.Quartic.Out
         };
 
-        if (defined(onComplete)) {
-            template.onComplete = function() {
-                onComplete(transitioner);
+        if (defined(complete)) {
+            template.complete = function() {
+                complete(transitioner);
             };
         }
 

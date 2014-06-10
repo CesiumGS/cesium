@@ -102,24 +102,22 @@ defineSuite([
     it('creates an animation', function() {
         var destination = new Cartesian3(1e9, 1e9, 1e9);
         var duration = 5000.0;
-        var onComplete = function() {
-            return true;
+        var complete = function() {
         };
-        var onCancel = function() {
-            return true;
+        var cancel = function() {
         };
 
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete,
-            onCancel: onCancel
+            complete : complete,
+            cancel: cancel
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(typeof flight.onComplete).toEqual('function');
-        expect(typeof flight.onCancel).toEqual('function');
-        expect(typeof flight.onUpdate).toEqual('function');
+        expect(typeof flight.complete).toEqual('function');
+        expect(typeof flight.cancel).toEqual('function');
+        expect(typeof flight.update).toEqual('function');
         expect(flight.startValue).toBeDefined();
         expect(flight.stopValue).toBeDefined();
         expect(flight.easingFunction).toBeDefined();
@@ -128,24 +126,22 @@ defineSuite([
     it('creates an animation with rectangle', function() {
         var destination = new Rectangle(-1, -1, 1, 1);
         var duration = 5000.0;
-        var onComplete = function() {
-            return true;
+        var complete = function() {
         };
-        var onCancel = function() {
-            return true;
+        var cancel = function() {
         };
 
         var flight = CameraFlightPath.createAnimationRectangle(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete,
-            onCancel: onCancel
+            complete : complete,
+            cancel: cancel
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(typeof flight.onComplete).toEqual('function');
-        expect(typeof flight.onCancel).toEqual('function');
-        expect(typeof flight.onUpdate).toEqual('function');
+        expect(typeof flight.complete).toEqual('function');
+        expect(typeof flight.cancel).toEqual('function');
+        expect(typeof flight.update).toEqual('function');
         expect(flight.startValue).toBeDefined();
         expect(flight.stopValue).toBeDefined();
         expect(flight.easingFunction).toBeDefined();
@@ -170,12 +166,12 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
@@ -203,12 +199,12 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position).toEqualEpsilon(endPosition, 1);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
@@ -241,12 +237,12 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position).toEqualEpsilon(destination, CesiumMath.EPSILON4);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
@@ -281,12 +277,12 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON6);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON6);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON6);
@@ -321,13 +317,13 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
         expect(camera.frustum.right - camera.frustum.left).toEqual(startHeight);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position.x).toEqualEpsilon(destination.x, CesiumMath.EPSILON8);
         expect(camera.position.y).toEqualEpsilon(destination.y, CesiumMath.EPSILON8);
         expect(camera.position.z).toEqualEpsilon(startPosition.z, CesiumMath.EPSILON8);
@@ -366,13 +362,13 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(startPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(startDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(startUp, CesiumMath.EPSILON12);
         expect(camera.frustum.right - camera.frustum.left).toEqual(startHeight);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position.x).toEqualEpsilon(endPosition.x, CesiumMath.EPSILON8);
         expect(camera.position.y).toEqualEpsilon(endPosition.y, CesiumMath.EPSILON8);
         expect(camera.position.z).toEqualEpsilon(startPosition.z, CesiumMath.EPSILON8);
@@ -392,10 +388,10 @@ defineSuite([
             duration : duration
         });
 
-        flight.onUpdate({ time : 0.0 });
+        flight.update({ time : 0.0 });
         expect(camera.position).toEqualEpsilon(start, CesiumMath.EPSILON12);
 
-        flight.onUpdate({ time : duration });
+        flight.update({ time : duration });
         expect(camera.position).toEqualEpsilon(end, CesiumMath.EPSILON12);
     });
 
@@ -427,21 +423,21 @@ defineSuite([
     it('creates an animation with 0 duration', function() {
         var destination = new Cartesian3(1e9, 1e9, 1e9);
         var duration = 0;
-        var onComplete = function() {
+        var complete = function() {
             return true;
         };
 
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : destination,
             duration : duration,
-            onComplete : onComplete
+            complete : complete
         });
 
         expect(flight.duration).toEqual(duration);
-        expect(flight.onComplete).not.toEqual(onComplete);
-        expect(flight.onUpdate).toBeUndefined();
+        expect(flight.complete).not.toEqual(complete);
+        expect(flight.update).toBeUndefined();
         expect(frameState.camera.position).not.toEqual(destination);
-        flight.onComplete();
+        flight.complete();
         expect(frameState.camera.position).toEqual(destination);
     });
 
@@ -531,8 +527,8 @@ defineSuite([
             duration : 0
         });
 
-        expect(typeof flight.onComplete).toEqual('function');
-        flight.onComplete();
+        expect(typeof flight.complete).toEqual('function');
+        flight.complete();
         expect(camera.position.x).toEqualEpsilon(destination.x, CesiumMath.EPSILON8);
         expect(camera.position.y).toEqualEpsilon(destination.y, CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON8);
@@ -560,8 +556,8 @@ defineSuite([
             duration : 0
         });
 
-        expect(typeof flight.onComplete).toEqual('function');
-        flight.onComplete();
+        expect(typeof flight.complete).toEqual('function');
+        flight.complete();
         expect(camera.position).toEqualEpsilon(destination, CesiumMath.EPSILON8);
     });
 
@@ -583,8 +579,8 @@ defineSuite([
             duration : 0
         });
 
-        expect(typeof flight.onComplete).toEqual('function');
-        flight.onComplete();
+        expect(typeof flight.complete).toEqual('function');
+        flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
         expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
         expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);

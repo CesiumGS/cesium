@@ -49,16 +49,16 @@ define([
             var tween = new Tween.Tween(value);
             // set the callback on the instance to avoid extra bookkeeping
             // or patching Tween.js
-            tween.onCancel = options.onCancel;
+            tween.cancel = options.cancel;
             tween.to(options.stopValue, options.duration);
             tween.delay(delayDuration);
             tween.easing(easingFunction);
-            if (typeof options.onUpdate === 'function') {
+            if (typeof options.update === 'function') {
                 tween.onUpdate(function() {
-                    options.onUpdate(value);
+                    options.update(value);
                 });
             }
-            tween.onComplete(defaultValue(options.onComplete, null));
+            tween.onComplete(defaultValue(options.complete, null));
 
             // start then stop to remove the tween from the global array
             tween.start().stop();
@@ -67,8 +67,8 @@ define([
             return {
                 _tween : tween
             };
-        } else if (typeof options.onComplete === 'function') {
-            options.onComplete();
+        } else if (typeof options.complete === 'function') {
+            options.complete();
         }
     };
 
@@ -136,7 +136,7 @@ define([
                 material.uniforms[properties[i]].alpha = value.alpha;
             }
         });
-        tween.onComplete(defaultValue(options.onComplete, null));
+        tween.onComplete(defaultValue(options.complete, null));
 
         // start then stop to remove the tween from the global array
         tween.start().stop();
@@ -182,7 +182,7 @@ define([
         tween.onUpdate(function() {
             object[property] = value.value;
         });
-        tween.onComplete(defaultValue(options.onComplete, null));
+        tween.onComplete(defaultValue(options.complete, null));
 
         // start then stop to remove the tween from the global array
         tween.start().stop();
@@ -225,7 +225,7 @@ define([
         tween.onUpdate(function() {
             material.uniforms.offset = value.offset;
         });
-        // options.onComplete is ignored.
+        // options.stop is ignored.
         tween.repeat(Infinity);
 
         // start then stop to remove the tween from the global array
@@ -248,8 +248,8 @@ define([
         var tween = animation._tween;
         var index = this._tweens.indexOf(tween);
         if (index !== -1) {
-            if (typeof tween.onCancel === 'function') {
-                tween.onCancel();
+            if (typeof tween.cancel === 'function') {
+                tween.cancel();
             }
             this._tweens.splice(index, 1);
             return true;
@@ -264,8 +264,8 @@ define([
     AnimationCollection.prototype.removeAll = function() {
         for (var i = 0; i < this._tweens.length; ++i) {
             var tween = this._tweens[i];
-            if (typeof tween.onCancel === 'function') {
-                tween.onCancel();
+            if (typeof tween.cancel === 'function') {
+                tween.cancel();
             }
         }
         this._tweens.length = 0;

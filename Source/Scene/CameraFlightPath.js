@@ -436,8 +436,8 @@ define([
             };
             return wrapped;
         };
-        var onComplete = wrapCallback(options.onComplete);
-        var onCancel = wrapCallback(options.onCancel);
+        var complete = wrapCallback(options.complete);
+        var cancel = wrapCallback(options.cancel);
 
         var transform = options.endTransform;
         if (defined(transform)) {
@@ -449,15 +449,15 @@ define([
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
                     duration : 0,
-                    onComplete : onComplete,
-                    onCancel: onCancel
+                    complete : complete,
+                    cancel: cancel
                 };
             }
         } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
                 duration : 0,
-                onComplete : onComplete,
-                onCancel: onCancel
+                complete : complete,
+                cancel: cancel
             };
         }
 
@@ -500,14 +500,14 @@ define([
                     frustum.bottom = -frustum.top;
                 }
 
-                if (typeof onComplete === 'function') {
-                    onComplete();
+                if (typeof complete === 'function') {
+                    complete();
                 }
             };
             return {
                 duration : 0,
-                onComplete : newOnComplete,
-                onCancel: onCancel
+                complete : newOnComplete,
+                cancel: cancel
             };
         }
 
@@ -529,9 +529,9 @@ define([
             stopValue : {
                 time : duration
             },
-            onUpdate : update,
-            onComplete : onComplete,
-            onCancel: onCancel
+            update : update,
+            complete : complete,
+            cancel: cancel
         };
     };
 
