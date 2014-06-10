@@ -151,5 +151,16 @@ define([
         return false;
     };
 
+    /**
+     * Gets a value indicating whether or not the provider includes vertex normals.
+     *
+     * @memberof EllipsoidTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has vertex normals; otherwise, false.
+     */
+    EllipsoidTerrainProvider.prototype.hasVertexNormals = function() {
+        return false;
+    };
+
     return EllipsoidTerrainProvider;
 });

@@ -277,6 +277,17 @@ define([
         return false;
     };
 
+    /**
+     * Gets a value indicating whether or not the provider includes vertex normals.
+     *
+     * @memberof VRTheWorldTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has vertex normals; otherwise, false.
+     */
+    VRTheWorldTerrainProvider.prototype.hasVertexNormals = function() {
+        return false;
+    };
+
     var rectangleScratch = new Rectangle();
 
     function getChildMask(provider, x, y, level) {

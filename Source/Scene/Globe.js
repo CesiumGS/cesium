@@ -252,6 +252,7 @@ define([
         this._zoomedOutOceanSpecularIntensity = 0.5;
         this._showingPrettyOcean = false;
         this._hasWaterMask = false;
+        this._hasVertexNormals = false;
         this._lightingFadeDistance = new Cartesian2(this.lightingFadeOutDistance, this.lightingFadeInDistance);
 
         var that = this;
@@ -666,7 +667,9 @@ define([
 
         // Initial compile or re-compile if uber-shader parameters changed
         var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
+        var hasVertexNormals = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasVertexNormals();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
+        var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;
 
         if (!defined(this._surfaceShaderSet) ||
@@ -674,6 +677,7 @@ define([
             !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
             hasWaterMaskChanged ||
+            hasVertexNormalsChanged ||
             hasEnableLightingChanged ||
             (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
 
@@ -724,7 +728,7 @@ define([
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
                     (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
-                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                    (this.enableLighting && hasVertexNormals ? 'ENABLE_LIGHTING' : '')
                 ],
                 sources : [GlobeFS]
             });

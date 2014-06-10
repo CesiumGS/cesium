@@ -229,5 +229,16 @@ define([
         return false;
     };
 
+    /**
+     * Gets a value indicating whether or not the provider includes vertex normals
+     *
+     * @memberof ArcGisImageServerTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has vertex normals; otherwise, false.
+     */
+    ArcGisImageServerTerrainProvider.prototype.hasVertexNormals = function() {
+        return false;
+    };
+
     return ArcGisImageServerTerrainProvider;
 });

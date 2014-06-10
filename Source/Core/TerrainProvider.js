@@ -181,5 +181,15 @@ define([
      */
     TerrainProvider.prototype.hasWaterMask = DeveloperError.throwInstantiationError;
 
+    /**
+     * Gets a value indicating whether or not the provider includes vertex normals.
+     * This function should not be called before {@link TerrainProvider#ready} returns true.
+     * @memberof TerrainProvider
+     * @function
+     *
+     * @returns {Boolean} True if the provider will supply vertex normals; otherwise, false.
+     */
+    TerrainProvider.prototype.hasVertexNormals = DeveloperError.throwInstantiationError;
+
     return TerrainProvider;
 });

@@ -79,6 +79,8 @@ define([
 
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
+        this._hasVertexNormals = false;     // does the server provide vertex normals?
+        this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);       // does the client even want these normals?
 
         this._errorEvent = new Event();
 
@@ -144,6 +146,10 @@ define([
                 that._credit = new Credit(data.attribution);
             }
 
+            if (defined(data.extensions) && data.extensions.indexOf("vertexnormals") > -1) {
+                that._hasVertexNormals = true;
+            }
+
             that._ready = true;
         }
 
@@ -173,12 +179,23 @@ define([
         requestMetadata();
     };
 
-    var requestHeaders = {
-            Accept : 'application/octet-stream,*/*;q=0.01'
+    var requestHeadersVertexNormals = {
+            // prefer quantized-mesh media-type
+            // only request vertex normals if Lighting is enabled on the CesiumTerrainProvider
+            Accept : 'application/vnd.quantized-mesh;extensions=vertexnormals,application/octet-stream;q=0.9,*/*;q=0.01'
+    };
+
+    function loadTileVertexNormals(url) {
+        return loadArrayBuffer(url, requestHeadersVertexNormals);
+    }
+
+    var requestHeadersDefault = {
+            // prefer quantized-mesh media-type
+            Accept : 'application/vnd.quantized-mesh,application/octet-stream;q=0.9,*/*;q=0.01'
     };
 
     function loadTile(url) {
-        return loadArrayBuffer(url, requestHeaders);
+        return loadArrayBuffer(url, requestHeadersDefault);
     }
 
     function createHeightmapTerrainData(provider, buffer, level, x, y, tmsY) {
@@ -299,8 +316,15 @@ define([
         pos += northVertexCount * uint16Length;
 
         var encodedNormalBuffer;
+        if (pos < view.byteLength) {
+            var extensionsflag = view.getInt8(pos);
+            pos += uint8Length;
+
+            if (extensionsflag | 0x1) {
         encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
         pos += vertexCount * 2 * uint8Length;
+            }
+        }
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
@@ -369,14 +393,19 @@ define([
 
         var promise;
 
+        var tileLoader = loadTile;
+        if (this._requestVertexNormals && this._hasVertexNormals) {
+            tileLoader = loadTileVertexNormals;
+        }
+
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadTile);
+            promise = throttleRequestByServer(url, tileLoader);
             if (!defined(promise)) {
                 return undefined;
             }
         } else {
-            promise = loadTile(url);
+            promise = tileLoader(url);
         }
 
         var that = this;
@@ -448,6 +477,21 @@ define([
             get : function() {
                 return this._ready;
             }
+        },
+
+        /**
+         * Gets or sets a value indicating whether or to request vertex normals from the server. This
+         * property has no effect if {@link CesiumTerrainProvider#hasVertexNormals} is false.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         */
+        requestVertexNormals : {
+            get : function() {
+                return this._requestVertexNormals;
+            },
+            set : function(value) {
+                this._requestVertexNormals = value;
+            }
         }
     });
 
@@ -479,6 +523,27 @@ define([
         //>>includeEnd('debug');
 
         return this._hasWaterMask;
+    };
+
+    /**
+     * Gets a value indicating whether or not vertex normals can be requested from the server.
+     *
+     * @memberof CesiumTerrainProvider
+     *
+     * @returns {Boolean} True if the provider has vertex normals; otherwise, false.
+     *
+     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
+     *            returns true.
+     */
+    CesiumTerrainProvider.prototype.hasVertexNormals = function() {
+        //>>includeStart('debug', pragmas.debug)
+        if (!this._ready) {
+            throw new DeveloperError('hasVertexNormals must not be called before the terrain provider is ready.');
+        }
+        //>>includeEnd('debug');
+
+        // returns true if we can request vertex normals from the server
+        return this._hasVertexNormals && this._requestVertexNormals;
     };
 
     function getChildMaskForTile(terrainProvider, level, x, y) {
