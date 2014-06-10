@@ -41,13 +41,13 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('throws if description is undefined', function() {
+    it('throws if options is undefined', function() {
         expect(function() {
             return new PerformanceWatchdog(undefined);
         }).toThrowDeveloperError();
     });
 
-    it('throws if description.container is undefined', function() {
+    it('throws if options.container is undefined', function() {
         expect(function() {
             return new PerformanceWatchdog({
                 container : undefined,
@@ -56,7 +56,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws if description.scene is undefined', function() {
+    it('throws if options.scene is undefined', function() {
         var container = document.createElement('span');
         container.id = 'testContainer';
         document.body.appendChild(container);
