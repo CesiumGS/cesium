@@ -472,6 +472,15 @@ define([
         return distance * ratio;
     }
 
+    var scratchAdjustForTerrainCart = new Cartographic();
+    var scratchAdjustForTerrainCenter = new Cartesian3();
+    var scratchAdjustForTerrainAxis = new Cartesian3();
+    var scratchQuaternion = new Quaternion();
+    var scratchRotation = new Matrix3();
+    var scratchAdjustForTerrainStart = new Cartesian3();
+    var scratchAdjustForTerrainStop = new Cartesian3();
+    var scratchRayArray = [];
+
     function adjustRotateForTerrain(controller, frameState, center, radius, axis, angle, globeOverride) {
         var globe = defaultValue(globeOverride, controller._globe);
         if (!defined(globe)) {
@@ -481,23 +490,30 @@ define([
         var camera = controller._camera;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            var cart = frameState.mapProjection.ellipsoid.cartesianToCartographic(center);
-            center = frameState.mapProjection.project(cart);
-            center = Cartesian3.fromElements(center.z, center.x, center.y);
-            axis = Cartesian3.fromElements(axis.z, axis.x, axis.y);
+            var cart = frameState.mapProjection.ellipsoid.cartesianToCartographic(center, scratchAdjustForTerrainCart);
+            center = frameState.mapProjection.project(cart, scratchAdjustForTerrainCenter);
+            center = Cartesian3.fromElements(center.z, center.x, center.y, center);
+            axis = Cartesian3.fromElements(axis.z, axis.x, axis.y, scratchAdjustForTerrainAxis);
         }
 
         var numRays = Math.min(Math.ceil(radius * Math.abs(angle) / 1000.0), 1.0);
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays));
-        var start = Cartesian3.subtract(camera.positionWC, center);
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays, scratchQuaternion), scratchRotation);
+        var start = Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart);
 
-        var rays = [];
+        var rays = scratchRayArray;
+        rays.length = numRays;
+
         for (var i = 0; i < numRays; ++i) {
-            var stop = Matrix3.multiplyByVector(rotation, start);
-            var direction = Cartesian3.subtract(stop, start);
-            var origin = Cartesian3.add(center, start);
-            rays.push(new Ray(origin, direction));
-            start = stop;
+            var stop = Matrix3.multiplyByVector(rotation, start, scratchAdjustForTerrainStop);
+
+            var ray = rays[i];
+            if (!defined(ray)) {
+                ray = rays[i] = new Ray();
+            }
+
+            var direction = Cartesian3.subtract(stop, start, ray.direction);
+            var origin = Cartesian3.add(center, start, ray.origin);
+            start = Cartesian3.clone(stop, start);
         }
 
         var intersection = globe.intersect(rays, frameState, adjustForTerrainCartesian3);
@@ -505,9 +521,9 @@ define([
             return angle;
         }
 
-        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center));
-        var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center));
-        var newAngle = Math.acos(Cartesian3.dot(startDirection, endDirection));
+        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart), scratchAdjustForTerrainStart);
+        var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center, scratchAdjustForTerrainStop), scratchAdjustForTerrainStop);
+        var newAngle = CesiumMath.acosClamped(Cartesian3.dot(startDirection, endDirection));
         return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance / radius, 0.0, Math.abs(angle));
     }
 
