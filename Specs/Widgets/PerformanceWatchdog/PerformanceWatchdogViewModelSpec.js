@@ -76,9 +76,9 @@ defineSuite([
 
     it('shows a message on low frame rate', function() {
         var monitor = FrameRateMonitor.fromScene(scene);
-        monitor.quietPeriod = 1;
-        monitor.warmupPeriod = 1;
-        monitor.samplingWindow = 1;
+        monitor.quietPeriod = 0.001;
+        monitor.warmupPeriod = 0.001;
+        monitor.samplingWindow = 0.001;
         monitor.minimumFrameRateDuringWarmup = 1000;
         monitor.minimumFrameRateAfterWarmup = 1000;
 
@@ -107,9 +107,9 @@ defineSuite([
 
     it('does not report a low frame rate during the queit period', function() {
         var monitor = FrameRateMonitor.fromScene(scene);
-        monitor.quietPeriod = 1000;
-        monitor.warmupPeriod = 1;
-        monitor.samplingWindow = 1;
+        monitor.quietPeriod = 1.0;
+        monitor.warmupPeriod = 0.001;
+        monitor.samplingWindow = 0.001;
         monitor.minimumFrameRateDuringWarmup = 1000;
         monitor.minimumFrameRateAfterWarmup = 1000;
 
@@ -130,9 +130,9 @@ defineSuite([
 
     it('the low frame rate message goes away after the warmup period if the frame rate returns to nominal', function() {
         var monitor = FrameRateMonitor.fromScene(scene);
-        monitor.quietPeriod = 1;
-        monitor.warmupPeriod = 1;
-        monitor.samplingWindow = 1;
+        monitor.quietPeriod = 0.001;
+        monitor.warmupPeriod = 0.001;
+        monitor.samplingWindow = 0.001;
         monitor.minimumFrameRateDuringWarmup = 10;
         monitor.minimumFrameRateAfterWarmup = 10;
 
@@ -170,9 +170,9 @@ defineSuite([
 
     it('does not show the low frame rate message again once it is dismissed', function() {
         var monitor = FrameRateMonitor.fromScene(scene);
-        monitor.quietPeriod = 1;
-        monitor.warmupPeriod = 1;
-        monitor.samplingWindow = 1;
+        monitor.quietPeriod = 0.001;
+        monitor.warmupPeriod = 0.001;
+        monitor.samplingWindow = 0.001;
         monitor.minimumFrameRateDuringWarmup = 1000;
         monitor.minimumFrameRateAfterWarmup = 1000;
 

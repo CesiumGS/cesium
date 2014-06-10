@@ -6,7 +6,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/getTimestamp'
+        '../Core/getTimestamp',
+        '../Core/TimeConstants'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +15,8 @@ define([
         destroyObject,
         DeveloperError,
         Event,
-        getTimestamp) {
+        getTimestamp,
+        TimeConstants) {
     "use strict";
 
     /**
@@ -28,10 +30,10 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Scene} options.scene The Scene instance for which to monitor performance.
-     * @param {Number} [options.samplingWindow=5000] The length of the sliding window over which to compute the average frame rate, in milliseconds.
-     * @param {Number} [options.quietPeriod=2000] The length of time to wait at startup and each time the page becomes visible (i.e. when the user
-     *        switches back to the tab) before starting to measure performance, in milliseconds.
-     * @param {Number} [options.warmupPeriod=5000] The length of the warmup period, in milliseconds.  During the warmup period, a separate
+     * @param {Number} [options.samplingWindow=5.0] The length of the sliding window over which to compute the average frame rate, in seconds.
+     * @param {Number} [options.quietPeriod=2.0] The length of time to wait at startup and each time the page becomes visible (i.e. when the user
+     *        switches back to the tab) before starting to measure performance, in seconds.
+     * @param {Number} [options.warmupPeriod=5.0] The length of the warmup period, in seconds.  During the warmup period, a separate
      *        (usually lower) frame rate is required.
      * @param {Number} [options.minimumFrameRateDuringWarmup=4] The minimum frames-per-second that are required for acceptable performance during
      *        the warmup period.  If the frame rate averages less than this during any samplingWindow during the warmupPeriod, the
@@ -50,20 +52,20 @@ define([
         this._scene = options.scene;
 
         /**
-         * Gets or sets the length of the sliding window over which to compute the average frame rate, in milliseconds.
+         * Gets or sets the length of the sliding window over which to compute the average frame rate, in seconds.
          * @type {Number}
          */
         this.samplingWindow = defaultValue(options.samplingWindow, FrameRateMonitor.defaultSettings.samplingWindow);
 
         /**
          * Gets or sets the length of time to wait at startup and each time the page becomes visible (i.e. when the user
-         * switches back to the tab) before starting to measure performance, in milliseconds.
+         * switches back to the tab) before starting to measure performance, in seconds.
          * @type {Number}
          */
         this.quietPeriod = defaultValue(options.quietPeriod, FrameRateMonitor.defaultSettings.quietPeriod);
 
         /**
-         * Gets or sets the length of the warmup period, in milliseconds.  During the warmup period, a separate
+         * Gets or sets the length of the warmup period, in seconds.  During the warmup period, a separate
          * (usually lower) frame rate is required.
          * @type {Number}
          */
@@ -133,9 +135,9 @@ define([
      * @memberof FrameRateMonitor
      */
     FrameRateMonitor.defaultSettings = {
-        samplingWindow : 5000,
-        quietPeriod : 2000,
-        warmupPeriod : 5000,
+        samplingWindow : 5.0,
+        quietPeriod : 2.0,
+        warmupPeriod : 5.0,
         minimumFrameRateDuringWarmup : 4,
         minimumFrameRateAfterWarmup : 8
     };
@@ -291,12 +293,12 @@ define([
         if (monitor._needsQuietPeriod) {
             monitor._needsQuietPeriod = false;
             monitor._frameTimes.length = 0;
-            monitor._quietPeriodEndTime = timeStamp + monitor.quietPeriod;
-            monitor._warmupPeriodEndTime = monitor._quietPeriodEndTime + monitor.warmupPeriod + monitor.samplingWindow;
+            monitor._quietPeriodEndTime = timeStamp + (monitor.quietPeriod / TimeConstants.SECONDS_PER_MILLISECOND);
+            monitor._warmupPeriodEndTime = monitor._quietPeriodEndTime + ((monitor.warmupPeriod + monitor.samplingWindow) / TimeConstants.SECONDS_PER_MILLISECOND);
         } else if (timeStamp >= monitor._quietPeriodEndTime) {
             monitor._frameTimes.push(timeStamp);
 
-            var beginningOfWindow = timeStamp - monitor.samplingWindow;
+            var beginningOfWindow = timeStamp - (monitor.samplingWindow / TimeConstants.SECONDS_PER_MILLISECOND);
 
             if (monitor._frameTimes.length >= 2 && monitor._frameTimes[0] <= beginningOfWindow) {
                 while (monitor._frameTimes.length >= 2 && monitor._frameTimes[1] < beginningOfWindow) {
