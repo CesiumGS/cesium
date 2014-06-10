@@ -113,7 +113,7 @@ define([
      *
      * @example
      * // Example 2. Add an animation and provide all properties and events
-     * var startTime = new JulianDate();
+     * var startTime = JulianDate.now();
      *
      * var animation = model.activeAnimations.add({
      *   name : 'another animation name',

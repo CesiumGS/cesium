@@ -137,7 +137,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
         time = JulianDate.addSeconds(time, secondsDiff);
 
@@ -159,7 +159,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works after noon', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
         time = JulianDate.addSeconds(time, secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
 
@@ -181,7 +181,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works with a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
         time = JulianDate.addSeconds(time, secondsDiff);
 

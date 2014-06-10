@@ -77,7 +77,7 @@ defineSuite([
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -90,7 +90,7 @@ defineSuite([
         var cone = testObject.cone = new DynamicCone();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -103,12 +103,12 @@ defineSuite([
         var cone = testObject.cone = new DynamicCone();
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicCone causes a ComplexConicSensor to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
@@ -150,7 +150,7 @@ defineSuite([
     });
 
     it('IntersectionColor is set correctly with multiple cones.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
@@ -179,7 +179,7 @@ defineSuite([
     });
 
     it('An empty DynamicCone causes a ComplexConicSensor to be created with CZML defaults.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
 
@@ -211,7 +211,7 @@ defineSuite([
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         expect(scene.primitives.length).toEqual(0);
         visualizer.update(time);
         expect(scene.primitives.length).toEqual(1);
@@ -233,7 +233,7 @@ defineSuite([
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         visualizer.update(time);
         expect(scene.primitives.get(0).id).toEqual(testObject);
     });

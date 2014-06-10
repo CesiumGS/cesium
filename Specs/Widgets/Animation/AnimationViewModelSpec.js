@@ -426,7 +426,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
 
         //UNBOUNDED but available when start/stop time does not include realtime
-        clockViewModel.systemTime = new JulianDate();
+        clockViewModel.systemTime = JulianDate.now();
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
         clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
         clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, -30);

@@ -58,7 +58,7 @@ defineSuite([
     it('update throws without dynamicObject property', function() {
         var view = new DynamicObjectView(undefined, scene);
         expect(function() {
-            view.update(new JulianDate());
+            view.update(JulianDate.now());
         }).toThrowDeveloperError();
 
     });
@@ -68,7 +68,7 @@ defineSuite([
         dynamicObject.position = new ConstantPositionProperty(Cartesian3.ZERO);
         var view = new DynamicObjectView(dynamicObject, undefined);
         expect(function() {
-            view.update(new JulianDate());
+            view.update(JulianDate.now());
         }).toThrowDeveloperError();
     });
 
@@ -78,7 +78,7 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, scene);
         view.ellipsoid = undefined;
         expect(function() {
-            view.update(new JulianDate());
+            view.update(JulianDate.now());
         }).toThrowDeveloperError();
     });
 
@@ -86,7 +86,7 @@ defineSuite([
         var dynamicObject = new DynamicObject();
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
-            view.update(new JulianDate());
+            view.update(JulianDate.now());
         }).toThrowDeveloperError();
     });
 }, 'WebGL');

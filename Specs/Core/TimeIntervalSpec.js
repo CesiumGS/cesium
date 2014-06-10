@@ -13,7 +13,7 @@ defineSuite([
     }
 
     it('Construction correctly sets all properties.', function() {
-        var start = new JulianDate();
+        var start = JulianDate.now();
         var stop = JulianDate.addDays(start, 1);
         var isStartIncluded = false;
         var isStopIncluded = true;
@@ -28,7 +28,7 @@ defineSuite([
     });
 
     it('Optional constructor parameters initialize properties to expected defaults.', function() {
-        var start = new JulianDate();
+        var start = JulianDate.now();
         var stop = JulianDate.addDays(start, 1);
         var interval = new TimeInterval(start, stop);
         expect(interval.start).toEqual(start);
@@ -40,13 +40,13 @@ defineSuite([
 
     it('throws when constructing with an undefined start', function() {
         expect(function() {
-            return new TimeInterval(undefined, new JulianDate());
+            return new TimeInterval(undefined, JulianDate.now());
         }).toThrowDeveloperError();
     });
 
     it('throws when constructing with an undefined stop', function() {
         expect(function() {
-            return new TimeInterval(new JulianDate());
+            return new TimeInterval(JulianDate.now());
         }).toThrowDeveloperError();
     });
 

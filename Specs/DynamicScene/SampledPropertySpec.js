@@ -198,7 +198,7 @@ defineSuite([
     it('mergeNewSamples works with huge data sets.', function() {
         var times = [];
         var values = [];
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var data = [];
         var expectedTimes = [];
@@ -220,7 +220,7 @@ defineSuite([
     it('mergeNewSamples works for sorted non-intersecting data.', function() {
         var times = [];
         var values = [];
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var newData = [0, 'a', 1, 'b', 2, 'c'];
         var newData2 = [3, 'd', 4, 'e', 5, 'f'];
@@ -256,7 +256,7 @@ defineSuite([
     it('mergeNewSamples works for elements of size 2.', function() {
         var times = [];
         var values = [];
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var newData = [1, 'b', 'b', 4, 'e', 'e', 0, 'a', 'a'];
         var newData2 = [2, 'c', 'c', 3, 'd', 'd'];
@@ -274,7 +274,7 @@ defineSuite([
     it('mergeNewSamples works for unsorted intersecting data.', function() {
         var times = [];
         var values = [];
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var newData = [1, 'b', 4, 'e', 0, 'a'];
         var newData2 = [5, 'f', 2, 'c', 3, 'd'];
@@ -292,7 +292,7 @@ defineSuite([
     it('mergeNewSamples works for data with repeated values.', function() {
         var times = [];
         var values = [];
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var newData = [0, 'a', 1, 'b', 1, 'c', 0, 'd', 4, 'e', 5, 'f'];
         var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
@@ -366,7 +366,7 @@ defineSuite([
         var right = new SampledProperty(Number);
         expect(left.equals(right)).toEqual(true);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         left.addSample(time, 5);
         expect(left.equals(right)).toEqual(false);
 

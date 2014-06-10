@@ -64,7 +64,7 @@ define([
         var currentTimeUndefined = !defined(currentTime);
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
-            currentTime = new JulianDate();
+            currentTime = JulianDate.now();
             startTime = JulianDate.clone(currentTime);
             stopTime = JulianDate.addDays(currentTime, 1.0);
         } else if (startTimeUndefined && stopTimeUndefined) {
@@ -172,7 +172,7 @@ define([
 
         if (this.canAnimate && this.shouldAnimate) {
             if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-                currentTime = new JulianDate();
+                currentTime = JulianDate.now();
             } else {
                 if (this.clockStep === ClockStep.TICK_DEPENDENT) {
                     currentTime = JulianDate.addSeconds(currentTime, multiplier);

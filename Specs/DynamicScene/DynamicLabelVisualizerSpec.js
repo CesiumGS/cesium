@@ -85,7 +85,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
     });
@@ -99,7 +99,7 @@ defineSuite([
         label.show = new ConstantProperty(true);
         label.text = new ConstantProperty('lorum ipsum');
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
     });
@@ -113,7 +113,7 @@ defineSuite([
         var label = testObject.label = new DynamicLabel();
         label.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var labelCollection = scene.primitives.get(0);
         expect(labelCollection.length).toEqual(0);
     });
@@ -127,7 +127,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var label = testObject.label = new DynamicLabel();
         var l;
 
@@ -216,7 +216,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var label = testObject.label = new DynamicLabel();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -244,7 +244,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var label = testObject.label = new DynamicLabel();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));

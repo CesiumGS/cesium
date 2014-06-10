@@ -19,7 +19,7 @@ defineSuite([
 
     it('isAvailable is always true if no availability defined.', function() {
         var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.isAvailable(new JulianDate())).toEqual(true);
+        expect(dynamicObject.isAvailable(JulianDate.now())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {

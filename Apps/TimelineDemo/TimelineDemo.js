@@ -214,7 +214,7 @@ define([
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');
 
-        var today = new JulianDate();
+        var today = JulianDate.now();
         var tomorrow = JulianDate.addDays(today, 1);
         dijit.byId('startCal').set('value', JulianDate.toDate(today));
         dijit.byId('endCal').set('value', JulianDate.toDate(tomorrow));

@@ -167,76 +167,38 @@ define([
     var iso8601ErrorMessage = 'Valid ISO 8601 date string required.';
 
     /**
-     * Constructs a JulianDate instance from a Julian day number, the number of seconds elapsed
-     * into that day, and the time standard which the parameters are in.  Passing no parameters will
-     * construct a JulianDate that represents the current system time.
-     *
-     * An astronomical Julian date is the number of days since noon on January 1, -4712 (4713 BC).
+     * Represents an astronomical Julian date, which is the number of days since noon on January 1, -4712 (4713 BC).
      * For increased precision, this class stores the whole number part of the date and the seconds
      * part of the date in separate components.  In order to be safe for arithmetic and represent
      * leap seconds, the date is always stored in the International Atomic Time standard
      * {@link TimeStandard.TAI}.
-     *
      * @alias JulianDate
      * @constructor
-     * @immutable
      *
      * @param {Number} julianDayNumber The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
      * @param {Number} julianSecondsOfDay The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
-     *
-     * @exception {DeveloperError} timeStandard is not a known TimeStandard.
-     *
-     * @see JulianDate.fromDate
-     * @see JulianDate.fromTotalDays
-     * @see JulianDate.fromIso8601
-     * @see TimeStandard
-     * @see LeapSecond
-     *
-     * @example
-     * // Example 1. Construct a JulianDate representing the current system time.
-     * var julianDate = new Cesium.JulianDate();
-     *
-     * @example
-     * // Example 2. Construct a JulianDate from a Julian day number and seconds of the day.
-     * var julianDayNumber = 2448257;   // January 1, 1991
-     * var secondsOfDay = 21600;        // 06:00:00
-     * var julianDate = new Cesium.JulianDate(julianDayNumber, secondsOfDay, Cesium.TimeStandard.UTC);
      */
     var JulianDate = function(julianDayNumber, julianSecondsOfDay, timeStandard) {
+        /**
+         * Gets or sets the number of whole days.
+         * @type {Number}
+         */
         this.dayNumber = undefined;
+
+        /**
+         * Gets or sets the number of seconds into the current day.
+         * @type {Number}
+         */
         this.secondsOfDay = undefined;
 
-        var wholeDays;
-        var secondsOfDay;
-        //If any of the properties are defined, then we are constructing from components.
-        if (defined(julianDayNumber) || defined(julianSecondsOfDay) || defined(timeStandard)) {
-            timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
+        julianDayNumber = defaultValue(julianDayNumber, 0.0);
+        julianSecondsOfDay = defaultValue(julianSecondsOfDay, 0.0);
+        timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
 
-            //>>includeStart('debug', pragmas.debug);
-            if (timeStandard !== TimeStandard.UTC && timeStandard !== TimeStandard.TAI) {
-                throw new DeveloperError('timeStandard is not a known TimeStandard.');
-            }
-            if (julianDayNumber === null || isNaN(julianDayNumber)) {
-                throw new DeveloperError('julianDayNumber is required.');
-            }
-            if (julianSecondsOfDay === null || isNaN(julianSecondsOfDay)) {
-                throw new DeveloperError('julianSecondsOfDay is required.');
-            }
-            //>>includeEnd('debug');
-
-            //coerce to integer
-            wholeDays = julianDayNumber | 0;
-            //If julianDayNumber was fractional, add the number of seconds the fraction represented
-            secondsOfDay = julianSecondsOfDay + (julianDayNumber - wholeDays) * TimeConstants.SECONDS_PER_DAY;
-        } else {
-            //Create a new date from the current time.
-            var date = new Date();
-            var components = computeJulianDateComponentsFromDate(date);
-            wholeDays = components[0];
-            secondsOfDay = components[1];
-            timeStandard = TimeStandard.UTC;
-        }
+        //If julianDayNumber was fractional, make it an integer and add the number of seconds the fraction represented
+        var wholeDays = julianDayNumber | 0;
+        var secondsOfDay = julianSecondsOfDay + (julianDayNumber - wholeDays) * TimeConstants.SECONDS_PER_DAY;
 
         setComponents(wholeDays, secondsOfDay, this);
 
@@ -246,40 +208,15 @@ define([
     };
 
     /**
-     * Duplicates a JulianDate instance.
-     *
-     * @param {Cartesian3} date The JulianDate to duplicate.
-     * @param {Cartesian3} [result] The object onto which to store the JulianDate.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if date is undefined)
-     */
-    JulianDate.clone = function(date, result) {
-        if (!defined(date)) {
-            return undefined;
-        }
-        if (!defined(result)) {
-            return new JulianDate(date.dayNumber, date.secondsOfDay, TimeStandard.TAI);
-        }
-        result.dayNumber = date.dayNumber;
-        result.secondsOfDay = date.secondsOfDay;
-        return result;
-    };
-
-    /**
      * Creates a JulianDate instance from a JavaScript Date object.
      * While the JavaScript Date object defaults to the system's local time zone,
      * the JulianDate is computed using the UTC values.
      *
      * @param {Date} date The JavaScript Date object representing the time to be converted to a JulianDate.
-     * @param {TimeStandard} [timeStandard=TimeStandard.UTC] Indicates the time standard in which this JulianDate is represented.
+     * @param {TimeStandard} [timeStandard=TimeStandard.UTC] Indicates the time standard in which this date is represented.
      * @returns {JulianDate} The new {@Link JulianDate} instance.
      *
      * @exception {DeveloperError} date must be a valid JavaScript Date.
-     *
-     * @see JulianDate
-     * @see JulianDate.fromTotalDays
-     * @see JulianDate.fromIso8601
-     * @see TimeStandard
-     * @see LeapSecond
      *
      * @example
      * // Construct a JulianDate specifying the UTC time standard
@@ -594,6 +531,42 @@ define([
     };
 
     /**
+     * Creates a new instance that represents the current system time.
+     * This is equivalent to calling <code>JulianDate.fromDate(new Date());</code>.
+     *
+     * @param {JulianDate} [result] An existing instance to store the result into.
+     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     */
+    JulianDate.now = function(result) {
+        var components = computeJulianDateComponentsFromDate(new Date());
+        if (!defined(result)) {
+            return new JulianDate(components[0], components[1], TimeStandard.UTC);
+        }
+        setComponents(components[0], components[1], result);
+        convertUtcToTai(result);
+        return result;
+    };
+
+    /**
+     * Duplicates a JulianDate instance.
+     *
+     * @param {JulianDate} date The JulianDate to duplicate.
+     * @param {JulianDate} [result] The object onto which to store the JulianDate.
+     * @returns {JulianDate} The modified result parameter or a new JulianDate instance if one was not provided. (Returns undefined if date is undefined)
+     */
+    JulianDate.clone = function(date, result) {
+        if (!defined(date)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            return new JulianDate(date.dayNumber, date.secondsOfDay, TimeStandard.TAI);
+        }
+        result.dayNumber = date.dayNumber;
+        result.secondsOfDay = date.secondsOfDay;
+        return result;
+    };
+
+    /**
      * Compares two JulianDate instances.
      *
      * @param {JulianDate} a The first instance.
@@ -602,12 +575,12 @@ define([
      *                  a positive value if a is greater than b,
      *                  or zero if a and b are equal.
      */
-    JulianDate.compare = function(a, b) {
-        var julianDayNumberDifference = a.dayNumber - b.dayNumber;
+    JulianDate.compare = function(left, right) {
+        var julianDayNumberDifference = left.dayNumber - right.dayNumber;
         if (julianDayNumberDifference !== 0) {
             return julianDayNumberDifference;
         }
-        return a.secondsOfDay - b.secondsOfDay;
+        return left.secondsOfDay - right.secondsOfDay;
     };
 
     /**
@@ -649,22 +622,12 @@ define([
     };
 
     /**
-     * Duplicates this JulianDate.
-     *
-     * @param {Cartesian3} [result] The object onto which to store the JulianDate.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    JulianDate.prototype.clone = function(result) {
-        return JulianDate.clone(this, result);
-    };
-
-    /**
      * Returns the total number of whole and fractional days represented by this astronomical Julian date.
      *
      * @returns {Number} The Julian date as single floating point number.
      */
-    JulianDate.getTotalDays = function(value) {
-        return value.dayNumber + (value.secondsOfDay / TimeConstants.SECONDS_PER_DAY);
+    JulianDate.getTotalDays = function(julianDate) {
+        return julianDate.dayNumber + (julianDate.secondsOfDay / TimeConstants.SECONDS_PER_DAY);
     };
 
     var toGregorianDateScratch = new JulianDate(0, 0, TimeStandard.TAI);
@@ -674,14 +637,14 @@ define([
      *
      * @returns {GregorianDate} A gregorian date.
      */
-    JulianDate.toGregorianDate = function(value) {
+    JulianDate.toGregorianDate = function(julianDate) {
         var isLeapSecond = false;
-        var thisUtc = convertTaiToUtc(value, toGregorianDateScratch);
+        var thisUtc = convertTaiToUtc(julianDate, toGregorianDateScratch);
         if (!defined(thisUtc)) {
             //Conversion to UTC will fail if we are during a leap second.
             //If that's the case, subtract a second and convert again.
             //JavaScript doesn't support leap seconds, so this results in second 59 being repeated twice.
-            JulianDate.addSeconds(value, -1, toGregorianDateScratch);
+            JulianDate.addSeconds(julianDate, -1, toGregorianDateScratch);
             thisUtc = convertTaiToUtc(toGregorianDateScratch, toGregorianDateScratch);
             isLeapSecond = true;
         }
@@ -729,12 +692,14 @@ define([
 
     /**
      * Creates a JavaScript Date representation of this date in UTC.
-     * Javascript dates are only accurate to the nearest millisecond.
+     * Javascript dates are only accurate to the nearest millisecond and
+     * many implementation cannot represet a leap second.  Consider using
+     * {@link JulianDate#toGregorianDate} instead.
      *
      * @returns {Date} A new JavaScript Date equivalent to this JulianDate.
      */
-    JulianDate.toDate = function(value) {
-        var gDate = JulianDate.toGregorianDate(value);
+    JulianDate.toDate = function(julianDate) {
+        var gDate = JulianDate.toGregorianDate(julianDate);
         var second = gDate.second;
         if (gDate.isLeapSecond) {
             second -= 1;
@@ -748,8 +713,8 @@ define([
      * @param {Number} [precision] The number of fractional digits used to represent the seconds component.  By default, the most precise representation is used.
      * @returns {String} An ISO8601 string represenation of this JulianDate.
      */
-    JulianDate.toIso8601 = function(value, precision) {
-        var gDate = JulianDate.toGregorianDate(value);
+    JulianDate.toIso8601 = function(julianDate, precision) {
+        var gDate = JulianDate.toGregorianDate(julianDate);
         var millisecondStr;
 
         if (!defined(precision) && gDate.millisecond !== 0) {
@@ -813,8 +778,8 @@ define([
      * @see LeapSecond
      * @see TimeStandard
      */
-    JulianDate.getTaiMinusUtc = function(value) {
-        binarySearchScratchLeapSecond.julianDate = value;
+    JulianDate.getTaiMinusUtc = function(julianDate) {
+        binarySearchScratchLeapSecond.julianDate = julianDate;
         var leapSeconds = LeapSecond._leapSeconds;
         var index = binarySearch(leapSeconds, binarySearchScratchLeapSecond, LeapSecond.compareLeapSecondDate);
         if (index < 0) {
@@ -884,14 +849,14 @@ define([
      * @param {Number} duration An integer number of hours to add or subtract.
      * @returns {JulianDate} A new JulianDate object
      */
-    JulianDate.addHours = function(julianDate, value) {
+    JulianDate.addHours = function(julianDate, hours) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('duration is required.');
+        if (!defined(hours)) {
+            throw new DeveloperError('hours is required.');
         }
         //>>includeEnd('debug');
 
-        var newSecondsOfDay = julianDate.secondsOfDay + (value * TimeConstants.SECONDS_PER_HOUR);
+        var newSecondsOfDay = julianDate.secondsOfDay + (hours * TimeConstants.SECONDS_PER_HOUR);
         return new JulianDate(julianDate.dayNumber, newSecondsOfDay, TimeStandard.TAI);
     };
 
@@ -972,15 +937,13 @@ define([
     };
 
     /**
-     * Compares this date to another date.
+     * Duplicates this JulianDate.
      *
-     * @param {JulianDate} other The other JulianDate to compare to.
-     * @returns {Number} A negative value if this instance is less than the other,
-     *                  a positive value if this instance is greater than the other,
-     *                  or zero if this instance and the other are equal.
+     * @param {JulianDate} [result] The object onto which to store the JulianDate.
+     * @returns {JulianDate} The modified result parameter or a new JulianDate instance if one was not provided.
      */
-    JulianDate.prototype.compareTo = function(other) {
-        return JulianDate.compare(this, other);
+    JulianDate.prototype.clone = function(result) {
+        return JulianDate.clone(this, result);
     };
 
     /**
@@ -1019,6 +982,18 @@ define([
      */
     JulianDate.prototype.equalsEpsilon = function(other, epsilon) {
         return JulianDate.equalsEpsilon(this, other, epsilon);
+    };
+
+    /**
+     * Compares this date to another date.
+     *
+     * @param {JulianDate} other The other JulianDate to compare to.
+     * @returns {Number} A negative value if this instance is less than the other,
+     *                  a positive value if this instance is greater than the other,
+     *                  or zero if this instance and the other are equal.
+     */
+    JulianDate.prototype.compareTo = function(other) {
+        return JulianDate.compare(this, other);
     };
 
     //To avoid circular dependencies, we load the default list of leap seconds

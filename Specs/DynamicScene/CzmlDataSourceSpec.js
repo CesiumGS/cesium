@@ -747,12 +747,12 @@ defineSuite([
         dataSource.load(czml);
 
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
     it('CZML sampled cartographicsDegrees positions work.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var czml = {
             position : {
@@ -775,7 +775,7 @@ defineSuite([
     });
 
     it('CZML sampled positions work without epoch.', function() {
-        var lastDate = new JulianDate();
+        var lastDate = JulianDate.now();
         var firstDate = new JulianDate(lastDate.dayNumber - 1, 0);
 
         var czml = {
@@ -809,12 +809,12 @@ defineSuite([
         dataSource.load(czml);
 
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
     it('Can set reference frame', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
         var dataSource = new CzmlDataSource();
 
         var czml = {
@@ -843,7 +843,7 @@ defineSuite([
     });
 
     it('Default reference frame on existing interval does not reset value to FIXED.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
         var dataSource = new CzmlDataSource();
 
         var czml = {
@@ -870,7 +870,7 @@ defineSuite([
     });
 
     it('CZML sampled cartographicRadians positions work.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var czml = {
             position : {
@@ -1996,7 +1996,7 @@ defineSuite([
     });
 
     it('Can use constant reference properties', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packets = [{
             id : 'targetId',
             point : {
@@ -2060,7 +2060,7 @@ defineSuite([
     });
 
     it('Can use constant reference properties for position', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var packets = [{
             id : 'targetId',
@@ -2085,7 +2085,7 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var packets = [{
             id : 'targetId',
@@ -2123,7 +2123,7 @@ defineSuite([
     });
 
     it('Can reference properties before they exist.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packets = [{
             id : 'referenceId',
             point : {
@@ -2149,7 +2149,7 @@ defineSuite([
     });
 
     it('Can reference local properties.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packet = {
             id : 'testObject',
             point : {

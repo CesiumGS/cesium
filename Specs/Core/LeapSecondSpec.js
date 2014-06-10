@@ -20,12 +20,12 @@ defineSuite([
 
     it('throws an exception if constructed without an offset', function() {
         expect(function() {
-            return new LeapSecond(new JulianDate());
+            return new LeapSecond(JulianDate.now());
         }).toThrowDeveloperError();
     });
 
     it('can get the TAI offset from UTC', function() {
-        var ls = new LeapSecond(new JulianDate(), 1.0);
+        var ls = new LeapSecond(JulianDate.now(), 1.0);
         expect(ls.offset).toEqual(1.0);
     });
 

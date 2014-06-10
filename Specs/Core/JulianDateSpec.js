@@ -14,13 +14,19 @@ defineSuite([
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
+        var defaultDate = new JulianDate();
+        expect(defaultDate.dayNumber).toEqual(0);
+        expect(defaultDate.secondsOfDay).toEqual(10);
+    });
+
+    it('Construct a date at the current time', function() {
         // Default constructing a date uses 'now'.  Unfortunately,
         // there's no way to know exactly what that time will be, so we
         // give ourselves a 5 second epsilon as a hack to avoid possible
         // race conditions.  In reality, it might be better to just omit
         // a check in this test, since if this breaks, tons of other stuff
         // will as well.
-        var defaultDate = new JulianDate();
+        var defaultDate = JulianDate.now();
         var dateNow = JulianDate.fromDate(new Date());
         expect(defaultDate.equalsEpsilon(dateNow, 5)).toEqual(true);
     });
@@ -35,7 +41,7 @@ defineSuite([
     });
 
     it('clone works without result parameter', function() {
-        var julianDate = new JulianDate();
+        var julianDate = JulianDate.now();
         var returnedResult = julianDate.clone();
         expect(returnedResult).toEqual(julianDate);
         expect(returnedResult).toNotBe(julianDate);
@@ -43,7 +49,7 @@ defineSuite([
 
     it('clone works with result parameter', function() {
         var julianDate = new JulianDate(1, 2);
-        var result = new JulianDate();
+        var result = JulianDate.now();
         var returnedResult = julianDate.clone(result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toNotBe(julianDate);
@@ -106,76 +112,6 @@ defineSuite([
         expect(julianDateDefault).toEqual(julianDateUtc);
     });
 
-    it('Fail to construct a date with invalid time standard', function() {
-        var dayNumber = 12;
-        var seconds = 12.5;
-        var timeStandard = 'invalid';
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with a null time standard', function() {
-        var dayNumber = 12;
-        var seconds = 12.5;
-        var timeStandard = null;
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with an undefined secondsOfDay', function() {
-        var dayNumber = 12;
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(dayNumber, undefined, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with null secondsOfDay', function() {
-        var dayNumber = 12;
-        var seconds = null;
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with non-numerical secondsOfDay', function() {
-        var dayNumber = 12;
-        var seconds = 'not a number';
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with undefined day number', function() {
-        var seconds = 12.5;
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(undefined, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with null day number', function() {
-        var dayNumber = null;
-        var seconds = 12.5;
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct a date with non-numerical day number', function() {
-        var dayNumber = 'not a number';
-        var seconds = 12.5;
-        var timeStandard = TimeStandard.UTC;
-        expect(function() {
-            return new JulianDate(dayNumber, seconds, timeStandard);
-        }).toThrowDeveloperError();
-    });
-
     it('Construct a date from a JavaScript Date (1)', function() {
         var date = new Date('January 1, 1991 06:00:00 UTC');
         var julianDate = JulianDate.fromDate(date, TimeStandard.TAI);
@@ -222,12 +158,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Fail to construct from a JavaScript Date with invalid time standard', function() {
-        expect(function() {
-            return JulianDate.fromDate(new Date(), 'invalid');
-        }).toThrowDeveloperError();
-    });
-
     it('Construct a date from total days (1)', function() {
         var julianDate = JulianDate.fromTotalDays(2448257.75, TimeStandard.UTC);
         var expected = JulianDate.fromDate(new Date('January 1, 1991 06:00:00 UTC'));
@@ -258,27 +188,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('Fail to construct from null total days', function() {
-        expect(function() {
-            return JulianDate.fromTotalDays(null, TimeStandard.UTC);
-        }).toThrowDeveloperError();
-    });
-
     it('Fail to construct from undefined total days', function() {
         expect(function() {
             return JulianDate.fromTotalDays(undefined, TimeStandard.UTC);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct from total days with null time standard', function() {
-        expect(function() {
-            return JulianDate.fromTotalDays(1234, null);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fail to construct from total days with invalid time standard', function() {
-        expect(function() {
-            return JulianDate.fromTotalDays(1234, 'invalid');
         }).toThrowDeveloperError();
     });
 
@@ -585,12 +497,6 @@ defineSuite([
     it('Fails to construct an ISO8601 date from undefined', function() {
         expect(function() {
             return JulianDate.fromIso8601(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('Fails to construct an ISO8601 date from null', function() {
-        expect(function() {
-            return JulianDate.fromIso8601(null);
         }).toThrowDeveloperError();
     });
 
@@ -999,7 +905,7 @@ defineSuite([
     });
     it('addSeconds fails with undefined input', function() {
         expect(function() {
-            return JulianDate.addSeconds(new JulianDate(), undefined);
+            return JulianDate.addSeconds(JulianDate.now(), undefined);
         }).toThrowDeveloperError();
     });
     it('addMinutes works', function() {
@@ -1018,7 +924,7 @@ defineSuite([
 
     it('addMinutes fails with undefined input', function() {
         expect(function() {
-            return JulianDate.addMinutes(new JulianDate(), undefined);
+            return JulianDate.addMinutes(JulianDate.now(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1035,7 +941,7 @@ defineSuite([
     });
     it('addHours fails with undefined input', function() {
         expect(function() {
-            return JulianDate.addHours(new JulianDate(), undefined);
+            return JulianDate.addHours(JulianDate.now(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1055,7 +961,7 @@ defineSuite([
 
     it('addDays fails with undefined input', function() {
         expect(function() {
-            return JulianDate.addDays(new JulianDate(), undefined);
+            return JulianDate.addDays(JulianDate.now(), undefined);
         }).toThrowDeveloperError();
     });
 
@@ -1127,7 +1033,7 @@ defineSuite([
     });
 
     it('equalsEpsilon works', function() {
-        var date = new JulianDate();
+        var date = JulianDate.now();
         var datePlusOne = JulianDate.addSeconds(date, 0.01);
         expect(date.equalsEpsilon(datePlusOne, CesiumMath.EPSILON1)).toEqual(true);
     });

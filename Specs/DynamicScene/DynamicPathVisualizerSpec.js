@@ -82,7 +82,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty([new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)]);
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -94,7 +94,7 @@ defineSuite([
         var path = testObject.path = new DynamicPath();
         path.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 

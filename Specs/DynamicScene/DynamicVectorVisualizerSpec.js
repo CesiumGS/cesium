@@ -74,7 +74,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.length).toEqual(0);
@@ -88,14 +88,14 @@ defineSuite([
         var vector = testObject.vector = new DynamicVector();
         vector.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(1);
         var polylineCollection = scene.primitives.get(0);
         expect(polylineCollection.length).toEqual(0);
     });
 
     it('A DynamicVector causes a primtive to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
@@ -149,7 +149,7 @@ defineSuite([
         visualizer = new DynamicVectorVisualizer(scene, dynamicObjectCollection);
         expect(scene.primitives.length).toEqual(1);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
         var vector = testObject.vector = new DynamicVector();
@@ -179,7 +179,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var vector = testObject.vector = new DynamicVector();
 
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));

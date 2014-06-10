@@ -484,7 +484,7 @@ define([
      */
     Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame= function(date, result){
         if (!defined(date)) {
-            date = new JulianDate();
+            date = JulianDate.now();
         }
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
@@ -508,7 +508,7 @@ define([
      */
     Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame = function(date, result){
         if (!defined(date)) {
-            date = new JulianDate();
+            date = JulianDate.now();
         }
         result = computeSimonMoon(date, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
