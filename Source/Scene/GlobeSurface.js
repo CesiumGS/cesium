@@ -286,7 +286,7 @@ define([
         start : 0.0,
         stop : 0.0
     };
-    var scratchRay = new Ray();
+    var scratchCartesian = new Cartesian3();
 
     /**
      * Find an intersection between a ray or a line segment and the globe surface.
@@ -316,10 +316,6 @@ define([
         var tile;
         var i;
 
-        var tempRay = scratchRay;
-        Cartesian3.clone(ray.origin, tempRay.origin);
-        Cartesian3.normalize(ray.direction, tempRay.direction);
-
         var levelZeroTiles = this._levelZeroTiles;
         var length = levelZeroTiles.length;
         for (i = 0; i < length; ++i) {
@@ -345,7 +341,15 @@ define([
                 BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
             }
 
-            var boundingSphereIntersection = IntersectionTests.raySphere(tempRay, boundingVolume, scratchSphereIntersectionResult);
+            var boundingSphereIntersection;
+            if (Cartesian3.magnitude(ray.direction) > 1.0) {
+                var p0 = ray.origin;
+                var p1 = Cartesian3.add(p0, ray.direction, scratchCartesian);
+                boundingSphereIntersection = IntersectionTests.lineSegmentSphere(p0, p1, boundingVolume, scratchSphereIntersectionResult);
+            } else {
+                boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
+            }
+
             if (defined(boundingSphereIntersection)) {
                 var children = tile.children;
                 var childrenLength = children.length;

@@ -225,14 +225,6 @@ define([
             var root0 = (-b + disc) * denom;
             var root1 = (-b - disc) * denom;
 
-            if (root0 <= 0.0 && root1 <= 0.0) {
-                return undefined;
-            } else if (root0 < 0.0) {
-                root0 = 0.0;
-            } else if (root1 < 0.0) {
-                root1 = 0.0;
-            }
-
             if (root0 < root1) {
                 result.root0 = root0;
                 result.root1 = root1;
@@ -258,25 +250,7 @@ define([
         root1 : 0.0
     };
 
-    /**
-     * Computes the intersection points of a ray with a sphere.
-     * @memberof IntersectionTests
-     *
-     * @param {Ray} ray The ray.
-     * @param {BoundingSphere} sphere The sphere.
-     * @param {Object} [result] The result onto which to store the result.
-     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
-     */
-    IntersectionTests.raySphere = function(ray, sphere, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(ray)) {
-            throw new DeveloperError('ray is required.');
-        }
-        if (!defined(sphere)) {
-            throw new DeveloperError('sphere is required.');
-        }
-        //>>includeEnd('debug');
-
+    function raySphere(ray, sphere, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -300,6 +274,76 @@ define([
 
         result.start = roots.root0;
         result.stop = roots.root1;
+        return result;
+    }
+
+    /**
+     * Computes the intersection points of a ray with a sphere.
+     * @memberof IntersectionTests
+     *
+     * @param {Ray} ray The ray.
+     * @param {BoundingSphere} sphere The sphere.
+     * @param {Object} [result] The result onto which to store the result.
+     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the ray or undefined if there are no intersections.
+     */
+    IntersectionTests.raySphere = function(ray, sphere, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(ray)) {
+            throw new DeveloperError('ray is required.');
+        }
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        result = raySphere(ray, sphere, result);
+        if (!defined(result) || result.stop < 0.0) {
+            return undefined;
+        }
+
+        result.start = Math.max(result.start, 0.0);
+        return result;
+    };
+
+    var scratchLineSegmentRay = new Ray();
+
+    /**
+     * Computes the intersection points of a line segment with a sphere.
+     * @memberof IntersectionTests
+     *
+     * @param {Cartesian3} p0 An end point of the line segment.
+     * @param {Cartesian3} p1 The other end point of the line segment.
+     * @param {BoundingSphere} sphere The sphere.
+     * @param {Object} [result] The result onto which to store the result.
+     * @returns {Object} An object with the first (<code>start</code>) and the second (<code>stop</code>) intersection scalars for points along the line segment or undefined if there are no intersections.
+     */
+    IntersectionTests.lineSegmentSphere = function(p0, p1, sphere, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(p0)) {
+            throw new DeveloperError('p0 is required.');
+        }
+        if (!defined(p1)) {
+            throw new DeveloperError('p1 is required.');
+        }
+        if (!defined(sphere)) {
+            throw new DeveloperError('sphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var ray = scratchLineSegmentRay;
+        var origin = Cartesian3.clone(p0, ray.origin);
+        var direction = Cartesian3.subtract(p1, p0, ray.direction);
+
+        var maxT = Cartesian3.magnitude(direction);
+        Cartesian3.normalize(direction, direction);
+
+        result = raySphere(ray, sphere, result);
+        if (!defined(result) || result.stop < 0.0 || result.start > maxT) {
+            return undefined;
+        }
+
+        result.start = Math.max(result.start, 0.0);
+        result.stop = Math.min(result.stop, maxT);
         return result;
     };
 
