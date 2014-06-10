@@ -27,25 +27,13 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+
     var rectangle;
     var rectangularSensor;
 
-    function addAlphaAnimation(primitive, scene) {
-        Sandcastle.declare(addAlphaAnimation); // For highlighting in Sandcastle.
-        scene.animations.addAlpha(primitive.material, 0.0, 0.5);
-    }
-
-    function addStripeAnimation(primitive, scene) {
-        Sandcastle.declare(addStripeAnimation); // For highlighting in Sandcastle.
-        scene.animations.addOffsetIncrement(primitive.material);
-    }
-
-    function resetRectanglePropeties(rectangle) {
-        rectangle.material.uniforms.time = 1.0;
-        rectangle.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
-    }
-
-    function createPrimitives(scene) {
+    function createPrimitives() {
         var primitives = scene.primitives;
 
         rectangle = new Cesium.RectanglePrimitive({
@@ -72,23 +60,22 @@ require(['Cesium'], function(Cesium) {
         });
         primitives.add(sensors);
     }
+    createPrimitives();
 
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-
-    createPrimitives(scene);
+    function reset() {
+        scene.animations.removeAll();
+        rectangle.material.uniforms.time = 1.0;
+        rectangle.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+    }
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
-        scene.animations.removeAll();
-        resetRectanglePropeties(rectangle);
-        addAlphaAnimation(rectangle, scene);
-        Sandcastle.highlight(addAlphaAnimation);
+        reset();
+        scene.animations.addAlpha(rectangle.material, 0.0, 0.5);
     });
 
     Sandcastle.addToolbarButton('Stripe Animation', function() {
-        scene.animations.removeAll();
-        addStripeAnimation(rectangularSensor, scene);
-        Sandcastle.highlight(addStripeAnimation);
+        reset();
+        scene.animations.addOffsetIncrement(rectangularSensor.material);
     });
 
     Sandcastle.finishedLoading();
