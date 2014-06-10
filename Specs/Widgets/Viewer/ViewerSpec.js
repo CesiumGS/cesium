@@ -373,6 +373,14 @@ defineSuite([
         expect(viewer.targetFrameRate).toBe(23);
     });
 
+    it('can set dataSources at construction', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        expect(viewer.dataSources).toBe(collection);
+    });
+
     it('throws if targetFrameRate less than 0', function() {
         viewer = new Viewer(container);
         expect(function() {

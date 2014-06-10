@@ -41,6 +41,7 @@ Beta Releases
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
+* `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
 
 ### b29 - 2014-06-02
 
