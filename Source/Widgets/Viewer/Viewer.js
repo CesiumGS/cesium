@@ -98,8 +98,8 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
-     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
-     *        to the bottom of the widget itself.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -228,7 +228,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer
         });
 
-        var dataSourceCollection = new DataSourceCollection();
+        var dataSourceCollection = options.dataSources;
+        if (!defined(dataSourceCollection)) {
+            dataSourceCollection = new DataSourceCollection();
+        }
+
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
 
         var clock = cesiumWidget.clock;
