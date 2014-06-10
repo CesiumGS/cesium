@@ -286,11 +286,10 @@ define([
         start : 0.0,
         stop : 0.0
     };
-    var scratchArray = new Array(1);
     var scratchRay = new Ray();
 
     /**
-     * Find an intersection between rays or line segments and the globe surface.
+     * Find an intersection between a ray or a line segment and the globe surface.
      * <p>
      * If the rays direction has a magnitude greater than one, then the ray is assumed to be a line
      * segment with end points at the ray origin and the ray origin plus the ray direction.
@@ -298,30 +297,28 @@ define([
      *
      * @memberof Globe
      *
-     * @param {Ray|Ray[]} rays The rays or line segments to test for intersection.
+     * @param {Ray} ray The ray or line segment to test for intersection.
      * @param {FrameState} frameState The current frame state.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The first intersection or <code>undefined</code> if none were found.
+     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
      *
      * @example
      * // find intersection of ray through a pixel and the globe
      * var ray = scene.camera.getPickRay(windowCoordinates);
      * var intersection = globe.rayIntersections(ray, scene.frameState);
      */
-    GlobeSurface.prototype.intersect = function(rays, frameState, result) {
-        if (!isArray(rays)) {
-            scratchArray[0] = rays;
-            rays = scratchArray;
-        }
-
+    GlobeSurface.prototype.intersect = function(ray, frameState, result) {
         var stack = scratchArray1;
         stack.length = 0;
         var sphereIntersections = scratchArray2;
         sphereIntersections.length = 0;
 
-        var raysLength = rays.length;
         var tile;
         var i;
+
+        var tempRay = scratchRay;
+        Cartesian3.clone(ray.origin, tempRay.origin);
+        Cartesian3.normalize(ray.direction, tempRay.direction);
 
         var levelZeroTiles = this._levelZeroTiles;
         var length = levelZeroTiles.length;
@@ -348,19 +345,12 @@ define([
                 BoundingSphere.clone(tile.boundingSphere3D, boundingVolume);
             }
 
-            for (i = 0; i < raysLength; ++i) {
-                var ray = scratchRay;
-                Cartesian3.clone(rays[i].origin, ray.origin);
-                Cartesian3.normalize(rays[i].direction, ray.direction);
-
-                var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
-                if (defined(boundingSphereIntersection)) {
-                    var children = tile.children;
-                    var childrenLength = children.length;
-                    for (i = 0; i < childrenLength; ++i) {
-                        stack.push(children[i]);
-                    }
-                    break;
+            var boundingSphereIntersection = IntersectionTests.raySphere(tempRay, boundingVolume, scratchSphereIntersectionResult);
+            if (defined(boundingSphereIntersection)) {
+                var children = tile.children;
+                var childrenLength = children.length;
+                for (i = 0; i < childrenLength; ++i) {
+                    stack.push(children[i]);
                 }
             }
         }
@@ -370,7 +360,7 @@ define([
             return undefined;
         }
 
-        sphereIntersections.sort(createComparePickTileFunction(rays[0].origin));
+        sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
         var currentTile = sphereIntersections[0];
         var uniqueIntersections = scratchArray1;
@@ -388,7 +378,7 @@ define([
         var intersection;
         length = uniqueIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = uniqueIntersections[i].pick(rays, frameState, result);
+            intersection = uniqueIntersections[i].pick(ray, frameState, result);
             if (defined(intersection)) {
                 break;
             }
@@ -450,14 +440,10 @@ define([
 
         sphereIntersections.sort(createComparePickTileFunction(ray.origin));
 
-        var rays = scratchArray2;
-        rays.length = 1;
-        rays[0] = ray;
-
         var intersection;
         length = sphereIntersections.length;
         for (i = 0; i < length; ++i) {
-            intersection = sphereIntersections[i].pick(rays, frameState, result);
+            intersection = sphereIntersections[i].pick(ray, frameState, result);
             if (defined(intersection)) {
                 break;
             }

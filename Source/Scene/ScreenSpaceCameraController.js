@@ -501,8 +501,7 @@ define([
     var scratchRotation = new Matrix3();
     var scratchAdjustForTerrainStart = new Cartesian3();
     var scratchAdjustForTerrainStop = new Cartesian3();
-    var scratchRayArray = [];
-    var maxRayDistance = 10000.0;
+    var scratchRay = new Ray();
 
     function adjustRotateForTerrain(controller, frameState, center, radius, axis, angle, globeOverride) {
         var mode = frameState.mode;
@@ -534,28 +533,15 @@ define([
             axis = Cartesian3.fromElements(axis.z, axis.x, axis.y, scratchAdjustForTerrainAxis);
         }
 
-        //var numRays = Math.min(Math.max(Math.ceil(radius * Math.abs(angle) / maxRayDistance), 1.0), 4.0);
-        var numRays = 1.0;
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays, scratchQuaternion), scratchRotation);
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle, scratchQuaternion), scratchRotation);
         var start = Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart);
+        var stop = Matrix3.multiplyByVector(rotation, start, scratchAdjustForTerrainStop);
 
-        var rays = scratchRayArray;
-        rays.length = numRays;
+        var ray = scratchRay;
+        Cartesian3.subtract(stop, start, ray.direction);
+        Cartesian3.add(center, start, ray.origin);
 
-        for (var i = 0; i < numRays; ++i) {
-            var stop = Matrix3.multiplyByVector(rotation, start, scratchAdjustForTerrainStop);
-
-            var ray = rays[i];
-            if (!defined(ray)) {
-                ray = rays[i] = new Ray();
-            }
-
-            var direction = Cartesian3.subtract(stop, start, ray.direction);
-            var origin = Cartesian3.add(center, start, ray.origin);
-            start = Cartesian3.clone(stop, start);
-        }
-
-        var intersection = globe.intersect(rays, frameState, adjustForTerrainCartesian3);
+        var intersection = globe.intersect(ray, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
             return angle;
         }
@@ -563,7 +549,7 @@ define([
         var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart), scratchAdjustForTerrainStart);
         var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center, scratchAdjustForTerrainStop), scratchAdjustForTerrainStop);
         var newAngle = CesiumMath.acosClamped(Cartesian3.dot(startDirection, endDirection));
-        newAngle = CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance * 10.0 / radius, 0.0, Math.abs(angle));
+        newAngle = CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance * 100.0 / radius, 0.0, Math.abs(angle));
         return newAngle;
     }
 
