@@ -24,7 +24,7 @@ define([
      * @param {JulianDate} stop The stop date of the interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
-     * @param {Object} [data The data associated with this interval.
+     * @param {Object} [data] The data associated with this interval.
      *
      * @exception {DeveloperError} start must be specified.
      * @exception {DeveloperError} stop must be specified.
