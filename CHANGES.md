@@ -31,6 +31,8 @@ Beta Releases
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
+* Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
+* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
 * Fixed support for embedded resources in glTF models.
 * Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
