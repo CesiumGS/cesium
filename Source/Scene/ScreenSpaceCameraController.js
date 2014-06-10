@@ -447,11 +447,15 @@ define([
         var camera = controller._camera;
 
         var ray = adjustForTerrainRay;
-        Cartesian3.clone(camera.position, ray.origin);
+        Cartesian3.clone(camera.positionWC, ray.origin);
         if (distance < 0.0) {
-            Cartesian3.negate(direction, ray.direction);
+            direction = Cartesian3.negate(direction, ray.direction);
         } else {
-            Cartesian3.clone(direction, ray.direction);
+            direction = Cartesian3.clone(direction, ray.direction);
+        }
+
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            Cartesian3.fromElements(direction.z, direction.x, direction.y, direction);
         }
 
         var intersection = controller._globe.intersect(ray, frameState, adjustForTerrainCartesian3);
@@ -476,9 +480,16 @@ define([
 
         var camera = controller._camera;
 
+        if (frameState.mode !== SceneMode.SCENE3D) {
+            var cart = frameState.mapProjection.ellipsoid.cartesianToCartographic(center);
+            center = frameState.mapProjection.project(cart);
+            center = Cartesian3.fromElements(center.z, center.x, center.y);
+            axis = Cartesian3.fromElements(axis.z, axis.x, axis.y);
+        }
+
         var numRays = Math.min(Math.ceil(radius * Math.abs(angle) / 1000.0), 1.0);
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle / numRays));
-        var start = Cartesian3.subtract(camera.position, center);
+        var start = Cartesian3.subtract(camera.positionWC, center);
 
         var rays = [];
         for (var i = 0; i < numRays; ++i) {
@@ -494,7 +505,7 @@ define([
             return angle;
         }
 
-        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.position, center));
+        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center));
         var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center));
         var newAngle = Math.acos(Cartesian3.dot(startDirection, endDirection));
         return CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance / radius, 0.0, Math.abs(angle));
@@ -698,6 +709,8 @@ define([
         var mag = Cartesian3.magnitude(diff);
         if (mag > CesiumMath.EPSILON6) {
             Cartesian3.normalize(diff, diff);
+
+            mag = adjustForTerrain(controller, frameState, mag, diff);
             camera.move(diff, mag);
         }
     }
@@ -781,11 +794,12 @@ define([
 
         var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, ellipsoid, rotateCVVerticalTransform);
 
+        var globeOverride = controller._globe;
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var constrainedAxis = Cartesian3.UNIT_Z;
-        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, undefined, false, true);
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, undefined, false, true, globeOverride);
 
         var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
         if (Cartesian3.dot(camera.right, tangent) < 0.0) {
@@ -797,11 +811,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false, globeOverride);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false, globeOverride);
         }
 
         controller.globe = oldGlobe;
