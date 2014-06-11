@@ -275,7 +275,7 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('createPerspectiveFieldOfView works', function() {
+    it('computePerspectiveFieldOfView works', function() {
         var expected = new Matrix4(1, 0,                   0,                  0,
                                    0, 1,                  0,                  0,
                                    0, 0, -1.222222222222222, -2.222222222222222,
@@ -307,7 +307,7 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('createOrthographicOffCenter works', function() {
+    it('computeOrthographicOffCenter works', function() {
         var expected = new Matrix4(2, 0, 0, -1, 0, 2, 0, -5, 0, 0, -2, -1, 0, 0, 0, 1);
         var result = new Matrix4();
         var returnedResult = Matrix4.computeOrthographicOffCenter(0, 1, 2, 3, 0, 1, result);
@@ -315,7 +315,7 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
-    it('createViewportTransformation works', function() {
+    it('computeViewportTransformation  works', function() {
         var expected = new Matrix4(2.0, 0.0, 0.0, 2.0,
                                    0.0, 3.0, 0.0, 3.0,
                                    0.0, 0.0, 1.0, 1.0,
@@ -331,7 +331,7 @@ defineSuite([
         expect(returnedResult).toBe(result);
     });
 
-    it('createPerspectiveOffCenter works', function() {
+    it('computePerspectiveOffCenter works', function() {
         var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -3, -4, 0, 0, -1, 0);
         var result = new Matrix4();
         var returnedResult = Matrix4.computePerspectiveOffCenter(1, 2, 2, 3, 1, 2, result);
@@ -339,7 +339,7 @@ defineSuite([
         expect(returnedResult).toBe(result);
     });
 
-    it('createInfinitePerspectiveOffCenter works', function() {
+    it('computeInfinitePerspectiveOffCenter  works', function() {
         var expected = new Matrix4(2, 0, 3, 0, 0, 2, 5, 0, 0, 0, -1, -2, 0, 0, -1, 0);
         var result = new Matrix4();
         var returnedResult = Matrix4.computeInfinitePerspectiveOffCenter(1, 2, 2, 3, 1, result);
@@ -1000,143 +1000,144 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without left', function() {
+    it('computeOrthographicOffCenter throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(undefined, right, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without right', function() {
+    it('computeOrthographicOffCenter throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, undefined, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without bottom', function() {
+    it('computeOrthographicOffCenter throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, undefined, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without top', function() {
+    it('computeOrthographicOffCenter throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, undefined, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without near', function() {
+    it('computeOrthographicOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, top, undefined, far);
         }).toThrowDeveloperError();
     });
 
-    it('createOrthographicOffCenter throws without far', function() {
+    it('computeOrthographicOffCenter throws without far', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, near = 0;
             Matrix4.computeOrthographicOffCenter(left, right, bottom, top, near, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without left', function() {
+    it('computePerspectiveOffCenter throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (undefined, right, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without right', function() {
+    it('computePerspectiveOffCenter throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, undefined, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without bottom', function() {
+    it('computePerspectiveOffCenter throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, undefined, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without top', function() {
+    it('computePerspectiveOffCenter throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, undefined, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without near', function() {
+    it('computePerspectiveOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, top, undefined, far);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveOffCenter throws without far', function() {
+    it('computePerspectiveOffCenter throws without far', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, near = 0;
             Matrix4.computePerspectiveOffCenter (left, right, bottom, top, near, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('createInfinitePerspectiveOffCenter throws without left', function() {
+    it('computeInfinitePerspectiveOffCenter  throws without left', function() {
         expect(function() {
             var right = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (undefined, right, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createInfinitePerspectiveOffCenter throws without right', function() {
+    it('computeInfinitePerspectiveOffCenter  throws without right', function() {
         expect(function() {
             var left = 0, bottom = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, undefined, bottom, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createInfinitePerspectiveOffCenter throws without bottom', function() {
+    it('computeInfinitePerspectiveOffCenter  throws without bottom', function() {
         expect(function() {
             var left = 0, right = 0, top = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, undefined, top, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createInfinitePerspectiveOffCenter throws without top', function() {
+    it('computeInfinitePerspectiveOffCenter  throws without top', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, near = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, undefined, near, far);
         }).toThrowDeveloperError();
     });
 
-    it('createInfinitePerspectiveOffCenter throws without near', function() {
+    it('computeInfinitePerspectiveOffCenter  throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, undefined, far);
         }).toThrowDeveloperError();
     });
-    it('createPerspectiveFieldOfView throws with out of range y field of view', function() {
+
+    it('computePerspectiveFieldOfView throws with out of range y field of view', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(0, 1, 2, 3);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveFieldOfView throws with out of range aspect', function() {
+    it('computePerspectiveFieldOfView throws with out of range aspect', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 0, 2, 3);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveFieldOfView throws with out of range near', function() {
+    it('computePerspectiveFieldOfView throws with out of range near', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 1, 0, 3);
         }).toThrowDeveloperError();
     });
 
-    it('createPerspectiveFieldOfView throws with out of range far', function() {
+    it('computePerspectiveFieldOfView throws with out of range far', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(1, 1, 2, 0);
         }).toThrowDeveloperError();
@@ -1379,6 +1380,118 @@ defineSuite([
     it('inverseTransformation throws without matrix parameter', function() {
         expect(function() {
             Matrix4.inverseTransformation(undefined);
+        }).toThrowDeveloperError();
+    });
+
+
+    it('getColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix4.getColumn(new Matrix4(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix4.setColumn(new Matrix4(), 2, new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
+    it('getRow throws with result parameter', function() {
+        expect(function() {
+            Matrix4.getRow(new Matrix4(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setRow throws with result parameter', function() {
+        expect(function() {
+            Matrix4.setRow(new Matrix4(), 2, new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
+    it('getScale throws with result parameter', function() {
+        expect(function() {
+            Matrix4.getScale(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiply throws with result parameter', function() {
+        expect(function() {
+            Matrix4.multiply(new Matrix4(), new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByVector throws with result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByVector(new Matrix4(), new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByScalar(new Matrix4(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with result parameter', function() {
+        expect(function() {
+            Matrix4.negate(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('transpose throws with result parameter', function() {
+        expect(function() {
+            Matrix4.transpose(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with result parameter', function() {
+        expect(function() {
+            Matrix4.abs(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('inverse throws with result parameter', function() {
+        expect(function() {
+            Matrix4.inverse(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('computePerspectiveFieldOfView throws with result parameter', function() {
+        expect(function() {
+            Matrix4.computePerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeOrthographicOffCenter throws without result parameter', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, near = 0;
+            Matrix4.computeOrthographicOffCenter(left, right, bottom, top, near, 0);
+        }).toThrowDeveloperError();
+    });
+
+    it('computePerspectiveOffCenter throws without result parameter', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, near = 0;
+            Matrix4.computePerspectiveOffCenter (left, right, bottom, top, near, 0);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeInfinitePerspectiveOffCenter  throws without near', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeViewportTransformation  works', function() {
+        expect(function() {
+            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            Matrix4.computeViewportTransformation ({
+                x : 0,
+                y : 0,
+                width : 4.0,
+                height : 6.0
+            }, 0.0, 2.0);
         }).toThrowDeveloperError();
     });
 });

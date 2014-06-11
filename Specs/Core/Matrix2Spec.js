@@ -616,4 +616,70 @@ defineSuite([
             Matrix2.equalsEpsilon(new Matrix2(), new Matrix2(), {});
         }).toThrowDeveloperError();
     });
+
+    it('getColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix2.getColumn(new Matrix2(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix2.setColumn(new Matrix2(), 2, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('getRow throws with result parameter', function() {
+        expect(function() {
+            Matrix2.getRow(new Matrix2(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setRow throws with result parameter', function() {
+        expect(function() {
+            Matrix2.setRow(new Matrix2(), 2, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('getScale throws with result parameter', function() {
+        expect(function() {
+            Matrix2.getScale(new Matrix2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiply throws with result parameter', function() {
+        expect(function() {
+            Matrix2.multiply(new Matrix2(), new Matrix2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByVector throws with result parameter', function() {
+        expect(function() {
+            Matrix2.multiplyByVector(new Matrix2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with result parameter', function() {
+        expect(function() {
+            Matrix2.multiplyByScalar(new Matrix2(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with result parameter', function() {
+        expect(function() {
+            Matrix2.negate(new Matrix2());
+        }).toThrowDeveloperError();
+    });
+
+    it('transpose throws with result parameter', function() {
+        expect(function() {
+            Matrix2.transpose(new Matrix2());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with result parameter', function() {
+        expect(function() {
+            Matrix2.abs(new Matrix2());
+        }).toThrowDeveloperError();
+    });
 });

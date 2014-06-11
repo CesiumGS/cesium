@@ -883,4 +883,77 @@ defineSuite([
             Matrix3.equalsEpsilon(new Matrix3(), new Matrix3(), {});
         }).toThrowDeveloperError();
     });
+
+    it('getColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix3.getColumn(new Matrix3(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setColumn throws with result parameter', function() {
+        expect(function() {
+            Matrix3.setColumn(new Matrix3(), 2, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('getRow throws with result parameter', function() {
+        expect(function() {
+            Matrix3.getRow(new Matrix3(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('setRow throws with result parameter', function() {
+        expect(function() {
+            Matrix3.setRow(new Matrix3(), 2, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('getScale throws with result parameter', function() {
+        expect(function() {
+            Matrix3.getScale(new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+
+    it('multiply throws with result parameter', function() {
+        expect(function() {
+            Matrix3.multiply(new Matrix3(), new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByVector throws with result parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByVector(new Matrix3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with result parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByScalar(new Matrix3(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with result parameter', function() {
+        expect(function() {
+            Matrix3.negate(new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('transpose throws with result parameter', function() {
+        expect(function() {
+            Matrix3.transpose(new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with result parameter', function() {
+        expect(function() {
+            Matrix3.abs(new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
+    it('inverse throws with result parameter', function() {
+        expect(function() {
+            Matrix3.inverse(new Matrix3());
+        }).toThrowDeveloperError();
+    });
 });
