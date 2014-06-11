@@ -91,13 +91,17 @@ define([
         return Math.max(dx, dy);
     }
 
+    var scratchCart = new Cartesian3();
+    var scratchCart2 = new Cartesian3();
+    var scratchCart3 = new Cartesian3();
+    var scratchCart4 = new Cartesian3();
     function createPath3D(camera, ellipsoid, start, up, right, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
         var radius = ellipsoid.maximumRadius;
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
-        var dot = Cartesian3.dot(Cartesian3.normalize(start), Cartesian3.normalize(end));
+        var dot = Cartesian3.dot(Cartesian3.normalize(start, scratchCart), Cartesian3.normalize(end, scratchCart2));
 
         var points;
         var altitude;
@@ -106,29 +110,30 @@ define([
             altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
-            var diff = Cartesian3.subtract(start, end);
-            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5), end));
-            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up)));
-            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right)));
+            var diff = Cartesian3.subtract(start, end, scratchCart);
+            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5, scratchCart2), end, scratchCart2));
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end), altitude);
-        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start), altitude);
+        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end, scratchCart2), altitude, scratchCart2);
+        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start, scratchCart), altitude, scratchCart);
 
-        var axis, angle, rotation, middle;
+        var axis, angle, rotation;
+        var middle = new Cartesian3();
         if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end, middle), 0.5, middle), end, middle);
             points = [ start, middle, end ];
         } else if (Cartesian3.magnitude(start) > maxStartAlt && dot > 0) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd, middle), 0.5, middle), aboveEnd, middle);
             points = [ start, middle, end ];
         } else {
             points = [ start ];
 
-            angle = CesiumMath.acosClamped(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
-            axis = Cartesian3.cross(aboveEnd, afterStart);
+            angle = CesiumMath.acosClamped(Cartesian3.dot(Cartesian3.normalize(afterStart, scratchCart3), Cartesian3.normalize(aboveEnd, scratchCart4)));
+            axis = Cartesian3.cross(aboveEnd, afterStart, scratchCart3);
             if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
             }
@@ -228,6 +233,7 @@ define([
         return update;
     }
 
+    var cartScratch1 = new Cartesian3();
     function createPath2D(camera, ellipsoid, start, end, duration) {
         if (CesiumMath.equalsEpsilon(Cartesian2.magnitude(start), Cartesian2.magnitude(end), 10000.0)) {
             return new LinearSpline({
@@ -247,7 +253,7 @@ define([
         if (start.z > maxStartAlt) {
             altitude = 0.6 * maxStartAlt;
         } else {
-            var diff = Cartesian3.subtract(start, end);
+            var diff = Cartesian3.subtract(start, end, cartScratch1);
             altitude = getAltitude(frustum, Math.abs(diff.y), Math.abs(diff.x));
         }
 
@@ -256,24 +262,25 @@ define([
         var afterStart = Cartesian3.clone(start);
         afterStart.z = altitude;
 
-        var middle;
+        var middle = new Cartesian3();
         if (end.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end, middle), 0.5, middle), end, middle);
             points = [ start, middle, end ];
         } else if (start.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd, middle), 0.5, middle), aboveEnd, middle);
             points = [ start, middle, end ];
         } else {
             points = [ start ];
 
-            var v = Cartesian3.subtract(afterStart, aboveEnd);
+            var v = Cartesian3.subtract(afterStart, aboveEnd, cartScratch1);
             var distance = Cartesian3.magnitude(v);
             Cartesian3.normalize(v, v);
 
             var increment = incrementPercentage * distance;
             var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
-                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i), aboveEnd));
+                var p = new Cartesian3();
+                points.push(Cartesian3.add(Cartesian3.multiplyByScalar(v, i, p), aboveEnd, p));
             }
 
             points.push(end);
@@ -291,9 +298,10 @@ define([
         });
     }
 
-    var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
-    var right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y));
-    var up2D = Cartesian3.cross(right2D, direction2D);
+    var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+    var right2D = new Cartesian3();
+    right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y, right2D), right2D);
+    var up2D = Cartesian3.cross(right2D, direction2D, new Cartesian3());
     var quat = createQuaternion(direction2D, up2D);
 
     function createOrientations2D(camera, path, endDirection, endUp) {
@@ -352,7 +360,7 @@ define([
         start.z = camera.frustum.right - camera.frustum.left;
 
         var path = createPath2D(camera, ellipsoid, start, destination, duration);
-        var orientations = createOrientations2D(camera, path, Cartesian3.negate(Cartesian3.UNIT_Z), up);
+        var orientations = createOrientations2D(camera, path, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), up);
 
         var height = camera.position.z;
 

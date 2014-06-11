@@ -1661,7 +1661,7 @@ defineSuite([
     });
 
     it('CZML adds data for infinite vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
         var vectorPacket = {
             vector : {
                 color : {
@@ -1689,7 +1689,7 @@ defineSuite([
     });
 
     it('CZML adds data for constrained vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
         var vectorPacket = {
             vector : {
                 interval : '2000-01-01/2001-01-01',

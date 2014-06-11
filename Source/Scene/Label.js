@@ -81,7 +81,7 @@ define([
         this._style = defaultValue(options.style, LabelStyle.FILL);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.BOTTOM);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.LEFT);
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._scale = defaultValue(options.scale, 1.0);
@@ -332,7 +332,7 @@ define([
 
                 var pixelOffset = this._pixelOffset;
                 if (!Cartesian2.equals(pixelOffset, value)) {
-                    Cartesian2.clone(value, pixelOffset);
+                    pixelOffset = Cartesian2.clone(value, pixelOffset);
                     repositionAllGlyphs(this);
                 }
             }
