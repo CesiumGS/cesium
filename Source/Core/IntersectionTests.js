@@ -31,6 +31,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Plane} plane The plane.
+     * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.rayPlane = function(ray, plane, result) {
@@ -265,13 +266,6 @@ define([
         return solutions;
     }
 
-    /**
-     * Provides the point along the ray which is nearest to the ellipsoid.
-     *
-     * @param {Ray} ray The ray.
-     * @param {Ellipsoid} ellipsoid The ellipsoid.
-     * @returns {Cartesian} The nearest planetodetic point on the ray.
-     */
     var firstAxisScratch = new Cartesian3();
     var secondAxisScratch = new Cartesian3();
     var thirdAxisScratch = new Cartesian3();
@@ -283,6 +277,14 @@ define([
     var matrixScratch5 = new Matrix3();
     var scratchCart3 = new Cartesian3();
     var scratchClosest = new Cartesian3();
+    /**
+     * Provides the point along the ray which is nearest to the ellipsoid.
+     *
+     * @param {Ray} ray The ray.
+     * @param {Ellipsoid} ellipsoid The ellipsoid.
+     * @returns {Cartesian} The nearest planetodetic point on the ray.
+     */
+
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
@@ -417,9 +419,6 @@ define([
         }
 
         // intersection is endPoint0 + t * (endPoint1 - endPoint0)
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
         Cartesian3.multiplyByScalar(difference, t, result);
         Cartesian3.add(endPoint0, result, result);
         return result;

@@ -864,6 +864,7 @@ define([
         return attributesInAllGeometries;
     }
 
+    var tempScratch = new Cartesian3();
     /**
      * Combines geometry from several {@link GeometryInstance} objects into one geometry.
      * This concatenates the attributes, concatenates and adjusts the indices, and creates
@@ -891,7 +892,6 @@ define([
      * }
      * var geometry = Cesium.GeometryPipeline.combine(instances);
      */
-    var tempScratch = new Cartesian3();
     GeometryPipeline.combine = function(instances) {
         //>>includeStart('debug', pragmas.debug);
         if ((!defined(instances)) || (instances.length < 1)) {
