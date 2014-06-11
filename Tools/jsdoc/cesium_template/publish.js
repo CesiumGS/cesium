@@ -5,7 +5,7 @@ var fs = require('jsdoc/fs');
 var helper = require('jsdoc/util/templateHelper');
 var logger = require('jsdoc/util/logger');
 var path = require('jsdoc/path');
-var taffy = require('jsdoc/node_modules/taffydb').taffy;
+var taffy = require('taffydb').taffy;
 var template = require('jsdoc/template');
 var util = require('util');
 
