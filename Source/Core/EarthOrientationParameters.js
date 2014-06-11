@@ -288,7 +288,7 @@ define([
                 if (taiMinusUtc !== lastTaiMinusUtc && defined(lastTaiMinusUtc)) {
                     // We crossed a leap second boundary, so add the leap second
                     // if it does not already exist.
-                    var leapSeconds = LeapSecond._leapSeconds;
+                    var leapSeconds = JulianDate.leapSeconds;
                     var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
                     if (leapSecondIndex < 0) {
                         var leapSecond = new LeapSecond(date, taiMinusUtc);

@@ -17,11 +17,11 @@ defineSuite([
     var officialLeapSeconds;
 
     beforeAll(function() {
-        officialLeapSeconds = LeapSecond.leapSeconds.slice(0);
+        officialLeapSeconds = JulianDate.leapSeconds.slice(0);
     });
 
     afterEach(function() {
-        LeapSecond.leapSeconds = officialLeapSeconds.slice(0);
+        JulianDate.leapSeconds = officialLeapSeconds.slice(0);
     });
 
     it('adds leap seconds found in the data by default', function() {
@@ -44,7 +44,7 @@ defineSuite([
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.leapSeconds;
+        var leapSeconds = JulianDate.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length + 1);
 
         var newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
@@ -88,7 +88,7 @@ defineSuite([
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.leapSeconds;
+        var leapSeconds = JulianDate.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length);
     });
 
