@@ -164,32 +164,27 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
-
-        var value = {
+        var startValue = {
             value : start
         };
-        var tween = new Tween.Tween(value);
-        tween.to({
+        var stopValue = {
             value : stop
-        }, duration);
-        tween.delay(delay);
-        tween.easing(easingFunction);
-        tween.onUpdate(function() {
-            object[property] = value.value;
-        });
-        tween.onComplete(defaultValue(options.complete, null));
-
-        // start then stop to remove the tween from the global array
-        tween.start().stop();
-        this._tweens.push(tween);
-
-        return {
-            _tween : tween
         };
+
+        function update(value) {
+            object[property] = value.value;
+        }
+
+        return this.add({
+            duration : defaultValue(options.duration, 3.0),
+            delay : options.delay,
+            easingFunction : options.easingFunction,
+            startValue : startValue,
+            stopValue : stopValue,
+            update : update,
+            complete : options.complete,
+            cancel : options.cancel
+        });
     };
 
     /**
