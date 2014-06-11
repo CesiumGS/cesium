@@ -27,6 +27,7 @@ Beta Releases
    * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
    * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
    * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+   * Renamed `ScreenSpaceCameraController.ellipsoid` to `ScreenSpaceCameraController.globe` whose type can now be `Globe` or `Ellipsoid`.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
@@ -40,6 +41,12 @@ Beta Releases
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
+* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
+* Added `Quaternion.rotateVector` for fast application of a quaternion rotation to a vector.
+* Fixed camera rotation near the camera's constrained axis.
+* Added `Globe.intersect` and `Globe.pick` for finding intersections of a ray or line segment with the globe. `Globe.pick` only performs a ray intersection test with the part of the surface that was rendered.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked.
+* Added camera collision detection to the default mouse interaction.
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 
 ### b29 - 2014-06-02
