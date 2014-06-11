@@ -95,7 +95,7 @@ define([
 
         timeline.addTrack(new TimeInterval(startJulian, JulianDate.addSeconds(startJulian, 60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
         timeline.addTrack(new TimeInterval(JulianDate.addSeconds(endJulian, -60 * 60), endJulian), 8, Color.LIME);
-        var middle = JulianDate.getSecondsDifference(startJulian, endJulian) / 4;
+        var middle = JulianDate.getSecondsDifference(endJulian, startJulian) / 4;
         timeline.addTrack(new TimeInterval(JulianDate.addSeconds(startJulian, middle), JulianDate.addSeconds(startJulian, middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         var clockViewModel = new ClockViewModel(clock);
@@ -123,7 +123,7 @@ define([
         }
 
         if (startJulian && endJulian) {
-            if (JulianDate.getSecondsDifference(startJulian, endJulian) < 0.1) {
+            if (JulianDate.getSecondsDifference(endJulian, startJulian) < 0.1) {
                 endBeforeStart.style.display = 'block';
                 containerElement.style.visibility = 'hidden';
             } else {

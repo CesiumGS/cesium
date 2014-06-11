@@ -192,7 +192,7 @@ define([
                         currentTime = JulianDate.clone(startTime);
                     }
                     while (JulianDate.greaterThan(currentTime, stopTime)) {
-                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(stopTime, currentTime));
+                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(currentTime, stopTime));
                     }
                 }
             }

@@ -338,7 +338,7 @@ define([
             return result;
         }
 
-        var factor = JulianDate.getSecondsDifference(beforeDate, date) / JulianDate.getSecondsDifference(beforeDate, afterDate);
+        var factor = JulianDate.getSecondsDifference(date, beforeDate) / JulianDate.getSecondsDifference(afterDate, beforeDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

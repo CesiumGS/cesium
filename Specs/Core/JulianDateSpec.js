@@ -782,32 +782,32 @@ defineSuite([
     it('getSecondsDifference works in UTC', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
-        expect(JulianDate.getSecondsDifference(start, end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
     it('getSecondsDifference works in TAI', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
-        expect(JulianDate.getSecondsDifference(start, end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
     it('getSecondsDifference works with mixed time standards', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00 UTC'));
         var end = JulianDate.fromDate(new Date('July 5, 2011 12:01:00 UTC'));
-        expect(JulianDate.getSecondsDifference(start, end)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqualEpsilon(TimeConstants.SECONDS_PER_DAY + TimeConstants.SECONDS_PER_MINUTE, CesiumMath.EPSILON5);
     });
 
     it('getDaysDifference works', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
         var end = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
-        var difference = JulianDate.getDaysDifference(start, end);
+        var difference = JulianDate.getDaysDifference(end, start);
         expect(difference).toEqual(1.1);
     });
 
     it('getDaysDifference works with negative result', function() {
         var end = JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
         var start = JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
-        var difference = JulianDate.getDaysDifference(start, end);
+        var difference = JulianDate.getDaysDifference(end, start);
         expect(difference).toEqual(-1.1);
     });
 
@@ -821,39 +821,39 @@ defineSuite([
     it('addSeconds works with fractions (1)', function() {
         var start = new JulianDate(2454832, 0, TimeStandard.TAI);
         var end = JulianDate.addSeconds(start, 1.5);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(1.5);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(1.5);
     });
 
     it('addSeconds works with fractions (2)', function() {
         var start = JulianDate.fromDate(new Date('August 11 2011 6:00:00 UTC'));
         var end = JulianDate.addSeconds(start, 0.5);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(0.5);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(0.5);
     });
 
     it('addSeconds works with fractions (3)', function() {
         var start = JulianDate.fromDate(new Date('August 11 2011 11:59:59 UTC'));
         var end = JulianDate.addSeconds(start, 1.25);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(1.25);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(1.25);
     });
 
     it('addSeconds works with negative numbers', function() {
         var start = JulianDate.fromDate(new Date('July 4, 2011 12:01:30 UTC'));
         var end = JulianDate.addSeconds(start, -60.0);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(-60.0);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(-60.0);
     });
 
     it('addSeconds works with more seconds than in a day', function() {
         var seconds = TimeConstants.SECONDS_PER_DAY * 7 + 15;
         var start = new JulianDate(2448444, 0, TimeStandard.UTC);
         var end = JulianDate.addSeconds(start, seconds);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(seconds);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(seconds);
     });
 
     it('addSeconds works with negative seconds more than in a day', function() {
         var seconds = -TimeConstants.SECONDS_PER_DAY * 7 - 15;
         var start = new JulianDate(2448444, 0, TimeStandard.UTC);
         var end = JulianDate.addSeconds(start, seconds);
-        expect(JulianDate.getSecondsDifference(start, end)).toEqual(seconds);
+        expect(JulianDate.getSecondsDifference(end, start)).toEqual(seconds);
     });
     it('addSeconds fails with undefined input', function() {
         expect(function() {

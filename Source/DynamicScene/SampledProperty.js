@@ -359,7 +359,7 @@ define([
 
             // Build the tables
             for (var i = 0; i < length; ++i) {
-                xTable[i] = JulianDate.getSecondsDifference(times[lastIndex], times[firstIndex + i]);
+                xTable[i] = JulianDate.getSecondsDifference(times[firstIndex + i], times[lastIndex]);
             }
 
             if (!defined(innerType.convertPackedArrayForInterpolation)) {
@@ -378,7 +378,7 @@ define([
             }
 
             // Interpolate!
-            var x = JulianDate.getSecondsDifference(times[lastIndex], time);
+            var x = JulianDate.getSecondsDifference(time, times[lastIndex]);
             var interpolationResult;
             if (inputOrder === 0 || !defined(interpolationAlgorithm.interpolate)) {
                 interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);

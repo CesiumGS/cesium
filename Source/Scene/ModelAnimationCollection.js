@@ -362,7 +362,7 @@ define([
             var stopTime = scheduledAnimation.stopTime;
 
             // [0.0, 1.0] normalized local animation time
-            var delta = (duration !== 0.0) ? (JulianDate.getSecondsDifference(startTime, sceneTime) / duration) : 0.0;
+            var delta = (duration !== 0.0) ? (JulianDate.getSecondsDifference(sceneTime, startTime) / duration) : 0.0;
             var pastStartTime = (delta >= 0.0);
 
             // Play animation if

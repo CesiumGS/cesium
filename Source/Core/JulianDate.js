@@ -60,7 +60,7 @@ define([
             //However, if the difference between the UTC date being converted and the TAI
             //defined leap second is greater than the offset, we are off by one and need to use
             //the previous leap second.
-            var difference = JulianDate.getSecondsDifference(julianDate, leapSeconds[index].julianDate);
+            var difference = JulianDate.getSecondsDifference(leapSeconds[index].julianDate, julianDate);
             if (difference > offset) {
                 index--;
                 offset = leapSeconds[index].offset;
@@ -89,7 +89,7 @@ define([
         }
 
         //Compute the difference between the found leap second and the time we are converting.
-        var difference = JulianDate.getSecondsDifference(julianDate, leapSeconds[index].julianDate);
+        var difference = JulianDate.getSecondsDifference(leapSeconds[index].julianDate, julianDate);
 
         if (difference === 0) {
             //The date is in our leap second table.
@@ -756,8 +756,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dayDifference = (right.dayNumber - left.dayNumber) * TimeConstants.SECONDS_PER_DAY;
-        return (dayDifference + (right.secondsOfDay - left.secondsOfDay));
+        var dayDifference = (left.dayNumber - right.dayNumber) * TimeConstants.SECONDS_PER_DAY;
+        return (dayDifference + (left.secondsOfDay - right.secondsOfDay));
     };
 
     /**
@@ -777,8 +777,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var dayDifference = (right.dayNumber - left.dayNumber);
-        var secondDifference = (right.secondsOfDay - left.secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
+        var dayDifference = (left.dayNumber - right.dayNumber);
+        var secondDifference = (left.secondsOfDay - right.secondsOfDay) / TimeConstants.SECONDS_PER_DAY;
         return dayDifference + secondDifference;
     };
 

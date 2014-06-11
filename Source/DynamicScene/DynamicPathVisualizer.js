@@ -84,7 +84,7 @@ define([
             if (t < (len - 1)) {
                 if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
-                    var secondsUntilNext = JulianDate.getSecondsDifference(current, next);
+                    var secondsUntilNext = JulianDate.getSecondsDifference(next, current);
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
@@ -161,7 +161,7 @@ define([
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.start, interval.stop) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2);
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);

@@ -81,7 +81,7 @@ define([
         var dateTT = julianDateScratch;
         dateTT.dayNumber = dayTT;
         dateTT.secondsOfDay = secondTT;
-        return JulianDate.getDaysDifference(xys._sampleZeroDateTT, dateTT);
+        return JulianDate.getDaysDifference(dateTT, xys._sampleZeroDateTT);
     }
 
     /**
