@@ -71,7 +71,7 @@ define([
             return undefined;
         }
         if (!defined(result)) {
-            result = new Cartesian2();
+            return new Cartesian2(cartesian.x, cartesian.y);
         }
 
         result.x = cartesian.x;

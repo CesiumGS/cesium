@@ -115,7 +115,7 @@ define([
         }
 
         if (!defined(result)) {
-            result = new Cartesian4();
+            return new Cartesian4(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
         }
 
         result.x = cartesian.x;

@@ -109,7 +109,7 @@ define([
             return undefined;
         }
         if (!defined(result)) {
-            result = new Cartesian3();
+            return new Cartesian3(cartesian.x, cartesian.y, cartesian.z);
         }
 
         result.x = cartesian.x;
