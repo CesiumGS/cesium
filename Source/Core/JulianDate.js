@@ -886,7 +886,7 @@ define([
         //>>includeEnd('debug');
 
         var newJulianDayNumber = julianDate.dayNumber + days;
-        return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
+        return setComponents(newJulianDayNumber, julianDate.secondsOfDay, result);
     };
 
     /**
