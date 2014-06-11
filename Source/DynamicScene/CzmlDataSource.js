@@ -55,6 +55,7 @@ define([
         './DynamicPolygon',
         './DynamicPolyline',
         './DynamicPyramid',
+        './DynamicScreenOverlay',
         './DynamicRectangle',
         './DynamicVector',
         './DynamicWall',
@@ -68,7 +69,8 @@ define([
         './StripeMaterialProperty',
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
-        './TimeIntervalCollectionProperty'
+        './TimeIntervalCollectionProperty',
+        './VideoMaterialProperty'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -125,6 +127,7 @@ define([
         DynamicPolygon,
         DynamicPolyline,
         DynamicPyramid,
+        DynamicScreenOverlay,
         DynamicRectangle,
         DynamicVector,
         DynamicWall,
@@ -138,7 +141,8 @@ define([
         StripeMaterialProperty,
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
-        TimeIntervalCollectionProperty) {
+        TimeIntervalCollectionProperty,
+        VideoMaterialProperty) {
     "use strict";
 
     var currentId;
@@ -235,6 +239,16 @@ define([
 
     function unwrapImageInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapVideoInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.video, czmlInterval);
         if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
@@ -419,6 +433,8 @@ define([
             return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        case HTMLVideoElement:
+            return unwrapVideoInterval(czmlInterval, sourceUri);
         default:
             throw new DeveloperError(type);
         }
@@ -829,6 +845,17 @@ define([
             processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri, dynamicObjectCollection);
             processPacketData(Number, existingMaterial, 'offset', materialData.offset, undefined, sourceUri, dynamicObjectCollection);
             processPacketData(Number, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, dynamicObjectCollection);
+        } else if (defined(packetData.video)) {
+            if (!(existingMaterial instanceof VideoMaterialProperty)) {
+                existingMaterial = new VideoMaterialProperty();
+            }
+            materialData = packetData.video;
+            processPacketData(HTMLVideoElement, existingMaterial, 'video', materialData.video, undefined, sourceUri, dynamicObjectCollection);
+            processPacketData(Number, existingMaterial, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri, dynamicObjectCollection);
+            processPacketData(Number, existingMaterial, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri, dynamicObjectCollection);
+            processPacketData(Boolean, existingMaterial, 'loop', materialData.loop, undefined, sourceUri, dynamicObjectCollection);
+            processPacketData(Number, existingMaterial, 'speed', materialData.speed, undefined, sourceUri, dynamicObjectCollection);
+            processPacketData(JulianDate, existingMaterial, 'startTime', materialData.startTime, undefined, sourceUri, dynamicObjectCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1454,6 +1481,31 @@ define([
         }
     }
 
+    function processScreenOverlay(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var screenOverlayData = packet.screenOverlay;
+        if (!defined(screenOverlayData)) {
+            return;
+        }
+
+        var interval = screenOverlayData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var screenOverlay = dynamicObject.screenOverlay;
+        if (!defined(screenOverlay)) {
+            dynamicObject.screenOverlay = screenOverlay = new DynamicScreenOverlay();
+        }
+
+        processPacketData(Boolean, screenOverlay, 'show', screenOverlayData.show, interval, sourceUri, dynamicObjectCollection);
+        processPacketData(Cartesian2, screenOverlay, 'position', screenOverlayData.position, interval, sourceUri, dynamicObjectCollection);
+        processPacketData(Number, screenOverlay, 'width', screenOverlayData.width, interval, sourceUri, dynamicObjectCollection);
+        processPacketData(Number, screenOverlay, 'height', screenOverlayData.height, interval, sourceUri, dynamicObjectCollection);
+        processMaterialPacketData(screenOverlay, 'material', screenOverlayData.material, interval, sourceUri, dynamicObjectCollection);
+
+    }
+
+
     function processVector(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vectorData = packet.vector;
         if (!defined(vectorData)) {
@@ -1686,6 +1738,7 @@ define([
     processPolygon, //
     processPolyline, //
     processPyramid, //
+    processScreenOverlay, //
     processRectangle, //
     processVector, //
     processPosition, //

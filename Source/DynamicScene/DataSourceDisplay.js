@@ -12,6 +12,7 @@ define([
         './DynamicPathVisualizer',
         './DynamicPointVisualizer',
         './DynamicPyramidVisualizer',
+        './DynamicScreenOverlayVisualizer',
         './DynamicVectorVisualizer',
         './EllipseGeometryUpdater',
         './EllipsoidGeometryUpdater',
@@ -33,6 +34,7 @@ define([
         DynamicPathVisualizer,
         DynamicPointVisualizer,
         DynamicPyramidVisualizer,
+        DynamicScreenOverlayVisualizer,
         DynamicVectorVisualizer,
         EllipseGeometryUpdater,
         EllipsoidGeometryUpdater,
@@ -98,6 +100,7 @@ define([
                 new DynamicPointVisualizer(scene, dynamicObjects),
                 new DynamicVectorVisualizer(scene, dynamicObjects),
                 new DynamicPyramidVisualizer(scene, dynamicObjects),
+                new DynamicScreenOverlayVisualizer(scene, dynamicObjects),
                 new DynamicPathVisualizer(scene, dynamicObjects)];
     };
 
