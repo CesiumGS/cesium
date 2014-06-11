@@ -124,7 +124,6 @@ define([
         result[6] = array[startingIndex + 6];
         result[7] = array[startingIndex + 7];
         result[8] = array[startingIndex + 8];
-        result[9] = array[startingIndex + 9];
         return result;
     };
 

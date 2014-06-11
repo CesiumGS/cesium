@@ -543,7 +543,7 @@ defineSuite([
     it('multiplyByTranslation works', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
-        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
+        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation), new Matrix4());
         var result = new Matrix4();
         var returnedResult = Matrix4.multiplyByTranslation(m, translation, result);
         expect(returnedResult).toBe(result);
@@ -553,7 +553,7 @@ defineSuite([
     it('multiplyByTranslation works with a result parameter that is an input result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var translation = new Cartesian3(17, 18, 19);
-        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation));
+        var expected = Matrix4.multiply(m, Matrix4.fromTranslation(translation), new Matrix4());
         var returnedResult = Matrix4.multiplyByTranslation(m, translation, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
@@ -562,7 +562,7 @@ defineSuite([
     it('multiplyByUniformScale works', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = 1.0;
-        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
+        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale), new Matrix4());
         var result = new Matrix4();
         var returnedResult = Matrix4.multiplyByUniformScale(m, scale, result);
         expect(returnedResult).toBe(result);
@@ -572,7 +572,7 @@ defineSuite([
     it('multiplyByUniformScale works with a result parameter that is an input result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = 2.0;
-        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale));
+        var expected = Matrix4.multiply(m, Matrix4.fromUniformScale(scale), new Matrix4());
         var returnedResult = Matrix4.multiplyByUniformScale(m, scale, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
@@ -581,7 +581,7 @@ defineSuite([
     it('multiplyByScale works', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = new Cartesian3(1.0, 1.0, 1.0);
-        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale));
+        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
         var result = new Matrix4();
         var returnedResult = Matrix4.multiplyByScale(m, scale, result);
         expect(returnedResult).toBe(result);
@@ -591,7 +591,7 @@ defineSuite([
     it('multiplyByScale works with "this" result parameter', function() {
         var m = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 0, 0, 1);
         var scale = new Cartesian3(1.0, 2.0, 3.0);
-        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale));
+        var expected = Matrix4.multiply(m, Matrix4.fromScale(scale), new Matrix4());
         var returnedResult = Matrix4.multiplyByScale(m, scale, m);
         expect(returnedResult).toBe(m);
         expect(m).toEqual(expected);
@@ -850,7 +850,7 @@ defineSuite([
         var returnedResult = Matrix4.inverse(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqualEpsilon(returnedResult, CesiumMath.EPSILON20);
-        expect(Matrix4.multiply(returnedResult, matrix)).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
+        expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqualEpsilon(Matrix4.IDENTITY, CesiumMath.EPSILON15);
     });
 
     it('inverseTransformation works', function() {
@@ -868,7 +868,7 @@ defineSuite([
         var returnedResult = Matrix4.inverseTransformation(matrix, result);
         expect(returnedResult).toBe(result);
         expect(expected).toEqual(returnedResult);
-        expect(Matrix4.multiply(returnedResult, matrix)).toEqual(Matrix4.IDENTITY);
+        expect(Matrix4.multiply(returnedResult, matrix, new Matrix4())).toEqual(Matrix4.IDENTITY);
     });
 
     it('abs throws without a matrix', function() {
@@ -1372,7 +1372,7 @@ defineSuite([
     it('inverse throws with non-inversable matrix', function() {
         var matrix = new Matrix4(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
         expect(function() {
-            Matrix4.inverse(matrix);
+            Matrix4.inverse(matrix, new Matrix4());
         }).toThrowRuntimeError();
     });
 

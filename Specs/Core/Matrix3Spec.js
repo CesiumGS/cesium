@@ -492,17 +492,17 @@ defineSuite([
         var decomposition = Matrix3.getEigenDecomposition(a);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 
-        var v = Matrix3.getColumn(decomposition.unitary, 0);
-        var lambda = Matrix3.getColumn(decomposition.diagonal, 0).x;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        var v = Matrix3.getColumn(decomposition.unitary, 0, new Cartesian3());
+        var lambda = Matrix3.getColumn(decomposition.diagonal, 0, new Cartesian3()).x;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
 
-        v = Matrix3.getColumn(decomposition.unitary, 1);
-        lambda = Matrix3.getColumn(decomposition.diagonal, 1).y;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        v = Matrix3.getColumn(decomposition.unitary, 1, new Cartesian3());
+        lambda = Matrix3.getColumn(decomposition.diagonal, 1, new Cartesian3()).y;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
 
-        v = Matrix3.getColumn(decomposition.unitary, 2);
-        lambda = Matrix3.getColumn(decomposition.diagonal, 2).z;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        v = Matrix3.getColumn(decomposition.unitary, 2, new Cartesian3());
+        lambda = Matrix3.getColumn(decomposition.diagonal, 2, new Cartesian3()).z;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
     });
 
     it('computes eigenvalues and eigenvectors with result parameters', function() {
@@ -522,17 +522,17 @@ defineSuite([
         expect(decomposition).toBe(result);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
 
-        var v = Matrix3.getColumn(decomposition.unitary, 0);
-        var lambda = Matrix3.getColumn(decomposition.diagonal, 0).x;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        var v = Matrix3.getColumn(decomposition.unitary, 0, new Cartesian3());
+        var lambda = Matrix3.getColumn(decomposition.diagonal, 0, new Cartesian3()).x;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
 
-        v = Matrix3.getColumn(decomposition.unitary, 1);
-        lambda = Matrix3.getColumn(decomposition.diagonal, 1).y;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        v = Matrix3.getColumn(decomposition.unitary, 1, new Cartesian3());
+        lambda = Matrix3.getColumn(decomposition.diagonal, 1, new Cartesian3()).y;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
 
-        v = Matrix3.getColumn(decomposition.unitary, 2);
-        lambda = Matrix3.getColumn(decomposition.diagonal, 2).z;
-        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v), CesiumMath.EPSILON14);
+        v = Matrix3.getColumn(decomposition.unitary, 2, new Cartesian3());
+        lambda = Matrix3.getColumn(decomposition.diagonal, 2, new Cartesian3()).z;
+        expect(Cartesian3.multiplyByScalar(v, lambda, new Cartesian3())).toEqualEpsilon(Matrix3.multiplyByVector(a, v, new Cartesian3()), CesiumMath.EPSILON14);
     });
 
     it('abs throws without a matrix', function() {

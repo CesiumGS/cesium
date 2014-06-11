@@ -282,7 +282,7 @@ defineSuite([
                     expect(Matrix4.inverse(t4, new Matrix4())).toEqualEpsilon(Matrix4.inverseTransformation(t4, new Matrix4()), CesiumMath.EPSILON14);
 
                     var expectedMtx = Matrix3.fromQuaternion(Quaternion.conjugate(componentsData[i].icrfToFixedQuaternion));
-                    var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx, new Matrix3());
+                    var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                     var testDiff = new Matrix3();
                     for ( var k = 0; k < 9; k++) {
                         testDiff[k] = t[k] - expectedMtx[k];
@@ -325,7 +325,7 @@ defineSuite([
                 // The rotation matrix from STK Components corresponding to the time and data inputs above
                 var expectedMtx = new Matrix3(0.18264414843630006, -0.98317906144315947, -0.00021950336420248503, 0.98317840915224974, 0.18264428011734501, -0.0011325710874539787, 0.0011536112127187594, -0.0000089534866085598909, 0.99999933455028112);
 
-                var testInverse = Matrix3.multiply(Matrix3.transpose(t), expectedMtx, new Matrix3());
+                var testInverse = Matrix3.multiply(Matrix3.transpose(t, new Matrix3()), expectedMtx, new Matrix3());
                 var testDiff = new Matrix3();
                 for ( var i = 0; i < 9; i++) {
                     testDiff[i] = t[i] - expectedMtx[i];
@@ -518,7 +518,7 @@ defineSuite([
     var vpTransform = Matrix4.computeViewportTransformation({
         width : width,
         height : height
-    }, new Matrix4());
+    }, 0, 1, new Matrix4());
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({

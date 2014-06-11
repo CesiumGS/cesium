@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/RectangleGeometry',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
@@ -10,6 +11,7 @@ defineSuite([
         'Core/VertexFormat'
     ], function(
         RectangleGeometry,
+        Cartesian2,
         Cartesian3,
         Ellipsoid,
         GeographicProjection,
