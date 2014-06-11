@@ -1127,10 +1127,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-
     it('lerp throws with no result', function() {
         expect(function() {
             Cartesian3.lerp(new Cartesian3(), new Cartesian3(), 10);
+        }).toThrowDeveloperError();
+    });
+
+    it('mostOrthogonalAxis throws with no result', function() {
+        expect(function() {
+            Cartesian3.mostOrthogonalAxis(new Cartesian3());
         }).toThrowDeveloperError();
     });
 
