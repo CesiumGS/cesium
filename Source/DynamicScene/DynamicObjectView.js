@@ -170,6 +170,7 @@ define([
         }
     }
 
+    var offset3DCrossScratch = new Cartesian3();
     /**
      * A utility object for tracking an object with the camera.
      * @alias DynamicObjectView
@@ -179,7 +180,6 @@ define([
      * @param {Scene} scene The scene to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
-    var offset3DCrossScratch = new Cartesian3();
     var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
         /**
          * The object to track with the camera.

@@ -245,6 +245,7 @@ define([
         return false;
     };
 
+    var tempScratch = new Cartesian3();
     /**
      * Determine to what extent an occludee is visible (not visible, partially visible,  or fully visible).
      *
@@ -262,7 +263,6 @@ define([
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.getVisibility(sphere2); //returns Visibility.NONE
      */
-    var tempScratch = new Cartesian3();
     Occluder.prototype.getVisibility = function(occludeeBS) {
         if (!defined(occludeeBS)) {
             throw new DeveloperError('occludeeBS is required.');
@@ -313,6 +313,7 @@ define([
         return Visibility.NONE;
     };
 
+    var occludeePointScratch = new Cartesian3();
     /**
      * Computes a point that can be used as the occludee position to the visibility functions.
      * Use a radius of zero for the occludee radius.  Typically, a user computes a bounding sphere around
@@ -340,7 +341,6 @@ define([
      * var occludeePosition = tileOccluderSphere.center;
      * var occludeePt = occluder.getOccludeePoint(occluderBoundingSphere, occludeePosition, positions);
      */
-    var occludeePointScratch = new Cartesian3();
     Occluder.getOccludeePoint = function(occluderBoundingSphere, occludeePosition, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(occluderBoundingSphere)) {

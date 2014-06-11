@@ -266,6 +266,10 @@ define([
         return solutions;
     }
 
+    var firstAxisScratch = new Cartesian3();
+    var secondAxisScratch = new Cartesian3();
+    var thirdAxisScratch = new Cartesian3();
+    var referenceScratch = new Cartesian3();
     /**
      * Provides the point along the ray which is nearest to the ellipsoid.
      *
@@ -273,10 +277,6 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid.
      * @returns {Cartesian} The nearest planetodetic point on the ray.
      */
-    var firstAxisScratch = new Cartesian3();
-    var secondAxisScratch = new Cartesian3();
-    var thirdAxisScratch = new Cartesian3();
-    var referenceScratch = new Cartesian3();
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
