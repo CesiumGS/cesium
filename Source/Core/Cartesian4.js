@@ -622,6 +622,9 @@ define([
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
         //>>includeEnd('debug');
 
         var f = Cartesian4.normalize(cartesian, mostOrthogonalAxisScratch);
