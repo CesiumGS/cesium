@@ -46,12 +46,12 @@ define([
      *
      * @param {Number} x The x coordinate.
      * @param {Number} y The y coordinate.
-     * @param {Cartesian2} result The object onto which to store the result.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.fromElements = function(x, y, result) {
         if (!defined(result)) {
-            result = new Cartesian2();
+            return new Cartesian2(x, y);
         }
 
         result.x = x;
@@ -103,7 +103,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Cartesian2.packedLength = 2;
 
@@ -177,7 +177,7 @@ define([
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
      *
-     * @param {Cartesian2} The cartesian to use.
+     * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the maximum component.
      */
     Cartesian2.getMaximumComponent = function(cartesian) {
@@ -193,7 +193,7 @@ define([
     /**
      * Computes the value of the minimum component for the supplied Cartesian.
      *
-     * @param {Cartesian2} The cartesian to use.
+     * @param {Cartesian2} cartesian The cartesian to use.
      * @returns {Number} The value of the minimum component.
      */
     Cartesian2.getMinimumComponent = function(cartesian) {
@@ -315,7 +315,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian to be normalized.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.normalize = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -360,7 +360,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -386,7 +386,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.add = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -412,7 +412,7 @@ define([
      * @param {Cartesian2} left The first Cartesian.
      * @param {Cartesian2} right The second Cartesian.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.subtract = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -438,7 +438,7 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -464,7 +464,7 @@ define([
      * @param {Cartesian2} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.divideByScalar = function(cartesian, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -489,7 +489,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian to be negated.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.negate = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -511,7 +511,7 @@ define([
      *
      * @param {Cartesian2} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.abs = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -532,10 +532,10 @@ define([
     /**
      * Computes the linear interpolation or extrapolation at t using the provided cartesians.
      *
-     * @param start The value corresponding to t at 0.0.
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
-     * @param {Cartesian2} result The object onto which to store the result.
+     * @param {Cartesian2} start The value corresponding to t at 0.0.
+     * @param {Cartesian2} end The value corresponding to t at 1.0.
+     * @param {Number} t The point along t at which to interpolate.
+     * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.lerp = function(start, end, t, result) {

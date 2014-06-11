@@ -30,7 +30,6 @@ Beta Releases
    * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
-
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
 * `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
