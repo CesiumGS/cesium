@@ -831,7 +831,7 @@ define([
      * @param {JulianDate} [result] An existing instance to use for the result.
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
      */
-    JulianDate.addMinutes = function(julianDate, minutes) {
+    JulianDate.addMinutes = function(julianDate, minutes, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(julianDate)) {
             throw new DeveloperError('julianDate is required.');
@@ -842,7 +842,7 @@ define([
         //>>includeEnd('debug');
 
         var newSecondsOfDay = julianDate.secondsOfDay + (minutes * TimeConstants.SECONDS_PER_MINUTE);
-        return new JulianDate(julianDate.dayNumber, newSecondsOfDay, TimeStandard.TAI);
+        return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
     };
 
     /**
@@ -853,7 +853,7 @@ define([
      * @param {JulianDate} [result] An existing instance to use for the result.
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
      */
-    JulianDate.addHours = function(julianDate, hours) {
+    JulianDate.addHours = function(julianDate, hours, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(julianDate)) {
             throw new DeveloperError('julianDate is required.');
@@ -864,7 +864,7 @@ define([
         //>>includeEnd('debug');
 
         var newSecondsOfDay = julianDate.secondsOfDay + (hours * TimeConstants.SECONDS_PER_HOUR);
-        return new JulianDate(julianDate.dayNumber, newSecondsOfDay, TimeStandard.TAI);
+        return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
     };
 
     /**
@@ -875,7 +875,7 @@ define([
      * @param {JulianDate} [result] An existing instance to use for the result.
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
      */
-    JulianDate.addDays = function(julianDate, days) {
+    JulianDate.addDays = function(julianDate, days, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(julianDate)) {
             throw new DeveloperError('julianDate is required.');
@@ -886,7 +886,7 @@ define([
         //>>includeEnd('debug');
 
         var newJulianDayNumber = julianDate.dayNumber + days;
-        return new JulianDate(newJulianDayNumber, julianDate.secondsOfDay, TimeStandard.TAI);
+        return setComponents(julianDate.dayNumber, newSecondsOfDay, result);
     };
 
     /**
