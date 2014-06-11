@@ -6,12 +6,12 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/Ellipsoid',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
-        '../ThirdParty/Tween',
         './Camera',
         './OrthographicFrustum',
         './PerspectiveFrustum',
@@ -23,12 +23,12 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        EasingFunction,
         Ellipsoid,
         CesiumMath,
         Matrix4,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
-        Tween,
         Camera,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -283,7 +283,7 @@ define([
 
         var animation = scene.animations.add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.Out,
+            easingFunction : EasingFunction.QUARTIC_OUT,
             startValue : {
                 time : 0.0
             },
@@ -333,7 +333,7 @@ define([
 
         var animation = scene.animations.add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.Out,
+            easingFunction : EasingFunction.QUARTIC_OUT,
             startValue : {
                 time : 0.0
             },
@@ -378,7 +378,7 @@ define([
         duration *= 0.5;
         var animation = scene.animations.add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.Out,
+            easingFunction : EasingFunction.QUARTIC_OUT,
             startValue : {
                 time : 0.0
             },
@@ -464,7 +464,7 @@ define([
         }
 
         var animation = scene.animations.add({
-            easingFunction : Tween.Easing.Quartic.Out,
+            easingFunction : EasingFunction.QUARTIC_OUT,
             duration : partialDuration,
             startValue : {
                 time : startTime
@@ -507,7 +507,7 @@ define([
 
             var animation = scene.animations.add({
                 duration : duration,
-                easingFunction : Tween.Easing.Quartic.Out,
+                easingFunction : EasingFunction.QUARTIC_OUT,
                 startValue : {
                     time : 0.0
                 },
@@ -549,7 +549,7 @@ define([
 
         var animation = scene.animations.add({
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.Out,
+            easingFunction : EasingFunction.QUARTIC_OUT,
             startValue : {
                 time : 0.0
             },
@@ -574,7 +574,7 @@ define([
         // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
         var template = {
             duration : duration,
-            easingFunction : Tween.Easing.Quartic.Out
+            easingFunction : EasingFunction.QUARTIC_OUT
         };
 
         if (defined(complete)) {

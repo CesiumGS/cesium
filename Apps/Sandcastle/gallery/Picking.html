@@ -196,7 +196,7 @@ require(['Cesium'], function(Cesium) {
                             alpha : 1.0
                         },
                         duration : 0.5,
-                        easingFunction : Cesium.Tween.Easing.Quartic.Out
+                        easingFunction : Cesium.EasingFunction.QUARTIC_OUT
                     });
                 }
                 else if ((pickedObject !== billboard) && billboard.highlighted) {
@@ -219,7 +219,7 @@ require(['Cesium'], function(Cesium) {
                             alpha : 1.0
                         },
                         duration : 0.5,
-                        easingFunction : Cesium.Tween.Easing.Quartic.Out
+                        easingFunction : Cesium.EasingFunction.QUARTIC_OUT
                     });
                 }
             }

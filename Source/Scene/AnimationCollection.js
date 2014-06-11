@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/getTimestamp',
         '../Core/TimeConstants',
         '../ThirdParty/Tween'
@@ -14,6 +15,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         getTimestamp,
         TimeConstants,
         Tween) {
@@ -46,7 +48,7 @@ define([
         if (options.duration > 0.0) {
             var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
             var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-            var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
+            var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
             var value = clone(options.startValue);
             var tween = new Tween.Tween(value);
@@ -122,7 +124,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
         var value = {
             alpha : start
@@ -171,7 +173,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
         var value = {
             value : start
@@ -214,7 +216,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
         var value = {
             offset : material.uniforms.offset

@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/Ellipsoid',
         '../Core/IntersectionTests',
         '../Core/Math',
@@ -16,7 +17,6 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
-        '../ThirdParty/Tween',
         './CameraFlightPath',
         './PerspectiveFrustum',
         './SceneMode'
@@ -29,6 +29,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         Ellipsoid,
         IntersectionTests,
         CesiumMath,
@@ -37,7 +38,6 @@ define([
         Quaternion,
         Ray,
         Transforms,
-        Tween,
         CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
@@ -1870,7 +1870,7 @@ define([
             };
 
             return {
-                easingFunction : Tween.Easing.Exponential.Out,
+                easingFunction : EasingFunction.EXPONENTIAL_OUT,
                 startValue : {
                     time : 0.0
                 },
@@ -1906,7 +1906,7 @@ define([
         };
 
         return {
-            easingFunction : Tween.Easing.Exponential.Out,
+            easingFunction : EasingFunction.EXPONENTIAL_OUT,
             startValue : {
                 time : 0.0
             },

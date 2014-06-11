@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/HermiteSpline',
         '../Core/LinearSpline',
         '../Core/Math',
@@ -14,7 +15,6 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../ThirdParty/Tween',
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './SceneMode'
@@ -26,6 +26,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        EasingFunction,
         HermiteSpline,
         LinearSpline,
         CesiumMath,
@@ -33,7 +34,6 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
-        Tween,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
@@ -522,7 +522,7 @@ define([
 
         return {
             duration : duration,
-            easingFunction : Tween.Easing.Sinusoidal.InOut,
+            easingFunction : EasingFunction.SINUSOIDAL_IN_OUT,
             startValue : {
                 time : 0.0
             },

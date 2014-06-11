@@ -5,18 +5,18 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EasingFunction',
         '../../Scene/SceneTransforms',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/Tween'
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        EasingFunction,
         SceneTransforms,
-        knockout,
-        Tween) {
+        knockout) {
     "use strict";
 
     var screenSpacePos = new Cartesian2();
@@ -116,7 +116,7 @@ define([
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
         this._animationCollection.addProperty(this, '_scale', 2, 1, {
             duration : 0.8,
-            easingFunction : Tween.Easing.Exponential.Out
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 
@@ -126,7 +126,7 @@ define([
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
         this._animationCollection.addProperty(this, '_scale', this._scale, 1.5, {
             duration : 0.8,
-            easingFunction : Tween.Easing.Exponential.Out
+            easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
     };
 
