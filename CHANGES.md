@@ -27,18 +27,17 @@ Beta Releases
   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
-  * Moved `LeapScond.leapSeconds` to `JulianDate.leapSeconds`.
+  * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * Refactored `JulianDate` to be in line with other Core types.
     * Most functions now take result parameters.
+    * The default constructor no longer creates a date at the current time, use `JulianDate.now()` instead.
     * Removed `JulianDate.getJulianTimeFraction` and `JulianDate.compareTo`
+    * `new JulianDate()` -> `JulianDate.now()`
     * `date.getJulianDayNumber()` -> `date.dayNumber`
     * `date.getSecondsOfDay()` -> `secondsOfDay`
-    * `new JulianDate()` -> `JulianDate.now()`
     * `date.getTotalDays()` -> `JulianDate.getTotalDays(date)`
     * `date.getSecondsDifference(arg1, arg2)` -> `JulianDate.getSecondsDifference(arg2, arg1)` (Note, order of arguments flipped)
     * `date.getDaysDifference(arg1, arg2)` -> `JulianDate.getDaysDifference(arg2, arg1)` (Note, order of arguments flipped)
-    * `date.getTaiMinusUtc()` -> `JulianDate.getTaiMinusUtc(date)`
-    * `date.getTaiMinusUtc()` -> `JulianDate.getTaiMinusUtc(date)`
     * `date.getTaiMinusUtc()` -> `JulianDate.getTaiMinusUtc(date)`
     * `date.addSeconds(seconds)` -> `JulianDate.addSeconds(date, seconds)`
     * `date.addMinutes(minutes)` -> `JulianDate.addMinutes(date, minutes)`
