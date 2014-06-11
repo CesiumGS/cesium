@@ -59,7 +59,7 @@ define([
         if (typeof date === 'string') {
             return JulianDate.fromIso8601(date);
         }
-        return epoch.addSeconds(date);
+        return JulianDate.addSeconds(epoch, date);
     }
 
     var timesSpliceArgs = [];
@@ -359,7 +359,7 @@ define([
 
             // Build the tables
             for (var i = 0; i < length; ++i) {
-                xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
+                xTable[i] = JulianDate.getSecondsDifference(times[firstIndex + i], times[lastIndex]);
             }
 
             if (!defined(innerType.convertPackedArrayForInterpolation)) {
@@ -378,7 +378,7 @@ define([
             }
 
             // Interpolate!
-            var x = times[lastIndex].getSecondsDifference(time);
+            var x = JulianDate.getSecondsDifference(time, times[lastIndex]);
             var interpolationResult;
             if (inputOrder === 0 || !defined(interpolationAlgorithm.interpolate)) {
                 interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);

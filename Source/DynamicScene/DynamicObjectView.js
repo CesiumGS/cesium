@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Transforms',
@@ -15,6 +16,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        JulianDate,
         CesiumMath,
         Matrix3,
         Transforms,
@@ -43,7 +45,7 @@ define([
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-            var deltaTime = time.addSeconds(0.001);
+            var deltaTime = JulianDate.addSeconds(time, 0.001);
             var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
             if (defined(deltaCartesian)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
