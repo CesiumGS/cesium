@@ -864,6 +864,7 @@ define([
         return attributesInAllGeometries;
     }
 
+    var tempScratch = new Cartesian3();
     /**
      * Combines geometry from several {@link GeometryInstance} objects into one geometry.
      * This concatenates the attributes, concatenates and adjusts the indices, and creates
@@ -999,7 +1000,7 @@ define([
 
             for (i = 0; i < length; ++i) {
                 bs = instances[i].geometry.boundingSphere;
-                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center)) + bs.radius;
+                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center, tempScratch)) + bs.radius;
 
                 if (tempRadius > radius) {
                     radius = tempRadius;
@@ -1095,7 +1096,7 @@ define([
 
             Cartesian3.subtract(v1, v0, v1);
             Cartesian3.subtract(v2, v0, v2);
-            normalsPerTriangle[j] = Cartesian3.cross(v1, v2);
+            normalsPerTriangle[j] = Cartesian3.cross(v1, v2, new Cartesian3());
             j++;
         }
 
@@ -1617,6 +1618,13 @@ define([
         return splitTriangleResult;
     }
 
+    var u0Scratch = new Cartesian2();
+    var u1Scratch = new Cartesian2();
+    var u2Scratch = new Cartesian2();
+    var v0Scratch = new Cartesian3();
+    var v1Scratch = new Cartesian3();
+    var v2Scratch = new Cartesian3();
+    var computeScratch = new Cartesian3();
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
         if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
@@ -1631,8 +1639,12 @@ define([
         var b0, b1, b2;
         var t0, t1, t2;
         var s0, s1, s2;
-        var v0, v1, v2;
-        var u0, u1, u2;
+        var v0 = v0Scratch;
+        var v1 = v1Scratch;
+        var v2 = v2Scratch;
+        var u0 = u0Scratch;
+        var u1 = u1Scratch;
+        var u2 = u2Scratch;
 
         if (defined(normals)) {
             n0 = Cartesian3.fromArray(normals, i0 * 3);
@@ -1667,7 +1679,7 @@ define([
                 v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
                 v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
 
-                var normal = Cartesian3.add(v0, v1);
+                var normal = Cartesian3.add(v0, v1, computeScratch);
                 Cartesian3.add(normal, v2, normal);
                 Cartesian3.normalize(normal, normal);
 
@@ -1679,7 +1691,7 @@ define([
                 v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
                 v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
 
-                var binormal = Cartesian3.add(v0, v1);
+                var binormal = Cartesian3.add(v0, v1, computeScratch);
                 Cartesian3.add(binormal, v2, binormal);
                 Cartesian3.normalize(binormal, binormal);
 
@@ -1691,7 +1703,7 @@ define([
                 v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
                 v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
 
-                var tangent = Cartesian3.add(v0, v1);
+                var tangent = Cartesian3.add(v0, v1, computeScratch);
                 Cartesian3.add(tangent, v2, tangent);
                 Cartesian3.normalize(tangent, tangent);
 
@@ -1703,7 +1715,7 @@ define([
                 u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
                 u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
 
-                var texCoord = Cartesian2.add(u0, u1);
+                var texCoord = Cartesian2.add(u0, u1, u0);
                 Cartesian2.add(texCoord, u2, texCoord);
 
                 texCoords.push(texCoord.x, texCoord.y);
@@ -1789,6 +1801,8 @@ define([
         geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
+    var offsetScratch = new Cartesian3();
+    var offsetPointScratch = new Cartesian3();
     function wrapLongitudeLines(geometry) {
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
@@ -1835,7 +1849,7 @@ define([
                 var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane);
                 if (defined(intersection)) {
                     // move point on the xz-plane slightly away from the plane
-                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9);
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, offsetScratch);
                     if (prev.y < 0.0) {
                         Cartesian3.negate(offset, offset);
                     }
@@ -1843,7 +1857,7 @@ define([
                     var index = newPositions.length / 3;
                     newIndices.push(index, index + 1);
 
-                    var offsetPoint = Cartesian3.add(intersection, offset);
+                    var offsetPoint = Cartesian3.add(intersection, offset, offsetPointScratch);
                     newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
                     Cartesian3.negate(offset, offset);

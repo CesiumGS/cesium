@@ -62,6 +62,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         result = Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);
     };

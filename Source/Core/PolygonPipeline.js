@@ -33,9 +33,11 @@ define([
         WindingOrder) {
     "use strict";
 
+    var uScratch = new Cartesian2();
+    var vScratch = new Cartesian2();
     function isTipConvex(p0, p1, p2) {
-        var u = Cartesian2.subtract(p1, p0);
-        var v = Cartesian2.subtract(p2, p1);
+        var u = Cartesian2.subtract(p1, p0, uScratch);
+        var v = Cartesian2.subtract(p2, p1, vScratch);
 
         // Use the sign of the z component of the cross product
         return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
@@ -133,6 +135,7 @@ define([
      *
      * @private
      */
+    var distScratch = new Cartesian2();
     function intersectPointWithRing(point, ring, edgeIndices) {
         edgeIndices = defaultValue(edgeIndices, []);
 
@@ -167,7 +170,7 @@ define([
                     var ub = (((point2.x - point.x) * (point.y - v1.y)) - ((point2.y - point.y) * (point.x - v1.x))) * temp;
                     if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
                         var tempIntersection = new Cartesian2(point.x + ua * (point2.x - point.x), point.y + ua * (point2.y - point.y));
-                        var dist = Cartesian2.subtract(tempIntersection, point);
+                        var dist = Cartesian2.subtract(tempIntersection, point, distScratch);
                         temp = Cartesian2.magnitudeSquared(dist);
                         if (temp < minDistance) {
                             intersection = tempIntersection;
@@ -193,6 +196,8 @@ define([
      *
      * @private
      */
+    var v1Scratch = new Cartesian2(1.0, 0.0);
+    var v2Scratch = new Cartesian2();
     function getMutuallyVisibleVertexIndex(outerRing, innerRings) {
         var innerRingIndex = getRightmostRingIndex(innerRings);
         var innerRing = innerRings[innerRingIndex];
@@ -207,8 +212,8 @@ define([
         }
 
         // Set P to be the edge endpoint closest to the inner ring vertex
-        var d1 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex));
-        var d2 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex));
+        var d1 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex, v1Scratch));
+        var d2 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex, v1Scratch));
         var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
 
         var reflexVertices = getReflexVertices(outerRing);
@@ -230,9 +235,9 @@ define([
         // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
         var minAngle = Number.MAX_VALUE;
         if (pointsInside.length > 0) {
-            var v1 = new Cartesian2(1.0, 0.0);
+            var v1 = Cartesian2.fromElements(1.0, 0.0, v1Scratch);
             for (i = 0; i < pointsInside.length; i++) {
-                var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
+                var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex, v2Scratch);
                 var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
                 if (denominator !== 0) {
                     var angle = Math.abs(CesiumMath.acosClamped(Cartesian2.dot(v1, v2) / denominator));
@@ -372,6 +377,9 @@ define([
      */
     var BEFORE = -1;
     var AFTER = 1;
+    var s1Scratch = new Cartesian3();
+    var s2Scratch = new Cartesian3();
+    var cutScratch = new Cartesian3();
     function internalCut(a1i, a2i, pArray) {
         // Make sure vertex is valid
         validateVertex(a1i, pArray);
@@ -384,14 +392,9 @@ define([
         var before = getNextVertex(a1i, pArray, BEFORE);
         var after = getNextVertex(a1i, pArray, AFTER);
 
-        var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
-        var s2 = Cartesian2.subtract(pArray[after].position, a1.position);
-        var cut = Cartesian2.subtract(a2.position, a1.position);
-
-        // Convert to 3-dimensional so we can use cross product
-        s1 = new Cartesian3(s1.x, s1.y, 0.0);
-        s2 = new Cartesian3(s2.x, s2.y, 0.0);
-        cut = new Cartesian3(cut.x, cut.y, 0.0);
+        var s1 = Cartesian2.subtract(pArray[before].position, a1.position, s1Scratch);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1.position, s2Scratch);
+        var cut = Cartesian2.subtract(a2.position, a1.position, cutScratch);
 
         if (isParallel(s1, cut)) { // Cut is parallel to s1
             return isInternalToParallelSide(s1, cut);
@@ -501,6 +504,8 @@ define([
      *
      * @private
      */
+    var vvScratch1 = new Cartesian3();
+    var vvScratch2 = new Cartesian3();
     function validateVertex(index, pArray) {
         var before = index - 1;
         var after = index + 1;
@@ -511,12 +516,8 @@ define([
             after = 0;
         }
 
-        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position);
-        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position);
-
-        // Convert to 3-dimensional so we can use cross product
-        s1 = new Cartesian3(s1.x, s1.y, 0.0);
-        s2 = new Cartesian3(s2.x, s2.y, 0.0);
+        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position, vvScratch1);
+        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position, vvScratch2);
 
         if (isParallel(s1, s2)) {
             var e = new DeveloperError("Superfluous vertex found.");
@@ -534,8 +535,9 @@ define([
      *
      * @private
      */
+    var parallelScratch = new Cartesian3();
     function isParallel(s1, s2) {
-        return Cartesian3.cross(s1, s2).z === 0.0;
+        return Cartesian3.cross(s1, s2, parallelScratch).z === 0.0;
     }
 
     /**
@@ -548,8 +550,9 @@ define([
      *
      * @private
      */
+    var lessThanScratch = new Cartesian3();
     function angleLessThan180(s1, s2) {
-        return Cartesian3.cross(s1, s2).z < 0.0;
+        return Cartesian3.cross(s1, s2, lessThanScratch).z < 0.0;
     }
 
     /**
@@ -562,8 +565,9 @@ define([
      *
      * @private
      */
+    var greaterThanScratch = new Cartesian3();
     function angleGreaterThan180(s1, s2) {
-        return Cartesian3.cross(s1, s2).z > 0.0;
+        return Cartesian3.cross(s1, s2, greaterThanScratch).z > 0.0;
     }
 
     /**
@@ -579,8 +583,9 @@ define([
      *
      * @private
      */
+    var insideBigAngleScratch = new Cartesian3();
     function isInsideBigAngle(s1, s2, s3) {
-        return (Cartesian3.cross(s1, s3).z > 0.0) && (Cartesian3.cross(s3, s2).z > 0.0);
+        return (Cartesian3.cross(s1, s3, insideBigAngleScratch).z > 0.0) && (Cartesian3.cross(s3, s2, insideBigAngleScratch).z > 0.0);
     }
 
     /**
@@ -596,8 +601,9 @@ define([
      *
      * @private
      */
+    var insideSmallAngleScratch = new Cartesian3();
     function isInsideSmallAngle(s1, s2, s3) {
-        return (Cartesian3.cross(s1, s3).z < 0.0) && (Cartesian3.cross(s3, s2).z < 0.0);
+        return (Cartesian3.cross(s1, s3, insideSmallAngleScratch).z < 0.0) && (Cartesian3.cross(s3, s2, insideSmallAngleScratch).z < 0.0);
     }
 
     /**
@@ -610,6 +616,7 @@ define([
      *
      * @private
      */
+    var intersectionScratch = new Cartesian2();
     function intersectsSide(a1, a2, pArray) {
         for ( var i = 0; i < pArray.length; i++) {
             var b1 = pArray[i].position;
@@ -645,7 +652,7 @@ define([
             }
             var intY = slopeA * intX + a1.y - slopeA * a1.x;
 
-            var intersection = new Cartesian2(intX, intY);
+            var intersection = Cartesian2.fromElements(intX, intY, intersectionScratch);
 
             // If intersection is on an endpoint, count no intersection
             if (Cartesian2.equals(intersection, a1) || Cartesian2.equals(intersection, a2) || Cartesian2.equals(intersection, b1) || Cartesian2.equals(intersection, b2)) {
@@ -663,18 +670,16 @@ define([
         return false;
     }
 
+    var side1Scratch = new Cartesian3();
+    var side2Scratch = new Cartesian3();
     function triangleInLine(pArray) {
         // Get two sides
         var v1 = pArray[0].position;
         var v2 = pArray[1].position;
         var v3 = pArray[2].position;
 
-        var side1 = Cartesian2.subtract(v2, v1);
-        var side2 = Cartesian2.subtract(v3, v1);
-
-        // Convert to 3-dimensional so we can use cross product
-        side1 = new Cartesian3(side1.x, side1.y, 0.0);
-        side2 = new Cartesian3(side2.x, side2.y, 0.0);
+        var side1 = Cartesian2.subtract(v2, v1, side1Scratch);
+        var side2 = Cartesian2.subtract(v3, v1, side2Scratch);
 
         // If they're parallel, so is the last
         return isParallel(side1, side2);
@@ -776,372 +781,371 @@ define([
     /**
      * @private
      */
-    var PolygonPipeline = {
-        /**
-         * Cleans up a simple polygon by removing duplicate adjacent positions and making
-         * the first position not equal the last position.
-         *
-         * @exception {DeveloperError} At least three positions are required.
-         */
-        removeDuplicates : function(positions) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(positions)) {
-                throw new DeveloperError('positions is required.');
-            }
-            if (positions.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
-            }
-            //>>includeEnd('debug');
-
-            var length = positions.length;
-
-            var cleanedPositions = [];
-
-            for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
-                var v0 = positions[i0];
-                var v1 = positions[i1];
-
-                if (!Cartesian3.equals(v0, v1)) {
-                    cleanedPositions.push(v1); // Shallow copy!
-                }
-            }
-
-            return cleanedPositions;
-        },
-
-        /**
-         * @exception {DeveloperError} At least three positions are required.
-         */
-        computeArea2D : function(positions) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(positions)) {
-                throw new DeveloperError('positions is required.');
-            }
-            if (positions.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
-            }
-            //>>includeEnd('debug');
-
-            var length = positions.length;
-            var area = 0.0;
-
-            for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
-                var v0 = positions[i0];
-                var v1 = positions[i1];
-
-                area += (v0.x * v1.y) - (v1.x * v0.y);
-            }
-
-            return area * 0.5;
-        },
-
-        /**
-         * @returns {WindingOrder} The winding order.
-         *
-         * @exception {DeveloperError} At least three positions are required.
-         */
-        computeWindingOrder2D : function(positions) {
-            var area = PolygonPipeline.computeArea2D(positions);
-            return (area >= 0.0) ? WindingOrder.COUNTER_CLOCKWISE : WindingOrder.CLOCKWISE;
-        },
-
-        /**
-         * Triangulate a polygon
-         *
-         * @param {Cartesian2[]} positions - Cartesian2 array containing the vertices of the polygon
-         * @returns {Number[]} - Index array representing triangles that fill the polygon
-         *
-         * @exception {DeveloperError} At least three positions are required.
-         */
-        triangulate : function(positions) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(positions)) {
-                throw new DeveloperError('positions is required.');
-            }
-            if (positions.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
-            }
-            //>>includeEnd('debug');
-
-            var length = positions.length;
-            // Keep track of indices for later
-            var nodeArray = [];
-            for ( var i = 0; i < length; ++i) {
-                nodeArray[i] = {
-                    position : positions[i],
-                    index : i
-                };
-            }
-
-            // Recursive chop
-            return randomChop(nodeArray);
-        },
-
-        /**
-         * This function is used for predictable testing.
-         *
-         * @private
-         */
-        resetSeed : function(seed) {
-            rseed = defaultValue(seed, 0);
-        },
-
-        /**
-         * Subdivides positions and raises points to the surface of the ellipsoid.
-         *
-         * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
-         * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
-         * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-         *
-         * @exception {DeveloperError} At least three indices are required.
-         * @exception {DeveloperError} The number of indices must be divisable by three.
-         * @exception {DeveloperError} Granularity must be greater than zero.
-         */
-        computeSubdivision : function(positions, indices, granularity) {
-            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(positions)) {
-                throw new DeveloperError('positions is required.');
-            }
-            if (!defined(indices)) {
-                throw new DeveloperError('indices is required.');
-            }
-            if (indices.length < 3) {
-                throw new DeveloperError('At least three indices are required.');
-            }
-            if (indices.length % 3 !== 0) {
-                throw new DeveloperError('The number of indices must be divisable by three.');
-            }
-            if (granularity <= 0.0) {
-                throw new DeveloperError('granularity must be greater than zero.');
-            }
-            //>>includeEnd('debug');
-
-            // Use a queue for triangles that need (or might need) to be subdivided.
-            var triangles = new Queue();
-
-            var indicesLength = indices.length;
-            for ( var j = 0; j < indicesLength; j += 3) {
-                triangles.enqueue({
-                    i0 : indices[j],
-                    i1 : indices[j + 1],
-                    i2 : indices[j + 2]
-                });
-            }
-
-            // New positions due to edge splits are appended to the positions list.
-            var subdividedPositions = positions.slice(0); // shallow copy!
-            var subdividedIndices = [];
-
-            // Used to make sure shared edges are not split more than once.
-            var edges = {};
-
-            var i;
-            while (triangles.length > 0) {
-                var triangle = triangles.dequeue();
-
-                var v0 = subdividedPositions[triangle.i0];
-                var v1 = subdividedPositions[triangle.i1];
-                var v2 = subdividedPositions[triangle.i2];
-
-                var g0 = Cartesian3.angleBetween(v0, v1);
-                var g1 = Cartesian3.angleBetween(v1, v2);
-                var g2 = Cartesian3.angleBetween(v2, v0);
-
-                var max = Math.max(g0, Math.max(g1, g2));
-                var edge;
-                var mid;
-
-                if (max > granularity) {
-                    if (g0 === max) {
-                        edge = Math.min(triangle.i0, triangle.i1).toString() + ' ' + Math.max(triangle.i0, triangle.i1).toString();
-
-                        i = edges[edge];
-                        if (!i) {
-                            mid = Cartesian3.add(v0, v1);
-                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                            subdividedPositions.push(mid);
-                            i = subdividedPositions.length - 1;
-                            edges[edge] = i;
-                        }
-
-                        triangles.enqueue({
-                            i0 : triangle.i0,
-                            i1 : i,
-                            i2 : triangle.i2
-                        });
-                        triangles.enqueue({
-                            i0 : i,
-                            i1 : triangle.i1,
-                            i2 : triangle.i2
-                        });
-                    } else if (g1 === max) {
-                        edge = Math.min(triangle.i1, triangle.i2).toString() + ' ' + Math.max(triangle.i1, triangle.i2).toString();
-
-                        i = edges[edge];
-                        if (!i) {
-                            mid = Cartesian3.add(v1, v2);
-                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                            subdividedPositions.push(mid);
-                            i = subdividedPositions.length - 1;
-                            edges[edge] = i;
-                        }
-
-                        triangles.enqueue({
-                            i0 : triangle.i1,
-                            i1 : i,
-                            i2 : triangle.i0
-                        });
-                        triangles.enqueue({
-                            i0 : i,
-                            i1 : triangle.i2,
-                            i2 : triangle.i0
-                        });
-                    } else if (g2 === max) {
-                        edge = Math.min(triangle.i2, triangle.i0).toString() + ' ' + Math.max(triangle.i2, triangle.i0).toString();
-
-                        i = edges[edge];
-                        if (!i) {
-                            mid = Cartesian3.add(v2, v0);
-                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
-                            subdividedPositions.push(mid);
-                            i = subdividedPositions.length - 1;
-                            edges[edge] = i;
-                        }
-
-                        triangles.enqueue({
-                            i0 : triangle.i2,
-                            i1 : i,
-                            i2 : triangle.i1
-                        });
-                        triangles.enqueue({
-                            i0 : i,
-                            i1 : triangle.i0,
-                            i2 : triangle.i1
-                        });
-                    }
-                } else {
-                    subdividedIndices.push(triangle.i0);
-                    subdividedIndices.push(triangle.i1);
-                    subdividedIndices.push(triangle.i2);
-                }
-            }
-
-            // PERFORMANCE_IDEA Rather that waste time re-iterating the entire set of positions
-            // here, all of the above code can be refactored to flatten as values are added
-            // Removing the need for this for loop.
-            var length = subdividedPositions.length;
-            var flattenedPositions = new Array(length * 3);
-            var q = 0;
-            for (i = 0; i < length; i++) {
-                var item = subdividedPositions[i];
-                flattenedPositions[q++] = item.x;
-                flattenedPositions[q++] = item.y;
-                flattenedPositions[q++] = item.z;
-            }
-
-            return new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : flattenedPositions
-                    })
-                },
-                indices : subdividedIndices,
-                primitiveType : PrimitiveType.TRIANGLES
-            });
-        },
-
-        /**
-         * Scales each position of a geometry's position attribute to a height, in place.
-         *
-         * @param {Geometry} geometry The geometry whose positions are to be scaled.
-         * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
-         * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
-         * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
-         * @returns {Geometry} The same geometry whose positions where scaled.
-         */
-        scaleToGeodeticHeight : function(geometry, height, ellipsoid, scaleToSurface) {
-            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-            var n = scaleToGeodeticHeightN;
-            var p = scaleToGeodeticHeightP;
-
-            height = defaultValue(height, 0.0);
-            scaleToSurface = defaultValue(scaleToSurface, true);
-
-            if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
-                var positions = geometry.attributes.position.values;
-                var length = positions.length;
-
-                for ( var i = 0; i < length; i += 3) {
-                    Cartesian3.fromArray(positions, i, p);
-
-                    if (scaleToSurface) {
-                        p = ellipsoid.scaleToGeodeticSurface(p, p);
-                    }
-
-                    n = ellipsoid.geodeticSurfaceNormal(p, n);
-
-                    Cartesian3.multiplyByScalar(n, height, n);
-                    Cartesian3.add(p, n, p);
-
-                    positions[i] = p.x;
-                    positions[i + 1] = p.y;
-                    positions[i + 2] = p.z;
-                }
-            }
-
-            return geometry;
-        },
-
-        /**
-         * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
-         * a polygon defined by the outer ring with the inner holes removed.
-         *
-         * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-         * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-         * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
-         *
-         * @exception {DeveloperError} <code>outerRing</code> must not be empty.
-         *
-         * @example
-         * // Simplifying a polygon with multiple holes.
-         * outerRing = Cesium.PolygonPipeline.eliminateHoles(outerRing, innerRings);
-         * polygon.positions = outerRing;
-         */
-        eliminateHoles : function(outerRing, innerRings, ellipsoid) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(outerRing)) {
-                throw new DeveloperError('outerRing is required.');
-            }
-            if (outerRing.length === 0) {
-                throw new DeveloperError('outerRing must not be empty.');
-            }
-            if (!defined(innerRings)) {
-                throw new DeveloperError('innerRings is required.');
-            }
-            //>>includeEnd('debug');
-
-            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-            var innerRingsCopy = [];
-            for ( var i = 0; i < innerRings.length; i++) {
-                var innerRing = [];
-                for ( var j = 0; j < innerRings[i].length; j++) {
-                    innerRing.push(Cartesian3.clone(innerRings[i][j]));
-                }
-                innerRingsCopy.push(innerRing);
-            }
-
-            var newPolygonVertices = outerRing;
-            while (innerRingsCopy.length > 0) {
-                newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy, ellipsoid);
-            }
-            return newPolygonVertices;
+    var PolygonPipeline = {};
+    /**
+     * Cleans up a simple polygon by removing duplicate adjacent positions and making
+     * the first position not equal the last position.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     */
+    PolygonPipeline.removeDuplicates = function(positions) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('positions is required.');
         }
+        if (positions.length < 3) {
+            throw new DeveloperError('At least three positions are required.');
+        }
+        //>>includeEnd('debug');
+
+        var length = positions.length;
+
+        var cleanedPositions = [];
+
+        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
+            var v0 = positions[i0];
+            var v1 = positions[i1];
+
+            if (!Cartesian3.equals(v0, v1)) {
+                cleanedPositions.push(v1); // Shallow copy!
+            }
+        }
+
+        return cleanedPositions;
+    };
+
+    /**
+     * @exception {DeveloperError} At least three positions are required.
+     */
+    PolygonPipeline.computeArea2D = function(positions) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('positions is required.');
+        }
+        if (positions.length < 3) {
+            throw new DeveloperError('At least three positions are required.');
+        }
+        //>>includeEnd('debug');
+
+        var length = positions.length;
+        var area = 0.0;
+
+        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
+            var v0 = positions[i0];
+            var v1 = positions[i1];
+
+            area += (v0.x * v1.y) - (v1.x * v0.y);
+        }
+
+        return area * 0.5;
+    };
+
+    /**
+     * @returns {WindingOrder} The winding order.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     */
+    PolygonPipeline.computeWindingOrder2D = function(positions) {
+        var area = PolygonPipeline.computeArea2D(positions);
+        return (area > 0.0) ? WindingOrder.COUNTER_CLOCKWISE : WindingOrder.CLOCKWISE;
+    };
+
+    /**
+     * Triangulate a polygon
+     *
+     * @param {Cartesian2[]} positions - Cartesian2 array containing the vertices of the polygon
+     * @returns {Number[]} - Index array representing triangles that fill the polygon
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     */
+    PolygonPipeline.triangulate = function(positions) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('positions is required.');
+        }
+        if (positions.length < 3) {
+            throw new DeveloperError('At least three positions are required.');
+        }
+        //>>includeEnd('debug');
+
+        var length = positions.length;
+        // Keep track of indices for later
+        var nodeArray = [];
+        for ( var i = 0; i < length; ++i) {
+            nodeArray[i] = {
+                position : positions[i],
+                index : i
+            };
+        }
+
+        // Recursive chop
+        return randomChop(nodeArray);
+    };
+
+    /**
+     * This function is used for predictable testing.
+     *
+     * @private
+     */
+    PolygonPipeline.resetSeed = function(seed) {
+        rseed = defaultValue(seed, 0);
+    };
+
+    /**
+     * Subdivides positions and raises points to the surface of the ellipsoid.
+     *
+     * @param {Cartesian3[]} positions An array of {@link Cartesian3} positions of the polygon.
+     * @param {Number[]} indices An array of indices that determines the triangles in the polygon.
+     * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} At least three indices are required.
+     * @exception {DeveloperError} The number of indices must be divisable by three.
+     * @exception {DeveloperError} Granularity must be greater than zero.
+     */
+    PolygonPipeline.computeSubdivision = function(positions, indices, granularity) {
+        granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('positions is required.');
+        }
+        if (!defined(indices)) {
+            throw new DeveloperError('indices is required.');
+        }
+        if (indices.length < 3) {
+            throw new DeveloperError('At least three indices are required.');
+        }
+        if (indices.length % 3 !== 0) {
+            throw new DeveloperError('The number of indices must be divisable by three.');
+        }
+        if (granularity <= 0.0) {
+            throw new DeveloperError('granularity must be greater than zero.');
+        }
+        //>>includeEnd('debug');
+
+        // Use a queue for triangles that need (or might need) to be subdivided.
+        var triangles = new Queue();
+
+        var indicesLength = indices.length;
+        for ( var j = 0; j < indicesLength; j += 3) {
+            triangles.enqueue({
+                i0 : indices[j],
+                i1 : indices[j + 1],
+                i2 : indices[j + 2]
+            });
+        }
+
+        // New positions due to edge splits are appended to the positions list.
+        var subdividedPositions = positions.slice(0); // shallow copy!
+        var subdividedIndices = [];
+
+        // Used to make sure shared edges are not split more than once.
+        var edges = {};
+
+        var i;
+        while (triangles.length > 0) {
+            var triangle = triangles.dequeue();
+
+            var v0 = subdividedPositions[triangle.i0];
+            var v1 = subdividedPositions[triangle.i1];
+            var v2 = subdividedPositions[triangle.i2];
+
+            var g0 = Cartesian3.angleBetween(v0, v1);
+            var g1 = Cartesian3.angleBetween(v1, v2);
+            var g2 = Cartesian3.angleBetween(v2, v0);
+
+            var max = Math.max(g0, Math.max(g1, g2));
+            var edge;
+            var mid;
+
+            if (max > granularity) {
+                if (g0 === max) {
+                    edge = Math.min(triangle.i0, triangle.i1).toString() + ' ' + Math.max(triangle.i0, triangle.i1).toString();
+
+                    i = edges[edge];
+                    if (!i) {
+                        mid = Cartesian3.add(v0, v1, new Cartesian3());
+                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        subdividedPositions.push(mid);
+                        i = subdividedPositions.length - 1;
+                        edges[edge] = i;
+                    }
+
+                    triangles.enqueue({
+                        i0 : triangle.i0,
+                        i1 : i,
+                        i2 : triangle.i2
+                    });
+                    triangles.enqueue({
+                        i0 : i,
+                        i1 : triangle.i1,
+                        i2 : triangle.i2
+                    });
+                } else if (g1 === max) {
+                    edge = Math.min(triangle.i1, triangle.i2).toString() + ' ' + Math.max(triangle.i1, triangle.i2).toString();
+
+                    i = edges[edge];
+                    if (!i) {
+                        mid = Cartesian3.add(v1, v2, new Cartesian3());
+                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        subdividedPositions.push(mid);
+                        i = subdividedPositions.length - 1;
+                        edges[edge] = i;
+                    }
+
+                    triangles.enqueue({
+                        i0 : triangle.i1,
+                        i1 : i,
+                        i2 : triangle.i0
+                    });
+                    triangles.enqueue({
+                        i0 : i,
+                        i1 : triangle.i2,
+                        i2 : triangle.i0
+                    });
+                } else if (g2 === max) {
+                    edge = Math.min(triangle.i2, triangle.i0).toString() + ' ' + Math.max(triangle.i2, triangle.i0).toString();
+
+                    i = edges[edge];
+                    if (!i) {
+                        mid = Cartesian3.add(v2, v0, new Cartesian3());
+                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        subdividedPositions.push(mid);
+                        i = subdividedPositions.length - 1;
+                        edges[edge] = i;
+                    }
+
+                    triangles.enqueue({
+                        i0 : triangle.i2,
+                        i1 : i,
+                        i2 : triangle.i1
+                    });
+                    triangles.enqueue({
+                        i0 : i,
+                        i1 : triangle.i0,
+                        i2 : triangle.i1
+                    });
+                }
+            } else {
+                subdividedIndices.push(triangle.i0);
+                subdividedIndices.push(triangle.i1);
+                subdividedIndices.push(triangle.i2);
+            }
+        }
+
+        // PERFORMANCE_IDEA Rather that waste time re-iterating the entire set of positions
+        // here, all of the above code can be refactored to flatten as values are added
+        // Removing the need for this for loop.
+        var length = subdividedPositions.length;
+        var flattenedPositions = new Array(length * 3);
+        var q = 0;
+        for (i = 0; i < length; i++) {
+            var item = subdividedPositions[i];
+            flattenedPositions[q++] = item.x;
+            flattenedPositions[q++] = item.y;
+            flattenedPositions[q++] = item.z;
+        }
+
+        return new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : flattenedPositions
+                })
+            },
+            indices : subdividedIndices,
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+    };
+
+    /**
+     * Scales each position of a geometry's position attribute to a height, in place.
+     *
+     * @param {Geometry} geometry The geometry whose positions are to be scaled.
+     * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
+     * @returns {Geometry} The same geometry whose positions where scaled.
+     */
+    PolygonPipeline.scaleToGeodeticHeight = function(geometry, height, ellipsoid, scaleToSurface) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var n = scaleToGeodeticHeightN;
+        var p = scaleToGeodeticHeightP;
+
+        height = defaultValue(height, 0.0);
+        scaleToSurface = defaultValue(scaleToSurface, true);
+
+        if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
+            var positions = geometry.attributes.position.values;
+            var length = positions.length;
+
+            for ( var i = 0; i < length; i += 3) {
+                Cartesian3.fromArray(positions, i, p);
+
+                if (scaleToSurface) {
+                    p = ellipsoid.scaleToGeodeticSurface(p, p);
+                }
+
+                n = ellipsoid.geodeticSurfaceNormal(p, n);
+
+                Cartesian3.multiplyByScalar(n, height, n);
+                Cartesian3.add(p, n, p);
+
+                positions[i] = p.x;
+                positions[i + 1] = p.y;
+                positions[i + 2] = p.z;
+            }
+        }
+
+        return geometry;
+    };
+
+    /**
+     * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
+     * a polygon defined by the outer ring with the inner holes removed.
+     *
+     * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
+     * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
+     * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     *
+     * @exception {DeveloperError} <code>outerRing</code> must not be empty.
+     *
+     * @example
+     * // Simplifying a polygon with multiple holes.
+     * outerRing = Cesium.PolygonPipeline.eliminateHoles(outerRing, innerRings);
+     * polygon.positions = outerRing;
+     */
+    PolygonPipeline.eliminateHoles = function(outerRing, innerRings, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(outerRing)) {
+            throw new DeveloperError('outerRing is required.');
+        }
+        if (outerRing.length === 0) {
+            throw new DeveloperError('outerRing must not be empty.');
+        }
+        if (!defined(innerRings)) {
+            throw new DeveloperError('innerRings is required.');
+        }
+        //>>includeEnd('debug');
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var innerRingsCopy = [];
+        for ( var i = 0; i < innerRings.length; i++) {
+            var innerRing = [];
+            for ( var j = 0; j < innerRings[i].length; j++) {
+                innerRing.push(Cartesian3.clone(innerRings[i][j]));
+            }
+            innerRingsCopy.push(innerRing);
+        }
+
+        var newPolygonVertices = outerRing;
+        while (innerRingsCopy.length > 0) {
+            newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy, ellipsoid);
+        }
+        return newPolygonVertices;
     };
 
     return PolygonPipeline;

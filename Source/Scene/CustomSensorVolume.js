@@ -252,6 +252,9 @@ define([
         return this._directions;
     };
 
+    var n0Scratch = new Cartesian3();
+    var n1Scratch = new Cartesian3();
+    var n2Scratch = new Cartesian3();
     function computePositions(customSensorVolume) {
         var directions = customSensorVolume._directions;
         var length = directions.length;
@@ -262,14 +265,14 @@ define([
 
         for ( var i = length - 2, j = length - 1, k = 0; k < length; i = j++, j = k++) {
             // PERFORMANCE_IDEA:  We can avoid redundant operations for adjacent edges.
-            var n0 = Cartesian3.fromSpherical(directions[i]);
-            var n1 = Cartesian3.fromSpherical(directions[j]);
-            var n2 = Cartesian3.fromSpherical(directions[k]);
+            var n0 = Cartesian3.fromSpherical(directions[i], n0Scratch);
+            var n1 = Cartesian3.fromSpherical(directions[j], n1Scratch);
+            var n2 = Cartesian3.fromSpherical(directions[k], n2Scratch);
 
             // Extend position so the volume encompasses the sensor's radius.
             var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
-            var p = Cartesian3.multiplyByScalar(n1, distance);
+            var p = Cartesian3.multiplyByScalar(n1, distance, new Cartesian3());
 
             positions[(j * 3)] = p.x;
             positions[(j * 3) + 1] = p.y;
@@ -283,6 +286,7 @@ define([
         return positions;
     }
 
+    var nScratch = new Cartesian3();
     function createVertexArray(customSensorVolume, context) {
         var positions = computePositions(customSensorVolume);
 
@@ -293,7 +297,7 @@ define([
         for ( var i = length - 1, j = 0; j < length; i = j++) {
             var p0 = new Cartesian3(positions[(i * 3)], positions[(i * 3) + 1], positions[(i * 3) + 2]);
             var p1 = new Cartesian3(positions[(j * 3)], positions[(j * 3) + 1], positions[(j * 3) + 2]);
-            var n = Cartesian3.normalize(Cartesian3.cross(p1, p0)); // Per-face normals
+            var n = Cartesian3.normalize(Cartesian3.cross(p1, p0, nScratch), nScratch); // Per-face normals
 
             vertices[k++] = 0.0; // Sensor vertex
             vertices[k++] = 0.0;

@@ -47,12 +47,12 @@ require(['Cesium'], function(Cesium) {
 
             if (scene.mode === Cesium.SceneMode.SCENE3D) {
                 eye = new Cesium.Cartesian3(294572.0645397696, 5637826.573008351, 2978624.6868285);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9028130862217908, -0.42449297750082904, -0.06880583840911567));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9028130862217908, -0.42449297750082904, -0.06880583840911567), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(0.40668971896562117, 0.790807045510862, 0.45741413322152297);
                 scene.camera.lookAt(eye, target, up);
             } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
                 eye = new Cesium.Cartesian3(9684590.891310014, 3114799.076252769, 9849.375792522824);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8929328433855669, -0.00005779973945286486, -0.45018988645076763));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8929328433855669, -0.00005779973945286486, -0.45018988645076763), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(-0.4501898855076042, -0.0000291369789812141, 0.8929328452557279);
                 scene.camera.lookAt(eye, target, up);
             } else {
@@ -65,12 +65,12 @@ require(['Cesium'], function(Cesium) {
 
             if (scene.mode === Cesium.SceneMode.SCENE3D) {
                 eye = new Cesium.Cartesian3(-2496304.1498512086, -4391818.97382059, 3884176.4503971986);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9279518715011381, -0.29488412129953234, -0.22792252890604328));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9279518715011381, -0.29488412129953234, -0.22792252890604328), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(-0.11836693744723503, -0.8130611584421428, 0.5700182635106171);
                 scene.camera.lookAt(eye, target, up);
             } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
                 eye = new Cesium.Cartesian3(-13314946.646404704, 4200941.442507448, 2468.225945515426);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9624895834866811, 0.04124314776883213, -0.26816562874787864));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(0.9624895834866811, 0.04124314776883213, -0.26816562874787864), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(0.2679197697914868, 0.011480478929947842, 0.9633728227203466);
                 scene.camera.lookAt(eye, target, up);
             } else {
@@ -83,12 +83,12 @@ require(['Cesium'], function(Cesium) {
 
             if (scene.mode === Cesium.SceneMode.SCENE3D) {
                 eye = new Cesium.Cartesian3(-2674718.9291375633, -4332137.224608461, 3888180.6614196445);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.40034097132786534, 0.9155843741828319, 0.03784653786617176), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(-0.6502679490649945, -0.3129458646313862, 0.6922546353438556);
                 scene.camera.lookAt(eye, target, up);
             } else if (scene.mode === Cesium.SceneMode.COLUMBUS_VIEW) {
                 eye = new Cesium.Cartesian3(-13562569.113918452, 4176598.9965795614, 37656.37201701476);
-                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8108519561707095, 0.4023795334200999, -0.42498213639958615));
+                target = Cesium.Cartesian3.add(eye, new Cesium.Cartesian3(-0.8108519561707095, 0.4023795334200999, -0.42498213639958615), new Cesium.Cartesian3());
                 up = new Cesium.Cartesian3(-0.3806859699462094, 0.18891270085627615, 0.905201736488051);
                 scene.camera.lookAt(eye, target, up);
             } else {
