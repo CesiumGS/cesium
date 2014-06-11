@@ -180,10 +180,10 @@ define([
      * @constructor
      *
      * @param {Number} julianDayNumber The Julian Day Number representing the number of whole days.  Fractional days will also be handled correctly.
-     * @param {Number} julianSecondsOfDay The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
+     * @param {Number} secondsOfDay The number of seconds into the current Julian Day Number.  Fractional seconds, negative seconds and seconds greater than a day will be handled correctly.
      * @param {TimeStandard} [timeStandard=TimeStandard.UTC] The time standard in which the first two parameters are defined.
      */
-    var JulianDate = function(julianDayNumber, julianSecondsOfDay, timeStandard) {
+    var JulianDate = function(julianDayNumber, secondsOfDay, timeStandard) {
         /**
          * Gets or sets the number of whole days.
          * @type {Number}
@@ -197,12 +197,12 @@ define([
         this.secondsOfDay = undefined;
 
         julianDayNumber = defaultValue(julianDayNumber, 0.0);
-        julianSecondsOfDay = defaultValue(julianSecondsOfDay, 0.0);
+        secondsOfDay = defaultValue(secondsOfDay, 0.0);
         timeStandard = defaultValue(timeStandard, TimeStandard.UTC);
 
         //If julianDayNumber is fractional, make it an integer and add the number of seconds the fraction represented.
         var wholeDays = julianDayNumber | 0;
-        var secondsOfDay = julianSecondsOfDay + (julianDayNumber - wholeDays) * TimeConstants.SECONDS_PER_DAY;
+        secondsOfDay = secondsOfDay + (julianDayNumber - wholeDays) * TimeConstants.SECONDS_PER_DAY;
 
         setComponents(wholeDays, secondsOfDay, this);
 
@@ -219,9 +219,6 @@ define([
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
      *
      * @exception {DeveloperError} date must be a valid JavaScript Date.
-     *
-     * @example
-     * var julianDate = Cesium.JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST'));
      */
     JulianDate.fromDate = function(date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -249,18 +246,6 @@ define([
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
      *
      * @exception {DeveloperError} Invalid ISO 8601 date.
-     *
-     * @example
-     * // Construct an instance at April 24th, 2012 6:08PM UTC
-     * var date = Cesium.JulianDate.fromIso8601('2012-04-24T18:08Z');
-     *
-     * @example
-     * // Construct an instance in local time April 24th, 2012 12:00 AM
-     * var date = Cesium.JulianDate.fromIso8601('2012-04-24');
-     *
-     * @example
-     * // Construct an instance 5 hours behind April 24th, 2012 5:00 PM UTC
-     * var date = Cesium.JulianDate.fromIso8601('2012-04-24T12:00-05:00');
      */
     JulianDate.fromIso8601 = function(iso8601String, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -760,11 +745,6 @@ define([
      * @param {JulianDate} left The first instance.
      * @param {JulianDate} right The second instance.
      * @returns {Number} The difference, in seconds, when subtracting <code>right</code> from <code>left</code>.
-     *
-     * @example
-     * var left = Cesium.JulianDate.fromDate(new Date('July 5, 2011 12:01:00'));
-     * var right = Cesium.JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
-     * var difference = JulianDate.getSecondsDifference(left, right); // -86460.0 seconds
      */
     JulianDate.getSecondsDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
@@ -786,11 +766,6 @@ define([
      * @param {JulianDate} left The first instance.
      * @param {JulianDate} right The second instance.
      * @returns {Number} The difference, in days, when subtracting <code>right</code> from <code>left</code>.
-     *
-     * @example
-     * var left = Cesium.JulianDate.fromDate(new Date('July 4, 2011 12:00:00'));
-     * var right = Cesium.JulianDate.fromDate(new Date('July 5, 2011 14:24:00'));
-     * var difference = JulianDate.getDaysDifference(left, right); // 1.1 days
      */
     JulianDate.getDaysDifference = function(left, right) {
         //>>includeStart('debug', pragmas.debug);
@@ -811,7 +786,7 @@ define([
      * Computes the number of seconds the provided instance is ahead of UTC.
      *
      * @param {JulianDate} julianDate The date.
-     * @returns {Number} The number of seconds the provided isntance is ahead of UTC
+     * @returns {Number} The number of seconds the provided instance is ahead of UTC
      */
     JulianDate.getTaiMinusUtc = function(julianDate) {
         binarySearchScratchLeapSecond.julianDate = julianDate;
@@ -834,13 +809,6 @@ define([
      * @param {Number} seconds The number of seconds to add or subtract.
      * @param {JulianDate} [result] An existing instance to use for the result.
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
-     *
-     * @example
-     * var date = new Date();
-     * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00:00 UTC
-     * date.setUTCHours(12, 0, 00, 0);
-     * var start = Cesium.JulianDate.fromDate(date);
-     * var end = JulianDate.addSeconds(start, 95);      // July 4, 2011 @ 12:01:35 UTC
      */
     JulianDate.addSeconds = function(julianDate, seconds, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -862,13 +830,6 @@ define([
      * @param {Number} minutes The number of minutes to add or subtract.
      * @param {JulianDate} [result] An existing instance to use for the result.
      * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
-     *
-     * @example
-     * var date = new Date();
-     * date.setUTCFullYear(2011, 6, 4);     // July 4, 2011 @ 12:00 UTC
-     * date.setUTCHours(12, 0, 0, 0);
-     * var start = Cesium.JulianDate.fromDate(date);
-     * var end = start.addMinutes(65);      // July 4, 2011 @ 13:05 UTC
      */
     JulianDate.addMinutes = function(julianDate, minutes) {
         //>>includeStart('debug', pragmas.debug);
