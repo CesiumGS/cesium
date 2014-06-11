@@ -41,7 +41,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.duration)) {
-            throw new DeveloperError('duration is required.');
+            throw new DeveloperError('options.duration is required.');
         }
         //>>includeEnd('debug');
 
@@ -58,12 +58,13 @@ define([
             tween.to(clone(options.stopValue), duration);
             tween.delay(delay);
             tween.easing(easingFunction);
-            if (typeof options.update === 'function') {
+            if (defined(options.update)) {
                 tween.onUpdate(function() {
                     options.update(value);
                 });
             }
             tween.onComplete(defaultValue(options.complete, null));
+            tween.repeat(defaultValue(options._repeat, 0.0));
 
             // start then stop to remove the tween from the global array
             tween.start().stop();
@@ -72,7 +73,7 @@ define([
             return {
                 _tween : tween
             };
-        } else if (typeof options.complete === 'function') {
+        } else if (defined(options.complete)) {
             options.complete();
         }
     };
@@ -127,7 +128,7 @@ define([
 
         function update(value) {
             var length = properties.length;
-            for ( var i = 0; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 material.uniforms[properties[i]].alpha = value.alpha;
             }
         }
@@ -175,6 +176,8 @@ define([
             object[property] = value.value;
         }
 
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         return this.add({
             duration : defaultValue(options.duration, 3.0),
             delay : options.delay,
@@ -183,7 +186,8 @@ define([
             stopValue : stopValue,
             update : update,
             complete : options.complete,
-            cancel : options.cancel
+            cancel : options.cancel,
+            _repeat : options._repeat
         });
     };
 
@@ -202,33 +206,30 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
-
-        var value = {
+        var startValue = {
             offset : material.uniforms.offset
         };
-        var tween = new Tween.Tween(value);
-        tween.to({
-            offset : material.uniforms.offset + 1.0
-        }, duration);
-        tween.delay(delay);
-        tween.easing(easingFunction);
-        tween.onUpdate(function() {
-            material.uniforms.offset = value.offset;
-        });
-        // options.stop is ignored.
-        tween.repeat(Infinity);
-
-        // start then stop to remove the tween from the global array
-        tween.start().stop();
-        this._tweens.push(tween);
-
-        return {
-            _tween : tween
+        var stopValue = {
+            offset : material.uniforms.offset + 1
         };
+
+        function update(value) {
+            material.uniforms.offset = value.offset;
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        return this.add({
+            duration : defaultValue(options.duration, 3.0),
+            delay : options.delay,
+            easingFunction : options.easingFunction,
+            startValue : startValue,
+            stopValue : stopValue,
+            update : update,
+            complete : options.complete,
+            cancel : options.cancel,
+            _repeat : Infinity
+        });
     };
 
     /**
@@ -242,7 +243,7 @@ define([
         var tween = animation._tween;
         var index = this._tweens.indexOf(tween);
         if (index !== -1) {
-            if (typeof tween.cancel === 'function') {
+            if (defined(tween.cancel)) {
                 tween.cancel();
             }
             this._tweens.splice(index, 1);
@@ -258,7 +259,7 @@ define([
     AnimationCollection.prototype.removeAll = function() {
         for (var i = 0; i < this._tweens.length; ++i) {
             var tween = this._tweens[i];
-            if (typeof tween.cancel === 'function') {
+            if (defined(tween.cancel)) {
                 tween.cancel();
             }
         }
