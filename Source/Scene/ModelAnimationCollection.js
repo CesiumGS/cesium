@@ -89,7 +89,6 @@ define([
      * This raises the {@link ModelAnimationCollection#animationAdded} event so, for example, a UI can stay in sync.
      * </p>
      *
-     *
      * @param {Object} options Object with the following properties:
      * @param {String} options.name The glTF animation name that identifies the animation.
      * @param {JulianDate} [options.startTime] The scene time to start playing the animation.  When this is <code>undefined</code>, the animation starts at the next frame.

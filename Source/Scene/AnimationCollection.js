@@ -30,8 +30,23 @@ define([
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
      */
     var AnimationCollection = function() {
-        this._tweens = [];
+        this._animations = [];
     };
+
+    defineProperties(AnimationCollection.prototype, {
+        /**
+         * The number of animations in the collection.
+         * @memberof AnimationCollection.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        length : {
+            get : function() {
+                return this._animations.length;
+            }
+        }
+    });
 
     /**
      * DOC_TBA
@@ -40,55 +55,87 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.duration)) {
-            throw new DeveloperError('options.duration is required.');
+        if (!defined(options.duration) || options.duration < 0.0) {
+            throw new DeveloperError('options.duration is required and must be positive.');
         }
         //>>includeEnd('debug');
 
-        if (options.duration > 0.0) {
-            var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
-            var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-            var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
-
-            var value = clone(options.startValue);
-            var tween = new Tween.Tween(value);
-            // set the callback on the instance to avoid extra bookkeeping
-            // or patching Tween.js
-            tween.cancel = options.cancel;
-            tween.to(clone(options.stopValue), duration);
-            tween.delay(delay);
-            tween.easing(easingFunction);
-            if (defined(options.update)) {
-                tween.onUpdate(function() {
-                    options.update(value);
-                });
-            }
-            tween.onComplete(defaultValue(options.complete, null));
-            tween.repeat(defaultValue(options._repeat, 0.0));
-
-            // start then stop to remove the tween from the global array
-            tween.start().stop();
-            this._tweens.push(tween);
-
-            return {
-                _tween : tween
-            };
-        } else if (defined(options.complete)) {
+        if ((options.duration === 0.0) && defined(options.complete)) {
             options.complete();
+            return;
         }
+
+        var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
+        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
+        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
+
+        var value = clone(options.startValue);
+        var tween = new Tween.Tween(value);
+        tween.to(clone(options.stopValue), duration);
+        tween.delay(delay);
+        tween.easing(easingFunction);
+        if (defined(options.update)) {
+            tween.onUpdate(function() {
+                options.update(value);
+            });
+        }
+        tween.onComplete(defaultValue(options.complete, null));
+        tween.repeat(defaultValue(options._repeat, 0.0));
+
+        // start then stop to remove the tween from the global array
+        tween.start().stop();
+
+        var animation = {
+            _tween : tween,
+            _cancel : options.cancel
+        };
+        this._animations.push(animation);
+        return animation;
     };
 
-    defineProperties(AnimationCollection.prototype, {
-        /**
-         * DOC_TBA
-         * @memberof AnimationCollection.prototype
-         */
-        all : {
-            get : function() {
-                return this._tweens;
-            }
+    /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} object must have the specified property.
+     */
+    AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(object)) {
+            throw new DeveloperError('object is required.');
         }
-    });
+        if (!defined(property)) {
+            throw new DeveloperError('property is required.');
+        }
+        if (!defined(object[property])) {
+            throw new DeveloperError('object must have the specified property.');
+        }
+        //>>includeEnd('debug');
+
+        var startValue = {
+            value : start
+        };
+        var stopValue = {
+            value : stop
+        };
+
+        function update(value) {
+            object[property] = value.value;
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        return this.add({
+            duration : defaultValue(options.duration, 3.0),
+            delay : options.delay,
+            easingFunction : options.easingFunction,
+            startValue : startValue,
+            stopValue : stopValue,
+            update : update,
+            complete : options.complete,
+            cancel : options.cancel,
+            _repeat : options._repeat
+        });
+    };
 
     /**
      * DOC_TBA
@@ -150,50 +197,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @exception {DeveloperError} object must have the specified property.
-     */
-    AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(object)) {
-            throw new DeveloperError('object is required.');
-        }
-        if (!defined(property)) {
-            throw new DeveloperError('property is required.');
-        }
-        if (!defined(object[property])) {
-            throw new DeveloperError('object must have the specified property.');
-        }
-        //>>includeEnd('debug');
-
-        var startValue = {
-            value : start
-        };
-        var stopValue = {
-            value : stop
-        };
-
-        function update(value) {
-            object[property] = value.value;
-        }
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        return this.add({
-            duration : defaultValue(options.duration, 3.0),
-            delay : options.delay,
-            easingFunction : options.easingFunction,
-            startValue : startValue,
-            stopValue : stopValue,
-            update : update,
-            complete : options.complete,
-            cancel : options.cancel,
-            _repeat : options._repeat
-        });
-    };
-
-    /**
-     * DOC_TBA
-     *
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
@@ -202,34 +205,15 @@ define([
             throw new DeveloperError('material is required.');
         }
         if (!defined(material.uniforms.offset)) {
-            throw new DeveloperError('material must have an offset property.');
+            throw new DeveloperError('material.uniforms must have an offset property.');
         }
         //>>includeEnd('debug');
 
-        var startValue = {
-            offset : material.uniforms.offset
-        };
-        var stopValue = {
-            offset : material.uniforms.offset + 1
-        };
+        options = defaultValue(options, {});
+        options._repeat = Infinity;
 
-        function update(value) {
-            material.uniforms.offset = value.offset;
-        }
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        return this.add({
-            duration : defaultValue(options.duration, 3.0),
-            delay : options.delay,
-            easingFunction : options.easingFunction,
-            startValue : startValue,
-            stopValue : stopValue,
-            update : update,
-            complete : options.complete,
-            cancel : options.cancel,
-            _repeat : Infinity
-        });
+        var uniforms = material.uniforms;
+        return this.addProperty(uniforms, 'offset', uniforms.offset, uniforms.offset + 1, options);
     };
 
     /**
@@ -240,13 +224,12 @@ define([
             return false;
         }
 
-        var tween = animation._tween;
-        var index = this._tweens.indexOf(tween);
+        var index = this._animations.indexOf(animation);
         if (index !== -1) {
-            if (defined(tween.cancel)) {
-                tween.cancel();
+            if (defined(animation._cancel)) {
+                animation._cancel();
             }
-            this._tweens.splice(index, 1);
+            this._animations.splice(index, 1);
             return true;
         }
 
@@ -257,42 +240,52 @@ define([
      * DOC_TBA
      */
     AnimationCollection.prototype.removeAll = function() {
-        for (var i = 0; i < this._tweens.length; ++i) {
-            var tween = this._tweens[i];
-            if (defined(tween.cancel)) {
-                tween.cancel();
+        var animations = this._animations;
+
+        for (var i = 0; i < animations.length; ++i) {
+            var animation = animations[i];
+            if (defined(animation._cancel)) {
+                animation._cancel();
             }
         }
-        this._tweens.length = 0;
+        animations.length = 0;
     };
 
     /**
      * DOC_TBA
      */
     AnimationCollection.prototype.contains = function(animation) {
-        return defined(animation) && (this._tweens.indexOf(animation._tween) !== -1);
+        return defined(animation) && (this._animations.indexOf(animation) !== -1);
+    };
+
+    /**
+     * DOC_TBA
+     */
+    AnimationCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(index)) {
+            throw new DeveloperError('index is required.');
+        }
+        //>>includeEnd('debug');
+
+        return this._animations[index];
     };
 
     /**
      * DOC_TBA
      */
     AnimationCollection.prototype.update = function() {
-        var tweens = this._tweens;
-        if (tweens.length === 0) {
-            return false;
-        }
+        var animations = this._animations;
 
         var i = 0;
         var time = getTimestamp();
-        while (i < tweens.length) {
-            if (tweens[i].update(time)) {
+        while (i < animations.length) {
+            if (animations[i]._tween.update(time)) {
                 i++;
             } else {
-                tweens.splice(i, 1);
+                animations.splice(i, 1);
             }
         }
-
-        return true;
     };
 
     return AnimationCollection;
