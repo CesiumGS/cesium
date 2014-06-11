@@ -127,7 +127,7 @@ defineSuite([
         var left = -right;
         var near = frustum.near;
 
-        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, undefined, new Matrix4());
+        var expected = Matrix4.computeInfinitePerspectiveOffCenter(left, right, bottom, top, near, new Matrix4());
         expect(frustum.infiniteProjectionMatrix).toEqual(expected);
     });
 

@@ -307,18 +307,18 @@ define([
         var reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
         var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis, secondAxisScratch), secondAxisScratch);
         var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch), thirdAxisScratch);
-        var B = Matrix3.fromArray([firstAxis.x, secondAxis.x, thirdAxis.x,
-                            firstAxis.y, secondAxis.y, thirdAxis.y,
-                            firstAxis.z, secondAxis.z, thirdAxis.z], 0, new Matrix3());
+        var B = Matrix3.fromArray([firstAxis.x, firstAxis.y, firstAxis.z,
+                                   secondAxis.x, secondAxis.y, secondAxis.z,
+                                   thirdAxis.x, thirdAxis.y, thirdAxis.z], 0, new Matrix3());
         var B_T = Matrix3.transpose(B, new Matrix3());
 
         // Get the scaling matrix and its inverse.
         var D_I = Matrix3.fromScale(ellipsoid.radii, new Matrix3());
         var D = Matrix3.fromScale(ellipsoid.oneOverRadii, new Matrix3());
 
-        var C = Matrix3.fromArray([0.0, direction.z, -direction.y,
-                            -direction.z, 0.0, direction.x,
-                            direction.y, -direction.x, 0.0], 0, new Matrix3());
+        var C = Matrix3.fromArray([0.0, -direction.z, direction.y,
+                                   direction.z, 0.0, -direction.x,
+                                   -direction.y, direction.x, 0.0], 0, new Matrix3());
 
         var temp = Matrix3.multiply(Matrix3.multiply(B_T, D, new Matrix3()), C, new Matrix3());
         var A = Matrix3.multiply(Matrix3.multiply(temp, D_I, new Matrix3()), B, new Matrix3());
