@@ -27,6 +27,9 @@
 require(['Cesium'], function(Cesium) {
     "use strict";
 
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
+
     var handler;
     var label;
     var billboard;
@@ -96,12 +99,11 @@ require(['Cesium'], function(Cesium) {
     }
 
     function cleanup() {
-        viewer.scene.primitives.removeAll();
+        scene.primitives.removeAll();
         handler = handler && handler.destroy();
     }
 
-    function pickCartographicPosition(scene) {
-        Sandcastle.declare(pickCartographicPosition);   // For highlighting in Sandcastle.
+    function pickCartographicPosition() {
         var ellipsoid = scene.globe.ellipsoid;
         var labels = new Cesium.LabelCollection();
         label = labels.add();
@@ -121,9 +123,16 @@ require(['Cesium'], function(Cesium) {
             }
         }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     }
+    pickCartographicPosition();
 
-    function pickBillboard(scene) {
-        Sandcastle.declare(pickBillboard);  // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
+        cleanup();
+        pickCartographicPosition();
+    });
+
+    Sandcastle.addToolbarButton('Pick Billboard', function() {
+        cleanup();
+
         addBillboard(scene);
 
         // If the mouse is over the billboard, change its scale and color
@@ -143,10 +152,11 @@ require(['Cesium'], function(Cesium) {
             },
             Cesium.ScreenSpaceEventType.MOUSE_MOVE
         );
-    }
+    });
 
-    function animateBillboardOnPick(scene) {
-        Sandcastle.declare(animateBillboardOnPick); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Animate Billboard on Pick', function() {
+        cleanup();
+
         addBillboard(scene);
 
         var animation;
@@ -215,85 +225,56 @@ require(['Cesium'], function(Cesium) {
             }
         },
         Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    }
+    });
 
     var originalColor = {};
-    function multiPickPrimitives(scene) {
-        Sandcastle.declare(multiPickPrimitives);    // For highlighting in Sandcastle.
-        addOverlappingPolygons(scene);
-
-        var primitives = scene.primitives;
-        // Move the primitive that the mouse is over to the top.
-        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-            handler.setInputAction(function(movement) {
-                // clear picked flags
-                var numberOfPrimitves = primitives.length;
-                for (var i = 0; i < numberOfPrimitves; ++i) {
-                    var p = primitives.get(i);
-                    p.processedPick = false;
-                }
-
-                // get an array of all primitives at the mouse position
-                var pickedObjects = scene.drillPick(movement.endPosition);
-                if(Cesium.defined(pickedObjects)) {
-                    for( i=0; i<pickedObjects.length; ++i) {
-                        var polygon = pickedObjects[i].primitive;
-
-                        if(polygon.picked === false) {
-                            originalColor[polygon.id] = polygon.material.uniforms.color;
-                            polygon.material.uniforms.color = {
-                                red : 1.0,
-                                green : 1.0,
-                                blue : 0.0,
-                                alpha : 0.5
-                            };
-                            polygon.picked = true;
-                        }
-
-                        polygon.processedPick = true;
-                    }
-                }
-
-                // return unpicked primitives to their original color
-                for (i = 0; i < numberOfPrimitves; ++i) {
-                    var primitive = primitives.get(i);
-
-                    if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
-                        primitive.material.uniforms.color = originalColor[primitive.id];
-                        primitive.picked = false;
-                    }
-                }
-            }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-
-    }
-
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
-
-    pickCartographicPosition(scene);
-
-    Sandcastle.addToolbarButton('Show Cartographic Position on Mouse Over', function() {
-        cleanup();
-        pickCartographicPosition(scene);
-        Sandcastle.highlight(pickCartographicPosition);
-    });
-
-    Sandcastle.addToolbarButton('Pick Billboard', function() {
-        cleanup();
-        pickBillboard(scene);
-        Sandcastle.highlight(pickBillboard);
-    });
-
-    Sandcastle.addToolbarButton('Animate Billboard on Pick', function() {
-        cleanup();
-        animateBillboardOnPick(scene);
-        Sandcastle.highlight(animateBillboardOnPick);
-    });
-
     Sandcastle.addToolbarButton('Drill-Down Picking', function() {
         cleanup();
-        multiPickPrimitives(scene);
-        Sandcastle.highlight(multiPickPrimitives);
+
+        var primitives = scene.primitives;
+        addOverlappingPolygons(scene);
+
+        // Move the primitive that the mouse is over to the top.
+        handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+        handler.setInputAction(function(movement) {
+            // clear picked flags
+            var numberOfPrimitves = primitives.length;
+            for (var i = 0; i < numberOfPrimitves; ++i) {
+                var p = primitives.get(i);
+                p.processedPick = false;
+            }
+
+            // get an array of all primitives at the mouse position
+            var pickedObjects = scene.drillPick(movement.endPosition);
+            if(Cesium.defined(pickedObjects)) {
+                for( i=0; i<pickedObjects.length; ++i) {
+                    var polygon = pickedObjects[i].primitive;
+
+                    if(polygon.picked === false) {
+                        originalColor[polygon.id] = polygon.material.uniforms.color;
+                        polygon.material.uniforms.color = {
+                            red : 1.0,
+                            green : 1.0,
+                            blue : 0.0,
+                            alpha : 0.5
+                        };
+                        polygon.picked = true;
+                    }
+
+                    polygon.processedPick = true;
+                }
+            }
+
+            // return unpicked primitives to their original color
+            for (i = 0; i < numberOfPrimitves; ++i) {
+                var primitive = primitives.get(i);
+
+                if(primitive.processedPick === false && Cesium.defined(originalColor[primitive.id])) {
+                    primitive.material.uniforms.color = originalColor[primitive.id];
+                    primitive.picked = false;
+                }
+            }
+        }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     });
 
     Sandcastle.finishedLoading();

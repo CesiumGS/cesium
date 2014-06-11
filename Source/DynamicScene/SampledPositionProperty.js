@@ -30,9 +30,21 @@ define([
      * @constructor
      *
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
+     * @param {Number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
      */
-    var SampledPositionProperty = function(referenceFrame) {
-        this._property = new SampledProperty(Cartesian3);
+    var SampledPositionProperty = function(referenceFrame, numberOfDerivatives) {
+        numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
+
+        var derivativeTypes;
+        if (numberOfDerivatives > 0) {
+            derivativeTypes = new Array(numberOfDerivatives);
+            for (var i = 0; i < numberOfDerivatives; i++) {
+                derivativeTypes[i] = Cartesian3;
+            }
+        }
+
+        this._numberOfDerivatives = numberOfDerivatives;
+        this._property = new SampledProperty(Cartesian3, derivativeTypes);
         this._definitionChanged = new Event();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
 
@@ -84,7 +96,7 @@ define([
          * Gets the degree of interpolation to perform when retrieving a value.
          * @memberof SampledPositionProperty.prototype
          *
-         * @type {Object}
+         * @type {Number}
          * @default 1
          */
         interpolationDegree : {
@@ -103,11 +115,23 @@ define([
             get : function() {
                 return this._property.interpolationAlgorithm;
             }
+        },
+        /**
+         * The number of derivatives contained by this property; i.e. 0 for just position, 1 for velocity, etc.
+         * @memberof SampledPositionProperty.prototype
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        numberOfDerivatives : {
+            get : function() {
+                return this._numberOfDerivatives;
+            }
         }
     });
 
     /**
-     * Gets the value of the property at the provided time.
+     * Gets the position at the provided time.
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -118,7 +142,7 @@ define([
     };
 
     /**
-     * Gets the value of the property at the provided time and in the provided reference frame.
+     * Gets the position at the provided time and in the provided reference frame.
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
@@ -139,7 +163,7 @@ define([
         if (defined(result)) {
             return PositionProperty.convertToReferenceFrame(time, result, this._referenceFrame, referenceFrame, result);
         }
-        return result;
+        return undefined;
     };
 
     /**
@@ -154,29 +178,38 @@ define([
     };
 
     /**
-     * Adds a new sample
+     * Adds a new sample.
      *
      * @param {JulianDate} time The sample time.
-     * @param {Cartesian3} value The value at the provided time.
+     * @param {Cartesian3} position The position at the provided time.
+     * @param {Cartesian3[]} [derivatives] The array of derivative values at the provided time.
      */
-    SampledPositionProperty.prototype.addSample = function(time, value) {
-        this._property.addSample(time, value);
+    SampledPositionProperty.prototype.addSample = function(time, position, derivatives) {
+        var numberOfDerivatives = this._numberOfDerivatives;
+        //>>includeStart('debug', pragmas.debug);
+        if (numberOfDerivatives > 0 && (!defined(derivatives) || derivatives.length !== numberOfDerivatives)) {
+            throw new DeveloperError('derivatives length must be equal to the number of derivatives.');
+        }
+        //>>includeEnd('debug');
+        this._property.addSample(time, position, derivatives);
     };
 
     /**
-     * Adds an array of samples
+     * Adds multiple samples via parallel arrays.
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
-     * @param {Cartesian3[]} values The array of Cartesian3 instances, where each value corresponds to the provided times index.
+     * @param {Cartesian3[]} positions An array of Cartesian3 position instances, where each value corresponds to the provided time index.
+     * @param {Array[]} [derivatives] An array where each value is another array containing derivatives for the corresponding time index.
      *
-     * @exception {DeveloperError} times and values must be the same length..
+     * @exception {DeveloperError} All arrays must be the same length.
      */
-    SampledPositionProperty.prototype.addSamples = function(times, values) {
-        this._property.addSamples(times, values);
+    SampledPositionProperty.prototype.addSamples = function(times, positions, derivatives) {
+        this._property.addSamples(times, positions, derivatives);
     };
 
     /**
-     * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * Adds samples as a single packed array where each new sample is represented as a date,
+     * followed by the packed representation of the corresponding value and derivatives.
      *
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.

@@ -9,11 +9,8 @@ define([
 
 
     /**
-     * Functions for performing linear interpolation.
+     * An {@link InterpolationAlgorithm} for performing linear interpolation.
      * @exports LinearApproximation
-     *
-     * @see LagrangePolynomialApproximation
-     * @see HermitePolynomialApproximation
      */
     var LinearApproximation = {
         type : 'Linear'
@@ -21,19 +18,13 @@ define([
 
     /**
      * Given the desired degree, returns the number of data points required for interpolation.
-     *
+     * Since linear interpolation can only generate a first degree polynomial, this function
+     * always returns 2.
      * @param {Number} degree The desired degree of interpolation.
-     * @returns The number of required data points needed for the desired degree of interpolation.
+     * @returns {Number} This function always returns 2.
      *
-     * @exception {DeveloperError} Linear interpolation can only generate a first degree polynomial.
      */
     LinearApproximation.getRequiredDataPoints = function(degree) {
-        //>>includeStart('debug', pragmas.debug);
-        if (degree !== 1) {
-            throw new DeveloperError('Linear interpolation can only generate a first degree polynomial.');
-        }
-        //>>includeEnd('debug');
-
         return 2;
     };
 
@@ -48,10 +39,7 @@ define([
      * @param {Number} yStride The number of dependent variable values in yTable corresponding to
      * each independent variable value in xTable.
      * @param {Number[]} [result] An existing array into which to store the result.
-     * @returns The array of interpolated values, or the result parameter if one was provided.
-     *
-     * @see LagrangePolynomialApproximation
-     * @see HermitePolynomialApproximation
+     * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
      */
     LinearApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         //>>includeStart('debug', pragmas.debug);
