@@ -956,7 +956,7 @@ define([
 
             var max = Math.max(g0, Math.max(g1, g2));
             var edge;
-            var mid = new Cartesian3();
+            var mid;
 
             if (max > granularity) {
                 if (g0 === max) {
@@ -964,7 +964,7 @@ define([
 
                     i = edges[edge];
                     if (!i) {
-                        mid = Cartesian3.add(v0, v1, mid);
+                        mid = Cartesian3.add(v0, v1, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);
                         i = subdividedPositions.length - 1;
@@ -986,7 +986,7 @@ define([
 
                     i = edges[edge];
                     if (!i) {
-                        mid = Cartesian3.add(v1, v2, mid);
+                        mid = Cartesian3.add(v1, v2, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);
                         i = subdividedPositions.length - 1;
@@ -1008,7 +1008,7 @@ define([
 
                     i = edges[edge];
                     if (!i) {
-                        mid = Cartesian3.add(v2, v0, mid);
+                        mid = Cartesian3.add(v2, v0, new Cartesian3());
                         Cartesian3.multiplyByScalar(mid, 0.5, mid);
                         subdividedPositions.push(mid);
                         i = subdividedPositions.length - 1;
