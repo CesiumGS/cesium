@@ -1086,7 +1086,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
@@ -1178,7 +1178,7 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction);
 
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 0.01 * maxRadii;
         frustum.far = 60.0 * maxRadii;
@@ -1420,7 +1420,7 @@ defineSuite([
     it('animates position to visible map in Columbus view', function() {
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
@@ -1474,7 +1474,7 @@ defineSuite([
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
         var frustum = new PerspectiveFrustum();
-        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.fov = CesiumMath.toRadians(60.0);
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;

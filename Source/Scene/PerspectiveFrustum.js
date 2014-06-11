@@ -138,7 +138,7 @@ define([
         },
 
         /**
-         * The angle of the vertical field of view, in radians.
+         * Gets the angle of the vertical field of view, in radians.
          * @type {Number}
          * @default undefined
          */
@@ -146,13 +146,6 @@ define([
             get : function() {
                 update(this);
                 return this._fovy;
-            },
-            set : function(fovy) {
-                if (defined(this.aspectRatio) && this.aspectRatio > 1) {
-                    this.fov = fovy * this.aspectRatio;
-                } else {
-                    this.fov = fovy;
-                }
             }
         }
     });

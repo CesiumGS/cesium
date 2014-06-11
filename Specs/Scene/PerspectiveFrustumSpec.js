@@ -39,18 +39,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('out of range fovy causes an exception', function() {
-        frustum.fovy = -1.0;
-        expect(function() {
-            return frustum.projectionMatrix;
-        }).toThrowDeveloperError();
-
-        frustum.fovy = CesiumMath.TWO_PI;
-        expect(function() {
-            return frustum.projectionMatrix;
-        }).toThrowDeveloperError();
-    });
-
     it('negative aspect ratio throws an exception', function() {
         frustum.aspectRatio = -1.0;
         expect(function() {
