@@ -614,6 +614,16 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromSpherical work with no result parameter', function() {
+        expect(function() {
+            Cartesian3.fromSpherical({
+                    clock : sixtyDegrees,
+                    cone : (fortyFiveDegrees + Math.PI / 2.0),
+                    magnitude : Math.sqrt(8.0)
+            });
+        }).not.toThrowDeveloperError();
+    });
+
     it('clone returns undefined with no parameter', function() {
         expect(Cartesian3.clone()).toBeUndefined();
     });
@@ -939,6 +949,20 @@ defineSuite([
         expect(actual).toEqual(expected);
     });
 
+    it('fromRadiansArray with result', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = [new Cartesian3(), new Cartesian3()];
+        var actual = Cartesian3.fromRadiansArray([lon1, lat1, lon2, lat2], ellipsoid, result);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1), new Cartographic(lon2, lat2)]);
+        expect(result).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
     it('fromRadiansArray throws with no positions', function() {
         expect(function() {
             Cartesian3.fromRadiansArray();
@@ -1003,6 +1027,22 @@ defineSuite([
         expect(actual).toEqual(expected);
     });
 
+    it('fromRadiansArrayHeights with result', function(){
+        var lon1 = CesiumMath.toRadians(90);
+        var lat1 = CesiumMath.toRadians(-70);
+        var alt1 = 200000;
+        var lon2 = CesiumMath.toRadians(-100);
+        var lat2 = CesiumMath.toRadians(40);
+        var alt2 = 100000;
+
+        var ellipsoid = Ellipsoid.WGS84;
+        var result = [new Cartesian3(), new Cartesian3()];
+        var actual = Cartesian3.fromRadiansArrayHeights([lon1, lat1, alt1, lon2, lat2, alt2], ellipsoid, result);
+        var expected = ellipsoid.cartographicArrayToCartesianArray([new Cartographic(lon1, lat1, alt1), new Cartographic(lon2, lat2, alt2)]);
+        expect(result).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
     it('fromRadiansArrayHeights throws with no positions', function() {
         expect(function() {
             Cartesian3.fromRadiansArrayHeights();
@@ -1018,6 +1058,79 @@ defineSuite([
     it('fromRadiansArrayHeights throws with positions length not multiple of 3', function() {
         expect(function() {
             Cartesian3.fromRadiansArrayHeights([1, 3, 5, 2]);
+        }).toThrowDeveloperError();
+    });
+
+    it('getMinimumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian3.getMinimumByComponent(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian3.getMaximumByComponent(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('normalize throws with no result', function() {
+        expect(function() {
+            Cartesian3.normalize(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyComponents throws with no result', function() {
+        expect(function() {
+            Cartesian3.multiplyComponents(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws with no result', function() {
+        expect(function() {
+            Cartesian3.add(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('subtract throws with no result', function() {
+        expect(function() {
+            Cartesian3.subtract(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian3.multiplyByScalar(new Cartesian3(), 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian3.divideByScalar(new Cartesian3(), 5);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with no result', function() {
+        expect(function() {
+            Cartesian3.negate(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with no result', function() {
+        expect(function() {
+            Cartesian3.abs(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('cross throws with no result', function() {
+        expect(function() {
+            Cartesian3.cross(new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+
+    it('lerp throws with no result', function() {
+        expect(function() {
+            Cartesian3.lerp(new Cartesian3(), new Cartesian3(), 10);
         }).toThrowDeveloperError();
     });
 

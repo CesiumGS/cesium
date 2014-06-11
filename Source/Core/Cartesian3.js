@@ -575,7 +575,7 @@ define([
      * @param {Cartesian3} start The value corresponding to t at 0.0.
      * @param {Cartesian3} end The value corresponding to t at 1.0.
      * @param {Number} t The point along t at which to interpolate.
-     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @param {Cartesian3} result The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.lerp = function(start, end, t, result) {
@@ -588,6 +588,9 @@ define([
         }
         if (typeof t !== 'number') {
             throw new DeveloperError('t is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 

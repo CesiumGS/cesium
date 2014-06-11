@@ -704,5 +704,71 @@ defineSuite([
         expect(cartesian2).toEqual(expectedResult);
     });
 
+    it('getMinimumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian2.getMinimumByComponent(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('getMaximumByComponent throws with no result', function() {
+        expect(function() {
+            Cartesian2.getMaximumByComponent(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('normalize throws with no result', function() {
+        expect(function() {
+            Cartesian2.normalize(new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyComponents throws with no result', function() {
+        expect(function() {
+            Cartesian2.multiplyComponents(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('add throws with no result', function() {
+        expect(function() {
+            Cartesian2.add(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('subtact throws with no result', function() {
+        expect(function() {
+            Cartesian2.subtract(new Cartesian2(), new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian2.multiplyByScalar(new Cartesian2(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('divideByScalar throws with no result', function() {
+        expect(function() {
+            Cartesian2.divideByScalar(new Cartesian2(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('negate throws with no result', function() {
+        expect(function() {
+            Cartesian2.negate(new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('abs throws with no result', function() {
+        expect(function() {
+            Cartesian2.abs(new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('lerp throws with no result', function() {
+        expect(function() {
+            Cartesian2.lerp(new Cartesian2(), new Cartesian2(), 10);
+        }).toThrowDeveloperError();
+    });
+
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
 });
