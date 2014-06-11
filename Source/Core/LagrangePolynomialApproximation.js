@@ -6,11 +6,8 @@ define([
     "use strict";
 
     /**
-     * Functions for performing Lagrange interpolation.
+     * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
      * @exports LagrangePolynomialApproximation
-     *
-     * @see LinearApproximation
-     * @see HermitePolynomialApproximation
      */
     var LagrangePolynomialApproximation = {
         type : 'Lagrange'
@@ -38,9 +35,6 @@ define([
      * each independent variable value in xTable.
      * @param {Number[]} [result] An existing array into which to store the result.
      * @returns {Number[]} The array of interpolated values, or the result parameter if one was provided.
-     *
-     * @see LinearApproximation
-     * @see HermitePolynomialApproximation
      */
     LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
         if (!defined(result)) {

@@ -125,7 +125,8 @@ define([
      * @alias SampledProperty
      * @constructor
      *
-     * @param {Number|Object} type The type of property, which must be a Number or implement {@link Packable}.
+     * @param {Number|Packable} type The type of property.
+     * @param {Packable[]} [derivativeTypes] When supplied, indicates that samples will contain derivative information of the specified types.
      *
      * @see SampledPositionProperty
      *
@@ -163,7 +164,7 @@ define([
      * //Retrieve an interpolated value
      * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
-    var SampledProperty = function(type) {
+    var SampledProperty = function(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -174,7 +175,26 @@ define([
         if (innerType === Number) {
             innerType = PackableNumber;
         }
-        var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, innerType.packedLength);
+        var packedLength = innerType.packedLength;
+        var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, packedLength);
+
+        var inputOrder = 0;
+        var innerDerivativeTypes;
+        if (defined(derivativeTypes)) {
+            var length = derivativeTypes.length;
+            innerDerivativeTypes = new Array(length);
+            for (var i = 0; i < length; i++) {
+                var derivativeType = derivativeTypes[i];
+                if (derivativeType === Number) {
+                    derivativeType = PackableNumber;
+                }
+                var derivativePackedLength = derivativeType.packedLength;
+                packedLength += derivativePackedLength;
+                packedInterpolationLength += defaultValue(derivativeType.packedInterpolationLength, derivativePackedLength);
+                innerDerivativeTypes[i] = derivativeType;
+            }
+            inputOrder = length;
+        }
 
         this._type = type;
         this._innerType = innerType;
@@ -185,10 +205,14 @@ define([
         this._values = [];
         this._xTable = [];
         this._yTable = [];
+        this._packedLength = packedLength;
         this._packedInterpolationLength = packedInterpolationLength;
         this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
         this._definitionChanged = new Event();
+        this._derivativeTypes = derivativeTypes;
+        this._innerDerivativeTypes = innerDerivativeTypes;
+        this._inputOrder = inputOrder;
     };
 
     defineProperties(SampledProperty.prototype, {
@@ -227,6 +251,16 @@ define([
         type : {
             get : function() {
                 return this._type;
+            }
+        },
+        /**
+         * Gets the derivative types used by this property.
+         * @memberof SampledProperty.prototype
+         * @type {Packable[]}
+         */
+        derivativeTypes : {
+            get : function() {
+                return this._derivativeTypes;
             }
         },
         /**
@@ -276,10 +310,11 @@ define([
             var yTable = this._yTable;
             var interpolationAlgorithm = this._interpolationAlgorithm;
             var packedInterpolationLength = this._packedInterpolationLength;
+            var inputOrder = this._inputOrder;
 
             if (this._updateTableLength) {
                 this._updateTableLength = false;
-                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
+                var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree, inputOrder), times.length);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
                     xTable.length = numberOfPoints;
@@ -323,13 +358,13 @@ define([
             var length = lastIndex - firstIndex + 1;
 
             // Build the tables
-            for ( var i = 0; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 xTable[i] = JulianDate.getSecondsDifference(times[lastIndex], times[firstIndex + i]);
             }
 
             if (!defined(innerType.convertPackedArrayForInterpolation)) {
                 var destinationIndex = 0;
-                var packedLength = innerType.packedLength;
+                var packedLength = this._packedLength;
                 var sourceIndex = firstIndex * packedLength;
                 var stop = (lastIndex + 1) * packedLength;
 
@@ -344,14 +379,20 @@ define([
 
             // Interpolate!
             var x = JulianDate.getSecondsDifference(times[lastIndex], time);
-            var interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            var interpolationResult;
+            if (inputOrder === 0 || !defined(interpolationAlgorithm.interpolate)) {
+                interpolationResult = interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, this._interpolationResult);
+            } else {
+                var yStride = Math.floor(packedInterpolationLength / (inputOrder + 1));
+                interpolationResult = interpolationAlgorithm.interpolate(x, xTable, yTable, yStride, inputOrder, inputOrder, this._interpolationResult);
+            }
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationResult, 0, result);
             }
             return innerType.unpackInterpolationResult(interpolationResult, values, firstIndex, lastIndex, result);
         }
-        return innerType.unpack(this._values, index * innerType.packedLength, result);
+        return innerType.unpack(this._values, index * this._packedLength, result);
     };
 
     /**
@@ -393,9 +434,13 @@ define([
      * Adds a new sample
      *
      * @param {JulianDate} time The sample time.
-     * @param {Object} value The value at the provided time.
+     * @param {Packable} value The value at the provided time.
+     * @param {Packable[]} [derivatives] The array of derivatives at the provided time.
      */
-    SampledProperty.prototype.addSample = function(time, value) {
+    SampledProperty.prototype.addSample = function(time, value, derivatives) {
+        var innerDerivativeTypes = this._innerDerivativeTypes;
+        var hasDerivatives = defined(innerDerivativeTypes);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
@@ -403,12 +448,23 @@ define([
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        if (hasDerivatives && !defined(derivatives)) {
+            throw new DeveloperError('derivatives is required.');
+        }
         //>>includeEnd('debug');
 
         var innerType = this._innerType;
-        var data = [time];
-        innerType.pack(value, data, 1);
-        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        var data = [];
+        data.push(time);
+        innerType.pack(value, data, data.length);
+
+        if (hasDerivatives) {
+            var derivativesLength = innerDerivativeTypes.length;
+            for (var x = 0; x < derivativesLength; x++) {
+                innerDerivativeTypes[x].pack(derivatives[x], data, data.length);
+            }
+        }
+        mergeNewSamples(undefined, this._times, this._values, data, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
@@ -418,10 +474,15 @@ define([
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
      * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
+     * @param {Array[]} [derivativeValues] An array where each item is the array of derivatives at the equivalent time index.
      *
-     * @exception {DeveloperError} times and values must be the same length..
+     * @exception {DeveloperError} times and values must be the same length.
+     * @exception {DeveloperError} times and derivativeValues must be the same length.
      */
-    SampledProperty.prototype.addSamples = function(times, values) {
+    SampledProperty.prototype.addSamples = function(times, values, derivativeValues) {
+        var innerDerivativeTypes = this._innerDerivativeTypes;
+        var hasDerivatives = defined(innerDerivativeTypes);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
@@ -432,22 +493,34 @@ define([
         if (times.length !== values.length) {
             throw new DeveloperError('times and values must be the same length.');
         }
+        if (hasDerivatives && (!defined(derivativeValues) || derivativeValues.length !== times.length)) {
+            throw new DeveloperError('times and derivativeValues must be the same length.');
+        }
         //>>includeEnd('debug');
 
         var innerType = this._innerType;
         var length = times.length;
         var data = [];
-        for ( var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++) {
             data.push(times[i]);
             innerType.pack(values[i], data, data.length);
+
+            if (hasDerivatives) {
+                var derivatives = derivativeValues[i];
+                var derivativesLength = innerDerivativeTypes.length;
+                for (var x = 0; x < derivativesLength; x++) {
+                    innerDerivativeTypes[x].pack(derivatives[x], data, data.length);
+                }
+            }
         }
-        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        mergeNewSamples(undefined, this._times, this._values, data, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
 
     /**
-     * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * Adds samples as a single packed array where each new sample is represented as a date,
+     * followed by the packed representation of the corresponding value and derivatives.
      *
      * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
@@ -459,7 +532,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
+        mergeNewSamples(epoch, this._times, this._values, packedSamples, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
     };
@@ -479,15 +552,43 @@ define([
             return false;
         }
 
+        if (this._type !== other._type || //
+            this._interpolationDegree !== other._interpolationDegree || //
+            this._interpolationAlgorithm !== other._interpolationAlgorithm) {
+            return false;
+        }
+
+        var derivativeTypes = this._derivativeTypes;
+        var hasDerivatives = defined(derivativeTypes);
+        var otherDerivativeTypes = other._derivativeTypes;
+        var otherHasDerivatives = defined(otherDerivativeTypes);
+        if (hasDerivatives !== otherHasDerivatives) {
+            return false;
+        }
+
+        var i;
+        var length;
+        if (hasDerivatives) {
+            length = derivativeTypes.length;
+            if (length !== otherDerivativeTypes.length) {
+                return false;
+            }
+
+            for (i = 0; i < length; i++) {
+                if (derivativeTypes[i] !== otherDerivativeTypes[i]) {
+                    return false;
+                }
+            }
+        }
+
         var times = this._times;
         var otherTimes = other._times;
-        var length = times.length;
+        length = times.length;
 
         if (length !== otherTimes.length) {
             return false;
         }
 
-        var i;
         for (i = 0; i < length; i++) {
             if (!JulianDate.equals(times[i], otherTimes[i])) {
                 return false;
@@ -502,9 +603,7 @@ define([
             }
         }
 
-        return this._type === other._type && //
-               this._interpolationDegree === other._interpolationDegree && //
-               this._interpolationAlgorithm === other._interpolationAlgorithm;
+        return true;
     };
 
     //Exposed for testing.
