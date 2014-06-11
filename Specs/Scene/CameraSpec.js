@@ -103,18 +103,18 @@ defineSuite([
                                       0.0, 1.0, 0.0, -position.y,
                                       0.0, 0.0, 1.0, -position.z,
                                       0.0, 0.0, 0.0,         1.0);
-        var expected = Matrix4.multiply(rotation, translation);
+        var expected = Matrix4.multiply(rotation, translation, new Matrix4());
         expect(viewMatrix).toEqual(expected);
     });
 
     it('get inverse view matrix', function() {
-        var expected = Matrix4.inverse(camera.viewMatrix);
+        var expected = Matrix4.inverse(camera.viewMatrix, new Matrix4());
         expect(expected).toEqualEpsilon(camera.inverseViewMatrix, CesiumMath.EPSILON15);
     });
 
     it('get inverse transform', function() {
         camera.transform = new Matrix4(5.0, 0.0, 0.0, 1.0, 0.0, 5.0, 0.0, 2.0, 0.0, 0.0, 5.0, 3.0, 0.0, 0.0, 0.0, 1.0);
-        var expected = Matrix4.inverseTransformation(camera.transform);
+        var expected = Matrix4.inverseTransformation(camera.transform, new Matrix4());
         expect(expected).toEqual(camera.inverseTransform);
     });
 
@@ -142,10 +142,10 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame);
+        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
-        var right = Matrix3.multiplyByVector(transform, camera.right);
+        var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
         var heading = Math.atan2(right.y, right.x);
 
         expect(camera.heading).toEqual(heading);
@@ -266,9 +266,9 @@ defineSuite([
         cartOrigin.height = height;
 
         camera.position = ellipsoid.cartographicToCartesian(cartOrigin);
-        camera.direction = Cartesian3.negate(Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 2)), new Cartesian3());
-        camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1));
-        camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0));
+        camera.direction = Cartesian3.negate(Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 2, new Cartesian4())), new Cartesian3());
+        camera.up = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 1, new Cartesian4(), new Matrix4()));
+        camera.right = Cartesian3.fromCartesian4(Matrix4.getColumn(transform, 0, new Cartesian4()));
 
         camera.setTransform(transform);
 
@@ -303,7 +303,7 @@ defineSuite([
                                        1.0, 0.0, 0.0, 20.0,
                                        0.0, 1.0, 0.0, 30.0,
                                        0.0, 0.0, 0.0, 1.0);
-        var expected = Cartesian3.add(Matrix4.getColumn(camera.inverseTransform, 3), Cartesian3.UNIT_Z, new Cartesian3());
+        var expected = Cartesian3.add(Matrix4.getColumn(camera.inverseTransform, 3, new Cartesian4()), Cartesian3.UNIT_Z, new Cartesian3());
         expect(camera.worldToCameraCoordinatesPoint(Cartesian3.UNIT_X)).toEqual(expected);
     });
 
@@ -346,7 +346,7 @@ defineSuite([
                                        1.0, 0.0, 0.0, 20.0,
                                        0.0, 1.0, 0.0, 30.0,
                                        0.0, 0.0, 0.0, 1.0);
-        var expected = Cartesian3.add(Cartesian3.UNIT_X, Matrix4.getColumn(camera.transform, 3), new Cartesian3());
+        var expected = Cartesian3.add(Cartesian3.UNIT_X, Matrix4.getColumn(camera.transform, 3, new Cartesian4()), new Cartesian3());
         expect(camera.cameraToWorldCoordinatesPoint(Cartesian3.UNIT_Z)).toEqual(expected);
     });
 
