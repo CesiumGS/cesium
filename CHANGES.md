@@ -72,7 +72,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
-  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `scene.globe`.
   * Renamed `CentralBody` to `Globe`.
   * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
   * Refactored visualizers, removing `setDynamicObjectCollection`, `getDynamicObjectCollection`, `getScene`, and `removeAllPrimitives` which are all superfluous after the introduction of `DataSourceDisplay`.  The affected classes are:
