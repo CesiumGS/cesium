@@ -400,6 +400,9 @@ define([
             throw new DeveloperError('date is required.');
         }
         //>>includeEnd('debug');
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
 
         var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
         if (!defined(fixedToIcrfMtx)) {
@@ -433,9 +436,9 @@ define([
      * var now = new Cesium.JulianDate();
      * var pointInFixed = new Cesium.Cartesian3(...);
      * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
-     * var pointInInertial;
+     * var pointInInertial = new Cartesian3();
      * if (Cesium.defined(fixedToIcrf)) {
-     *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
+     *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed, pointInInertial);
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
@@ -444,6 +447,10 @@ define([
             throw new DeveloperError('date is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Matrix3();
+        }
 
         // Compute pole wander
         var eop = Transforms.earthOrientationParameters.compute(date, eopScratch);

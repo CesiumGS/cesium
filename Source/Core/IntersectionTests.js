@@ -276,6 +276,13 @@ define([
     var secondAxisScratch = new Cartesian3();
     var thirdAxisScratch = new Cartesian3();
     var referenceScratch = new Cartesian3();
+    var matrixScratch1 = new Matrix3();
+    var matrixScratch2 = new Matrix3();
+    var matrixScratch3 = new Matrix3();
+    var matrixScratch4 = new Matrix3();
+    var matrixScratch5 = new Matrix3();
+    var scratchCart3 = new Cartesian3();
+    var scratchClosest = new Cartesian3();
     IntersectionTests.grazingAltitudeLocation = function(ray, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
@@ -305,41 +312,41 @@ define([
         var reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
         var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis, secondAxisScratch), secondAxisScratch);
         var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch), thirdAxisScratch);
-        var B = new Matrix3(firstAxis.x, secondAxis.x, thirdAxis.x,
+        var B = Matrix3.fromArray([firstAxis.x, secondAxis.x, thirdAxis.x,
                             firstAxis.y, secondAxis.y, thirdAxis.y,
-                            firstAxis.z, secondAxis.z, thirdAxis.z);
-        var B_T = Matrix3.transpose(B);
+                            firstAxis.z, secondAxis.z, thirdAxis.z], matrixScratch1);
+        var B_T = Matrix3.transpose(B, matrixScratch2);
 
         // Get the scaling matrix and its inverse.
-        var D_I = Matrix3.fromScale(ellipsoid.radii);
-        var D = Matrix3.fromScale(ellipsoid.oneOverRadii);
+        var D_I = Matrix3.fromScale(ellipsoid.radii, matrixScratch3);
+        var D = Matrix3.fromScale(ellipsoid.oneOverRadii, matrixScratch4);
 
-        var C = new Matrix3(0.0, direction.z, -direction.y,
+        var C = Matrix3.fromArray([0.0, direction.z, -direction.y,
                             -direction.z, 0.0, direction.x,
-                            direction.y, -direction.x, 0.0);
+                            direction.y, -direction.x, 0.0], matrixScratch5);
 
-        var temp = Matrix3.multiply(Matrix3.multiply(B_T, D), C);
-        var A = Matrix3.multiply(Matrix3.multiply(temp, D_I), B);
-        var b = Matrix3.multiplyByVector(temp, position);
+        var temp = Matrix3.multiply(Matrix3.multiply(B_T, D, matrixScratch2), C, matrixScratch2);
+        var A = Matrix3.multiply(Matrix3.multiply(temp, D_I, matrixScratch4), B, matrixScratch4);
+        var b = Matrix3.multiplyByVector(temp, position, matrixScratch5);
 
         // Solve for the solutions to the expression in standard form:
         var solutions = quadraticVectorExpression(A, Cartesian3.negate(b, firstAxisScratch), 0.0, 0.0, 1.0);
 
-        var s;
+        var s = scratchCart3;
         var altitude;
         var length = solutions.length;
         if (length > 0) {
-            var closest = Cartesian3.ZERO;
+            var closest = scratchClosest;
             var maximumValue = Number.NEGATIVE_INFINITY;
 
             for ( var i = 0; i < length; ++i) {
-                s = Matrix3.multiplyByVector(D_I, Matrix3.multiplyByVector(B, solutions[i]));
+                s = Matrix3.multiplyByVector(D_I, Matrix3.multiplyByVector(B, solutions[i], s), s);
                 var v = Cartesian3.normalize(Cartesian3.subtract(s, position, referenceScratch), referenceScratch);
                 var dotProduct = Cartesian3.dot(v, direction);
 
                 if (dotProduct > maximumValue) {
                     maximumValue = dotProduct;
-                    closest = s;
+                    closest = Cartesian3.clone(s, closest);
                 }
             }
 

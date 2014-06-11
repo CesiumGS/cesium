@@ -515,6 +515,9 @@ define([
         if (!defined(date)) {
             date = new JulianDate();
         }
+        if (!defined(result)){
+            result = new Cartesian3();
+        }
         result = computeSimonMoon(date, result);
         Matrix3.multiplyByVector(axesTransformation, result, result);
 
