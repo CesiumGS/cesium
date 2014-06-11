@@ -536,7 +536,7 @@ define([
      * @param {Cartesian2} end The value corresponding to t at 1.0.
      * @param {Number} t The point along t at which to interpolate.
      * @param {Cartesian2} result The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
+     * @returns {Cartesian2} The modified result parameter.
      */
     Cartesian2.lerp = function(start, end, t, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -595,6 +595,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
