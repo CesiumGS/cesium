@@ -14,9 +14,9 @@ defineSuite([
 
     it('merge assigns unassigned properties', function() {
         var source = new DynamicClock();
-        source.startTime = new JulianDate();
-        source.stopTime = new JulianDate();
-        source.currentTime = new JulianDate();
+        source.startTime = JulianDate.now();
+        source.stopTime = JulianDate.now();
+        source.currentTime = JulianDate.now();
         source.clockRange = ClockRange.CLAMPED;
         source.clockStep = ClockStep.TICK_DEPENDENT;
         source.multiplier = 1;
@@ -34,16 +34,16 @@ defineSuite([
 
     it('merge does not assign assigned properties', function() {
         var source = new DynamicClock();
-        source.startTime = new JulianDate();
-        source.stopTime = new JulianDate();
-        source.currentTime = new JulianDate();
+        source.startTime = JulianDate.now();
+        source.stopTime = JulianDate.now();
+        source.currentTime = JulianDate.now();
         source.clockRange = ClockRange.CLAMPED;
         source.clockStep = ClockStep.TICK_DEPENDENT;
         source.multiplier = 1;
 
-        var startTime = new JulianDate();
-        var stopTime = new JulianDate();
-        var currentTime = new JulianDate();
+        var startTime = JulianDate.now();
+        var stopTime = JulianDate.now();
+        var currentTime = JulianDate.now();
         var clockRange = ClockRange.CLAMPED;
         var clockStep = ClockStep.TICK_DEPENDENT;
         var multiplier = 1;
@@ -68,9 +68,9 @@ defineSuite([
 
     it('clone works', function() {
         var source = new DynamicClock();
-        source.startTime = new JulianDate();
-        source.stopTime = new JulianDate();
-        source.currentTime = new JulianDate();
+        source.startTime = JulianDate.now();
+        source.stopTime = JulianDate.now();
+        source.currentTime = JulianDate.now();
         source.clockRange = ClockRange.CLAMPED;
         source.clockStep = ClockStep.TICK_DEPENDENT;
         source.multiplier = 1;

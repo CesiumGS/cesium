@@ -43,7 +43,7 @@ define([
          * @type {JulianDate}
          * @default JulianDate()
          */
-        this.systemTime = knockout.observable(new JulianDate());
+        this.systemTime = knockout.observable(JulianDate.now());
         this.systemTime.equalityComparer = JulianDate.equals;
 
         knockout.track(this, ['systemTime']);
@@ -223,7 +223,7 @@ define([
         var canAnimate = clock.canAnimate;
         var shouldAnimate = clock.shouldAnimate;
 
-        this.systemTime = new JulianDate();
+        this.systemTime = JulianDate.now();
         this.startTime = startTime;
         this.stopTime = stopTime;
         this.currentTime = currentTime;

@@ -83,7 +83,7 @@ define([
      */
     IauOrientationAxes.prototype.evaluate = function(date, result) {
         if (!defined(date)) {
-            date = new JulianDate();
+            date = JulianDate.now();
         }
 
         var alphaDeltaW = this._computeFunction(date);

@@ -6,6 +6,7 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/JulianDate',
         '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
         '../createCommand',
@@ -17,6 +18,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        JulianDate,
         knockout,
         sprintf,
         createCommand,
@@ -241,10 +243,10 @@ define([
 
             var result = false;
             if (clockRange === ClockRange.LOOP_STOP) {
-                result = currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
+                result = JulianDate.greaterThan(currentTime, startTime) || (currentTime.equals(startTime) && multiplier > 0);
             } else {
                 var stopTime = clockViewModel.stopTime;
-                result = (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) || //
+                result = (JulianDate.greaterThan(currentTime, startTime) && JulianDate.lessThan(currentTime, stopTime)) || //
                 (currentTime.equals(startTime) && multiplier > 0) || //
                 (currentTime.equals(stopTime) && multiplier < 0);
             }
@@ -264,7 +266,7 @@ define([
             }
 
             var systemTime = clockViewModel.systemTime;
-            return systemTime.greaterThanOrEquals(clockViewModel.startTime) && systemTime.lessThanOrEquals(clockViewModel.stopTime);
+            return JulianDate.greaterThanOrEquals(systemTime, clockViewModel.startTime) && JulianDate.lessThanOrEquals(systemTime, clockViewModel.stopTime);
         });
 
         this._isAnimating = undefined;
@@ -370,7 +372,7 @@ define([
      * @returns {String} The string representation of the calendar date portion of the provided date.
      */
     AnimationViewModel.defaultDateFormatter = function(date, viewModel) {
-        var gregorianDate = date.toGregorianDate();
+        var gregorianDate = JulianDate.toGregorianDate(date);
         return monthNames[gregorianDate.month - 1] + ' ' + gregorianDate.day + ' ' + gregorianDate.year;
     };
 
@@ -390,7 +392,7 @@ define([
      * @returns {String} The string representation of the time portion of the provided date.
      */
     AnimationViewModel.defaultTimeFormatter = function(date, viewModel) {
-        var gregorianDate = date.toGregorianDate();
+        var gregorianDate = JulianDate.toGregorianDate(date);
         var millisecond = Math.round(gregorianDate.millisecond);
         if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
             return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);

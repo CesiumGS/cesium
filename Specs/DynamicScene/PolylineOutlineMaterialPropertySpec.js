@@ -31,7 +31,7 @@ defineSuite([
         property.color = new ConstantProperty(Color.RED);
         property.outlineColor = new ConstantProperty(Color.BLUE);
 
-        var result = property.getValue(new JulianDate());
+        var result = property.getValue(JulianDate.now());
         expect(result.color).toEqual(Color.RED);
         expect(result.outlineColor).toEqual(Color.BLUE);
     });
@@ -72,7 +72,7 @@ defineSuite([
             color : Color.YELLOW.clone(),
             outlineColor : Color.BROWN.clone()
         };
-        var returnedResult = property.getValue(new JulianDate(), result);
+        var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);
         expect(result.color).toEqual(Color.RED);
         expect(result.outlineColor).toEqual(Color.BLUE);
