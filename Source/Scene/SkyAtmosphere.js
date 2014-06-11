@@ -55,7 +55,6 @@ define([
      *
      * @see Scene.skyAtmosphere
      */
-    var scalarScratch = new Cartesian3();
     var SkyAtmosphere = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
@@ -76,7 +75,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, scalarScratch));
+        this._outerRadius = Cartesian3.getMaximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
         var innerRadius = ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
@@ -145,7 +144,7 @@ define([
 
         if (!defined(command.vertexArray)) {
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, scalarScratch),
+                radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, new Cartesian3()),
                 slicePartitions : 256,
                 stackPartitions : 256,
                 vertexFormat : VertexFormat.POSITION_ONLY
