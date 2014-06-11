@@ -64,7 +64,7 @@ define([
      * camera.position = new Cesium.Cartesian3();
      * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
-     * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
+     * camera.frustum.fov = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      *
@@ -150,8 +150,8 @@ define([
          * @see OrthographicFrustum
          */
         this.frustum = new PerspectiveFrustum();
-        this.frustum.fovy = CesiumMath.toRadians(60.0);
         this.frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        this.frustum.fov = CesiumMath.toRadians(60.0);
 
         /**
          * The default amount to move the camera when an argument is not
@@ -1821,7 +1821,7 @@ define([
         }
 
         var frustum = this.frustum;
-        if (defined(frustum.aspectRatio) && defined(frustum.fovy) && defined(frustum.near)) {
+        if (defined(frustum.aspectRatio) && defined(frustum.fov) && defined(frustum.near)) {
             return getPickRayPerspective(this, windowPosition, result);
         }
 

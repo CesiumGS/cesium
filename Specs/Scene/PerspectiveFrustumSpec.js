@@ -22,12 +22,24 @@ defineSuite([
         frustum = new PerspectiveFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
-        frustum.fovy = (Math.PI) / 3;
         frustum.aspectRatio = 1.0;
+        frustum.fov = (Math.PI) / 3;
         planes = frustum.computeCullingVolume(new Cartesian3(), Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Y).planes;
     });
 
     it('out of range fov causes an exception', function() {
+        frustum.fov = -1.0;
+        expect(function() {
+            return frustum.projectionMatrix;
+        }).toThrowDeveloperError();
+
+        frustum.fov = CesiumMath.TWO_PI;
+        expect(function() {
+            return frustum.projectionMatrix;
+        }).toThrowDeveloperError();
+    });
+
+    it('out of range fovy causes an exception', function() {
         frustum.fovy = -1.0;
         expect(function() {
             return frustum.projectionMatrix;
@@ -149,7 +161,7 @@ defineSuite([
         var frustum2 = new PerspectiveFrustum();
         frustum2.near = 1.0;
         frustum2.far = 2.0;
-        frustum2.fovy = (Math.PI) / 3.0;
+        frustum2.fov = (Math.PI) / 3.0;
         frustum2.aspectRatio = 1.0;
         expect(frustum.equals(frustum2)).toEqual(true);
     });

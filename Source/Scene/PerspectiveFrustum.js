@@ -24,8 +24,8 @@ define([
      *
      * @example
      * var frustum = new Cesium.PerspectiveFrustum();
-     * frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
+     * frustum.fov = Cesium.Math.PI_OVER_THREE;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
      */
@@ -33,11 +33,14 @@ define([
         this._offCenterFrustum = new PerspectiveOffCenterFrustum();
 
         /**
-         * The angle of the field of view, in radians.
+         * The angle of the field of view (FOV), in radians.  This angle will be used
+         * as the horizontal FOV if the width is greater than the height, otherwise
+         * it will be the vertical FOV.
          * @type {Number}
          * @default undefined
          */
-        this.fovy = undefined;
+        this.fov = undefined;
+        this._fov = undefined;
         this._fovy = undefined;
 
         /**
@@ -67,18 +70,18 @@ define([
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
-            throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
+        if (!defined(frustum.fov) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
+            throw new DeveloperError('fov, aspectRatio, near, or far parameters are not set.');
         }
         //>>includeEnd('debug');
 
         var f = frustum._offCenterFrustum;
 
-        if (frustum.fovy !== frustum._fovy || frustum.aspectRatio !== frustum._aspectRatio ||
+        if (frustum.fov !== frustum._fov || frustum.aspectRatio !== frustum._aspectRatio ||
                 frustum.near !== frustum._near || frustum.far !== frustum._far) {
             //>>includeStart('debug', pragmas.debug);
-            if (frustum.fovy < 0 || frustum.fovy >= Math.PI) {
-                throw new DeveloperError('fovy must be in the range [0, PI).');
+            if (frustum.fov < 0 || frustum.fov >= Math.PI) {
+                throw new DeveloperError('fov must be in the range [0, PI).');
             }
 
             if (frustum.aspectRatio < 0) {
@@ -90,12 +93,13 @@ define([
             }
             //>>includeEnd('debug');
 
-            frustum._fovy = frustum.fovy;
             frustum._aspectRatio = frustum.aspectRatio;
+            frustum._fov = frustum.fov;
+            frustum._fovy = (frustum.aspectRatio <= 1) ? frustum.fov : (frustum.fov / frustum.aspectRatio);
             frustum._near = frustum.near;
             frustum._far = frustum.far;
 
-            f.top = frustum.near * Math.tan(0.5 * frustum.fovy);
+            f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
             f.bottom = -f.top;
             f.right = frustum.aspectRatio * f.top;
             f.left = -f.right;
@@ -130,6 +134,25 @@ define([
             get : function() {
                 update(this);
                 return this._offCenterFrustum.infiniteProjectionMatrix;
+            }
+        },
+
+        /**
+         * The angle of the vertical field of view, in radians.
+         * @type {Number}
+         * @default undefined
+         */
+        fovy : {
+            get : function() {
+                update(this);
+                return this._fovy;
+            },
+            set : function(fovy) {
+                if (defined(this.aspectRatio) && this.aspectRatio > 1) {
+                    this.fov = fovy * this.aspectRatio;
+                } else {
+                    this.fov = fovy;
+                }
             }
         }
     });
@@ -201,14 +224,14 @@ define([
             result = new PerspectiveFrustum();
         }
 
-        result.fovy = this.fovy;
         result.aspectRatio = this.aspectRatio;
+        result.fov = this.fov;
         result.near = this.near;
         result.far = this.far;
 
         // force update of clone to compute matrices
-        result._fovy = undefined;
         result._aspectRatio = undefined;
+        result._fov = undefined;
         result._near = undefined;
         result._far = undefined;
 
@@ -232,7 +255,7 @@ define([
         update(this);
         update(other);
 
-        return (this.fovy === other.fovy &&
+        return (this.fov === other.fov &&
                 this.aspectRatio === other.aspectRatio &&
                 this.near === other.near &&
                 this.far === other.far &&
