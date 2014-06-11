@@ -99,7 +99,6 @@ define([
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animation is played relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animation is played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animation is looped.
-     *
      * @returns {ModelAnimation} The animation that was added to the collection.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
@@ -112,6 +111,7 @@ define([
      *   name : 'animation name'
      * });
      *
+     * @example
      * // Example 2. Add an animation and provide all properties and events
      * var startTime = new JulianDate();
      *
@@ -181,7 +181,6 @@ define([
      * @param {Number} [options.speedup=1.0] Values greater than <code>1.0</code> increase the speed that the animations play relative to the scene clock speed; values less than <code>1.0</code> decrease the speed.
      * @param {Boolean} [options.reverse=false] When <code>true</code>, the animations are played in reverse.
      * @param {ModelAnimationLoop} [options.loop=ModelAnimationLoop.NONE] Determines if and how the animations are looped.
-     *
      * @returns {ModelAnimation[]} An array of {@link ModelAnimation} objects, one for each animation added to the collection.  If there are no glTF animations, the array is empty.
      *
      * @exception {DeveloperError} Animations are not loaded.  Wait for the {@link Model#readyToRender} event.
@@ -231,7 +230,6 @@ define([
      * </p>
      *
      * @param {ModelAnimation} animation The animation to remove.
-     *
      * @returns {Boolean} <code>true</code> if the animation was removed; <code>false</code> if the animation was not found in the collection.
      *
      * @example
@@ -277,7 +275,6 @@ define([
      * Determines whether this collection contains a given animation.
      *
      * @param {ModelAnimation} animation The animation to check for.
-     *
      * @returns {Boolean} <code>true</code> if this animation contains the animation, <code>false</code> otherwise.
      */
     ModelAnimationCollection.prototype.contains = function(animation) {
@@ -295,7 +292,6 @@ define([
      * all the animations in the collection.
      *
      * @param {Number} index The zero-based index of the animation.
-     *
      * @returns {ModelAnimation} The animation at the specified index.
      *
      * @example

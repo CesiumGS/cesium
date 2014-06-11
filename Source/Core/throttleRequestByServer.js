@@ -32,7 +32,6 @@ define([
      * @param {String} url The URL to request.
      * @param {Function} requestFunction The actual function that makes the request.
      * This function is expected to return a Promise for the requested data.
-     *
      * @returns {Promise} Either undefined, meaning the request would exceed the maximum
      * number of parallel requests, or a Promise that returns the requested data.
      *

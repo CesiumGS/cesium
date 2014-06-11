@@ -674,7 +674,6 @@ define([
      * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
      *
      * @param {CorridorGeometry} corridorGeometry A description of the corridor.
-     *
      * @returns {Geometry} The computed vertices and indices.
      *
      * @exception {DeveloperError} Count of unique positions must be greater than 1.

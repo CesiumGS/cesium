@@ -23,6 +23,7 @@ define([
      * @param {Cartesian3} [center] The center of the box; automatically computed if not supplied.
      *
      * @see BoundingSphere
+     * @see BoundingRectangle
      */
     var AxisAlignedBoundingBox = function(minimum, maximum, center) {
         /**

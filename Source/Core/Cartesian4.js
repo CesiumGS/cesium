@@ -190,7 +190,6 @@ define([
      * @param {Number[]} array The array whose four consecutive elements correspond to the x, y, z, and w components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @example
@@ -327,7 +326,6 @@ define([
      *
      * @param {Cartesian4} left The first point to compute the distance from.
      * @param {Cartesian4} right The second point to compute the distance to.
-     *
      * @returns {Number} The distance between two points.
      *
      * @example

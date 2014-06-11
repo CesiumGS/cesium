@@ -32,16 +32,16 @@ define([
      * if not specified.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
+     * @see loadText
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
+     *
      * @example
      * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
      *     // Do something with the JSON object
      * }, function(error) {
      *     // an error occurred
      * });
-     *
-     * @see loadText
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     var loadJson = function loadJson(url, headers) {
         //>>includeStart('debug', pragmas.debug);

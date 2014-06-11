@@ -192,7 +192,6 @@ define([
      * @param {Number[]} array The array whose three consecutive elements correspond to the x, y, and z components, respectively.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @example
@@ -326,7 +325,6 @@ define([
      *
      * @param {Cartesian3} left The first point to compute the distance from.
      * @param {Cartesian3} right The second point to compute the distance to.
-     *
      * @returns {Number} The distance between two points.
      *
      * @example
@@ -747,7 +745,6 @@ define([
      * @param {Number} [height = 0] The height, in meters, above the ellipsoid.
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The position
      *
      * @example
@@ -780,7 +777,6 @@ define([
      * @param {Number} [height = 0] The height, in meters, above the ellipsoid.
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3} The position
      *
      * @example
@@ -822,7 +818,6 @@ define([
      * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -849,7 +844,6 @@ define([
      * @param {Number[]} coordinates A list of longitude and latitude values. Values alternate [longitude, latitude, longitude, latitude...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the coordinates lie.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -890,7 +884,6 @@ define([
      * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example
@@ -925,7 +918,6 @@ define([
      * @param {Number[]} coordinates A list of longitude, latitude and height values. Values alternate [longitude, latitude, height,, longitude, latitude, height...].
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the position lies.
      * @param {Cartesian3[]} [result] An array of Cartesian3 objects to store the result.
-     *
      * @returns {Cartesian3[]} The array of positions.
      *
      * @example

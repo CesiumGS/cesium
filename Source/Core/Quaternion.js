@@ -755,7 +755,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var theta = Math.acos(CesiumMath.clamp(quaternion.w, -1.0, 1.0));
+        var theta = CesiumMath.acosClamped(quaternion.w);
         var thetaOverSinTheta = 0.0;
 
         if (theta !== 0.0) {
