@@ -95,7 +95,7 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    CompositeMaterialProperty.prototype.getValue = function(time, result) {
+    CompositeMaterialProperty.prototype.getValue = function(time, resul, context) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');

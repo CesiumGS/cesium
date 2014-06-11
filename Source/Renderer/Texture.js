@@ -45,6 +45,15 @@ define([
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
 
+        if (defined(source)) {
+            if (!defined(width)) {
+                width = defaultValue(source.videoWidth, source.width);
+            }
+            if (!defined(height)) {
+                height = defaultValue(source.videoHeight, source.height);
+            }
+        }
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
             throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');

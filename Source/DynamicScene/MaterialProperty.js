@@ -84,14 +84,14 @@ define([
     /**
      * @private
      */
-    MaterialProperty.getValue = function(time, materialProperty, material) {
+    MaterialProperty.getValue = function(time, materialProperty, material, context) {
         if (defined(materialProperty)) {
             var type = materialProperty.getType(time);
             if (defined(type)) {
                 if (!defined(material) || (material.type !== type)) {
                     material = Material.fromType(type);
                 }
-                materialProperty.getValue(time, material.uniforms);
+                materialProperty.getValue(time, material.uniforms, context);
             }
         }
         return material;
