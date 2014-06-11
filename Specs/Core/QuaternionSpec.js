@@ -54,6 +54,23 @@ defineSuite([
         expect(returnedResult).toEqual(expected);
     });
 
+    it('rotateVector works without a result parameter', function() {
+        var axis = Cartesian3.UNIT_Z;
+        var angle = CesiumMath.PI_OVER_TWO;
+        var rotation = Quaternion.fromAxisAngle(axis, angle);
+        expect(Quaternion.rotateVector(rotation, Cartesian3.UNIT_X)).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
+    });
+
+    it('rotateVector works with a result parameter', function() {
+        var axis = Cartesian3.UNIT_Z;
+        var angle = CesiumMath.PI_OVER_TWO;
+        var rotation = Quaternion.fromAxisAngle(axis, angle);
+        var result = new Cartesian3();
+        var actual = Quaternion.rotateVector(rotation, Cartesian3.UNIT_X, result);
+        expect(actual).toBe(result);
+        expect(actual).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON14);
+    });
+
     it('fromRotationMatrix works when m22 is max', function() {
         var q = Quaternion.fromAxisAngle(Cartesian3.negate(Cartesian3.UNIT_Z), Math.PI);
         var rotation = new Matrix3(-1.0,  0.0, 0.0,
@@ -776,6 +793,18 @@ defineSuite([
     it('fromAxisAngle throws with non-numeric angle', function() {
         expect(function() {
             Quaternion.fromAxisAngle(Cartesian3.UNIT_X, {});
+        }).toThrowDeveloperError();
+    });
+
+    it('rotateVector throws without quaternion', function() {
+        expect(function() {
+            Quaternion.rotateVector(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('rotateVector throws without cartesian', function() {
+        expect(function() {
+            Quaternion.rotateVector(new Quaternion(), undefined);
         }).toThrowDeveloperError();
     });
 

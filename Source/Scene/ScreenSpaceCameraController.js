@@ -533,13 +533,12 @@ define([
             axis = Cartesian3.fromElements(axis.z, axis.x, axis.y, scratchAdjustForTerrainAxis);
         }
 
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(axis, angle, scratchQuaternion), scratchRotation);
         var start = Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart);
-        var stop = Matrix3.multiplyByVector(rotation, start, scratchAdjustForTerrainStop);
+        var stop = Quaternion.rotateVector(Quaternion.fromAxisAngle(axis, angle, scratchQuaternion), start, scratchAdjustForTerrainStop);
 
         var ray = scratchRay;
+        Cartesian3.clone(camera.positionWC, ray.origin);
         Cartesian3.subtract(stop, start, ray.direction);
-        Cartesian3.add(center, start, ray.origin);
 
         var intersection = globe.intersect(ray, frameState, adjustForTerrainCartesian3);
         if (!defined(intersection)) {
