@@ -60,9 +60,20 @@ define([
         }
         //>>includeEnd('debug');
 
+        var that = this;
+
         if ((options.duration === 0.0) && defined(options.complete)) {
             options.complete();
-            return;
+
+            /**
+             * DOC_TBA
+             */
+            return {
+                cancelAnimation : function() {
+                },
+                _tween : undefined,
+                _cancel : undefined
+            };
         }
 
         var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
@@ -85,7 +96,6 @@ define([
         // start then stop to remove the tween from the global array
         tween.start().stop();
 
-        var that = this;
         /**
          * DOC_TBA
          */
