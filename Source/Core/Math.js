@@ -676,5 +676,29 @@ define([
         return randomNumberGenerator.random();
     };
 
+    /**
+     * Computes <code>Math.acos(value)</acode>, but first clamps <code>value</code> to the range [-1.0, 1.0]
+     * so that the function will never return NaN.
+     *
+     * @param value The value for which to compute acos.
+     * @returns {number} The acos of the value if the value is in the range [-1.0, 1.0], or the acos of -1.0 or 1.0,
+     *          whichever is closer, if the value is outside the range.
+     */
+    CesiumMath.acosClamped = function(value) {
+        return Math.acos(CesiumMath.clamp(value, -1.0, 1.0));
+    };
+
+    /**
+     * Computes <code>Math.asin(value)</acode>, but first clamps <code>value</code> to the range [-1.0, 1.0]
+     * so that the function will never return NaN.
+     *
+     * @param value The value for which to compute asin.
+     * @returns {number} The asin of the value if the value is in the range [-1.0, 1.0], or the asin of -1.0 or 1.0,
+     *          whichever is closer, if the value is outside the range.
+     */
+    CesiumMath.asinClamped = function(value) {
+        return Math.asin(CesiumMath.clamp(value, -1.0, 1.0));
+    };
+
     return CesiumMath;
 });

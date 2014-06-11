@@ -89,7 +89,7 @@ define([
             var key;
             var nameProperty;
             for (key in properties) {
-                if (properties.hasOwnProperty(key)) {
+                if (properties.hasOwnProperty(key) && properties[key]) {
                     var upperKey = key.toUpperCase();
                     if (upperKey === 'NAME' || upperKey === 'TITLE') {
                         nameProperty = key;
@@ -100,7 +100,7 @@ define([
             }
             if (!defined(nameProperty)) {
                 for (key in properties) {
-                    if (properties.hasOwnProperty(key)) {
+                    if (properties.hasOwnProperty(key) && properties[key]) {
                         if (/name/i.test(key) || /title/i.test(key)) {
                             nameProperty = key;
                             dynamicObject.name = properties[key];

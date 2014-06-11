@@ -137,6 +137,14 @@ defineSuite([
         geometry : point
     };
 
+    var featureWithNullName = {
+        type : 'Feature',
+        geometry : point,
+        properties : {
+            name : null
+        }
+    };
+
     var featureWithId = {
         id : 'myId',
         type : 'Feature',
@@ -229,6 +237,23 @@ defineSuite([
             var pointObject = dynamicObjectCollection.getObjects()[0];
             expect(pointObject.geoJson).toBe(feature);
             expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
+            expect(pointObject.point).toBeDefined();
+        });
+    });
+
+    it('Does not use "name" property as the object\'s name if it is null', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(featureWithNullName);
+
+        var dynamicObjectCollection = dataSource.dynamicObjects;
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 1;
+        });
+        runs(function() {
+            var pointObject = dynamicObjectCollection.getObjects()[0];
+            expect(pointObject.name).toBeUndefined();
+            expect(pointObject.geoJson).toBe(featureWithNullName);
+            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(featureWithNullName.geometry.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
