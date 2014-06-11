@@ -32,12 +32,11 @@ require(['Cesium'], function(Cesium) {
     var clock = viewer.clock;
 
     function reset() {
-        var ellipsoid = scene.globe.ellipsoid;
         scene.primitives.removeAll();
         scene.animations.removeAll();
 
         var controller = scene.screenSpaceCameraController;
-        controller.ellipsoid = ellipsoid;
+        controller.globe = scene.globe;
         controller.enableTilt = true;
 
         scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
