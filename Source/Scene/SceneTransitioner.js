@@ -251,9 +251,8 @@ define([
     }
 
     function destroyMorphHandler(transitioner) {
-        var animations = transitioner._scene.animations;
         for ( var i = 0; i < transitioner._currentAnimations.length; ++i) {
-            animations.remove(transitioner._currentAnimations[i]);
+            transitioner._currentAnimations[i].cancelAnimation();
         }
         transitioner._currentAnimations.length = 0;
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();

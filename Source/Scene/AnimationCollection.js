@@ -85,7 +85,14 @@ define([
         // start then stop to remove the tween from the global array
         tween.start().stop();
 
+        var that = this;
+        /**
+         * DOC_TBA
+         */
         var animation = {
+            cancelAnimation : function() {
+                that.remove(this);
+            },
             _tween : tween,
             _cancel : options.cancel
         };
