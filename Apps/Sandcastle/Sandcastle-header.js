@@ -18,9 +18,13 @@
             document.body.className = document.body.className.replace(/(?:\s|^)sandcastle-loading(?:\s|$)/, ' ');
         },
         addToolbarButton : function(text, onclick, toolbarID) {
+            window.Sandcastle.declare(onclick);
             var button = document.createElement('button');
             button.className = 'sandcastle-button';
-            button.onclick = onclick;
+            button.onclick = function() {
+                window.Sandcastle.highlight(onclick);
+                onclick();
+            };
             button.textContent = text;
             document.getElementById(toolbarID || 'toolbar').appendChild(button);
         },

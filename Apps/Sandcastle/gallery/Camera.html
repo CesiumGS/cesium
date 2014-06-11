@@ -31,27 +31,50 @@ require(['Cesium'], function(Cesium) {
     var scene = viewer.scene;
     var clock = viewer.clock;
 
-    function flyToSanDiego() {
-        Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
-        
+    function reset() {
+        var ellipsoid = scene.globe.ellipsoid;
+        scene.primitives.removeAll();
+        scene.animations.removeAll();
+
+        var controller = scene.screenSpaceCameraController;
+        controller.ellipsoid = ellipsoid;
+        controller.enableTilt = true;
+
+        scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
+
+        clock.multiplier = 1.0;
+        scene.preRender.removeEventListener(icrf);
+        scene.globe.enableLighting = false;
+    }
+
+    scene.morphComplete.addEventListener(function() {
+        reset();
+    });
+
+    Sandcastle.addToolbarButton('Fly to San Diego', function() {
+        reset();
         scene.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
         });
-    }
+    });
 
-    function flyToMyLocation() {
-        Sandcastle.declare(flyToMyLocation); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Fly to My Location', function() {
+        reset();
+
+        // Create callback for browser's geolocation
         function fly(position) {
             scene.camera.flyTo({
                 destination : Cesium.Cartesian3.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0)
             });
         }
 
+        // Ask browser for location, and fly there.
         navigator.geolocation.getCurrentPosition(fly);
-    }
+    });
 
-    function viewARectangle() {
-        Sandcastle.declare(viewARectangle); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('View a Rectangle', function() {
+        reset();
+
         var west = -77.0;
         var south = 38.0;
         var east = -72.0;
@@ -70,10 +93,11 @@ require(['Cesium'], function(Cesium) {
                 west, south
             ])
         });
-    }
+    });
 
-    function flyToRectangle() {
-        Sandcastle.declare(flyToRectangle); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Fly to Rectangle', function() {
+        reset();
+
         var west = -90.0;
         var south = 38.0;
         var east = -87.0;
@@ -94,10 +118,11 @@ require(['Cesium'], function(Cesium) {
                 west, south
             ])
         });
-    }
+    });
 
-    function eastNorthUp() {
-        Sandcastle.declare(eastNorthUp); // For highlighting in Sandcastle.
+    Sandcastle.addToolbarButton('Set camera reference frame', function() {
+        reset();
+
         var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
         var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
 
@@ -121,7 +146,7 @@ require(['Cesium'], function(Cesium) {
             modelMatrix : transform,
             length : 100000.0
         }));
-    }
+    });
 
     function icrf(scene, time) {
         if (scene.mode !== Cesium.SceneMode.SCENE3D) {
@@ -134,7 +159,9 @@ require(['Cesium'], function(Cesium) {
         }
     }
 
-    function viewIcrf() {
+    Sandcastle.addToolbarButton('View in ICRF', function() {
+        reset();
+
         var vm = viewer.homeButton.viewModel;
         vm.duration = 0.0;
         vm.command();
@@ -142,61 +169,7 @@ require(['Cesium'], function(Cesium) {
 
         clock.multiplier = 3 * 60 * 60;
         scene.preRender.addEventListener(icrf);
-    }
-
-    function reset() {
-        var ellipsoid = scene.globe.ellipsoid;
-        scene.primitives.removeAll();
-        scene.animations.removeAll();
-        
-        var controller = scene.screenSpaceCameraController;
-        controller.globe = scene.globe;
-        controller.enableTilt = true;
-        
-        scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
-
-        clock.multiplier = 1.0;
-        scene.preRender.removeEventListener(icrf);
-    }
-
-    scene.morphComplete.addEventListener(function() {
-        reset();
-    });
-
-    Sandcastle.addToolbarButton('Fly to San Diego', function() {
-        reset();
-        flyToSanDiego();
-        Sandcastle.highlight(flyToSanDiego);
-    });
-
-    Sandcastle.addToolbarButton('Fly to My Location', function() {
-        reset();
-        flyToMyLocation();
-        Sandcastle.highlight(flyToMyLocation);
-    });
-
-    Sandcastle.addToolbarButton('Fly to Rectangle', function() {
-        reset();
-        flyToRectangle();
-        Sandcastle.highlight(flyToRectangle);
-    });
-
-    Sandcastle.addToolbarButton('View a Rectangle', function() {
-        reset();
-        viewARectangle();
-        Sandcastle.highlight(viewARectangle);
-    });
-
-    Sandcastle.addToolbarButton('Set camera reference frame', function() {
-        reset();
-        eastNorthUp();
-        Sandcastle.highlight(eastNorthUp);
-    });
-
-    Sandcastle.addToolbarButton('View in ICRF', function() {
-        reset();
-        viewIcrf();
-        Sandcastle.highlight(viewIcrf);
+        scene.globe.enableLighting = true;
     });
 
     Sandcastle.finishedLoading();
