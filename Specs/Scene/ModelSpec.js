@@ -590,7 +590,7 @@ defineSuite([
 
         waitsFor(function() {
             scene.renderForSpecs(time);
-            time = time.addSeconds(1.0, time);
+            time = JulianDate.addSeconds(time, 1.0, time);
             return stopped;
         }, 'raises animation start, update, and stop events when removeOnStop is true', 10000);
 
@@ -626,7 +626,7 @@ defineSuite([
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time); // Does not fire start
-        scene.renderForSpecs(time.addSeconds(1.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0));
 
         expect(spyStart.calls.length).toEqual(1);
 
@@ -650,8 +650,8 @@ defineSuite([
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
-        scene.renderForSpecs(time.addSeconds(1.0));
-        scene.renderForSpecs(time.addSeconds(2.0)); // Does not fire update
+        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0)); // Does not fire update
 
         expect(spyUpdate.calls.length).toEqual(2);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
@@ -674,8 +674,8 @@ defineSuite([
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
-        scene.renderForSpecs(time.addSeconds(1.0));
-        scene.renderForSpecs(time.addSeconds(2.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0));
 
         expect(spyUpdate.calls.length).toEqual(3);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
@@ -699,9 +699,9 @@ defineSuite([
 
         animBoxesModel.show = true;
         scene.renderForSpecs(time);
-        scene.renderForSpecs(time.addSeconds(1.0));
-        scene.renderForSpecs(time.addSeconds(2.0));
-        scene.renderForSpecs(time.addSeconds(3.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 1.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 2.0));
+        scene.renderForSpecs(JulianDate.addSeconds(time, 3.0));
 
         expect(spyUpdate.calls.length).toEqual(4);
         expect(spyUpdate.calls[0].args[2]).toEqualEpsilon(3.708, CesiumMath.EPSILON3);
@@ -726,7 +726,7 @@ defineSuite([
 
         animBoxesModel.show = true;
         for (var i = 0; i < 8; ++i) {
-            scene.renderForSpecs(time.addSeconds(i));
+            scene.renderForSpecs(JulianDate.addSeconds(time, i));
         }
 
         expect(spyUpdate.calls.length).toEqual(8);
@@ -756,7 +756,7 @@ defineSuite([
 
         animBoxesModel.show = true;
         for (var i = 0; i < 8; ++i) {
-            scene.renderForSpecs(time.addSeconds(i));
+            scene.renderForSpecs(JulianDate.addSeconds(time, i));
         }
 
         expect(spyUpdate.calls.length).toEqual(8);
@@ -786,7 +786,7 @@ defineSuite([
         animBoxesModel.zoomTo();
 
         for (var i = 0; i < 4; ++i) {
-            var t = time.addSeconds(i);
+            var t = JulianDate.addSeconds(time, i);
             expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
 
             animBoxesModel.show = true;
@@ -822,7 +822,7 @@ defineSuite([
         riggedFigureModel.zoomTo();
 
         for (var i = 0; i < 6; ++i) {
-            var t = time.addSeconds(0.25 * i);
+            var t = JulianDate.addSeconds(time, 0.25 * i);
             expect(scene.renderForSpecs(t)).toEqual([0, 0, 0, 255]);
 
             riggedFigureModel.show = true;

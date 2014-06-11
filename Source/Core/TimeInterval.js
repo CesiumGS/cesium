@@ -35,7 +35,7 @@ define([
      *
      * @example
      * // Construct an Timeinterval closed on one end with a Color payload.
-     * var interval = new Cesium.TimeInterval(Cesium.JulianDate.fromTotalDays(1000), Cesium.JulianDate.fromTotalDays(1001), true, false, Cesium.Color.WHITE);
+     * var interval = new Cesium.TimeInterval(Cesium.new JulianDate(1000), Cesium.new JulianDate(1001), true, false, Cesium.Color.WHITE);
      */
     var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
         //>>includeStart('debug', pragmas.debug);
@@ -209,7 +209,7 @@ define([
         var isStartIncluded;
         var isStopIncluded;
 
-        if (otherStart.greaterThanOrEquals(thisStart) && thisStop.greaterThanOrEquals(otherStart)) {
+        if (JulianDate.greaterThanOrEquals(otherStart, thisStart) && JulianDate.greaterThanOrEquals(thisStop, otherStart)) {
 
             isStartIncluded = (!JulianDate.equals(otherStart, thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
@@ -217,7 +217,7 @@ define([
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
 
-            if (thisStop.greaterThanOrEquals(otherStop)) {
+            if (JulianDate.greaterThanOrEquals(thisStop, otherStop)) {
                 isStopIncluded = isStopIncluded || (!JulianDate.equals(otherStop, thisStop) && otherIsStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
@@ -226,14 +226,14 @@ define([
             return new TimeInterval(otherStart, thisStop, isStartIncluded, isStopIncluded, outputData);
         }
 
-        if (otherStart.lessThanOrEquals(thisStart) && thisStart.lessThanOrEquals(otherStop)) {
+        if (JulianDate.lessThanOrEquals(otherStart, thisStart) && JulianDate.lessThanOrEquals(thisStart, otherStop)) {
 
             isStartIncluded = (JulianDate.equals(otherStart, thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
             isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
-            if (thisStop.greaterThanOrEquals(otherStop)) {
+            if (JulianDate.greaterThanOrEquals(thisStop, otherStop)) {
                 isStopIncluded = isStopIncluded || (JulianDate.equals(otherStop, thisStop) === false && otherIsStopIncluded);
                 return new TimeInterval(thisStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }

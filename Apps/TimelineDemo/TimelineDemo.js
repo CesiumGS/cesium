@@ -93,10 +93,10 @@ define([
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, startJulian.addSeconds(60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
-        timeline.addTrack(new TimeInterval(endJulian.addSeconds(-60 * 60), endJulian), 8, Color.LIME);
-        var middle = startJulian.getSecondsDifference(endJulian) / 4;
-        timeline.addTrack(new TimeInterval(startJulian.addSeconds(middle), startJulian.addSeconds(middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(startJulian, JulianDate.addSeconds(startJulian, 60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(endJulian, -60 * 60), endJulian), 8, Color.LIME);
+        var middle = JulianDate.getSecondsDifference(endJulian, startJulian) / 4;
+        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(startJulian, middle), JulianDate.addSeconds(startJulian, middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         var clockViewModel = new ClockViewModel(clock);
         animationViewModel = new AnimationViewModel(clockViewModel);
@@ -123,7 +123,7 @@ define([
         }
 
         if (startJulian && endJulian) {
-            if (startJulian.getSecondsDifference(endJulian) < 0.1) {
+            if (JulianDate.getSecondsDifference(endJulian, startJulian) < 0.1) {
                 endBeforeStart.style.display = 'block';
                 containerElement.style.visibility = 'hidden';
             } else {
@@ -214,9 +214,9 @@ define([
         dijit.byId('startTimeSel').set('value', 'T00:00:00');
         dijit.byId('endTimeSel').set('value', 'T24:00:00');
 
-        var today = new JulianDate();
-        var tomorrow = today.addDays(1);
-        dijit.byId('startCal').set('value', today.toDate());
-        dijit.byId('endCal').set('value', tomorrow.toDate());
+        var today = JulianDate.now();
+        var tomorrow = JulianDate.addDays(today, 1);
+        dijit.byId('startCal').set('value', JulianDate.toDate(today));
+        dijit.byId('endCal').set('value', JulianDate.toDate(tomorrow));
     });
 });

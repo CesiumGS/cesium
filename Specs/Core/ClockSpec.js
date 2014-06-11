@@ -14,7 +14,7 @@ defineSuite([
 
     it('constructor sets default parameters', function() {
         var clock = new Clock();
-        expect(clock.stopTime).toEqual(clock.startTime.addDays(1));
+        expect(clock.stopTime).toEqual(JulianDate.addDays(clock.startTime, 1));
         expect(clock.startTime).toEqual(clock.currentTime);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
@@ -22,9 +22,9 @@ defineSuite([
     });
 
     it('constructor sets provided parameters correctly', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(112);
-        var currentTime = JulianDate.fromTotalDays(13);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(112);
+        var currentTime = new JulianDate(13);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -45,9 +45,9 @@ defineSuite([
     });
 
     it('constructor works with no currentTime parameter', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(112);
-        var currentTime = JulianDate.fromTotalDays(12);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(112);
+        var currentTime = new JulianDate(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -67,8 +67,8 @@ defineSuite([
     });
 
     it('constructor works with no startTime parameter', function() {
-        var stop = JulianDate.fromTotalDays(112);
-        var currentTime = JulianDate.fromTotalDays(13);
+        var stop = new JulianDate(112);
+        var currentTime = new JulianDate(13);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -88,9 +88,9 @@ defineSuite([
     });
 
     it('constructor works with no start or stop time', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(13);
+        var currentTime = new JulianDate(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -109,9 +109,9 @@ defineSuite([
     });
 
     it('constructor works with no start or current time', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(13);
+        var currentTime = new JulianDate(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -131,9 +131,9 @@ defineSuite([
 
 
     it('constructor works with no current or stop time', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(13);
+        var currentTime = new JulianDate(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -152,9 +152,9 @@ defineSuite([
     });
 
     it('constructor works with no stopTime parameter', function() {
-        var start = JulianDate.fromTotalDays(12);
-        var stop = JulianDate.fromTotalDays(13);
-        var currentTime = JulianDate.fromTotalDays(12);
+        var start = new JulianDate(12);
+        var stop = new JulianDate(13);
+        var currentTime = new JulianDate(12);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -174,9 +174,9 @@ defineSuite([
     });
 
     it('Tick dependant clock step works animating forward.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0.5);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = new JulianDate(0.5);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -190,19 +190,19 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
     it('Tick dependant clock step works animating backwards.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0.5);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = new JulianDate(0.5);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = -1.5;
@@ -216,19 +216,19 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
     it('Tick dependant clock step works unbounded animating forward.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(1);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = new JulianDate(1);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = 1.5;
@@ -242,19 +242,19 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
     it('Tick dependant clock step works unbounded animating backwards.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(0);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = new JulianDate(0);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.UNBOUNDED;
         var multiplier = -1.5;
@@ -268,19 +268,19 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
     it('Tick dependant clock loops animating forward.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
-        var currentTime = JulianDate.fromTotalDays(1);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
+        var currentTime = new JulianDate(1);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = 1.5;
@@ -294,20 +294,20 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = start.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(start, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = currentTime.addSeconds(multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier);
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
 
     it('Tick dependant clock step stops at start when animating backwards with ClockRange.LOOP_STOP.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
 
-        var currentTime = JulianDate.fromTotalDays(0);
+        var currentTime = new JulianDate(0);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.LOOP_STOP;
         var multiplier = -100.0;
@@ -326,10 +326,10 @@ defineSuite([
     });
 
     it('Tick dependant clock step stops at end when animating forwards.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
 
-        var currentTime = JulianDate.fromTotalDays(1);
+        var currentTime = new JulianDate(1);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.CLAMPED;
         var multiplier = 100.0;
@@ -357,15 +357,15 @@ defineSuite([
 
         waitsFor(function() {
             var time2 = clock.tick();
-            return time2.greaterThan(time1);
+            return JulianDate.greaterThan(time2, time1);
         });
     });
 
     it('Tick dependant clock step stops at start animating backwards.', function() {
-        var start = JulianDate.fromTotalDays(0);
-        var stop = JulianDate.fromTotalDays(1);
+        var start = new JulianDate(0);
+        var stop = new JulianDate(1);
 
-        var currentTime = JulianDate.fromTotalDays(0);
+        var currentTime = new JulianDate(0);
         var step = ClockStep.TICK_DEPENDENT;
         var range = ClockRange.CLAMPED;
         var multiplier = -100.0;
@@ -384,8 +384,8 @@ defineSuite([
     });
 
     it('throws if start time is after stop time.', function() {
-        var start = JulianDate.fromTotalDays(1);
-        var stop = JulianDate.fromTotalDays(0);
+        var start = new JulianDate(1);
+        var stop = new JulianDate(0);
         expect(function() {
             return new Clock({
                 startTime : start,
@@ -401,7 +401,7 @@ defineSuite([
         var time1 = clock.tick();
         waitsFor(function() {
             var time2 = clock.tick();
-            return time2.greaterThan(time1);
+            return JulianDate.greaterThan(time2, time1);
         });
     });
 
@@ -419,7 +419,7 @@ defineSuite([
         time1 = clock.tick();
         waitsFor(function() {
             time2 = clock.tick();
-            return time2.greaterThan(time1);
+            return JulianDate.greaterThan(time2, time1);
         });
 
         clock.clockStep = ClockStep.SYSTEM_CLOCK;
@@ -431,7 +431,7 @@ defineSuite([
         time1 = clock.tick();
         waitsFor(function() {
             time2 = clock.tick();
-            return time2.greaterThan(time1);
+            return JulianDate.greaterThan(time2, time1);
         });
 
         clock.clockStep = ClockStep.TICK_DEPENDENT;
@@ -440,7 +440,7 @@ defineSuite([
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
         clock.shouldAnimate = true;
-        expect((clock.tick()).greaterThan(currentTime)).toEqual(true);
+        expect(JulianDate.greaterThan(clock.tick(), currentTime)).toEqual(true);
 
     });
 });
