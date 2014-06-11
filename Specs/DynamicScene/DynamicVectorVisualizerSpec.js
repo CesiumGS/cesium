@@ -120,7 +120,7 @@ defineSuite([
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
-        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time), new Cartesian3()), vector.length.getValue(time), new Cartesian3()), new Cartesian3())]);
         expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
         var material = primitive.material;
@@ -133,7 +133,7 @@ defineSuite([
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.vector.show.getValue(time));
 
-        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time)), vector.length.getValue(time)))]);
+        expect(primitive.positions).toEqual([testObject.position.getValue(time), Cartesian3.add(testObject.position.getValue(time), Cartesian3.multiplyByScalar(Cartesian3.normalize(vector.direction.getValue(time), new Cartesian3()), vector.length.getValue(time), new Cartesian3()), new Cartesian3())]);
         expect(primitive.width).toEqual(testObject.vector.width.getValue(time));
 
         material = primitive.material;

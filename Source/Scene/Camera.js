@@ -62,7 +62,7 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Cesium.Camera(scene);
      * camera.position = new Cesium.Cartesian3();
-     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z);
+     * camera.direction = Cesium.Cartesian3.negate(Cesium.Cartesian3.UNIT_Z, new Cartesian3());
      * camera.up = Cesium.Cartesian3.clone(Cesium.Cartesian3.UNIT_Y);
      * camera.frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * camera.frustum.near = 1.0;
@@ -94,7 +94,8 @@ define([
         this._actualInvTransform = Matrix4.clone(Matrix4.IDENTITY);
 
         var maxRadii = Ellipsoid.WGS84.maximumRadius;
-        var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.5 * maxRadii);
+        var position = new Cartesian3(0.0, -2.0, 1.0);
+        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 2.5 * maxRadii, position);
 
         /**
          * The position of the camera.
@@ -105,7 +106,8 @@ define([
         this._position = Cartesian3.clone(position);
         this._positionWC = Cartesian3.clone(position);
 
-        var direction = Cartesian3.normalize(Cartesian3.negate(position));
+        var direction = new Cartesian3();
+        direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
 
         /**
          * The view direction of the camera.
@@ -116,8 +118,9 @@ define([
         this._direction = Cartesian3.clone(direction);
         this._directionWC = Cartesian3.clone(direction);
 
-        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-        var up = Cartesian3.cross(right, direction);
+        var right = new Cartesian3();
+        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
+        var up = Cartesian3.cross(right, direction, new Cartesian3());
 
         /**
          * The up direction of the camera.
@@ -128,7 +131,7 @@ define([
         this._up = Cartesian3.clone(up);
         this._upWC = Cartesian3.clone(up);
 
-        right = Cartesian3.cross(direction, up);
+        right = Cartesian3.cross(direction, up, new Cartesian3());
 
         /**
          * The right direction of the camera.
@@ -1450,6 +1453,10 @@ define([
     var viewRectangle3DCenter = new Cartesian3();
     var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
     function rectangleCameraPosition3D (camera, rectangle, ellipsoid, result, positionOnly) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var cameraRF = camera;
         if (positionOnly) {
             cameraRF = defaultRF;
@@ -1859,7 +1866,7 @@ define([
 
             var update2D = function(value) {
                 if (animatePosition) {
-                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time);
+                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time, camera.position);
                 }
                 if (animateFrustum) {
                     camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
@@ -1901,7 +1908,7 @@ define([
         }
 
         var updateCV = function(value) {
-            var interp = Cartesian3.lerp(position, newPosition, value.time);
+            var interp = Cartesian3.lerp(position, newPosition, value.time, new Cartesian3());
             camera.worldToCameraCoordinatesPoint(interp, camera.position);
         };
 

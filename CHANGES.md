@@ -27,6 +27,7 @@ Beta Releases
   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * Refactored `JulianDate` to be in line with other Core types.
     * Most functions now take result parameters.
@@ -61,6 +62,8 @@ Beta Releases
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
+* `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
+* `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
 
 ### b29 - 2014-06-02
 
@@ -110,7 +113,7 @@ Beta Releases
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/CQ0wCHjJ9x4)):
   * Renamed and moved `Scene.primitives.centralBody` moved to `Scene.globe`.
-  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `Scene.globe`.
+  * Removed `CesiumWidget.centralBody` and `Viewer.centralBody`.  Use `CesiumWidget.scene.globe` and `Viewer.scene.globe`.
   * Renamed `CentralBody` to `Globe`.
   * Replaced `Model.computeWorldBoundingSphere` with `Model.boundingSphere`.
   * Refactored visualizers, removing `setDynamicObjectCollection`, `getDynamicObjectCollection`, `getScene`, and `removeAllPrimitives` which are all superfluous after the introduction of `DataSourceDisplay`.  The affected classes are:

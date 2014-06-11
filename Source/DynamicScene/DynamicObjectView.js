@@ -172,6 +172,7 @@ define([
         }
     }
 
+    var offset3DCrossScratch = new Cartesian3();
     /**
      * A utility object for tracking an object with the camera.
      * @alias DynamicObjectView
@@ -209,7 +210,7 @@ define([
         this._lastCartesian = new Cartesian3();
 
         this._offset3D = new Cartesian3(-10000, 2500, 2500);
-        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D));
+        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D, offset3DCrossScratch), new Cartesian3());
         Cartesian3.normalize(this._up3D, this._up3D);
 
         this._offset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._offset3D));
