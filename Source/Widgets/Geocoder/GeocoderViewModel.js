@@ -62,7 +62,7 @@ define([
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._flightDuration = defaultValue(options.flightDuration, 1500);
+        this._flightDuration = defaultValue(options.flightDuration, 1.5);
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
