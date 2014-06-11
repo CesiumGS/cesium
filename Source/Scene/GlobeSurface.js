@@ -552,8 +552,8 @@ define([
 
     var southwestCornerScratch = new Cartesian3();
     var northeastCornerScratch = new Cartesian3();
-    var negativeUnitY = Cartesian3.negate(Cartesian3.UNIT_Y);
-    var negativeUnitZ = Cartesian3.negate(Cartesian3.UNIT_Z);
+    var negativeUnitY = Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3());
+    var negativeUnitZ = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
     var vectorScratch = new Cartesian3();
 
     function distanceSquaredToTile(frameState, cameraCartesianPosition, cameraCartographicPosition, tile) {

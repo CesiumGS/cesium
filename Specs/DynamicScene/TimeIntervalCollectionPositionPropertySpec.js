@@ -21,7 +21,7 @@ defineSuite([
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionPositionProperty();
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
-        expect(property.getValue(new JulianDate())).toBeUndefined();
+        expect(property.getValue(JulianDate.now())).toBeUndefined();
         expect(property.referenceFrame).toBe(ReferenceFrame.FIXED);
     });
 
@@ -129,7 +129,7 @@ defineSuite([
 
     it('throws with no reference frame parameter', function() {
         var property = new TimeIntervalCollectionPositionProperty();
-        var time = new JulianDate();
+        var time = JulianDate.now();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();

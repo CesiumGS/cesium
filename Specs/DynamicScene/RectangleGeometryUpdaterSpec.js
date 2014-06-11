@@ -127,7 +127,7 @@ defineSuite([
         var dynamicObject = createBasicRectangle();
         var updater = new RectangleGeometryUpdater(dynamicObject);
         dynamicObject.rectangle.coordinates = new SampledProperty(Rectangle);
-        dynamicObject.rectangle.coordinates.addSample(new JulianDate(), new Rectangle());
+        dynamicObject.rectangle.coordinates.addSample(JulianDate.now(), new Rectangle());
         expect(updater.isDynamic).toBe(true);
     });
 

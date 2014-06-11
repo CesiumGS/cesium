@@ -82,7 +82,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);

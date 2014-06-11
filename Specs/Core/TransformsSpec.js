@@ -40,6 +40,8 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var negativeX = new Cartesian4(-1, 0, 0, 0);
+    var negativeZ = new Cartesian4(0, 0, -1, 0);
     it('eastNorthUpToFixedFrame works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var expectedTranslation = new Cartesian4(origin.x, origin.y, origin.z, 1.0);
@@ -72,7 +74,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
+        expect(Matrix4.getColumn(returnedResult, 1)).toEqual(negativeX); // north
         expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.UNIT_Z); // up
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
@@ -84,7 +86,7 @@ defineSuite([
         var returnedResult = Transforms.eastNorthUpToFixedFrame(southPole, Ellipsoid.UNIT_SPHERE);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Y); // east
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_X); // north
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // up
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeZ); // up
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -95,7 +97,7 @@ defineSuite([
         var returnedResult = Transforms.northEastDownToFixedFrame(origin, Ellipsoid.UNIT_SPHERE);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeX); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -108,7 +110,7 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.UNIT_Z); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeX); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -119,9 +121,9 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Transforms.northEastDownToFixedFrame(northPole, Ellipsoid.UNIT_SPHERE, result);
         expect(returnedResult).toBe(result);
-        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(Cartesian4.negate(Cartesian4.UNIT_X)); // north
+        expect(Matrix4.getColumn(returnedResult, 0)).toEqual(negativeX); // north
         expect(Matrix4.getColumn(returnedResult, 1)).toEqual(Cartesian4.UNIT_Y); // east
-        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(Cartesian4.negate(Cartesian4.UNIT_Z)); // down
+        expect(Matrix4.getColumn(returnedResult, 2)).toEqual(negativeZ); // down
         expect(Matrix4.getColumn(returnedResult, 3)).toEqual(expectedTranslation); // translation
     });
 
@@ -137,9 +139,9 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
-        var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff);
+        var time = JulianDate.now();
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff);
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -151,7 +153,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
         var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
@@ -159,9 +161,9 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works after noon', function() {
-        var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
+        var time = JulianDate.now();
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5);
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -173,7 +175,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var u = Transforms.computeTemeToPseudoFixedMatrix(time);
         var tAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(t));
         var uAngle = Quaternion.getAngle(Quaternion.fromRotationMatrix(u));
@@ -181,9 +183,9 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works with a result parameter', function() {
-        var time = new JulianDate();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.getSecondsOfDay();
-        time = time.addSeconds(secondsDiff);
+        var time = JulianDate.now();
+        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
+        time = JulianDate.addSeconds(time, secondsDiff);
 
         var resultT = new Matrix3();
         var t = Transforms.computeTemeToPseudoFixedMatrix(time, resultT);
@@ -197,7 +199,7 @@ defineSuite([
         var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
         expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-        time = time.addHours(23.93447); // add one sidereal day
+        time = JulianDate.addHours(time, 23.93447); // add one sidereal day
         var resultU = new Matrix3();
         var u = Transforms.computeTemeToPseudoFixedMatrix(time, resultU);
         expect(u).toBe(resultU);
@@ -312,7 +314,7 @@ defineSuite([
                 var t4 = Matrix4.fromRotationTranslation(t, Cartesian3.ZERO);
                 expect(Matrix4.inverse(t4)).toEqualEpsilon(Matrix4.inverseTransformation(t4), CesiumMath.EPSILON14);
 
-                time = time.addHours(23.93447); // add one sidereal day
+                time = JulianDate.addHours(time, 23.93447); // add one sidereal day
                 var resultU = new Matrix3();
                 var u = Transforms.computeIcrfToFixedMatrix(time, resultU);
                 expect(u).toBe(resultU);
@@ -400,7 +402,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = Matrix3.multiplyByVector(t, inertialPos);
-                var error = Cartesian3.subtract(result, expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos, new Cartesian3());
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -414,7 +416,7 @@ defineSuite([
             // Purposefully do not load EOP!  EOP doesn't make a lot of sense before 1972.
             // Even though we are trying to load the data for 1970,
             // we don't have the data in Cesium to load.
-            preloadTransformationData(time, time.addDays(1));
+            preloadTransformationData(time, JulianDate.addDays(time, 1));
             var resultT = new Matrix3();
             var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
             // Check that we get undefined, since we don't have ICRF data
@@ -427,7 +429,7 @@ defineSuite([
             // Purposefully do not load EOP!  EOP doesn't exist yet that far into the future
             // Even though we are trying to load the data for 2030,
             // we don't have the data in Cesium to load.
-            preloadTransformationData(time, time.addDays(1));
+            preloadTransformationData(time, JulianDate.addDays(time, 1));
             var resultT = new Matrix3();
             var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
             // Check that we get undefined, since we don't have ICRF data
@@ -450,7 +452,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = Matrix3.multiplyByVector(t, inertialPos);
-                var error = Cartesian3.subtract(result, expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos, new Cartesian3());
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -520,7 +522,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
@@ -533,7 +535,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });

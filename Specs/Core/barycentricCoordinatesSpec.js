@@ -30,23 +30,23 @@ defineSuite([
     });
 
     it('evaluates on the p0-p1 edge', function() {
-        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p1, p0), 0.5);
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p1, p0, new Cartesian3()), 0.5, new Cartesian3());
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(new Cartesian3(0.5, 0.5, 0.0));
     });
 
     it('evaluates on the p0-p2 edge', function() {
-        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p2, p0), 0.5);
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p2, p0, new Cartesian3()), 0.5, new Cartesian3());
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(new Cartesian3(0.5, 0.0, 0.5));
     });
 
     it('evaluates on the p1-p2 edge', function() {
-        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p2, p1), 0.5);
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p2, p1, new Cartesian3()), 0.5, new Cartesian3());
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqual(new Cartesian3(0.0, 0.5, 0.5));
     });
 
     it('evaluates on the interior', function() {
         var scalar = 1.0 / 3.0;
-        var point = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.add(p0, p1), p2), scalar);
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.add(p0, p1, new Cartesian3()), p2, new Cartesian3()), scalar, new Cartesian3());
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqualEpsilon(new Cartesian3(scalar, scalar, scalar), CesiumMath.EPSILON14);
     });
 

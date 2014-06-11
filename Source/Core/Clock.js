@@ -64,28 +64,28 @@ define([
         var currentTimeUndefined = !defined(currentTime);
 
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
-            currentTime = new JulianDate();
+            currentTime = JulianDate.now();
             startTime = JulianDate.clone(currentTime);
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0);
         } else if (startTimeUndefined && stopTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0);
         } else if (startTimeUndefined && currentTimeUndefined) {
-            startTime = stopTime.addDays(-1.0);
+            startTime = JulianDate.addDays(stopTime, -1.0);
             currentTime = JulianDate.clone(startTime);
         } else if (currentTimeUndefined && stopTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
-            stopTime = startTime.addDays(1.0);
+            stopTime = JulianDate.addDays(startTime, 1.0);
         } else if (currentTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
         } else if (stopTimeUndefined) {
-            stopTime = currentTime.addDays(1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0);
         } else if (startTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (startTime.greaterThan(stopTime)) {
+        if (JulianDate.greaterThan(startTime, stopTime)) {
             throw new DeveloperError('startTime must come before stopTime.');
         }
         //>>includeEnd('debug');
@@ -172,27 +172,27 @@ define([
 
         if (this.canAnimate && this.shouldAnimate) {
             if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-                currentTime = new JulianDate();
+                currentTime = JulianDate.now();
             } else {
                 if (this.clockStep === ClockStep.TICK_DEPENDENT) {
-                    currentTime = currentTime.addSeconds(multiplier);
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier);
                 } else {
                     var milliseconds = currentSystemTime - this._lastSystemTime;
-                    currentTime = currentTime.addSeconds(multiplier * (milliseconds / 1000.0));
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier * (milliseconds / 1000.0));
                 }
 
                 if (this.clockRange === ClockRange.CLAMPED) {
-                    if (currentTime.lessThan(startTime)) {
+                    if (JulianDate.lessThan(currentTime, startTime)) {
                         currentTime = startTime;
-                    } else if (currentTime.greaterThan(stopTime)) {
+                    } else if (JulianDate.greaterThan(currentTime, stopTime)) {
                         currentTime = stopTime;
                     }
                 } else if (this.clockRange === ClockRange.LOOP_STOP) {
-                    if (currentTime.lessThan(startTime)) {
+                    if (JulianDate.lessThan(currentTime, startTime)) {
                         currentTime = JulianDate.clone(startTime);
                     }
-                    while (currentTime.greaterThan(stopTime)) {
-                        currentTime = startTime.addSeconds(stopTime.getSecondsDifference(currentTime));
+                    while (JulianDate.greaterThan(currentTime, stopTime)) {
+                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(currentTime, stopTime));
                     }
                 }
             }

@@ -54,10 +54,12 @@ define([
             });
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             var maxRadii = ellipsoid.maximumRadius;
-            var position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
-            var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
-            var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
-            var up = Cartesian3.cross(right, direction);
+            var position = new Cartesian3(0.0, -1.0, 1.0);
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
+            var direction = new Cartesian3();
+            direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
+            var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z, new Cartesian3());
+            var up = Cartesian3.cross(right, direction, new Cartesian3());
 
             scene.camera.flyTo({
                 destination : position,

@@ -19,7 +19,7 @@ defineSuite([
 
     it('isAvailable is always true if no availability defined.', function() {
         var dynamicObject = new DynamicObject('someId');
-        expect(dynamicObject.isAvailable(new JulianDate())).toEqual(true);
+        expect(dynamicObject.isAvailable(JulianDate.now())).toEqual(true);
     });
 
     it('isAvailable throw if no time specified.', function() {
@@ -40,10 +40,10 @@ defineSuite([
         var dynamicObject = new DynamicObject();
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         dynamicObject.availability = interval;
-        expect(dynamicObject.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.stop.addSeconds(1))).toEqual(false);
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.stop, 1))).toEqual(false);
     });
 
     it('definitionChanged works for all properties', function() {

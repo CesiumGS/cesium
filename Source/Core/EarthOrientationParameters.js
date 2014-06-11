@@ -187,9 +187,9 @@ define([
         if (defined(lastIndex)) {
             var previousIndexDate = dates[lastIndex];
             var nextIndexDate = dates[lastIndex + 1];
-            var isAfterPrevious = previousIndexDate.lessThanOrEquals(date);
+            var isAfterPrevious = JulianDate.lessThanOrEquals(previousIndexDate, date);
             var isAfterLastSample = !defined(nextIndexDate);
-            var isBeforeNext = isAfterLastSample || nextIndexDate.greaterThanOrEquals(date);
+            var isBeforeNext = isAfterLastSample || JulianDate.greaterThanOrEquals(nextIndexDate, date);
 
             if (isAfterPrevious && isBeforeNext) {
                 before = lastIndex;
@@ -288,7 +288,7 @@ define([
                 if (taiMinusUtc !== lastTaiMinusUtc && defined(lastTaiMinusUtc)) {
                     // We crossed a leap second boundary, so add the leap second
                     // if it does not already exist.
-                    var leapSeconds = LeapSecond._leapSeconds;
+                    var leapSeconds = JulianDate.leapSeconds;
                     var leapSecondIndex = binarySearch(leapSeconds, date, compareLeapSecondDates);
                     if (leapSecondIndex < 0) {
                         var leapSecond = new LeapSecond(date, taiMinusUtc);
@@ -338,7 +338,7 @@ define([
             return result;
         }
 
-        var factor = beforeDate.getSecondsDifference(date) / beforeDate.getSecondsDifference(afterDate);
+        var factor = JulianDate.getSecondsDifference(date, beforeDate) / JulianDate.getSecondsDifference(afterDate, beforeDate);
 
         var startBefore = before * columnCount;
         var startAfter = after * columnCount;

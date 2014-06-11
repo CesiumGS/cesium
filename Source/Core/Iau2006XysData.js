@@ -79,9 +79,9 @@ define([
 
     function getDaysSinceEpoch(xys, dayTT, secondTT) {
         var dateTT = julianDateScratch;
-        dateTT._julianDayNumber = dayTT;
-        dateTT._secondsOfDay = secondTT;
-        return xys._sampleZeroDateTT.getDaysDifference(dateTT);
+        dateTT.dayNumber = dayTT;
+        dateTT.secondsOfDay = secondTT;
+        return JulianDate.getDaysDifference(dateTT, xys._sampleZeroDateTT);
     }
 
     /**

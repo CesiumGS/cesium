@@ -159,7 +159,7 @@ defineSuite([
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
         var frustum = new OrthographicFrustum();
@@ -189,8 +189,8 @@ defineSuite([
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;

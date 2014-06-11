@@ -37,12 +37,18 @@ define([
             var p1 = points[1];
 
             return function(time, result) {
+                if (!defined(result)){
+                    result = new Cartesian3();
+                }
                 var u = (time - t0) * invSpan;
                 return Cartesian3.lerp(p0, p1, u, result);
             };
         }
 
         return function(time, result) {
+            if (!defined(result)) {
+                result = new Cartesian3();
+            }
             var i = spline._lastTimeIndex = spline.findTimeInterval(time, spline._lastTimeIndex);
             var u = (time - times[i]) / (times[i + 1] - times[i]);
 

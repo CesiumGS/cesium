@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Transforms',
@@ -15,6 +16,7 @@ define([
         defined,
         DeveloperError,
         Ellipsoid,
+        JulianDate,
         CesiumMath,
         Matrix3,
         Transforms,
@@ -43,7 +45,7 @@ define([
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-            var deltaTime = time.addSeconds(0.001);
+            var deltaTime = JulianDate.addSeconds(time, 0.001);
             var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
             if (defined(deltaCartesian)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);
@@ -170,6 +172,7 @@ define([
         }
     }
 
+    var offset3DCrossScratch = new Cartesian3();
     /**
      * A utility object for tracking an object with the camera.
      * @alias DynamicObjectView
@@ -207,7 +210,7 @@ define([
         this._lastCartesian = new Cartesian3();
 
         this._offset3D = new Cartesian3(-10000, 2500, 2500);
-        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D));
+        this._up3D = Cartesian3.cross(this._offset3D, Cartesian3.cross(Cartesian3.UNIT_Z, this._offset3D, offset3DCrossScratch), new Cartesian3());
         Cartesian3.normalize(this._up3D, this._up3D);
 
         this._offset2D = new Cartesian3(0.0, 0.0, Cartesian3.magnitude(this._offset3D));

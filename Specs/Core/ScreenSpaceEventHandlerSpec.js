@@ -135,7 +135,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOWN);
@@ -163,7 +163,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_UP);
@@ -191,7 +191,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_CLICK);
@@ -229,7 +229,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOWN);
@@ -257,7 +257,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_UP);
@@ -285,7 +285,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_CLICK);
@@ -323,7 +323,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOWN);
@@ -351,7 +351,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_UP);
@@ -379,7 +379,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_CLICK);
@@ -417,7 +417,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
@@ -445,7 +445,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK);
@@ -473,7 +473,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
@@ -507,8 +507,8 @@ defineSuite([
         };
 
         var mouseMove = function(movement) {
-            actualMove.startPosition = Cartesian2.clone(movement.startPosition);
-            actualMove.endPosition = Cartesian2.clone(movement.endPosition);
+            actualMove.startPosition = Cartesian2.clone(movement.startPosition, new Cartesian2());
+            actualMove.endPosition = Cartesian2.clone(movement.endPosition, new Cartesian2());
         };
 
         handler.setInputAction(mouseMove, ScreenSpaceEventType.MOUSE_MOVE);
@@ -570,7 +570,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOWN, KeyboardEventModifier.SHIFT);
@@ -600,7 +600,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_UP, KeyboardEventModifier.SHIFT);
@@ -630,7 +630,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_CLICK, KeyboardEventModifier.SHIFT);
@@ -672,7 +672,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOWN, KeyboardEventModifier.ALT);
@@ -702,7 +702,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_UP, KeyboardEventModifier.ALT);
@@ -732,7 +732,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_CLICK, KeyboardEventModifier.ALT);
@@ -774,7 +774,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOWN, KeyboardEventModifier.CTRL);
@@ -804,7 +804,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_UP, KeyboardEventModifier.CTRL);
@@ -834,7 +834,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_CLICK, KeyboardEventModifier.CTRL);
@@ -876,7 +876,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.LEFT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
@@ -906,7 +906,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.RIGHT_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
@@ -936,7 +936,7 @@ defineSuite([
         var expectedCoords = new Cartesian2(1, 1);
 
         var mouseDown = function(event) {
-            actualCoords = Cartesian2.clone(event.position);
+            actualCoords = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(mouseDown, ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK, KeyboardEventModifier.CTRL);
@@ -972,8 +972,8 @@ defineSuite([
         };
 
         var mouseMove = function(movement) {
-            actualMove.startPosition = Cartesian2.clone(movement.startPosition);
-            actualMove.endPosition = Cartesian2.clone(movement.endPosition);
+            actualMove.startPosition = Cartesian2.clone(movement.startPosition, new Cartesian2());
+            actualMove.endPosition = Cartesian2.clone(movement.endPosition, new Cartesian2());
         };
 
         handler.setInputAction(mouseMove, ScreenSpaceEventType.MOUSE_MOVE, KeyboardEventModifier.CTRL);
@@ -1040,11 +1040,11 @@ defineSuite([
         var startPosition;
         var endPosition;
         var callback = function(event) {
-            startPosition = Cartesian2.clone(event.position);
+            startPosition = Cartesian2.clone(event.position, new Cartesian2());
         };
         var callbackMove = function(event) {
-            startPosition = Cartesian2.clone(event.startPosition);
-            endPosition = Cartesian2.clone(event.endPosition);
+            startPosition = Cartesian2.clone(event.startPosition, new Cartesian2());
+            endPosition = Cartesian2.clone(event.endPosition, new Cartesian2());
         };
 
         handler.setInputAction(callback, ScreenSpaceEventType.LEFT_DOWN);
@@ -1130,7 +1130,7 @@ defineSuite([
     it('touch click', function() {
         var touchClick = new Cartesian2();
         var touchClickCallback = function(event) {
-            touchClick = Cartesian2.clone(event.position);
+            touchClick = Cartesian2.clone(event.position, new Cartesian2());
         };
 
         handler.setInputAction(touchClickCallback, ScreenSpaceEventType.LEFT_CLICK);

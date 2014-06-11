@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Iso8601',
+        '../Core/JulianDate',
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         './DynamicObject'
@@ -18,6 +19,7 @@ define([
         DeveloperError,
         Event,
         Iso8601,
+        JulianDate,
         RuntimeError,
         TimeInterval,
         DynamicObject) {
@@ -135,10 +137,10 @@ define([
             if (defined(availability)) {
                 var start = availability.start;
                 var stop = availability.stop;
-                if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
+                if (JulianDate.lessThan(start, startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
                     startTime = start;
                 }
-                if (stop.greaterThan(stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
+                if (JulianDate.greaterThan(stop, stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
                     stopTime = stop;
                 }
             }
