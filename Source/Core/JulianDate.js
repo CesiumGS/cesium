@@ -31,7 +31,6 @@ define([
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var daysInLeapFeburary = 29;
 
-
     function compareLeapSecondDates(leapSecond, dateToFind) {
         return JulianDate.compare(leapSecond.julianDate, dateToFind.julianDate);
     }
