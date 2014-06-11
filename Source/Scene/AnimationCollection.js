@@ -55,7 +55,7 @@ define([
             // set the callback on the instance to avoid extra bookkeeping
             // or patching Tween.js
             tween.cancel = options.cancel;
-            tween.to(options.stopValue, duration);
+            tween.to(clone(options.stopValue), duration);
             tween.delay(delay);
             tween.easing(easingFunction);
             if (typeof options.update === 'function') {
@@ -103,7 +103,7 @@ define([
 
         var properties = [];
 
-        for ( var property in material.uniforms) {
+        for (var property in material.uniforms) {
             if (material.uniforms.hasOwnProperty(property) &&
                 defined(material.uniforms[property]) &&
                 defined(material.uniforms[property].alpha)) {
@@ -118,38 +118,32 @@ define([
         //>>includeEnd('debug');
 
         // Default to fade in
-        start = defaultValue(start, 0.0);
-        stop = defaultValue(stop, 1.0);
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var duration = defaultValue(options.duration, 3.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
-        var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
-
-        var value = {
-            alpha : start
+        var startValue = {
+            alpha : defaultValue(start, 0.0)
         };
-        var tween = new Tween.Tween(value);
-        tween.to({
-            alpha : stop
-        }, duration);
-        tween.delay(delay);
-        tween.easing(easingFunction);
-        tween.onUpdate(function() {
+        var stopValue = {
+            alpha : defaultValue(stop, 1.0)
+        };
+
+        function update(value) {
             var length = properties.length;
             for ( var i = 0; i < length; ++i) {
                 material.uniforms[properties[i]].alpha = value.alpha;
             }
+        }
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        return this.add({
+            duration : defaultValue(options.duration, 3.0),
+            delay : options.delay,
+            easingFunction : options.easingFunction,
+            startValue : startValue,
+            stopValue : stopValue,
+            update : update,
+            complete : options.complete,
+            cancel : options.cancel
         });
-        tween.onComplete(defaultValue(options.complete, null));
-
-        // start then stop to remove the tween from the global array
-        tween.start().stop();
-        this._tweens.push(tween);
-
-        return {
-            _tween : tween
-        };
     };
 
     /**
