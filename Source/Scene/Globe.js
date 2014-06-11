@@ -119,7 +119,7 @@ define([
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
 
-        this._surfaceShaderSet = new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations);
+        this._surfaceShaderSet = new GlobeSurfaceShaderSet();
 
         this._surface = new QuadtreePrimitive({
             tileProvider : new GlobeSurfaceTileProvider({

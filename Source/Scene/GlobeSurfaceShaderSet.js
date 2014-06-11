@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        '../Scene/terrainAttributeLocations'
     ], function(
         defined,
-        destroyObject) {
+        destroyObject,
+        terrainAttributeLocations) {
     "use strict";
 
     /**
@@ -13,10 +15,10 @@ define([
      * @alias GlobeSurfaceShaderSet
      * @private
      */
-    function GlobeSurfaceShaderSet(attributeLocations) {
+    function GlobeSurfaceShaderSet() {
         this.baseVertexShaderString = undefined;
         this.baseFragmentShaderString = undefined;
-        this._attributeLocations = attributeLocations;
+        this._attributeLocations = terrainAttributeLocations;
         this._shaders = {};
     }
 

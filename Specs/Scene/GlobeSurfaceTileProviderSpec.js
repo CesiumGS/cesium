@@ -18,6 +18,7 @@ defineSuite([
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
+        'Scene/terrainAttributeLocations',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -42,6 +43,7 @@ defineSuite([
         QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
+        terrainAttributeLocations,
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
@@ -124,7 +126,7 @@ defineSuite([
             function constructWithoutTerrainProvider() {
                 return new GlobeSurfaceTileProvider({
                     imageryLayers : new ImageryLayerCollection(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
                 });
             }
             expect(constructWithoutTerrainProvider).toThrowDeveloperError();
@@ -134,7 +136,7 @@ defineSuite([
             function constructWithoutImageryLayerCollection() {
                 return new GlobeSurfaceTileProvider({
                     terrainProvider : new EllipsoidTerrainProvider(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
