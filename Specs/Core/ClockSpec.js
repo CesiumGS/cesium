@@ -14,7 +14,7 @@ defineSuite([
 
     it('constructor sets default parameters', function() {
         var clock = new Clock();
-        expect(clock.stopTime).toEqual(JulianDate.addDays(clock.startTime, 1));
+        expect(clock.stopTime).toEqual(JulianDate.addDays(clock.startTime, 1, new JulianDate()));
         expect(clock.startTime).toEqual(clock.currentTime);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
@@ -190,11 +190,11 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
@@ -216,11 +216,11 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
@@ -242,11 +242,11 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
@@ -268,11 +268,11 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
@@ -294,11 +294,11 @@ defineSuite([
         });
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(start, multiplier);
+        currentTime = JulianDate.addSeconds(start, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
 
-        currentTime = JulianDate.addSeconds(currentTime, multiplier);
+        currentTime = JulianDate.addSeconds(currentTime, multiplier, new JulianDate());
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
     });
@@ -353,7 +353,7 @@ defineSuite([
         var clock = new Clock({
             clockStep : ClockStep.SYSTEM_CLOCK
         });
-        var time1 = clock.tick();
+        var time1 = JulianDate.clone(clock.tick());
 
         waitsFor(function() {
             var time2 = clock.tick();
@@ -398,7 +398,8 @@ defineSuite([
         var clock = new Clock({
             clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER
         });
-        var time1 = clock.tick();
+        var time1 = JulianDate.clone(clock.tick());
+
         waitsFor(function() {
             var time2 = clock.tick();
             return JulianDate.greaterThan(time2, time1);
@@ -416,31 +417,36 @@ defineSuite([
         expect(currentTime).toEqual(clock.tick());
         expect(clock.currentTime).toEqual(currentTime);
         clock.shouldAnimate = true;
-        time1 = clock.tick();
+        time1 = JulianDate.clone(clock.tick());
+
         waitsFor(function() {
             time2 = clock.tick();
             return JulianDate.greaterThan(time2, time1);
         });
 
-        clock.clockStep = ClockStep.SYSTEM_CLOCK;
-        currentTime = clock.currentTime;
-        clock.shouldAnimate = false;
-        expect(currentTime).toEqual(clock.tick());
-        expect(clock.currentTime).toEqual(currentTime);
-        clock.shouldAnimate = true;
-        time1 = clock.tick();
+        runs(function() {
+            clock.clockStep = ClockStep.SYSTEM_CLOCK;
+            currentTime = clock.currentTime;
+            clock.shouldAnimate = false;
+            expect(currentTime).toEqual(clock.tick());
+            expect(clock.currentTime).toEqual(currentTime);
+            clock.shouldAnimate = true;
+            time1 = JulianDate.clone(clock.tick());
+        });
+
         waitsFor(function() {
             time2 = clock.tick();
             return JulianDate.greaterThan(time2, time1);
         });
 
-        clock.clockStep = ClockStep.TICK_DEPENDENT;
-        currentTime = clock.currentTime;
-        clock.shouldAnimate = false;
-        expect(currentTime).toEqual(clock.tick());
-        expect(clock.currentTime).toEqual(currentTime);
-        clock.shouldAnimate = true;
-        expect(JulianDate.greaterThan(clock.tick(), currentTime)).toEqual(true);
-
+        runs(function() {
+            clock.clockStep = ClockStep.TICK_DEPENDENT;
+            currentTime = JulianDate.clone(clock.currentTime);
+            clock.shouldAnimate = false;
+            expect(currentTime).toEqual(clock.tick());
+            expect(clock.currentTime).toEqual(currentTime);
+            clock.shouldAnimate = true;
+            expect(JulianDate.greaterThan(clock.tick(), currentTime)).toEqual(true);
+        });
     });
 });

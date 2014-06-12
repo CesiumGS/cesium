@@ -115,10 +115,6 @@ define([
             secondsOfDay += TimeConstants.SECONDS_PER_DAY;
         }
 
-        if (!defined(julianDate)) {
-            return new JulianDate(wholeDays, secondsOfDay, TimeStandard.TAI);
-        }
-
         julianDate.dayNumber = wholeDays;
         julianDate.secondsOfDay = secondsOfDay;
         return julianDate;
@@ -806,8 +802,8 @@ define([
      *
      * @param {JulianDate} julianDate The date.
      * @param {Number} seconds The number of seconds to add or subtract.
-     * @param {JulianDate} [result] An existing instance to use for the result.
-     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
      */
     JulianDate.addSeconds = function(julianDate, seconds, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -816,6 +812,9 @@ define([
         }
         if (!defined(seconds)) {
             throw new DeveloperError('seconds is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
@@ -827,8 +826,8 @@ define([
      *
      * @param {JulianDate} julianDate The date.
      * @param {Number} minutes The number of minutes to add or subtract.
-     * @param {JulianDate} [result] An existing instance to use for the result.
-     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
      */
     JulianDate.addMinutes = function(julianDate, minutes, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -837,6 +836,9 @@ define([
         }
         if (!defined(minutes)) {
             throw new DeveloperError('minutes is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
@@ -849,8 +851,8 @@ define([
      *
      * @param {JulianDate} julianDate The date.
      * @param {Number} hours The number of hours to add or subtract.
-     * @param {JulianDate} [result] An existing instance to use for the result.
-     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
      */
     JulianDate.addHours = function(julianDate, hours, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -859,6 +861,9 @@ define([
         }
         if (!defined(hours)) {
             throw new DeveloperError('hours is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
@@ -871,8 +876,8 @@ define([
      *
      * @param {JulianDate} julianDate The date.
      * @param {Number} days The number of days to add or subtract.
-     * @param {JulianDate} [result] An existing instance to use for the result.
-     * @returns {JulianDate} The modified result parameter or a new instance if none was provided.
+     * @param {JulianDate} result An existing instance to use for the result.
+     * @returns {JulianDate} The modified result parameter.
      */
     JulianDate.addDays = function(julianDate, days, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -881,6 +886,9 @@ define([
         }
         if (!defined(days)) {
             throw new DeveloperError('days is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 

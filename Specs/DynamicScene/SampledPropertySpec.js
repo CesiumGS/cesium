@@ -210,7 +210,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(JulianDate.addSeconds(time, 4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
     it('mergeNewSamples works with huge data sets.', function() {
@@ -225,7 +225,7 @@ defineSuite([
         for ( var i = 0; i < 200000; i++) {
             data.push(i);
             data.push(i);
-            expectedTimes.push(JulianDate.addSeconds(epoch, i));
+            expectedTimes.push(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expectedValues.push(i);
         }
 
@@ -243,7 +243,12 @@ defineSuite([
         var newData = [0, 'a', 1, 'b', 2, 'c'];
         var newData2 = [3, 'd', 4, 'e', 5, 'f'];
 
-        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 1, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 2, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 3, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 4, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 5, new JulianDate())];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
@@ -261,7 +266,12 @@ defineSuite([
         var newData = ['2010-01-01T12:00:00', 'a', '2010-01-01T12:00:01', 'b', '2010-01-01T12:00:02', 'c'];
         var newData2 = ['2010-01-01T12:00:03', 'd', '2010-01-01T12:00:04', 'e', '2010-01-01T12:00:05', 'f'];
 
-        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 1, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 2, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 3, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 4, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 5, new JulianDate())];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(undefined, times, values, newData, 1);
@@ -279,7 +289,11 @@ defineSuite([
         var newData = [1, 'b', 'b', 4, 'e', 'e', 0, 'a', 'a'];
         var newData2 = [2, 'c', 'c', 3, 'd', 'd'];
 
-        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 1, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 2, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 3, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 4, new JulianDate())];
         var expectedValues = ['a', 'a', 'b', 'b', 'c', 'c', 'd', 'd', 'e', 'e'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 2);
@@ -297,7 +311,12 @@ defineSuite([
         var newData = [1, 'b', 4, 'e', 0, 'a'];
         var newData2 = [5, 'f', 2, 'c', 3, 'd'];
 
-        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 2), JulianDate.addSeconds(epoch, 3), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 1, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 2, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 3, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 4, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 5, new JulianDate())];
         var expectedValues = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
@@ -313,7 +332,10 @@ defineSuite([
         var epoch = JulianDate.now();
 
         var newData = [0, 'a', 1, 'b', 1, 'c', 0, 'd', 4, 'e', 5, 'f'];
-        var expectedTimes = [JulianDate.addSeconds(epoch, 0), JulianDate.addSeconds(epoch, 1), JulianDate.addSeconds(epoch, 4), JulianDate.addSeconds(epoch, 5)];
+        var expectedTimes = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 1, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 4, new JulianDate()),
+                             JulianDate.addSeconds(epoch, 5, new JulianDate())];
         var expectedValues = ['d', 'c', 'e', 'f'];
         SampledProperty._mergeNewSamples(epoch, times, values, newData, 1);
 
@@ -421,24 +443,24 @@ defineSuite([
         });
 
         for (var x = 0; x < 100; x += 20) {
-            property.addSample(JulianDate.addSeconds(epoch, x), Math.sin(x), [Math.cos(x), -Math.sin(x)]);
+            property.addSample(JulianDate.addSeconds(epoch, x, new JulianDate()), Math.sin(x), [Math.cos(x), -Math.sin(x)]);
         }
         var resultIndex = 0;
         for (var i = 0; i < 100; i += 10) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(results[resultIndex++], CesiumMath.EPSILON12);
         }
     });
 
     var epoch = JulianDate.fromIso8601('2014-01-01T00:00:00');
-    var times = [JulianDate.addSeconds(epoch, 0),
-                 JulianDate.addSeconds(epoch, 60),
-                 JulianDate.addSeconds(epoch, 120),
-                 JulianDate.addSeconds(epoch, 180),
-                 JulianDate.addSeconds(epoch, 240),
-                 JulianDate.addSeconds(epoch, 300),
-                 JulianDate.addSeconds(epoch, 360),
-                 JulianDate.addSeconds(epoch, 420)];
+    var times = [JulianDate.addSeconds(epoch, 0, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 60, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 120, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 180, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 240, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 300, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 360, new JulianDate()),
+                 JulianDate.addSeconds(epoch, 420, new JulianDate())];
 
     var positions = [new Cartesian3(13378137.0000000, 0.000000000, 1),
                      new Cartesian3(13374128.3576279, 327475.593690065, 2),
@@ -516,7 +538,7 @@ defineSuite([
         }
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order1Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });
@@ -534,7 +556,7 @@ defineSuite([
 
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order0Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });
@@ -549,7 +571,7 @@ defineSuite([
         property.addSamples(times, positions, derivatives);
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order1Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });
@@ -564,7 +586,7 @@ defineSuite([
         property.addSamples(times, positions);
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order0Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });
@@ -586,7 +608,7 @@ defineSuite([
 
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order1Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });
@@ -607,7 +629,7 @@ defineSuite([
 
         var resultIndex = 0;
         for (var i = 0; i < 420; i += 20) {
-            var result = property.getValue(JulianDate.addSeconds(epoch, i));
+            var result = property.getValue(JulianDate.addSeconds(epoch, i, new JulianDate()));
             expect(result).toEqualEpsilon(order0Results[resultIndex++], CesiumMath.EPSILON7);
         }
     });

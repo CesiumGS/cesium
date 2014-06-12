@@ -39,6 +39,7 @@ define([
     var c11 = 0.0036096;
     var c12 = 0.1643573;
     var c13 = 12.9590088;
+    var dateTT = new JulianDate();
 
     /**
      * Compute the orientation parameters for the Moon.
@@ -52,7 +53,7 @@ define([
             date = JulianDate.now();
         }
 
-        var dateTT = JulianDate.addSeconds(date, TdtMinusTai);
+        dateTT = JulianDate.addSeconds(date, TdtMinusTai, dateTT);
         var d = JulianDate.getTotalDays(dateTT) - J2000d;
         var T = d / TimeConstants.DAYS_PER_JULIAN_CENTURY;
 
