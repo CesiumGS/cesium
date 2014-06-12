@@ -523,13 +523,13 @@ defineSuite([
         composite2.addCollection(collection1);
         composite2.addCollection(collection2);
 
-        expect(composite1.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
-        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(false);
+        expect(composite1.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(true);
+        expect(composite2.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(false);
 
         // switch the billboard show for the dynamic object in collection2 to true, this should affect
         // composite2 but not composite1
         dynamicObject2.billboard.show = new ConstantProperty(true);
-        expect(composite2.getById(id).billboard.show.getValue(new JulianDate())).toEqual(true);
+        expect(composite2.getById(id).billboard.show.getValue(JulianDate.now())).toEqual(true);
         expect(composite1.getById(id).billboard.show).toBe(dynamicObject1.billboard.show);
         expect(composite2.getById(id).billboard.show).toBe(dynamicObject2.billboard.show);
 

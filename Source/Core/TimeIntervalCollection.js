@@ -269,7 +269,7 @@ define([
 
             // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
             if (thisIntervals.length === 0 ||
-                interval.start.greaterThan(thisIntervals[thisIntervals.length - 1].stop)) {
+                JulianDate.greaterThan(interval.start, thisIntervals[thisIntervals.length - 1].stop)) {
                 thisIntervals.push(interval);
                 this._intervalsChanged.raiseEvent(this);
                 return;
@@ -306,7 +306,7 @@ define([
                     // There is an overlap
                     if (defined(equalsCallback) ? equalsCallback(thisIntervals[index - 1].data, interval.data) : (thisIntervals[index - 1].data === interval.data)) {
                         // Overlapping intervals have the same data, so combine them
-                        if (interval.stop.greaterThan(thisIntervals[index - 1].stop)) {
+                        if (JulianDate.greaterThan(interval.stop, thisIntervals[index - 1].stop)) {
                             interval = new TimeInterval(thisIntervals[index - 1].start,
                                                         interval.stop,
                                                         thisIntervals[index - 1].isStartIncluded,
@@ -358,9 +358,9 @@ define([
                     if (defined(equalsCallback) ? equalsCallback(thisIntervals[index].data, interval.data) : thisIntervals[index].data === interval.data) {
                         // Overlapping intervals have the same data, so combine them
                         interval = new TimeInterval(interval.start,
-                                                    thisIntervals[index].stop.greaterThan(interval.stop) ? thisIntervals[index].stop : interval.stop,
+                                                    JulianDate.greaterThan(thisIntervals[index].stop, interval.stop) ? thisIntervals[index].stop : interval.stop,
                                                     interval.isStartIncluded,
-                                                    thisIntervals[index].stop.greaterThan(interval.stop) ? thisIntervals[index].isStopIncluded : interval.isStopIncluded,
+                                                    JulianDate.greaterThan(thisIntervals[index].stop, interval.stop) ? thisIntervals[index].isStopIncluded : interval.isStopIncluded,
                                                     interval.data);
                         thisIntervals.splice(index, 1);
                     } else {
@@ -426,12 +426,12 @@ define([
         if (index > 0) {
             var indexMinus1 = thisIntervals[index - 1];
             var indexMinus1Stop = indexMinus1.stop;
-            if (indexMinus1Stop.greaterThan(intervalStart) ||
+            if (JulianDate.greaterThan(indexMinus1Stop, intervalStart) ||
                 (indexMinus1Stop.equals(intervalStart) &&
                  indexMinus1.isStopIncluded && intervalIsStartIncluded)) {
                 result = true;
 
-                if (indexMinus1Stop.greaterThan(intervalStop) ||
+                if (JulianDate.greaterThan(indexMinus1Stop, intervalStop) ||
                     (indexMinus1.isStopIncluded && !intervalIsStopIncluded && indexMinus1Stop.equals(intervalStop))) {
                     // Break the existing interval into two pieces
                     thisIntervals.splice(index, 0, new TimeInterval(intervalStop, indexMinus1Stop, !intervalIsStopIncluded, indexMinus1.isStopIncluded, indexMinus1.data));
@@ -456,7 +456,7 @@ define([
 
         // Remove any intervals that are completely overlapped by the input interval.
         while (index < thisIntervals.length &&
-                intervalStop.greaterThan(indexInterval.stop)) {
+                JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
             result = true;
             thisIntervals.splice(index, 1);
         }
@@ -484,7 +484,7 @@ define([
 
         // Truncate any partially-overlapped intervals.
         if (index < thisIntervals.length &&
-            (intervalStop.greaterThan(indexInterval.start) ||
+            (JulianDate.greaterThan(intervalStop, indexInterval.start) ||
              (intervalStop.equals(indexInterval.start) &&
               intervalIsStopIncluded &&
               indexInterval.isStartIncluded))) {
@@ -557,9 +557,9 @@ define([
         while (left < thisIntervals.length && right < otherIntervals.length) {
             var leftInterval = thisIntervals[left];
             var rightInterval = otherIntervals[right];
-            if (leftInterval.stop.lessThan(rightInterval.start)) {
+            if (JulianDate.lessThan(leftInterval.stop, rightInterval.start)) {
                 ++left;
-            } else if (rightInterval.stop.lessThan(leftInterval.start)) {
+            } else if (JulianDate.lessThan(rightInterval.stop, leftInterval.start)) {
                 ++right;
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
@@ -575,7 +575,7 @@ define([
                     }
                 }
 
-                if (leftInterval.stop.lessThan(rightInterval.stop) ||
+                if (JulianDate.lessThan(leftInterval.stop, rightInterval.stop) ||
                     (leftInterval.stop.equals(rightInterval.stop) &&
                      !leftInterval.isStopIncluded &&
                      rightInterval.isStopIncluded)) {

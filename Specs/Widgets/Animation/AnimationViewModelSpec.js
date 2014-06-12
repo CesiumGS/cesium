@@ -426,38 +426,38 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
 
         //UNBOUNDED but available when start/stop time does not include realtime
-        clockViewModel.systemTime = new JulianDate();
+        clockViewModel.systemTime = JulianDate.now();
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
-        clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
-        clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
+        clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
+        clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, -30);
         expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
         expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
 
         //CLAMPED but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange = ClockRange.CLAMPED;
-        clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
-        clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
+        clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
+        clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, -30);
         expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
         expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Current time not in range');
 
         //CLAMPED but available when start/stop time includes realtime
         clockViewModel.clockRange = ClockRange.CLAMPED;
-        clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
-        clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(60);
+        clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
+        clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, 60);
         expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
         expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
 
         //LOOP_STOP but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange = ClockRange.LOOP_STOP;
-        clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
-        clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
+        clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
+        clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, -30);
         expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
         expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Current time not in range');
 
         //LOOP_STOP but available when start/stop time includes realtime
         clockViewModel.clockRange = ClockRange.LOOP_STOP;
-        clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
-        clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(60);
+        clockViewModel.startTime = JulianDate.addSeconds(clockViewModel.systemTime, -60);
+        clockViewModel.stopTime = JulianDate.addSeconds(clockViewModel.systemTime, 60);
         expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
         expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
     });

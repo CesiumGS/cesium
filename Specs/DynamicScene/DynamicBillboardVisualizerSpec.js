@@ -85,7 +85,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
     });
@@ -99,7 +99,7 @@ defineSuite([
         billboard.show = new ConstantProperty(true);
         billboard.image = new ConstantProperty('Data/Images/Blue.png');
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
     });
@@ -113,7 +113,7 @@ defineSuite([
         var billboard = testObject.billboard = new DynamicBillboard();
         billboard.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
     });
@@ -127,7 +127,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var billboard = testObject.billboard = new DynamicBillboard();
         var bb;
 
@@ -236,7 +236,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var billboard = testObject.billboard = new DynamicBillboard();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
@@ -268,7 +268,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var billboard = testObject.billboard = new DynamicBillboard();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));

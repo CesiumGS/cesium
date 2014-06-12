@@ -61,7 +61,7 @@ define([
         this.w = defaultValue(w, 0.0);
     };
 
-    var fromAxisAngleScratch;
+    var fromAxisAngleScratch = new Cartesian3();
 
     /**
      * Computes a quaternion representing a rotation around an axis.

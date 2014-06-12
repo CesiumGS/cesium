@@ -37,7 +37,7 @@ defineSuite([
     });
 
     it('getValue works without a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -48,7 +48,7 @@ defineSuite([
     });
 
     it('getValue works with a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -60,7 +60,7 @@ defineSuite([
     });
 
     it('getValue returns in fixed frame', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var valueInertial = new Cartesian3(1, 2, 3);
         var valueFixed = PositionProperty.convertToReferenceFrame(time, valueInertial, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED);
         var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
@@ -71,7 +71,7 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works without a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty();
         property.addSample(time, value);
@@ -82,7 +82,7 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works with a result parameter', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
         property.addSample(time, value);
@@ -259,7 +259,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(time.addSeconds(4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4))).toBeUndefined();
     });
 
     it('throws with no time parameter', function() {
@@ -271,7 +271,7 @@ defineSuite([
 
     it('throws with no reference frame parameter', function() {
         var property = new SampledPositionProperty();
-        var time = new JulianDate();
+        var time = JulianDate.now();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
@@ -322,7 +322,7 @@ defineSuite([
         var right = new SampledPositionProperty();
         expect(left.equals(right)).toEqual(true);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var value = new Cartesian3(1, 2, 3);
         left.addSample(time, value);
         expect(left.equals(right)).toEqual(false);

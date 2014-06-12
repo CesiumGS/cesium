@@ -39,7 +39,7 @@ defineSuite([
         property.offset = new ConstantProperty(10);
         property.repeat = new ConstantProperty(20);
 
-        var result = property.getValue(new JulianDate());
+        var result = property.getValue(JulianDate.now());
         expect(result.horizontal).toEqual(false);
         expect(result.evenColor).toEqual(Color.RED);
         expect(result.oddColor).toEqual(Color.BLUE);
@@ -109,7 +109,7 @@ defineSuite([
             offset : 3,
             repeat : 4
         };
-        var returnedResult = property.getValue(new JulianDate(), result);
+        var returnedResult = property.getValue(JulianDate.now(), result);
         expect(returnedResult).toBe(result);
         expect(result.horizontal).toEqual(false);
         expect(result.evenColor).toEqual(Color.RED);

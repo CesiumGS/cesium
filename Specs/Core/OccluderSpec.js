@@ -173,10 +173,10 @@ defineSuite([
 
         var occluderPosition = occluder.position;
         var occludeePosition = occludee.position;
-        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()), new Cartesian3());
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
-        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal));
+        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal), new Cartesian3());
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
         if (((majorAxis === 0) && (tempVec0.z > tempVec0.x)) || ((majorAxis === 1) && (tempVec0.z > tempVec0.y))) {
             majorAxis = 2;
@@ -195,10 +195,10 @@ defineSuite([
 
         var occluderPosition = occluder.position;
         var occludeePosition = occludee.position;
-        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()), new Cartesian3());
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
-        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal));
+        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal), new Cartesian3());
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
         if (((majorAxis === 0) && (tempVec0.z > tempVec0.x)) || ((majorAxis === 1) && (tempVec0.z > tempVec0.y))) {
             majorAxis = 2;
@@ -217,10 +217,10 @@ defineSuite([
 
         var occluderPosition = occluder.position;
         var occludeePosition = occludee.position;
-        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition, new Cartesian3()), new Cartesian3());
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
-        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal));
+        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal), new Cartesian3());
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
         if (((majorAxis === 0) && (tempVec0.z > tempVec0.x)) || ((majorAxis === 1) && (tempVec0.z > tempVec0.y))) {
             majorAxis = 2;
