@@ -53,7 +53,7 @@ defineSuite([
     function translatePositions(positions, translation) {
         var points = [];
         for (var i = 0; i < positions.length; ++i) {
-            points.push(Cartesian3.add(translation, positions[i]));
+            points.push(Cartesian3.add(translation, positions[i], new Cartesian3()));
         }
 
         return points;
@@ -209,7 +209,7 @@ defineSuite([
     it('does not intersect (4)', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
         var points = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR).points;
-        var translation = Cartesian3.multiplyByScalar(new Cartesian3(2.0, 3.0, 0.0), 2.1);
+        var translation = Cartesian3.multiplyByScalar(new Cartesian3(2.0, 3.0, 0.0), 2.1, new Cartesian3());
         points = translatePositions(points, translation);
         var box2 = ObjectOrientedBoundingBox.fromPoints(points);
         expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);
@@ -218,7 +218,7 @@ defineSuite([
     it('does not intersect (5)', function() {
         var box1 = ObjectOrientedBoundingBox.fromPoints(positions);
         var points = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR).points;
-        var translation = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 3.0, 4.0), 2.1);
+        var translation = Cartesian3.multiplyByScalar(new Cartesian3(0.0, 3.0, 4.0), 2.1, new Cartesian3());
         points = translatePositions(points, translation);
         var box2 = ObjectOrientedBoundingBox.fromPoints(points);
         expect(ObjectOrientedBoundingBox.intersect(box1, box2)).toEqual(false);

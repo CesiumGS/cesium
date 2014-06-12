@@ -163,7 +163,7 @@ defineSuite([
         expect(clock.currentTime).toEqual(interval.start);
         expect(clock.clockRange).toEqual(ClockRange.LOOP_STOP);
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-        expect(clock.multiplier).toEqual(interval.start.getSecondsDifference(interval.stop) / 120.0);
+        expect(clock.multiplier).toEqual(JulianDate.getSecondsDifference(interval.stop, interval.start) / 120.0);
     });
 
     it('processUrl loads expected data', function() {
@@ -512,7 +512,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(billboardPacket.billboard.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket);
@@ -699,7 +699,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(conePacket.cone.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
@@ -747,16 +747,16 @@ defineSuite([
         dataSource.load(czml);
 
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
     it('CZML sampled cartographicsDegrees positions work.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var czml = {
             position : {
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartographicDegrees : [0, 34, 117, 10000, 1, 34, 117, 20000]
             }
         };
@@ -770,17 +770,17 @@ defineSuite([
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(epoch.addSeconds(1));
+        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
     it('CZML sampled positions work without epoch.', function() {
-        var lastDate = new JulianDate();
-        var firstDate = new JulianDate(lastDate.getJulianDayNumber() - 1, 0);
+        var lastDate = JulianDate.now();
+        var firstDate = new JulianDate(lastDate.dayNumber - 1, 0);
 
         var czml = {
             position : {
-                cartographicDegrees : [firstDate.toIso8601(), 34, 117, 10000, lastDate.toIso8601(), 34, 117, 20000]
+                cartographicDegrees : [JulianDate.toIso8601(firstDate), 34, 117, 10000, JulianDate.toIso8601(lastDate), 34, 117, 20000]
             }
         };
         var cartographic = Cartographic.fromDegrees(34, 117, 10000);
@@ -809,18 +809,18 @@ defineSuite([
         dataSource.load(czml);
 
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        var resultCartesian = dynamicObject.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
     });
 
     it('Can set reference frame', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
         var dataSource = new CzmlDataSource();
 
         var czml = {
             position : {
                 referenceFrame : 'INERTIAL',
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartesian : [1.0, 2.0, 3.0]
             }
         };
@@ -832,7 +832,7 @@ defineSuite([
         czml = {
             position : {
                 referenceFrame : 'FIXED',
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartesian : [1.0, 2.0, 3.0]
             }
         };
@@ -843,13 +843,13 @@ defineSuite([
     });
 
     it('Default reference frame on existing interval does not reset value to FIXED.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
         var dataSource = new CzmlDataSource();
 
         var czml = {
             position : {
                 referenceFrame : 'INERTIAL',
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartesian : [1.0, 2.0, 3.0]
             }
         };
@@ -860,7 +860,7 @@ defineSuite([
 
         var czml2 = {
             position : {
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartesian : [1.0, 2.0, 3.0]
             }
         };
@@ -870,11 +870,11 @@ defineSuite([
     });
 
     it('CZML sampled cartographicRadians positions work.', function() {
-        var epoch = new JulianDate();
+        var epoch = JulianDate.now();
 
         var czml = {
             position : {
-                epoch : epoch.toIso8601(),
+                epoch : JulianDate.toIso8601(epoch),
                 cartographicRadians : [0, 2, 0.3, 10000, 1, 0.2, 0.5, 20000]
             }
         };
@@ -888,19 +888,19 @@ defineSuite([
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(epoch.addSeconds(1));
+        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
     it('CZML sampled numbers work without epoch.', function() {
         var firstDate = Iso8601.MINIMUM_VALUE;
-        var midDate = firstDate.addDays(1);
-        var lastDate = firstDate.addDays(2);
+        var midDate = JulianDate.addDays(firstDate, 1);
+        var lastDate = JulianDate.addDays(firstDate, 2);
 
         var ellipsePacket = {
             ellipse : {
                 semiMajorAxis : {
-                    number : [firstDate.toIso8601(), 0, lastDate.toIso8601(), 10]
+                    number : [JulianDate.toIso8601(firstDate), 0, JulianDate.toIso8601(lastDate), 10]
                 }
             }
         };
@@ -949,7 +949,7 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         var validTime = TimeInterval.fromIso8601(ellipsePacketInterval.ellipse.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
@@ -1011,7 +1011,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(ellipsoidPacketInterval.ellipsoid.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacketInterval);
@@ -1100,7 +1100,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(labelPacket.label.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
@@ -1337,7 +1337,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pathPacket.path.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
@@ -1404,7 +1404,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pointPacket.point.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
@@ -1471,7 +1471,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(polygonPacket.polygon.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
@@ -1529,7 +1529,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(polylinePacket.polyline.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
@@ -1634,7 +1634,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pyramidPacket.pyramid.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
@@ -1661,7 +1661,7 @@ defineSuite([
     });
 
     it('CZML adds data for infinite vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
         var vectorPacket = {
             vector : {
                 color : {
@@ -1689,7 +1689,7 @@ defineSuite([
     });
 
     it('CZML adds data for constrained vector.', function() {
-        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3), new Cartesian3());
         var vectorPacket = {
             vector : {
                 interval : '2000-01-01/2001-01-01',
@@ -1706,7 +1706,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(vectorPacket.vector.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1);
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);
@@ -1800,13 +1800,13 @@ defineSuite([
         var date = JulianDate.fromIso8601('2000-01-01');
 
         var object = {};
-        CzmlDataSource.processPacketData(JulianDate, object, 'simpleDate', date.toIso8601());
+        CzmlDataSource.processPacketData(JulianDate, object, 'simpleDate', JulianDate.toIso8601(date));
 
         expect(object.simpleDate).toBeDefined();
         expect(object.simpleDate.getValue()).toEqual(date);
 
         CzmlDataSource.processPacketData(JulianDate, object, 'objDate', {
-            date : date.toIso8601()
+            date : JulianDate.toIso8601(date)
         });
 
         expect(object.objDate).toBeDefined();
@@ -1996,7 +1996,7 @@ defineSuite([
     });
 
     it('Can use constant reference properties', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packets = [{
             id : 'targetId',
             point : {
@@ -2060,7 +2060,7 @@ defineSuite([
     });
 
     it('Can use constant reference properties for position', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var packets = [{
             id : 'targetId',
@@ -2085,7 +2085,7 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var packets = [{
             id : 'targetId',
@@ -2123,7 +2123,7 @@ defineSuite([
     });
 
     it('Can reference properties before they exist.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packets = [{
             id : 'referenceId',
             point : {
@@ -2149,7 +2149,7 @@ defineSuite([
     });
 
     it('Can reference local properties.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var packet = {
             id : 'testObject',
             point : {

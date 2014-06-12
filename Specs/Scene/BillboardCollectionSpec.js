@@ -1012,7 +1012,7 @@ defineSuite([
 
         var camera = scene.camera;
         camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();

@@ -68,7 +68,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
@@ -80,12 +80,12 @@ defineSuite([
         var model = testObject.model = new DynamicModel();
         model.uri = new ConstantProperty(duckUrl);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicModel causes a primtive to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
 
@@ -117,7 +117,7 @@ defineSuite([
         var model = new DynamicModel();
         model.uri = new ConstantProperty(duckUrl);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1101112));
         testObject.model = model;
@@ -134,7 +134,7 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicModelVisualizer(scene, dynamicObjectCollection);
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var model = new DynamicModel();
         testObject.model = model;

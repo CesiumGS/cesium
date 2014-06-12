@@ -454,7 +454,7 @@ defineSuite([
         s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
         s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
         s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
 
         s.initializeFrame();
         s.render();

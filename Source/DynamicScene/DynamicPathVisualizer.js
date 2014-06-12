@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ReferenceFrame',
@@ -24,6 +25,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        JulianDate,
         Matrix3,
         Matrix4,
         ReferenceFrame,
@@ -50,7 +52,7 @@ define([
             result[r++] = tmp;
         }
 
-        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
+        var steppedOnNow = !defined(updateTime) || JulianDate.lessThanOrEquals(updateTime, start) || JulianDate.greaterThanOrEquals(updateTime, stop);
 
         //Iterate over all interval times and add the ones that fall in our
         //time range.  Note that times can contain data outside of
@@ -65,14 +67,14 @@ define([
         var sampleStepSize;
 
         while (t < len) {
-            if (!steppedOnNow && current.greaterThanOrEquals(updateTime)) {
+            if (!steppedOnNow && JulianDate.greaterThanOrEquals(current, updateTime)) {
                 tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
                 }
                 steppedOnNow = true;
             }
-            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(updateTime)) {
+            if (JulianDate.greaterThan(current, start) && JulianDate.lessThan(current, loopStop) && !current.equals(updateTime)) {
                 tmp = property.getValueInReferenceFrame(current, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
@@ -82,7 +84,7 @@ define([
             if (t < (len - 1)) {
                 if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
-                    var secondsUntilNext = current.getSecondsDifference(next);
+                    var secondsUntilNext = JulianDate.getSecondsDifference(next, current);
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
@@ -94,7 +96,7 @@ define([
                 }
 
                 if (sampling && sampleStepsTaken < sampleStepsToTake) {
-                    current = current.addSeconds(sampleStepSize);
+                    current = JulianDate.addSeconds(current, sampleStepSize);
                     sampleStepsTaken++;
                     continue;
                 }
@@ -119,9 +121,9 @@ define([
         var index = startingIndex;
         var time = start;
         var stepSize = Math.max(maximumStep, 60);
-        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
-        while (time.lessThan(stop)) {
-            if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
+        var steppedOnNow = !defined(updateTime) || JulianDate.lessThanOrEquals(updateTime, start) || JulianDate.greaterThanOrEquals(updateTime, stop);
+        while (JulianDate.lessThan(time, stop)) {
+            if (!steppedOnNow && JulianDate.greaterThanOrEquals(time, updateTime)) {
                 steppedOnNow = true;
                 tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[index]);
                 if (defined(tmp)) {
@@ -135,7 +137,7 @@ define([
                 index++;
             }
             i++;
-            time = start.addSeconds(stepSize * i);
+            time = JulianDate.addSeconds(start, stepSize * i);
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -159,7 +161,7 @@ define([
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = interval.start.addSeconds(interval.start.getSecondsDifference(interval.stop) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2);
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
@@ -192,12 +194,12 @@ define([
                 var intervalStop = interval.stop;
 
                 var sampleStart = start;
-                if (intervalStart.greaterThan(sampleStart)) {
+                if (JulianDate.greaterThan(intervalStart, sampleStart)) {
                     sampleStart = intervalStart;
                 }
 
                 var sampleStop = stop;
-                if (intervalStop.lessThan(sampleStop)) {
+                if (JulianDate.lessThan(intervalStop, sampleStop)) {
                     sampleStop = intervalStop;
                 }
 
@@ -309,25 +311,25 @@ define([
             //we won't have to draw anything anyway.
             if (show) {
                 if (hasTrailTime) {
-                    sampleStart = time.addSeconds(-trailTime);
+                    sampleStart = JulianDate.addSeconds(time, -trailTime);
                 }
                 if (hasLeadTime) {
-                    sampleStop = time.addSeconds(leadTime);
+                    sampleStop = JulianDate.addSeconds(time, leadTime);
                 }
 
                 if (hasAvailability) {
                     var start = availability.start;
                     var stop = availability.stop;
 
-                    if (!hasTrailTime || start.greaterThan(sampleStart)) {
+                    if (!hasTrailTime || JulianDate.greaterThan(start, sampleStart)) {
                         sampleStart = start;
                     }
 
-                    if (!hasLeadTime || stop.lessThan(sampleStop)) {
+                    if (!hasLeadTime || JulianDate.lessThan(stop, sampleStop)) {
                         sampleStop = stop;
                     }
                 }
-                show = sampleStart.lessThan(sampleStop);
+                show = JulianDate.lessThan(sampleStart, sampleStop);
             }
         }
 

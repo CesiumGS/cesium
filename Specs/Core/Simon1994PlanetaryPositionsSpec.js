@@ -22,7 +22,7 @@ defineSuite([
     // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the
     // sun center of mass point and the earth J2000 reference frame.
     it('computes correct sun position', function() {
-        var date = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI);
+        var date = new JulianDate(2451545, 0, TimeStandard.TAI);
         var sun = PlanetaryPositions.computeSunPositionInEarthInertialFrame(date);
         var X = 26500268539.790234;
         var Y = -132756447253.27325;
@@ -31,7 +31,7 @@ defineSuite([
         expect(Y).toEqualEpsilon(sun.y, CesiumMath.EPSILON2);
         expect(Z).toEqualEpsilon(sun.z, CesiumMath.EPSILON2);
 
-        date = JulianDate.fromTotalDays(2456401.5, TimeStandard.TAI);
+        date = new JulianDate(2456401.5, 0, TimeStandard.TAI);
         sun = PlanetaryPositions.computeSunPositionInEarthInertialFrame(date);
         X = 131512388940.33589;
         Y = 66661342667.949928;
@@ -40,7 +40,7 @@ defineSuite([
         expect(Y).toEqualEpsilon(sun.y, CesiumMath.EPSILON3);
         expect(Z).toEqualEpsilon(sun.z, CesiumMath.EPSILON3);
 
-        date = JulianDate.fromTotalDays(2455998.591667, TimeStandard.TAI);
+        date = new JulianDate(2455998.591667, 0, TimeStandard.TAI);
         sun = PlanetaryPositions.computeSunPositionInEarthInertialFrame(date);
         X = 147109989956.19534;
         Y = -19599996881.217579;
@@ -53,7 +53,7 @@ defineSuite([
     // Values for X Y and Z were found using the STK Components GeometryTransformer on the Simon 1994 moon point and the earth
     // J2000 reference frame.
     it('computes correct moon position', function() {
-        var date = JulianDate.fromTotalDays(2451545.0, TimeStandard.TAI);
+        var date = new JulianDate(2451545.0, 0, TimeStandard.TAI);
         var moon = PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         var X = -291632410.61232185;
         var Y = -266522146.36821631;
@@ -62,7 +62,7 @@ defineSuite([
         expect(Y).toEqualEpsilon(moon.y, CesiumMath.EPSILON4);
         expect(Z).toEqualEpsilon(moon.z, CesiumMath.EPSILON4);
 
-        date = JulianDate.fromTotalDays(2456401.5, TimeStandard.TAI);
+        date = new JulianDate(2456401.5, 0, TimeStandard.TAI);
         moon = PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         X = -223792974.4736526;
         Y = 315772435.34490639;
@@ -71,7 +71,7 @@ defineSuite([
         expect(Y).toEqualEpsilon(moon.y, CesiumMath.EPSILON4);
         expect(Z).toEqualEpsilon(moon.z, CesiumMath.EPSILON4);
 
-        date = JulianDate.fromTotalDays(2455998.591667, TimeStandard.TAI);
+        date = new JulianDate(2455998.591667, 0, TimeStandard.TAI);
         moon = PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         X = -268426117.00202647;
         Y = -220468861.73998192;

@@ -101,8 +101,8 @@ define([
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
-     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
-     *        to the bottom of the widget itself.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
+     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -231,7 +231,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer
         });
 
-        var dataSourceCollection = new DataSourceCollection();
+        var dataSourceCollection = options.dataSources;
+        if (!defined(dataSourceCollection)) {
+            dataSourceCollection = new DataSourceCollection();
+        }
+
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
 
         var clock = cesiumWidget.clock;
@@ -816,6 +820,15 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     };
 
     /**
+     * This forces the widget to re-think its layout, including
+     * widget sizes and credit placement.
+     */
+    Viewer.prototype.forceResize = function() {
+        this._lastWidth = 0;
+        this.resize();
+    };
+
+    /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
      */
@@ -907,13 +920,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var container = viewer._container;
         var width = container.clientWidth;
         var height = container.clientHeight;
-        var animationShown = defined(viewer._animation);
-        var timelineShown = defined(viewer._timeline);
+        var animationExists = defined(viewer._animation);
+        var timelineExists = defined(viewer._timeline);
 
-        if (width === viewer._lastWidth && height === viewer._lastHeight &&
-            animationShown === viewer._lastAnimationShown &&
-            timelineShown === viewer._lastTimelineShown) {
-
+        if (width === viewer._lastWidth && height === viewer._lastHeight) {
             return;
         }
 
@@ -934,10 +944,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var timeline = viewer._timeline;
         var animationContainer;
-        var resizeWidgets = animationShown !== viewer._lastAnimationShown;
         var animationWidth = 0;
+        var creditLeft = 0;
+        var creditBottom = 0;
 
-        if (animationShown) {
+        if (animationExists && window.getComputedStyle(viewer._animation.container).visibility !== 'hidden') {
             var lastWidth = viewer._lastWidth;
             animationContainer = viewer._animation.container;
             if (width > 900) {
@@ -945,7 +956,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth <= 900) {
                     animationContainer.style.width = '169px';
                     animationContainer.style.height = '112px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             } else if (width >= 600) {
@@ -953,7 +963,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth < 600 || lastWidth > 900) {
                     animationContainer.style.width = '136px';
                     animationContainer.style.height = '90px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             } else {
@@ -961,47 +970,31 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 if (lastWidth > 600 || lastWidth === 0) {
                     animationContainer.style.width = '106px';
                     animationContainer.style.height = '70px';
-                    resizeWidgets = true;
                     viewer._animation.resize();
                 }
             }
+            creditLeft = animationWidth + 5;
         }
 
-        var logoBottom = 0;
+        if (timelineExists && window.getComputedStyle(viewer._timeline.container).visibility !== 'hidden') {
+            var fullscreenButton = viewer._fullscreenButton;
+            var timelineContainer = timeline.container;
+            var timelineStyle = timelineContainer.style;
 
-        if (resizeWidgets) {
-            var logoLeft = animationWidth + 5;
-            if (timelineShown) {
-                var fullscreenButton = viewer._fullscreenButton;
-                var timelineContainer = timeline.container;
-                var timelineStyle = timelineContainer.style;
+            creditBottom = timelineContainer.clientHeight + 3;
+            timelineStyle.left = animationWidth + 'px';
 
-                logoBottom = timelineContainer.clientHeight + 3;
-                timelineStyle.left = animationWidth + 'px';
-
-                if (defined(fullscreenButton)) {
-                    timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
-                }
+            if (defined(fullscreenButton)) {
+                timelineStyle.right = fullscreenButton.container.clientWidth + 'px';
             }
-        }
-
-        if (animationShown) {
-            viewer._bottomContainer.style.left = (animationWidth + 5) + 'px';
-        } else {
-            viewer._bottomContainer.style.left = 0;
-        }
-
-        if (timelineShown) {
-            viewer._bottomContainer.style.bottom = logoBottom + 'px';
             timeline.resize();
-        } else {
-            viewer._bottomContainer.style.bottom = 0;
         }
+
+        viewer._bottomContainer.style.left = creditLeft + 'px';
+        viewer._bottomContainer.style.bottom = creditBottom + 'px';
 
         viewer._lastWidth = width;
         viewer._lastHeight = height;
-        viewer._lastAnimationShown = animationShown;
-        viewer._lastTimelineShown = timelineShown;
     }
 
     return Viewer;

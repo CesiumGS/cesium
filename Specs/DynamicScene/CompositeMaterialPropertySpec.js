@@ -22,8 +22,8 @@ defineSuite([
         var property = new CompositeMaterialProperty();
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.isConstant).toBe(true);
-        expect(property.getType(new JulianDate())).toBeUndefined();
-        expect(property.getValue(new JulianDate())).toBeUndefined();
+        expect(property.getType(JulianDate.now())).toBeUndefined();
+        expect(property.getValue(JulianDate.now())).toBeUndefined();
     });
 
     it('works without a result parameter', function() {
