@@ -155,7 +155,7 @@ define([
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!interval.intersect(sampleInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, sampleInterval).isEmpty) {
                 var time = interval.start;
                 if (!interval.isStartIncluded) {
                     if (interval.isStopIncluded) {
@@ -189,7 +189,7 @@ define([
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!interval.intersect(sampleInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, sampleInterval).isEmpty) {
                 var intervalStart = interval.start;
                 var intervalStop = interval.stop;
 

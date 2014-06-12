@@ -216,7 +216,7 @@ define([
         }
 
         index = ~index;
-        if (index > 0 && (index - 1) < thisIntervals.length && thisIntervals[index - 1].contains(date)) {
+        if (index > 0 && (index - 1) < thisIntervals.length && TimeInterval.contains(thisIntervals[index - 1], date)) {
             return index - 1;
         }
         return ~index;
@@ -567,7 +567,7 @@ define([
                    ((defined(equalsCallback) && equalsCallback(leftInterval, rightInterval)) ||
                     (!defined(equalsCallback) && rightInterval.data === leftInterval.data))) {
 
-                    var intersection = leftInterval.intersect(rightInterval, mergeCallback);
+                    var intersection = TimeInterval.intersect(leftInterval, rightInterval, mergeCallback);
                     if (!intersection.isEmpty) {
                         // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'this' (as a rule),
                         // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.

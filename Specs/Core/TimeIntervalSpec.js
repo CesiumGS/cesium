@@ -82,25 +82,25 @@ defineSuite([
 
     it('Contains works for a typical interval.', function() {
         var interval1 = new TimeInterval(new JulianDate(2451545), new JulianDate(2451546), true, true);
-        expect(interval1.contains(new JulianDate(2451545.5))).toEqual(true);
-        expect(interval1.contains(new JulianDate(2451546.5))).toEqual(false);
+        expect(TimeInterval.contains(interval1, new JulianDate(2451545.5))).toEqual(true);
+        expect(TimeInterval.contains(interval1, new JulianDate(2451546.5))).toEqual(false);
     });
 
     it('Contains works for an empty interval.', function() {
         var interval1 = new TimeInterval(new JulianDate(2451545), new JulianDate(2451545), false, false);
-        expect(interval1.contains(new JulianDate(2451545))).toEqual(false);
+        expect(TimeInterval.contains(interval1, new JulianDate(2451545))).toEqual(false);
     });
 
     it('Contains returns true at start and stop times of a closed interval', function() {
         var interval1 = new TimeInterval(new JulianDate(2451545), new JulianDate(2451546), true, true);
-        expect(interval1.contains(new JulianDate(2451545))).toEqual(true);
-        expect(interval1.contains(new JulianDate(2451546))).toEqual(true);
+        expect(TimeInterval.contains(interval1, new JulianDate(2451545))).toEqual(true);
+        expect(TimeInterval.contains(interval1, new JulianDate(2451546))).toEqual(true);
     });
 
     it('Contains returns false at start and stop times of an open interval', function() {
         var interval = new TimeInterval(new JulianDate(2451545), new JulianDate(2451546), false, false);
-        expect(interval.contains(new JulianDate(2451545))).toEqual(false);
-        expect(interval.contains(new JulianDate(2451546))).toEqual(false);
+        expect(TimeInterval.contains(interval, new JulianDate(2451545))).toEqual(false);
+        expect(TimeInterval.contains(interval, new JulianDate(2451546))).toEqual(false);
     });
 
     it('equals and equalsEpsilon return true for identical time intervals', function() {
@@ -199,8 +199,8 @@ defineSuite([
             var first = testParameters[i];
             var second = testParameters[i + 1];
             var expectedResult = testParameters[i + 2];
-            var intersect1 = first.intersect(second);
-            var intersect2 = second.intersect(first);
+            var intersect1 = TimeInterval.intersect(first, second);
+            var intersect2 = TimeInterval.intersect(second, first);
             expect(intersect1).toEqual(intersect2);
             expect(intersect2).toEqual(intersect1);
             expect(expectedResult).toEqual(intersect1);
@@ -209,13 +209,13 @@ defineSuite([
 
     it('intersect with undefined results in an empty interval.', function() {
         var interval = new TimeInterval(new JulianDate(1), new JulianDate(2));
-        expect(interval.intersect(undefined)).toEqual(TimeInterval.EMPTY);
+        expect(TimeInterval.intersect(interval, undefined)).toEqual(TimeInterval.EMPTY);
     });
 
     it('intersect with a merge callback properly merges data.', function() {
         var oneToThree = new TimeInterval(new JulianDate(1), new JulianDate(3), true, true, 2);
         var twoToFour = new TimeInterval(new JulianDate(2), new JulianDate(4), true, true, 3);
-        var twoToThree = oneToThree.intersect(twoToFour, mergeByAdd);
+        var twoToThree = TimeInterval.intersect(oneToThree, twoToFour, mergeByAdd);
         expect(twoToThree.start).toEqual(twoToFour.start);
         expect(twoToThree.stop).toEqual(oneToThree.stop);
         expect(twoToThree.isStartIncluded).toEqual(true);

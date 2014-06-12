@@ -3,11 +3,13 @@ defineSuite([
         'DynamicScene/DynamicObject',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicObject,
         JulianDate,
         TimeInterval,
+        TimeIntervalCollection,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -39,7 +41,9 @@ defineSuite([
     it('isAvailable works.', function() {
         var dynamicObject = new DynamicObject();
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        dynamicObject.availability = interval;
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(interval);
+        dynamicObject.availability = intervals;
         expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);

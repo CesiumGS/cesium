@@ -446,7 +446,7 @@ define([
         if (defined(packetInterval)) {
             combinedInterval = TimeInterval.fromIso8601(packetInterval);
             if (defined(constrainedInterval)) {
-                combinedInterval = combinedInterval.intersect(constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
@@ -608,7 +608,7 @@ define([
         if (defined(packetInterval)) {
             combinedInterval = TimeInterval.fromIso8601(packetInterval);
             if (defined(constrainedInterval)) {
-                combinedInterval = combinedInterval.intersect(constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
@@ -764,7 +764,7 @@ define([
         if (defined(packetInterval)) {
             combinedInterval = TimeInterval.fromIso8601(packetInterval);
             if (defined(constrainedInterval)) {
-                combinedInterval = combinedInterval.intersect(constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
