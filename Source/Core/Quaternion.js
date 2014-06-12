@@ -120,12 +120,16 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         // t = 2.0 * cross(quaternion.xyz, cartesian)
         var t = Cartesian3.cross(quaternion, cartesian, scratchRotateCross);
         Cartesian3.multiplyByScalar(t, 2.0, t);
 
         // return cartesian + quaternion.w * t + cross(quaternion.xyz, t)
-        result = Cartesian3.cross(quaternion, t, result);
+        Cartesian3.cross(quaternion, t, result);
         Cartesian3.multiplyByScalar(t, quaternion.w, t);
         Cartesian3.add(t, result, result);
         return Cartesian3.add(result, cartesian, result);

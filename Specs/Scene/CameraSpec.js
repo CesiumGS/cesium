@@ -631,10 +631,10 @@ defineSuite([
     it('rotate past constrained axis stops at constained axis', function() {
         camera.constrainedAxis = Cartesian3.UNIT_Y;
         camera.rotateUp(Math.PI);
-        expect(camera.up).toEqualEpsilon(Cartesian3.negate(dir, new Cartesian3()), CesiumMath.EPSILON14);
-        expect(camera.direction).toEqualEpsilon(up, CesiumMath.EPSILON14);
-        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON14);
-        expect(camera.position).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON14);
+        expect(camera.up).toEqualEpsilon(Cartesian3.negate(dir, new Cartesian3()), CesiumMath.EPSILON4);
+        expect(camera.direction).toEqualEpsilon(up, CesiumMath.EPSILON4);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON4);
+        expect(camera.position).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON4);
     });
 
     it('zooms out 2D', function() {

@@ -86,7 +86,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z));
+        var ray = new Ray(Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).toEqual(Cartesian3.ZERO);
@@ -97,7 +97,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Z);
+        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Z);
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).toEqual(Cartesian3.ZERO);
@@ -108,7 +108,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z), Cartesian3.UNIT_Z);
+        var ray = new Ray(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), Cartesian3.UNIT_Z);
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2, true);
         expect(intersection).not.toBeDefined();
@@ -119,7 +119,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(new Cartesian3(0.0, -1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+        var ray = new Ray(new Cartesian3(0.0, -1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -130,7 +130,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(new Cartesian3(1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+        var ray = new Ray(new Cartesian3(1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -141,7 +141,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var ray = new Ray(new Cartesian3(-1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z));
+        var ray = new Ray(new Cartesian3(-1.0, 1.0, 1.0), Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()));
 
         var intersection = IntersectionTests.rayTriangle(ray, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -205,7 +205,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = Cartesian3.UNIT_Z;
-        var v1 = Cartesian3.negate(Cartesian3.UNIT_Z);
+        var v1 = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).toEqual(Cartesian3.ZERO);
@@ -216,7 +216,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var v0 = Cartesian3.negate(Cartesian3.UNIT_Z);
+        var v0 = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
         var v1 = Cartesian3.UNIT_Z;
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
@@ -228,7 +228,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var v0 = Cartesian3.negate(Cartesian3.UNIT_Z);
+        var v0 = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
         var v1 = Cartesian3.UNIT_Z;
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2, true);
@@ -241,7 +241,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = new Cartesian3(0.0, -1.0, 1.0);
-        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z));
+        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -253,7 +253,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = new Cartesian3(1.0, 1.0, 1.0);
-        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z));
+        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -265,7 +265,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = new Cartesian3(-1.0, 1.0, 1.0);
-        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z));
+        var v1 = Cartesian3.add(v0, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -277,7 +277,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = new Cartesian3(-1.0, 0.0, 1.0);
-        var v1 = Cartesian3.add(v0, Cartesian3.UNIT_X);
+        var v1 = Cartesian3.add(v0, Cartesian3.UNIT_X, new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -289,7 +289,7 @@ defineSuite([
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
         var v0 = Cartesian3.UNIT_Z;
-        var v1 = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, 2.0);
+        var v1 = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, 2.0, new Cartesian3());
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
         expect(intersection).not.toBeDefined();
@@ -300,7 +300,7 @@ defineSuite([
         var p1 = new Cartesian3(1.0, 0.0, 0.0);
         var p2 = new Cartesian3(0.0, 1.0, 0.0);
 
-        var v0 = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, 2.0);
+        var v0 = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, 2.0, new Cartesian3());
         var v1 = Cartesian3.UNIT_Z;
 
         var intersection = IntersectionTests.lineSegmentTriangle(v0, v1, p0, p1, p2);
@@ -377,7 +377,7 @@ defineSuite([
         var sphere = new BoundingSphere(Cartesian3.ZERO, 5000.0);
 
         var origin = new Cartesian3(200.0, 0.0, 0.0);
-        var direction = Cartesian3.negate(Cartesian3.normalize(origin));
+        var direction = Cartesian3.negate(Cartesian3.normalize(origin, new Cartesian3()), new Cartesian3());
         var ray = new Ray(origin, direction);
 
         var expected = {
@@ -395,7 +395,7 @@ defineSuite([
         var sphere = new BoundingSphere(Cartesian3.ZERO, 5000.0);
 
         var origin = new Cartesian3(200.0, 0.0, 0.0);
-        var direction = Cartesian3.normalize(origin);
+        var direction = Cartesian3.normalize(origin, new Cartesian3());
         var ray = new Ray(origin, direction);
 
         var expected = {

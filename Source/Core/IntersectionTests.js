@@ -175,7 +175,11 @@ define([
             return undefined;
         }
 
-        result = Cartesian3.multiplyByScalar(ray.direction, t, result);
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);
     };
 
@@ -215,7 +219,11 @@ define([
             return undefined;
         }
 
-        result = Cartesian3.multiplyByScalar(ray.direction, t, result);
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);
     };
 
