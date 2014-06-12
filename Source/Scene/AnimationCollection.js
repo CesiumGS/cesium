@@ -22,6 +22,153 @@ define([
     "use strict";
 
     /**
+     * An animation interpolates the properties of two objects using an {@link EasingFunction}.  Create
+     * one using {@link Scene#animations} and {@link AnimationCollection#add} and related add functions.
+     *
+     * @alias Animation
+     * @constructor
+     *
+     * @example
+     * DOC_TBA
+     */
+    var Animation = function(animations, tween, startValue, stopValue, duration, delay, easingFunction, update, complete, cancel) {
+        this._animations = animations;
+        this._tween = tween;
+
+        this._startValue = clone(startValue);
+        this._stopValue = clone(stopValue);
+
+        this._duration = duration;
+        this._delay = delay;
+        this._easingFunction = easingFunction;
+
+        this._update = update;
+        this._complete = complete;
+
+        /**
+         * DOC_TBA
+         */
+        this.cancel = cancel;
+
+        /**
+         * @private
+         */
+        this.needsStart = true;
+    };
+
+    defineProperties(Animation.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        startValue : {
+            get : function() {
+                return this._startValue;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        stopValue : {
+            get : function() {
+                return this._stopValue;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        duration : {
+            get : function() {
+                return this._duration;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        delay : {
+            get : function() {
+                return this._delay;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {EasingFunction}
+         * @readonly
+         */
+        easingFunction : {
+            get : function() {
+                return this._easingFunction;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Function}
+         * @readonly
+         */
+        update : {
+            get : function() {
+                return this._update;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Animation.prototype
+         *
+         * @type {Function}
+         * @readonly
+         */
+        complete : {
+            get : function() {
+                return this._complete;
+            }
+        },
+
+        /**
+         * @memberof Animation.prototype
+         *
+         * @private
+         */
+        tween : {
+            get : function() {
+                return this._tween;
+            }
+        }
+    });
+
+    /**
+     * Cancels the animation calling the {@link Animation#cancel} callback if one exists.  This
+     * has no effect if the animation finished or was already canceled.
+     */
+    Animation.prototype.cancelAnimation = function() {
+        this._animations.remove(this);
+    };
+
+    /**
      * DOC_TBA
      *
      * @alias AnimationCollection
@@ -55,35 +202,27 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.startValue) || !defined(options.stopValue)) {
+            throw new DeveloperError('options.startValue and options.stopValue are required.');
+        }
+
         if (!defined(options.duration) || options.duration < 0.0) {
             throw new DeveloperError('options.duration is required and must be positive.');
         }
         //>>includeEnd('debug');
 
-        var that = this;
-
         if ((options.duration === 0.0) && defined(options.complete)) {
             options.complete();
-
-            /**
-             * DOC_TBA
-             */
-            return {
-                cancelAnimation : function() {
-                },
-                _needsStart : true,
-                _tween : undefined,
-                _cancel : undefined
-            };
+            return new Animation(this);
         }
 
         var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
-        var value = options.startValue;               // don't clone so value can update without an update function
+        var value = options.startValue;
         var tween = new Tween.Tween(value);
-        tween.to(clone(options.stopValue), duration); // clone so caller can't change stop value during animation
+        tween.to(clone(options.stopValue), duration);
         tween.delay(delay);
         tween.easing(easingFunction);
         if (defined(options.update)) {
@@ -97,14 +236,7 @@ define([
         /**
          * DOC_TBA
          */
-        var animation = {
-            cancelAnimation : function() {
-                that.remove(this);
-            },
-            _needsStart : true,
-            _tween : tween,
-            _cancel : options.cancel
-        };
+        var animation = new Animation(this, tween, options.startValue, options.stopValue, duration, delay, easingFunction, options.update, options.complete, options.cancel);
         this._animations.push(animation);
         return animation;
     };
@@ -242,9 +374,9 @@ define([
 
         var index = this._animations.indexOf(animation);
         if (index !== -1) {
-            animation._tween.stop();
-            if (defined(animation._cancel)) {
-                animation._cancel();
+            animation.tween.stop();
+            if (defined(animation.cancel)) {
+                animation.cancel();
             }
             this._animations.splice(index, 1);
             return true;
@@ -261,9 +393,9 @@ define([
 
         for (var i = 0; i < animations.length; ++i) {
             var animation = animations[i];
-            animation._tween.stop();
-            if (defined(animation._cancel)) {
-                animation._cancel();
+            animation.tween.stop();
+            if (defined(animation.cancel)) {
+                animation.cancel();
             }
         }
         animations.length = 0;
@@ -292,17 +424,17 @@ define([
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.update = function() {
+    AnimationCollection.prototype.update = function(time) {
         var animations = this._animations;
 
         var i = 0;
-        var time = getTimestamp();
+        time = defaultValue(time, getTimestamp());
         while (i < animations.length) {
             var animation = animations[i];
-            var tween = animation._tween;
+            var tween = animation.tween;
 
-            if (animation._needsStart) {
-                animation._needsStart = false;
+            if (animation.needsStart) {
+                animation.needsStart = false;
                 tween.start(time);
             } else {
                 if (tween.update(time)) {
