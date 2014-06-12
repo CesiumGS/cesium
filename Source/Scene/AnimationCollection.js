@@ -71,6 +71,7 @@ define([
             return {
                 cancelAnimation : function() {
                 },
+                _needsStart : true,
                 _tween : undefined,
                 _cancel : undefined
             };
@@ -80,9 +81,9 @@ define([
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
-        var value = clone(options.startValue);
+        var value = options.startValue;               // don't clone so value can update without an update function
         var tween = new Tween.Tween(value);
-        tween.to(clone(options.stopValue), duration);
+        tween.to(clone(options.stopValue), duration); // clone so caller can't change stop value during animation
         tween.delay(delay);
         tween.easing(easingFunction);
         if (defined(options.update)) {
@@ -93,9 +94,6 @@ define([
         tween.onComplete(defaultValue(options.complete, null));
         tween.repeat(defaultValue(options._repeat, 0.0));
 
-        // start then stop to remove the tween from the global array
-        tween.start().stop();
-
         /**
          * DOC_TBA
          */
@@ -103,6 +101,7 @@ define([
             cancelAnimation : function() {
                 that.remove(this);
             },
+            _needsStart : true,
             _tween : tween,
             _cancel : options.cancel
         };
@@ -243,6 +242,7 @@ define([
 
         var index = this._animations.indexOf(animation);
         if (index !== -1) {
+            animation._tween.stop();
             if (defined(animation._cancel)) {
                 animation._cancel();
             }
@@ -261,6 +261,7 @@ define([
 
         for (var i = 0; i < animations.length; ++i) {
             var animation = animations[i];
+            animation._tween.stop();
             if (defined(animation._cancel)) {
                 animation._cancel();
             }
@@ -297,10 +298,19 @@ define([
         var i = 0;
         var time = getTimestamp();
         while (i < animations.length) {
-            if (animations[i]._tween.update(time)) {
-                i++;
+            var animation = animations[i];
+            var tween = animation._tween;
+
+            if (animation._needsStart) {
+                animation._needsStart = false;
+                tween.start(time);
             } else {
-                animations.splice(i, 1);
+                if (tween.update(time)) {
+                    i++;
+                } else {
+                    tween.stop();
+                    animations.splice(i, 1);
+                }
             }
         }
     };
