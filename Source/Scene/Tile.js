@@ -314,7 +314,7 @@ define([
         Cartesian3.unpack(vertices, index * 6, result);
         Cartesian3.add(tile.center, result, result);
 
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if (defined(frameState) && frameState.mode !== SceneMode.SCENE3D) {
             var projection = frameState.mapProjection;
             var ellipsoid = projection.ellipsoid;
             var positionCart = ellipsoid.cartesianToCartographic(result);
@@ -331,7 +331,7 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchResult = new Cartesian3();
 
-    Tile.prototype.pick = function(ray, frameState, result) {
+    Tile.prototype.pick = function(ray, frameState, cullBackFaces, result) {
         var terrain = this.pickTerrain;
         if (!defined(terrain)) {
             return undefined;
@@ -355,15 +355,7 @@ define([
             var v1 = getPosition(this, frameState, vertices, i1, scratchV1);
             var v2 = getPosition(this, frameState, vertices, i2, scratchV2);
 
-            var intersection;
-            if (Cartesian3.magnitude(ray.direction) > 1.0) {
-                var p0 = ray.origin;
-                var p1 = Cartesian3.add(p0, ray.direction, scratchCartesian);
-                intersection = IntersectionTests.lineSegmentTriangle(p0, p1, v0, v1, v2, true, scratchResult);
-            } else {
-                intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, true, scratchResult);
-            }
-
+            var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {
                 return Cartesian3.clone(intersection, result);
             }

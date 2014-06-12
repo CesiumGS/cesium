@@ -442,116 +442,6 @@ define([
         }
     }
 
-    var adjustForTerrainRay = new Ray();
-    var adjustForTerrainCartesian3 = new Cartesian3();
-
-    function adjustForTerrain(controller, frameState, distance, direction) {
-        var mode = frameState.mode;
-        if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
-            return distance;
-        }
-
-        var globe = controller._globe;
-        if (!defined(globe)) {
-            return distance;
-        }
-
-        var camera = controller._camera;
-        var height;
-        if (mode === SceneMode.SCENE3D) {
-            height = Cartesian3.magnitude(camera.positionWC) - globe.ellipsoid.maximumRadius;
-        } else {
-            height = camera.position.z;
-        }
-
-        if (height > controller.minimumCollisionTerrainHeight) {
-            return distance;
-        }
-
-        var ray = adjustForTerrainRay;
-        Cartesian3.clone(camera.positionWC, ray.origin);
-        if (distance < 0.0) {
-            direction = Cartesian3.negate(direction, ray.direction);
-        } else {
-            direction = Cartesian3.clone(direction, ray.direction);
-        }
-
-        if (mode !== SceneMode.SCENE3D) {
-            Cartesian3.fromElements(direction.z, direction.x, direction.y, direction);
-        }
-
-        var intersection = globe.intersect(ray, frameState, adjustForTerrainCartesian3);
-        if (!defined(intersection)) {
-            return distance;
-        }
-
-        var dist = Cartesian3.distance(ray.origin, intersection) - controller.minimumZoomDistance;
-        if (dist <= 0.0 || distance === 0.0) {
-            return 0.0;
-        }
-
-        var ratio = CesiumMath.clamp(dist / Math.abs(distance), 0.0, 1.0);
-        return distance * ratio;
-    }
-
-    var scratchAdjustForTerrainCart = new Cartographic();
-    var scratchAdjustForTerrainCenter = new Cartesian3();
-    var scratchAdjustForTerrainAxis = new Cartesian3();
-    var scratchQuaternion = new Quaternion();
-    var scratchRotation = new Matrix3();
-    var scratchAdjustForTerrainStart = new Cartesian3();
-    var scratchAdjustForTerrainStop = new Cartesian3();
-    var scratchRay = new Ray();
-
-    function adjustRotateForTerrain(controller, frameState, center, radius, axis, angle, globeOverride) {
-        var mode = frameState.mode;
-        if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
-            return angle;
-        }
-
-        var globe = defaultValue(globeOverride, controller._globe);
-        if (!defined(globe)) {
-            return angle;
-        }
-
-        var camera = controller._camera;
-        var height;
-        if (mode === SceneMode.SCENE3D) {
-            height = Cartesian3.magnitude(camera.positionWC) - globe.ellipsoid.maximumRadius;
-        } else {
-            height = camera.position.z;
-        }
-
-        if (height > controller.minimumCollisionTerrainHeight) {
-            return angle;
-        }
-
-        if (mode !== SceneMode.SCENE3D) {
-            var cart = frameState.mapProjection.ellipsoid.cartesianToCartographic(center, scratchAdjustForTerrainCart);
-            center = frameState.mapProjection.project(cart, scratchAdjustForTerrainCenter);
-            center = Cartesian3.fromElements(center.z, center.x, center.y, center);
-            axis = Cartesian3.fromElements(axis.z, axis.x, axis.y, scratchAdjustForTerrainAxis);
-        }
-
-        var start = Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart);
-        var stop = Quaternion.rotateVector(Quaternion.fromAxisAngle(axis, angle, scratchQuaternion), start, scratchAdjustForTerrainStop);
-
-        var ray = scratchRay;
-        Cartesian3.clone(camera.positionWC, ray.origin);
-        Cartesian3.subtract(stop, start, ray.direction);
-
-        var intersection = globe.intersect(ray, frameState, adjustForTerrainCartesian3);
-        if (!defined(intersection)) {
-            return angle;
-        }
-
-        var startDirection = Cartesian3.normalize(Cartesian3.subtract(camera.positionWC, center, scratchAdjustForTerrainStart), scratchAdjustForTerrainStart);
-        var endDirection = Cartesian3.normalize(Cartesian3.subtract(intersection, center, scratchAdjustForTerrainStop), scratchAdjustForTerrainStop);
-        var newAngle = CesiumMath.acosClamped(Cartesian3.dot(startDirection, endDirection));
-        newAngle = CesiumMath.sign(angle) * CesiumMath.clamp(newAngle - controller.minimumZoomDistance * 100.0 / radius, 0.0, Math.abs(angle));
-        return newAngle;
-    }
-
     function handleZoom(object, startPosition, movement, frameState, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
@@ -586,7 +476,6 @@ define([
             distance = distanceMeasure - maxHeight;
         }
 
-        distance = adjustForTerrain(object, frameState, distance, object._camera.direction);
         object._camera.zoomIn(distance);
     }
 
@@ -750,8 +639,6 @@ define([
         var mag = Cartesian3.magnitude(diff);
         if (mag > CesiumMath.EPSILON6) {
             Cartesian3.normalize(diff, diff);
-
-            mag = adjustForTerrain(controller, frameState, mag, diff);
             camera.move(diff, mag);
         }
     }
@@ -835,12 +722,11 @@ define([
 
         var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, ellipsoid, rotateCVVerticalTransform);
 
-        var globeOverride = controller._globe;
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var constrainedAxis = Cartesian3.UNIT_Z;
-        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, undefined, false, true, globeOverride);
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, undefined, false, true);
 
         var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
         if (Cartesian3.dot(camera.right, tangent) < 0.0) {
@@ -852,11 +738,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false, globeOverride);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false, globeOverride);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, undefined, true, false);
         }
 
         controller.globe = oldGlobe;
@@ -946,7 +832,7 @@ define([
     var rotate3DNegateScratch = new Cartesian3();
     var rotate3DInverseMatrixScratch = new Matrix4();
 
-    function rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, rotateOnlyVertical, rotateOnlyHorizontal, globeOverride) {
+    function rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, rotateOnlyVertical, rotateOnlyHorizontal) {
         rotateOnlyVertical = defaultValue(rotateOnlyVertical, false);
         rotateOnlyHorizontal = defaultValue(rotateOnlyHorizontal, false);
 
@@ -979,12 +865,10 @@ define([
         var radius = Cartesian3.distance(camera.position, center);
 
         if (!rotateOnlyVertical) {
-            deltaPhi = adjustRotateForTerrain(controller, frameState, center, radius, camera.up, deltaPhi, globeOverride);
             camera.rotateRight(deltaPhi, transform);
         }
 
         if (!rotateOnlyHorizontal) {
-            deltaTheta = adjustRotateForTerrain(controller, frameState, center, radius, camera.right, deltaTheta, globeOverride);
             camera.rotateUp(deltaTheta, transform);
         }
 
@@ -1034,7 +918,6 @@ define([
 
             if (dot < 1.0 && !Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = Math.acos(dot);
-                angle = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, axis, angle);
                 camera.rotate(axis, angle);
             }
         } else {
@@ -1094,10 +977,7 @@ define([
                 deltaTheta = startTheta - endTheta;
             }
 
-            deltaPhi = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.up, deltaPhi);
             camera.rotateRight(deltaPhi);
-
-            deltaTheta = adjustRotateForTerrain(controller, frameState, Cartesian3.ZERO, cameraPosMag, camera.right, deltaTheta);
             camera.rotateUp(deltaTheta);
         }
     }
@@ -1185,14 +1065,13 @@ define([
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, tilt3DTransform);
         var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, newEllipsoid, tilt3DVerticalTransform);
 
-        var globeOverride = controller._globe;
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
 
         var angle = (minHeight * 0.25) / Cartesian3.distance(center, camera.position);
         var constrainedAxis = Cartesian3.UNIT_Z;
         var restrictedAngle = CesiumMath.PI_OVER_TWO - angle;
-        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true, globeOverride);
+        rotate3D(controller, startPosition, movement, frameState, transform, constrainedAxis, restrictedAngle, false, true);
 
         var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2, tilt3DNormal), Cartesian3.normalize(camera.position, tilt3DCartesian3), tilt3DCartesian3);
         if (Cartesian3.dot(camera.right, tangent) < 0.0) {
@@ -1205,11 +1084,11 @@ define([
             var oldConstrainedAxis = camera.constrainedAxis;
             camera.constrainedAxis = undefined;
 
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, globeOverride);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false);
 
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
-            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false, globeOverride);
+            rotate3D(controller, startPosition, movement, frameState, verticalTransform, constrainedAxis, restrictedAngle, true, false);
         }
 
         controller.globe = oldGlobe;
@@ -1267,6 +1146,49 @@ define([
         reactToInput(controller, frameState, controller.enableLook, controller.lookEventTypes, look3D);
     }
 
+    var scratchAdjustHeightCartographic = new Cartographic();
+
+    function adjustHeightForTerrain(controller, frameState) {
+        var mode = frameState.mode;
+        var globe = controller._globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        var camera = controller._camera;
+        var ellipsoid = controller._ellipsoid;
+        var projection = frameState.mapProjection;
+
+        var cartographic = scratchAdjustHeightCartographic;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartesianToCartographic(camera.position, cartographic);
+        } else {
+            projection.unproject(camera.position, cartographic);
+        }
+
+        if (cartographic.height > controller.minimumCollisionTerrainHeight) {
+            return;
+        }
+
+        var height = globe.getHeight(cartographic, frameState);
+        if (!defined(height)) {
+            return;
+        }
+
+        height += controller.minimumZoomDistance;
+        if (cartographic.height >= height) {
+            return;
+        }
+
+        cartographic.height = height;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartographicToCartesian(cartographic, camera.position);
+        } else {
+            projection.project(cartographic, camera.position);
+        }
+    }
+
     /**
      * @private
      */
@@ -1281,6 +1203,8 @@ define([
             this._horizontalRotationAxis = undefined;
             update3D(this, frameState);
         }
+
+        adjustHeightForTerrain(this, frameState);
 
         this._aggregator.reset();
     };

@@ -294,35 +294,7 @@ define([
     });
 
     /**
-     * Find an intersection between a ray or a line segment and the globe surface.
-     * <p>
-     * If the rays direction has a magnitude greater than one, then the ray is assumed to be a line
-     * segment with end points at the ray origin and the ray origin plus the ray direction.
-     * </p>
-     *
-     * @memberof Globe
-     *
-     * @param {Ray} ray The ray or line segment to test for intersection.
-     * @param {FrameState} frameState The current frame state.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3|undefined} The intersection or <code>undefined</code> if none was found.
-     *
-     * @example
-     * // find intersection of ray through a pixel and the globe
-     * var ray = scene.camera.getPickRay(windowCoordinates);
-     * var intersection = globe.rayIntersections(ray, scene.frameState);
-     */
-    Globe.prototype.intersect = function(ray, frameState, result) {
-        return this._surface.intersect(ray, frameState, result);
-    };
-
-    /**
      * Find an intersection between a ray and the globe surface that was rendered.
-     * <p>
-     * Prefer this method over {@link Globe#intersect} when finding an intersection with the section of
-     * the globe that is rendered for better performance
-     * </p>
-     * @memberof Globe
      *
      * @param {Ray} ray The ray to test for intersection.
      * @param {FrameState} frameState The current frame state.
@@ -336,6 +308,16 @@ define([
      */
     Globe.prototype.pick = function(ray, frameState, result) {
         return this._surface.pick(ray, frameState, result);
+    };
+
+    /**
+     * Get the height of the surface at a given cartographic.
+     *
+     * @param {Cartographic} cartographic The cartographic for which to find the height.
+     * @returns {Number|undefined} The height of the cartographic or undefined if it could not be found.
+     */
+    Globe.prototype.getHeight = function(cartographic) {
+        return this._surface.getHeight(cartographic);
     };
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
