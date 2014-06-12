@@ -1,34 +1,34 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './defaultValue',
         './BoundingSphere',
         './Cartesian3',
-        './PolylinePipeline',
-        './VertexFormat',
+        './Color',
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './Color'
+        './IndexDatatype',
+        './PolylinePipeline',
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        defaultValue,
         BoundingSphere,
         Cartesian3,
-        PolylinePipeline,
-        VertexFormat,
+        Color,
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        Color) {
+        IndexDatatype,
+        PolylinePipeline,
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
     /**
@@ -39,9 +39,9 @@ define([
      * @alias PolylineGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
-     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -52,19 +52,18 @@ define([
      *
      * @example
      * // A polyline with two connected line segments
-     * var polyline = new PolylineGeometry({
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *     Cartographic.fromDegrees(0.0, 0.0),
-     *     Cartographic.fromDegrees(5.0, 0.0),
-     *     Cartographic.fromDegrees(5.0, 5.0)
+     * var polyline = new Cesium.PolylineGeometry({
+     *   positions : Cesium.Cartesian3.fromDegreesArray([
+     *     0.0, 0.0,
+     *     5.0, 0.0,
+     *     5.0, 5.0
      *   ]),
      *   width : 10.0
      * });
-     * var geometry = PolylineGeometry.createGeometry(polyline);
+     * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
      */
     var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         var positions = options.positions;
         var colors = options.colors;
         var s = options.s;
@@ -72,17 +71,17 @@ define([
         var width = defaultValue(options.width, 1.0);
         var perVertex = defaultValue(options.colorsPerVertex, false);
 
+        //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-
         if (width < 1.0) {
             throw new DeveloperError('width must be greater than or equal to one.');
         }
-
         if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
             throw new DeveloperError('colors has an invalid length.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._colors = colors;

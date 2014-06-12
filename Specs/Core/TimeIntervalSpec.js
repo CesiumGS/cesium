@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/TimeInterval',
-         'Core/JulianDate'
-     ], function(
-         TimeInterval,
-         JulianDate) {
+        'Core/TimeInterval',
+        'Core/JulianDate'
+    ], function(
+        TimeInterval,
+        JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -41,13 +41,13 @@ defineSuite([
     it('throws when constructing with an undefined start', function() {
         expect(function() {
             return new TimeInterval(undefined, new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructing with an undefined stop', function() {
         expect(function() {
             return new TimeInterval(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('IsEmpty is false for a typical interval', function() {

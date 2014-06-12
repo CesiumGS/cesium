@@ -1,26 +1,22 @@
 /*global define*/
 define([
-        './defined',
-        './Cartesian2',
         './Cartesian3',
         './CornerType',
-        './EllipsoidTangentPlane',
+        './defined',
+        './Math',
+        './Matrix3',
         './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
-        './Matrix3',
-        './Quaternion',
-        './Math'
+        './Quaternion'
     ], function(
-        defined,
-        Cartesian2,
         Cartesian3,
         CornerType,
-        EllipsoidTangentPlane,
+        defined,
+        CesiumMath,
+        Matrix3,
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
-        Matrix3,
-        Quaternion,
-        CesiumMath) {
+        Quaternion) {
     "use strict";
 
     /**
@@ -48,9 +44,9 @@ define([
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
-    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
+    function computeRoundCorner(cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
         var angle = Cartesian3.angleBetween(Cartesian3.subtract(startPoint, cornerPoint, scratch1), Cartesian3.subtract(endPoint, cornerPoint, scratch2));
-        var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
+        var granularity = (cornerType === CornerType.BEVELED) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
         var size = granularity * 3;
         var array = new Array(size);
@@ -68,7 +64,7 @@ define([
 
         var index = 0;
         startPoint = Cartesian3.clone(startPoint, scratch1);
-        for ( var i = 0; i < granularity; i++) {
+        for (var i = 0; i < granularity; i++) {
             startPoint = Matrix3.multiplyByVector(m, startPoint, startPoint);
             array[index++] = startPoint.x;
             array[index++] = startPoint.y;
@@ -78,7 +74,7 @@ define([
         return array;
     }
 
-    function addEndCaps (calculatedPositions, width, ellipsoid) {
+    function addEndCaps(calculatedPositions) {
         var cornerPoint = cartesian1;
         var startPoint = cartesian2;
         var endPoint = cartesian3;
@@ -100,7 +96,7 @@ define([
         return [firstEndCap, lastEndCap];
     }
 
-    function computeMiteredCorner (position, leftCornerDirection, lastPoint, leftIsOutside) {
+    function computeMiteredCorner(position, leftCornerDirection, lastPoint, leftIsOutside) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
@@ -111,7 +107,7 @@ define([
         return [cornerPoint.x, cornerPoint.y, cornerPoint.z, lastPoint.x, lastPoint.y, lastPoint.z];
     }
 
-    function addShiftedPositions (positions, left, scalar, calculatedPositions) {
+    function addShiftedPositions(positions, left, scalar, calculatedPositions) {
         var rightPositions = new Array(positions.length);
         var leftPositions = new Array(positions.length);
         var scaledLeft = Cartesian3.multiplyByScalar(left, scalar, scratch1);
@@ -139,7 +135,7 @@ define([
     /**
      * @private
      */
-    CorridorGeometryLibrary.addAttribute = function (attribute, value, front, back) {
+    CorridorGeometryLibrary.addAttribute = function(attribute, value, front, back) {
         var x = value.x;
         var y = value.y;
         var z = value.z;
@@ -156,7 +152,7 @@ define([
     };
 
     function scaleToSurface(positions, ellipsoid) {
-        for(var i = 0; i < positions.length; i++) {
+        for (var i = 0; i < positions.length; i++) {
             positions[i] = ellipsoid.scaleToGeodeticSurface(positions[i], positions[i]);
         }
         return positions;
@@ -165,7 +161,7 @@ define([
     /**
      * @private
      */
-    CorridorGeometryLibrary.computePositions = function (params) {
+    CorridorGeometryLibrary.computePositions = function(params) {
         var granularity = params.granularity;
         var positions = params.positions;
         var ellipsoid = params.ellipsoid;
@@ -232,10 +228,14 @@ define([
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     leftPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width * 2, leftPos), leftPos);
                     previousPos = Cartesian3.add(rightPos, Cartesian3.multiplyByScalar(left, width, previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside)});
+                    if (cornerType === CornerType.ROUNDED || cornerType === CornerType.BEVELED) {
+                        corners.push({
+                            leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside)
+                        });
                     } else {
-                        corners.push({leftPositions : computeMiteredCorner(position, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside)});
+                        corners.push({
+                            leftPositions : computeMiteredCorner(position, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside)
+                        });
                     }
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
@@ -253,10 +253,14 @@ define([
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width * 2, rightPos), rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, Cartesian3.negate(Cartesian3.multiplyByScalar(left, width, previousPos), previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside)});
+                    if (cornerType === CornerType.ROUNDED || cornerType === CornerType.BEVELED) {
+                        corners.push({
+                            rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside)
+                        });
                     } else {
-                        corners.push({rightPositions : computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside)});
+                        corners.push({
+                            rightPositions : computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside)
+                        });
                     }
                 }
                 backward = Cartesian3.negate(forward, backward);
@@ -275,16 +279,16 @@ define([
         }
 
         var endPositions;
-        if (cornerType.value === CornerType.ROUNDED.value) {
-            endPositions = addEndCaps(calculatedPositions, width, ellipsoid);
+        if (cornerType === CornerType.ROUNDED) {
+            endPositions = addEndCaps(calculatedPositions);
         }
 
         return {
-            positions: calculatedPositions,
-            corners: corners,
-            lefts: calculatedLefts,
-            normals: calculatedNormals,
-            endPositions: endPositions
+            positions : calculatedPositions,
+            corners : corners,
+            lefts : calculatedLefts,
+            normals : calculatedNormals,
+            endPositions : endPositions
         };
     };
 

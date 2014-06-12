@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Tipsify'
-     ], function(
-         Tipsify) {
+        'Core/Tipsify'
+    ], function(
+        Tipsify) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -20,10 +20,10 @@ defineSuite([
 
     it('throws when calculating ACMR (1 of 4)', function() {
         expect(function() {
-            Tipsify.calculateACMR({indices : null,
+            Tipsify.calculateACMR({indices : undefined,
                                    maximumIndex : 1,
                                    cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when calculating ACMR (2 of 4)', function() {
@@ -31,7 +31,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : [1, 2, 3, 4],
                                    maximumIndex : 1,
                                    cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when calculating ACMR (3 of 4)', function() {
@@ -39,7 +39,7 @@ defineSuite([
             Tipsify.calculateACMR({indices : [0, 1, 2],
                                    maximumIndex : -1,
                                    cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when calculating ACMR (4 of 4)', function() {
@@ -47,15 +47,15 @@ defineSuite([
             Tipsify.calculateACMR({indices : [0, 1, 2],
                                    maximumIndex : 2,
                                    cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (1 of 5)', function() {
         expect(function() {
-            Tipsify.tipsify({indices : null,
+            Tipsify.tipsify({indices : undefined,
                              maximumIndex : 1,
                              cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (2 of 5)', function() {
@@ -63,7 +63,7 @@ defineSuite([
             Tipsify.tipsify({indices : [1, 2, 3, 4],
                              maximumIndex : 1,
                              cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (3 of 5)', function () {
@@ -71,7 +71,7 @@ defineSuite([
             Tipsify.tipsify({indices : [1, 2, 3],
                              maximumIndex : -1,
                              cacheSize : 3});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (4 of 5)', function() {
@@ -79,13 +79,13 @@ defineSuite([
             Tipsify.tipsify({indices : [0, 1, 2],
                              maximumIndex : 2,
                              cacheSize : 2});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when executing Tipsify (5 of 5)', function() {
         expect(function() {
             Tipsify.tipsify();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can lower ACMR using the Tipsify algorithm', function() {

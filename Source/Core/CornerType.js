@@ -1,5 +1,5 @@
 /*global define*/
-define(['../Core/Enumeration'], function(Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -12,11 +12,10 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * | |
          *
          * Corner is circular.
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 0
          */
-        ROUNDED : new Enumeration(0, 'ROUNDED'),
+        ROUNDED : 0,
 
         /**
          *  ______
@@ -24,11 +23,10 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * | |
          *
          * Corner point is the intersection of adjacent edges.
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 1
          */
-        MITERED : new Enumeration(1, 'MITERED'),
+        MITERED : 1,
 
         /**
          *   ___
@@ -36,11 +34,10 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * | |
          *
          * Corner is clipped.
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
-         * @default 2
          */
-        BEVELED : new Enumeration(2, 'BEVELED')
+        BEVELED : 2
     };
 
     return CornerType;

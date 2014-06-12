@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/GeometryInstanceAttribute',
-         'Core/ComponentDatatype'
-     ], function(
-         GeometryInstanceAttribute,
-         ComponentDatatype) {
+        'Core/GeometryInstanceAttribute',
+        'Core/ComponentDatatype'
+    ], function(
+        GeometryInstanceAttribute,
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -28,7 +28,7 @@ defineSuite([
                 componentsPerAttribute : 4,
                 value : new Uint8Array([255, 255, 0, 255])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without componentsPerAttribute', function() {
@@ -37,7 +37,7 @@ defineSuite([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 value : new Uint8Array([255, 255, 0, 255])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws when componentsPerAttribute is less than 1 or greater than 4', function() {
@@ -47,7 +47,7 @@ defineSuite([
                 componentsPerAttribute : 7,
                 value : new Uint8Array([255, 255, 0, 255])
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without values', function() {
@@ -56,7 +56,7 @@ defineSuite([
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ColorGeometryInstanceAttribute',
-         'Core/Color',
-         'Core/ComponentDatatype'
-     ], function(
-         ColorGeometryInstanceAttribute,
-         Color,
-         ComponentDatatype) {
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/Color',
+        'Core/ComponentDatatype'
+    ], function(
+        ColorGeometryInstanceAttribute,
+        Color,
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -34,7 +34,7 @@ defineSuite([
     it('fromColor throws without color', function() {
         expect(function() {
             ColorGeometryInstanceAttribute.fromColor();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('toValue', function() {
@@ -55,7 +55,7 @@ defineSuite([
     it('toValue throws without a color', function() {
         expect(function() {
             ColorGeometryInstanceAttribute.toValue();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

@@ -2,16 +2,16 @@
 define([
         './defaultValue',
         './defined',
-        './freezeObject',
         './DeveloperError',
         './FeatureDetection',
+        './freezeObject',
         './Math'
     ], function(
         defaultValue,
         defined,
-        freezeObject,
         DeveloperError,
         FeatureDetection,
+        freezeObject,
         CesiumMath) {
     "use strict";
 
@@ -75,6 +75,33 @@ define([
     };
 
     /**
+     * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,
+     * and <code>w</code> map to <code>red</code>, <code>green</code>, <code>blue</code>, and <code>alpha</code>, respectively.
+     * @memberof Color
+     *
+     * @param {Cartesian4} cartesian The source cartesian.
+     * @param {Color} [result] The object onto which to store the result.
+     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+     */
+    Color.fromCartesian4 = function(cartesian, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            return new Color(cartesian.x, cartesian.y, cartesian.z, cartesian.w);
+        }
+
+        result.red = cartesian.x;
+        result.green = cartesian.y;
+        result.blue = cartesian.z;
+        result.alpha = cartesian.w;
+        return result;
+    };
+
+    /**
      * Creates a new Color specified using red, green, blue, and alpha values
      * that are in the range of 0 to 255, converting them internally to a range of 0.0 to 1.0.
      * @memberof Color
@@ -112,7 +139,7 @@ define([
      * @returns {Color} A new color instance.
      *
      * @example
-     * var color = Color.fromRgba(0x67ADDFFF);
+     * var color = Cesium.Color.fromRgba(0x67ADDFFF);
      *
      * @see Color#toRgba
      */
@@ -132,7 +159,7 @@ define([
      * @param {Number} [alpha=1.0] The alpha component 0...1
      * @returns {Color} The color object.
      *
-     * @see <a href="http://www.w3.org/TR/css3-color/#hsl-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#hsl-color|CSS color values}
      */
     Color.fromHsl = function(hue, saturation, lightness, alpha) {
         hue = defaultValue(hue, 0.0) % 1.0;
@@ -190,17 +217,17 @@ define([
      *
      * @example
      * //Create a completely random color
-     * var color = Color.fromRandom();
+     * var color = Cesium.Color.fromRandom();
      *
      * //Create a random shade of yellow.
-     * var color = Color.fromRandom({
+     * var color = Cesium.Color.fromRandom({
      *     red : 1.0,
      *     green : 1.0,
      *     alpha : 1.0
      * });
      *
      * //Create a random bright color.
-     * var color = Color.fromRandom({
+     * var color = Cesium.Color.fromRandom({
      *     minimumRed : 0.75,
      *     minimumGreen : 0.75,
      *     minimumBlue : 0.75,
@@ -215,9 +242,12 @@ define([
             var minimumRed = defaultValue(options.minimumRed, 0);
             var maximumRed = defaultValue(options.maximumRed, 1.0);
 
+            //>>includeStart('debug', pragmas.debug);
             if (minimumRed > maximumRed) {
                 throw new DeveloperError("minimumRed must be less than or equal to maximumRed");
             }
+            //>>includeEnd('debug');
+
             red = minimumRed + (CesiumMath.nextRandomNumber() * (maximumRed - minimumRed));
         }
 
@@ -226,9 +256,12 @@ define([
             var minimumGreen = defaultValue(options.minimumGreen, 0);
             var maximumGreen = defaultValue(options.maximumGreen, 1.0);
 
+            //>>includeStart('debug', pragmas.debug);
             if (minimumGreen > maximumGreen) {
                 throw new DeveloperError("minimumGreen must be less than or equal to maximumGreen");
             }
+            //>>includeEnd('debug');
+
             green = minimumGreen + (CesiumMath.nextRandomNumber() * (maximumGreen - minimumGreen));
         }
 
@@ -237,9 +270,12 @@ define([
             var minimumBlue = defaultValue(options.minimumBlue, 0);
             var maximumBlue = defaultValue(options.maximumBlue, 1.0);
 
+            //>>includeStart('debug', pragmas.debug);
             if (minimumBlue > maximumBlue) {
                 throw new DeveloperError("minimumBlue must be less than or equal to maximumBlue");
             }
+            //>>includeEnd('debug');
+
             blue = minimumBlue + (CesiumMath.nextRandomNumber() * (maximumBlue - minimumBlue));
         }
 
@@ -248,9 +284,12 @@ define([
             var minimumAlpha = defaultValue(options.minimumAlpha, 0);
             var maximumAlpha = defaultValue(options.maximumAlpha, 1.0);
 
+            //>>includeStart('debug', pragmas.debug);
             if (minimumAlpha > maximumAlpha) {
                 throw new DeveloperError("minimumAlpha must be less than or equal to maximumAlpha");
             }
+            //>>includeEnd('debug');
+
             alpha = minimumAlpha + (CesiumMath.nextRandomNumber() * (maximumAlpha - minimumAlpha));
         }
 
@@ -281,18 +320,18 @@ define([
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
      *
-     * @exception {DeveloperError} color is required.
-     *
      * @example
-     * var cesiumBlue = Color.fromCssColorString('#67ADDF');
-     * var green = Color.fromCssColorString('green');
+     * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
+     * var green = Cesium.Color.fromCssColorString('green');
      *
-     * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
             throw new DeveloperError('color is required');
         }
+        //>>includeEnd('debug');
 
         var namedColor = Color[color.toUpperCase()];
         if (defined(namedColor)) {
@@ -334,7 +373,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Color.packedLength = 4;
 
@@ -343,23 +382,20 @@ define([
      * @memberof Color
      *
      * @param {Color} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
-     *
-     * @exception {DeveloperError} value is required.
-     * @exception {DeveloperError} array is required.
      */
     Color.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
             throw new DeveloperError('value is required');
         }
-
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
-
         array[startingIndex++] = value.red;
         array[startingIndex++] = value.green;
         array[startingIndex++] = value.blue;
@@ -370,19 +406,18 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Color
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
-     *
-     * @exception {DeveloperError} array is required.
      */
     Color.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required');
         }
+        //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
-
         if (!defined(result)) {
             result = new Color();
         }
@@ -399,7 +434,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.byteToFloat = function(number) {
         return number / 255.0;
@@ -411,7 +446,7 @@ define([
      * @memberof Color
      *
      * @param {Number} number The number to be converted.
-     * @returns {number} The converted number.
+     * @returns {Number} The converted number.
      */
     Color.floatToByte = function(number) {
         return number === 1.0 ? 255.0 : (number * 256.0) | 0;
@@ -511,7 +546,7 @@ define([
      * @memberof Color
      *
      * @returns {String} The CSS equivalent of this color.
-     * @see <a href="http://www.w3.org/TR/css3-color/#rgba-color">CSS RGB or RGBA color values</a>
+     * @see {@link http://www.w3.org/TR/css3-color/#rgba-color|CSS RGB or RGBA color values}
      */
     Color.prototype.toCssColorString = function() {
         var red = Color.floatToByte(this.red);
@@ -528,8 +563,8 @@ define([
      * that are in the range of 0 to 255.
      * @memberof Color
      *
-     * @param {Array} [result] The array to store the result in, if undefined a new instance will be created.
-     * @returns {Array} The modified result parameter or a new instance if result was undefined.
+     * @param {Number[]} [result] The array to store the result in, if undefined a new instance will be created.
+     * @returns {Number[]} The modified result parameter or a new instance if result was undefined.
      */
     Color.prototype.toBytes = function(result) {
         var red = Color.floatToByte(this.red);
@@ -556,7 +591,7 @@ define([
      * @returns {Number} A single numeric unsigned 32-bit RGBA value.
      *
      * @example
-     * var rgba = Color.BLUE.toRgba();
+     * var rgba = Cesium.Color.BLUE.toRgba();
      *
      * @see Color.fromRgba
      */

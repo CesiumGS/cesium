@@ -22,5 +22,5 @@ void main()
     // Here, we clamp the depth in the vertex shader to avoid being overwritten; however, this creates
     // artifacts since some fragments can be alpha blended twice.  This is solved by only rendering
     // the ellipsoid in the closest frustum to the viewer.
-    gl_Position.z = clamp(gl_Position.z, gl_DepthRange.near, gl_DepthRange.far);
+    gl_Position.z = clamp(gl_Position.z, czm_depthRange.near, czm_depthRange.far);
 }

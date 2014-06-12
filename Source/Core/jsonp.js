@@ -1,14 +1,14 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
-        './DeveloperError',
-        '../ThirdParty/when'
+        './DeveloperError'
     ], function(
+        when,
         defaultValue,
         defined,
-        DeveloperError,
-        when) {
+        DeveloperError) {
     "use strict";
 
     function pushQueryParameter(array, name, value) {
@@ -27,20 +27,22 @@ define([
      *
      * @returns {Object} a promise that will resolve to the requested data when loaded.
      *
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a data asynchronously
-     * jsonp('some/webservice').then(function(data) {
+     * Cesium.jsonp('some/webservice').then(function(data) {
      *     // use the loaded data
-     * }, function() {
+     * }, function(error) {
      *     // an error occurred
      * });
      */
     var jsonp = function(url, options) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

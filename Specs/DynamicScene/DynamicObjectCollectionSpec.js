@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/DynamicObjectCollection',
-         'Core/JulianDate',
-         'Core/Iso8601',
-         'Core/TimeInterval',
-         'Core/TimeIntervalCollection',
-         'DynamicScene/DynamicObject'
-     ], function(
-         DynamicObjectCollection,
-         JulianDate,
-         Iso8601,
-         TimeInterval,
-         TimeIntervalCollection,
-         DynamicObject) {
+        'DynamicScene/DynamicObjectCollection',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/DynamicObject'
+    ], function(
+        DynamicObjectCollection,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        DynamicObject) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -279,14 +279,14 @@ defineSuite([
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.resumeEvents();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws with undefined DynamicObject', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.add(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws for DynamicObject with same id', function() {
@@ -297,34 +297,34 @@ defineSuite([
 
         expect(function() {
             dynamicObjectCollection.add(dynamicObject2);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('remove throws with undefined DynamicObject', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.remove(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removeById throws for undefined id', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.removeById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getOrCreateObject throws if no id specified', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         expect(function() {
             dynamicObjectCollection.getOrCreateObject(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

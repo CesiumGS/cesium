@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Plane',
-         'Core/Cartesian3'
-     ], function(
-         Plane,
-         Cartesian3) {
+        'Core/Plane',
+        'Core/Cartesian3'
+    ], function(
+        Plane,
+        Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -19,13 +19,13 @@ defineSuite([
     it('constructor throws without a normal', function() {
         expect(function() {
             return new Plane(undefined, 0.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without a distance', function() {
         expect(function() {
             return new Plane(Cartesian3.UNIT_X, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructs from a point and a normal', function() {
@@ -50,32 +50,26 @@ defineSuite([
     it('fromPointNormal throws without a point', function() {
         expect(function() {
             return Plane.fromPointNormal(undefined, Cartesian3.UNIT_X);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromPointNormal throws without a normal', function() {
         expect(function() {
             return Plane.fromPointNormal(Cartesian3.UNIT_X, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('gets the distance to a point', function() {
         var plane = new Plane(new Cartesian3(1.0, 2.0, 3.0), 12.34);
         var point = new Cartesian3(4.0, 5.0, 6.0);
 
-        expect(plane.getPointDistance(point)).toEqual(Cartesian3.dot(plane.normal, point) + plane.distance);
+        expect(Plane.getPointDistance(plane, point)).toEqual(Cartesian3.dot(plane.normal, point) + plane.distance);
     });
 
     it('getPointDistance throws without a point', function() {
         var plane = new Plane(Cartesian3.UNIT_X, 0.0);
         expect(function() {
-            return plane.getPointDistance();
-        }).toThrow();
-    });
-
-    it('static getPointDistance throws without a plane', function() {
-        expect(function() {
-            return Plane.getPointDistance(undefined, Cartesian3.UNIT_X);
-        }).toThrow();
+            return Plane.getPointDistance();
+        }).toThrowDeveloperError();
     });
 });

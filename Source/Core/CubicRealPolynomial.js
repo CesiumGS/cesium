@@ -23,13 +23,9 @@ define([
      * @param {Number} c The coefficient of the 1st order monomial.
      * @param {Number} d The coefficient of the 0th order monomial.
      * @returns {Number} The value of the discriminant.
-     *
-     * @exception {DeveloperError} a is a required number.
-     * @exception {DeveloperError} b is a required number.
-     * @exception {DeveloperError} c is a required number.
-     * @exception {DeveloperError} d is a required number.
      */
     CubicRealPolynomial.discriminant = function(a, b, c, d) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -42,6 +38,7 @@ define([
         if (typeof d !== 'number') {
             throw new DeveloperError('d is a required number.');
         }
+        //>>includeEnd('debug');
 
         var a2 = a * a;
         var b2 = b * b;
@@ -165,14 +162,10 @@ define([
      * @param {Number} b The coefficient of the 2nd order monomial.
      * @param {Number} c The coefficient of the 1st order monomial.
      * @param {Number} d The coefficient of the 0th order monomial.
-     * @returns {Array} The real valued roots.
-     *
-     * @exception {DeveloperError} a is a required number.
-     * @exception {DeveloperError} b is a required number.
-     * @exception {DeveloperError} c is a required number.
-     * @exception {DeveloperError} d is a required number.
+     * @returns {Number[]} The real valued roots.
      */
     CubicRealPolynomial.realRoots = function(a, b, c, d) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof a !== 'number') {
             throw new DeveloperError('a is a required number.');
         }
@@ -185,6 +178,7 @@ define([
         if (typeof d !== 'number') {
             throw new DeveloperError('d is a required number.');
         }
+        //>>includeEnd('debug');
 
         var roots;
         var ratio;

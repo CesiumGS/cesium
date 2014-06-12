@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/TimeIntervalCollectionProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             TimeIntervalCollectionProperty,
-             Cartesian3,
-             JulianDate,
-             TimeInterval,
-             TimeIntervalCollection) {
+        'DynamicScene/TimeIntervalCollectionProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection'
+    ], function(
+        TimeIntervalCollectionProperty,
+        Cartesian3,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -18,6 +18,7 @@ defineSuite([
         var property = new TimeIntervalCollectionProperty();
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
+        expect(property.isConstant).toBe(true);
     });
 
     it('works with basic types', function() {
@@ -30,6 +31,7 @@ defineSuite([
 
         expect(property.getValue(interval1.start)).toBe(interval1.data);
         expect(property.getValue(interval2.stop)).toBe(interval2.data);
+        expect(property.isConstant).toBe(false);
     });
 
     it('works with clonable objects', function() {
@@ -71,7 +73,7 @@ defineSuite([
         var property = new TimeIntervalCollectionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works for differing basic type intervals', function() {
@@ -104,5 +106,25 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
         right.intervals.addInterval(interval2);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged event', function() {
+        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+
+        var property = new TimeIntervalCollectionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.removeInterval(interval);
+        expect(listener).toHaveBeenCalledWith(property);
+
+        property.intervals.addInterval(interval);
+        listener.reset();
+        property.intervals.removeAll();
+        expect(listener).toHaveBeenCalledWith(property);
     });
 });

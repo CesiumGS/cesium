@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/binarySearch'], function(binarySearch) {
+defineSuite([
+        'Core/binarySearch'
+    ], function(
+        binarySearch) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -55,18 +58,18 @@ defineSuite(['Core/binarySearch'], function(binarySearch) {
     it('throws an exception if array is missing', function() {
         expect(function() {
             binarySearch(undefined, 1, dummy);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception if itemToFind is missing', function() {
         expect(function() {
             binarySearch([0, 1, 2], undefined, dummy);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception if comparator is missing', function() {
         expect(function() {
             binarySearch([0, 1, 2], 1, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

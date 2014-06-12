@@ -1,34 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidPrimitive',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createCamera',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene',
-         'Specs/pick',
-         'Specs/render',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Matrix4',
-         'Renderer/ClearCommand',
-         'Scene/Material'
-     ], function(
-         EllipsoidPrimitive,
-         createContext,
-         destroyContext,
-         createCamera,
-         createFrameState,
-         createScene,
-         destroyScene,
-         pick,
-         render,
-         Cartesian3,
-         defined,
-         Matrix4,
-         ClearCommand,
-         Material) {
+        'Scene/EllipsoidPrimitive',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/Matrix4',
+        'Renderer/ClearCommand',
+        'Scene/Material',
+        'Specs/createCamera',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        EllipsoidPrimitive,
+        Cartesian3,
+        defined,
+        Matrix4,
+        ClearCommand,
+        Material,
+        createCamera,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -48,7 +48,7 @@ defineSuite([
     beforeEach(function() {
         ellipsoid = new EllipsoidPrimitive();
         frameState = createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z));
-        us = context.getUniformState();
+        us = context.uniformState;
         us.update(context, frameState);
     });
 
@@ -134,19 +134,19 @@ defineSuite([
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
         var scene = createScene();
-        scene.getPrimitives().add(new EllipsoidPrimitive({
+        scene.primitives.add(new EllipsoidPrimitive({
             radii : new Cartesian3(1.0, 1.0, 1.0),
             debugShowBoundingVolume : true
         }));
 
-        var camera = scene.getCamera();
+        var camera = scene.camera;
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
@@ -214,6 +214,6 @@ defineSuite([
 
         expect(function() {
             render(context, frameState, ellipsoid);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

@@ -1,23 +1,23 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/SimplePolylineGeometry',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/PrimitiveType',
-         'Core/Color'
-     ], function(
-         SimplePolylineGeometry,
-         Cartesian3,
-         BoundingSphere,
-         PrimitiveType,
-         Color) {
+        'Core/SimplePolylineGeometry',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/PrimitiveType'
+    ], function(
+        SimplePolylineGeometry,
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        PrimitiveType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor throws with no positions', function() {
         expect(function() {
             return new SimplePolylineGeometry();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with less than two positions', function() {
@@ -25,7 +25,7 @@ defineSuite([
             return new SimplePolylineGeometry({
                 positions : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with invalid number of colors', function() {
@@ -34,7 +34,7 @@ defineSuite([
                 positions : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
                 colors : []
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor computes all vertex attributes', function() {

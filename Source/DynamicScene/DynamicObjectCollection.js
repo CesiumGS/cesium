@@ -1,35 +1,36 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/AssociativeArray',
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/TimeInterval',
-        '../Core/Iso8601',
         '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/Iso8601',
         '../Core/RuntimeError',
+        '../Core/TimeInterval',
         './DynamicObject'
     ], function(
+        AssociativeArray,
         createGuid,
         defined,
         defineProperties,
-        Event,
-        TimeInterval,
-        Iso8601,
         DeveloperError,
+        Event,
+        Iso8601,
         RuntimeError,
+        TimeInterval,
         DynamicObject) {
     "use strict";
 
     function fireChangedEvent(collection) {
         if (collection._suspendCount === 0) {
-            var added = collection._added;
-            var removed = collection._removed;
+            var added = collection._addedObjects;
+            var removed = collection._removedObjects;
             if (added.length !== 0 || removed.length !== 0) {
-                collection._collectionChanged.raiseEvent(collection, added, removed);
-                added.length = 0;
-                removed.length = 0;
-                collection._addedHash = {};
-                collection._removedHash = {};
+                collection._collectionChanged.raiseEvent(collection, added.values, removed.values);
+                added.removeAll();
+                removed.removeAll();
             }
         }
     }
@@ -40,12 +41,9 @@ define(['../Core/createGuid',
      * @constructor
      */
     var DynamicObjectCollection = function() {
-        this._array = [];
-        this._hash = {};
-        this._added = [];
-        this._addedHash = {};
-        this._removed = [];
-        this._removedHash = {};
+        this._objects = new AssociativeArray();
+        this._addedObjects = new AssociativeArray();
+        this._removedObjects = new AssociativeArray();
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
@@ -75,9 +73,11 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
      */
     DynamicObjectCollection.prototype.resumeEvents = function() {
+        //>>includeStart('debug', pragmas.debug);
         if (this._suspendCount === 0) {
             throw new DeveloperError('resumeEvents can not be called before suspendEvents.');
         }
+        //>>includeEnd('debug');
 
         this._suspendCount--;
         fireChangedEvent(this);
@@ -89,8 +89,8 @@ define(['../Core/createGuid',
      * @function
      *
      * @param {DynamicObjectCollection} collection The collection that triggered the event.
-     * @param {Array} added The array of {@link DynamicObject} instances that have been added to the collection.
-     * @param {Array} removed The array of {@link DynamicObject} instances that have been removed from the collection.
+     * @param {DynamicObject[]} added The array of {@link DynamicObject} instances that have been added to the collection.
+     * @param {DynamicObject[]} removed The array of {@link DynamicObject} instances that have been removed from the collection.
      */
     DynamicObjectCollection.collectionChangedEventCallback = undefined;
 
@@ -132,13 +132,13 @@ define(['../Core/createGuid',
     DynamicObjectCollection.prototype.computeAvailability = function() {
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
-        var dynamicObjects = this._array;
+        var dynamicObjects = this._objects.values;
         for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
             var object = dynamicObjects[i];
             var availability = object.availability;
             if (defined(availability)) {
-                var start = availability.getStart();
-                var stop = availability.getStop();
+                var start = availability.start;
+                var stop = availability.stop;
                 if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
                     startTime = start;
                 }
@@ -162,34 +162,26 @@ define(['../Core/createGuid',
      * @memberof DynamicObjectCollection
      *
      * @param {DynamicObject} dynamicObject The object to be added.
-     * @exception {DeveloperError} dynamicObject is required.
      * @exception {DeveloperError} An object with <dynamicObject.id> already exists in this collection.
      */
     DynamicObjectCollection.prototype.add = function(dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required.');
         }
+        //>>includeEnd('debug');
+
         var id = dynamicObject.id;
-        var hash = this._hash;
-        if (defined(hash[id])) {
+        var objects = this._objects;
+        if (defined(objects.get(id))) {
             throw new RuntimeError('An object with id ' + id + ' already exists in this collection.');
         }
 
-        hash[id] = dynamicObject;
-        this._array.push(dynamicObject);
+        objects.set(id, dynamicObject);
 
-        var removed = this._removed;
-        var index = -1;
-        var removedObject = this._removedHash[id];
-        if (defined(removedObject)) {
-            index = removed.indexOf(removedObject);
-        }
-        if (index !== -1) {
-            removed.splice(index, 1);
-            this._removedHash[id] = undefined;
-        } else {
-            this._added.push(dynamicObject);
-            this._addedHash[id] = dynamicObject;
+        var removedObjects = this._removedObjects;
+        if (!this._removedObjects.remove(id)) {
+            this._addedObjects.set(id, dynamicObject);
         }
         fireChangedEvent(this);
     };
@@ -200,13 +192,14 @@ define(['../Core/createGuid',
      *
      * @param {DynamicObject} dynamicObject The object to be added.
      * @returns {Boolean} true if the item was removed, false if it did not exist in the collection.
-     *
-     * @exception {DeveloperError} dynamicObject is required.
      */
     DynamicObjectCollection.prototype.remove = function(dynamicObject) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(dynamicObject)) {
             throw new DeveloperError('dynamicObject is required');
         }
+        //>>includeEnd('debug');
+
         return this.removeById(dynamicObject.id);
     };
 
@@ -216,37 +209,26 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to remove.
      * @returns {Boolean} true if the item was removed, false if no item with the provided id existed in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.removeById = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-        var hash = this._hash;
-        var array = this._array;
-        var dynamicObject = hash[id];
-        var result = defined(dynamicObject);
-        if (result) {
-            hash[id] = undefined;
-            array.splice(array.indexOf(dynamicObject), 1);
+        //>>includeEnd('debug');
 
-            var added = this._added;
-            var index = -1;
-            var addedObject = this._addedHash[id];
-            if (defined(addedObject)) {
-                index = added.indexOf(addedObject);
-            }
-            if (index !== -1) {
-                added.splice(index, 1);
-                this._addedHash[id] = undefined;
-            } else {
-                this._removed.push(dynamicObject);
-                this._removedHash[id] = dynamicObject;
-            }
-            fireChangedEvent(this);
+        var objects = this._objects;
+        var dynamicObject = objects.get(id);
+        if (!this._objects.remove(id)) {
+            return false;
         }
-        return result;
+
+        if (!this._addedObjects.remove(id)) {
+            this._removedObjects.set(id, dynamicObject);
+        }
+        fireChangedEvent(this);
+
+        return true;
     };
 
     /**
@@ -256,29 +238,24 @@ define(['../Core/createGuid',
     DynamicObjectCollection.prototype.removeAll = function() {
         //The event should only contain items added before events were suspended
         //and the contents of the collection.
-        var array = this._array;
-        var arrayLength = array.length;
+        var objects = this._objects;
+        var objectsLength = objects.length;
+        var array = objects.values;
 
-        var removed = this._removed;
-        var removedHash = this._removedHash;
+        var addedObjects = this._addedObjects;
+        var removed = this._removedObjects;
 
-        var addedHash = this._addedHash;
-
-        for ( var i = 0; i < arrayLength; i++) {
+        for (var i = 0; i < objectsLength; i++) {
             var existingItem = array[i];
             var existingItemId = existingItem.id;
-            var addedItem = addedHash[existingItemId];
+            var addedItem = addedObjects.get(existingItemId);
             if (!defined(addedItem)) {
-                removed.push(existingItem);
-                removedHash[existingItemId] = existingItem;
+                removed.set(existingItemId, existingItem);
             }
         }
 
-        this._addedHash = {};
-        this._added.length = 0;
-        array.length = 0;
-        this._hash = {};
-
+        objects.removeAll();
+        addedObjects.removeAll();
         fireChangedEvent(this);
     };
 
@@ -288,14 +265,15 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve.
      * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getById = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-        return this._hash[id];
+        //>>includeEnd('debug');
+
+        return this._objects.get(id);
     };
 
     /**
@@ -303,10 +281,10 @@ define(['../Core/createGuid',
      * The array should not be modified directly.
      * @memberof DynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in the collection.
+     * @returns {DynamicObject[]} the array of DynamicObject instances in the collection.
      */
     DynamicObjectCollection.prototype.getObjects = function() {
-        return this._array;
+        return this._objects.values;
     };
 
     /**
@@ -315,14 +293,15 @@ define(['../Core/createGuid',
      *
      * @param {Object} id The id of the object to retrieve or create.
      * @returns {DynamicObject} The new or existing object.
-     *
-     * @exception {DeveloperError} id is required.
      */
     DynamicObjectCollection.prototype.getOrCreateObject = function(id) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
-        var dynamicObject = this._hash[id];
+        //>>includeEnd('debug');
+
+        var dynamicObject = this._objects.get(id);
         if (!defined(dynamicObject)) {
             dynamicObject = new DynamicObject(id);
             this.add(dynamicObject);

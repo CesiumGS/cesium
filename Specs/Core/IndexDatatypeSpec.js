@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/IndexDatatype',
-         'Core/Math'
-     ], function(
-         IndexDatatype,
-         CesiumMath) {
+        'Core/IndexDatatype',
+        'Core/Math'
+    ], function(
+        IndexDatatype,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -22,7 +22,7 @@ defineSuite([
     it('IndexDatatype.createTypedArray thorws without numberOfVertices', function() {
         expect(function() {
             IndexDatatype.createTypedArray(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('IndexDatatype.getSizeInBytes returns size', function() {
@@ -31,9 +31,9 @@ defineSuite([
         expect(IndexDatatype.getSizeInBytes(IndexDatatype.UNSIGNED_INT)).toEqual(Uint32Array.BYTES_PER_ELEMENT);
     });
 
-    it('IndexDatatype.getSizeInBytes thorws without indexDatatype', function() {
+    it('IndexDatatype.getSizeInBytes throws without indexDatatype', function() {
         expect(function() {
             IndexDatatype.getSizeInBytes(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

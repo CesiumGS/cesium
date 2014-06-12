@@ -2,21 +2,29 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/DeveloperError',
-        './TerrainProvider',
-        './TerrainState',
-        './TileProviderError',
-        '../ThirdParty/when'
+        '../Core/IndexDatatype',
+        '../Core/TerrainProvider',
+        '../Core/TileProviderError',
+        '../Renderer/BufferUsage',
+        '../ThirdParty/when',
+        './terrainAttributeLocations',
+        './TerrainState'
     ], function(
         BoundingSphere,
         Cartesian3,
+        ComponentDatatype,
         defined,
         DeveloperError,
+        IndexDatatype,
         TerrainProvider,
-        TerrainState,
         TileProviderError,
-        when) {
+        BufferUsage,
+        when,
+        terrainAttributeLocations,
+        TerrainState) {
     "use strict";
 
     /**
@@ -50,7 +58,7 @@ define([
         this.mesh = undefined;
 
         if (defined(this.vertexArray)) {
-            var indexBuffer = this.vertexArray.getIndexBuffer();
+            var indexBuffer = this.vertexArray.indexBuffer;
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
@@ -110,7 +118,7 @@ define([
             terrainProvider._requestError = TileProviderError.handleError(
                     terrainProvider._requestError,
                     terrainProvider,
-                    terrainProvider.getErrorEvent(),
+                    terrainProvider.errorEvent,
                     message,
                     x, y, level,
                     doRequest);
@@ -138,16 +146,19 @@ define([
     TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             var upsampleDetails = this.upsampleDetails;
+
+            //>>includeStart('debug', pragmas.debug);
             if (!defined(upsampleDetails)) {
                 throw new DeveloperError('TileTerrain cannot upsample unless provided upsampleDetails.');
             }
+            //>>includeEnd('debug');
 
             var sourceData = upsampleDetails.data;
             var sourceX = upsampleDetails.x;
             var sourceY = upsampleDetails.y;
             var sourceLevel = upsampleDetails.level;
 
-            this.data = sourceData.upsample(terrainProvider.getTilingScheme(), sourceX, sourceY, sourceLevel, x, y, level);
+            this.data = sourceData.upsample(terrainProvider.tilingScheme, sourceX, sourceY, sourceLevel, x, y, level);
             if (!defined(this.data)) {
                 // The upsample request has been deferred - try again later.
                 return;
@@ -174,7 +185,7 @@ define([
     };
 
     function transform(tileTerrain, context, terrainProvider, x, y, level) {
-        var tilingScheme = terrainProvider.getTilingScheme();
+        var tilingScheme = terrainProvider.tilingScheme;
 
         var terrainData = tileTerrain.data;
         var meshPromise = terrainData.createMesh(tilingScheme, x, y, level);
@@ -195,7 +206,43 @@ define([
     }
 
     function createResources(tileTerrain, context, terrainProvider, x, y, level) {
-        TerrainProvider.createTileEllipsoidGeometryFromBuffers(context, tileTerrain.mesh, tileTerrain, true);
+        var datatype = ComponentDatatype.FLOAT;
+        var typedArray = tileTerrain.mesh.vertices;
+        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
+        var stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
+        var position3DAndHeightLength = 4;
+
+        var attributes = [{
+            index : terrainAttributeLocations.position3DAndHeight,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : position3DAndHeightLength,
+            offsetInBytes : 0,
+            strideInBytes : stride
+        }, {
+            index : terrainAttributeLocations.textureCoordinates,
+            vertexBuffer : buffer,
+            componentDatatype : datatype,
+            componentsPerAttribute : 2,
+            offsetInBytes : position3DAndHeightLength * ComponentDatatype.getSizeInBytes(datatype),
+            strideInBytes : stride
+        }];
+
+        var indexBuffers = tileTerrain.mesh.indices.indexBuffers || {};
+        var indexBuffer = indexBuffers[context.id];
+        if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
+            var indices = tileTerrain.mesh.indices;
+            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            indexBuffer.vertexArrayDestroyable = false;
+            indexBuffer.referenceCount = 1;
+            indexBuffers[context.id] = indexBuffer;
+            tileTerrain.mesh.indices.indexBuffers = indexBuffers;
+        } else {
+            ++indexBuffer.referenceCount;
+        }
+
+        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+
         tileTerrain.state = TerrainState.READY;
     }
 

@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicObjectView',
-             'Core/Cartesian3',
-             'Core/Ellipsoid',
-             'Core/JulianDate',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/ConstantPositionProperty',
-             'Specs/createScene',
-             'Specs/destroyScene'
-            ], function(
-              DynamicObjectView,
-              Cartesian3,
-              Ellipsoid,
-              JulianDate,
-              DynamicObject,
-              ConstantPositionProperty,
-              createScene,
-              destroyScene) {
+        'DynamicScene/DynamicObjectView',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/JulianDate',
+        'DynamicScene/ConstantPositionProperty',
+        'DynamicScene/DynamicObject',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicObjectView,
+        Cartesian3,
+        Ellipsoid,
+        JulianDate,
+        ConstantPositionProperty,
+        DynamicObject,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -52,14 +52,14 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
             view.update(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without dynamicObject property', function() {
         var view = new DynamicObjectView(undefined, scene);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
 
     });
 
@@ -69,7 +69,7 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, undefined);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without ellipsoid property', function() {
@@ -79,7 +79,7 @@ defineSuite([
         view.ellipsoid = undefined;
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('update throws without dynamicObject.position property.', function() {
@@ -87,6 +87,6 @@ defineSuite([
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
             view.update(new JulianDate());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

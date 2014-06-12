@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadImageViaBlob',
-             'Core/defined',
-             'ThirdParty/when'
-            ], function(
-             loadImageViaBlob,
-             defined,
-             when) {
+        'Core/loadImageViaBlob',
+        'Core/defined',
+        'ThirdParty/when'
+    ], function(
+        loadImageViaBlob,
+        defined,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,7 +47,7 @@ defineSuite([
     it('throws with if url is missing', function() {
         expect(function() {
             loadImageViaBlob();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('resolves the promise when the image loads', function() {

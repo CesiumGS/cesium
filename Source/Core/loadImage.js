@@ -1,16 +1,16 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './isCrossOriginUrl',
-        '../ThirdParty/when'
+        './isCrossOriginUrl'
     ], function(
+        when,
         defaultValue,
         defined,
         DeveloperError,
-        isCrossOriginUrl,
-        when) {
+        isCrossOriginUrl) {
     "use strict";
 
     var dataUriRegex = /^data:/;
@@ -28,14 +28,14 @@ define([
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
-     * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
-     * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a single image asynchronously
-     * loadImage('some/image/url.png').then(function(image) {
+     * Cesium.loadImage('some/image/url.png').then(function(image) {
      *     // use the loaded image
-     * }, function() {
+     * }, function(error) {
      *     // an error occurred
      * });
      *
@@ -45,9 +45,11 @@ define([
      * });
      */
     var loadImage = function(url, allowCrossOrigin) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
+        //>>includeEnd('debug');
 
         allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 

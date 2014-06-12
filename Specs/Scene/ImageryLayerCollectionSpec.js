@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/ImageryLayerCollection',
-         'Scene/ImageryLayer'
-     ], function(
-         ImageryLayerCollection,
-         ImageryLayer) {
+        'Scene/ImageryLayerCollection',
+        'Scene/ImageryLayer'
+    ], function(
+        ImageryLayerCollection,
+        ImageryLayer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -142,7 +142,7 @@ defineSuite([
 
         expect(function() {
             collection.add(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addImageryProvider throws when imageryProvider is undefined', function() {
@@ -150,7 +150,7 @@ defineSuite([
 
         expect(function() {
             collection.addImageryProvider(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('add throws when index is outside valid range', function() {
@@ -160,35 +160,29 @@ defineSuite([
 
         expect(function() {
             collection.add(layer1, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             collection.add(layer1, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
-        expect(function() {
-            collection.add(layer1, 0);
-        }).not.toThrow();
+        collection.add(layer1, 0);
 
         expect(function() {
             collection.add(layer2, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             collection.add(layer2, 2);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
-        expect(function() {
-            collection.add(layer2, 0);
-        }).not.toThrow();
+        collection.add(layer2, 0);
     });
 
     it('remove ignores request to remove a layer that does not exist in the collection', function() {
         var collection = new ImageryLayerCollection();
         var layer1 = new ImageryLayer(fakeProvider);
-        expect(function() {
-            collection.remove(layer1);
-        }).not.toThrow();
+        expect(collection.remove(layer1)).toBe(false);
     });
 
     it('contains works as expected', function() {
@@ -224,7 +218,7 @@ defineSuite([
         var collection = new ImageryLayerCollection();
         expect(function() {
             collection.get();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when raising an undefined layer', function() {
@@ -232,7 +226,7 @@ defineSuite([
 
         expect(function() {
             collection.raise(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when raising a layer not in the collection', function() {
@@ -241,7 +235,7 @@ defineSuite([
 
         expect(function() {
             collection.raise(layer1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('reports whether or not it is destroyed', function() {

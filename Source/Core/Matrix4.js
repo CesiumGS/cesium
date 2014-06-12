@@ -59,6 +59,7 @@ define([
      * @see Matrix4.computeViewportTransformation
      * @see Matrix2
      * @see Matrix3
+     * @see Packable
      */
     var Matrix4 = function(column0Row0, column1Row0, column2Row0, column3Row0,
                            column0Row1, column1Row1, column2Row1, column3Row1,
@@ -80,6 +81,91 @@ define([
         this[13] = defaultValue(column3Row1, 0.0);
         this[14] = defaultValue(column3Row2, 0.0);
         this[15] = defaultValue(column3Row3, 0.0);
+    };
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    Matrix4.packedLength = 16;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    Matrix4.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value[0];
+        array[startingIndex++] = value[1];
+        array[startingIndex++] = value[2];
+        array[startingIndex++] = value[3];
+        array[startingIndex++] = value[4];
+        array[startingIndex++] = value[5];
+        array[startingIndex++] = value[6];
+        array[startingIndex++] = value[7];
+        array[startingIndex++] = value[8];
+        array[startingIndex++] = value[9];
+        array[startingIndex++] = value[10];
+        array[startingIndex++] = value[11];
+        array[startingIndex++] = value[12];
+        array[startingIndex++] = value[13];
+        array[startingIndex++] = value[14];
+        array[startingIndex] = value[15];
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Matrix4
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Matrix4} [result] The object into which to store the result.
+     */
+    Matrix4.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Matrix4();
+        }
+
+        result[0] = array[startingIndex++];
+        result[1] = array[startingIndex++];
+        result[2] = array[startingIndex++];
+        result[3] = array[startingIndex++];
+        result[4] = array[startingIndex++];
+        result[5] = array[startingIndex++];
+        result[6] = array[startingIndex++];
+        result[7] = array[startingIndex++];
+        result[8] = array[startingIndex++];
+        result[9] = array[startingIndex++];
+        result[10] = array[startingIndex++];
+        result[11] = array[startingIndex++];
+        result[12] = array[startingIndex++];
+        result[13] = array[startingIndex++];
+        result[14] = array[startingIndex++];
+        result[15] = array[startingIndex];
+        return result;
     };
 
     /**
@@ -123,13 +209,11 @@ define([
      * Creates a Matrix4 from 16 consecutive elements in an array.
      * @memberof Matrix4
      *
-     * @param {Array} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} array is required.
      *
      * @example
      * // Create the Matrix4:
@@ -139,59 +223,27 @@ define([
      * // [1.0, 2.0, 3.0, 4.0]
      *
      * var v = [1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
-     * var m = Matrix4.fromArray(v);
+     * var m = Cesium.Matrix4.fromArray(v);
      *
      * // Create same Matrix4 with using an offset into an array
      * var v2 = [0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0, 3.0, 3.0, 3.0, 3.0, 4.0, 4.0, 4.0, 4.0];
-     * var m2 = Matrix4.fromArray(v2, 2);
+     * var m2 = Cesium.Matrix4.fromArray(v2, 2);
      */
-    Matrix4.fromArray = function(array, startingIndex, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(array)) {
-            throw new DeveloperError('array is required');
-        }
-        //>>includeEnd('debug');
-
-        startingIndex = defaultValue(startingIndex, 0);
-
-        if (!defined(result)) {
-            result = new Matrix4();
-        }
-
-        result[0] = array[startingIndex];
-        result[1] = array[startingIndex + 1];
-        result[2] = array[startingIndex + 2];
-        result[3] = array[startingIndex + 3];
-        result[4] = array[startingIndex + 4];
-        result[5] = array[startingIndex + 5];
-        result[6] = array[startingIndex + 6];
-        result[7] = array[startingIndex + 7];
-        result[8] = array[startingIndex + 8];
-        result[9] = array[startingIndex + 9];
-        result[10] = array[startingIndex + 10];
-        result[11] = array[startingIndex + 11];
-        result[12] = array[startingIndex + 12];
-        result[13] = array[startingIndex + 13];
-        result[14] = array[startingIndex + 14];
-        result[15] = array[startingIndex + 15];
-        return result;
-    };
+    Matrix4.fromArray = Matrix4.unpack;
 
     /**
      * Computes a Matrix4 instance from a column-major order array.
      * @memberof Matrix4
      * @function
      *
-     * @param {Array} values The column-major order array.
+     * @param {Number[]} values The column-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(values)) {
-            throw new DeveloperError('values parameter is required');
+            throw new DeveloperError('values is required');
         }
         //>>includeEnd('debug');
 
@@ -203,11 +255,9 @@ define([
      * The resulting matrix will be in column-major order.
      * @memberof Matrix4
      *
-     * @param {Array} values The row-major order array.
+     * @param {Number[]} values The row-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} values is required.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -250,9 +300,6 @@ define([
      * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} rotation is required.
-     * @exception {DeveloperError} translation is required.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -304,15 +351,11 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} translation is required.
-     * @exception {DeveloperError} rotation is required.
-     * @exception {DeveloperError} scale is required.
-     *
      * @example
-     * result = Matrix4.fromTranslationQuaternionRotationScale(
-     *   new Cartesian3(1.0, 2.0, 3.0), // translation
-     *   Quaternion.IDENTITY,           // rotation
-     *   new Cartesian3(7.0, 8.0, 9.0), // scale
+     * result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
+     *   new Cesium.Cartesian3(1.0, 2.0, 3.0), // translation
+     *   Cesium.Quaternion.IDENTITY,           // rotation
+     *   new Cesium.Cartesian3(7.0, 8.0, 9.0), // scale
      *   result);
      */
     Matrix4.fromTranslationQuaternionRotationScale = function(translation, rotation, scale, result) {
@@ -388,8 +431,6 @@ define([
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.multiplyByTranslation
-     *
-     * @exception {DeveloperError} translation is required.
      */
     Matrix4.fromTranslation = function(translation, result) {
         return Matrix4.fromRotationTranslation(Matrix3.IDENTITY, translation, result);
@@ -403,15 +444,13 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} scale is required.
-     *
      * @example
      * // Creates
      * //   [7.0, 0.0, 0.0, 0.0]
      * //   [0.0, 8.0, 0.0, 0.0]
      * //   [0.0, 0.0, 9.0, 0.0]
      * //   [0.0, 0.0, 0.0, 1.0]
-     * var m = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
+     * var m = Cesium.Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
      */
     Matrix4.fromScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -455,15 +494,13 @@ define([
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} scale is required.
-     *
      * @example
      * // Creates
      * //   [2.0, 0.0, 0.0, 0.0]
      * //   [0.0, 2.0, 0.0, 0.0]
      * //   [0.0, 0.0, 2.0, 0.0]
      * //   [0.0, 0.0, 0.0, 1.0]
-     * var m = Matrix4.fromScale(2.0);
+     * var m = Cesium.Matrix4.fromScale(2.0);
      */
     Matrix4.fromUniformScale = function(scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -509,11 +546,6 @@ define([
      * @param {Camera} camera The camera to use.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} camera is required.
-     * @exception {DeveloperError} camera.eye is required.
-     * @exception {DeveloperError} camera.target is required.
-     * @exception {DeveloperError} camera.up is required.
      */
     Matrix4.fromCamera = function(camera, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -680,13 +712,6 @@ define([
     * @param {Number} far The distance to the far plane in meters.
     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-    *
-    * @exception {DeveloperError} left is required.
-    * @exception {DeveloperError} right is required.
-    * @exception {DeveloperError} bottom is required.
-    * @exception {DeveloperError} top is required.
-    * @exception {DeveloperError} near is required.
-    * @exception {DeveloperError} far is required.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -759,13 +784,6 @@ define([
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     * @exception {DeveloperError} bottom is required.
-     * @exception {DeveloperError} top is required.
-     * @exception {DeveloperError} near is required.
-     * @exception {DeveloperError} far is required.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -835,12 +853,6 @@ define([
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     * @exception {DeveloperError} bottom is required.
-     * @exception {DeveloperError} top is required.
-     * @exception {DeveloperError} near is required.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -900,17 +912,16 @@ define([
      * @memberof Matrix4
      *
      * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
-     * @param {Number}[nearDepthRange = 0.0] The near plane distance in window coordinates.
-     * @param {Number}[farDepthRange = 1.0] The far plane distance in window coordinates.
+     * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
+     * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see czm_viewportTransformation
-     * @see Context#getViewport
      *
      * @example
      * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
-     * var m = Matrix4.computeViewportTransformation({
+     * var m = Cesium.Matrix4.computeViewportTransformation({
      *     x : 0.0,
      *     y : 0.0,
      *     width : 1024.0,
@@ -918,7 +929,7 @@ define([
      * }, 0.0, 1.0);
      *
      * // Example 2.  Create viewport transformation using the context's viewport.
-     * var m = Matrix4.computeViewportTransformation(context.getViewport());
+     * var m = Cesium.Matrix4.computeViewportTransformation(context.getViewport());
      */
     Matrix4.computeViewportTransformation = function(viewport, nearDepthRange, farDepthRange, result) {
         viewport = defaultValue(viewport, defaultValue.EMPTY_OBJECT);
@@ -972,10 +983,8 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to use..
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
+     * @param {Number[]} [result] The Array onto which to store the result.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @example
      * //create an array from an instance of Matrix4
@@ -983,11 +992,10 @@ define([
      * //     [11.0, 15.0, 19.0, 23.0]
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
-     * var a = Matrix4.toArray(m);
+     * var a = Cesium.Matrix4.toArray(m);
      *
      * // m remains the same
      * //creates a = [10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0, 25.0]
-     *
      */
     Matrix4.toArray = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1029,22 +1037,22 @@ define([
      * @param {Number} column The zero-based index of the column.
      * @returns {Number} The index of the element at the provided row and column.
      *
-     * @exception {DeveloperError} row is required and must be 0, 1, 2, or 3.
-     * @exception {DeveloperError} column is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} row must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} column must be 0, 1, 2, or 3.
      *
      * @example
-     * var myMatrix = new Matrix4();
-     * var column1Row0Index = Matrix4.getElementIndex(1, 0);
+     * var myMatrix = new Cesium.Matrix4();
+     * var column1Row0Index = Cesium.Matrix4.getElementIndex(1, 0);
      * var column1Row0 = myMatrix[column1Row0Index]
      * myMatrix[column1Row0Index] = 10.0;
      */
     Matrix4.getElementIndex = function(column, row) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof row !== 'number' || row < 0 || row > 3) {
-            throw new DeveloperError('row is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('row must be 0, 1, 2, or 3.');
         }
         if (typeof column !== 'number' || column < 0 || column > 3) {
-            throw new DeveloperError('column is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('column must be 0, 1, 2, or 3.');
         }
         //>>includeEnd('debug');
 
@@ -1060,8 +1068,7 @@ define([
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
      *
@@ -1073,14 +1080,13 @@ define([
      * //     [22.0, 23.0, 24.0, 25.0]
      *
      * //Example 1: Creates an instance of Cartesian
-     * var a = Matrix4.getColumn(m, 2);
+     * var a = Cesium.Matrix4.getColumn(m, 2);
      *
      * //Example 2: Sets values for Cartesian instance
-     * var a = new Cartesian4();
-     * Matrix4.getColumn(m, 2, a);
+     * var a = new Cesium.Cartesian4();
+     * Cesium.Matrix4.getColumn(m, 2, a);
      *
      * // a.x = 12.0; a.y = 16.0; a.z = 20.0; a.w = 24.0;
-     *
      */
     Matrix4.getColumn = function(matrix, index, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1089,7 +1095,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         //>>includeEnd('debug');
 
@@ -1119,9 +1125,7 @@ define([
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
      *
@@ -1132,14 +1136,13 @@ define([
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Matrix4.setColumn(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
+     * var a = Cesium.Matrix4.setColumn(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
      *
      * // m remains the same
      * // a = [10.0, 11.0, 99.0, 13.0]
      * //     [14.0, 15.0, 98.0, 17.0]
      * //     [18.0, 19.0, 97.0, 21.0]
      * //     [22.0, 23.0, 96.0, 25.0]
-     *
      */
     Matrix4.setColumn = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1150,7 +1153,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         //>>includeEnd('debug');
 
@@ -1172,8 +1175,7 @@ define([
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
      *
@@ -1185,11 +1187,11 @@ define([
      * //     [22.0, 23.0, 24.0, 25.0]
      *
      * //Example 1: Returns an instance of Cartesian
-     * var a = Matrix4.getRow(m, 2);
+     * var a = Cesium.Matrix4.getRow(m, 2);
      *
      * //Example 1: Sets values for a Cartesian instance
      * var a = new Cartesian4();
-     * Matrix4.getRow(m, 2, a);
+     * Cesium.Matrix4.getRow(m, 2, a);
      *
      * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
      */
@@ -1200,7 +1202,7 @@ define([
         }
 
         if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         //>>includeEnd('debug');
 
@@ -1229,9 +1231,7 @@ define([
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
+     * @exception {DeveloperError} index must be 0, 1, 2, or 3.
      *
      * @see Cartesian4
      *
@@ -1242,14 +1242,13 @@ define([
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Matrix4.setRow(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
+     * var a = Cesium.Matrix4.setRow(m, 2, new Cartesian4(99.0, 98.0, 97.0, 96.0));
      *
      * // m remains the same
      * // a = [10.0, 11.0, 12.0, 13.0]
      * //     [14.0, 15.0, 16.0, 17.0]
      * //     [99.0, 98.0, 97.0, 96.0]
      * //     [22.0, 23.0, 24.0, 25.0]
-     *
      */
     Matrix4.setRow = function(matrix, index, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1260,7 +1259,7 @@ define([
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 3) {
-            throw new DeveloperError('index is required and must be 0, 1, 2, or 3.');
+            throw new DeveloperError('index must be 0, 1, 2, or 3.');
         }
         //>>includeEnd('debug');
 
@@ -1272,6 +1271,49 @@ define([
         return result;
     };
 
+    var scratchColumn = new Cartesian3();
+
+    /**
+     * Extracts the non-uniform scale assuming the matrix is an affine transformation.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     */
+    Matrix4.getScale = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        result.x = Cartesian3.magnitude(Cartesian3.fromElements(matrix[0], matrix[1], matrix[2], scratchColumn));
+        result.y = Cartesian3.magnitude(Cartesian3.fromElements(matrix[4], matrix[5], matrix[6], scratchColumn));
+        result.z = Cartesian3.magnitude(Cartesian3.fromElements(matrix[8], matrix[9], matrix[10], scratchColumn));
+        return result;
+    };
+
+    var scratchScale = new Cartesian3();
+
+    /**
+     * Computes the maximum scale assuming the matrix is an affine transformation.
+     * The maximum scale is the maximum length of the column vectors in the upper-left
+     * 3x3 matrix.
+     * @memberof Matrix4
+     *
+     * @param {Matrix4} matrix The matrix.
+     * @returns {Number} The maximum scale.
+     */
+    Matrix4.getMaximumScale = function(matrix) {
+        Matrix4.getScale(matrix, scratchScale);
+        return Cartesian3.getMaximumComponent(scratchScale);
+    };
+
     /**
      * Computes the product of two matrices.
      * @memberof Matrix4
@@ -1280,9 +1322,6 @@ define([
      * @param {Matrix4} right The second matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
      */
     Matrix4.multiply = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1380,7 +1419,7 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the product for general 4x4
-     * matrices using {@link #multiply}.
+     * matrices using {@link Matrix4.multiply}.
      * @memberof Matrix4
      *
      * @param {Matrix4} left The first matrix.
@@ -1388,13 +1427,10 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     *
      * @example
-     * var m1 = new Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0];
-     * var m2 = Transforms.eastNorthUpToFixedFrame(new Cartesian3(1.0, 1.0, 1.0));
-     * var m3 = Matrix4.multiplyTransformation(m1, m2);
+     * var m1 = new Cesium.Matrix4(1.0, 6.0, 7.0, 0.0, 2.0, 5.0, 8.0, 0.0, 3.0, 4.0, 9.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+     * var m2 = Cesium.Transforms.eastNorthUpToFixedFrame(new Cesium.Cartesian3(1.0, 1.0, 1.0));
+     * var m3 = Cesium.Matrix4.multiplyTransformation(m1, m2);
      */
     Matrix4.multiplyTransformation = function(left, right, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1486,14 +1522,11 @@ define([
      *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} translation is required.
-     *
-     * @see Matrix4#fromTranslation
+     * @see Matrix4.fromTranslation
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Matrix4.fromTranslation(position), m);
-     * Matrix4.multiplyByTranslation(m, position, m);
+     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromTranslation(position), m);
+     * Cesium.Matrix4.multiplyByTranslation(m, position, m);
      */
     Matrix4.multiplyByTranslation = function(matrix, translation, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1554,15 +1587,12 @@ define([
      *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} scale is required.
-     *
-     * @see Matrix4#fromUniformScale
-     * @see Matrix4#multiplyByScale
+     * @see Matrix4.fromUniformScale
+     * @see Matrix4.multiplyByScale
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Matrix4.fromUniformScale(scale), m);
-     * Matrix4.multiplyByUniformScale(m, scale, m);
+     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
+     * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1590,15 +1620,12 @@ define([
      *
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} scale is required.
-     *
-     * @see Matrix4#fromScale
-     * @see Matrix4#multiplyByUniformScale
+     * @see Matrix4.fromScale
+     * @see Matrix4.multiplyByUniformScale
      *
      * @example
-     * // Instead of Matrix4.multiply(m, Matrix4.fromScale(scale), m);
-     * Matrix4.multiplyByUniformScale(m, scale, m);
+     * // Instead of Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
+     * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1654,9 +1681,6 @@ define([
      * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
      * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} cartesian is required.
      */
     Matrix4.multiplyByVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1698,15 +1722,12 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} matrix is required.
-     *
      * @example
-     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
-     * Matrix4.multiplyByPointAsVector(matrix, p, result);
+     * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+     * Cesium.Matrix4.multiplyByPointAsVector(matrix, p, result);
      * // A shortcut for
      * //   Cartesian3 p = ...
-     * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 0.0), result);
+     * //   Cesium.Matrix4.multiplyByVector(matrix, new Cesium.Cartesian4(p.x, p.y, p.z, 0.0), result);
      */
     Matrix4.multiplyByPointAsVector = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1745,12 +1766,9 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} matrix is required.
-     *
      * @example
-     * Cartesian3 p = new Cartesian3(1.0, 2.0, 3.0);
-     * Matrix4.multiplyByPoint(matrix, p, result);
+     * var p = new Cesium.Cartesian3(1.0, 2.0, 3.0);
+     * Cesium.Matrix4.multiplyByPoint(matrix, p, result);
      */
     Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1789,9 +1807,6 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     * @exception {DeveloperError} scalar is required and must be a number.
-     *
      * @example
      * //create a Matrix4 instance which is a scaled version of the supplied Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1799,14 +1814,13 @@ define([
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Matrix4.multiplyByScalar(m, -2);
+     * var a = Cesium.Matrix4.multiplyByScalar(m, -2);
      *
      * // m remains the same
      * // a = [-20.0, -22.0, -24.0, -26.0]
      * //     [-28.0, -30.0, -32.0, -34.0]
      * //     [-36.0, -38.0, -40.0, -42.0]
      * //     [-44.0, -46.0, -48.0, -50.0]
-     *
      */
     Matrix4.multiplyByScalar = function(matrix, scalar, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1814,7 +1828,7 @@ define([
             throw new DeveloperError('matrix is required');
         }
         if (typeof scalar !== 'number') {
-            throw new DeveloperError('scalar is required and must be a number');
+            throw new DeveloperError('scalar must be a number');
         }
         //>>includeEnd('debug');
 
@@ -1851,8 +1865,6 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     *
      * @example
      * //create a new Matrix4 instance which is a negation of a Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1860,14 +1872,13 @@ define([
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Matrix4.negate(m);
+     * var a = Cesium.Matrix4.negate(m);
      *
      * // m remains the same
      * // a = [-10.0, -11.0, -12.0, -13.0]
      * //     [-14.0, -15.0, -16.0, -17.0]
      * //     [-18.0, -19.0, -20.0, -21.0]
      * //     [-22.0, -23.0, -24.0, -25.0]
-     *
      */
     Matrix4.negate = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1909,8 +1920,6 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     *
      * @example
      * //returns transpose of a Matrix4
      * // m = [10.0, 11.0, 12.0, 13.0]
@@ -1918,14 +1927,13 @@ define([
      * //     [18.0, 19.0, 20.0, 21.0]
      * //     [22.0, 23.0, 24.0, 25.0]
      *
-     * var a = Matrix4.negate(m);
+     * var a = Cesium.Matrix4.negate(m);
      *
      * // m remains the same
      * // a = [10.0, 14.0, 18.0, 22.0]
      * //     [11.0, 15.0, 19.0, 23.0]
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
-     *
      */
     Matrix4.transpose = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1974,8 +1982,6 @@ define([
      * @param {Matrix4} matrix The matrix with signed elements.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix4.abs = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -2034,14 +2040,13 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      *
-     * if(Matrix4.equals(a,b)) {
+     * if(Cesium.Matrix4.equals(a,b)) {
      *      console.log("Both matrices are equal");
      * } else {
      *      console.log("They are not equal");
      * }
      *
      * //Prints "Both matrices are equal" on the console
-     *
      */
     Matrix4.equals = function(left, right) {
         return (left === right) ||
@@ -2076,8 +2081,6 @@ define([
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
-     * @exception {DeveloperError} epsilon is required and must be a number.
-     *
      * @example
      * //compares two Matrix4 instances
      *
@@ -2091,19 +2094,18 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      *
-     * if(Matrix4.equalsEpsilon(a,b,0.1)){
+     * if(Cesium.Matrix4.equalsEpsilon(a,b,0.1)){
      *      console.log("Difference between both the matrices is less than 0.1");
      * } else {
      *      console.log("Difference between both the matrices is not less than 0.1");
      * }
      *
      * //Prints "Difference between both the matrices is not less than 0.1" on the console
-     *
      */
     Matrix4.equalsEpsilon = function(left, right, epsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof epsilon !== 'number') {
-            throw new DeveloperError('epsilon is required and must be a number');
+            throw new DeveloperError('epsilon must be a number');
         }
         //>>includeEnd('debug');
 
@@ -2136,8 +2138,6 @@ define([
      * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     *
      * @see Cartesian3
      */
     Matrix4.getTranslation = function(matrix, result) {
@@ -2164,8 +2164,6 @@ define([
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
-     * @exception {DeveloperError} matrix is required.
-     *
      * @see Matrix3
      *
      * @example
@@ -2176,13 +2174,12 @@ define([
      * //     [12.0, 16.0, 20.0, 24.0]
      * //     [13.0, 17.0, 21.0, 25.0]
      *
-     * var b = new Matrix3();
-     * Matrix4.getRotation(m,b);
+     * var b = new Cesium.Matrix3();
+     * Cesium.Matrix4.getRotation(m,b);
      *
      * // b = [10.0, 14.0, 18.0]
      * //     [11.0, 15.0, 19.0]
      * //     [12.0, 16.0, 20.0]
-     *
      */
     Matrix4.getRotation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -2212,14 +2209,13 @@ define([
       * Computes the inverse of the provided matrix using Cramers Rule.
       * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
       * If the matrix is an affine transformation matrix, it is more efficient
-      * to invert it with {@link #inverseTransformation}.
+      * to invert it with {@link Matrix4.inverseTransformation}.
       * @memberof Matrix4
       *
       * @param {Matrix4} matrix The matrix to invert.
       * @param {Matrix4} [result] The object onto which to store the result.
       * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
       *
-      * @exception {DeveloperError} matrix is required.
       * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
       */
     Matrix4.inverse = function(matrix, result) {
@@ -2340,14 +2336,12 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the inverse for a general 4x4
-     * matrix using {@link #inverse}.
+     * matrix using {@link Matrix4.inverse}.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to invert.
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
      */
     Matrix4.inverseTransformation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -2542,8 +2536,6 @@ define([
      * @param {Matrix4} [right] The right hand side matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
-     *
-     * @exception {DeveloperError} epsilon is required and must be a number.
      */
     Matrix4.prototype.equalsEpsilon = function(right, epsilon) {
         return Matrix4.equalsEpsilon(this, right, epsilon);

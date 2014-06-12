@@ -1,39 +1,39 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian3',
+        './ComponentDatatype',
+        './CornerType',
+        './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian3',
-        './CornerType',
-        './CorridorGeometryLibrary',
-        './ComponentDatatype',
         './Ellipsoid',
         './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes',
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
         './PrimitiveType',
-        './BoundingSphere',
-        './GeometryAttribute',
-        './GeometryAttributes',
         './VertexFormat'
     ], function(
+        BoundingSphere,
+        Cartesian3,
+        ComponentDatatype,
+        CornerType,
+        CorridorGeometryLibrary,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian3,
-        CornerType,
-        CorridorGeometryLibrary,
-        ComponentDatatype,
         Ellipsoid,
         Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
         PrimitiveType,
-        BoundingSphere,
-        GeometryAttribute,
-        GeometryAttributes,
         VertexFormat) {
     "use strict";
 
@@ -626,40 +626,37 @@ define([
      * @alias CorridorGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {Cartesain3} positions that define the center of the corridor.
+     * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
      * @param {Number} options.width The distance between the edges of the corridor in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance in meters between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
+     * @param {Boolean} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
-     * @exception {DeveloperError} options.positions is required.
-     * @exception {DeveloperError} options.width is required.
-     *
-     * @see CorridorGeometry#createGeometry
+     * @see CorridorGeometry.createGeometry
      *
      * @example
-     * var corridor = new CorridorGeometry({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0)
-     *     ]),
+     * var corridor = new Cesium.CorridorGeometry({
+     *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
+     *   positions : Cesium.Cartesian3.fromDegreesArray([-72.0, 40.0, -70.0, 35.0]),
      *   width : 100000
      * });
      */
     var CorridorGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
+        var width = options.width;
+
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
-        var width = options.width;
         if (!defined(width)) {
             throw new DeveloperError('options.width is required.');
         }
+        //>>includeEnd('debug');
 
         this._positions = positions;
         this._width = width;
@@ -688,9 +685,13 @@ define([
         var extrudedHeight = corridorGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+
+        //>>includeStart('debug', pragmas.debug);
         if (cleanPositions.length < 2) {
             throw new DeveloperError('Count of unique positions must be greater than 1.');
         }
+        //>>includeEnd('debug');
+
         var ellipsoid = corridorGeometry._ellipsoid;
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {

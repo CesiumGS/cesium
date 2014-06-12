@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/barycentricCoordinates',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         barycentricCoordinates,
-         Cartesian3,
-         CesiumMath) {
+        'Core/barycentricCoordinates',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        barycentricCoordinates,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -53,24 +53,24 @@ defineSuite([
     it('throws without point', function() {
         expect(function() {
             barycentricCoordinates();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p0', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p1', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p2', function() {
         expect(function() {
             barycentricCoordinates(new Cartesian3(), new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

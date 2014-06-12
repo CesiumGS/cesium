@@ -69,14 +69,18 @@ defineSuite([
         var parameters = new ArrayBuffer(byteLength);
         expect(parameters.byteLength).toEqual(byteLength);
 
-        var promise = taskProcessor.scheduleTask(parameters, [parameters]);
+        waitsForPromise(TaskProcessor._canTransferArrayBuffer).then(function(canTransferArrayBuffer) {
+            var promise = taskProcessor.scheduleTask(parameters, [parameters]);
 
-        // array buffer should be neutered when transferred
-        expect(parameters.byteLength).toEqual(0);
+            if (canTransferArrayBuffer) {
+                // array buffer should be neutered when transferred
+                expect(parameters.byteLength).toEqual(0);
+            }
 
-        // the worker should see the array with proper byte length
-        waitsForPromise(promise).then(function(result) {
-            expect(result).toEqual(byteLength);
+            // the worker should see the array with proper byte length
+            waitsForPromise(promise).then(function(result) {
+                expect(result).toEqual(byteLength);
+            });
         });
     });
 

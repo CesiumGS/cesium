@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/isLeapYear'], function(isLeapYear) {
+defineSuite([
+        'Core/isLeapYear'
+    ], function(
+        isLeapYear) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -16,18 +19,18 @@ defineSuite(['Core/isLeapYear'], function(isLeapYear) {
     it('Fail with null value', function() {
         expect(function() {
             isLeapYear(null);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Fail with undefined value', function() {
         expect(function() {
             isLeapYear(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('Fail with non-numerical value', function() {
         expect(function() {
             isLeapYear('asd');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

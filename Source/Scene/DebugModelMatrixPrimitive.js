@@ -1,26 +1,26 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
-        '../Core/Matrix4',
-        '../Core/Color',
         '../Core/destroyObject',
         '../Core/GeometryInstance',
+        '../Core/Matrix4',
         '../Core/PolylineGeometry',
-        './Primitive',
-        './PolylineColorAppearance'
+        './PolylineColorAppearance',
+        './Primitive'
     ], function(
+        Cartesian3,
+        Color,
         defaultValue,
         defined,
-        Cartesian3,
-        Matrix4,
-        Color,
         destroyObject,
         GeometryInstance,
+        Matrix4,
         PolylineGeometry,
-        Primitive,
-        PolylineColorAppearance) {
+        PolylineColorAppearance,
+        Primitive) {
     "use strict";
 
     /**
@@ -41,10 +41,10 @@ define([
      * @param {Number} [options.width=2.0] The width of the axes in pixels.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 matrix that defines the reference frame, i.e., origin plus axes, to visualize.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
-     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Scene#pick}
+     * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick}
      *
      * @example
-     * primitives.add(new DebugModelMatrixPrimitive({
+     * primitives.add(new Cesium.DebugModelMatrixPrimitive({
      *   modelMatrix : primitive.modelMatrix,  // primitive to debug
      *   length : 100000.0,
      *   width : 10.0
@@ -153,7 +153,8 @@ define([
                 }),
                 appearance : new PolylineColorAppearance(),
                 asynchronous : false,
-                allow3DOnly : Matrix4.equals(this.modelMatrix, Matrix4.IDENTITY)  // Workaround projecting (0, 0, 0)
+                // Workaround projecting (0, 0, 0)
+                allow3DOnly : (this.modelMatrix[12] === 0.0 && this.modelMatrix[13] === 0.0 && this.modelMatrix[14] === 0.0)
             });
         }
 

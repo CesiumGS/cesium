@@ -1,35 +1,35 @@
 /*global define*/
 define([
+        './BoundingSphere',
+        './Cartesian2',
+        './Cartesian3',
+        './ComponentDatatype',
+        './CylinderGeometryLibrary',
         './defaultValue',
         './defined',
         './DeveloperError',
-        './Cartesian2',
-        './Cartesian3',
-        './CylinderGeometryLibrary',
-        './Math',
-        './ComponentDatatype',
-        './IndexDatatype',
-        './PrimitiveType',
-        './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './IndexDatatype',
+        './Math',
+        './PrimitiveType',
         './VertexFormat'
     ], function(
+        BoundingSphere,
+        Cartesian2,
+        Cartesian3,
+        ComponentDatatype,
+        CylinderGeometryLibrary,
         defaultValue,
         defined,
         DeveloperError,
-        Cartesian2,
-        Cartesian3,
-        CylinderGeometryLibrary,
-        CesiumMath,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        BoundingSphere,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        IndexDatatype,
+        CesiumMath,
+        PrimitiveType,
         VertexFormat) {
     "use strict";
 
@@ -49,7 +49,7 @@ define([
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
@@ -58,16 +58,16 @@ define([
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
      *
-     * @see CylinderGeometry#createGeometry
+     * @see CylinderGeometry.createGeometry
      *
      * @example
      * // create cylinder geometry
-     * var cylinder = new CylinderGeometry({
+     * var cylinder = new Cesium.CylinderGeometry({
      *     length: 200000,
      *     topRadius: 80000,
      *     bottomRadius: 200000,
      * });
-     * var geometry = CylinderGeometry.createGeometry(cylinder);
+     * var geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
      */
     var CylinderGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -78,25 +78,23 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var slices = defaultValue(options.slices, 128);
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0.');
         }
-
         if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0.');
         }
-
         if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
-
         if (bottomRadius === 0 && topRadius === 0) {
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
-
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
         }
+        //>>includeEnd('debug');
 
         this._length = length;
         this._topRadius = topRadius;

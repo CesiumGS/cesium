@@ -1,28 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/GeographicProjection',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-             GeographicProjection,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/GeographicProjection',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        GeographicProjection,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('construct0', function() {
         var projection = new GeographicProjection();
-        expect(projection.getEllipsoid()).toEqual(Ellipsoid.WGS84);
+        expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('construct1', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var projection = new GeographicProjection(ellipsoid);
-        expect(projection.getEllipsoid()).toEqual(ellipsoid);
+        expect(projection.ellipsoid).toEqual(ellipsoid);
     });
 
     it('project0', function() {
@@ -35,7 +35,7 @@ defineSuite([
     it('project1', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
-        var expected = new Cartesian3(Math.PI * ellipsoid.getRadii().x, CesiumMath.PI_OVER_TWO * ellipsoid.getRadii().x, 0.0);
+        var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
         var projection = new GeographicProjection(ellipsoid);
         expect(projection.project(cartographic)).toEqual(expected);
     });
@@ -51,7 +51,7 @@ defineSuite([
     it('project3', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
-        var expected = new Cartesian3(Math.PI * ellipsoid.getRadii().x, CesiumMath.PI_OVER_TWO * ellipsoid.getRadii().x, 0.0);
+        var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
         var projection = new GeographicProjection(ellipsoid);
         var result = new Cartesian3(0.0, 0.0, 0.0);
         var returnValue = projection.project(cartographic, result);
@@ -74,5 +74,12 @@ defineSuite([
         var returnValue = projection.unproject(projected, result);
         expect(result).toEqual(returnValue);
         expect(result).toEqual(cartographic);
+    });
+
+    it('project throws without cartesian', function() {
+        var projection = new GeographicProjection();
+        expect(function() {
+            return projection.unproject();
+        }).toThrowDeveloperError();
     });
 });

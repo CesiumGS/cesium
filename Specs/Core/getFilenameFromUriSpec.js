@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/getFilenameFromUri'], function(getFilenameFromUri) {
+defineSuite([
+        'Core/getFilenameFromUri'
+    ], function(
+        getFilenameFromUri) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -14,6 +17,6 @@ defineSuite(['Core/getFilenameFromUri'], function(getFilenameFromUri) {
     it('throws with undefined parameter', function() {
         expect(function() {
             getFilenameFromUri(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

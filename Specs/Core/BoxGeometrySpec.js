@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/BoxGeometry',
-         'Core/VertexFormat',
-         'Core/Cartesian3'
-     ], function(
-         BoxGeometry,
-         VertexFormat,
-         Cartesian3) {
+        'Core/BoxGeometry',
+        'Core/Cartesian3',
+        'Core/VertexFormat'
+    ], function(
+        BoxGeometry,
+        Cartesian3,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,7 +15,7 @@ defineSuite([
             return new BoxGeometry({
                 maximumCorner : new Cartesian3()
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws without maximum corner', function() {
@@ -23,7 +23,7 @@ defineSuite([
             return new BoxGeometry({
                 minimumCorner : new Cartesian3()
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY', function() {
@@ -61,7 +61,7 @@ defineSuite([
     it('fromDimensions throws without dimensions', function() {
         expect(function() {
             return BoxGeometry.fromDimensions();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromDimensions throws with negative dimensions', function() {
@@ -69,7 +69,7 @@ defineSuite([
             return BoxGeometry.fromDimensions({
                 dimensions : new Cartesian3(1, 2, -1)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromDimensions', function() {

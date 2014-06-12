@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/WallOutlineGeometry',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math'
-     ], function(
-         WallOutlineGeometry,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath) {
+        'Core/WallOutlineGeometry',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math'
+    ], function(
+        WallOutlineGeometry,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -19,7 +19,7 @@ defineSuite([
     it('throws with no positions', function() {
         expect(function() {
             return new WallOutlineGeometry();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when positions and minimumHeights length do not match', function() {
@@ -28,7 +28,7 @@ defineSuite([
                 positions : new Array(2),
                 minimumHeights : new Array(3)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when positions and maximumHeights length do not match', function() {
@@ -37,7 +37,7 @@ defineSuite([
                 positions : new Array(2),
                 maximumHeights : new Array(3)
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with less than 2 positions', function() {
@@ -45,7 +45,7 @@ defineSuite([
             return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
                 positions : ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with less than 2 unique positions', function() {
@@ -57,7 +57,7 @@ defineSuite([
                     Cartographic.fromDegrees(49.0, 18.0, 1000.0)
                 ])
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates positions relative to ellipsoid', function() {
@@ -140,7 +140,7 @@ defineSuite([
     it('fromConstantHeights throws without positions', function() {
         expect(function() {
             return WallOutlineGeometry.fromConstantHeights();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates positions with constant minimum and maximum heights', function() {

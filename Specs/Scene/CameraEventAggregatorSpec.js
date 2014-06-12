@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/CameraEventAggregator',
-         'Scene/CameraEventType',
-         'Core/Cartesian2',
-         'Core/KeyboardEventModifier',
-         'Core/ScreenSpaceEventType',
-         'Specs/MockCanvas'
-     ], function(
-         CameraEventAggregator,
-         CameraEventType,
-         Cartesian2,
-         KeyboardEventModifier,
-         ScreenSpaceEventType,
-         MockCanvas) {
+        'Scene/CameraEventAggregator',
+        'Core/Cartesian2',
+        'Core/KeyboardEventModifier',
+        'Scene/CameraEventType',
+        'Specs/MockCanvas'
+    ], function(
+        CameraEventAggregator,
+        Cartesian2,
+        KeyboardEventModifier,
+        CameraEventType,
+        MockCanvas) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,37 +34,37 @@ defineSuite([
     it('throws without a canvas', function() {
         expect(function() {
             handler2 = new CameraEventAggregator();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMovement throws without a type', function() {
         expect(function() {
             handler.getMovement();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isMoving throws without a type', function() {
         expect(function() {
             handler.isMoving();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('isButtonDown throws without a type', function() {
         expect(function() {
             handler.isButtonDown();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getButtonPressTime throws without a type', function() {
         expect(function() {
             handler.getButtonPressTime();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getButtonReleaseTime throws without a type', function() {
         expect(function() {
             handler.getButtonReleaseTime();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getMovement', function() {

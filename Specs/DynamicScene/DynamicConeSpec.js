@@ -1,16 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicCone',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicVertexPositionsProperty',
-             'Core/Color'
-         ], function(
-             DynamicCone,
-             ColorMaterialProperty,
-             ConstantProperty,
-             DynamicVertexPositionsProperty,
-             Color) {
+        'DynamicScene/DynamicCone',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicCone,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -147,6 +145,6 @@ defineSuite([
         var target = new DynamicCone();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

@@ -1,32 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-         'DynamicScene/CompositeDynamicObjectCollection',
-         'DynamicScene/CompositePositionProperty',
-         'DynamicScene/CompositeProperty',
-         'DynamicScene/ConstantProperty',
-         'DynamicScene/DynamicBillboard',
-         'DynamicScene/DynamicObjectCollection',
-         'DynamicScene/DynamicObject',
-         'Core/JulianDate',
-         'Core/Iso8601',
-         'Core/TimeInterval',
-         'Core/TimeIntervalCollection',
-         'DynamicScene/CzmlDataSource',
-         'Scene/HorizontalOrigin'
-     ], function(
-         CompositeDynamicObjectCollection,
-         CompositePositionProperty,
-         CompositeProperty,
-         ConstantProperty,
-         DynamicBillboard,
-         DynamicObjectCollection,
-         DynamicObject,
-         JulianDate,
-         Iso8601,
-         TimeInterval,
-         TimeIntervalCollection,
-         CzmlDataSource,
-         HorizontalOrigin) {
+        'DynamicScene/CompositeDynamicObjectCollection',
+        'Core/Iso8601',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/CompositePositionProperty',
+        'DynamicScene/CompositeProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicBillboard',
+        'DynamicScene/DynamicObject',
+        'DynamicScene/DynamicObjectCollection'
+    ], function(
+        CompositeDynamicObjectCollection,
+        Iso8601,
+        JulianDate,
+        TimeInterval,
+        TimeIntervalCollection,
+        CompositePositionProperty,
+        CompositeProperty,
+        ConstantProperty,
+        DynamicBillboard,
+        DynamicObject,
+        DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -553,6 +549,35 @@ defineSuite([
         expect(composite2.getById(id).position).toBe(dynamicObject2.position);
     });
 
+    it('suspend events suspends recompositing', function() {
+        var id = 'test';
+        var collection1 = new DynamicObjectCollection();
+        var dynamicObject1 = new DynamicObject(id);
+        collection1.add(dynamicObject1);
+
+        var collection2 = new DynamicObjectCollection();
+        var dynamicObject2 = new DynamicObject(id);
+        collection2.add(dynamicObject2);
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(collection2);
+
+        // suspend events
+        composite.suspendEvents();
+        composite.addCollection(collection1);
+
+        // add a billboard
+        var compositeObject = composite.getById(id);
+        dynamicObject1.billboard = new DynamicBillboard();
+        dynamicObject1.billboard.show = new ConstantProperty(false);
+        // should be undefined because we haven't recomposited
+        expect(compositeObject.billboard).toBeUndefined();
+        // resume events
+        composite.resumeEvents();
+
+        expect(compositeObject.billboard.show).toBe(dynamicObject1.billboard.show);
+    });
+
     it('prevents names from colliding between property events and object events', function() {
         var id = 'test';
         var collection1 = new DynamicObjectCollection();
@@ -595,7 +620,7 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addCollection throws if negative index', function() {
@@ -603,7 +628,7 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(collection, -1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('addCollection throws if index greater than length', function() {
@@ -611,14 +636,14 @@ defineSuite([
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.addCollection(collection, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getCollection throws with undefined index', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.getCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollection throws if collection not in composite', function() {
@@ -626,7 +651,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.raiseCollection(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollectionToTop throws if collection not in composite', function() {
@@ -634,7 +659,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.raiseCollectionToTop(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollection throws if collection not in composite', function() {
@@ -642,7 +667,7 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.lowerCollection(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollectionToBottom throws if collection not in composite', function() {
@@ -650,48 +675,48 @@ defineSuite([
         var collection = new DynamicObjectCollection();
         expect(function() {
             composite.lowerCollectionToBottom(collection);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollection throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.raiseCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('raiseCollectionToTop throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.raiseCollectionToTop(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollection throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.lowerCollection(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lowerCollectionToBottom throws if collection not defined', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.lowerCollectionToBottom(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('resumeEvents throws if no matching suspendEvents', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.resumeEvents();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getById throws if no id specified', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(function() {
             composite.getById(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

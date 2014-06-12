@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CircleGeometry',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/VertexFormat'
-     ], function(
-         CircleGeometry,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         VertexFormat) {
+        'Core/CircleGeometry',
+        'Core/Cartographic',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/VertexFormat'
+    ], function(
+        CircleGeometry,
+        Cartographic,
+        Ellipsoid,
+        CesiumMath,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -19,7 +19,7 @@ defineSuite([
             return new CircleGeometry({
                 radius : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without a radius', function() {
@@ -27,7 +27,7 @@ defineSuite([
             return new CircleGeometry({
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic())
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative radius', function() {
@@ -36,7 +36,7 @@ defineSuite([
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 radius : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative granularity', function() {
@@ -46,7 +46,7 @@ defineSuite([
                 radius : 1.0,
                 granularity : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

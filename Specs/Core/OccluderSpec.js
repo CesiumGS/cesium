@@ -1,39 +1,39 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Occluder',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/Visibility',
-         'Core/Math',
-         'Core/Ellipsoid',
-         'Core/Extent'
-     ], function(
-         Occluder,
-         Cartesian3,
-         BoundingSphere,
-         Visibility,
-         CesiumMath,
-         Ellipsoid,
-         Extent) {
+        'Core/Occluder',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/Visibility'
+    ], function(
+        Occluder,
+        BoundingSphere,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Rectangle,
+        Visibility) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {
             return new Occluder();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception during construction (2 of 3)', function() {
         expect(function() {
             return new Occluder(new BoundingSphere(new Cartesian3(0, 0, 0)));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws an exception during construction (3 of 3)', function() {
         expect(function() {
             return new Occluder(new Cartesian3(0, 0, 0));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can entirely eclipse a smaller occludee', function() {
@@ -50,7 +50,7 @@ defineSuite([
         var littleSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
         var cameraPosition = Cartesian3.ZERO;
         var occluder = new Occluder(littleSphere, cameraPosition);
-        expect(occluder.getRadius()).toBeLessThan(bigSphere.radius);
+        expect(occluder.radius).toBeLessThan(bigSphere.radius);
         expect(occluder.isBoundingSphereVisible(bigSphere)).toEqual(true);
         expect(occluder.getVisibility(bigSphere)).toEqual(Visibility.FULL);
     });
@@ -111,13 +111,13 @@ defineSuite([
 
         expect(function() {
             occluder.getVisibility();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (1 of 5)', function() {
         expect(function() {
             Occluder.getOccludeePoint();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (2 of 5)', function() {
@@ -127,7 +127,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, occludeePosition, positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (3 of 5)', function() {
@@ -136,7 +136,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -3), positions);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (4 of 5)', function() {
@@ -144,7 +144,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -3));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can throw errors during getOccludeePoint (5 of 5)', function() {
@@ -152,7 +152,7 @@ defineSuite([
 
         expect(function() {
             Occluder.getOccludeePoint(occluderBS, new Cartesian3(0, 0, -5), new Cartesian3(0, 0, -3));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('can compute an occludee point', function() {
@@ -171,8 +171,8 @@ defineSuite([
         var occludeeBS = new BoundingSphere(new Cartesian3(8, 0, 0), 1);
         var occludee = new Occluder(occludeeBS, cameraPosition);
 
-        var occluderPosition = occluder.getPosition();
-        var occludeePosition = occludee.getPosition();
+        var occluderPosition = occluder.position;
+        var occludeePosition = occludee.position;
         var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
@@ -193,8 +193,8 @@ defineSuite([
         var occludeeBS = new BoundingSphere(new Cartesian3(7, 2, 0), 1);
         var occludee = new Occluder(occludeeBS, cameraPosition);
 
-        var occluderPosition = occluder.getPosition();
-        var occludeePosition = occludee.getPosition();
+        var occluderPosition = occluder.position;
+        var occludeePosition = occludee.position;
         var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
@@ -215,8 +215,8 @@ defineSuite([
         var occludeeBS = new BoundingSphere(new Cartesian3(6, 0, 2), 1);
         var occludee = new Occluder(occludeeBS, cameraPosition);
 
-        var occluderPosition = occluder.getPosition();
-        var occludeePosition = occludee.getPosition();
+        var occluderPosition = occluder.position;
+        var occludeePosition = occludee.position;
         var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
         var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
@@ -256,38 +256,38 @@ defineSuite([
         expect(occluder.isBoundingSphereVisible(new BoundingSphere(result, 0.0))).toEqual(true);
     });
 
-    it('compute occludee point from extent throws without an extent', function() {
+    it('compute occludee point from rectangle throws without an rectangle', function() {
         expect(function() {
-            return Occluder.computeOccludeePointFromExtent();
-        }).toThrow();
+            return Occluder.computeOccludeePointFromRectangle();
+        }).toThrowDeveloperError();
     });
 
-    it('compute invalid occludee point from extent', function() {
-        var extent = Extent.MAX_VALUE;
-        expect(Occluder.computeOccludeePointFromExtent(extent)).toEqual(undefined);
+    it('compute invalid occludee point from rectangle', function() {
+        var rectangle = Rectangle.MAX_VALUE;
+        expect(Occluder.computeOccludeePointFromRectangle(rectangle)).toEqual(undefined);
     });
 
-    it('compute valid occludee point from extent', function() {
+    it('compute valid occludee point from rectangle', function() {
         var edge = Math.PI / 32.0;
-        var extent = new Extent(-edge, -edge, edge, edge);
+        var rectangle = new Rectangle(-edge, -edge, edge, edge);
         var ellipsoid = Ellipsoid.WGS84;
-        var positions = extent.subsample(ellipsoid);
+        var positions = Rectangle.subsample(rectangle, ellipsoid);
         var bs = BoundingSphere.fromPoints(positions);
-        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), bs.center, positions);
-        var actual = Occluder.computeOccludeePointFromExtent(extent);
+        var point = Occluder.getOccludeePoint(new BoundingSphere(Cartesian3.ZERO, ellipsoid.minimumRadius), bs.center, positions);
+        var actual = Occluder.computeOccludeePointFromRectangle(rectangle);
         expect(actual).toEqual(point);
     });
 
     it('fromBoundingSphere throws without a bounding sphere', function() {
         expect(function() {
             Occluder.fromBoundingSphere();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromBoundingSphere throws without camera position', function() {
         expect(function() {
             Occluder.fromBoundingSphere(new BoundingSphere());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromBoundingSphere without result parameter', function() {
@@ -296,8 +296,8 @@ defineSuite([
         var occluder0 = new Occluder(occluderBS, cameraPosition);
         var occluder1 = Occluder.fromBoundingSphere(occluderBS, cameraPosition);
 
-        expect(occluder1.getPosition()).toEqual(occluder0.getPosition());
-        expect(occluder1.getRadius()).toEqual(occluder0.getRadius());
+        expect(occluder1.position).toEqual(occluder0.position);
+        expect(occluder1.radius).toEqual(occluder0.radius);
     });
 
     it('fromBoundingSphere with result parameter', function() {
@@ -308,7 +308,7 @@ defineSuite([
         var occluder1 = Occluder.fromBoundingSphere(occluderBS, cameraPosition, result);
 
         expect(occluder1).toBe(result);
-        expect(occluder1.getPosition()).toEqual(occluder0.getPosition());
-        expect(occluder1.getRadius()).toEqual(occluder0.getRadius());
+        expect(occluder1.position).toEqual(occluder0.position);
+        expect(occluder1.radius).toEqual(occluder0.radius);
     });
 });

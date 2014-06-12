@@ -1,18 +1,18 @@
 /*global define*/
 define([
+        '../../Core/Color',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/Color',
         '../getElement',
         '../subscribeAndEvaluate'
     ], function(
+        Color,
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
-        Color,
         getElement,
         subscribeAndEvaluate) {
     "use strict";
@@ -308,16 +308,14 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {AnimationViewModel} viewModel The view model used by this widget.
      *
-     * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
-     * @exception {DeveloperError} viewModel is required.
      *
      * @see AnimationViewModel
      * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
-     * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="animationContainer"></div>
      *
      * var clock = new Cesium.Clock();
      * var clockViewModel = new Cesium.ClockViewModel(clock);
@@ -331,19 +329,18 @@ define([
      * Cesium.requestAnimationFrame(tick);
      */
     var Animation = function(container, viewModel) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-
         if (!defined(viewModel)) {
             throw new DeveloperError('viewModel is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
-
         this._viewModel = viewModel;
         this._container = container;
-
         this._centerX = 0;
         this._centerY = 0;
         this._defsElement = undefined;

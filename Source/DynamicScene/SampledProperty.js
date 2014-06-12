@@ -5,14 +5,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
-       ], function(
+    ], function(
         binarySearch,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
+        Event,
         JulianDate,
         LinearApproximation) {
     "use strict";
@@ -123,54 +125,55 @@ define([
      * @alias SampledProperty
      * @constructor
      *
-     * @param {Object} type The type of property, which must be Number, String or implement {@link Packable}.
-     *
-     * @exception {DeveloperError} type is required.
+     * @param {Number|Object} type The type of property, which must be a Number or implement {@link Packable}.
      *
      * @see SampledPositionProperty
      *
      * @example
      * //Create a linearly interpolated Cartesian2
-     * var property = new SampledProperty(Cartesian2);
+     * var property = new Cesium.SampledProperty(Cesium.Cartesian2);
      * property.interpolationDegree = 1;
      * property.interpolationAlgorithm = LinearApproximation;
      *
      * //Populate it with data
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cartesian2(0, 0));
-     * property.addSample(JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new Cartesian2(4, 7));
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cesium.Cartesian2(0, 0));
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new Cesium.Cartesian2(4, 7));
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
+     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
      *
      * @example
      * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
-     * var property = new SampledProperty(Number);
-     * property.interpolationDegree = 3;
-     * property.interpolationAlgorithm = HermitePolynomialApproximation;
+     * var property = new Cesium.SampledProperty(Number);
+     * property.setInterpolationOptions({
+     *     interpolationDegree : 3,
+     *     interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+     * });
      *
      * //Populate it with data
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
      *
      * //Samples can be added in any order.
-     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
+     * property.addSample(Cesium.JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
      *
      * //Retrieve an interpolated value
-     * var result = property.getValue(JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
+     * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
     var SampledProperty = function(type) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
+        //>>includeEnd('debug');
 
         var innerType = type;
         if (innerType === Number) {
             innerType = PackableNumber;
         }
-
         var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, innerType.packedLength);
 
         this._type = type;
@@ -185,9 +188,33 @@ define([
         this._packedInterpolationLength = packedInterpolationLength;
         this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
+        this._definitionChanged = new Event();
     };
 
     defineProperties(SampledProperty.prototype, {
+        /**
+         * Gets a value indicating if this property is constant.  A property is considered
+         * constant if getValue always returns the same result for the current definition.
+         * @memberof SampledProperty.prototype
+         * @type {Boolean}
+         */
+        isConstant : {
+            get : function() {
+                return this._values.length === 0;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever the definition of this property changes.
+         * The definition is considered to have changed if a call to getValue would return
+         * a different result for the same time.
+         * @memberof SampledProperty.prototype
+         * @type {Event}
+         */
+        definitionChanged : {
+            get : function() {
+                return this._definitionChanged;
+            }
+        },
         /**
          * Gets the type of property.
          * @memberof SampledProperty.prototype
@@ -199,22 +226,18 @@ define([
             }
         },
         /**
-         * Gets or sets the degree of interpolation to perform when retrieving a value.
+         * Gets the degree of interpolation to perform when retrieving a value.
          * @memberof SampledProperty.prototype
-         * @type {Object}
+         * @type {Number}
          * @default 1
          */
         interpolationDegree : {
             get : function() {
                 return this._interpolationDegree;
-            },
-            set : function(value) {
-                this._interpolationDegree = value;
-                this._updateTableLength = true;
             }
         },
         /**
-         * Gets or sets the interpolation algorithm to use when retrieving a value.
+         * Gets the interpolation algorithm to use when retrieving a value.
          * @memberof SampledProperty.prototype
          * @type {InterpolationAlgorithm}
          * @default LinearApproximation
@@ -222,10 +245,6 @@ define([
         interpolationAlgorithm : {
             get : function() {
                 return this._interpolationAlgorithm;
-            },
-            set : function(value) {
-                this._interpolationAlgorithm = value;
-                this._updateTableLength = true;
             }
         }
     });
@@ -237,13 +256,13 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
-     *
-     * @exception {DeveloperError} time is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
+        //>>includeEnd('debug');
 
         var innerType = this._innerType;
         var times = this._times;
@@ -333,42 +352,77 @@ define([
     };
 
     /**
+     * Sets the algorithm and degree to use when interpolating a value.
+     * @memberof SampledProperty
+     *
+     * @param {Object} options The options
+     * @param {InterpolationAlgorithm} [options.interpolationAlgorithm] The new interpolation algorithm.  If undefined, the existing property will be unchanged.
+     * @param {Number} [options.interpolationDegree] The new interpolation degree.  If undefined, the existing property will be unchanged.
+     */
+    SampledProperty.prototype.setInterpolationOptions = function(options) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
+        }
+        //>>includeEnd('debug');
+
+        var valuesChanged = false;
+
+        var interpolationAlgorithm = options.interpolationAlgorithm;
+        var interpolationDegree = options.interpolationDegree;
+
+        if (this._interpolationAlgorithm !== interpolationAlgorithm) {
+            this._interpolationAlgorithm = interpolationAlgorithm;
+            valuesChanged = true;
+        }
+
+        if (this._interpolationDegree !== interpolationDegree) {
+            this._interpolationDegree = interpolationDegree;
+            valuesChanged = true;
+        }
+
+        if (valuesChanged) {
+            this._updateTableLength = true;
+            this._definitionChanged.raiseEvent(this);
+        }
+    };
+
+    /**
      * Adds a new sample
      * @memberof SampledProperty
      *
      * @param {JulianDate} time The sample time.
      * @param {Object} value The value at the provided time.
-     *
-     * @exception {DeveloperError} time is required.
-     * @exception {DeveloperError} value is required.
      */
     SampledProperty.prototype.addSample = function(time, value) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
         if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
+        //>>includeEnd('debug');
 
         var innerType = this._innerType;
         var data = [time];
         innerType.pack(value, data, 1);
         mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTableLength = true;
+        this._definitionChanged.raiseEvent(this);
     };
 
     /**
      * Adds an array of samples
      * @memberof SampledProperty
      *
-     * @param {Array} times An array of JulianDate instances where each index is a sample time.
-     * @param {Array} values The array of values, where each value corresponds to the provided times index.
+     * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
+     * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
      *
-     * @exception {DeveloperError} times is required.
-     * @exception {DeveloperError} values is required.
      * @exception {DeveloperError} times and values must be the same length..
      */
     SampledProperty.prototype.addSamples = function(times, values) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(times)) {
             throw new DeveloperError('times is required.');
         }
@@ -378,6 +432,7 @@ define([
         if (times.length !== values.length) {
             throw new DeveloperError('times and values must be the same length.');
         }
+        //>>includeEnd('debug');
 
         var innerType = this._innerType;
         var length = times.length;
@@ -388,23 +443,26 @@ define([
         }
         mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTableLength = true;
+        this._definitionChanged.raiseEvent(this);
     };
 
     /**
      * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledProperty
      *
-     * @param {Array} packedSamples The array of packed samples.
+     * @param {Number[]} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
-     *
-     * @exception {DeveloperError} packedSamples is required.
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(packedSamples)) {
             throw new DeveloperError('packedSamples is required.');
         }
+        //>>includeEnd('debug');
+
         mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
         this._updateTableLength = true;
+        this._definitionChanged.raiseEvent(this);
     };
 
     /**

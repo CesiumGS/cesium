@@ -1,29 +1,29 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/QuadraticRealPolynomial',
-             'Core/Math'
-            ], function(
-              QuadraticRealPolynomial,
-              CesiumMath) {
+        'Core/QuadraticRealPolynomial',
+        'Core/Math'
+    ], function(
+        QuadraticRealPolynomial,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('discriminant throws without a', function() {
         expect(function() {
             QuadraticRealPolynomial.discriminant();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without b', function() {
         expect(function() {
             QuadraticRealPolynomial.discriminant(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without c', function() {
         expect(function() {
             QuadraticRealPolynomial.discriminant(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant', function() {
@@ -34,19 +34,19 @@ defineSuite([
     it('real roots throws without a', function() {
         expect(function() {
             QuadraticRealPolynomial.realRoots();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without b', function() {
         expect(function() {
             QuadraticRealPolynomial.realRoots(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without c', function() {
         expect(function() {
             QuadraticRealPolynomial.realRoots(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('negative b', function() {

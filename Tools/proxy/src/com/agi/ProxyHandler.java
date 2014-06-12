@@ -69,6 +69,10 @@ public final class ProxyHandler extends AbstractHandler {
 		URI uri;
 		try {
 			uri = new URI((String) parameterNames.nextElement());
+
+			if (uri.getScheme() == null) {
+				uri = new URI("http", uri.getUserInfo(), uri.getHost(), uri.getPort(), uri.getPath(), uri.getQuery(), uri.getFragment());
+			}
 		} catch (Exception e) {
 			throw new ServletException(e);
 		}

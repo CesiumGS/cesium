@@ -1,39 +1,38 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
+        './Cartesian2',
+        './Cartesian3',
+        './Cartesian4',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './EarthOrientationParameters',
+        './EarthOrientationParametersSample',
+        './Ellipsoid',
         './Iau2006XysData',
         './Iau2006XysSample',
         './Math',
         './Matrix3',
         './Matrix4',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './TimeConstants',
-        './Ellipsoid',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        '../ThirdParty/when'
-    ],
-    function(
+        './TimeConstants'
+    ], function(
+        when,
+        Cartesian2,
+        Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
+        EarthOrientationParameters,
+        EarthOrientationParametersSample,
+        Ellipsoid,
         Iau2006XysData,
         Iau2006XysSample,
         CesiumMath,
         Matrix3,
         Matrix4,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        TimeConstants,
-        Ellipsoid,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        when) {
+        TimeConstants) {
     "use strict";
 
     /**
@@ -63,13 +62,11 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
-     * @exception {DeveloperError} origin is required.
-     *
      * @example
      * // Get the transform from local east-north-up at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-     * var transform = Transforms.eastNorthUpToFixedFrame(center);
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.ZERO);
+     * var transform = Cesium.Transforms.eastNorthUpToFixedFrame(center);
      */
     Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -169,13 +166,11 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
-     * @exception {DeveloperError} origin is required.
-     *
      * @example
      * // Get the transform from local north-east-down at cartographic (0.0, 0.0) to Earth's fixed frame.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var center = ellipsoid.cartographicToCartesian(Cartographic.ZERO);
-     * var transform = Transforms.northEastDownToFixedFrame(center);
+     * var ellipsoid = Cesium.Ellipsoid.WGS84;
+     * var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.ZERO);
+     * var transform = Cesium.Transforms.northEastDownToFixedFrame(center);
      */
     Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -272,18 +267,12 @@ define([
      * @param {Matrix3} [result] The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      *
-     * @exception {DeveloperError} date is required.
-     *
      * @example
      * //Set the view to in the inertial frame.
-     * function updateAndRender() {
-     *     var now = new JulianDate();
-     *     scene.initializeFrame();
-     *     scene.getCamera().transform = Matrix4.fromRotationTranslation(Transforms.computeTemeToPseudoFixedMatrix(now), Cartesian3.ZERO);
-     *     scene.render();
-     *     requestAnimationFrame(updateAndRender);
-     * }
-     * updateAndRender();
+     * scene.preRender.addEventListener(function(scene, time) {
+     *   var now = new Cesium.JulianDate();
+     *   scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(Cesium.Transforms.computeTemeToPseudoFixedMatrix(now), Cesium.Cartesian3.ZERO);
+     * });
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -378,7 +367,7 @@ define([
      * @see when
      *
      * @example
-     * var interval = new TimeInterval(...);
+     * var interval = new Cesium.TimeInterval(...);
      * when(preloadIcrfFixed(interval), function() {
      *     // the data is now loaded
      * });
@@ -409,21 +398,19 @@ define([
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
-     * @exception {DeveloperError} date is required.
-     *
      * @see Transforms.preloadIcrfFixed
      *
      * @example
      * //Set the view to the inertial frame.
      * function updateAndRender() {
-     *     var now = new JulianDate();
+     *     var now = new Cesium.JulianDate();
      *     scene.initializeFrame();
-     *     var icrfToFixed = Transforms.computeIcrfToFixedMatrix(now);
-     *     if (defined(icrfToFixed)) {
-     *         scene.getCamera().transform = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
+     *     var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(now);
+     *     if (Cesium.defined(icrfToFixed)) {
+     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
      *     }
      *     scene.render();
-     *     requestAnimationFrame(updateAndRender);
+     *     Cesium.requestAnimationFrame(updateAndRender);
      * }
      * updateAndRender();
      */
@@ -461,18 +448,16 @@ define([
      * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
-     * @exception {DeveloperError} date is required.
-     *
      * @see Transforms.preloadIcrfFixed
      *
      * @example
      * // Transform a point from the ICRF axes to the Fixed axes.
-     * var now = new JulianDate();
-     * var pointInFixed = new Cartesian3(...);
-     * var fixedToIcrf = Transforms.computeIcrfToFixedMatrix(now);
+     * var now = new Cesium.JulianDate();
+     * var pointInFixed = new Cesium.Cartesian3(...);
+     * var fixedToIcrf = Cesium.Transforms.computeIcrfToFixedMatrix(now);
      * var pointInInertial;
-     * if (defined(fixedToIcrf)) {
-     *     pointInInertial = Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
+     * if (Cesium.defined(fixedToIcrf)) {
+     *     pointInInertial = Cesium.Matrix3.multiplyByVector(fixedToIcrf, pointInFixed);
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
@@ -588,13 +573,7 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
-     * @exception {DeveloperError} modelViewProjectionMatrix is required.
-     * @exception {DeveloperError} viewportTransformation is required.
-     * @exception {DeveloperError} point is required.
-     *
-     * @see UniformState#getModelViewProjection
      * @see czm_modelViewProjection
-     * @see UniformState#getViewportTransformation
      * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {

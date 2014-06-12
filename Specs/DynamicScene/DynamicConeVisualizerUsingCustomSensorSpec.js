@@ -1,38 +1,34 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicConeVisualizerUsingCustomSensor',
-             'Core/Matrix3',
-             'Core/Matrix4',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicCone',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'DynamicScene/ColorMaterialProperty',
-             'Core/JulianDate',
-             'Core/Quaternion',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene',
-             'Core/Math'
-            ], function(
-              DynamicConeVisualizerUsingCustomSensor,
-              Matrix3,
-              Matrix4,
-              createScene,
-              destroyScene,
-              ConstantProperty,
-              DynamicCone,
-              DynamicObjectCollection,
-              DynamicObject,
-              ColorMaterialProperty,
-              JulianDate,
-              Quaternion,
-              Cartesian3,
-              Color,
-              Scene,
-              CesiumMath) {
+        'DynamicScene/DynamicConeVisualizerUsingCustomSensor',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/Matrix3',
+        'Core/Matrix4',
+        'Core/Quaternion',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty',
+        'DynamicScene/DynamicCone',
+        'DynamicScene/DynamicObjectCollection',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        DynamicConeVisualizerUsingCustomSensor,
+        Cartesian3,
+        Color,
+        JulianDate,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
+        Quaternion,
+        ColorMaterialProperty,
+        ConstantProperty,
+        DynamicCone,
+        DynamicObjectCollection,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -54,14 +50,7 @@ defineSuite([
     it('constructor throws if no scene is passed.', function() {
         expect(function() {
             return new DynamicConeVisualizerUsingCustomSensor();
-        }).toThrow();
-    });
-
-    it('constructor sets expected parameters.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
-        expect(visualizer.getScene()).toEqual(scene);
-        expect(visualizer.getDynamicObjectCollection()).toEqual(dynamicObjectCollection);
+        }).toThrowDeveloperError();
     });
 
     it('update throws if no time specified.', function() {
@@ -69,16 +58,12 @@ defineSuite([
         visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
         expect(function() {
             visualizer.update();
-        }).toThrow();
-    });
-
-    it('update does nothing if no dynamicObjectCollection.', function() {
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
-        visualizer.update(new JulianDate());
+        }).toThrowDeveloperError();
     });
 
     it('isDestroy returns false until destroyed.', function() {
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene);
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
         expect(visualizer.isDestroyed()).toEqual(false);
         visualizer.destroy();
         expect(visualizer.isDestroyed()).toEqual(true);
@@ -93,7 +78,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no position does not create a primitive.', function() {
@@ -106,7 +91,7 @@ defineSuite([
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('object with no orientation does not create a primitive.', function() {
@@ -119,7 +104,7 @@ defineSuite([
         cone.maximumClockAngle = new ConstantProperty(1);
         cone.outerHalfAngle = new ConstantProperty(1);
         visualizer.update(new JulianDate());
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
     });
 
     it('A DynamicCone causes a ComplexConicSensor to be created and updated.', function() {
@@ -145,8 +130,8 @@ defineSuite([
         cone.outerMaterial = new ColorMaterialProperty();
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var c = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var c = scene.primitives.get(0);
         expect(c.minimumClockAngle).toEqual(testObject.cone.minimumClockAngle.getValue(time));
         expect(c.maximumClockAngle).toEqual(testObject.cone.maximumClockAngle.getValue(time));
         expect(c.innerHalfAngle).toEqual(testObject.cone.innerHalfAngle.getValue(time));
@@ -185,11 +170,11 @@ defineSuite([
 
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(2);
-        var c = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(2);
+        var c = scene.primitives.get(0);
         expect(c.intersectionColor).toEqual(testObject.cone.intersectionColor.getValue(time));
 
-        c = scene.getPrimitives().get(1);
+        c = scene.primitives.get(1);
         expect(c.intersectionColor).toEqual(testObject2.cone.intersectionColor.getValue(time));
     });
 
@@ -205,8 +190,8 @@ defineSuite([
         testObject.cone = new DynamicCone();
         visualizer.update(time);
 
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var c = scene.getPrimitives().get(0);
+        expect(scene.primitives.length).toEqual(1);
+        var c = scene.primitives.get(0);
         expect(c.minimumClockAngle).toEqual(0.0);
         expect(c.maximumClockAngle).toEqual(CesiumMath.TWO_PI);
         expect(c.innerHalfAngle).toEqual(0);
@@ -227,14 +212,14 @@ defineSuite([
         cone.outerHalfAngle = new ConstantProperty(1);
 
         var time = new JulianDate();
-        expect(scene.getPrimitives().getLength()).toEqual(0);
+        expect(scene.primitives.length).toEqual(0);
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(true);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(true);
         dynamicObjectCollection.removeAll();
         visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        expect(scene.getPrimitives().get(0).show).toEqual(false);
+        expect(scene.primitives.length).toEqual(1);
+        expect(scene.primitives.get(0).show).toEqual(false);
     });
 
     it('Visualizer sets dynamicObject property.', function() {
@@ -250,39 +235,6 @@ defineSuite([
 
         var time = new JulianDate();
         visualizer.update(time);
-        expect(scene.getPrimitives().get(0).dynamicObject).toEqual(testObject);
-    });
-
-    it('setDynamicObjectCollection removes old objects and add new ones.', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
-        var cone = testObject.cone = new DynamicCone();
-        cone.maximumClockAngle = new ConstantProperty(1);
-        cone.outerHalfAngle = new ConstantProperty(1);
-
-        var dynamicObjectCollection2 = new DynamicObjectCollection();
-        var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.orientation = new ConstantProperty(new Quaternion(1, 0, 0, 0));
-        var cone2 = testObject2.cone = new DynamicCone();
-        cone2.maximumClockAngle = new ConstantProperty(0.12);
-        cone2.outerHalfAngle = new ConstantProperty(1.1);
-
-        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
-
-        var time = new JulianDate();
-
-        visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        var conePrimitive = scene.getPrimitives().get(0);
-        expect(conePrimitive.dynamicObject).toEqual(testObject);
-
-        visualizer.setDynamicObjectCollection(dynamicObjectCollection2);
-        visualizer.update(time);
-        expect(scene.getPrimitives().getLength()).toEqual(1);
-        conePrimitive = scene.getPrimitives().get(0);
-        expect(conePrimitive.dynamicObject).toEqual(testObject2);
+        expect(scene.primitives.get(0).id).toEqual(testObject);
     });
 }, 'WebGL');

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPath',
-             'DynamicScene/ConstantProperty',
-             'Core/Color'
-            ], function(
-                    DynamicPath,
-              ConstantProperty,
-              Color) {
+        'DynamicScene/DynamicPath',
+        'Core/Color',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicPath,
+        Color,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -100,6 +100,6 @@ defineSuite([
         var target = new DynamicPath();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

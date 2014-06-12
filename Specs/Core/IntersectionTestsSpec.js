@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/IntersectionTests',
-         'Core/Cartesian3',
-         'Core/defined',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/Plane',
-         'Core/Ray'
-     ], function(
-         IntersectionTests,
-         Cartesian3,
-         defined,
-         Ellipsoid,
-         CesiumMath,
-         Plane,
-         Ray) {
+        'Core/IntersectionTests',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Core/Plane',
+        'Core/Ray'
+    ], function(
+        IntersectionTests,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        Plane,
+        Ray) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -48,25 +46,25 @@ defineSuite([
     it('rayPlane throws without ray', function() {
         expect(function() {
             IntersectionTests.rayPlane();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayPlane throws without plane', function() {
         expect(function() {
             IntersectionTests.rayPlane(new Ray(new Cartesian3(), new Cartesian3()));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid throws without ray', function() {
         expect(function() {
             IntersectionTests.rayEllipsoid();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid throws without ellipsoid', function() {
         expect(function() {
             IntersectionTests.rayEllipsoid(new Ray(new Cartesian3(), new Cartesian3()));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('rayEllipsoid outside intersections', function() {
@@ -132,7 +130,7 @@ defineSuite([
 
         var expected = {
                 start : 0.0,
-                stop : ellipsoid.getRadii().x + origin.x
+                stop : ellipsoid.radii.x + origin.x
         };
         var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 
@@ -150,7 +148,7 @@ defineSuite([
 
         var expected = {
                 start : 0.0,
-                stop : ellipsoid.getRadii().x - origin.x
+                stop : ellipsoid.radii.x - origin.x
         };
         var actual = IntersectionTests.rayEllipsoid(ray, ellipsoid);
 
@@ -190,13 +188,13 @@ defineSuite([
     it('grazingAltitudeLocation throws without ray', function() {
         expect(function() {
             IntersectionTests.grazingAltitudeLocation();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('grazingAltitudeLocation throws without ellipsoid', function() {
         expect(function() {
             IntersectionTests.grazingAltitudeLocation(new Ray());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('grazingAltitudeLocation is origin of ray', function() {
@@ -300,19 +298,19 @@ defineSuite([
     it('lineSegmentPlane throws without endPoint0', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lineSegmentPlane throws without endPoint1', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane(new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('lineSegmentPlane throws without plane', function() {
         expect(function() {
             IntersectionTests.lineSegmentPlane(new Cartesian3(), new Cartesian3());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('triangle is front of a plane', function() {
@@ -413,7 +411,7 @@ defineSuite([
     it('trianglePlaneIntersection throws without p0', function() {
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without p1', function() {
@@ -421,7 +419,7 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without p2', function() {
@@ -429,7 +427,7 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p, p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('trianglePlaneIntersection throws without plane', function() {
@@ -437,6 +435,6 @@ defineSuite([
 
         expect(function() {
             return IntersectionTests.trianglePlaneIntersection(p, p, p);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

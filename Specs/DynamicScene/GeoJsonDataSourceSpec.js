@@ -1,19 +1,19 @@
 /*global defineSuite*/
 defineSuite([
         'DynamicScene/GeoJsonDataSource',
-        'DynamicScene/DynamicObjectCollection',
-        'Core/Cartographic',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Event',
+        'DynamicScene/DynamicObjectCollection',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
-        DynamicObjectCollection,
-        Cartographic,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         Event,
+        DynamicObjectCollection,
         when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -194,20 +194,19 @@ defineSuite([
 
     it('default constructor has expected values', function() {
         var dataSource = new GeoJsonDataSource();
-        expect(dataSource.getChangedEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getErrorEvent()).toBeInstanceOf(Event);
-        expect(dataSource.getClock()).toBeUndefined();
-        expect(dataSource.getName()).toBeUndefined();
-        expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(false);
+        expect(dataSource.changedEvent).toBeInstanceOf(Event);
+        expect(dataSource.errorEvent).toBeInstanceOf(Event);
+        expect(dataSource.clock).toBeUndefined();
+        expect(dataSource.name).toBeUndefined();
+        expect(dataSource.dynamicObjects).toBeInstanceOf(DynamicObjectCollection);
+        expect(dataSource.dynamicObjects.getObjects().length).toEqual(0);
     });
 
     it('Works with null geometry', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(featureNullGeometry);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -222,7 +221,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(feature);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -238,7 +237,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(featureWithId);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 2;
         });
@@ -254,7 +253,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(point);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -270,7 +269,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(multiPoint);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === multiPoint.coordinates.length;
         });
@@ -290,7 +289,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(lineString);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -306,7 +305,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(multiLineString);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 2;
         });
@@ -326,7 +325,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(polygon);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -343,7 +342,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(polygonWithHoles);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -360,7 +359,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(multiPolygon);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 2;
         });
@@ -381,7 +380,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(topoJson);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 2;
         });
@@ -400,11 +399,26 @@ defineSuite([
         });
     });
 
+    it('Generates description', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(topoJson);
+
+        var dynamicObjectCollection = dataSource.dynamicObjects;
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 2;
+        });
+        runs(function() {
+            var objects = dynamicObjectCollection.getObjects();
+            var polygon = objects[0];
+            expect(polygon.description).toBeDefined();
+        });
+    });
+
     it('Works with geometrycollection', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(geometryCollection);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 2;
         });
@@ -425,7 +439,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(pointNamedCrs);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -450,7 +464,7 @@ defineSuite([
         };
         dataSource.load(pointCrsLinkHref);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -464,7 +478,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         dataSource.load(pointCrsEpsg);
 
-        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        var dynamicObjectCollection = dataSource.dynamicObjects;
         waitsFor(function() {
             return dynamicObjectCollection.getObjects().length === 1;
         });
@@ -479,11 +493,11 @@ defineSuite([
         dataSource.loadUrl('Data/test.geojson');
 
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 4;
+            return dataSource.dynamicObjects.getObjects().length === 4;
         });
 
         runs(function() {
-            expect(dataSource.getName()).toEqual('test.geojson');
+            expect(dataSource.name).toEqual('test.geojson');
         });
     });
 
@@ -530,27 +544,27 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('load throws with unknown geometry', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(unknownGeometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl throws with undefined Url', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.loadUrl(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('loadUrl raises error with invalud url', function() {
         var dataSource = new GeoJsonDataSource();
         var thrown = false;
-        dataSource.getErrorEvent().addEventListener(function() {
+        dataSource.errorEvent.addEventListener(function() {
             thrown = true;
         });
         dataSource.loadUrl('invalid.geojson');
@@ -569,7 +583,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithNullCrs);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs type', function() {
@@ -585,7 +599,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with undefined crs properties', function() {
@@ -600,7 +614,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs', function() {
@@ -618,7 +632,7 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('load throws with unknown crs link', function() {
@@ -637,14 +651,14 @@ defineSuite([
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(featureWithUnknownCrsType);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('raises error when an error occurs in loadUrl', function() {
         var dataSource = new GeoJsonDataSource();
 
         var spy = jasmine.createSpy('errorEvent');
-        dataSource.getErrorEvent().addEventListener(spy);
+        dataSource.errorEvent.addEventListener(spy);
 
         var promise = dataSource.loadUrl('Data/Images/Blue.png'); //not JSON
 

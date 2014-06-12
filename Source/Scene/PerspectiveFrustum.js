@@ -3,7 +3,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Scene/PerspectiveOffCenterFrustum'
+        './PerspectiveOffCenterFrustum'
     ], function(
         defined,
         defineProperties,
@@ -13,7 +13,7 @@ define([
 
     /**
      * The viewing frustum is defined by 6 planes.
-     * Each plane is represented by a {Cartesian4} object, where the x, y, and z components
+     * Each plane is represented by a {@link Cartesian4} object, where the x, y, and z components
      * define the unit vector normal to the plane, and the w component is the distance of the
      * plane from the origin/camera position.
      *
@@ -23,8 +23,8 @@ define([
      * @see PerspectiveOffCenterFrustum
      *
      * @example
-     * var frustum = new PerspectiveFrustum();
-     * frustum.fovy = CesiumMath.PI_OVER_THREE;
+     * var frustum = new Cesium.PerspectiveFrustum();
+     * frustum.fovy = Cesium.Math.PI_OVER_THREE;
      * frustum.aspectRatio = canvas.clientWidth / canvas.clientHeight;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
@@ -63,6 +63,14 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        this._xOffset = 0.0;
+        this._yOffset = 0.0;
+    };
+
+    PerspectiveFrustum.prototype.setOffset = function(xOffset, yOffset) {
+      this._xOffset = xOffset;
+      this._yOffset = yOffset;
     };
 
     function update(frustum) {
@@ -101,13 +109,21 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            // now apply offsets
+            var dx = f.right - f.left;
+            f.left += dx * frustum._xOffset;
+            f.right += dx * frustum._xOffset;
+            var dy = f.top - f.bottom;
+            f.top += dy * frustum._yOffset;
+            f.bottom += dy * frustum._yOffset;
         }
     }
 
     defineProperties(PerspectiveFrustum.prototype, {
         /**
-         * The perspective projection matrix computed from the view frustum.
-         * @memberof PerspectiveFrustum
+         * Gets the perspective projection matrix computed from the view frustum.
+         * @memberof PerspectiveFrustum.prototype
          * @type {Matrix4}
          *
          * @see PerspectiveFrustum#infiniteProjectionMatrix
@@ -143,10 +159,6 @@ define([
      * @param {Cartesian3} direction The view direction.
      * @param {Cartesian3} up The up direction.
      *
-     * @exception {DeveloperError} position is required.
-     * @exception {DeveloperError} direction is required.
-     * @exception {DeveloperError} up is required.
-     *
      * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
@@ -169,7 +181,6 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} drawingBufferDimensions is required.
      * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
      * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
      *
@@ -186,9 +197,9 @@ define([
      * // For example, get the size of a pixel of an image on a billboard.
      * var position = camera.position;
      * var direction = camera.direction;
-     * var toCenter = Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
-     * var toCenterProj = Cartesian3.multiplyByScalar(direction, Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
-     * var distance = Cartesian3.magnitude(toCenterProj);
+     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position);      // vector from camera to a primitive
+     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter)); // project vector onto camera direction vector
+     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
      * var pixelSize = camera.frustum.getPixelSize({
      *     width : canvas.clientWidth,
      *     height : canvas.clientHeight
@@ -221,6 +232,9 @@ define([
         result._aspectRatio = undefined;
         result._near = undefined;
         result._far = undefined;
+
+        result._xOffset = this._xOffset;
+        result._yOffset = this._yOffset;
 
         this._offCenterFrustum.clone(result._offCenterFrustum);
 

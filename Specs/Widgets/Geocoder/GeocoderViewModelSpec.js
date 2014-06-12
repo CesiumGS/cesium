@@ -1,14 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Geocoder/GeocoderViewModel',
-         'Core/Ellipsoid',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         GeocoderViewModel,
-         Ellipsoid,
-         createScene,
-         destroyScene) {
+        'Widgets/Geocoder/GeocoderViewModel',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Specs/createScene',
+        'Specs/destroyScene'
+    ], function(
+        GeocoderViewModel,
+        Cartesian3,
+        Ellipsoid,
+        createScene,
+        destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -51,7 +53,7 @@ defineSuite([
 
         expect(function() {
             viewModel.flightDuration = -123;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws is searchText is not a string', function() {
@@ -60,7 +62,7 @@ defineSuite([
         });
         expect(function() {
             viewModel.searchText = undefined;
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('moves camera when search command invoked', function() {
@@ -68,14 +70,14 @@ defineSuite([
             scene : scene
         });
 
-        var cameraPosition = scene.getCamera().position;
+        var cameraPosition = Cartesian3.clone(scene.camera.position);
 
         viewModel.searchText = '220 Valley Creek Blvd, Exton, PA';
         viewModel.search();
 
         waitsFor(function() {
-            scene.getAnimations().update();
-            var newCameraPosition = scene.getCamera().position;
+            scene.animations.update();
+            var newCameraPosition = scene.camera.position;
             return cameraPosition.x !== newCameraPosition.x || cameraPosition.y !== newCameraPosition.y || cameraPosition.z !== newCameraPosition.z;
         });
     });
@@ -83,6 +85,6 @@ defineSuite([
     it('constructor throws without scene', function() {
         expect(function() {
             return new GeocoderViewModel();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

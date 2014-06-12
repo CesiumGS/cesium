@@ -1,22 +1,22 @@
 /*global define*/
 define([
-        '../../Core/DeveloperError',
         '../../Core/ClockRange',
         '../../Core/defined',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Core/JulianDate',
         '../getElement',
-        './TimelineTrack',
-        './TimelineHighlightRange'
+        './TimelineHighlightRange',
+        './TimelineTrack'
     ], function(
-        DeveloperError,
         ClockRange,
         defined,
         destroyObject,
+        DeveloperError,
         JulianDate,
         getElement,
-        TimelineTrack,
-        TimelineHighlightRange) {
+        TimelineHighlightRange,
+        TimelineTrack) {
     "use strict";
 
     var timelineWheelDelta = 1e12;
@@ -74,13 +74,14 @@ define([
     var timelineMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     function Timeline(container, clock) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
-
         if (!defined(clock)) {
             throw new DeveloperError('clock is required.');
         }
+        //>>includeEnd('debug');
 
         container = getElement(container);
 
@@ -187,8 +188,8 @@ define([
         destroyObject(this);
     };
 
-    Timeline.prototype.addHighlightRange = function(color, heightInPx) {
-        var newHighlightRange = new TimelineHighlightRange(color, heightInPx);
+    Timeline.prototype.addHighlightRange = function(color, heightInPx, base) {
+        var newHighlightRange = new TimelineHighlightRange(color, heightInPx, base);
         this._highlightRanges.push(newHighlightRange);
         this.resize();
         return newHighlightRange;
@@ -204,9 +205,13 @@ define([
 
     Timeline.prototype.zoomTo = function(startJulianDate, endJulianDate) {
         this._timeBarSecondsSpan = startJulianDate.getSecondsDifference(endJulianDate);
+
+        //>>includeStart('debug', pragmas.debug);
         if (this._timeBarSecondsSpan <= 0) {
             throw new DeveloperError('Start time must come before end time.');
         }
+        //>>includeEnd('debug');
+
         this._startJulian = startJulianDate;
         this._endJulian = endJulianDate;
 
@@ -356,12 +361,15 @@ define([
         // Width in pixels of a typical label, plus padding
         this._rulerEle.innerHTML = this.makeLabel(this._endJulian.addSeconds(-minimumDuration));
         var sampleWidth = this._rulerEle.offsetWidth + 20;
+        if (sampleWidth < 30) {
+            // Workaround an apparent IE bug with measuring the width after going full-screen from inside an iframe.
+            sampleWidth = 180;
+        }
 
         var origMinSize = minSize;
         minSize -= epsilon;
 
         var renderState = {
-            y : 0,
             startTime : startTime,
             startJulian : startJulian,
             epochJulian : epochJulian,
@@ -459,6 +467,10 @@ define([
                 var ticLabel = this.makeLabel(ticTime);
                 this._rulerEle.innerHTML = ticLabel;
                 textWidth = this._rulerEle.offsetWidth;
+                if (textWidth < 10) {
+                    // IE iframe fullscreen sampleWidth workaround, continued.
+                    textWidth = sampleWidth;
+                }
                 var labelLeft = ticLeft - ((textWidth / 2) - 1);
                 if (labelLeft > lastTextLeft) {
                     lastTextLeft = labelLeft + textWidth + 5;

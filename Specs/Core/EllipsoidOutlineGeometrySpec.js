@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/EllipsoidOutlineGeometry'
-     ], function(
-         EllipsoidOutlineGeometry) {
+        'Core/EllipsoidOutlineGeometry'
+    ], function(
+        EllipsoidOutlineGeometry) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -11,7 +11,7 @@ defineSuite([
             return new EllipsoidOutlineGeometry({
                 stackPartitions: 0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if slicePartitions less than 0', function() {
@@ -19,7 +19,7 @@ defineSuite([
             return new EllipsoidOutlineGeometry({
                 slicePartitions: -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if subdivisions less than 0', function() {
@@ -27,7 +27,7 @@ defineSuite([
             return new EllipsoidOutlineGeometry({
                 subdivisions: -2
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

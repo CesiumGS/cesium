@@ -1,18 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/DiscardMissingTileImagePolicy',
-         'Core/Cartesian2',
-         'Core/defined',
-         'Core/loadImage',
-         'Core/loadWithXhr',
-         'ThirdParty/when'
-     ], function(
-         DiscardMissingTileImagePolicy,
-         Cartesian2,
-         defined,
-         loadImage,
-         loadWithXhr,
-         when) {
+        'Scene/DiscardMissingTileImagePolicy',
+        'Core/Cartesian2',
+        'Core/defined',
+        'Core/loadImage',
+        'Core/loadWithXhr',
+        'ThirdParty/when'
+    ], function(
+        DiscardMissingTileImagePolicy,
+        Cartesian2,
+        defined,
+        loadImage,
+        loadWithXhr,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -28,7 +28,7 @@ defineSuite([
                     pixelsToCheck : [new Cartesian2(0, 0)]
                 });
             }
-            expect(constructWithoutMissingImageUrl).toThrow();
+            expect(constructWithoutMissingImageUrl).toThrowDeveloperError();
         });
 
         it('throws if pixelsToCheck is not provided', function() {
@@ -37,7 +37,7 @@ defineSuite([
                     missingImageUrl : 'http://some.host.invalid/missingImage.png'
                 });
             }
-            expect(constructWithoutPixelsToCheck).toThrow();
+            expect(constructWithoutPixelsToCheck).toThrowDeveloperError();
         });
 
         it('requests the missing image url', function() {
@@ -52,7 +52,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 imageDownloaded = true;
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
@@ -94,7 +94,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
@@ -137,7 +137,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toEqual(missingImageUrl);
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
@@ -197,7 +197,7 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadWithXhr.load = function(url, responseType, method, data, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 return loadWithXhr.defaultLoad('Data/Images/Transparent.png', responseType, method, data, headers, deferred);
             };
 
@@ -211,7 +211,7 @@ defineSuite([
                 policy.shouldDiscardImage(new Image());
             }
 
-            expect(callShouldDiscardImage).toThrow();
+            expect(callShouldDiscardImage).toThrowDeveloperError();
         });
     });
 });

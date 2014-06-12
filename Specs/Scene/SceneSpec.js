@@ -1,46 +1,50 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/defined',
-         'Core/defaultValue',
-         'Core/Color',
-         'Core/Cartesian3',
-         'Core/BoundingSphere',
-         'Core/Event',
-         'Core/Extent',
-         'Renderer/DrawCommand',
-         'Renderer/Context',
-         'Renderer/Pass',
-         'Renderer/UniformState',
-         'Scene/AnimationCollection',
-         'Scene/Camera',
-         'Scene/CompositePrimitive',
-         'Scene/ExtentPrimitive',
-         'Scene/FrameState',
-         'Scene/ScreenSpaceCameraController',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], 'Scene/Scene', function(
-         defined,
-         defaultValue,
-         Color,
-         Cartesian3,
-         BoundingSphere,
-         Event,
-         Extent,
-         DrawCommand,
-         Context,
-         Pass,
-         UniformState,
-         AnimationCollection,
-         Camera,
-         CompositePrimitive,
-         ExtentPrimitive,
-         FrameState,
-         ScreenSpaceCameraController,
-         createScene,
-         destroyScene) {
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/Ellipsoid',
+        'Core/PixelFormat',
+        'Core/Rectangle',
+        'Core/RuntimeError',
+        'Renderer/DrawCommand',
+        'Renderer/PixelDatatype',
+        'Scene/AnimationCollection',
+        'Scene/Camera',
+        'Scene/FrameState',
+        'Scene/Globe',
+        'Scene/Pass',
+        'Scene/PrimitiveCollection',
+        'Scene/RectanglePrimitive',
+        'Scene/ScreenSpaceCameraController',
+        'Specs/createScene',
+        'Specs/destroyScene',
+        'Specs/equals',
+        'Specs/render'
+    ], 'Scene/Scene', function(
+        BoundingSphere,
+        Cartesian3,
+        Color,
+        Ellipsoid,
+        PixelFormat,
+        Rectangle,
+        RuntimeError,
+        DrawCommand,
+        PixelDatatype,
+        AnimationCollection,
+        Camera,
+        FrameState,
+        Globe,
+        Pass,
+        PrimitiveCollection,
+        RectanglePrimitive,
+        ScreenSpaceCameraController,
+        createScene,
+        destroyScene,
+        equals,
+        render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,WebGLRenderingContext*/
 
     var scene;
 
@@ -49,8 +53,11 @@ defineSuite([
     });
 
     afterEach(function() {
+        scene.backgroundColor = new Color(0.0, 0.0, 0.0, 0.0);
         scene.debugCommandFilter = undefined;
-        scene.getPrimitives().removeAll();
+        scene.fxaaOrderIndependentTranslucency = true;
+        scene.fxaa = false;
+        scene.primitives.removeAll();
     });
 
     afterAll(function() {
@@ -58,16 +65,14 @@ defineSuite([
     });
 
     it('constructor has expected defaults', function() {
-        expect(scene.getCanvas()).toBeInstanceOf(HTMLCanvasElement);
-        expect(scene.getContext()).toBeInstanceOf(Context);
-        expect(scene.getPrimitives()).toBeInstanceOf(CompositePrimitive);
-        expect(scene.getCamera()).toBeInstanceOf(Camera);
-        expect(scene.getUniformState()).toBeInstanceOf(UniformState);
-        expect(scene.getScreenSpaceCameraController()).toBeInstanceOf(ScreenSpaceCameraController);
-        expect(scene.getFrameState()).toBeInstanceOf(FrameState);
-        expect(scene.getAnimations()).toBeInstanceOf(AnimationCollection);
+        expect(scene.canvas).toBeInstanceOf(HTMLCanvasElement);
+        expect(scene.primitives).toBeInstanceOf(PrimitiveCollection);
+        expect(scene.camera).toBeInstanceOf(Camera);
+        expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
+        expect(scene.frameState).toBeInstanceOf(FrameState);
+        expect(scene.animations).toBeInstanceOf(AnimationCollection);
 
-        var contextAttributes = scene.getContext()._gl.getContextAttributes();
+        var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
         expect(contextAttributes.stencil).toEqual(false);
@@ -81,7 +86,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
 
@@ -89,7 +94,7 @@ defineSuite([
             webgl : webglOptions
         });
 
-        var contextAttributes = s.getContext()._gl.getContextAttributes();
+        var contextAttributes = s.context._gl.getContextAttributes();
         expect(contextAttributes.alpha).toEqual(webglOptions.alpha);
         expect(contextAttributes.depth).toEqual(webglOptions.depth);
         expect(contextAttributes.stencil).toEqual(webglOptions.stencil);
@@ -103,55 +108,47 @@ defineSuite([
     it('draws background color', function() {
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 0, 255]);
 
         scene.backgroundColor = Color.BLUE;
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    function getMockPrimitive(options) {
-        return {
+    it('calls afterRender functions', function() {
+        var spyListener = jasmine.createSpy('listener');
+
+        var primitive = {
             update : function(context, frameState, commandList) {
-                options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-                if (defined(options.command)) {
-                    commandList.push(options.command);
-                }
-
-                if (defined(options.event)) {
-                    frameState.events.push(options.event);
-                }
+                frameState.afterRender.push(spyListener);
             },
             destroy : function() {
             }
         };
-    }
-
-    it('fires FrameState events', function() {
-        var spyListener = jasmine.createSpy('listener');
-        var event = new Event();
-        event.addEventListener(spyListener);
-
-        scene.getPrimitives().add(getMockPrimitive({
-            event : event
-        }));
+        scene.primitives.add(primitive);
 
         scene.initializeFrame();
         scene.render();
         expect(spyListener).toHaveBeenCalled();
     });
 
+    function CommandMockPrimitive(command) {
+        this.update = function(context, frameState, commandList) {
+            commandList.push(command);
+        };
+        this.destroy = function() {
+        };
+    }
+
     it('debugCommandFilter filters commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
             return command !== c;   // Do not execute command
@@ -163,14 +160,13 @@ defineSuite([
     });
 
     it('debugCommandFilter does not filter commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
         spyOn(c, 'execute');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         expect(scene.debugCommandFilter).toBeUndefined();
         scene.initializeFrame();
@@ -179,32 +175,30 @@ defineSuite([
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            debugShowBoundingVolume : true,
+            boundingVolume : new BoundingSphere(Cartesian3.ZERO, 7000000.0)
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.debugShowBoundingVolume = true;
-        c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
-        expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
+        expect(scene.context.readPixels()[0]).not.toEqual(0);  // Red bounding sphere
     });
 
     it('debugShowCommands tints commands', function() {
-        var c = new DrawCommand();
+        var c = new DrawCommand({
+            pass : Pass.OPAQUE,
+            shaderProgram : scene.context.createShaderProgram(
+                'void main() { gl_Position = vec4(1.0); }',
+                'void main() { gl_FragColor = vec4(1.0); }')
+        });
         c.execute = function() {};
-        c.pass = Pass.OPAQUE;
-        c.shaderProgram = scene.getContext().getShaderCache().getShaderProgram(
-            'void main() { gl_Position = vec4(1.0); }',
-            'void main() { gl_FragColor = vec4(1.0); }');
 
-        scene.getPrimitives().add(getMockPrimitive({
-            command : c
-        }));
+        scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugShowCommands = true;
         scene.initializeFrame();
@@ -213,82 +207,300 @@ defineSuite([
         scene.debugShowCommands = false;
     });
 
-    it('opaque/translucent render order (1)', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+    it('debugShowFramesPerSecond', function() {
+        scene.debugShowFramesPerSecond = true;
+        scene.render();
+        expect(scene._performanceDisplay).toBeDefined();
+        scene.debugShowFramesPerSecond = false;
+    });
 
-        var extentPrimitive1 = new ExtentPrimitive({
-            extent : extent,
+    it('opaque/translucent render order (1)', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive1 = new RectanglePrimitive({
+            rectangle : rectangle,
             asynchronous : false
         });
-        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var extentPrimitive2 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive2 = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        rectanglePrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var primitives = scene.getPrimitives();
-        primitives.add(extentPrimitive1);
-        primitives.add(extentPrimitive2);
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive1);
+        primitives.add(rectanglePrimitive2);
 
-        scene.getCamera().controller.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
 
-        primitives.raiseToTop(extentPrimitive1);
+        primitives.raiseToTop(rectanglePrimitive1);
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene.getContext().readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).not.toEqual(0);
         expect(pixels[2]).toEqual(0);
     });
 
     it('opaque/translucent render order (2)', function() {
-        var extent = Extent.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
 
-        var extentPrimitive1 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive1 = new RectanglePrimitive({
+            rectangle : rectangle,
             height : 1000.0,
             asynchronous : false
         });
-        extentPrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+        rectanglePrimitive1.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
 
-        var extentPrimitive2 = new ExtentPrimitive({
-            extent : extent,
+        var rectanglePrimitive2 = new RectanglePrimitive({
+            rectangle : rectangle,
             asynchronous : false
         });
-        extentPrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
+        rectanglePrimitive2.material.uniforms.color = new Color(0.0, 1.0, 0.0, 0.5);
 
-        var primitives = scene.getPrimitives();
-        primitives.add(extentPrimitive1);
-        primitives.add(extentPrimitive2);
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive1);
+        primitives.add(rectanglePrimitive2);
 
-        scene.getCamera().controller.viewExtent(extent);
+        scene.camera.viewRectangle(rectangle);
 
         scene.initializeFrame();
         scene.render();
-        var pixels = scene.getContext().readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
 
-        primitives.raiseToTop(extentPrimitive1);
+        primitives.raiseToTop(rectanglePrimitive1);
 
         scene.initializeFrame();
         scene.render();
-        pixels = scene.getContext().readPixels();
+        pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders fast path with no translucent primitives', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            height : 1000.0,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.camera.viewRectangle(rectangle);
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders with OIT and without FXAA', function() {
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            height : 1000.0,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.camera.viewRectangle(rectangle);
+
+        scene.fxaaOrderIndependentTranslucency = false;
+        scene.fxaa = false;
+
+        scene.initializeFrame();
+        scene.render();
+        var pixels = scene.context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders with forced FXAA', function() {
+        var context = scene.context;
+
+        // Workaround for Firefox on Mac, which does not support RGBA + depth texture
+        // attachments, which is allowed by the spec.
+        if (context.depthTexture) {
+            var framebuffer = context.createFramebuffer({
+                colorTextures : [context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.RGBA,
+                    pixelDatatype : PixelDatatype.UNSIGNED_BYTE
+                })],
+                depthTexture : context.createTexture2D({
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                    pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                })
+            });
+
+            var status = framebuffer.status;
+            framebuffer.destroy();
+
+            if (status !== WebGLRenderingContext.FRAMEBUFFER_COMPLETE) {
+                return;
+            }
+        }
+
+        var s = createScene();
+        s._oit._translucentMRTSupport = false;
+        s._oit._translucentMultipassSupport = false;
+
+        s.fxaa = true;
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+        var rectanglePrimitive = new RectanglePrimitive({
+            rectangle : rectangle,
+            height : 1000.0,
+            asynchronous : false
+        });
+        rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = s.primitives;
+        primitives.add(rectanglePrimitive);
+
+        s.camera.viewRectangle(rectangle);
+
+        s.initializeFrame();
+        s.render();
+        var pixels = s._context.readPixels();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        destroyScene(s);
+    });
+
+    it('setting a central body', function() {
+        var scene = createScene();
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+        var globe = new Globe(ellipsoid);
+        scene.globe = globe;
+
+        expect(scene.globe).toBe(globe);
+
+        destroyScene(scene);
+    });
+
+    it('destroys primitive on set globe', function() {
+        var scene = createScene();
+        var globe = new Globe(Ellipsoid.UNIT_SPHERE);
+
+        scene.globe = globe;
+        expect(globe.isDestroyed()).toEqual(false);
+
+        scene.globe = null;
+        expect(globe.isDestroyed()).toEqual(true);
+
+        destroyScene(scene);
+    });
+
+    it('renders a central body', function() {
+        var s = createScene();
+
+        s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+        s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+        s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position));
+
+        s.initializeFrame();
+        s.render();
+
+        waitsFor(function() {
+            render(s._context, s.frameState, s.globe);
+            return !equals(this.env, s._context.readPixels(), [0, 0, 0, 0]);
+        }, 'the central body to be rendered', 5000);
+    });
+
+    it('renders with multipass OIT if MRT is available', function() {
+        if (scene.context.drawBuffers) {
+            var s = createScene();
+            s._oit._translucentMRTSupport = false;
+            s._oit._translucentMultipassSupport = true;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = new RectanglePrimitive({
+                rectangle : rectangle,
+                height : 1000.0,
+                asynchronous : false
+            });
+            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.viewRectangle(rectangle);
+
+            s.initializeFrame();
+            s.render();
+            var pixels = s._context.readPixels();
+            expect(pixels[0]).not.toEqual(0);
+            expect(pixels[1]).toEqual(0);
+            expect(pixels[2]).toEqual(0);
+
+            destroyScene(s);
+        }
+    });
+
+    it('renders with alpha blending if floating point textures are available', function() {
+        if (scene.context.floatingPointTexture) {
+            var s = createScene();
+            s._oit._translucentMRTSupport = false;
+            s._oit._translucentMultipassSupport = false;
+
+            var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+
+            var rectanglePrimitive = new RectanglePrimitive({
+                rectangle : rectangle,
+                height : 1000.0,
+                asynchronous : false
+            });
+            rectanglePrimitive.material.uniforms.color = new Color(1.0, 0.0, 0.0, 0.5);
+
+            var primitives = s.primitives;
+            primitives.add(rectanglePrimitive);
+
+            s.camera.viewRectangle(rectangle);
+
+            s.initializeFrame();
+            s.render();
+            var pixels = s._context.readPixels();
+            expect(pixels[0]).not.toEqual(0);
+            expect(pixels[1]).toEqual(0);
+            expect(pixels[2]).toEqual(0);
+
+            destroyScene(s);
+        }
     });
 
     it('isDestroyed', function() {
@@ -296,5 +508,70 @@ defineSuite([
         expect(s.isDestroyed()).toEqual(false);
         destroyScene(s);
         expect(s.isDestroyed()).toEqual(true);
+    });
+
+    it('raises renderError when render throws', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = 'foo';
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        s.render();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('a render error is rethrown if rethrowRenderErrors is true', function() {
+        var s = createScene();
+        s.rethrowRenderErrors = true;
+
+        var spyListener = jasmine.createSpy('listener');
+        s.renderError.addEventListener(spyListener);
+
+        var error = new RuntimeError('error');
+        s.primitives.update = function() {
+            throw error;
+        };
+
+        expect(function() {
+            s.render();
+        }).toThrowRuntimeError();
+
+        expect(spyListener).toHaveBeenCalledWith(s, error);
+
+        destroyScene(s);
+    });
+
+    it('raises the preRender event prior to rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.preRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
+    });
+
+    it('raises the postRender event after rendering', function() {
+        var s = createScene();
+
+        var spyListener = jasmine.createSpy('listener');
+        s.postRender.addEventListener(spyListener);
+
+        s.render();
+
+        expect(spyListener.callCount).toBe(1);
+
+        destroyScene(s);
     });
 }, 'WebGL');

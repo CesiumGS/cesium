@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/TimeIntervalCollectionPositionProperty',
-             'DynamicScene/PositionProperty',
-             'Core/Cartesian3',
-             'Core/JulianDate',
-             'Core/ReferenceFrame',
-             'Core/TimeInterval',
-             'Core/TimeIntervalCollection'
-     ], function(
-             TimeIntervalCollectionPositionProperty,
-             PositionProperty,
-             Cartesian3,
-             JulianDate,
-             ReferenceFrame,
-             TimeInterval,
-             TimeIntervalCollection) {
+        'DynamicScene/TimeIntervalCollectionPositionProperty',
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'Core/ReferenceFrame',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DynamicScene/PositionProperty'
+    ], function(
+        TimeIntervalCollectionPositionProperty,
+        Cartesian3,
+        JulianDate,
+        ReferenceFrame,
+        TimeInterval,
+        TimeIntervalCollection,
+        PositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -124,7 +124,7 @@ defineSuite([
         var property = new TimeIntervalCollectionPositionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with no reference frame parameter', function() {
@@ -132,7 +132,7 @@ defineSuite([
         var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works for differing referenceFrames', function() {
@@ -158,5 +158,25 @@ defineSuite([
         expect(left.equals(right)).toEqual(false);
         right.intervals.addInterval(interval2);
         expect(left.equals(right)).toEqual(true);
+    });
+
+    it('raises definitionChanged event', function() {
+        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+
+        var property = new TimeIntervalCollectionPositionProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.intervals.addInterval(interval);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
+        property.intervals.removeInterval(interval);
+        expect(listener).toHaveBeenCalledWith(property);
+
+        property.intervals.addInterval(interval);
+        listener.reset();
+        property.intervals.removeAll();
+        expect(listener).toHaveBeenCalledWith(property);
     });
 });

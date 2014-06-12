@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ShowGeometryInstanceAttribute',
-         'Core/ComponentDatatype'
-     ], function(
-         ShowGeometryInstanceAttribute,
-         ComponentDatatype) {
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/ComponentDatatype'
+    ], function(
+        ShowGeometryInstanceAttribute,
+        ComponentDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -33,7 +33,7 @@ defineSuite([
     it('toValue throws without a color', function() {
         expect(function() {
             ShowGeometryInstanceAttribute.toValue();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
 });

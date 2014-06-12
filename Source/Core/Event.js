@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        './defineProperties',
         './DeveloperError'
-       ], function(
-         DeveloperError) {
+    ], function(
+        defineProperties,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -20,7 +22,7 @@ define([
      * }
      *
      * var myObjectInstance = new MyObject();
-     * var evt = new Event();
+     * var evt = new Cesium.Event();
      * evt.addEventListener(MyObject.prototype.myListener, myObjectInstance);
      * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
@@ -30,16 +32,18 @@ define([
         this._scopes = [];
     };
 
-    /**
-     * Gets the number of listeners currently subscribed to the event.
-     *
-     * @memberof Event
-     *
-     * @returns {Number} The number of subscribed listeners.
-     */
-    Event.prototype.getNumberOfListeners = function() {
-        return this._listeners.length;
-    };
+    defineProperties(Event.prototype, {
+        /**
+         * The number of listeners currently subscribed to the event.
+         * @memberof Event.prototype
+         * @type {Number}
+         */
+        numberOfListeners: {
+            get : function() {
+                return this._listeners.length;
+            }
+        }
+    });
 
     /**
      * Registers a callback function to be executed whenever the event is raised.
@@ -55,13 +59,13 @@ define([
      *
      * @see Event#raiseEvent
      * @see Event#removeEventListener
-     *
-     * @exception {DeveloperError} listener is required and must be a function.
      */
     Event.prototype.addEventListener = function(listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
+        //>>includeEnd('debug');
 
         this._listeners.push(listener);
         this._scopes.push(scope);
@@ -82,13 +86,14 @@ define([
      * @see Event#addEventListener
      * @see Event#raiseEvent
      *
-     * @exception {DeveloperError} listener is required and must be a function.
      * @exception {DeveloperError} listener is not subscribed.
      */
     Event.prototype.removeEventListener = function(listener, scope) {
+        //>>includeStart('debug', pragmas.debug);
         if (typeof listener !== 'function') {
             throw new DeveloperError('listener is required and must be a function.');
         }
+        //>>includeEnd('debug');
 
         var thisListeners = this._listeners;
         var thisScopes = this._scopes;
@@ -101,9 +106,11 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (index === -1) {
             throw new DeveloperError('listener is not subscribed.');
         }
+        //>>includeEnd('debug');
 
         thisListeners.splice(index, 1);
         this._scopes.splice(index, 1);

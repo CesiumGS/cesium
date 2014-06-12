@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/SampledProperty',
-             'Core/defined',
-             'Core/JulianDate',
-             'Core/LinearApproximation',
-             'Core/LagrangePolynomialApproximation'
-     ], function(
-             SampledProperty,
-             defined,
-             JulianDate,
-             LinearApproximation,
-             LagrangePolynomialApproximation) {
+        'DynamicScene/SampledProperty',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/LagrangePolynomialApproximation',
+        'Core/LinearApproximation'
+    ], function(
+        SampledProperty,
+        defined,
+        JulianDate,
+        LagrangePolynomialApproximation,
+        LinearApproximation) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -18,6 +18,14 @@ defineSuite([
         var property = new SampledProperty(Number);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+        expect(property.isConstant).toEqual(true);
+    });
+
+    it('isConstant works', function() {
+        var property = new SampledProperty(Number);
+        expect(property.isConstant).toEqual(true);
+        property.addSample(new JulianDate(0, 0), 1);
+        expect(property.isConstant).toEqual(false);
     });
 
     it('addSamplesPackedArray works', function() {
@@ -25,7 +33,12 @@ defineSuite([
         var epoch = new JulianDate(0, 0);
 
         var property = new SampledProperty(Number);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
         property.addSamplesPackedArray(data, epoch);
+
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(7.5);
     });
@@ -35,9 +48,20 @@ defineSuite([
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
         var property = new SampledProperty(Number);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
         property.addSample(times[0], values[0]);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
         property.addSample(times[1], values[1]);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
+
         property.addSample(times[2], values[2]);
+        expect(listener).toHaveBeenCalledWith(property);
+        listener.reset();
 
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
@@ -50,7 +74,11 @@ defineSuite([
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
         var property = new SampledProperty(Number);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
         property.addSamples(times, values);
+
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
@@ -136,12 +164,20 @@ defineSuite([
         };
 
         var property = new SampledProperty(Number);
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
         property.addSamplesPackedArray(data, epoch);
+
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 1))).toEqual(8);
 
-        property.interpolationDegree = 2;
-        property.interpolationAlgorithm = MockInterpolation;
+        property.setInterpolationOptions({
+            interpolationAlgorithm : MockInterpolation,
+            interpolationDegree : 2
+        });
+
+        expect(listener).toHaveBeenCalledWith(property);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 3))).toEqual(2);
 
@@ -288,32 +324,40 @@ defineSuite([
     it('constructor throws without type parameter.', function() {
         expect(function() {
             return new SampledProperty(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works when interpolators differ', function() {
         var left = new SampledProperty(Number);
-        left.interpolationAlgorithm = LinearApproximation;
-
         var right = new SampledProperty(Number);
-        right.interpolationAlgorithm = LinearApproximation;
 
         expect(left.equals(right)).toEqual(true);
-        right.interpolationAlgorithm = LagrangePolynomialApproximation;
+        right.setInterpolationOptions({
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
         expect(left.equals(right)).toEqual(false);
     });
 
     it('equals works when interpolator degree differ', function() {
         var left = new SampledProperty(Number);
-        left.interpolationAlgorithm = LagrangePolynomialApproximation;
-        left.interpolationDegree = 2;
+
+        left.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
 
         var right = new SampledProperty(Number);
-        right.interpolationAlgorithm = LagrangePolynomialApproximation;
-        right.interpolationDegree = 2;
+        right.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
 
         expect(left.equals(right)).toEqual(true);
-        right.interpolationDegree = 3;
+        right.setInterpolationOptions({
+            interpolationDegree : 3,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
+
         expect(left.equals(right)).toEqual(false);
     });
 

@@ -1,23 +1,21 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/PolylineGeometry',
-         'Core/Cartesian3',
-         'Core/PrimitiveType',
-         'Core/VertexFormat',
-         'Core/Color'
-     ], function(
-         PolylineGeometry,
-         Cartesian3,
-         PrimitiveType,
-         VertexFormat,
-         Color) {
+        'Core/PolylineGeometry',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/VertexFormat'
+    ], function(
+        PolylineGeometry,
+        Cartesian3,
+        Color,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor throws with no positions', function() {
         expect(function() {
             return new PolylineGeometry();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with less than two positions', function() {
@@ -25,7 +23,7 @@ defineSuite([
             return new PolylineGeometry({
                 positions : [Cartesian3.ZERO]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with invalid width', function() {
@@ -34,7 +32,7 @@ defineSuite([
                 positions : [Cartesian3.ZERO, Cartesian3.UNIT_X],
                 width : -1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws with invalid number of colors', function() {
@@ -43,7 +41,7 @@ defineSuite([
                 positions : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
                 colors : []
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor computes all vertex attributes', function() {

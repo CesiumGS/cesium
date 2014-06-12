@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/pointInsideTriangle',
-         'Core/Cartesian2'
-     ], function(
-         pointInsideTriangle,
-         Cartesian2) {
+        'Core/pointInsideTriangle',
+        'Core/Cartesian2'
+    ], function(
+        pointInsideTriangle,
+        Cartesian2) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -35,24 +35,24 @@ defineSuite([
     it('throws without point', function() {
         expect(function() {
             pointInsideTriangle();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p0', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p1', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2(), new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without p2', function() {
         expect(function() {
             pointInsideTriangle(new Cartesian2(), new Cartesian2(), new Cartesian2());
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

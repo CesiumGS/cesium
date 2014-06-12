@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/FullscreenButton/FullscreenButton'
-     ], function(
-         FullscreenButton) {
+        'Widgets/FullscreenButton/FullscreenButton'
+    ], function(
+        FullscreenButton) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -36,12 +36,12 @@ defineSuite([
     it('throws if container is undefined', function() {
         expect(function() {
             return new FullscreenButton(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws if container string is undefined', function() {
         expect(function() {
             return new FullscreenButton('testElement');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

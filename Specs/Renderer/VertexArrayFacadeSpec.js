@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/VertexArrayFacade',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Core/ComponentDatatype',
-         'Renderer/BufferUsage'
-     ], function(
-         VertexArrayFacade,
-         createContext,
-         destroyContext,
-         ComponentDatatype,
-         BufferUsage) {
+        'Renderer/VertexArrayFacade',
+        'Core/ComponentDatatype',
+        'Renderer/BufferUsage',
+        'Specs/createContext',
+        'Specs/destroyContext'
+    ], function(
+        VertexArrayFacade,
+        ComponentDatatype,
+        BufferUsage,
+        createContext,
+        destroyContext) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -40,8 +40,8 @@ defineSuite([
         vaf.commit(); // Commit writes
 
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * 3 * 4);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(1 * 3 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -67,8 +67,8 @@ defineSuite([
         vaf.commit(); // Commit writes
 
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(2 * 3 * 4);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 3 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -102,8 +102,8 @@ defineSuite([
 
         // Position attribute
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * ((3 * 4) + (4 * 1)));
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(1 * ((3 * 4) + (4 * 1)));
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -145,8 +145,8 @@ defineSuite([
 
         // Position attribute
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(1 * (3 * 4));
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(1 * (3 * 4));
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
@@ -154,8 +154,8 @@ defineSuite([
 
         // Texture coordinate attribute
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.getSizeInBytes()).toEqual(1 * (2 * 2));
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(1 * (2 * 2));
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.usage).toEqual(BufferUsage.DYNAMIC_DRAW);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentsPerAttribute).toEqual(2);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).offsetInBytes).toEqual(0);
@@ -202,22 +202,22 @@ defineSuite([
         vaf.endSubCommits();
 
         // Position attribute
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getSizeInBytes()).toEqual(2 * (3 * 4));
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.getUsage()).toEqual(BufferUsage.STATIC_DRAW);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(3);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).strideInBytes).toEqual(3 * 4);
-
-        // Temperature attribute
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer).toBeDefined();
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.getSizeInBytes()).toEqual(2 * 4);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.getUsage()).toEqual(BufferUsage.STREAM_DRAW);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentsPerAttribute).toEqual(1);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.sizeInBytes).toEqual(2 * (3 * 4));
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentsPerAttribute).toEqual(3);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).componentDatatype).toEqual(ComponentDatatype.FLOAT);
         expect(vaf.vaByPurpose.all[0].va.getAttribute(1).offsetInBytes).toEqual(0);
-        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).strideInBytes).toEqual(1 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(1).strideInBytes).toEqual(3 * 4);
+
+        // Temperature attribute
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer).toBeDefined();
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.sizeInBytes).toEqual(2 * 4);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STREAM_DRAW);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentsPerAttribute).toEqual(1);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).offsetInBytes).toEqual(0);
+        expect(vaf.vaByPurpose.all[0].va.getAttribute(0).strideInBytes).toEqual(1 * 4);
     });
 
     it('creates different vertex arrays for different purposes', function() {
@@ -256,11 +256,11 @@ defineSuite([
 
         var fooVA = vaf.vaByPurpose.foo[0].va;
         expect(fooVA).toBeDefined();
-        expect(fooVA.getNumberOfAttributes()).toEqual(2);
+        expect(fooVA.numberOfAttributes).toEqual(2);
 
         var barVA = vaf.vaByPurpose.bar[0].va;
         expect(barVA).toBeDefined();
-        expect(barVA.getNumberOfAttributes()).toEqual(2);
+        expect(barVA.numberOfAttributes).toEqual(2);
 
         expect(fooVA).not.toEqual(barVA);
 
@@ -311,25 +311,25 @@ defineSuite([
     it('throws when constructed without a context', function() {
         expect(function() {
             return new VertexArrayFacade(undefined, undefined, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed undefined attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, undefined, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed without attributes', function() {
         expect(function() {
             return new VertexArrayFacade(context, []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes without componentsPerAttribute', function() {
         expect(function() {
             return new VertexArrayFacade(context, [{}]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with an invalid componentDatatype', function() {
@@ -338,7 +338,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 componentDatatype : 'invalid component datatype'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with an invalid usage', function() {
@@ -347,7 +347,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 usage : 'invalid component usage'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices', function() {
@@ -359,7 +359,7 @@ defineSuite([
                 index : 0,
                 componentsPerAttribute : 1
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices for the same purpose.', function() {
@@ -373,7 +373,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 purpose : 'foo'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws when constructed with attributes with duplicate indices and only one specifies a purpose.', function() {
@@ -386,7 +386,7 @@ defineSuite([
                 index : 0,
                 componentsPerAttribute : 1
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new VertexArrayFacade(context, [{
@@ -397,7 +397,7 @@ defineSuite([
                 componentsPerAttribute : 1,
                 purpose : 'foo'
             }]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('subCommit throws when passed an invalid offsetInVertices', function() {
@@ -411,14 +411,14 @@ defineSuite([
 
         expect(function() {
             vaf.subCommit(-1, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             vaf.subCommit(10, 1);
-        }).toThrow();
+        }).toThrowDeveloperError();
 
         expect(function() {
             vaf.subCommit(1, 10);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

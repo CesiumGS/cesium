@@ -1,55 +1,55 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/TridiagonalSystemSolver',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         TridiagonalSystemSolver,
-         Cartesian3,
-         CesiumMath) {
+        'Core/TridiagonalSystemSolver',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        TridiagonalSystemSolver,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
    it('solve throws exception without lower diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception without diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception without upper diagonal', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception without rhs vector', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], [], []);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception when rhs vector length is not equal to diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([], [], [], [1]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception when lower diagonal length is not equal to upper diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([1], [1], [], [1]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve throws exception when lower/upper diagonal length is not one less than diagonal length', function() {
         expect(function() {
             TridiagonalSystemSolver.solve([1], [1], [1], [1]);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('solve three unknowns', function() {

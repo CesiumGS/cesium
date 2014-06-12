@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Spherical',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         Spherical,
-         Cartesian3,
-         CesiumMath) {
+        'Core/Spherical',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        Spherical,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -69,7 +69,7 @@ defineSuite([
 
     it('Normalizing with no result parameter creates new instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
-        var w = v.normalize();
+        var w = Spherical.normalize(v);
         expect(w).toNotEqual(v);
         expect(w.clock).toEqual(0);
         expect(w.cone).toEqual(2);
@@ -79,7 +79,7 @@ defineSuite([
     it('Normalizing with result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
         var w = new NotSpherical();
-        var q = v.normalize(w);
+        var q = Spherical.normalize(v, w);
         expect(w).toNotEqual(v);
         expect(w === q).toEqual(true);
         expect(w.clock).toEqual(0);
@@ -89,7 +89,7 @@ defineSuite([
 
     it('Normalizing with this as result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
-        var q = v.normalize(v);
+        var q = Spherical.normalize(v, v);
         expect(v === q).toEqual(true);
         expect(v.clock).toEqual(0);
         expect(v.cone).toEqual(2);

@@ -1,17 +1,17 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/loadJson',
-         'Core/RequestErrorEvent'
-     ], function(
-         loadJson,
-         RequestErrorEvent) {
+        'Core/loadJson',
+        'Core/RequestErrorEvent'
+    ], function(
+        loadJson,
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var fakeXHR;
 
     beforeEach(function() {
-        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort']);
+        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
         fakeXHR.simulateLoad = function(response) {
             fakeXHR.status = 200;
             fakeXHR.response = response;
@@ -39,7 +39,7 @@ defineSuite([
     it('throws with no url', function() {
         expect(function() {
             loadJson();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates and sends request, adding Accept header when headers are provided', function() {

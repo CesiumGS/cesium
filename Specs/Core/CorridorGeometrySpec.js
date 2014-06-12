@@ -1,27 +1,25 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CorridorGeometry',
-         'Core/CornerType',
-         'Core/Cartesian3',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/Math',
-         'Core/VertexFormat'
-     ], function(
-         CorridorGeometry,
-         CornerType,
-         Cartesian3,
-         Cartographic,
-         Ellipsoid,
-         CesiumMath,
-         VertexFormat) {
+        'Core/CorridorGeometry',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/CornerType',
+        'Core/Ellipsoid',
+        'Core/VertexFormat'
+    ], function(
+        CorridorGeometry,
+        Cartesian3,
+        Cartographic,
+        CornerType,
+        Ellipsoid,
+        VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('throws without positions', function() {
         expect(function() {
             return new CorridorGeometry({});
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without 2 unique positions', function() {
@@ -34,7 +32,7 @@ defineSuite([
                 ]),
                 width: 10000
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without width', function() {
@@ -42,7 +40,7 @@ defineSuite([
             return new CorridorGeometry({
                 positions: [new Cartesian3()]
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

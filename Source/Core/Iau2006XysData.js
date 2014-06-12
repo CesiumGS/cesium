@@ -1,22 +1,22 @@
 /*global define*/
 define([
+        '../ThirdParty/when',
         './buildModuleUrl',
         './defaultValue',
         './defined',
         './Iau2006XysSample',
         './JulianDate',
         './loadJson',
-        './TimeStandard',
-        '../ThirdParty/when'
+        './TimeStandard'
     ], function(
+        when,
         buildModuleUrl,
         defaultValue,
         defined,
         Iau2006XysSample,
         JulianDate,
         loadJson,
-        TimeStandard,
-        when) {
+        TimeStandard) {
     "use strict";
 
     /**
@@ -26,25 +26,25 @@ define([
      * @alias Iau2006XysData
      * @constructor
      *
-     * @param {String} [description.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
+     * @param {String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
-     * @param {Number} [description.interpolationOrder=9] The order of interpolation to perform on the XYS data.
-     * @param {Number} [description.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
+     * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
+     * @param {Number} [options.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
      *                 first XYS sample.
-     * @param {Number} [description.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
-     * @param {Number} [description.samplesPerXysFile=1000] The number of samples in each XYS file.
-     * @param {Number} [description.totalSamples=27426] The total number of samples in all XYS files.
+     * @param {Number} [options.stepSizeDays=1.0] The step size, in days, between successive XYS samples.
+     * @param {Number} [options.samplesPerXysFile=1000] The number of samples in each XYS file.
+     * @param {Number} [options.totalSamples=27426] The total number of samples in all XYS files.
      */
-    var Iau2006XysData = function Iau2006XysData(description) {
-        description = defaultValue(description, defaultValue.EMPTY_OBJECT);
+    var Iau2006XysData = function Iau2006XysData(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._xysFileUrlTemplate = description.xysFileUrlTemplate;
-        this._interpolationOrder = defaultValue(description.interpolationOrder, 9);
-        this._sampleZeroJulianEphemerisDate = defaultValue(description.sampleZeroJulianEphemerisDate, 2442396.5);
+        this._xysFileUrlTemplate = options.xysFileUrlTemplate;
+        this._interpolationOrder = defaultValue(options.interpolationOrder, 9);
+        this._sampleZeroJulianEphemerisDate = defaultValue(options.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
-        this._stepSizeDays = defaultValue(description.stepSizeDays, 1.0);
-        this._samplesPerXysFile = defaultValue(description.samplesPerXysFile, 1000);
-        this._totalSamples = defaultValue(description.totalSamples, 27426);
+        this._stepSizeDays = defaultValue(options.stepSizeDays, 1.0);
+        this._samplesPerXysFile = defaultValue(options.samplesPerXysFile, 1000);
+        this._totalSamples = defaultValue(options.totalSamples, 27426);
         this._samples = new Array(this._totalSamples * 3);
         this._chunkDownloadsInProgress = [];
 

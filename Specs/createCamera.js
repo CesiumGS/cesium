@@ -1,23 +1,23 @@
 /*global define*/
 define([
-        'Core/Math',
         'Core/Cartesian3',
         'Core/defaultValue',
+        'Core/Math',
         'Scene/Camera'
     ], function(
-        CesiumMath,
         Cartesian3,
         defaultValue,
+        CesiumMath,
         Camera) {
     "use strict";
 
-    function createCamera(context, eye, target, up, near, far) {
+    function createCamera(scene, eye, target, up, near, far) {
         eye = defaultValue(eye, new Cartesian3(-1.0, 0.0, 0.0));
         target = defaultValue(target, Cartesian3.ZERO);
         up = defaultValue(up, Cartesian3.UNIT_Z);
 
-        var camera = new Camera(context);
-        camera.controller.lookAt(eye, target, up);
+        var camera = new Camera(scene);
+        camera.lookAt(eye, target, up);
         camera.frustum.fovy = CesiumMath.toRadians(60.0);
         camera.frustum.aspectRatio = 1.0;
         camera.frustum.near = defaultValue(near, 0.01);

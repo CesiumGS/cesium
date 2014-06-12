@@ -1,37 +1,37 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/EllipsoidTangentPlane',
-         'Core/Ellipsoid',
-         'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Cartographic'
-     ], function(
-         EllipsoidTangentPlane,
-         Ellipsoid,
-         Cartesian2,
-         Cartesian3,
-         Cartographic) {
+        'Core/EllipsoidTangentPlane',
+        'Core/Cartesian2',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/Ellipsoid'
+    ], function(
+        EllipsoidTangentPlane,
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor defaults to WGS84', function() {
-        var origin = new Cartesian3(Ellipsoid.WGS84.getRadii().x, 0, 0);
+        var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0, 0);
         var tangentPlane = new EllipsoidTangentPlane(origin);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.WGS84);
-        expect(tangentPlane.getOrigin()).toEqual(origin);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.WGS84);
+        expect(tangentPlane.origin).toEqual(origin);
     });
 
     it('constructor sets expected values', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getOrigin()).toEqual(Cartesian3.UNIT_X);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
+        expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
     });
 
     it('fromPoints sets expected values', function() {
         var points = [new Cartesian3(2, 0, 0), new Cartesian3(0, 0, 0)];
         var tangentPlane = EllipsoidTangentPlane.fromPoints(points, Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getEllipsoid()).toBe(Ellipsoid.UNIT_SPHERE);
-        expect(tangentPlane.getOrigin()).toEqual(Cartesian3.UNIT_X);
+        expect(tangentPlane.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
+        expect(tangentPlane.origin).toEqual(Cartesian3.UNIT_X);
     });
 
     it('projectPointOntoPlane returns undefined for points not on the plane', function () {
@@ -134,40 +134,40 @@ defineSuite([
     it('constructor throws without origin', function() {
         expect(function() {
             return new EllipsoidTangentPlane(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('constructor throws if origin is at the center of the ellipsoid', function() {
         expect(function() {
             return new EllipsoidTangentPlane(Cartesian3.ZERO, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fromPoints throws without cartesians', function() {
         expect(function() {
             return EllipsoidTangentPlane.fromPoints(undefined, Ellipsoid.WGS84);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointOntoPlane throws without cartesian', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointOntoPlane(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoPlane throws without cartesians', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointsOntoPlane(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoEllipsoid throws without cartesians', function() {
         var tangentPlane = new EllipsoidTangentPlane(Cartesian3.UNIT_X, Ellipsoid.UNIT_SPHERE);
         expect(function() {
             return tangentPlane.projectPointsOntoEllipsoid(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectPointsOntoEllipsoid works with an arbitrary ellipsoid using fromPoints', function () {

@@ -26,34 +26,31 @@ define([
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see CircleGeometry#createGeometry
+     * @see CircleGeometry.createGeometry
      *
      * @example
      * // Create a circle.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var circle = new CircleGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     * var circle = new Cesium.CircleGeometry({
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   radius : 100000.0
      * });
-     * var geometry = CircleGeometry.createGeometry(circle);
+     * var geometry = Cesium.CircleGeometry.createGeometry(circle);
      */
     var CircleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-
         if (radius <= 0.0) {
             throw new DeveloperError('radius must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
             center : options.center,

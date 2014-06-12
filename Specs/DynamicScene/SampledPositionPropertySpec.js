@@ -1,22 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/SampledPositionProperty',
-             'DynamicScene/PositionProperty',
-             'Core/Cartesian3',
-             'Core/defined',
-             'Core/JulianDate',
-             'Core/LinearApproximation',
-             'Core/LagrangePolynomialApproximation',
-             'Core/ReferenceFrame'
-     ], function(
-             SampledPositionProperty,
-             PositionProperty,
-             Cartesian3,
-             defined,
-             JulianDate,
-             LinearApproximation,
-             LagrangePolynomialApproximation,
-             ReferenceFrame) {
+        'DynamicScene/SampledPositionProperty',
+        'Core/Cartesian3',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/LagrangePolynomialApproximation',
+        'Core/LinearApproximation',
+        'Core/ReferenceFrame',
+        'DynamicScene/PositionProperty'
+    ], function(
+        SampledPositionProperty,
+        Cartesian3,
+        defined,
+        JulianDate,
+        LagrangePolynomialApproximation,
+        LinearApproximation,
+        ReferenceFrame,
+        PositionProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -172,8 +172,10 @@ defineSuite([
 
         var property = new SampledPositionProperty();
         property.addSamplesPackedArray(data, epoch);
-        property.interpolationDegree = 2;
-        property.interpolationAlgorithm = MockInterpolation;
+        property.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : MockInterpolation
+        });
         expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
         expect(property.getValue(new JulianDate(0, 3))).toEqual(new Cartesian3(2, 3, 4));
 
@@ -195,7 +197,7 @@ defineSuite([
         var property = new SampledPositionProperty();
         expect(function() {
             property.getValue(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with no reference frame parameter', function() {
@@ -203,32 +205,40 @@ defineSuite([
         var time = new JulianDate();
         expect(function() {
             property.getValueInReferenceFrame(time, undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('equals works when interpolators differ', function() {
         var left = new SampledPositionProperty();
-        left.interpolationAlgorithm = LinearApproximation;
-
         var right = new SampledPositionProperty();
-        right.interpolationAlgorithm = LinearApproximation;
 
         expect(left.equals(right)).toEqual(true);
-        right.interpolationAlgorithm = LagrangePolynomialApproximation;
+        right.setInterpolationOptions({
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
         expect(left.equals(right)).toEqual(false);
     });
 
     it('equals works when interpolator degree differ', function() {
         var left = new SampledPositionProperty();
-        left.interpolationAlgorithm = LagrangePolynomialApproximation;
-        left.interpolationDegree = 2;
+
+        left.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
 
         var right = new SampledPositionProperty();
-        right.interpolationAlgorithm = LagrangePolynomialApproximation;
-        right.interpolationDegree = 2;
+        right.setInterpolationOptions({
+            interpolationDegree : 2,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
 
         expect(left.equals(right)).toEqual(true);
-        right.interpolationDegree = 3;
+        right.setInterpolationOptions({
+            interpolationDegree : 3,
+            interpolationAlgorithm : LagrangePolynomialApproximation
+        });
+
         expect(left.equals(right)).toEqual(false);
     });
 

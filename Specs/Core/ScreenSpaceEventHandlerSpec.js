@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ScreenSpaceEventHandler',
-         'Core/KeyboardEventModifier',
-         'Core/ScreenSpaceEventType',
-         'Core/Cartesian2'
-     ], function(
-         ScreenSpaceEventHandler,
-         KeyboardEventModifier,
-         ScreenSpaceEventType,
-         Cartesian2) {
+        'Core/ScreenSpaceEventHandler',
+        'Core/Cartesian2',
+        'Core/KeyboardEventModifier',
+        'Core/ScreenSpaceEventType'
+    ], function(
+        ScreenSpaceEventHandler,
+        Cartesian2,
+        KeyboardEventModifier,
+        ScreenSpaceEventType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -108,26 +108,26 @@ defineSuite([
     it('setting mouse events require an action', function() {
         expect(function() {
             handler.setInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('setting mouse events require a type', function() {
         expect(function() {
             handler.setInputAction(function() {
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('getting mouse events require a type', function() {
         expect(function() {
             handler.getInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('removing mouse events require a type', function() {
         expect(function() {
             handler.removeInputAction();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('mouse right down', function() {

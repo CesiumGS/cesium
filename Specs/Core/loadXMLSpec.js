@@ -1,21 +1,22 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadXML',
-             'Core/RequestErrorEvent'
-            ], function(
-             loadXML,
-             RequestErrorEvent) {
+        'Core/loadXML',
+        'Core/RequestErrorEvent'
+    ], function(
+        loadXML,
+        RequestErrorEvent) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var fakeXHR;
 
     beforeEach(function() {
-        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'overrideMimeType']);
+        fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'overrideMimeType', 'getAllResponseHeaders']);
         fakeXHR.simulateLoad = function(response) {
             var parser = new DOMParser();
             fakeXHR.status = 200;
-            fakeXHR.responseXML = parser.parseFromString(response, 'text/xml');
+            fakeXHR.response = parser.parseFromString(response, 'text/xml');
+            fakeXHR.responseXML = fakeXHR.response;
             if (typeof fakeXHR.onload === 'function') {
                 fakeXHR.onload();
             }
@@ -39,7 +40,7 @@ defineSuite([
     it('throws with no url', function() {
         expect(function() {
             loadXML();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('creates and sends request without any custom headers', function() {

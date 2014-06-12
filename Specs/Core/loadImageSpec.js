@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/loadImage',
-             'Core/defined',
-             'ThirdParty/when'
-            ], function(
-             loadImage,
-             defined,
-             when) {
+        'Core/loadImage',
+        'Core/defined',
+        'ThirdParty/when'
+    ], function(
+        loadImage,
+        defined,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -47,7 +47,7 @@ defineSuite([
     it('throws with if url is missing', function() {
         expect(function() {
             loadImage();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('sets the crossOrigin property for cross-origin images', function() {

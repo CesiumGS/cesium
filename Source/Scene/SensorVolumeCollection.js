@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './CustomSensorVolume',
@@ -8,6 +9,7 @@ define([
         './SceneMode'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         CustomSensorVolume,
@@ -21,11 +23,24 @@ define([
      * @alias SensorVolumeCollection
      * @constructor
      *
-     * @demo <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sensors.html">Cesium Sandcastle Sensors Demo</a>
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sensors.html|Cesium Sandcastle Sensors Demo}
      */
     var SensorVolumeCollection = function() {
         this._sensors = [];
     };
+
+    defineProperties(SensorVolumeCollection.prototype, {
+        /**
+         * DOC_TBA
+         * @memberof SensorVolumeCollection.prototype
+         * @type {Event}
+         */
+        length : {
+            get : function() {
+                return this._sensors.length;
+            }
+        }
+    });
 
     /**
      * DOC_TBA
@@ -110,25 +125,16 @@ define([
      *
      * @memberof SensorVolumeCollection
      *
-     * @see SensorVolumeCollection#getLength
+     * @see SensorVolumeCollection#length
      */
     SensorVolumeCollection.prototype.get = function(index) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
+        //>>includeEnd('debug');
 
         return this._sensors[index];
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof SensorVolumeCollection
-     *
-     * @see SensorVolumeCollection#get
-     */
-    SensorVolumeCollection.prototype.getLength = function() {
-        return this._sensors.length;
     };
 
     /**

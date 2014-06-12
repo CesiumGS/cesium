@@ -23,36 +23,33 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
-     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom of an extruded circle.
+     * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom of an extruded circle.
      *
-     * @exception {DeveloperError} center is required.
-     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see CircleOutlineGoemetry.createGeometry
+     * @see CircleOutlineGeometry.createGeometry
      *
      * @example
      * // Create a circle.
-     * var ellipsoid = Ellipsoid.WGS84;
-     * var circle = new CircleOutlineGeometry({
-     *   ellipsoid : ellipsoid,
-     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     * var circle = new Cesium.CircleOutlineGeometry({
+     *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
      *   radius : 100000.0
      * });
-     * var geometry = CircleOutlineGeometry.createGeometry(circle);
+     * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
      */
     var CircleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-
         if (radius <= 0.0) {
             throw new DeveloperError('radius must be greater than zero.');
         }
+        //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
             center : options.center,

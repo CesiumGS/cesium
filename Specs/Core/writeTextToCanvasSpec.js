@@ -1,10 +1,10 @@
 /*global defineSuite */
 defineSuite([
-         'Core/writeTextToCanvas',
-         'Core/Color'
-     ], function(
-         writeTextToCanvas,
-         Color) {
+        'Core/writeTextToCanvas',
+        'Core/Color'
+    ], function(
+        writeTextToCanvas,
+        Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -17,7 +17,7 @@ defineSuite([
     it('throws when text is undefined', function() {
         expect(function() {
             writeTextToCanvas();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('sizes the canvas to fit the text', function() {

@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/CircleOutlineGeometry',
-         'Core/Cartographic',
-         'Core/Ellipsoid'
-     ], function(
-         CircleOutlineGeometry,
-         Cartographic,
-         Ellipsoid) {
+        'Core/CircleOutlineGeometry',
+        'Core/Cartographic',
+        'Core/Ellipsoid'
+    ], function(
+        CircleOutlineGeometry,
+        Cartographic,
+        Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,7 +15,7 @@ defineSuite([
             return new CircleOutlineGeometry({
                 radius : 1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws without a radius', function() {
@@ -23,7 +23,7 @@ defineSuite([
             return new CircleOutlineGeometry({
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic())
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative radius', function() {
@@ -32,7 +32,7 @@ defineSuite([
                 center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 radius : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('throws with a negative granularity', function() {
@@ -42,7 +42,7 @@ defineSuite([
                 radius : 1.0,
                 granularity : -1.0
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('computes positions', function() {

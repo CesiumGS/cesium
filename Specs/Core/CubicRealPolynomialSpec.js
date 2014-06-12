@@ -1,35 +1,35 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/CubicRealPolynomial',
-             'Core/Math'
-            ], function(
-              CubicRealPolynomial,
-              CesiumMath) {
+        'Core/CubicRealPolynomial',
+        'Core/Math'
+    ], function(
+        CubicRealPolynomial,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('discriminant throws without a', function() {
         expect(function() {
             CubicRealPolynomial.discriminant();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without b', function() {
         expect(function() {
             CubicRealPolynomial.discriminant(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without c', function() {
         expect(function() {
             CubicRealPolynomial.discriminant(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant throws without d', function() {
         expect(function() {
             CubicRealPolynomial.discriminant(1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('discriminant', function() {
@@ -45,25 +45,25 @@ defineSuite([
     it('real roots throws without a', function() {
         expect(function() {
             CubicRealPolynomial.realRoots();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without b', function() {
         expect(function() {
             CubicRealPolynomial.realRoots(1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without c', function() {
         expect(function() {
             CubicRealPolynomial.realRoots(1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('real roots throws without d', function() {
         expect(function() {
             CubicRealPolynomial.realRoots(1.0, 1.0, 1.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('three repeated roots', function() {

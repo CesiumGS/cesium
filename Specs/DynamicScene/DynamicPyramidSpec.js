@@ -1,16 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPyramid',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'DynamicScene/DynamicVertexPositionsProperty',
-             'Core/Color'
-         ], function(
-             DynamicPyramid,
-             ColorMaterialProperty,
-             ConstantProperty,
-             DynamicVertexPositionsProperty,
-             Color) {
+        'DynamicScene/DynamicPyramid',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicPyramid,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -98,6 +96,6 @@ defineSuite([
         var target = new DynamicPyramid();
         expect(function() {
             target.merge(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 });

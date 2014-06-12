@@ -1,54 +1,27 @@
 /*global defineSuite*/
-defineSuite(['Core/EarthOrientationParameters',
-             'Core/Transforms',
-             'Core/DeveloperError',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Cartesian4',
-             'Core/defined',
-             'Core/Ellipsoid',
-             'Core/JulianDate',
-             'Core/LeapSecond',
-             'Core/Matrix3',
-             'Core/Matrix4',
-             'Core/Math',
-             'Core/Quaternion',
-             'Core/TimeConstants',
-             'Core/TimeInterval',
-             'Core/TimeStandard',
-             'ThirdParty/when',
-             'Core/loadJson'
-     ], function(
-             EarthOrientationParameters,
-             Transforms,
-             DeveloperError,
-             Cartesian2,
-             Cartesian3,
-             Cartesian4,
-             defined,
-             Ellipsoid,
-             JulianDate,
-             LeapSecond,
-             Matrix3,
-             Matrix4,
-             CesiumMath,
-             Quaternion,
-             TimeConstants,
-             TimeInterval,
-             TimeStandard,
-             when,
-             loadJson) {
+defineSuite([
+        'Core/EarthOrientationParameters',
+        'Core/defined',
+        'Core/JulianDate',
+        'Core/LeapSecond',
+        'Core/TimeStandard'
+    ], function(
+        EarthOrientationParameters,
+        defined,
+        JulianDate,
+        LeapSecond,
+        TimeStandard) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var officialLeapSeconds;
 
     beforeAll(function() {
-        officialLeapSeconds = LeapSecond.getLeapSeconds().slice(0);
+        officialLeapSeconds = LeapSecond.leapSeconds.slice(0);
     });
 
     afterEach(function() {
-        LeapSecond.setLeapSeconds(officialLeapSeconds.slice(0));
+        LeapSecond.leapSeconds = officialLeapSeconds.slice(0);
     });
 
     it('adds leap seconds found in the data by default', function() {
@@ -71,7 +44,7 @@ defineSuite(['Core/EarthOrientationParameters',
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length + 1);
 
         var newDate = new JulianDate(2455799.5, 34.5, TimeStandard.TAI);
@@ -115,7 +88,7 @@ defineSuite(['Core/EarthOrientationParameters',
         });
         expect(eop).not.toBeNull();
 
-        var leapSeconds = LeapSecond.getLeapSeconds();
+        var leapSeconds = LeapSecond.leapSeconds;
         expect(leapSeconds.length).toBe(officialLeapSeconds.length);
     });
 

@@ -1,26 +1,26 @@
 /*global define*/
 define([
         '../../Core/binarySearch',
-        '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/ClockStep',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../createCommand',
-        '../ToggleButtonViewModel',
+        '../../ThirdParty/knockout',
         '../../ThirdParty/sprintf',
-        '../../ThirdParty/knockout'
+        '../createCommand',
+        '../ToggleButtonViewModel'
     ], function(
         binarySearch,
-        ClockStep,
         ClockRange,
+        ClockStep,
         defined,
         defineProperties,
         DeveloperError,
-        createCommand,
-        ToggleButtonViewModel,
+        knockout,
         sprintf,
-        knockout) {
+        createCommand,
+        ToggleButtonViewModel) {
     "use strict";
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -103,21 +103,18 @@ define([
      *
      * @param {ClockViewModel} clockViewModel The ClockViewModel instance to use.
      *
-     * @exception {DeveloperError} clockViewModel is required.
-     *
      * @see Animation
      */
     var AnimationViewModel = function(clockViewModel) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
         }
+        //>>includeEnd('debug');
 
         var that = this;
-
         this._clockViewModel = clockViewModel;
-
         this._allShuttleRingTicks = [];
-
         this._dateFormatter = AnimationViewModel.defaultDateFormatter;
         this._timeFormatter = AnimationViewModel.defaultTimeFormatter;
 
@@ -422,14 +419,14 @@ define([
      * automatically, and duplicate values will be removed.
      * @memberof AnimationViewModel
      *
-     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
-     *
-     * @exception {DeveloperError} positiveTicks is required.
+     * @param {Number[]} positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(positiveTicks)) {
             throw new DeveloperError('positiveTicks is required.');
         }
+        //>>includeEnd('debug');
 
         var i;
         var len;
@@ -557,9 +554,12 @@ define([
                 return this._dateFormatter;
             },
             set : function(dateFormatter) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof dateFormatter !== 'function') {
                     throw new DeveloperError('dateFormatter must be a function');
                 }
+                //>>includeEnd('debug');
+
                 this._dateFormatter = dateFormatter;
             }
         },
@@ -578,9 +578,12 @@ define([
                 return this._timeFormatter;
             },
             set : function(timeFormatter) {
+                //>>includeStart('debug', pragmas.debug);
                 if (typeof timeFormatter !== 'function') {
                     throw new DeveloperError('timeFormatter must be a function');
                 }
+                //>>includeEnd('debug');
+
                 this._timeFormatter = timeFormatter;
             }
         }

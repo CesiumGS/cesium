@@ -1,55 +1,45 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Spline',
-         'Core/HermiteSpline',
-         'Core/Cartesian3'
-     ], function(
-         Spline,
-         HermiteSpline,
-         Cartesian3) {
+        'Core/Spline',
+        'Core/Cartesian3',
+        'Core/HermiteSpline'
+    ], function(
+        Spline,
+        Cartesian3,
+        HermiteSpline) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('contructor throws', function() {
         expect(function() {
             return new Spline();
-        }).toThrow();
-    });
-
-    it('evaluate throws', function() {
-        var Spline2 = function() {};
-        Spline2.prototype.evaluate = Spline.prototype.eavaluate;
-        var spline = new Spline2();
-
-        expect(function() {
-            return spline.evaluate();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval throws without a time', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             times : [0.0, 1.0, 2.0]
         });
 
         expect(function() {
             spline.findTimeInterval();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval throws when time is out of range', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             times : [0.0, 1.0, 2.0]
         });
 
         expect(function() {
             spline.findTimeInterval(4.0);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('findTimeInterval', function() {
-        var spline = new HermiteSpline({
+        var spline = HermiteSpline.createNaturalCubic({
             points : [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z],
             times : [0.0, 1.0, 2.0, 4.0]
         });
