@@ -274,7 +274,7 @@ define([
      * Determines whether this collection contains a given animation.
      *
      * @param {ModelAnimation} animation The animation to check for.
-     * @returns {Boolean} <code>true</code> if this animation contains the animation, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if this collection contains the animation, <code>false</code> otherwise.
      */
     ModelAnimationCollection.prototype.contains = function(animation) {
         if (defined(animation)) {
