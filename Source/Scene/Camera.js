@@ -1974,7 +1974,7 @@ define([
      *
      * @private
      */
-    Camera.prototype.createCorrectPositionAnimation = function(duration) {
+    Camera.prototype.createCorrectPositionTween = function(duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(duration)) {
             throw new DeveloperError('duration is required.');
@@ -2008,7 +2008,7 @@ define([
      */
     Camera.prototype.flyTo = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimation(scene, options));
+        scene.tweens.add(CameraFlightPath.createTween(scene, options));
     };
 
     /**
@@ -2023,7 +2023,7 @@ define([
      */
     Camera.prototype.flyToRectangle = function(options) {
         var scene = this._scene;
-        scene.animations.add(CameraFlightPath.createAnimationRectangle(scene, options));
+        scene.tweens.add(CameraFlightPath.createTweenRectangle(scene, options));
     };
 
     /**

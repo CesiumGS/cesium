@@ -76,7 +76,7 @@ defineSuite([
         viewModel.search();
 
         waitsFor(function() {
-            scene.animations.update();
+            scene.tweens.update();
             return !Cartesian3.equals(cameraPosition, scene.camera.position);
         });
     });

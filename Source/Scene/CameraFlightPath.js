@@ -40,7 +40,7 @@ define([
     "use strict";
 
     /**
-     * Creates animations for camera flights.
+     * Creates tweens for camera flights.
      * <br /><br />
      * Mouse interaction is disabled during flights.
      *
@@ -396,7 +396,7 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchDestination = new Cartesian3();
 
-    CameraFlightPath.createAnimation = function(scene, options) {
+    CameraFlightPath.createTween = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
         var direction = options.direction;
@@ -551,7 +551,7 @@ define([
         };
     };
 
-    CameraFlightPath.createAnimationRectangle = function(scene, options) {
+    CameraFlightPath.createTweenRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
 
@@ -571,7 +571,7 @@ define([
 
         createAnimationoptions.destination = c3destination;
         createAnimationoptions.convert = false;
-        return this.createAnimation(scene, createAnimationoptions);
+        return this.createTween(scene, createAnimationoptions);
     };
 
     return CameraFlightPath;

@@ -18,21 +18,21 @@ define([
         EasingFunction,
         getTimestamp,
         TimeConstants,
-        Tween) {
+        TweenJS) {
     "use strict";
 
     /**
-     * An animation interpolates the properties of two objects using an {@link EasingFunction}.  Create
-     * one using {@link Scene#animations} and {@link AnimationCollection#add} and related add functions.
+     * A tween is an animation interpolates the properties of two objects using an {@link EasingFunction}.  Create
+     * one using {@link Scene#tweens} and {@link TweenCollection#add} and related add functions.
      *
-     * @alias Animation
+     * @alias Tween
      * @constructor
      *
      * @example
      * DOC_TBA
      */
-    var Animation = function(animations, tween, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
-        this._animations = animations;
+    var Tween = function(tweens, tween, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
+        this._tweens = tweens;
         this._tween = tween;
 
         this._startObject = clone(startObject);
@@ -56,10 +56,10 @@ define([
         this.needsStart = true;
     };
 
-    defineProperties(Animation.prototype, {
+    defineProperties(Tween.prototype, {
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Object}
          * @readonly
@@ -72,7 +72,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Object}
          * @readonly
@@ -85,7 +85,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Number}
          * @readonly
@@ -98,7 +98,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Number}
          * @readonly
@@ -111,7 +111,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {EasingFunction}
          * @readonly
@@ -124,7 +124,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Function}
          * @readonly
@@ -137,7 +137,7 @@ define([
 
         /**
          * DOC_TBA
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @type {Function}
          * @readonly
@@ -149,7 +149,7 @@ define([
         },
 
         /**
-         * @memberof Animation.prototype
+         * @memberof Tween.prototype
          *
          * @private
          */
@@ -164,33 +164,33 @@ define([
      * Cancels the animation calling the {@link Animation#cancel} callback if one exists.  This
      * has no effect if the animation finished or was already canceled.
      */
-    Animation.prototype.cancelAnimation = function() {
-        this._animations.remove(this);
+    Tween.prototype.cancelTween = function() {
+        this._tweens.remove(this);
     };
 
     /**
      * DOC_TBA
      *
-     * @alias AnimationCollection
+     * @alias TweenCollection
      * @constructor
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
      */
-    var AnimationCollection = function() {
-        this._animations = [];
+    var TweenCollection = function() {
+        this._tweens = [];
     };
 
-    defineProperties(AnimationCollection.prototype, {
+    defineProperties(TweenCollection.prototype, {
         /**
-         * The number of animations in the collection.
-         * @memberof AnimationCollection.prototype
+         * The number of tweens in the collection.
+         * @memberof TweenCollection.prototype
          *
          * @type {Number}
          * @readonly
          */
         length : {
             get : function() {
-                return this._animations.length;
+                return this._tweens.length;
             }
         }
     });
@@ -198,7 +198,7 @@ define([
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.add = function(options) {
+    TweenCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -213,7 +213,7 @@ define([
 
         if ((options.duration === 0.0) && defined(options.complete)) {
             options.complete();
-            return new Animation(this);
+            return new Tween(this);
         }
 
         var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
@@ -221,24 +221,21 @@ define([
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
         var value = options.startObject;
-        var tween = new Tween.Tween(value);
-        tween.to(clone(options.stopObject), duration);
-        tween.delay(delay);
-        tween.easing(easingFunction);
+        var tweenjs = new TweenJS.Tween(value);
+        tweenjs.to(clone(options.stopObject), duration);
+        tweenjs.delay(delay);
+        tweenjs.easing(easingFunction);
         if (defined(options.update)) {
-            tween.onUpdate(function() {
+            tweenjs.onUpdate(function() {
                 options.update(value);
             });
         }
-        tween.onComplete(defaultValue(options.complete, null));
-        tween.repeat(defaultValue(options._repeat, 0.0));
+        tweenjs.onComplete(defaultValue(options.complete, null));
+        tweenjs.repeat(defaultValue(options._repeat, 0.0));
 
-        /**
-         * DOC_TBA
-         */
-        var animation = new Animation(this, tween, options.startObject, options.stopObject, duration, delay, easingFunction, options.update, options.complete, options.cancel);
-        this._animations.push(animation);
-        return animation;
+        var tween = new Tween(this, tweenjs, options.startObject, options.stopObject, duration, delay, easingFunction, options.update, options.complete, options.cancel);
+        this._tweens.push(tween);
+        return tween;
     };
 
     /**
@@ -246,7 +243,7 @@ define([
      *
      * @exception {DeveloperError} object must have the specified property.
      */
-    AnimationCollection.prototype.addProperty = function(options) {
+    TweenCollection.prototype.addProperty = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var object = options.object;
@@ -295,7 +292,7 @@ define([
      *
      * @exception {DeveloperError} material has no properties with alpha components.
      */
-    AnimationCollection.prototype.addAlpha = function(options) {
+    TweenCollection.prototype.addAlpha = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var material = options.material;
@@ -350,7 +347,7 @@ define([
      *
      * @exception {DeveloperError} material must have an offset property.
      */
-    AnimationCollection.prototype.addOffsetIncrement = function(options) {
+    TweenCollection.prototype.addOffsetIncrement = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var material = options.material;
@@ -383,18 +380,18 @@ define([
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.remove = function(animation) {
+    TweenCollection.prototype.remove = function(animation) {
         if (!defined(animation)) {
             return false;
         }
 
-        var index = this._animations.indexOf(animation);
+        var index = this._tweens.indexOf(animation);
         if (index !== -1) {
             animation.tween.stop();
             if (defined(animation.cancel)) {
                 animation.cancel();
             }
-            this._animations.splice(index, 1);
+            this._tweens.splice(index, 1);
             return true;
         }
 
@@ -404,49 +401,49 @@ define([
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.removeAll = function() {
-        var animations = this._animations;
+    TweenCollection.prototype.removeAll = function() {
+        var tweens = this._tweens;
 
-        for (var i = 0; i < animations.length; ++i) {
-            var animation = animations[i];
+        for (var i = 0; i < tweens.length; ++i) {
+            var animation = tweens[i];
             animation.tween.stop();
             if (defined(animation.cancel)) {
                 animation.cancel();
             }
         }
-        animations.length = 0;
+        tweens.length = 0;
     };
 
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.contains = function(animation) {
-        return defined(animation) && (this._animations.indexOf(animation) !== -1);
+    TweenCollection.prototype.contains = function(animation) {
+        return defined(animation) && (this._tweens.indexOf(animation) !== -1);
     };
 
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.get = function(index) {
+    TweenCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
         //>>includeEnd('debug');
 
-        return this._animations[index];
+        return this._tweens[index];
     };
 
     /**
      * DOC_TBA
      */
-    AnimationCollection.prototype.update = function(time) {
-        var animations = this._animations;
+    TweenCollection.prototype.update = function(time) {
+        var tweens = this._tweens;
 
         var i = 0;
         time = defaultValue(time, getTimestamp());
-        while (i < animations.length) {
-            var animation = animations[i];
+        while (i < tweens.length) {
+            var animation = tweens[i];
             var tween = animation.tween;
 
             if (animation.needsStart) {
@@ -457,11 +454,11 @@ define([
                     i++;
                 } else {
                     tween.stop();
-                    animations.splice(i, 1);
+                    tweens.splice(i, 1);
                 }
             }
         }
     };
 
-    return AnimationCollection;
+    return TweenCollection;
 });

@@ -63,14 +63,14 @@ require(['Cesium'], function(Cesium) {
     createPrimitives();
 
     function reset() {
-        scene.animations.removeAll();
+        scene.tweens.removeAll();
         rectangle.material.uniforms.time = 1.0;
         rectangle.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
         reset();
-        scene.animations.addAlpha({
+        scene.tweens.addAlpha({
             material : rectangle.material,
             startValue : 0.0,
             stopValue : 0.5
@@ -79,7 +79,7 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('Stripe Animation', function() {
         reset();
-        scene.animations.addOffsetIncrement({
+        scene.tweens.addOffsetIncrement({
             material : rectangularSensor.material
         });
     });

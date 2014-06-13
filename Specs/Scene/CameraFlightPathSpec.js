@@ -55,7 +55,7 @@ defineSuite([
 
     it('create animation throws without a scene', function() {
         expect(function() {
-            CameraFlightPath.createAnimation(undefined, {
+            CameraFlightPath.createTween(undefined, {
                 destination : new Cartesian3(1e9, 1e9, 1e9)
             });
         }).toThrowDeveloperError();
@@ -63,13 +63,13 @@ defineSuite([
 
     it('create animation throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimation(scene, {});
+            CameraFlightPath.createTween(scene, {});
         }).toThrowDeveloperError();
     });
 
     it('create animation throws with just up and no direction', function() {
         expect(function() {
-            CameraFlightPath.createAnimation(scene, {
+            CameraFlightPath.createTween(scene, {
                 destination : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Z
             });
@@ -78,7 +78,7 @@ defineSuite([
 
     it('create animation throws with just direction and no up', function() {
         expect(function() {
-            CameraFlightPath.createAnimation(scene, {
+            CameraFlightPath.createTween(scene, {
                 destination : Cartesian3.ZERO,
                 direction : Cartesian3.UNIT_X
             });
@@ -87,7 +87,7 @@ defineSuite([
 
     it('create animation with rectangle throws without a scene', function() {
         expect(function() {
-            CameraFlightPath.createAnimationRectangle(undefined, {
+            CameraFlightPath.createTweenRectangle(undefined, {
                 destination : new Cartographic(0.0, 0.0, 1e6)
             });
         }).toThrowDeveloperError();
@@ -95,7 +95,7 @@ defineSuite([
 
     it('create animation with rectangle throws without a destination', function() {
         expect(function() {
-            CameraFlightPath.createAnimationRectangle(scene, {});
+            CameraFlightPath.createTweenRectangle(scene, {});
         }).toThrowDeveloperError();
     });
 
@@ -107,7 +107,7 @@ defineSuite([
         var cancel = function() {
         };
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : destination,
             duration : duration,
             complete : complete,
@@ -131,7 +131,7 @@ defineSuite([
         var cancel = function() {
         };
 
-        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+        var flight = CameraFlightPath.createTweenRectangle(scene, {
             destination : destination,
             duration : duration,
             complete : complete,
@@ -159,7 +159,7 @@ defineSuite([
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -192,7 +192,7 @@ defineSuite([
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+        var flight = CameraFlightPath.createTweenRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
             up : endUp,
@@ -230,7 +230,7 @@ defineSuite([
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -270,7 +270,7 @@ defineSuite([
         var endPosition = camera.getRectangleCameraCoordinates(rectangle);
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+        var flight = CameraFlightPath.createTweenRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
             up : endUp,
@@ -310,7 +310,7 @@ defineSuite([
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -355,7 +355,7 @@ defineSuite([
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
         var duration = 5.0;
-        var flight = CameraFlightPath.createAnimationRectangle(scene, {
+        var flight = CameraFlightPath.createTweenRectangle(scene, {
             destination : rectangle,
             direction : endDirection,
             up : endUp,
@@ -383,7 +383,7 @@ defineSuite([
         var end = Cartesian3.multiplyByScalar(Cartesian3.normalize(start, new Cartesian3()), mag - 1000000.0, new Cartesian3());
 
         var duration = 3.0;
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : end,
             duration : duration
         });
@@ -407,7 +407,7 @@ defineSuite([
         var startUp = Cartesian3.clone(camera.up);
 
         var duration = 3.0;
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : startPosition,
             direction : startDirection,
             up : startUp,
@@ -427,7 +427,7 @@ defineSuite([
             return true;
         };
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : destination,
             duration : duration,
             complete : complete
@@ -457,7 +457,7 @@ defineSuite([
         var projection = frameState.mapProjection;
         var endPosition = projection.ellipsoid.cartographicToCartesian(projection.unproject(destination));
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition
         });
 
@@ -474,7 +474,7 @@ defineSuite([
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
         camera.frustum = createOrthographicFrustum();
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : camera.position
         });
 
@@ -493,7 +493,7 @@ defineSuite([
         var projection = frameState.mapProjection;
         var endPosition = projection.ellipsoid.cartographicToCartesian(projection.unproject(camera.position));
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition
         });
 
@@ -520,7 +520,7 @@ defineSuite([
         var endDirection = Cartesian3.clone(startDirection);
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,
@@ -551,7 +551,7 @@ defineSuite([
         var destination = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0), new Cartesian3());
         var endPosition = projection.ellipsoid.cartographicToCartesian(projection.unproject(destination));
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             duration : 0.0
         });
@@ -572,7 +572,7 @@ defineSuite([
         var endDirection = Cartesian3.negate(startDirection, new Cartesian3());
         var endUp = Cartesian3.negate(startUp, new Cartesian3());
 
-        var flight = CameraFlightPath.createAnimation(scene, {
+        var flight = CameraFlightPath.createTween(scene, {
             destination : endPosition,
             direction : endDirection,
             up : endUp,

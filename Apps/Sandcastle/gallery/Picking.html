@@ -159,7 +159,7 @@ require(['Cesium'], function(Cesium) {
 
         addBillboard(scene);
 
-        var animation;
+        var tween;
 
         function update(value) {
             billboard.scale = value.scale;
@@ -167,7 +167,7 @@ require(['Cesium'], function(Cesium) {
         }
 
         function complete() {
-            animation = undefined;
+            tween = undefined;
             billboard.highlighted = !billboard.highlighted;
         }
 
@@ -178,7 +178,7 @@ require(['Cesium'], function(Cesium) {
                 var pickedObject = scene.pick(movement.endPosition);
                 if (Cesium.defined(pickedObject) && (pickedObject.primitive === billboard) && !billboard.highlighted) {
                     // on enter
-                    animation = animation || scene.animations.add({
+                    tween = tween || scene.tweens.add({
                         update : update,
                         complete : complete,
                         startObject : {
@@ -201,7 +201,7 @@ require(['Cesium'], function(Cesium) {
                 }
                 else if ((pickedObject !== billboard) && billboard.highlighted) {
                     // on exit
-                    animation = animation || scene.animations.add({
+                    tween = tween || scene.tweens.add({
                         update : update,
                         complete : complete,
                         startObject : {

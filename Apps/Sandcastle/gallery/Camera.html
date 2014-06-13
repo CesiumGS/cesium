@@ -33,7 +33,7 @@ require(['Cesium'], function(Cesium) {
 
     function reset() {
         scene.primitives.removeAll();
-        scene.animations.removeAll();
+        scene.tweens.removeAll();
 
         var controller = scene.screenSpaceCameraController;
         controller.ellipsoid = scene.globe.ellipsoid;

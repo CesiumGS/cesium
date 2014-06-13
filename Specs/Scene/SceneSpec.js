@@ -11,7 +11,7 @@ defineSuite([
         'Core/WebMercatorProjection',
         'Renderer/DrawCommand',
         'Renderer/PixelDatatype',
-        'Scene/AnimationCollection',
+        'Scene/TweenCollection',
         'Scene/Camera',
         'Scene/FrameState',
         'Scene/Globe',
@@ -36,7 +36,7 @@ defineSuite([
         WebMercatorProjection,
         DrawCommand,
         PixelDatatype,
-        AnimationCollection,
+        TweenCollection,
         Camera,
         FrameState,
         Globe,
@@ -77,7 +77,7 @@ defineSuite([
         expect(scene.screenSpaceCameraController).toBeInstanceOf(ScreenSpaceCameraController);
         expect(scene.mapProjection).toBeInstanceOf(GeographicProjection);
         expect(scene.frameState).toBeInstanceOf(FrameState);
-        expect(scene.animations).toBeInstanceOf(AnimationCollection);
+        expect(scene.tweens).toBeInstanceOf(TweenCollection);
 
         var contextAttributes = scene.context._gl.getContextAttributes();
         // Do not check depth and antialias since they are requests not requirements

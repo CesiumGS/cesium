@@ -48,7 +48,7 @@ define([
         this._scene = scene;
         this._screenPositionX = '-1000px';
         this._screenPositionY = '0';
-        this._animationCollection = scene.animations;
+        this._tweens = scene.tweens;
         this._container = defaultValue(container, document.body);
         this._selectionIndicatorElement = selectionIndicatorElement;
         this._computeScreenSpacePosition = function(position, result) {
@@ -114,7 +114,7 @@ define([
      * Animate the indicator to draw attention to the selection.
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
-        this._animationCollection.addProperty({
+        this._tweens.addProperty({
             object : this,
             property : '_scale',
             startValue : 2,
@@ -128,7 +128,7 @@ define([
      * Animate the indicator to release the selection.
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
-        this._animationCollection.addProperty({
+        this._tweens.addProperty({
             object : this,
             property : '_scale',
             startValue : this._scale,

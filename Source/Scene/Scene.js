@@ -27,7 +27,7 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        './AnimationCollection',
+        './TweenCollection',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -76,7 +76,7 @@ define([
         ClearCommand,
         Context,
         PassState,
-        AnimationCollection,
+        TweenCollection,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -198,7 +198,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._pickFramebuffer = undefined;
 
-        this._animations = new AnimationCollection();
+        this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
 
@@ -601,15 +601,15 @@ define([
         },
 
         /**
-         * Gets the collection of animations taking place in the scene.
+         * Gets the collection of tweens taking place in the scene.
          * @memberof Scene.prototype
          *
-         * @type {AnimationCollection}
+         * @type {TweenCollection}
          * @readonly
          */
-        animations : {
+        tweens : {
             get : function() {
-                return this._animations;
+                return this._tweens;
             }
         },
 
@@ -1282,7 +1282,7 @@ define([
             this._context.shaderCache.destroyReleasedShaderPrograms();
         }
 
-        this._animations.update();
+        this._tweens.update();
         this._camera.update(this.mode);
         this._screenSpaceCameraController.update(this.mode);
     };
@@ -1636,7 +1636,7 @@ define([
      * scene = scene && scene.destroy();
      */
     Scene.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();

@@ -120,7 +120,7 @@ define([
             frustum : frustum
         };
 
-        this._currentAnimations = [];
+        this._currentTweens = [];
         this._morphHandler = undefined;
         this._morphCancelled = false;
         this._completeMorph = undefined;
@@ -261,10 +261,11 @@ define([
     }
 
     function destroyMorphHandler(transitioner) {
-        for ( var i = 0; i < transitioner._currentAnimations.length; ++i) {
-            transitioner._currentAnimations[i].cancelAnimation();
+        var tweens = transitioner._currentTweens;
+        for ( var i = 0; i < tweens.length; ++i) {
+            tweens[i].cancelTween();
         }
-        transitioner._currentAnimations.length = 0;
+        transitioner._currentTweens.length = 0;
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
@@ -290,7 +291,7 @@ define([
             Cartesian3.normalize(camera.right, camera.right);
         };
 
-        var animation = scene.animations.add({
+        var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
             startObject : {
@@ -301,7 +302,7 @@ define([
             },
             update : update
         });
-        transitioner._currentAnimations.push(animation);
+        transitioner._currentTweens.push(tween);
 
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
     }
@@ -341,7 +342,7 @@ define([
             camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, pos), distance, pos);
         };
 
-        var animation = scene.animations.add({
+        var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
             startObject : {
@@ -356,7 +357,7 @@ define([
                 complete(transitioner);
             }
         });
-        transitioner._currentAnimations.push(animation);
+        transitioner._currentTweens.push(tween);
     }
 
     function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, complete) {
@@ -387,7 +388,7 @@ define([
         };
 
         duration *= 0.5;
-        var animation = scene.animations.add({
+        var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
             startObject : {
@@ -401,7 +402,7 @@ define([
                 morphPerspectiveToOrthographic(transitioner, duration, complete);
             }
         });
-        transitioner._currentAnimations.push(animation);
+        transitioner._currentTweens.push(tween);
     }
 
     function morphFrom3DTo2D(transitioner, duration, ellipsoid, complete) {
@@ -476,7 +477,7 @@ define([
             }
         }
 
-        var animation = scene.animations.add({
+        var tween = scene.tweens.add({
             easingFunction : EasingFunction.QUARTIC_OUT,
             duration : partialDuration,
             startObject : {
@@ -491,7 +492,7 @@ define([
                 complete(transitioner);
             }
         });
-        transitioner._currentAnimations.push(animation);
+        transitioner._currentTweens.push(tween);
     }
 
     function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, complete) {
@@ -518,7 +519,7 @@ define([
                 Cartesian3.normalize(camera.right, camera.right);
             };
 
-            var animation = scene.animations.add({
+            var tween = scene.tweens.add({
                 duration : duration,
                 easingFunction : EasingFunction.QUARTIC_OUT,
                 startObject : {
@@ -533,7 +534,7 @@ define([
                 }
             });
 
-            transitioner._currentAnimations.push(animation);
+            transitioner._currentTweens.push(tween);
         };
 
         morphOrthographicToPerspective(transitioner, duration, ellipsoid, completeFrustumChange);
@@ -560,7 +561,7 @@ define([
             Cartesian3.normalize(camera.right, camera.right);
         };
 
-        var animation = scene.animations.add({
+        var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
             startObject : {
@@ -578,7 +579,7 @@ define([
                 Cartesian3.normalize(camera.right, camera.right);
             }
         });
-        transitioner._currentAnimations.push(animation);
+        transitioner._currentTweens.push(tween);
 
         addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, complete);
     }
@@ -600,8 +601,8 @@ define([
             };
         }
 
-        var animation = scene.animations.addProperty(options);
-        transitioner._currentAnimations.push(animation);
+        var tween = scene.tweens.addProperty(options);
+        transitioner._currentTweens.push(tween);
     }
 
     function updateFrustums(transitioner) {
