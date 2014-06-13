@@ -47,31 +47,6 @@ defineSuite([
         expect(interval.data).toEqual(undefined);
     });
 
-    it('throws when constructing with an undefined start', function() {
-        expect(function() {
-            return new TimeInterval({
-                start : undefined,
-                stop : JulianDate.now(),
-                isStartIncluded : true,
-                isStopIncluded : true,
-                data : {}
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws when constructing with an undefined stop', function() {
-        expect(function() {
-            return new TimeInterval({
-                start : JulianDate.now(),
-                stop : undefined,
-                isStartIncluded : true,
-                isStopIncluded : true,
-                data : {}
-            });
-        }).toThrowDeveloperError();
-
-    });
-
     it('IsEmpty is false for a typical interval', function() {
         var interval = new TimeInterval({
             start : new JulianDate(1),
@@ -292,8 +267,8 @@ defineSuite([
             var first = testParameters[i];
             var second = testParameters[i + 1];
             var expectedResult = testParameters[i + 2];
-            var intersect1 = TimeInterval.intersect(first, second, undefined, new TimeInterval(TimeInterval.EMPTY));
-            var intersect2 = TimeInterval.intersect(second, first, undefined, new TimeInterval(TimeInterval.EMPTY));
+            var intersect1 = TimeInterval.intersect(first, second, new TimeInterval());
+            var intersect2 = TimeInterval.intersect(second, first, new TimeInterval());
             expect(intersect1).toEqual(intersect2);
             expect(intersect2).toEqual(intersect1);
             expect(expectedResult).toEqual(intersect1);
@@ -305,7 +280,7 @@ defineSuite([
             start : new JulianDate(1),
             stop : new JulianDate(2)
         });
-        expect(TimeInterval.intersect(interval, undefined, undefined, new TimeInterval(TimeInterval.EMPTY))).toEqual(TimeInterval.EMPTY);
+        expect(TimeInterval.intersect(interval, undefined, new TimeInterval())).toEqual(TimeInterval.EMPTY);
     });
 
     it('intersect with a merge callback properly merges data.', function() {
@@ -319,7 +294,7 @@ defineSuite([
             stop : new JulianDate(4),
             data : 3
         });
-        var twoToThree = TimeInterval.intersect(oneToThree, twoToFour, mergeByAdd, new TimeInterval(TimeInterval.EMPTY));
+        var twoToThree = TimeInterval.intersect(oneToThree, twoToFour, new TimeInterval(), mergeByAdd);
         expect(twoToThree.start).toEqual(twoToFour.start);
         expect(twoToThree.stop).toEqual(oneToThree.stop);
         expect(twoToThree.isStartIncluded).toEqual(true);

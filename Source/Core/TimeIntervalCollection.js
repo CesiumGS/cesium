@@ -184,7 +184,7 @@ define([
         return this.indexOf(date) >= 0;
     };
 
-    var indexOfScratch = new TimeInterval(TimeInterval.EMPTY);
+    var indexOfScratch = new TimeInterval();
 
     /**
      * Returns the index of the interval in the collection that contains the specified date.
@@ -619,7 +619,7 @@ define([
                    ((defined(equalsCallback) && equalsCallback(leftInterval, rightInterval)) ||
                     (!defined(equalsCallback) && rightInterval.data === leftInterval.data))) {
 
-                    var intersection = TimeInterval.intersect(leftInterval, rightInterval, mergeCallback);
+                    var intersection = TimeInterval.intersect(leftInterval, rightInterval, new TimeInterval(), mergeCallback);
                     if (!intersection.isEmpty) {
                         // Since we start with an empty collection for 'result', and there are no overlapping intervals in 'this' (as a rule),
                         // the 'intersection' will never overlap with a previous interval in 'result'.  So, no need to do any additional 'merging'.

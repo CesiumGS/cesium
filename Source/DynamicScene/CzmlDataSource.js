@@ -205,6 +205,7 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
     var scratchCartographic = new Cartographic();
+    var scratchTimeInterval = new TimeInterval();
 
     function unwrapColorInterval(czmlInterval) {
         var rgbaf = czmlInterval.rgbaf;
@@ -447,7 +448,7 @@ define([
             iso8601Scratch.iso8601 = packetInterval;
             combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
             if (defined(constrainedInterval)) {
-                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
@@ -610,7 +611,7 @@ define([
             iso8601Scratch.iso8601 = packetInterval;
             combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
             if (defined(constrainedInterval)) {
-                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
@@ -767,7 +768,7 @@ define([
             iso8601Scratch.iso8601 = packetInterval;
             combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
             if (defined(constrainedInterval)) {
-                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval);
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
             }
         } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;

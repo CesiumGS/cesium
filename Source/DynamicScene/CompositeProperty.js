@@ -53,10 +53,19 @@ define([
      * //property for the first half of the day and a sampled property for the
      * //remaining half.
      * var composite = new Cesium.CompositeProperty();
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z', true, true, constantProperty));
-     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     *     iso8601 : '2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z',
+     *     data : constantProperty
+     * }));
+     * composite.intervals.addInterval(Cesium.TimeInterval.fromIso8601({
+     *     iso8601 : '2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z',
+     *     isStartIncluded : false,
+     *     isStopIncluded : false,
+     *     data : sampledProperty
+     * }));
      */
     var CompositeProperty = function() {
+
         this._eventHelper = new EventHelper();
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
