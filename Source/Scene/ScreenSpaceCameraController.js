@@ -752,6 +752,27 @@ define([
 
         camera.setTransform(oldTransform);
         controller.globe = oldGlobe;
+
+        var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
+        adjustHeightForTerrain(controller, frameState);
+
+        if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
+            camera.setTransform(verticalTransform);
+            camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
+
+            var angle = Cartesian3.angleBetween(originalPosition, camera.position);
+            var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
+            Cartesian3.normalize(axis, axis);
+
+            var quaternion = Quaternion.fromAxisAngle(axis, angle, tilt3DQuaternion);
+            var rotation = Matrix3.fromQuaternion(quaternion, tilt3DMatrix);
+            Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
+            Matrix3.multiplyByVector(rotation, camera.up, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.cross(camera.right, camera.direction, camera.up);
+
+            camera.setTransform(oldTransform);
+        }
     }
 
     var zoomCVWindowPos = new Cartesian2();
@@ -1078,13 +1099,12 @@ define([
         camera.setTransform(oldTransform);
         controller.globe = oldGlobe;
 
-        var originalPosition = Cartesian3.clone(camera.position, tilt3DCartesian3);
+        var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
         adjustHeightForTerrain(controller, frameState);
 
-        if (!Cartesian3.equals(camera.position, originalPosition)) {
+        if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera.setTransform(verticalTransform);
-            var invTransform = Matrix4.inverseTransformation(verticalTransform, tilt3DTransform);
-            Matrix4.multiplyByPoint(invTransform, originalPosition, originalPosition);
+            camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
 
             var angle = Cartesian3.angleBetween(originalPosition, camera.position);
             var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
