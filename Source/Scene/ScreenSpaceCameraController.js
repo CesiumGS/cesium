@@ -991,6 +991,8 @@ define([
     var tilt3DNormal = new Cartesian3();
     var tilt3DCartesian3 = new Cartesian3();
     var tilt3DOldTransform = new Matrix4();
+    var tilt3DQuaternion = new Quaternion();
+    var tilt3DMatrix = new Matrix3();
 
     function tilt3D(controller, startPosition, movement, frameState) {
         if (defined(movement.angleAndHeight)) {
@@ -1075,6 +1077,28 @@ define([
 
         camera.setTransform(oldTransform);
         controller.globe = oldGlobe;
+
+        var originalPosition = Cartesian3.clone(camera.position, tilt3DCartesian3);
+        adjustHeightForTerrain(controller, frameState);
+
+        if (!Cartesian3.equals(camera.position, originalPosition)) {
+            camera.setTransform(verticalTransform);
+            var invTransform = Matrix4.inverseTransformation(verticalTransform, tilt3DTransform);
+            Matrix4.multiplyByPoint(invTransform, originalPosition, originalPosition);
+
+            var angle = Cartesian3.angleBetween(originalPosition, camera.position);
+            var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
+            Cartesian3.normalize(axis, axis);
+
+            var quaternion = Quaternion.fromAxisAngle(axis, angle, tilt3DQuaternion);
+            var rotation = Matrix3.fromQuaternion(quaternion, tilt3DMatrix);
+            Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
+            Matrix3.multiplyByVector(rotation, camera.up, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.cross(camera.right, camera.direction, camera.up);
+
+            camera.setTransform(oldTransform);
+        }
     }
 
     var look3DStartPos = new Cartesian2();
