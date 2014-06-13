@@ -28,6 +28,7 @@ Beta Releases
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
   * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * All `Matrix2`, `Matrix3` and `Matrix4` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * Refactored `JulianDate` to be in line with other Core types.
     * Most functions now take result parameters.
