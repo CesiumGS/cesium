@@ -149,7 +149,10 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        var sampleInterval = new TimeInterval(start, stop, true, true);
+        var sampleInterval = new TimeInterval({
+            start : start,
+            stop : stop
+        });
 
         var index = startingIndex;
         var intervals = property.intervals;
@@ -183,7 +186,10 @@ define([
     }
 
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        var sampleInterval = new TimeInterval(start, stop, true, true);
+        var sampleInterval = new TimeInterval({
+            start : start,
+            stop : stop
+        });
 
         var index = startingIndex;
         var intervals = property.intervals;

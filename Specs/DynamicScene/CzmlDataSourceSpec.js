@@ -103,7 +103,9 @@ defineSuite([
     });
 
     var parsedClock = {
-        interval : TimeInterval.fromIso8601(clockCzml.clock.interval),
+        interval : TimeInterval.fromIso8601({
+            iso8601 : clockCzml.clock.interval
+        }),
         currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
         multiplier : clockCzml.clock.multiplier,
         range : ClockRange[clockCzml.clock.range],
@@ -152,7 +154,9 @@ defineSuite([
     });
 
     it('clock returns data interval if no clock defined', function() {
-        var interval = TimeInterval.fromIso8601(dynamicCzml.availability);
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : dynamicCzml.availability
+        });
 
         var dataSource = new CzmlDataSource();
         dataSource.load(dynamicCzml);
@@ -511,7 +515,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(billboardPacket.billboard.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : billboardPacket.billboard.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -551,7 +557,9 @@ defineSuite([
             }
         };
 
-        var interval = TimeInterval.fromIso8601(clockPacket.clock.interval);
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : clockPacket.clock.interval
+        });
         var currentTime = JulianDate.fromIso8601(clockPacket.clock.currentTime);
         var multiplier = clockPacket.clock.multiplier;
         var range = ClockRange[clockPacket.clock.range];
@@ -698,7 +706,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(conePacket.cone.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : conePacket.cone.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -948,7 +958,9 @@ defineSuite([
         dataSource.load(ellipsePacketInterval);
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
-        var validTime = TimeInterval.fromIso8601(ellipsePacketInterval.ellipse.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : ellipsePacketInterval.ellipse.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         expect(dynamicObject.ellipse).toBeDefined();
@@ -1010,7 +1022,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(ellipsoidPacketInterval.ellipsoid.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : ellipsoidPacketInterval.ellipsoid.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1099,7 +1113,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(labelPacket.label.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : labelPacket.label.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1240,7 +1256,9 @@ defineSuite([
         dataSource.process(packet1);
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
-        var interval = TimeInterval.fromIso8601(packet1.availability);
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : packet1.availability
+        });
         expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
 
@@ -1250,7 +1268,9 @@ defineSuite([
         };
 
         dataSource.process(packet2);
-        interval = TimeInterval.fromIso8601(packet2.availability);
+        interval = TimeInterval.fromIso8601({
+            iso8601 : packet2.availability
+        });
         expect(dynamicObject.availability.length).toEqual(1);
         expect(dynamicObject.availability.get(0)).toEqual(interval);
     });
@@ -1265,8 +1285,12 @@ defineSuite([
         dataSource.process(packet1);
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
-        var interval1 = TimeInterval.fromIso8601(packet1.availability[0]);
-        var interval2 = TimeInterval.fromIso8601(packet1.availability[1]);
+        var interval1 = TimeInterval.fromIso8601({
+            iso8601 : packet1.availability[0]
+        });
+        var interval2 = TimeInterval.fromIso8601({
+            iso8601 : packet1.availability[1]
+        });
         expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
@@ -1277,8 +1301,12 @@ defineSuite([
         };
         dataSource.process(packet2);
 
-        interval1 = TimeInterval.fromIso8601(packet2.availability[0]);
-        interval2 = TimeInterval.fromIso8601(packet2.availability[1]);
+        interval1 = TimeInterval.fromIso8601({
+            iso8601 : packet2.availability[0]
+        });
+        interval2 = TimeInterval.fromIso8601({
+            iso8601 : packet2.availability[1]
+        });
         expect(dynamicObject.availability.length).toEqual(2);
         expect(dynamicObject.availability.get(0)).toEqual(interval1);
         expect(dynamicObject.availability.get(1)).toEqual(interval2);
@@ -1336,7 +1364,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(pathPacket.path.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : pathPacket.path.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1403,7 +1433,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(pointPacket.point.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : pointPacket.point.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1470,7 +1502,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(polygonPacket.polygon.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : polygonPacket.polygon.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1528,7 +1562,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(polylinePacket.polyline.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : polylinePacket.polyline.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1575,9 +1611,7 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
-                [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
-                        new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
+        expect(dynamicObject.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
@@ -1633,7 +1667,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(pyramidPacket.pyramid.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : pyramidPacket.pyramid.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1641,9 +1677,7 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValue(validTime)).toEqual(
-                [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
-                        new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
+        expect(dynamicObject.pyramid.directions.getValue(validTime)).toEqual([new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]), new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
@@ -1705,7 +1739,9 @@ defineSuite([
             }
         };
 
-        var validTime = TimeInterval.fromIso8601(vectorPacket.vector.interval).start;
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : vectorPacket.vector.interval
+        }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
@@ -1882,10 +1918,10 @@ defineSuite([
                         cellAlpha : 0,
                         rowCount : 36,
                         rowThickness : 1,
-                        rowOffset: 0.5,
+                        rowOffset : 0.5,
                         columnCount : 9,
                         columnThickness : 1,
-                        columnOffset: 0.5
+                        columnOffset : 0.5
                     }
                 }]
             }
@@ -1930,7 +1966,6 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         dataSource.load(rectanglePacket);
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
-
 
         expect(dynamicObject.rectangle).toBeDefined();
         expect(dynamicObject.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Rectangle(0, 1, 2, 3));

@@ -26,8 +26,17 @@ defineSuite([
     });
 
     it('getValue works without a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty();
         property.intervals.addInterval(interval1);
@@ -43,8 +52,17 @@ defineSuite([
     });
 
     it('getValue works with a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty();
         property.intervals.addInterval(interval1);
@@ -61,7 +79,11 @@ defineSuite([
     });
 
     it('getValue returns in fixed frame', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty(ReferenceFrame.INERTIAL);
         property.intervals.addInterval(interval1);
@@ -74,8 +96,17 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works with a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
         property.intervals.addInterval(interval1);
@@ -94,8 +125,17 @@ defineSuite([
     });
 
     it('getValueInReferenceFrame works without a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
         property.intervals.addInterval(interval1);
@@ -113,7 +153,10 @@ defineSuite([
     it('returns undefined for valid interval without data', function() {
         var property = new TimeIntervalCollectionPositionProperty();
 
-        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, undefined);
+        var interval = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0)
+        });
         property.intervals.addInterval(interval);
 
         var result = property.getValue(interval.start);
@@ -145,8 +188,17 @@ defineSuite([
     });
 
     it('equals works for differing intervals', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var left = new TimeIntervalCollectionPositionProperty(ReferenceFrame.FIXED);
         left.intervals.addInterval(interval1);
@@ -161,7 +213,11 @@ defineSuite([
     });
 
     it('raises definitionChanged event', function() {
-        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+        var interval = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
 
         var property = new TimeIntervalCollectionPositionProperty();
         var listener = jasmine.createSpy('listener');

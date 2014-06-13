@@ -55,7 +55,11 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
 
         expect(property.isConstant).toBe(false);
 

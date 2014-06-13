@@ -7,10 +7,10 @@ defineSuite([
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'DynamicScene/ColorMaterialProperty',
-        'DynamicScene/ConstantProperty',
         'DynamicScene/ConstantPositionProperty',
-        'DynamicScene/DynamicObject',
+        'DynamicScene/ConstantProperty',
         'DynamicScene/DynamicBillboard',
+        'DynamicScene/DynamicObject',
         'DynamicScene/DynamicObjectCollection'
     ], function(
         ReferenceProperty,
@@ -20,10 +20,10 @@ defineSuite([
         ReferenceFrame,
         TimeInterval,
         ColorMaterialProperty,
-        ConstantProperty,
         ConstantPositionProperty,
-        DynamicObject,
+        ConstantProperty,
         DynamicBillboard,
+        DynamicObject,
         DynamicObjectCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
