@@ -114,7 +114,11 @@ define([
      * Animate the indicator to draw attention to the selection.
      */
     SelectionIndicatorViewModel.prototype.animateAppear = function() {
-        this._animationCollection.addProperty(this, '_scale', 2, 1, {
+        this._animationCollection.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : 2,
+            stopValue : 1,
             duration : 0.8,
             easingFunction : EasingFunction.EXPONENTIAL_OUT
         });
@@ -124,7 +128,11 @@ define([
      * Animate the indicator to release the selection.
      */
     SelectionIndicatorViewModel.prototype.animateDepart = function() {
-        this._animationCollection.addProperty(this, '_scale', this._scale, 1.5, {
+        this._animationCollection.addProperty({
+            object : this,
+            property : '_scale',
+            startValue : this._scale,
+            stopValue : 1.5,
             duration : 0.8,
             easingFunction : EasingFunction.EXPONENTIAL_OUT
         });

@@ -31,12 +31,12 @@ define([
      * @example
      * DOC_TBA
      */
-    var Animation = function(animations, tween, startValue, stopValue, duration, delay, easingFunction, update, complete, cancel) {
+    var Animation = function(animations, tween, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
         this._animations = animations;
         this._tween = tween;
 
-        this._startValue = clone(startValue);
-        this._stopValue = clone(stopValue);
+        this._startObject = clone(startObject);
+        this._stopObject = clone(stopObject);
 
         this._duration = duration;
         this._delay = delay;
@@ -64,9 +64,9 @@ define([
          * @type {Object}
          * @readonly
          */
-        startValue : {
+        startObject : {
             get : function() {
-                return this._startValue;
+                return this._startObject;
             }
         },
 
@@ -77,9 +77,9 @@ define([
          * @type {Object}
          * @readonly
          */
-        stopValue : {
+        stopObject : {
             get : function() {
-                return this._stopValue;
+                return this._stopObject;
             }
         },
 
@@ -202,8 +202,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.startValue) || !defined(options.stopValue)) {
-            throw new DeveloperError('options.startValue and options.stopValue are required.');
+        if (!defined(options.startObject) || !defined(options.stopObject)) {
+            throw new DeveloperError('options.startObject and options.stopObject are required.');
         }
 
         if (!defined(options.duration) || options.duration < 0.0) {
@@ -220,9 +220,9 @@ define([
         var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
-        var value = options.startValue;
+        var value = options.startObject;
         var tween = new Tween.Tween(value);
-        tween.to(clone(options.stopValue), duration);
+        tween.to(clone(options.stopObject), duration);
         tween.delay(delay);
         tween.easing(easingFunction);
         if (defined(options.update)) {
@@ -236,7 +236,7 @@ define([
         /**
          * DOC_TBA
          */
-        var animation = new Animation(this, tween, options.startValue, options.stopValue, duration, delay, easingFunction, options.update, options.complete, options.cancel);
+        var animation = new Animation(this, tween, options.startObject, options.stopObject, duration, delay, easingFunction, options.update, options.complete, options.cancel);
         this._animations.push(animation);
         return animation;
     };
@@ -246,38 +246,43 @@ define([
      *
      * @exception {DeveloperError} object must have the specified property.
      */
-    AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
+    AnimationCollection.prototype.addProperty = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var object = options.object;
+        var property = options.property;
+        var startValue = options.startValue;
+        var stopValue = options.stopValue;
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(object)) {
-            throw new DeveloperError('object is required.');
+            throw new DeveloperError('options.object is required.');
         }
         if (!defined(property)) {
-            throw new DeveloperError('property is required.');
+            throw new DeveloperError('options.property is required.');
         }
         if (!defined(object[property])) {
-            throw new DeveloperError('object must have the specified property.');
+            throw new DeveloperError('options.object must have the specified property.');
+        }
+        if (!defined(startValue) || !defined(stopValue)) {
+            throw new DeveloperError('options.startValue and options.stopValue are required.');
         }
         //>>includeEnd('debug');
-
-        var startValue = {
-            value : start
-        };
-        var stopValue = {
-            value : stop
-        };
 
         function update(value) {
             object[property] = value.value;
         }
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         return this.add({
             duration : defaultValue(options.duration, 3.0),
             delay : options.delay,
             easingFunction : options.easingFunction,
-            startValue : startValue,
-            stopValue : stopValue,
+            startObject : {
+                value : startValue
+            },
+            stopObject : {
+                value : stopValue
+            },
             update : update,
             complete : options.complete,
             cancel : options.cancel,
@@ -290,10 +295,14 @@ define([
      *
      * @exception {DeveloperError} material has no properties with alpha components.
      */
-    AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
+    AnimationCollection.prototype.addAlpha = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var material = options.material;
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
-            throw new DeveloperError('material is required.');
+            throw new DeveloperError('options.material is required.');
         }
         //>>includeEnd('debug');
 
@@ -313,14 +322,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        // Default to fade in
-        var startValue = {
-            alpha : defaultValue(start, 0.0)
-        };
-        var stopValue = {
-            alpha : defaultValue(stop, 1.0)
-        };
-
         function update(value) {
             var length = properties.length;
             for (var i = 0; i < length; ++i) {
@@ -328,14 +329,16 @@ define([
             }
         }
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         return this.add({
             duration : defaultValue(options.duration, 3.0),
             delay : options.delay,
             easingFunction : options.easingFunction,
-            startValue : startValue,
-            stopValue : stopValue,
+            startObject : {
+                alpha : defaultValue(options.startValue, 0.0)  // Default to fade in
+            },
+            stopObject : {
+                alpha : defaultValue(options.stopValue, 1.0)
+            },
             update : update,
             complete : options.complete,
             cancel : options.cancel
@@ -347,7 +350,11 @@ define([
      *
      * @exception {DeveloperError} material must have an offset property.
      */
-    AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
+    AnimationCollection.prototype.addOffsetIncrement = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var material = options.material;
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(material)) {
             throw new DeveloperError('material is required.');
@@ -357,11 +364,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, {});
-        options._repeat = Infinity;
-
         var uniforms = material.uniforms;
-        return this.addProperty(uniforms, 'offset', uniforms.offset, uniforms.offset + 1, options);
+        return this.addProperty({
+            object : uniforms,
+            property : 'offset',
+            startValue : uniforms.offset,
+            stopValue :  uniforms.offset + 1,
+            duration : options.duration,
+            delay : options.delay,
+            easingFunction : options.easingFunction,
+            update : options.update,
+            complete : options.complete,
+            cancel : options.cancel,
+            _repeat : Infinity
+        });
     };
 
     /**

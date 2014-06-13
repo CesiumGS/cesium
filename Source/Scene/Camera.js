@@ -1878,10 +1878,10 @@ define([
 
             return {
                 easingFunction : EasingFunction.EXPONENTIAL_OUT,
-                startValue : {
+                startObject : {
                     time : 0.0
                 },
-                stopValue : {
+                stopObject : {
                     time : 1.0
                 },
                 duration : duration,
@@ -1914,10 +1914,10 @@ define([
 
         return {
             easingFunction : EasingFunction.EXPONENTIAL_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             duration : duration,

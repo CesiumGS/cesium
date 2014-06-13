@@ -293,10 +293,10 @@ define([
         var animation = scene.animations.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             update : update
@@ -344,10 +344,10 @@ define([
         var animation = scene.animations.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             update : update,
@@ -390,10 +390,10 @@ define([
         var animation = scene.animations.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             update : updateCV,
@@ -479,10 +479,10 @@ define([
         var animation = scene.animations.add({
             easingFunction : EasingFunction.QUARTIC_OUT,
             duration : partialDuration,
-            startValue : {
+            startObject : {
                 time : startTime
             },
-            stopValue : {
+            stopObject : {
                 time : endTime
             },
             update : update2D,
@@ -521,10 +521,10 @@ define([
             var animation = scene.animations.add({
                 duration : duration,
                 easingFunction : EasingFunction.QUARTIC_OUT,
-                startValue : {
+                startObject : {
                     time : 0.0
                 },
-                stopValue : {
+                stopObject : {
                     time : 1.0
                 },
                 update : updateCV,
@@ -563,10 +563,10 @@ define([
         var animation = scene.animations.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : 1.0
             },
             update : update,
@@ -585,18 +585,22 @@ define([
 
     function addMorphTimeAnimations(transitioner, scene, start, stop, duration, complete) {
         // Later, this will be linear and each object will adjust, if desired, in its vertex shader.
-        var template = {
+        var options = {
+            object : scene,
+            property : 'morphTime',
+            startValue : start,
+            stopValue : stop,
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT
         };
 
         if (defined(complete)) {
-            template.complete = function() {
+            options.complete = function() {
                 complete(transitioner);
             };
         }
 
-        var animation = scene.animations.addProperty(scene, 'morphTime', start, stop, template);
+        var animation = scene.animations.addProperty(options);
         transitioner._currentAnimations.push(animation);
     }
 

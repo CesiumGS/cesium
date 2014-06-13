@@ -118,8 +118,8 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         expect(typeof flight.cancel).toEqual('function');
         expect(typeof flight.update).toEqual('function');
-        expect(flight.startValue).toBeDefined();
-        expect(flight.stopValue).toBeDefined();
+        expect(flight.startObject).toBeDefined();
+        expect(flight.stopObject).toBeDefined();
         expect(flight.easingFunction).toBeDefined();
     });
 
@@ -142,8 +142,8 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         expect(typeof flight.cancel).toEqual('function');
         expect(typeof flight.update).toEqual('function');
-        expect(flight.startValue).toBeDefined();
-        expect(flight.stopValue).toBeDefined();
+        expect(flight.startObject).toBeDefined();
+        expect(flight.stopObject).toBeDefined();
         expect(flight.easingFunction).toBeDefined();
     });
 

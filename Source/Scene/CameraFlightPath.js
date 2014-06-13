@@ -416,8 +416,8 @@ define([
 
         if (scene.frameState.mode === SceneMode.MORPHING) {
             return {
-                startValue : {},
-                stopValue: {},
+                startObject : {},
+                stopObject: {},
                 duration : 0.0
             };
         }
@@ -458,8 +458,8 @@ define([
         if (frameState.mode === SceneMode.SCENE2D) {
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
-                    startValue : {},
-                    stopValue: {},
+                    startObject : {},
+                    stopObject: {},
                     duration : 0.0,
                     complete : complete,
                     cancel: cancel
@@ -467,8 +467,8 @@ define([
             }
         } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
-                startValue : {},
-                stopValue: {},
+                startObject : {},
+                stopObject: {},
                 duration : 0.0,
                 complete : complete,
                 cancel: cancel
@@ -519,8 +519,8 @@ define([
                 }
             };
             return {
-                startValue : {},
-                stopValue: {},
+                startObject : {},
+                stopObject: {},
                 duration : 0.0,
                 complete : newOnComplete,
                 cancel: cancel
@@ -539,10 +539,10 @@ define([
         return {
             duration : duration,
             easingFunction : EasingFunction.SINUSOIDAL_IN_OUT,
-            startValue : {
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : duration
             },
             update : update,

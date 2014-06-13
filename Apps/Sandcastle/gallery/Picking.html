@@ -181,14 +181,14 @@ require(['Cesium'], function(Cesium) {
                     animation = animation || scene.animations.add({
                         update : update,
                         complete : complete,
-                        startValue : {
+                        startObject : {
                             scale : billboard.scale,
                             red   : billboard.color.red,
                             green : billboard.color.green,
                             blue  : billboard.color.blue,
                             alpha : billboard.color.alpha
                         },
-                        stopValue : {
+                        stopObject : {
                             scale : 2.0,
                             red   : 1.0,
                             green : 1.0,
@@ -204,14 +204,14 @@ require(['Cesium'], function(Cesium) {
                     animation = animation || scene.animations.add({
                         update : update,
                         complete : complete,
-                        startValue : {
+                        startObject : {
                             scale : billboard.scale,
                             red   : billboard.color.red,
                             green : billboard.color.green,
                             blue  : billboard.color.blue,
                             alpha : billboard.color.alpha
                         },
-                        stopValue : {
+                        stopObject : {
                             scale : 1.0,
                             red   : 1.0,
                             green : 1.0,

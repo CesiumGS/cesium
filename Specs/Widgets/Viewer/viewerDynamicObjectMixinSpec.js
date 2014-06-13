@@ -91,8 +91,8 @@ defineSuite([
 
         //Needed to avoid actually creating a flight when we issue the home command.
         spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            startValue : {},
-            stopValue: {},
+            startObject : {},
+            stopObject: {},
             duration : 0.0
         });
 

@@ -36,6 +36,7 @@ Beta Releases
       * `Geocoder` and `GeocoderViewModel` constructor parameter `options.flightDuration` and `GeocoderViewModel.flightDuration`.
       * `ScreenSpaceCameraController.bounceAnimationTime`.
       * `FrameRateMonitor` constructor parameter `options.samplingWindow`, `options.quietPeriod`, and `options.warmupPeriod`.
+    * `AnimationCollection.addProperty`, `AnimationCollection.addAlpha`, and `AnimationCollection.addOffsetIncrement` now take only an `options` parameter.
   * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.

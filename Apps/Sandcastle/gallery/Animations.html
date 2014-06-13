@@ -70,12 +70,18 @@ require(['Cesium'], function(Cesium) {
 
     Sandcastle.addToolbarButton('Alpha Animation', function() {
         reset();
-        scene.animations.addAlpha(rectangle.material, 0.0, 0.5);
+        scene.animations.addAlpha({
+            material : rectangle.material,
+            startValue : 0.0,
+            stopValue : 0.5
+        });
     });
 
     Sandcastle.addToolbarButton('Stripe Animation', function() {
         reset();
-        scene.animations.addOffsetIncrement(rectangularSensor.material);
+        scene.animations.addOffsetIncrement({
+            material : rectangularSensor.material
+        });
     });
 
     Sandcastle.finishedLoading();

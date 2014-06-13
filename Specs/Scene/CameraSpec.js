@@ -1516,8 +1516,8 @@ defineSuite([
 
     it('flyTo uses CameraFlightPath', function() {
         spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            startValue : {},
-            stopValue: {},
+            startObject : {},
+            stopObject: {},
             duration : 0.0
         });
 
@@ -1531,8 +1531,8 @@ defineSuite([
 
     it('flyToRectangle uses createAnimationRectangle', function() {
         spyOn(CameraFlightPath, 'createAnimationRectangle').andReturn({
-            startValue : {},
-            stopValue: {},
+            startObject : {},
+            stopObject: {},
             duration : 0.0
         });
 
