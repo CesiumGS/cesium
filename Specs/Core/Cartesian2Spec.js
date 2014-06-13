@@ -770,5 +770,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('mostOrthogonalAxis throws with no result', function() {
+        expect(function() {
+            Cartesian2.mostOrthogonalAxis(new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
 });

@@ -94,6 +94,7 @@ define([
     var scratchCart = new Cartesian3();
     var scratchCart2 = new Cartesian3();
     var scratchCart3 = new Cartesian3();
+    var scratchCart4 = new Cartesian3();
     var rotMatrixScratch = new Matrix3();
     function createPath3D(camera, ellipsoid, start, up, right, end, duration) {
         // get minimum altitude from which the whole ellipsoid is visible
@@ -132,7 +133,7 @@ define([
         } else {
             points = [ start ];
 
-            angle = CesiumMath.acosClamped(Cartesian3.dot(Cartesian3.normalize(afterStart, scratchCart3), Cartesian3.normalize(aboveEnd, scratchCart3)));
+            angle = CesiumMath.acosClamped(Cartesian3.dot(Cartesian3.normalize(afterStart, scratchCart3), Cartesian3.normalize(aboveEnd, scratchCart4)));
             axis = Cartesian3.cross(aboveEnd, afterStart, scratchCart3);
             if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;

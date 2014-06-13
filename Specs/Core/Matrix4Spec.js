@@ -1384,79 +1384,158 @@ defineSuite([
     });
 
 
-    it('getColumn throws with result parameter', function() {
+    it('getColumn throws without resut parameter', function() {
         expect(function() {
             Matrix4.getColumn(new Matrix4(), 2);
         }).toThrowDeveloperError();
     });
 
-    it('setColumn throws with result parameter', function() {
+    it('setColumn throws without resut parameter', function() {
         expect(function() {
             Matrix4.setColumn(new Matrix4(), 2, new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('getRow throws with result parameter', function() {
+    it('getRow throws without resut parameter', function() {
         expect(function() {
             Matrix4.getRow(new Matrix4(), 2);
         }).toThrowDeveloperError();
     });
 
-    it('setRow throws with result parameter', function() {
+    it('setRow throws without resut parameter', function() {
         expect(function() {
             Matrix4.setRow(new Matrix4(), 2, new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('getScale throws with result parameter', function() {
+    it('getScale throws without resut parameter', function() {
         expect(function() {
             Matrix4.getScale(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('multiply throws with result parameter', function() {
+    it('multiply throws without resut parameter', function() {
         expect(function() {
             Matrix4.multiply(new Matrix4(), new Matrix3());
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByVector throws with result parameter', function() {
+    it('multiplyByVector throws without resut parameter', function() {
         expect(function() {
             Matrix4.multiplyByVector(new Matrix4(), new Cartesian4());
         }).toThrowDeveloperError();
     });
 
-    it('multiplyByScalar throws with result parameter', function() {
+    it('multiplyByScalar throws without resut parameter', function() {
         expect(function() {
             Matrix4.multiplyByScalar(new Matrix4(), 2);
         }).toThrowDeveloperError();
     });
 
-    it('negate throws with result parameter', function() {
+    it('negate throws without resut parameter', function() {
         expect(function() {
             Matrix4.negate(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('transpose throws with result parameter', function() {
+    it('transpose throws without resut parameter', function() {
         expect(function() {
             Matrix4.transpose(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('abs throws with result parameter', function() {
+    it('abs throws without resut parameter', function() {
         expect(function() {
             Matrix4.abs(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('inverse throws with result parameter', function() {
+    it('inverse throws without resut parameter', function() {
         expect(function() {
             Matrix4.inverse(new Matrix4());
         }).toThrowDeveloperError();
     });
 
-    it('computePerspectiveFieldOfView throws with result parameter', function() {
+    it('multiplyTransformation throws without left parameter', function() {
+        expect(function() {
+            Matrix4.multiplyTransformation();
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyTransformation throws without right parameter', function() {
+        expect(function() {
+            Matrix4.multiplyTransformation(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyTransformation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyTransformation(new Matrix4(), new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByUniformScale throws without result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByUniformScale(new Matrix4(), 2);
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws without result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByScale(new Matrix4(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByPointAsVector throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByPointAsVector();
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByPointAsVector throws without cartesian parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByPointAsVector(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+
+    it('multiplyByPointAsVector throws without result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByPointAsVector(new Matrix4(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByPoint throws without matrix parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByPoint(new Matrix4(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('getTranslation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.getTranslation(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('getRotation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.getRotation(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('inverseTransformtation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.inverseTransformation(new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByTranslation throws without result parameter', function() {
+        expect(function() {
+            Matrix4.multiplyByTranslation(new Matrix4(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('computePerspectiveFieldOfView throws without resut parameter', function() {
         expect(function() {
             Matrix4.computePerspectiveFieldOfView(CesiumMath.PI_OVER_TWO, 1, 1, 10);
         }).toThrowDeveloperError();
@@ -1476,14 +1555,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('computeInfinitePerspectiveOffCenter  throws without near', function() {
+    it('computeInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
         }).toThrowDeveloperError();
     });
 
-    it('computeViewportTransformation  works', function() {
+    it('computeViewportTransformation works', function() {
         expect(function() {
             var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeViewportTransformation ({

@@ -47,6 +47,14 @@ defineSuite([
         return returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh.tile.json');
     }
 
+    function returnQuantizedMesh20TileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh2.0.tile.json');
+    }
+
+    function returnQuantizedMesh11TileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh1.1.tile.json');
+    }
+
     it('conforms to TerrainProvider interface', function() {
         expect(CesiumTerrainProvider).toConformToInterface(TerrainProvider);
     });
@@ -185,6 +193,48 @@ defineSuite([
 
         runs(function() {
             expect(error.message).toContain('invalid or not supported');
+        });
+    });
+
+    it('raises an error if layer.json does not specify quantized-mesh 1.x format', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh2.0.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.errorEvent.addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return defined(error);
+        }, 'error to be raised');
+
+        runs(function() {
+            expect(error.message).toContain('invalid or not supported');
+        });
+    });
+
+    it('supports quantized-mesh1.x minor versions', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/QuantizedMesh1.1.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        var error;
+        provider.errorEvent.addEventListener(function(e) {
+            error = e;
+        });
+
+        waitsFor(function() {
+            return provider.ready;
+        });
+
+        runs(function() {
+            expect(error).not.toBeDefined();
         });
     });
 

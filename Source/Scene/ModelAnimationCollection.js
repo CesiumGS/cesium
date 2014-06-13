@@ -113,13 +113,13 @@ define([
      *
      * @example
      * // Example 2. Add an animation and provide all properties and events
-     * var startTime = new JulianDate();
+     * var startTime = JulianDate.now();
      *
      * var animation = model.activeAnimations.add({
      *   name : 'another animation name',
      *   startTime : startTime,
      *   startOffset : 0.0,                    // Play at startTime (default)
-     *   stopTime : startTime.addSeconds(4.0),
+     *   stopTime : JulianDate.addSeconds(startTime, 4.0),
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
      *   speedup : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
@@ -350,7 +350,7 @@ define([
             var runtimeAnimation = scheduledAnimation._runtimeAnimation;
 
             if (!defined(scheduledAnimation._startTime)) {
-                scheduledAnimation._startTime = defaultValue(scheduledAnimation.startTime, sceneTime).addSeconds(scheduledAnimation.startOffset);
+                scheduledAnimation._startTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.startOffset);
             }
 
             if (!defined(scheduledAnimation._duration)) {
@@ -362,7 +362,7 @@ define([
             var stopTime = scheduledAnimation.stopTime;
 
             // [0.0, 1.0] normalized local animation time
-            var delta = (duration !== 0.0) ? (startTime.getSecondsDifference(sceneTime) / duration) : 0.0;
+            var delta = (duration !== 0.0) ? (JulianDate.getSecondsDifference(sceneTime, startTime) / duration) : 0.0;
             var pastStartTime = (delta >= 0.0);
 
             // Play animation if
@@ -373,7 +373,7 @@ define([
                        ((delta <= 1.0) ||
                         ((scheduledAnimation.loop === ModelAnimationLoop.REPEAT) ||
                          (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT))) &&
-                       (!defined(stopTime) || sceneTime.lessThanOrEquals(stopTime));
+                       (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
 
             if (play) {
                 // STOPPED -> ANIMATING state transition?

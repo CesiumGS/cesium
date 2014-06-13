@@ -374,7 +374,8 @@ define([
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
 
-        var endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position), d, new Cartesian3());
+        var endPos = new Cartesian3();
+        endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position, endPos), d, endPos);
         var endDir = Cartesian3.clone(transitioner._camera2D.direction);
         var endUp = Cartesian3.clone(transitioner._camera2D.up);
 

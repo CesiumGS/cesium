@@ -864,9 +864,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('lerp throws with no result', function() {
+    it('mostOrthogonalAxis throws with no result', function() {
         expect(function() {
-            Cartesian4.lerp(new Cartesian4(), new Cartesian4(), 10);
+            Cartesian4.mostOrthogonalAxis(new Cartesian4());
         }).toThrowDeveloperError();
     });
 

@@ -19,7 +19,7 @@ defineSuite([
     it('default constructor has expected values', function() {
         var property = new CompositeProperty();
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
-        expect(property.getValue(new JulianDate())).toBeUndefined();
+        expect(property.getValue(JulianDate.now())).toBeUndefined();
         expect(property.isConstant).toBe(true);
     });
 
