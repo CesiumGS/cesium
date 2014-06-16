@@ -186,6 +186,17 @@ define([
             get : function() {
                 return this._targetPropertyNames;
             }
+        },
+        /**
+         * Gets the resolved instance of the underlying referenced property.
+         * @memberof ReferenceProperty.prototype
+         * @Type {Property}
+         * @readonly
+         */
+        resolvedProperty : {
+            get : function() {
+                return resolve(this);
+            }
         }
     });
 
