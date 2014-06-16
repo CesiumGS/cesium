@@ -79,8 +79,20 @@ define([
 
         this._heightmapStructure = undefined;
         this._hasWaterMask = false;
-        this._hasVertexNormals = false;     // does the server provide vertex normals?
-        this._requestVertexNormals = defaultValue(options.requestVertexNormals, false);       // does the client even want these normals?
+
+        /**
+         * Boolean flag that indicates if the Terrain Server can provide vertex normals.
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        this._hasVertexNormals = false;
+        /**
+         * Boolean flag that indicates if the client should request vertex normals from the server.
+         * @type {Boolean}
+         * @default false
+         */
+        this.requestVertexNormals = defaultValue(options.requestVertexNormals, false);
 
         this._errorEvent = new Event();
 
@@ -317,12 +329,12 @@ define([
 
         var encodedNormalBuffer;
         if (pos < view.byteLength) {
-            var extensionsflag = view.getInt8(pos);
+            var extensionsflag = view.getUint8(pos);
             pos += uint8Length;
 
-            if (extensionsflag | 0x1) {
-        encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
-        pos += vertexCount * 2 * uint8Length;
+            if (extensionsflag & 0x1) {
+                encodedNormalBuffer = new Uint8Array(buffer, pos, vertexCount * 2);
+                pos += vertexCount * 2 * uint8Length;
             }
         }
 
@@ -394,7 +406,7 @@ define([
         var promise;
 
         var tileLoader = loadTile;
-        if (this._requestVertexNormals && this._hasVertexNormals) {
+        if (this.requestVertexNormals && this._hasVertexNormals) {
             tileLoader = loadTileVertexNormals;
         }
 
@@ -477,21 +489,6 @@ define([
             get : function() {
                 return this._ready;
             }
-        },
-
-        /**
-         * Gets or sets a value indicating whether or to request vertex normals from the server. This
-         * property has no effect if {@link CesiumTerrainProvider#hasVertexNormals} is false.
-         * @memberof CesiumTerrainProvider.prototype
-         * @type {Boolean}
-         */
-        requestVertexNormals : {
-            get : function() {
-                return this._requestVertexNormals;
-            },
-            set : function(value) {
-                this._requestVertexNormals = value;
-            }
         }
     });
 
@@ -527,6 +524,8 @@ define([
 
     /**
      * Gets a value indicating whether or not vertex normals can be requested from the server.
+     * This requires that the both the server supports vertex normals and that the client is
+     * configured to {@link CesiumTerrainProvider#requestVertexNormals}.
      *
      * @memberof CesiumTerrainProvider
      *
@@ -543,7 +542,7 @@ define([
         //>>includeEnd('debug');
 
         // returns true if we can request vertex normals from the server
-        return this._hasVertexNormals && this._requestVertexNormals;
+        return this._hasVertexNormals && this.requestVertexNormals;
     };
 
     function getChildMaskForTile(terrainProvider, level, x, y) {

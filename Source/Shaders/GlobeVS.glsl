@@ -92,10 +92,6 @@ void main()
     vec2 encodedNormal = textureCoordAndEncodedNormals.zw;
     encodedNormal = encodedNormal / 255.0 * 2.0 - 1.0;
     v_normal = czm_octDecode(encodedNormal);
-    //if (dot(v_normal, v_normal) < 0.9)
-    //{
-    //    v_normal = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    //}
 #endif
 
     v_textureCoordinates = textureCoordAndEncodedNormals.xy;
