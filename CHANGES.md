@@ -31,7 +31,7 @@ Beta Releases
     * `Geocoder` and `GeocoderViewModel` constructor parameter `options.flightDuration` and `GeocoderViewModel.flightDuration`.
     * `ScreenSpaceCameraController.bounceAnimationTime`.
     * `FrameRateMonitor` constructor parameter `options.samplingWindow`, `options.quietPeriod`, and `options.warmupPeriod`.
-  * Replaced `Scene.animations` with `Scene.tweens`.  Also replaced `AnimationCollection` with `TweenCollection`.
+  * Removed `Scene.animations` and `AnimationCollection` from the public Cesium API.
   * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
@@ -62,7 +62,7 @@ Beta Releases
     * `date.greaterThan (right)` -> `JulianDate.greaterThan (left, right)`
     * `date.greaterThanOrEquals (right)` -> `JulianDate.greaterThanOrEquals (left, right)`
   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
-  * Removed `Camera.createCorrectPositionAnimation` from the public Cesium API.
+  * Removed `Camera.createCorrectPositionAnimation`.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.

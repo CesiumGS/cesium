@@ -27,6 +27,8 @@ define([
      *
      * @alias Tween
      * @constructor
+     *
+     * @private
      */
     var Tween = function(tweens, tweenjs, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
         this._tweens = tweens;
@@ -173,7 +175,7 @@ define([
      * @alias TweenCollection
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Animations.html|Cesium Sandcastle Animation Demo}
+     * @private
      */
     var TweenCollection = function() {
         this._tweens = [];
