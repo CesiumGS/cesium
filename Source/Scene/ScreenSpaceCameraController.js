@@ -654,6 +654,8 @@ define([
     var rotateCVCartesian3 = new Cartesian3();
     var rotateCVCart = new Cartographic();
     var rotateCVOldTransform = new Matrix4();
+    var rotateCVQuaternion = new Quaternion();
+    var rotateCVMatrix = new Matrix3();
 
     function rotateCV(controller, startPosition, movement, frameState) {
         if (defined(movement.angleAndHeight)) {
@@ -717,11 +719,16 @@ define([
 
         var transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, rotateCVTransform);
 
-        Cartesian3.fromElements(verticalCenter.y, verticalCenter.z, verticalCenter.x, verticalCenter);
-        cart = projection.unproject(verticalCenter, rotateCVCart);
-        ellipsoid.cartographicToCartesian(cart, verticalCenter);
+        var verticalTransform;
+        if (defined(verticalCenter)) {
+            Cartesian3.fromElements(verticalCenter.y, verticalCenter.z, verticalCenter.x, verticalCenter);
+            cart = projection.unproject(verticalCenter, rotateCVCart);
+            ellipsoid.cartographicToCartesian(cart, verticalCenter);
 
-        var verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, ellipsoid, rotateCVVerticalTransform);
+            verticalTransform = Transforms.eastNorthUpToFixedFrame(verticalCenter, ellipsoid, rotateCVVerticalTransform);
+        } else {
+            verticalTransform = transform;
+        }
 
         var oldGlobe = controller.globe;
         controller.globe = Ellipsoid.UNIT_SPHERE;
@@ -750,10 +757,44 @@ define([
             rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
         }
 
+        if (defined(camera.constrainedAxis)) {
+            var right = Cartesian3.cross(camera.direction, camera.constrainedAxis, tilt3DCartesian3);
+            if (!Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+                if (Cartesian3.dot(right, camera.right) < 0.0) {
+                    Cartesian3.negate(right, right);
+                }
+
+                Cartesian3.cross(right, camera.direction, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+            } else {
+                var mostOrthogonalAxis = Cartesian3.mostOrthogonalAxis(camera.constrainedAxis, tilt3DCartesian3);
+                if (Math.abs(Cartesian3.dot(mostOrthogonalAxis, camera.up) < 0.5)) {
+                    Cartesian3.cross(camera.direction, mostOrthogonalAxis, right);
+                    if (Cartesian3.dot(right, camera.right) < 0.0) {
+                        Cartesian3.negate(right, right);
+                    }
+
+                    Cartesian3.cross(right, camera.direction, camera.up);
+                    Cartesian3.cross(camera.direction, camera.up, camera.right);
+                } else {
+                    var up = Cartesian3.cross(camera.direction, mostOrthogonalAxis, tilt3DCartesian3);
+                    if (Cartesian3.dot(up, camera.up) < 0.0) {
+                        Cartesian3.negate(up, up);
+                    }
+
+                    Cartesian3.cross(camera.direction, up, camera.right);
+                    Cartesian3.cross(camera.right, camera.direction, camera.up);
+                }
+            }
+
+            Cartesian3.normalize(camera.up, camera.up);
+            Cartesian3.normalize(camera.right, camera.right);
+        }
+
         camera.setTransform(oldTransform);
         controller.globe = oldGlobe;
 
-        var originalPosition = Cartesian3.clone(camera.positionWC, tilt3DCartesian3);
+        var originalPosition = Cartesian3.clone(camera.positionWC, rotateCVCartesian3);
         adjustHeightForTerrain(controller, frameState);
 
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
@@ -764,8 +805,8 @@ define([
             var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
             Cartesian3.normalize(axis, axis);
 
-            var quaternion = Quaternion.fromAxisAngle(axis, angle, tilt3DQuaternion);
-            var rotation = Matrix3.fromQuaternion(quaternion, tilt3DMatrix);
+            var quaternion = Quaternion.fromAxisAngle(axis, angle, rotateCVQuaternion);
+            var rotation = Matrix3.fromQuaternion(quaternion, rotateCVMatrix);
             Matrix3.multiplyByVector(rotation, camera.direction, camera.direction);
             Matrix3.multiplyByVector(rotation, camera.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
@@ -1094,6 +1135,40 @@ define([
             camera.constrainedAxis = oldConstrainedAxis;
         } else {
             rotate3D(controller, startPosition, movement, frameState, constrainedAxis, true, false);
+        }
+
+        if (defined(camera.constrainedAxis)) {
+            var right = Cartesian3.cross(camera.direction, camera.constrainedAxis, tilt3DCartesian3);
+            if (!Cartesian3.equalsEpsilon(right, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+                if (Cartesian3.dot(right, camera.right) < 0.0) {
+                    Cartesian3.negate(right, right);
+                }
+
+                Cartesian3.cross(right, camera.direction, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+            } else {
+                var mostOrthogonalAxis = Cartesian3.mostOrthogonalAxis(camera.constrainedAxis, tilt3DCartesian3);
+                if (Math.abs(Cartesian3.dot(mostOrthogonalAxis, camera.up) < 0.5)) {
+                    Cartesian3.cross(camera.direction, mostOrthogonalAxis, right);
+                    if (Cartesian3.dot(right, camera.right) < 0.0) {
+                        Cartesian3.negate(right, right);
+                    }
+
+                    Cartesian3.cross(right, camera.direction, camera.up);
+                    Cartesian3.cross(camera.direction, camera.up, camera.right);
+                } else {
+                    var up = Cartesian3.cross(camera.direction, mostOrthogonalAxis, tilt3DCartesian3);
+                    if (Cartesian3.dot(up, camera.up) < 0.0) {
+                        Cartesian3.negate(up, up);
+                    }
+
+                    Cartesian3.cross(camera.direction, up, camera.right);
+                    Cartesian3.cross(camera.right, camera.direction, camera.up);
+                }
+            }
+
+            Cartesian3.normalize(camera.up, camera.up);
+            Cartesian3.normalize(camera.right, camera.right);
         }
 
         camera.setTransform(oldTransform);

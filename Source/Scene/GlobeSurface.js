@@ -378,10 +378,14 @@ define([
         }
         //>>includeEnd('debug');
 
+        var levelZeroTiles = this._levelZeroTiles;
+        if (!defined(levelZeroTiles)) {
+            return;
+        }
+
         var tile;
         var i;
 
-        var levelZeroTiles = this._levelZeroTiles;
         var length = levelZeroTiles.length;
         for (i = 0; i < length; ++i) {
             tile = levelZeroTiles[i];
