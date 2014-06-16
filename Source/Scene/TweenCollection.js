@@ -226,13 +226,16 @@ define([
         }
         //>>includeEnd('debug');
 
-        if ((options.duration === 0.0) && defined(options.complete)) {
-            options.complete();
+        if (options.duration === 0.0) {
+            if (defined(options.complete)) {
+                options.complete();
+            }
             return new Tween(this);
         }
 
         var duration = options.duration / TimeConstants.SECONDS_PER_MILLISECOND;
-        var delay = defaultValue(options.delay, 0.0) / TimeConstants.SECONDS_PER_MILLISECOND;
+        var delayInSeconds = defaultValue(options.delay, 0.0);
+        var delay = delayInSeconds / TimeConstants.SECONDS_PER_MILLISECOND;
         var easingFunction = defaultValue(options.easingFunction, EasingFunction.LINEAR_NONE);
 
         var value = options.startObject;
@@ -248,7 +251,7 @@ define([
         tweenjs.onComplete(defaultValue(options.complete, null));
         tweenjs.repeat(defaultValue(options._repeat, 0.0));
 
-        var tween = new Tween(this, tweenjs, options.startObject, options.stopObject, duration, delay, easingFunction, options.update, options.complete, options.cancel);
+        var tween = new Tween(this, tweenjs, options.startObject, options.stopObject, options.duration, delayInSeconds, easingFunction, options.update, options.complete, options.cancel);
         this._tweens.push(tween);
         return tween;
     };
