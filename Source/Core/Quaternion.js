@@ -99,42 +99,6 @@ define([
         return result;
     };
 
-    var scratchRotateCross = new Cartesian3();
-
-    /**
-     * Apply a quaternion rotation to a vector.
-     * @memberof Quaternion
-     *
-     * @param {Quaternion} quaternion The rotation.
-     * @param {Cartesian3} cartesian The cartesian to rotate.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Quaternion.rotateVector = function(quaternion, cartesian, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(quaternion)) {
-            throw new DeveloperError('quaternion is required.');
-        }
-        if (!defined(cartesian)) {
-            throw new DeveloperError('quaternion is required.');
-        }
-        //>>includeEnd('debug');
-
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
-
-        // t = 2.0 * cross(quaternion.xyz, cartesian)
-        var t = Cartesian3.cross(quaternion, cartesian, scratchRotateCross);
-        Cartesian3.multiplyByScalar(t, 2.0, t);
-
-        // return cartesian + quaternion.w * t + cross(quaternion.xyz, t)
-        Cartesian3.cross(quaternion, t, result);
-        Cartesian3.multiplyByScalar(t, quaternion.w, t);
-        Cartesian3.add(t, result, result);
-        return Cartesian3.add(result, cartesian, result);
-    };
-
     var fromRotationMatrixNext = [1, 2, 0];
     var fromRotationMatrixQuat = new Array(3);
     /**
