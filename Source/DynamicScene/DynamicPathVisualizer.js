@@ -17,6 +17,7 @@ define([
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
@@ -37,6 +38,7 @@ define([
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
@@ -210,6 +212,10 @@ define([
                 }
 
                 var intervalProperty = interval.data;
+                if (intervalProperty instanceof ReferenceProperty) {
+                    intervalProperty = intervalProperty.resolvedProperty;
+                }
+
                 if (intervalProperty instanceof SampledPositionProperty) {
                     index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
@@ -230,6 +236,10 @@ define([
     function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
         if (!defined(result)) {
             result = [];
+        }
+
+        if (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
         var length = 0;
@@ -478,7 +488,7 @@ define([
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
-                frameToVisualize = positionProperty._referenceFrame;
+                frameToVisualize = positionProperty.referenceFrame;
             }
 
             var currentUpdater = this._updaters[frameToVisualize];
