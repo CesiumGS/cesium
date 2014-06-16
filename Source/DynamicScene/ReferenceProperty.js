@@ -146,7 +146,7 @@ define([
          * Gets the reference frame that the position is defined in.
          * This property is only valid if the referenced property is a {@link PositionProperty}.
          * @memberof ReferenceProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          * @readonly
          */
         referenceFrame : {
@@ -157,7 +157,7 @@ define([
         /**
          * Gets the id of the object being referenced.
          * @memberof ReferenceProperty.prototype
-         * @Type {String}
+         * @type {String}
          * @readonly
          */
         targetId : {
@@ -168,7 +168,7 @@ define([
         /**
          * Gets the collection containing the object being referenced.
          * @memberof ReferenceProperty.prototype
-         * @Type {DynamicObjectCollection}
+         * @type {DynamicObjectCollection}
          * @readonly
          */
         targetCollection : {
@@ -179,7 +179,7 @@ define([
         /**
          * Gets the array of property names used to retrieve the referenced property.
          * @memberof ReferenceProperty.prototype
-         * @Type {String[]}
+         * @type {String[]}
          * @readonly
          */
         targetPropertyNames : {
@@ -190,7 +190,7 @@ define([
         /**
          * Gets the resolved instance of the underlying referenced property.
          * @memberof ReferenceProperty.prototype
-         * @Type {Property}
+         * @type {Property}
          * @readonly
          */
         resolvedProperty : {
