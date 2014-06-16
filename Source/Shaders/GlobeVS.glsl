@@ -86,7 +86,10 @@ void main()
 
     gl_Position = getPosition(position3DWC);
 
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_LIGHTING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+    v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
+    v_positionMC = position3DWC;                                 // position in model coordinates
+#elif defined(ENABLE_VERTEX_LIGHTING)
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     vec2 encodedNormal = textureCoordAndEncodedNormals.zw;

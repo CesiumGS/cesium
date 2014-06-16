@@ -365,10 +365,14 @@ define([
         var northSkirtHeight = isNorthChild ? this._northSkirtHeight : (shortestSkirt * 0.5);
 
         return when(upsamplePromise, function(result) {
+            var encodedNormals;
+            if (defined(result.encodedNormals)) {
+                encodedNormals = new Uint8Array(result.encodedNormals);
+            }
             return new QuantizedMeshTerrainData({
                 quantizedVertices : new Uint16Array(result.vertices),
                 indices : new Uint16Array(result.indices),
-                encodedNormals : new Uint8Array(result.encodedNormals),
+                encodedNormals : encodedNormals,
                 minimumHeight : result.minimumHeight,
                 maximumHeight : result.maximumHeight,
                 boundingSphere : BoundingSphere.clone(result.boundingSphere),

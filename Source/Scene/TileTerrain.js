@@ -207,9 +207,18 @@ define([
 
     function createResources(tileTerrain, context, terrainProvider, x, y, level) {
         var datatype = ComponentDatatype.FLOAT;
+        var stride;
+        var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        var stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
+        if (terrainProvider.hasVertexNormals()) {
+            stride = 8 * ComponentDatatype.getSizeInBytes(datatype);
+            numTexCoordComponents = 4;
+        } else {
+            stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
+            numTexCoordComponents = 2;
+        }
+
         var position3DAndHeightLength = 4;
 
         var attributes = [{
@@ -220,10 +229,10 @@ define([
             offsetInBytes : 0,
             strideInBytes : stride
         }, {
-            index : terrainAttributeLocations.textureCoordinates,
+            index : terrainAttributeLocations.textureCoordAndEncodedNormals,
             vertexBuffer : buffer,
             componentDatatype : datatype,
-            componentsPerAttribute : 2,
+            componentsPerAttribute : numTexCoordComponents,
             offsetInBytes : position3DAndHeightLength * ComponentDatatype.getSizeInBytes(datatype),
             strideInBytes : stride
         }];

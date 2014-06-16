@@ -41,7 +41,7 @@ uniform float u_zoomedOutOceanSpecularIntensity;
 uniform sampler2D u_oceanNormalMap;
 #endif
 
-#ifdef ENABLE_LIGHTING
+#ifdef ENABLE_DAYNIGHT_SHADING
 uniform vec2 u_lightingFadeDistance;
 #endif
 
@@ -128,9 +128,11 @@ void main()
 
     vec4 color = vec4(startDayColor, 1.0);
     
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_LIGHTING)
-    //vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
-    vec3 normalMC = normalize(v_normal);   // normalized surface normal in model coordinates
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+    vec3 normalMC = normalize(czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));   // normalized surface normal in model coordinates
+    vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
+#elif defined(ENABLE_VERTEX_LIGHTING)
+    vec3 normalMC = normalize(v_normal);														// normalized surface normal in model coordinates
     vec3 normalEC = normalize(czm_normal3D * normalMC);                                         // normalized surface normal in eye coordiantes
 #endif
 
@@ -154,16 +156,17 @@ void main()
     }
 #endif
 
-#ifdef ENABLE_LIGHTING
-    //float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
-    //float cameraDist = length(czm_view[3]);
-    //float fadeOutDist = u_lightingFadeDistance.x;
-    //float fadeInDist = u_lightingFadeDistance.y;
-    //float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
-    //diffuseIntensity = mix(1.0, diffuseIntensity, t);
+#ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 0.8 + 0.2;
     gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
-    //gl_FragColor = vec4(v_normal, 1.0);
+#elif defined(ENABLE_DAYNIGHT_SHADING)
+    float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalEC) * 5.0 + 0.3, 0.0, 1.0);
+    float cameraDist = length(czm_view[3]);
+    float fadeOutDist = u_lightingFadeDistance.x;
+    float fadeInDist = u_lightingFadeDistance.y;
+    float t = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+    diffuseIntensity = mix(1.0, diffuseIntensity, t);
+    gl_FragColor = vec4(color.rgb * diffuseIntensity, color.a);
 #else
     gl_FragColor = color;
 #endif

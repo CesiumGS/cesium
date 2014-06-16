@@ -70,6 +70,7 @@ define([
         var parentHeightBuffer = parentVertices.subarray(quantizedVertexCount * 2, 3 * quantizedVertexCount);
 
         var vertexCount = 0;
+        var hasVertexNormals = defined(parentNormalBuffer);
 
         var i, n, u, v;
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
@@ -82,8 +83,10 @@ define([
                 uBuffer.push(u);
                 vBuffer.push(v);
                 heightBuffer.push(parentHeightBuffer[i]);
-                normalBuffer.push(parentNormalBuffer[n]);
-                normalBuffer.push(parentNormalBuffer[n + 1]);
+                if (hasVertexNormals) {
+                    normalBuffer.push(parentNormalBuffer[n]);
+                    normalBuffer.push(parentNormalBuffer[n + 1]);
+                }
 
                 ++vertexCount;
             }
@@ -138,7 +141,7 @@ define([
 
             // Clip the triangle against the North-south boundary.
             clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-            addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices);
+            addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
 
             // If there's another vertex in the original clipped result,
             // it forms a second triangle.  Clip it as well.
@@ -147,7 +150,7 @@ define([
                 clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
                 clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-                addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices);
+                addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped2, clippedTriangleVertices, hasVertexNormals);
             }
         }
 
@@ -245,12 +248,18 @@ define([
         }
 
         var indicesTypedArray = new Uint16Array(indices);
-        var normalArray = new Uint8Array(normalBuffer);
-        transferableObjects.push(vertices.buffer, indicesTypedArray.buffer, normalArray.buffer);
+        var encodedNormals;
+        if (hasVertexNormals) {
+            var normalArray = new Uint8Array(normalBuffer);
+            transferableObjects.push(vertices.buffer, indicesTypedArray.buffer, normalArray.buffer);
+            encodedNormals = normalArray.buffer;
+        } else {
+            transferableObjects.push(vertices.buffer, indicesTypedArray.buffer);
+        }
 
         return {
             vertices : vertices.buffer,
-            encodedNormals : normalArray.buffer,
+            encodedNormals : encodedNormals,
             indices : indicesTypedArray.buffer,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
@@ -367,14 +376,14 @@ define([
         if (defined(this.index)) {
             return this.normalBuffer[this.index * 2];
         }
-        return CesiumMath.lerp(this.first.getNormalX(), this.second.getNormalX(), this.ratio);
+        return Math.round(CesiumMath.lerp(this.first.getNormalX(), this.second.getNormalX(), this.ratio));
     };
 
     Vertex.prototype.getNormalY = function() {
         if (defined(this.index)) {
             return this.normalBuffer[this.index * 2 + 1];
         }
-        return CesiumMath.lerp(this.first.getNormalY(), this.second.getNormalY(), this.ratio);
+        return Math.round(CesiumMath.lerp(this.first.getNormalY(), this.second.getNormalY(), this.ratio));
     };
 
     var polygonVertices = [];
@@ -383,7 +392,7 @@ define([
     polygonVertices.push(new Vertex());
     polygonVertices.push(new Vertex());
 
-    function addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped, triangleVertices) {
+    function addClippedPolygon(uBuffer, vBuffer, heightBuffer, normalBuffer, indices, vertexMap, clipped, triangleVertices, hasVertexNormals) {
         if (clipped.length === 0) {
             return;
         }
@@ -405,8 +414,10 @@ define([
                     uBuffer.push(polygonVertex.getU());
                     vBuffer.push(polygonVertex.getV());
                     heightBuffer.push(polygonVertex.getH());
-                    normalBuffer.push(polygonVertex.getNormalX());
-                    normalBuffer.push(polygonVertex.getNormalY());
+                    if (hasVertexNormals) {
+                        normalBuffer.push(polygonVertex.getNormalX());
+                        normalBuffer.push(polygonVertex.getNormalY());
+                    }
                     polygonVertex.newIndex = newIndex;
                     vertexMap[key] = newIndex;
                 }
@@ -415,7 +426,9 @@ define([
                 polygonVertex.uBuffer = uBuffer;
                 polygonVertex.vBuffer = vBuffer;
                 polygonVertex.heightBuffer = heightBuffer;
-                polygonVertex.normalBuffer = normalBuffer;
+                if (hasVertexNormals) {
+                    polygonVertex.normalBuffer = normalBuffer;
+                }
             }
         }
 

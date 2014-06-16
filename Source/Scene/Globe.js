@@ -717,7 +717,8 @@ define([
             this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
-                    (this.enableLighting ? 'ENABLE_LIGHTING' : '')
+                    (this.enableLighting && !hasVertexNormals ? 'ENABLE_DAYNIGHT_SHADING' : ''),
+                    (this.enableLighting && hasVertexNormals ? 'ENABLE_VERTEX_LIGHTING' : '')
                 ],
                 sources : [GlobeVS, getPositionMode, get2DYPositionFraction]
             });
@@ -728,7 +729,8 @@ define([
                 defines : [
                     (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
                     (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : ''),
-                    (this.enableLighting && hasVertexNormals ? 'ENABLE_LIGHTING' : '')
+                    (this.enableLighting && !hasVertexNormals ? 'ENABLE_DAYNIGHT_SHADING' : ''),
+                    (this.enableLighting && hasVertexNormals ? 'ENABLE_VERTEX_LIGHTING' : '')
                 ],
                 sources : [GlobeFS]
             });
@@ -742,6 +744,7 @@ define([
 
             this._showingPrettyOcean = defined(this._oceanNormalMap);
             this._hasWaterMask = hasWaterMask;
+            this._hasVertexNormals = hasVertexNormals;
             this._enableLighting = this.enableLighting;
         }
 
