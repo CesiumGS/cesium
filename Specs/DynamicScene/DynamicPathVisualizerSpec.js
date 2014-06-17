@@ -475,7 +475,7 @@ defineSuite([
         expect(result).toEqual([intervalProperty.intervals.get(0).data,
                                 constantProperty.getValue(t1),
                                 sampledProperty.getValue(t3),
-                                sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep, new Cartesian3())),
+                                sampledProperty.getValue(JulianDate.addSeconds(t3, maximumStep, new JulianDate())),
                                 sampledProperty.getValue(t4),
                                 targetObject.position.getValue(t5)]);
     });
