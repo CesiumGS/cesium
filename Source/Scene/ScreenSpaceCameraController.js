@@ -873,23 +873,21 @@ define([
     var scratchEllipsoid = new Ellipsoid();
 
     function spin3D(controller, startPosition, movement, frameState) {
-        if (defined(controller._camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
-            var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC, scratchCartographic).height;
-            if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
-                var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
-                var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
-                if (!defined(mousePos)) {
-                    pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
-                } else {
-                    var magnitude = Cartesian3.magnitude(mousePos);
-                    var radii = scratchRadii;
-                    radii.x = radii.y = radii.z = magnitude;
-                    var ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
-                    pan3D(controller, startPosition, movement, frameState, ellipsoid);
-                }
+        var height = controller._ellipsoid.cartesianToCartographic(controller._camera.positionWC, scratchCartographic).height;
+        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
+            var startRay = controller._camera.getPickRay(movement.startPosition, scratchStartRay);
+            var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
+            if (!defined(mousePos)) {
+                rotate3D(controller, startPosition, movement, frameState);
             } else {
-                pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
+                var magnitude = Cartesian3.magnitude(mousePos);
+                var radii = scratchRadii;
+                radii.x = radii.y = radii.z = magnitude;
+                var ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                pan3D(controller, startPosition, movement, frameState, ellipsoid);
             }
+        } else if (defined(controller._camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
+            pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
         } else {
             rotate3D(controller, startPosition, movement, frameState);
         }
@@ -941,12 +939,22 @@ define([
     var pan3DTemp1 = new Cartesian3();
     var pan3DTemp2 = new Cartesian3();
     var pan3DTemp3 = new Cartesian3();
-    var basis1Scratch = new Cartesian3();
+    var pan3DStartMousePosition = new Cartesian2();
+    var pan3DEndMousePosition = new Cartesian2();
 
     function pan3D(controller, startPosition, movement, frameState, ellipsoid) {
         var camera = controller._camera;
-        var p0 = camera.pickEllipsoid(movement.startPosition, ellipsoid, pan3DP0);
-        var p1 = camera.pickEllipsoid(movement.endPosition, ellipsoid, pan3DP1);
+        var cameraPosMag = Cartesian3.magnitude(camera.position);
+
+        var startMousePosition = Cartesian2.clone(movement.startPosition, pan3DStartMousePosition);
+        var endMousePosition = Cartesian2.clone(movement.endPosition, pan3DEndMousePosition);
+        if (cameraPosMag < ellipsoid.maximumRadius) {
+            startMousePosition.y = endMousePosition.y;
+            endMousePosition.y = movement.startPosition.y;
+        }
+
+        var p0 = camera.pickEllipsoid(startMousePosition, ellipsoid, pan3DP0);
+        var p1 = camera.pickEllipsoid(endMousePosition, ellipsoid, pan3DP1);
 
         if (!defined(p0) || !defined(p1)) {
             return;
@@ -954,8 +962,6 @@ define([
 
         p0 = camera.worldToCameraCoordinates(p0, p0);
         p1 = camera.worldToCameraCoordinates(p1, p1);
-
-        var cameraPosMag = Cartesian3.magnitude(camera.position);
 
         if (!defined(camera.constrainedAxis)) {
             Cartesian3.normalize(p0, p0);
@@ -969,7 +975,7 @@ define([
             }
         } else {
             var basis0 = camera.constrainedAxis;
-            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0, basis1Scratch);
+            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0);
             Cartesian3.cross(basis1, basis0, basis1);
             Cartesian3.normalize(basis1, basis1);
             var basis2 = Cartesian3.cross(basis0, basis1, pan3DTemp1);
