@@ -766,29 +766,10 @@ define([
 
                 Cartesian3.cross(right, camera.direction, camera.up);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
-            } else {
-                var mostOrthogonalAxis = Cartesian3.mostOrthogonalAxis(camera.constrainedAxis, tilt3DCartesian3);
-                if (Math.abs(Cartesian3.dot(mostOrthogonalAxis, camera.up) < 0.5)) {
-                    Cartesian3.cross(camera.direction, mostOrthogonalAxis, right);
-                    if (Cartesian3.dot(right, camera.right) < 0.0) {
-                        Cartesian3.negate(right, right);
-                    }
 
-                    Cartesian3.cross(right, camera.direction, camera.up);
-                    Cartesian3.cross(camera.direction, camera.up, camera.right);
-                } else {
-                    var up = Cartesian3.cross(camera.direction, mostOrthogonalAxis, tilt3DCartesian3);
-                    if (Cartesian3.dot(up, camera.up) < 0.0) {
-                        Cartesian3.negate(up, up);
-                    }
-
-                    Cartesian3.cross(camera.direction, up, camera.right);
-                    Cartesian3.cross(camera.right, camera.direction, camera.up);
-                }
+                Cartesian3.normalize(camera.up, camera.up);
+                Cartesian3.normalize(camera.right, camera.right);
             }
-
-            Cartesian3.normalize(camera.up, camera.up);
-            Cartesian3.normalize(camera.right, camera.right);
         }
 
         camera.setTransform(oldTransform);
@@ -1152,29 +1133,10 @@ define([
 
                 Cartesian3.cross(right, camera.direction, camera.up);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
-            } else {
-                var mostOrthogonalAxis = Cartesian3.mostOrthogonalAxis(camera.constrainedAxis, tilt3DCartesian3);
-                if (Math.abs(Cartesian3.dot(mostOrthogonalAxis, camera.up) < 0.5)) {
-                    Cartesian3.cross(camera.direction, mostOrthogonalAxis, right);
-                    if (Cartesian3.dot(right, camera.right) < 0.0) {
-                        Cartesian3.negate(right, right);
-                    }
 
-                    Cartesian3.cross(right, camera.direction, camera.up);
-                    Cartesian3.cross(camera.direction, camera.up, camera.right);
-                } else {
-                    var up = Cartesian3.cross(camera.direction, mostOrthogonalAxis, tilt3DCartesian3);
-                    if (Cartesian3.dot(up, camera.up) < 0.0) {
-                        Cartesian3.negate(up, up);
-                    }
-
-                    Cartesian3.cross(camera.direction, up, camera.right);
-                    Cartesian3.cross(camera.right, camera.direction, camera.up);
-                }
+                Cartesian3.normalize(camera.up, camera.up);
+                Cartesian3.normalize(camera.right, camera.right);
             }
-
-            Cartesian3.normalize(camera.up, camera.up);
-            Cartesian3.normalize(camera.right, camera.right);
         }
 
         camera.setTransform(oldTransform);
