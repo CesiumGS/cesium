@@ -18,8 +18,8 @@ define([
     "use strict";
 
     /**
-     * An interval of time defined by a start and stop date. The end points are optionally included
-     * in the interval.
+     * An interval defined by a start and a stop time; optionally including those times as part of the interval.
+     * Arbitrary data can optionally be associated with each instance for used with {@link TimeIntervalCollection}.
      *
      * @alias TimeInterval
      * @constructor
@@ -31,11 +31,47 @@ define([
      * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
      * @param {Object} [options.data] Arbitrary data associated with this interval.
      *
-     * @see TimeIntervalCollection
+     * @example
+     * // Create an instance that spans August 1st, 1980 and is associated
+     * // with a Cartesian position.
+     * var timeInterval = new TimeInterval({
+     *     start : JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
+     *     stop : JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
+     *     isStartTimeIncluded : true,
+     *     iSStopTimeIncluded : false,
+     *     data : Cartesian.fromDegrees(39.921037, -75.170082)
+     * });
+     *
+     * @example
+     * // Create two instances from ISO 8601 intervals with associated numeric data
+     * // then compute their intersection, summing the data they contain.
+     * var left = TimeInterval.fromIso8601({
+     *     iso8601 : '2000/2010',
+     *     data : 2
+     * });
+     *
+     * var right = TimeInterval.fromIso8601({
+     *     iso8601 : '1995/2005',
+     *     data : 3
+     * });
+     *
+     * //The result of the below intersection will be an interval equivalent to
+     * //var intersection = TimeInterval.fromIso8601({
+     * //  iso8601 : '2000/2005',
+     * //  data : 5
+     * //});
+     * var intersection = new TimeInterval();
+     * TimeInterval.intersect(left, right, intersection, function(leftData, rightData) {
+     *     return leftData + rightData;
+     * });
+     *
+     * @example
+     * // Check if an interval contains a specific time.
+     * var dateToCheck = JulianDate.fromIso8601('1982-09-08T11:30:00Z');
+     * var containsDate = TimeInterval.contains(timeInterval, dateToCheck);
      */
     var TimeInterval = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         /**
          * Gets or sets the start time of this interval.
          * @type {JulianDate}
@@ -157,7 +193,7 @@ define([
      *
      * @param {TimeInterval} [left] The first instance.
      * @param {TimeInterval} [right] The second instance.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+     * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if the dates are equal; otherwise, <code>false</code>.
      */
     TimeInterval.equals = function(left, right, dataComparer) {
@@ -180,7 +216,7 @@ define([
      * @param {TimeInterval} [left] The first instance.
      * @param {TimeInterval} [right] The second instance.
      * @param {Number} epsilon The maximum number of seconds that should separate the two instances.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
+     * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if the two dates are within <code>epsilon</code> seconds of each other; otherwise <code>false</code>.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
@@ -206,9 +242,7 @@ define([
      * @param {TimeInterval} left The first interval.
      * @param {TimeInterval} [right] The second interval.
      * @param {TimeInterval} result An existing instance to use for the result.
-     * @param {Function} [mergeCallback] A function which takes the data property from
-     * each interval as input and merges it into a new value. If the callback is undefined,
-     * the data from the left interval will be used.
+     * @param {TimeInterval~MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
      * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
      */
     TimeInterval.intersect = function(left, right, result, mergeCallback) {
@@ -287,9 +321,10 @@ define([
     };
 
     /**
-     * Creates a copy of this instance.
+     * Duplicates this instance.
      *
-     * @returns A new TimeInterval that is equal to this interval.
+     * @param {TimeInterval} [result] An existing instance to use for the result.
+     * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
      */
     TimeInterval.prototype.clone = function(result) {
         return TimeInterval.clone(this, result);
@@ -300,7 +335,7 @@ define([
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
+     * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equals = function(right, dataComparer) {
@@ -314,7 +349,7 @@ define([
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
+     * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equalsEpsilon = function(right, epsilon, dataComparer) {
@@ -322,7 +357,7 @@ define([
     };
 
     /**
-     * An empty interval.
+     * An immutable empty interval.
      *
      * @type {TimeInterval}
      * @constant
@@ -333,6 +368,23 @@ define([
         isStartIncluded : false,
         isStopIncluded : false
     }));
+
+    /**
+     * Function interface for merging interval data.
+     * @callback TimeInterval~MergeCallback
+     *
+     * @param {Object} leftData The first data instance.
+     * @param {Object} rightData The second data instance.
+     * @returns {Object} The result of merging the two data instances.
+     */
+
+    /**
+     * Function interface for comparing interval data.
+     * @callback TimeInterval~DataComparer
+     * @param {Object} leftData The first data instance.
+     * @param {Object} rightData The second data instance.
+     * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
+     */
 
     return TimeInterval;
 });

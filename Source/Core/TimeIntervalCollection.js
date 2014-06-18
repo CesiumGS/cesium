@@ -22,13 +22,10 @@ define([
     }
 
     /**
-     * A non-overlapping collection of TimeIntervals sorted by start date.
+     * A non-overlapping collection of {@link TimeInterval} instances sorted by start date.
      *
      * @alias TimeIntervalCollection
      * @constructor
-     *
-     * @see TimeInterval
-     * @see JulianDate
      */
     var TimeIntervalCollection = function() {
         this._intervals = [];
