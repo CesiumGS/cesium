@@ -668,117 +668,86 @@ defineSuite([
         expect(intervals.get(1).isStopIncluded).toEqual(true);
     });
 
-//    it('intersectInterval works with an empty interval', function() {
-//        var intervals = new TimeIntervalCollection();
-//        intervals.addInterval(new TimeInterval({
-//            start : new JulianDate(1),
-//            stop : new JulianDate(4),
-//            isStartIncluded : true,
-//            isStopIncluded : true
-//        }));
-//        intervals = intervals.intersectInterval(TimeInterval.EMPTY);
-//        expect(intervals.length).toEqual(0);
-//    });
-//
-//    it('intersectInterval works non-overlapping intervals', function() {
-//        var leftIntervals = new TimeIntervalCollection();
-//        leftIntervals.addInterval(new TimeInterval({
-//            start : new JulianDate(1),
-//            stop : new JulianDate(2),
-//            isStartIncluded : true,
-//            isStopIncluded : false
-//        }));
-//        var rightIntervals = new TimeIntervalCollection();
-//        rightIntervals.addInterval(new TimeInterval({
-//            start : new JulianDate(2),
-//            stop : new JulianDate(3),
-//            isStartIncluded : true,
-//            isStopIncluded : true
-//        }));
-//        expect(leftIntervals.intersectInterval(rightIntervals).length).toEqual(0);
-//    });
-//
-//    it('intersectInterval works with intersecting intervals and no merge callback', function() {
-//        var intervals = new TimeIntervalCollection();
-//
-//        var interval = new TimeInterval({
-//            start : new JulianDate(1),
-//            stop : new JulianDate(4),
-//            isStartIncluded : true,
-//            isStopIncluded : true
-//        });
-//        var intersectInterval = new TimeInterval({
-//            start : new JulianDate(2),
-//            stop : new JulianDate(3),
-//            isStartIncluded : false,
-//            isStopIncluded : false
-//        });
-//        intervals.addInterval(interval);
-//
-//        var intersectedIntervals = intervals.intersectInterval(intersectInterval);
-//
-//        expect(intersectedIntervals.length).toEqual(1);
-//        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
-//        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
-//        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
-//        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
-//    });
-//
-//    it('intersectInterval works with intersecting intervals an a merge callback', function() {
-//        var intervals = new TimeIntervalCollection();
-//
-//        var interval = new TimeInterval({
-//            start : new JulianDate(1),
-//            stop : new JulianDate(4),
-//            isStartIncluded : true,
-//            isStopIncluded : true,
-//            data : new TestObject(1)
-//        });
-//        var intersectInterval = new TimeInterval({
-//            start : new JulianDate(2),
-//            stop : new JulianDate(3),
-//            isStartIncluded : false,
-//            isStopIncluded : false,
-//            data : new TestObject(2)
-//        });
-//        intervals.addInterval(interval);
-//
-//        var intersectedIntervals = intervals.intersectInterval(intersectInterval, TestObject.equals, TestObject.merge);
-//
-//        expect(intersectedIntervals.length).toEqual(1);
-//        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
-//        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
-//        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
-//        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
-//        expect(intersectedIntervals.get(0).data.value).toEqual(3);
-//    });
+    it('intersect works with an empty collection', function() {
+        var left = new TimeIntervalCollection();
+        left.addInterval(new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(4),
+            isStartIncluded : true,
+            isStopIncluded : true
+        }));
+        expect(left.intersect(new TimeIntervalCollection()).length).toEqual(0);
+    });
+
+    it('intersect works non-overlapping intervals', function() {
+        var left = new TimeIntervalCollection();
+        left.addInterval(new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2),
+            isStartIncluded : true,
+            isStopIncluded : false
+        }));
+
+        var right = new TimeIntervalCollection();
+        right.addInterval(new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : true,
+            isStopIncluded : true
+        }));
+        expect(left.intersect(right).length).toEqual(0);
+    });
+
+    it('intersect works with intersecting intervals and no merge callback', function() {
+        var left = new TimeIntervalCollection();
+        left.addInterval(new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(4),
+            isStartIncluded : true,
+            isStopIncluded : true
+        }));
+
+        var right = new TimeIntervalCollection();
+        right.addInterval(new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : false,
+            isStopIncluded : false
+        }));
+
+        var intersectedIntervals = left.intersect(right);
+
+        expect(intersectedIntervals.length).toEqual(1);
+        expect(intersectedIntervals.get(0).start).toEqual(right.get(0).start);
+        expect(intersectedIntervals.get(0).stop).toEqual(right.get(0).stop);
+        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+    });
 
     it('intersect works with intersecting intervals an a merge callback', function() {
-        var intervals = new TimeIntervalCollection();
-        var interval = new TimeInterval({
+        var left = new TimeIntervalCollection();
+        left.addInterval(new TimeInterval({
             start : new JulianDate(1),
             stop : new JulianDate(4),
             isStartIncluded : true,
             isStopIncluded : true,
             data : new TestObject(1)
-        });
-        intervals.addInterval(interval);
+        }));
 
-        var intervals2 = new TimeIntervalCollection();
-        var interval2 = new TimeInterval({
+        var right = new TimeIntervalCollection();
+        right.addInterval(new TimeInterval({
             start : new JulianDate(2),
             stop : new JulianDate(3),
             isStartIncluded : false,
             isStopIncluded : false,
             data : new TestObject(2)
-        });
-        intervals2.addInterval(interval2);
+        }));
 
-        var intersectedIntervals = intervals.intersect(intervals2, TestObject.equals, TestObject.merge);
+        var intersectedIntervals = left.intersect(right, TestObject.equals, TestObject.merge);
 
         expect(intersectedIntervals.length).toEqual(1);
-        expect(intersectedIntervals.get(0).start).toEqual(intervals2.start);
-        expect(intersectedIntervals.get(0).stop).toEqual(intervals2.stop);
+        expect(intersectedIntervals.get(0).start).toEqual(right.start);
+        expect(intersectedIntervals.get(0).stop).toEqual(right.stop);
         expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
         expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
         expect(intersectedIntervals.get(0).data.value).toEqual(3);
