@@ -578,7 +578,7 @@ define([
 
         //Check if the interval already exists in the composite
         var intervals = property.intervals;
-        interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
+        interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledProperty)) {
             //If not, create a SampledProperty for it.
             interval = combinedInterval.clone();
@@ -736,7 +736,7 @@ define([
 
         //Check if the interval already exists in the composite
         var intervals = property.intervals;
-        interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
+        interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
             //If not, create a SampledPositionProperty for it.
             interval = combinedInterval.clone();
@@ -785,7 +785,10 @@ define([
             }
             //See if we already have data at that interval.
             var thisIntervals = property.intervals;
-            existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
+            existingInterval = thisIntervals.findInterval({
+                start : combinedInterval.start,
+                stop : combinedInterval.stop
+            });
             if (defined(existingInterval)) {
                 //We have an interval, but we need to make sure the
                 //new data is the same type of material as the old data.
@@ -1236,7 +1239,7 @@ define([
                     composite.intervals.addInterval(materialInterval);
                 }
             }
-            materialInterval = composite.intervals.findInterval(interval.start, interval.stop, interval.isStartIncluded, interval.isStopIncluded);
+            materialInterval = composite.intervals.findInterval(interval);
             if (defined(materialInterval)) {
                 materialToProcess = materialInterval.data;
             } else {
@@ -1408,7 +1411,7 @@ define([
                     composite.intervals.addInterval(materialInterval);
                 }
             }
-            materialInterval = composite.intervals.findInterval(interval.start, interval.stop, interval.isStartIncluded, interval.isStopIncluded);
+            materialInterval = composite.intervals.findInterval(interval);
             if (defined(materialInterval)) {
                 materialToProcess = materialInterval.data;
             } else {

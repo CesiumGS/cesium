@@ -108,6 +108,7 @@ define([
     defineProperties(TimeInterval.prototype, {
         /**
          * Gets whether or not this interval is empty.
+         * @memberof TimeInterval.prototype
          * @type {Boolean}
          * @readonly
          */
@@ -334,7 +335,7 @@ define([
      * Compares this instance against the provided instance componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
      *
-     * @param {TimeInterval} [right] The right hand side Cartesian.
+     * @param {TimeInterval} [right] The right hand side interval.
      * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
@@ -347,7 +348,7 @@ define([
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
      *
-     * @param {TimeInterval} [right] The right hand side Cartesian.
+     * @param {TimeInterval} [right] The right hand side interval.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.

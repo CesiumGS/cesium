@@ -27,7 +27,7 @@ defineSuite([
         expect(intervals.length).toEqual(0);
         expect(intervals.start).toBeUndefined();
         expect(intervals.stop).toBeUndefined();
-        expect(intervals.empty).toEqual(true);
+        expect(intervals.isEmpty).toEqual(true);
         expect(intervals.changedEvent).toBeDefined();
     });
 
@@ -195,7 +195,12 @@ defineSuite([
         intervals.addInterval(interval1);
         intervals.addInterval(interval2);
         intervals.addInterval(interval3);
-        expect(intervals.findInterval(interval2.start, interval2.stop, true, false)).toEqual(interval2);
+        expect(intervals.findInterval({
+            start : interval2.start,
+            stop : interval2.stop,
+            isStartIncluded : true,
+            isStopIncluded : false
+        })).toEqual(interval2);
     });
 
     it('findInterval works when you do not care about end points', function() {
@@ -224,7 +229,10 @@ defineSuite([
         intervals.addInterval(interval1);
         intervals.addInterval(interval2);
         intervals.addInterval(interval3);
-        expect(intervals.findInterval(interval2.start, interval2.stop)).toEqual(interval2);
+        expect(intervals.findInterval({
+            start : interval2.start,
+            stop : interval2.stop
+        })).toEqual(interval2);
     });
 
     it('getStart & getStop return expected values.', function() {
@@ -255,9 +263,9 @@ defineSuite([
             isStartIncluded : false,
             isStopIncluded : true
         }));
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
         intervals.removeAll();
-        expect(intervals.empty).toEqual(true);
+        expect(intervals.isEmpty).toEqual(true);
     });
 
     it('length returns the correct interval length when adding intervals with different data', function() {
@@ -340,7 +348,7 @@ defineSuite([
         expect(intervals.length).toEqual(1);
         expect(intervals.start).toEqual(interval1.start);
         expect(intervals.stop).toEqual(interval1.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
@@ -350,7 +358,7 @@ defineSuite([
         expect(intervals.length).toEqual(2);
         expect(intervals.start).toEqual(interval1.start);
         expect(intervals.stop).toEqual(interval2.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
@@ -360,7 +368,7 @@ defineSuite([
         expect(intervals.length).toEqual(3);
         expect(intervals.start).toEqual(interval1.start);
         expect(intervals.stop).toEqual(interval3.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start)).toEqual(interval1);
         expect(intervals.findIntervalContainingDate(interval1.stop)).toEqual(interval1);
@@ -398,7 +406,7 @@ defineSuite([
         expect(intervals.length).toEqual(1);
         expect(intervals.start).toEqual(interval1.start);
         expect(intervals.stop).toEqual(interval1.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(1);
@@ -408,7 +416,7 @@ defineSuite([
         expect(intervals.length).toEqual(2);
         expect(intervals.start).toEqual(interval1.start);
         expect(intervals.stop).toEqual(interval2.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(1);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(2);
@@ -418,7 +426,7 @@ defineSuite([
         expect(intervals.length).toEqual(1);
         expect(intervals.start).toEqual(interval3.start);
         expect(intervals.stop).toEqual(interval3.stop);
-        expect(intervals.empty).toEqual(false);
+        expect(intervals.isEmpty).toEqual(false);
 
         expect(intervals.findIntervalContainingDate(interval1.start).data).toEqual(3);
         expect(intervals.findIntervalContainingDate(interval1.stop).data).toEqual(3);
@@ -628,90 +636,90 @@ defineSuite([
         expect(intervals.get(1).isStopIncluded).toEqual(true);
     });
 
-    it('intersectInterval works with an empty interval', function() {
-        var intervals = new TimeIntervalCollection();
-        intervals.addInterval(new TimeInterval({
-            start : new JulianDate(1),
-            stop : new JulianDate(4),
-            isStartIncluded : true,
-            isStopIncluded : true
-        }));
-        intervals = intervals.intersectInterval(TimeInterval.EMPTY);
-        expect(intervals.length).toEqual(0);
-    });
-
-    it('intersectInterval works non-overlapping intervals', function() {
-        var leftIntervals = new TimeIntervalCollection();
-        leftIntervals.addInterval(new TimeInterval({
-            start : new JulianDate(1),
-            stop : new JulianDate(2),
-            isStartIncluded : true,
-            isStopIncluded : false
-        }));
-        var rightIntervals = new TimeIntervalCollection();
-        rightIntervals.addInterval(new TimeInterval({
-            start : new JulianDate(2),
-            stop : new JulianDate(3),
-            isStartIncluded : true,
-            isStopIncluded : true
-        }));
-        expect(leftIntervals.intersectInterval(rightIntervals).length).toEqual(0);
-    });
-
-    it('intersectInterval works with intersecting intervals and no merge callback', function() {
-        var intervals = new TimeIntervalCollection();
-
-        var interval = new TimeInterval({
-            start : new JulianDate(1),
-            stop : new JulianDate(4),
-            isStartIncluded : true,
-            isStopIncluded : true
-        });
-        var intersectInterval = new TimeInterval({
-            start : new JulianDate(2),
-            stop : new JulianDate(3),
-            isStartIncluded : false,
-            isStopIncluded : false
-        });
-        intervals.addInterval(interval);
-
-        var intersectedIntervals = intervals.intersectInterval(intersectInterval);
-
-        expect(intersectedIntervals.length).toEqual(1);
-        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
-        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
-        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
-        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
-    });
-
-    it('intersectInterval works with intersecting intervals an a merge callback', function() {
-        var intervals = new TimeIntervalCollection();
-
-        var interval = new TimeInterval({
-            start : new JulianDate(1),
-            stop : new JulianDate(4),
-            isStartIncluded : true,
-            isStopIncluded : true,
-            data : new TestObject(1)
-        });
-        var intersectInterval = new TimeInterval({
-            start : new JulianDate(2),
-            stop : new JulianDate(3),
-            isStartIncluded : false,
-            isStopIncluded : false,
-            data : new TestObject(2)
-        });
-        intervals.addInterval(interval);
-
-        var intersectedIntervals = intervals.intersectInterval(intersectInterval, TestObject.equals, TestObject.merge);
-
-        expect(intersectedIntervals.length).toEqual(1);
-        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
-        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
-        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
-        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
-        expect(intersectedIntervals.get(0).data.value).toEqual(3);
-    });
+//    it('intersectInterval works with an empty interval', function() {
+//        var intervals = new TimeIntervalCollection();
+//        intervals.addInterval(new TimeInterval({
+//            start : new JulianDate(1),
+//            stop : new JulianDate(4),
+//            isStartIncluded : true,
+//            isStopIncluded : true
+//        }));
+//        intervals = intervals.intersectInterval(TimeInterval.EMPTY);
+//        expect(intervals.length).toEqual(0);
+//    });
+//
+//    it('intersectInterval works non-overlapping intervals', function() {
+//        var leftIntervals = new TimeIntervalCollection();
+//        leftIntervals.addInterval(new TimeInterval({
+//            start : new JulianDate(1),
+//            stop : new JulianDate(2),
+//            isStartIncluded : true,
+//            isStopIncluded : false
+//        }));
+//        var rightIntervals = new TimeIntervalCollection();
+//        rightIntervals.addInterval(new TimeInterval({
+//            start : new JulianDate(2),
+//            stop : new JulianDate(3),
+//            isStartIncluded : true,
+//            isStopIncluded : true
+//        }));
+//        expect(leftIntervals.intersectInterval(rightIntervals).length).toEqual(0);
+//    });
+//
+//    it('intersectInterval works with intersecting intervals and no merge callback', function() {
+//        var intervals = new TimeIntervalCollection();
+//
+//        var interval = new TimeInterval({
+//            start : new JulianDate(1),
+//            stop : new JulianDate(4),
+//            isStartIncluded : true,
+//            isStopIncluded : true
+//        });
+//        var intersectInterval = new TimeInterval({
+//            start : new JulianDate(2),
+//            stop : new JulianDate(3),
+//            isStartIncluded : false,
+//            isStopIncluded : false
+//        });
+//        intervals.addInterval(interval);
+//
+//        var intersectedIntervals = intervals.intersectInterval(intersectInterval);
+//
+//        expect(intersectedIntervals.length).toEqual(1);
+//        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
+//        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
+//        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+//        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+//    });
+//
+//    it('intersectInterval works with intersecting intervals an a merge callback', function() {
+//        var intervals = new TimeIntervalCollection();
+//
+//        var interval = new TimeInterval({
+//            start : new JulianDate(1),
+//            stop : new JulianDate(4),
+//            isStartIncluded : true,
+//            isStopIncluded : true,
+//            data : new TestObject(1)
+//        });
+//        var intersectInterval = new TimeInterval({
+//            start : new JulianDate(2),
+//            stop : new JulianDate(3),
+//            isStartIncluded : false,
+//            isStopIncluded : false,
+//            data : new TestObject(2)
+//        });
+//        intervals.addInterval(interval);
+//
+//        var intersectedIntervals = intervals.intersectInterval(intersectInterval, TestObject.equals, TestObject.merge);
+//
+//        expect(intersectedIntervals.length).toEqual(1);
+//        expect(intersectedIntervals.get(0).start).toEqual(intersectInterval.start);
+//        expect(intersectedIntervals.get(0).stop).toEqual(intersectInterval.stop);
+//        expect(intersectedIntervals.get(0).isStartIncluded).toEqual(false);
+//        expect(intersectedIntervals.get(0).isStopIncluded).toEqual(false);
+//        expect(intersectedIntervals.get(0).data.value).toEqual(3);
+//    });
 
     it('intersect works with intersecting intervals an a merge callback', function() {
         var intervals = new TimeIntervalCollection();
@@ -841,20 +849,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('get throws with NaN', function() {
-        var intervals = new TimeIntervalCollection();
-        expect(function() {
-            intervals.get(NaN);
-        }).toThrowDeveloperError();
-    });
-
-    it('get throws with non-number', function() {
-        var intervals = new TimeIntervalCollection();
-        expect(function() {
-            intervals.get({});
-        }).toThrowDeveloperError();
-    });
-
     it('findIntervalContainingDate throws with undefined date', function() {
         var intervals = new TimeIntervalCollection();
         expect(function() {
@@ -901,13 +895,6 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.intersect(undefined);
-        }).toThrowDeveloperError();
-    });
-
-    it('intersectInterval throws with undefined interval', function() {
-        var intervals = new TimeIntervalCollection();
-        expect(function() {
-            intervals.intersectInterval(undefined);
         }).toThrowDeveloperError();
     });
 
