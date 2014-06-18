@@ -55,7 +55,7 @@ Beta Releases
 
     should now look like:
 
-            return new TimeInterval({
+            new TimeInterval({
                 start : startTime,
                 stop : stopTime,
                 isStartIncluded : true,
@@ -69,7 +69,7 @@ Beta Releases
 
     should now look like:
 
-            return TimeInterval.fromIso8601({
+            TimeInterval.fromIso8601({
                 iso8601 : intervalString,
                 isStartIncluded : true,
                 isStopIncluded : true,
