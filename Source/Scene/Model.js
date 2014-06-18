@@ -1619,7 +1619,7 @@ define([
                 var uniformMap = {};
                 var uniformValues = {};
                 var jointMatrixUniformName;
-//
+
                 // Uniform parameters for this pass
                 for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
