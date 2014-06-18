@@ -21,7 +21,7 @@ define([
         var stopInterval = this.interval.stop;
 
         var spanStart = renderState.startJulian;
-        var spanStop = JulianDate.addSeconds(renderState.startJulian, renderState.duration);
+        var spanStop = JulianDate.addSeconds(renderState.startJulian, renderState.duration, new JulianDate());
 
         if (JulianDate.lessThan(startInterval, spanStart) && JulianDate.greaterThan(stopInterval, spanStop)) {
             //The track takes up the entire visible span.
@@ -32,7 +32,7 @@ define([
             var x;
             var start, stop;
             for (x = 0; x < renderState.timeBarWidth; ++x) {
-                var currentTime = JulianDate.addSeconds(renderState.startJulian, (x / renderState.timeBarWidth) * renderState.duration);
+                var currentTime = JulianDate.addSeconds(renderState.startJulian, (x / renderState.timeBarWidth) * renderState.duration, new JulianDate());
                 if (!defined(start) && JulianDate.greaterThanOrEquals(currentTime, startInterval)) {
                     start = x;
                 } else if (!defined(stop) && JulianDate.greaterThanOrEquals(currentTime, stopInterval)) {

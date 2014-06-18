@@ -32,7 +32,7 @@ define([
     var updateTransformCartesian3Scratch4 = new Cartesian3();
     var updateTransformCartesian3Scratch5 = new Cartesian3();
     var updateTransformCartesian3Scratch6 = new Cartesian3();
-
+    var deltaTime = new JulianDate();
     var northUpAxisFactor = 1.25;  // times ellipsoid's maximum radius
 
     function updateTransform(that, camera, objectChanged, positionProperty, time, ellipsoid) {
@@ -45,7 +45,7 @@ define([
 
             // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
             // Slower moving vehicles will most likely default to east-north-up, while faster ones will be VVLH.
-            var deltaTime = JulianDate.addSeconds(time, 0.001);
+            deltaTime = JulianDate.addSeconds(time, 0.001, deltaTime);
             var deltaCartesian = positionProperty.getValue(deltaTime, updateTransformCartesian3Scratch1);
             if (defined(deltaCartesian)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, updateTransformMatrix3Scratch1);

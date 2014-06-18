@@ -17,6 +17,7 @@ define([
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
@@ -37,6 +38,7 @@ define([
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
@@ -96,7 +98,7 @@ define([
                 }
 
                 if (sampling && sampleStepsTaken < sampleStepsToTake) {
-                    current = JulianDate.addSeconds(current, sampleStepSize);
+                    current = JulianDate.addSeconds(current, sampleStepSize, new JulianDate());
                     sampleStepsTaken++;
                     continue;
                 }
@@ -137,7 +139,7 @@ define([
                 index++;
             }
             i++;
-            time = JulianDate.addSeconds(start, stepSize * i);
+            time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -161,7 +163,7 @@ define([
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2, new JulianDate());
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
@@ -204,6 +206,10 @@ define([
                 }
 
                 var intervalProperty = interval.data;
+                if (intervalProperty instanceof ReferenceProperty) {
+                    intervalProperty = intervalProperty.resolvedProperty;
+                }
+
                 if (intervalProperty instanceof SampledPositionProperty) {
                     index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
@@ -224,6 +230,10 @@ define([
     function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
         if (!defined(result)) {
             result = [];
+        }
+
+        if (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
         var length = 0;
@@ -311,10 +321,10 @@ define([
             //we won't have to draw anything anyway.
             if (show) {
                 if (hasTrailTime) {
-                    sampleStart = JulianDate.addSeconds(time, -trailTime);
+                    sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
                 }
                 if (hasLeadTime) {
-                    sampleStop = JulianDate.addSeconds(time, leadTime);
+                    sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
                 }
 
                 if (hasAvailability) {
@@ -472,7 +482,7 @@ define([
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
-                frameToVisualize = positionProperty._referenceFrame;
+                frameToVisualize = positionProperty.referenceFrame;
             }
 
             var currentUpdater = this._updaters[frameToVisualize];
