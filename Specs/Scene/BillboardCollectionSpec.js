@@ -767,26 +767,6 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    it('renders with a different buffer usage', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
-        billboards.add({
-            position : Cartesian3.ZERO,
-            imageIndex : 0
-        });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-    });
-
     it('renders using billboard show property', function() {
         billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
         var greenBillboard = billboards.add({
