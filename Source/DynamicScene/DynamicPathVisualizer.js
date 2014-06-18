@@ -98,7 +98,7 @@ define([
                 }
 
                 if (sampling && sampleStepsTaken < sampleStepsToTake) {
-                    current = JulianDate.addSeconds(current, sampleStepSize);
+                    current = JulianDate.addSeconds(current, sampleStepSize, new JulianDate());
                     sampleStepsTaken++;
                     continue;
                 }
@@ -139,7 +139,7 @@ define([
                 index++;
             }
             i++;
-            time = JulianDate.addSeconds(start, stepSize * i);
+            time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -163,7 +163,7 @@ define([
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2, new JulianDate());
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
@@ -321,10 +321,10 @@ define([
             //we won't have to draw anything anyway.
             if (show) {
                 if (hasTrailTime) {
-                    sampleStart = JulianDate.addSeconds(time, -trailTime);
+                    sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
                 }
                 if (hasLeadTime) {
-                    sampleStop = JulianDate.addSeconds(time, leadTime);
+                    sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
                 }
 
                 if (hasAvailability) {

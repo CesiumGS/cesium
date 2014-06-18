@@ -259,7 +259,7 @@ defineSuite([
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
-        expect(property.getValue(JulianDate.addSeconds(time, 4))).toBeUndefined();
+        expect(property.getValue(JulianDate.addSeconds(time, 4, new JulianDate()))).toBeUndefined();
     });
 
     it('throws with no time parameter', function() {

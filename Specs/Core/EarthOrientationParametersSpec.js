@@ -171,8 +171,8 @@ defineSuite([
 
             var eop = new EarthOrientationParameters(eopDescription);
             var dateAtLeapSecond = JulianDate.fromIso8601("2009-01-01T00:00:00Z");
-            var dateSlightlyBefore = JulianDate.addSeconds(dateAtLeapSecond, -1.0);
-            var dateSlightlyAfter = JulianDate.addSeconds(dateAtLeapSecond, 1.0);
+            var dateSlightlyBefore = JulianDate.addSeconds(dateAtLeapSecond, -1.0, new JulianDate());
+            var dateSlightlyAfter = JulianDate.addSeconds(dateAtLeapSecond, 1.0, new JulianDate());
             var nColumns = eopDescription.data.columnNames.length;
             var x0 = eopDescription.data.samples[1*nColumns + 6];
             var x1 = eopDescription.data.samples[2*nColumns + 6];

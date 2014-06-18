@@ -14,7 +14,7 @@ defineSuite([
 
     it('Construction correctly sets all properties.', function() {
         var start = JulianDate.now();
-        var stop = JulianDate.addDays(start, 1);
+        var stop = JulianDate.addDays(start, 1, new JulianDate());
         var isStartIncluded = false;
         var isStopIncluded = true;
         var data = {};
@@ -29,7 +29,7 @@ defineSuite([
 
     it('Optional constructor parameters initialize properties to expected defaults.', function() {
         var start = JulianDate.now();
-        var stop = JulianDate.addDays(start, 1);
+        var stop = JulianDate.addDays(start, 1, new JulianDate());
         var interval = new TimeInterval(start, stop);
         expect(interval.start).toEqual(start);
         expect(interval.stop).toEqual(stop);

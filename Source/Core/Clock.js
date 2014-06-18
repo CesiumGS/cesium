@@ -66,20 +66,20 @@ define([
         if (startTimeUndefined && stopTimeUndefined && currentTimeUndefined) {
             currentTime = JulianDate.now();
             startTime = JulianDate.clone(currentTime);
-            stopTime = JulianDate.addDays(currentTime, 1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined && stopTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
-            stopTime = JulianDate.addDays(currentTime, 1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined && currentTimeUndefined) {
-            startTime = JulianDate.addDays(stopTime, -1.0);
+            startTime = JulianDate.addDays(stopTime, -1.0, new JulianDate());
             currentTime = JulianDate.clone(startTime);
         } else if (currentTimeUndefined && stopTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
-            stopTime = JulianDate.addDays(startTime, 1.0);
+            stopTime = JulianDate.addDays(startTime, 1.0, new JulianDate());
         } else if (currentTimeUndefined) {
             currentTime = JulianDate.clone(startTime);
         } else if (stopTimeUndefined) {
-            stopTime = JulianDate.addDays(currentTime, 1.0);
+            stopTime = JulianDate.addDays(currentTime, 1.0, new JulianDate());
         } else if (startTimeUndefined) {
             startTime = JulianDate.clone(currentTime);
         }
@@ -165,34 +165,34 @@ define([
      */
     Clock.prototype.tick = function() {
         var currentSystemTime = getTimestamp();
-        var currentTime = this.currentTime;
+        var currentTime = JulianDate.clone(this.currentTime);
         var startTime = this.startTime;
         var stopTime = this.stopTime;
         var multiplier = this.multiplier;
 
         if (this.canAnimate && this.shouldAnimate) {
             if (this.clockStep === ClockStep.SYSTEM_CLOCK) {
-                currentTime = JulianDate.now();
+                currentTime = JulianDate.now(currentTime);
             } else {
                 if (this.clockStep === ClockStep.TICK_DEPENDENT) {
-                    currentTime = JulianDate.addSeconds(currentTime, multiplier);
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier, currentTime);
                 } else {
                     var milliseconds = currentSystemTime - this._lastSystemTime;
-                    currentTime = JulianDate.addSeconds(currentTime, multiplier * (milliseconds / 1000.0));
+                    currentTime = JulianDate.addSeconds(currentTime, multiplier * (milliseconds / 1000.0), currentTime);
                 }
 
                 if (this.clockRange === ClockRange.CLAMPED) {
                     if (JulianDate.lessThan(currentTime, startTime)) {
-                        currentTime = startTime;
+                        currentTime = JulianDate.clone(startTime, currentTime);
                     } else if (JulianDate.greaterThan(currentTime, stopTime)) {
-                        currentTime = stopTime;
+                        currentTime = JulianDate.clone(stopTime, currentTime);
                     }
                 } else if (this.clockRange === ClockRange.LOOP_STOP) {
                     if (JulianDate.lessThan(currentTime, startTime)) {
-                        currentTime = JulianDate.clone(startTime);
+                        currentTime = JulianDate.clone(startTime, currentTime);
                     }
                     while (JulianDate.greaterThan(currentTime, stopTime)) {
-                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(currentTime, stopTime));
+                        currentTime = JulianDate.addSeconds(startTime, JulianDate.getSecondsDifference(currentTime, stopTime), currentTime);
                     }
                 }
             }
