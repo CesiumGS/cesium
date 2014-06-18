@@ -65,7 +65,6 @@ define([
      * }));
      */
     var CompositeProperty = function() {
-
         this._eventHelper = new EventHelper();
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();

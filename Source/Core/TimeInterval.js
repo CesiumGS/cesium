@@ -57,12 +57,14 @@ define([
         /**
          * Gets or sets whether or not the start time is included in this interval.
          * @type {Boolean}
+         * @default true
          */
         this.isStartIncluded = defaultValue(options.isStartIncluded, true);
 
         /**
          * Gets or sets whether or not the stop time is included in this interval.
          * @type {Boolean}
+         * @default true
          */
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
     };
@@ -71,6 +73,7 @@ define([
         /**
          * Gets whether or not this interval is empty.
          * @type {Boolean}
+         * @readonly
          */
         isEmpty : {
             get : function() {
@@ -96,6 +99,8 @@ define([
      * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
      * @param {Object} [options.data] Arbitrary data associated with this interval.
+     * @param {TimeInterval} [result] An existing instance to use for the result.
+     * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
      */
     TimeInterval.fromIso8601 = function(options, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -250,6 +255,7 @@ define([
     /**
      * Checks if the specified date is inside the provided interval.
      *
+     * @param {TimeInterval} timeInterval The interval.
      * @param {JulianDate} julianDate The date to check.
      * @returns {Boolean} <code>true</code> if the interval contains the specified date, <code>false</code> otherwise.
      */
