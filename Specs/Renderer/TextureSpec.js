@@ -560,7 +560,7 @@ defineSuite([
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
-            }).toThrowDeveloperError();
+            }).toThrowRuntimeError();
         }
     });
 
