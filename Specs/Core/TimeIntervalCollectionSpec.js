@@ -27,9 +27,41 @@ defineSuite([
         expect(intervals.length).toEqual(0);
         expect(intervals.start).toBeUndefined();
         expect(intervals.stop).toBeUndefined();
+        expect(intervals.isStartIncluded).toEqual(false);
+        expect(intervals.isStopIncluded).toEqual(false);
         expect(intervals.isEmpty).toEqual(true);
         expect(intervals.changedEvent).toBeDefined();
     });
+
+    it('isStartIncluded/isStopIncluded works.', function() {
+        var intervals = new TimeIntervalCollection();
+        var interval1 = new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2),
+            isStartIncluded : true,
+            isStopIncluded : false
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : false,
+            isStopIncluded : true
+        });
+
+        expect(intervals.isStartIncluded).toBe(false);
+        expect(intervals.isStopIncluded).toBe(false);
+
+        intervals.addInterval(interval1);
+
+        expect(intervals.isStartIncluded).toBe(true);
+        expect(intervals.isStopIncluded).toBe(false);
+
+        intervals.addInterval(interval2);
+
+        expect(intervals.isStartIncluded).toBe(true);
+        expect(intervals.isStopIncluded).toBe(true);
+    });
+
 
     it('contains works for a simple interval collection.', function() {
         var intervals = new TimeIntervalCollection();

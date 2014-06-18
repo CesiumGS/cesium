@@ -530,7 +530,7 @@ define([
                 if ((index + 1) < intervals.length && intervals[index + 1].start.equals(intervalStop) && indexInterval.data === intervals[index + 1].data) {
                     // Combine single point with the next interval
                     intervals.splice(index, 1);
-                    intervals[index] = indexInterval = new TimeInterval({
+                    indexInterval = new TimeInterval({
                         start : indexInterval.start,
                         stop : indexInterval.stop,
                         isStartIncluded : true,
@@ -538,7 +538,7 @@ define([
                         data : indexInterval.data
                     });
                 } else {
-                    intervals[index] = indexInterval = new TimeInterval({
+                    indexInterval = new TimeInterval({
                         start : intervalStop,
                         stop : intervalStop,
                         isStartIncluded : true,
@@ -546,6 +546,7 @@ define([
                         data : indexInterval.data
                     });
                 }
+                intervals[index] = indexInterval;
             } else {
                 // Interval is completely overlapped
                 intervals.splice(index, 1);
