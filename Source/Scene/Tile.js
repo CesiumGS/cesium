@@ -7,16 +7,16 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/PixelFormat',
         '../Core/Rectangle',
+        '../Renderer/PixelDatatype',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './ImageryState',
         './TerrainState',
         './TileState',
-        './TileTerrain',
-        '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
+        './TileTerrain'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -25,16 +25,16 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        PixelFormat,
         Rectangle,
+        PixelDatatype,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         ImageryState,
         TerrainState,
         TileState,
-        TileTerrain,
-        PixelDatatype,
-        PixelFormat,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
+        TileTerrain) {
     "use strict";
 
     /**
@@ -46,30 +46,30 @@ define([
      * @constructor
      * @private
      *
-     * @param {TilingScheme} description.tilingScheme The tiling scheme of which the new tile is a part, such as a
+     * @param {TilingScheme} options.tilingScheme The tiling scheme of which the new tile is a part, such as a
      *                                                {@link WebMercatorTilingScheme} or a {@link GeographicTilingScheme}.
-     * @param {Number} description.x The tile x coordinate.
-     * @param {Number} description.y The tile y coordinate.
-     * @param {Number} description.level The tile level-of-detail.
-     * @param {Tile} description.parent The parent of this tile in a tile tree system.
+     * @param {Number} options.x The tile x coordinate.
+     * @param {Number} options.y The tile y coordinate.
+     * @param {Number} options.level The tile level-of-detail.
+     * @param {Tile} options.parent The parent of this tile in a tile tree system.
      */
-    var Tile = function(description) {
+    var Tile = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description)) {
-            throw new DeveloperError('description is required.');
+        if (!defined(options)) {
+            throw new DeveloperError('options is required.');
         }
-        if (!defined(description.x)) {
-            throw new DeveloperError('description.x is required.');
-        } else if (!defined(description.y)) {
-            throw new DeveloperError('description.y is required.');
-        } else if (description.x < 0 || description.y < 0) {
-            throw new DeveloperError('description.x and description.y must be greater than or equal to zero.');
+        if (!defined(options.x)) {
+            throw new DeveloperError('options.x is required.');
+        } else if (!defined(options.y)) {
+            throw new DeveloperError('options.y is required.');
+        } else if (options.x < 0 || options.y < 0) {
+            throw new DeveloperError('options.x and options.y must be greater than or equal to zero.');
         }
-        if (!defined(description.level)) {
-            throw new DeveloperError('description.level is required and must be greater than or equal to zero.');
+        if (!defined(options.level)) {
+            throw new DeveloperError('options.level is required and must be greater than or equal to zero.');
         }
-        if (!defined(description.tilingScheme)) {
-            throw new DeveloperError('description.tilingScheme is required.');
+        if (!defined(options.tilingScheme)) {
+            throw new DeveloperError('options.tilingScheme is required.');
         }
         //>>includeEnd('debug');
 
@@ -79,31 +79,31 @@ define([
          * The tiling scheme used to tile the surface.
          * @type {TilingScheme}
          */
-        this.tilingScheme = description.tilingScheme;
+        this.tilingScheme = options.tilingScheme;
 
         /**
          * The x coordinate.
          * @type {Number}
          */
-        this.x = description.x;
+        this.x = options.x;
 
         /**
          * The y coordinate.
          * @type {Number}
          */
-        this.y = description.y;
+        this.y = options.y;
 
         /**
          * The level-of-detail, where zero is the coarsest, least-detailed.
          * @type {Number}
          */
-        this.level = description.level;
+        this.level = options.level;
 
         /**
          * The parent of this tile in a tiling scheme.
          * @type {Tile}
          */
-        this.parent = description.parent;
+        this.parent = options.parent;
 
         /**
          * The cartographic rectangle of the tile, with north, south, east and
@@ -135,7 +135,7 @@ define([
 
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type {Array}
+         * @type {TileImagery[]}
          * @default []
          */
         this.imagery = [];
@@ -224,11 +224,45 @@ define([
         this.upsampledTerrain = undefined;
     };
 
+    /**
+     * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
+     *
+     * @memberof Tile
+     *
+     * @param {TilingScheme} tilingScheme The tiling scheme for which the tiles are to be created.
+     * @returns {Tile[]} An array containing the tiles at level of detail zero, starting with the
+     * tile in the northwest corner and followed by the tile (if any) to its east.
+     */
+    Tile.createLevelZeroTiles = function(tilingScheme) {
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+
+        var numberOfLevelZeroTilesX = tilingScheme.getNumberOfXTilesAtLevel(0);
+        var numberOfLevelZeroTilesY = tilingScheme.getNumberOfYTilesAtLevel(0);
+
+        var result = new Array(numberOfLevelZeroTilesX * numberOfLevelZeroTilesY);
+
+        var index = 0;
+        for (var y = 0; y < numberOfLevelZeroTilesY; ++y) {
+            for (var x = 0; x < numberOfLevelZeroTilesX; ++x) {
+                result[index++] = new Tile({
+                    tilingScheme : tilingScheme,
+                    x : x,
+                    y : y,
+                    level : 0
+                });
+            }
+        }
+
+        return result;
+    };
+
     defineProperties(Tile.prototype, {
         /**
          * An array of tiles that would be at the next level of the tile tree.
          * @memberof Tile.prototype
-         * @type {Array}
+         * @type {Tile[]}
          */
         children : {
             get : function() {
@@ -358,11 +392,16 @@ define([
         // But it's not done loading until our two state machines are terminated.
         var isDoneLoading = !defined(this.loadedTerrain) && !defined(this.upsampledTerrain);
 
+        // If this tile's terrain and imagery are just upsampled from its parent, mark the tile as
+        // upsampled only.  We won't refine a tile if its four children are upsampled only.
+        var isUpsampledOnly = defined(this.terrainData) && this.terrainData.wasCreatedByUpsampling();
+
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
+                isUpsampledOnly = false;
                 continue;
             }
 
@@ -377,6 +416,8 @@ define([
                     --i;
                     len = tileImageryCollection.length;
                     continue;
+                } else {
+                    isUpsampledOnly = false;
                 }
             }
 
@@ -385,6 +426,9 @@ define([
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
             isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+
+            isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
+                             (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
@@ -394,7 +438,7 @@ define([
             }
 
             if (isDoneLoading) {
-                this.state = TileState.READY;
+                this.state = isUpsampledOnly ? TileState.UPSAMPLED_ONLY : TileState.READY;
             }
         }
     };
@@ -471,7 +515,7 @@ define([
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
-            if (loaded.state.value >= TerrainState.RECEIVED.value) {
+            if (loaded.state >= TerrainState.RECEIVED) {
                 if (tile.terrainData !== loaded.data) {
                     tile.terrainData = loaded.data;
 
@@ -518,7 +562,7 @@ define([
             // We'll potentially need it to upsample child tiles.
             // It's safe to overwrite terrainData because we won't get here after
             // loaded terrain data has been received.
-            if (upsampled.state.value >= TerrainState.RECEIVED.value) {
+            if (upsampled.state >= TerrainState.RECEIVED) {
                 if (tile.terrainData !== upsampled.data) {
                     tile.terrainData = upsampled.data;
 
@@ -573,9 +617,9 @@ define([
         // of its ancestors receives new (better) data and we want to re-upsample from the
         // new data.
 
-        if (defined(tile.children)) {
+        if (defined(tile._children)) {
             for (var childIndex = 0; childIndex < 4; ++childIndex) {
-                var childTile = tile.children[childIndex];
+                var childTile = tile._children[childIndex];
                 if (childTile.state !== TileState.START) {
                     if (defined(childTile.terrainData) && !childTile.terrainData.wasCreatedByUpsampling()) {
                         // Data for the child tile has already been loaded.

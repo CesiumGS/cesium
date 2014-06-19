@@ -1,18 +1,19 @@
 /*global define*/
-define(['../Core/Color',
+define([
+        '../Core/Color',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        './createDynamicPropertyDescriptor',
         './ConstantProperty',
+        './createDynamicPropertyDescriptor',
         './Property'
     ], function(
         Color,
         defined,
         defineProperties,
         Event,
-        createDynamicPropertyDescriptor,
         ConstantProperty,
+        createDynamicPropertyDescriptor,
         Property) {
     "use strict";
 
@@ -74,6 +75,7 @@ define(['../Core/Color',
         outlineColor : createDynamicPropertyDescriptor('outlineColor'),
         /**
          * Gets or sets the numberic property which determines the polyline's outline width.
+         * @memberof PolylineOutlineMaterialProperty.prototype
          * @type {Property}
          * @default new ConstantProperty(0)
          */
@@ -85,7 +87,7 @@ define(['../Core/Color',
      * @memberof PolylineOutlineMaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     PolylineOutlineMaterialProperty.prototype.getType = function(time) {
         return 'PolylineOutline';

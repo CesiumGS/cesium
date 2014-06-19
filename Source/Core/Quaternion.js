@@ -185,7 +185,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Quaternion.packedLength = 4;
 
@@ -194,7 +194,7 @@ define([
      * @memberof Quaternion
      *
      * @param {Quaternion} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Quaternion.pack = function(value, array, startingIndex) {
@@ -220,7 +220,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Quaternion
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Quaternion} [result] The object into which to store the result.
      */
@@ -245,7 +245,7 @@ define([
 
     /**
      * The number of elements used to store the object into an array in its interpolatable form.
-     * @Type {Number}
+     * @type {Number}
      */
     Quaternion.packedInterpolationLength = 3;
 
@@ -253,10 +253,10 @@ define([
      * Converts a packed array into a form suitable for interpolation.
      * @memberof Quaternion
      *
-     * @param {Array} packedArray The packed array.
+     * @param {Number[]} packedArray The packed array.
      * @param {Number} [startingIndex=0] The index of the first element to be converted.
      * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-     * @param {Array} [result] The object into which to store the result.
+     * @param {Number[]} [result] The object into which to store the result.
      */
     Quaternion.convertPackedArrayForInterpolation = function(packedArray, startingIndex, lastIndex, result) {
         Quaternion.unpack(packedArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
@@ -284,8 +284,8 @@ define([
      * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
      * @memberof Quaternion
      *
-     * @param {Array} array The original packed array.
-     * @param {Array} sourceArray The converted array.
+     * @param {Number[]} array The original packed array.
+     * @param {Number[]} sourceArray The converted array.
      * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
      * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
      * @param {Quaternion} [result] The object into which to store the result.

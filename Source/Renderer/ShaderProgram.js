@@ -2,72 +2,29 @@
 define([
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
-        '../Core/RuntimeError',
-        '../Core/destroyObject',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        './AutomaticUniforms',
-        './UniformDatatype',
-        '../Shaders/Builtin/CzmBuiltins'
+        '../Core/RuntimeError',
+        '../Shaders/Builtin/CzmBuiltins',
+        './AutomaticUniforms'
     ], function(
         defined,
         defineProperties,
+        destroyObject,
         DeveloperError,
         FeatureDetection,
-        RuntimeError,
-        destroyObject,
         Matrix2,
         Matrix3,
         Matrix4,
-        AutomaticUniforms,
-        UniformDatatype,
-        CzmBuiltins) {
+        RuntimeError,
+        CzmBuiltins,
+        AutomaticUniforms) {
     "use strict";
     /*global console*/
-
-    function getUniformDatatype(gl, activeUniformType) {
-        switch (activeUniformType) {
-        case gl.FLOAT:
-            return UniformDatatype.FLOAT;
-        case gl.FLOAT_VEC2:
-            return UniformDatatype.FLOAT_VEC2;
-        case gl.FLOAT_VEC3:
-            return UniformDatatype.FLOAT_VEC3;
-        case gl.FLOAT_VEC4:
-            return UniformDatatype.FLOAT_VEC4;
-        case gl.INT:
-            return UniformDatatype.INT;
-        case gl.INT_VEC2:
-            return UniformDatatype.INT_VEC2;
-        case gl.INT_VEC3:
-            return UniformDatatype.INT_VEC3;
-        case gl.INT_VEC4:
-            return UniformDatatype.INT_VEC4;
-        case gl.BOOL:
-            return UniformDatatype.BOOL;
-        case gl.BOOL_VEC2:
-            return UniformDatatype.BOOL_VEC2;
-        case gl.BOOL_VEC3:
-            return UniformDatatype.BOOL_VEC3;
-        case gl.BOOL_VEC4:
-            return UniformDatatype.BOOL_VEC4;
-        case gl.FLOAT_MAT2:
-            return UniformDatatype.FLOAT_MAT2;
-        case gl.FLOAT_MAT3:
-            return UniformDatatype.FLOAT_MAT3;
-        case gl.FLOAT_MAT4:
-            return UniformDatatype.FLOAT_MAT4;
-        case gl.SAMPLER_2D:
-            return UniformDatatype.SAMPLER_2D;
-        case gl.SAMPLER_CUBE:
-            return UniformDatatype.SAMPLER_CUBE;
-        default:
-            throw new RuntimeError('Unrecognized uniform type: ' + activeUniformType);
-        }
-    }
 
     var scratchUniformMatrix2;
     var scratchUniformMatrix3;
@@ -154,183 +111,9 @@ define([
     }
 
     /**
-     * A shader program's uniform, including the uniform's value.  This is most commonly used to change
-     * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
-     * which is useful for creating user interfaces for tweaking shaders.
-     * <br /><br />
-     * Do not create a uniform object with the <code>new</code> keyword; a shader program's uniforms
-     * are available via {@link ShaderProgram#getAllUniforms}.
-     * <br /><br />
-     * Changing a uniform's value will affect future calls to {@link Context#draw}
-     * that use the corresponding shader program.
-     * <br /><br />
-     * The datatype of the <code>value</code> property depends on the datatype
-     * used in the GLSL declaration as shown in the examples in the table below.
-     * <br /><br />
-     * <table border='1'>
-     * <tr>
-     * <td>GLSL</td>
-     * <td>JavaScript</td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform float u_float; </code></td>
-     * <td><code> sp.allUniforms.u_float.value = 1.0;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec2 u_vec2; </code></td>
-     * <td><code> sp.allUniforms.u_vec2.value = new Cartesian2(1.0, 2.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec3 u_vec3; </code></td>
-     * <td><code> sp.allUniforms.u_vec3.value = new Cartesian3(1.0, 2.0, 3.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform vec4 u_vec4; </code></td>
-     * <td><code> sp.allUniforms.u_vec4.value = new Cartesian4(1.0, 2.0, 3.0, 4.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform int u_int; </code></td>
-     * <td><code> sp.allUniforms.u_int.value = 1;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec2 u_ivec2; </code></td>
-     * <td><code> sp.allUniforms.u_ivec2.value = new Cartesian2(1, 2);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec3 u_ivec3; </code></td>
-     * <td><code> sp.allUniforms.u_ivec3.value = new Cartesian3(1, 2, 3);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform ivec4 u_ivec4; </code></td>
-     * <td><code> sp.allUniforms.u_ivec4.value = new Cartesian4(1, 2, 3, 4);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bool u_bool; </code></td>
-     * <td><code> sp.allUniforms.u_bool.value = true;</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec2 u_bvec2; </code></td>
-     * <td><code> sp.allUniforms.u_bvec2.value = new Cartesian2(true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec3 u_bvec3; </code></td>
-     * <td><code> sp.allUniforms.u_bvec3.value = new Cartesian3(true, true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform bvec4 u_bvec4; </code></td>
-     * <td><code> sp.allUniforms.u_bvec4.value = new Cartesian4(true, true, true, true);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat2 u_mat2; </code></td>
-     * <td><code> sp.allUniforms.u_mat2.value = new Matrix2(1.0, 2.0, 3.0, 4.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat3 u_mat3; </code></td>
-     * <td><code> sp.allUniforms.u_mat3.value = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform mat4 u_mat4; </code></td>
-     * <td><code> sp.allUniforms.u_mat4.value = new Matrix4(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform sampler2D u_texture; </code></td>
-     * <td><code> sp.allUniforms.u_texture.value = context.createTexture2D(...);</code></td>
-     * </tr>
-     * <tr>
-     * <td><code>uniform samplerCube u_cubeMap; </code></td>
-     * <td><code> sp.allUniforms.u_cubeMap.value = context.createCubeMap(...);</code></td>
-     * </tr>
-     * </table>
-     * <br />
-     * When the GLSL uniform is declared as an array, <code>value</code> is also an array as shown in Example 2.
-     * Individual members of a <code>struct uniform</code> can be accessed as done in Example 3.
-     * <br /><br />
-     * Uniforms whose names starting with <code>czm_</code>, such as {@link czm_viewProjection}, are called
-     * automatic uniforms; they are implicitly declared and automatically assigned to in
-     * <code>Context.draw</code> based on the {@link UniformState}.
-     *
-     * @alias Uniform
-     * @internalConstructor
-     *
-     * @see Uniform#value
-     * @see UniformDatatype
-     * @see ShaderProgram#getAllUniforms
-     * @see UniformState
-     * @see Context#draw
-     * @see Context#createTexture2D
-     * @see Context#createCubeMap
-     *
-     * @example
-     * // Example 1. Create a shader program and set its
-     * // one uniform, a 4x4 matrix, to the identity matrix
-     * var vs =
-     *   'attribute vec4 position; ' +
-     *   'uniform mat4 u_mvp; ' +
-     *   'void main() { gl_Position = u_mvp * position; }';
-     * var fs = // ...
-     * var sp = context.createShaderProgram(vs, fs);
-     *
-     * var mvp = sp.allUniforms.u_mvp;
-     * console.log(mvp.name);           // 'u_mvp'
-     * console.log(mvp.datatype.name);  // 'FLOAT_MAT4'
-     * mvp.value = Cesium.Matrix4.IDENTITY;
-     *
-     * //////////////////////////////////////////////////////////////////////
-     *
-     * // Example 2. Setting values for a GLSL array uniform
-     * // GLSL:  uniform float u_float[2];
-     * sp.allUniforms.u_float.value = new Cesium.Cartesian2(1.0, 2.0);
-     *
-     * // GLSL:  uniform vec4 u_vec4[2];
-     * sp.allUniforms.u_vec4.value = [
-     *   Cesium.Cartesian4.UNIT_X,
-     *   Cesium.Cartesian4.UNIT_Y
-     * ];
-     *
-     * //////////////////////////////////////////////////////////////////////
-     *
-     * // Example 3. Setting values for members of a GLSL struct
-     * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-     * sp.allUniforms['u_struct.f'].value = 1.0;
-     * sp.allUniforms['u_struct.v'].value = new Cartesian4(1.0, 2.0, 3.0, 4.0);
+     * @private
      */
     var Uniform = function(gl, activeUniform, uniformName, location, value) {
-        /**
-         * The value of the uniform.  The datatype depends on the datatype used in the
-         * GLSL declaration as explained in the {@link Uniform} help and shown
-         * in the examples below.
-         *
-         * @field
-         * @alias Uniform#value
-         *
-         * @see Context#createTexture2D
-         *
-         * @example
-         * // GLSL:  uniform float u_float;
-         * sp.allUniforms.u_float.value = 1.0;
-         *
-         * // GLSL:  uniform vec4 u_vec4;
-         * sp.allUniforms.u_vec4.value = Cesium.Cartesian4.ZERO;
-         *
-         * // GLSL:  uniform bvec4 u_bvec4;
-         * sp.allUniforms.u_bvec4.value = new Cesium.Cartesian4(true, true, true, true);
-         *
-         * // GLSL:  uniform mat4 u_mat4;
-         * sp.allUniforms.u_mat4.value = Cesium.Matrix4.IDENTITY;
-         *
-         * // GLSL:  uniform sampler2D u_texture;
-         * sp.allUniforms.u_texture.value = context.createTexture2D(...);
-         *
-         * // GLSL:  uniform vec2 u_vec2[2];
-         * sp.allUniforms.u_vec2.value = [
-         *   new Cesium.Cartesian2(1.0, 2.0),
-         *   new Cesium.Cartesian2(3.0, 4.0)
-         * ];
-         *
-         * // GLSL:  uniform struct { float f; vec4 v; } u_struct;
-         * sp.allUniforms['u_struct.f'].value = 1.0;
-         * sp.allUniforms['u_struct.v'].value = new Cesium.Cartesian4(1.0, 2.0, 3.0, 4.0);
-         */
         this.value = value;
 
         this._gl = gl;
@@ -355,26 +138,14 @@ define([
     };
 
     defineProperties(Uniform.prototype, {
-        /**
-         * The case-sensitive name of the GLSL uniform.
-         * @memberof Uniform.prototype
-         * @type {String}
-         */
         name : {
             get : function() {
                 return this._uniformName;
             }
         },
-
-        /**
-         * The datatype of the uniform.  This is useful when dynamically
-         * creating a user interface to tweak shader uniform values.
-         * @memberof Uniform.prototype
-         * @type {UniformDatatype}
-         */
         datatype : {
             get : function() {
-                return getUniformDatatype(this._gl, this._activeUniform.type);
+                return this._activeUniform.type;
             }
         }
     });
@@ -506,13 +277,7 @@ define([
     }
 
     /**
-     * Uniform and UniformArray have the same documentation.  It is just an implementation
-     * detail that they are two different types.
-     *
-     * @alias UniformArray
-     * @constructor
-     *
-     * @see Uniform
+     * @private
      */
     var UniformArray = function(gl, activeUniform, uniformName, locations, value) {
         this._gl = gl;
@@ -544,26 +309,14 @@ define([
     };
 
     defineProperties(UniformArray.prototype, {
-        /**
-         * The case-sensitive name of the GLSL uniform.
-         * @memberof Uniform.prototype
-         * @type {String}
-         */
         name : {
             get : function() {
                 return this._uniformName;
             }
         },
-
-        /**
-         * The datatype of the uniform.  This is useful when dynamically
-         * creating a user interface to tweak shader uniform values.
-         * @memberof Uniform.prototype
-         * @type {UniformDatatype}
-         */
         datatype : {
             get : function() {
-                return getUniformDatatype(this._gl, this._activeUniform.type);
+                return this._activeUniform.type;
             }
         }
     });
@@ -585,14 +338,7 @@ define([
     var nextShaderProgramId = 0;
 
     /**
-     * DOC_TBA
-     *
-     * @alias ShaderProgram
-     * @internalConstructor
-     *
-     * @exception {DeveloperError} A circular dependency was found in the Cesium built-in functions/structs/constants.
-     *
-     * @see Context#createShaderProgram
+     * @private
      */
     var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         this._gl = gl;
@@ -606,33 +352,15 @@ define([
         this._uniforms = undefined;
         this._automaticUniforms = undefined;
         this._manualUniforms = undefined;
+        this._cachedShader = undefined;  // Used by ShaderCache
 
         /**
          * @private
          */
         this.maximumTextureUnitIndex = undefined;
 
-        /**
-         * GLSL source for the shader program's vertex shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.vertexShaderSource = vertexShaderSource;
-
-        /**
-         * GLSL source for the shader program's fragment shader.  This is the version of
-         * the source provided when the shader program was created, not the final
-         * source provided to WebGL, which includes Cesium bulit-ins.
-         *
-         * @type {String}
-         *
-         * @readonly
-         */
-        this.fragmentShaderSource = fragmentShaderSource;
+        this._vertexShaderSource = vertexShaderSource;
+        this._fragmentShaderSource = fragmentShaderSource;
 
         /**
          * @private
@@ -642,46 +370,53 @@ define([
 
     defineProperties(ShaderProgram.prototype, {
         /**
-         * DOC_TBA
+         * GLSL source for the shader program's vertex shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
          * @memberof ShaderProgram.prototype
-         * @type {Object}
+         *
+         * @type {String}
+         * @readonly
          */
+        vertexShaderSource: {
+            get : function() {
+                return this._vertexShaderSource;
+            }
+        },
+        /**
+         * GLSL source for the shader program's fragment shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @memberof ShaderProgram.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        fragmentShaderSource: {
+            get : function() {
+                return this._fragmentShaderSource;
+            }
+        },
         vertexAttributes: {
             get : function() {
                 initialize(this);
                 return this._vertexAttributes;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof ShaderProgram.prototype
-         * @type {Number}
-         */
         numberOfVertexAttributes : {
             get : function() {
                 initialize(this);
                 return this._numberOfVertexAttributes;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof ShaderProgram.prototype
-         * @type {Object}
-         */
         allUniforms: {
             get : function() {
                 initialize(this);
                 return this._uniformsByName;
             }
         },
-
-        /**
-         * DOC_TBA
-         * @memberof ShaderProgram.prototype
-         * @type {Object}
-         */
         manualUniforms: {
             get : function() {
                 initialize(this);
@@ -1171,56 +906,18 @@ define([
         }
     };
 
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     * @memberof ShaderProgram
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     *
-     * @see ShaderProgram#destroy
-     */
     ShaderProgram.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     * @memberof ShaderProgram
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
-     *
-     * @see ShaderProgram#isDestroyed
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteShader.xml'>glDeleteShader</a>
-     * @see <a href='http://www.khronos.org/opengles/sdk/2.0/docs/man/glDeleteProgram.xml'>glDeleteProgram</a>
-     *
-     * @example
-     * shaderProgram = shaderProgram && shaderProgram.destroy();
-     */
     ShaderProgram.prototype.destroy = function() {
-        this._gl.deleteProgram(this._program);
-        return destroyObject(this);
+        this._cachedShader.cache.releaseShaderProgram(this);
+        return undefined;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderProgram
-     */
-    ShaderProgram.prototype.release = function() {
-        if (this._cachedShader) {
-            return this._cachedShader.cache.releaseShaderProgram(this);
-        }
-
-        return this.destroy();
+    ShaderProgram.prototype.finalDestroy = function() {
+        this._gl.deleteProgram(this._program);
+        return destroyObject(this);
     };
 
     return ShaderProgram;

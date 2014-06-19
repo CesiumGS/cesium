@@ -1,28 +1,28 @@
 /*global define*/
 define([
-        './defined',
-        './DeveloperError',
+        './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
-        './PrimitiveType',
         './defaultValue',
-        './BoundingSphere',
+        './defined',
+        './DeveloperError',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './VertexFormat',
-        './Geometry'
+        './PrimitiveType',
+        './VertexFormat'
     ], function(
-        defined,
-        DeveloperError,
+        BoundingSphere,
         Cartesian3,
         ComponentDatatype,
-        PrimitiveType,
         defaultValue,
-        BoundingSphere,
+        defined,
+        DeveloperError,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        VertexFormat,
-        Geometry) {
+        PrimitiveType,
+        VertexFormat) {
     "use strict";
 
     var diffScratch = new Cartesian3();
@@ -37,8 +37,8 @@ define([
      * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @see BoxGeometry#fromDimensions
-     * @see BoxGeometry#createGeometry
+     * @see BoxGeometry.fromDimensions
+     * @see BoxGeometry.createGeometry
      *
      * @example
      * var box = new Cesium.BoxGeometry({
@@ -79,7 +79,7 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxGeometry#createGeometry
+     * @see BoxGeometry.createGeometry
      *
      * @example
      * var box = Cesium.BoxGeometry.fromDimensions({

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/defined',
+define([
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
@@ -54,7 +55,7 @@ define(['../Core/defined',
      * @function
      *
      * @param {JulianDate} time The time for which to retrieve the type.
-     * @type {String} The type of material.
+     * @returns {String} The type of material.
      */
     MaterialProperty.prototype.getType = DeveloperError.throwInstantiationError;
 

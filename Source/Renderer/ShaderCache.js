@@ -1,20 +1,16 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/destroyObject'
+        '../Core/destroyObject',
+        './ShaderProgram'
     ], function(
         defined,
-        destroyObject) {
+        destroyObject,
+        ShaderProgram) {
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @alias ShaderCache
-     *
-     * @internalConstructor
-     *
-     * @see Context#getShaderCache
+     * @private
      */
     var ShaderCache = function(context) {
         this._context = context;
@@ -47,21 +43,12 @@ define([
      */
     ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         if (defined(shaderProgram)) {
-            shaderProgram.release();
+            shaderProgram.destroy();
         }
 
         return this.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof ShaderCache
-     *
-     * @returns {ShaderProgram} DOC_TBA.
-     *
-     * @see ShaderCache#replaceShaderProgram
-     */
     ShaderCache.prototype.getShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var keyword = vertexShaderSource + fragmentShaderSource + JSON.stringify(attributeLocations);
         var cachedShader;
@@ -72,7 +59,8 @@ define([
             // No longer want to release this if it was previously released.
             delete this._shadersToRelease[keyword];
         } else {
-            var sp = this._context.createShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
+            var context = this._context;
+            var sp = new ShaderProgram(context._gl, context.logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
 
             cachedShader = {
                 cache : this,
@@ -90,10 +78,6 @@ define([
         return cachedShader.shaderProgram;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderCache
-     */
     ShaderCache.prototype.destroyReleasedShaderPrograms = function() {
         var shadersToRelease = this._shadersToRelease;
 
@@ -101,20 +85,13 @@ define([
             if (shadersToRelease.hasOwnProperty(keyword)) {
                 var cachedShader = shadersToRelease[keyword];
                 delete this._shaders[cachedShader.keyword];
-                cachedShader.shaderProgram.destroy();
+                cachedShader.shaderProgram.finalDestroy();
             }
         }
 
         this._shadersToRelease = {};
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof ShaderCache
-     *
-     * @parameter {ShaderProgram} shaderProgram DOC_TBA.
-     */
     ShaderCache.prototype.releaseShaderProgram = function(shaderProgram) {
         if (shaderProgram) {
             var cachedShader = shaderProgram._cachedShader;
@@ -122,28 +99,18 @@ define([
                 this._shadersToRelease[cachedShader.keyword] = cachedShader;
             }
         }
-
-        return undefined;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderCache
-     */
     ShaderCache.prototype.isDestroyed = function() {
         return false;
     };
 
-    /**
-     * DOC_TBA
-     * @memberof ShaderCache
-     */
     ShaderCache.prototype.destroy = function() {
         var shaders = this._shaders;
 
         for ( var keyword in shaders) {
             if (shaders.hasOwnProperty(keyword)) {
-                shaders[keyword].shaderProgram.destroy();
+                shaders[keyword].shaderProgram.finalDestroy();
             }
         }
 

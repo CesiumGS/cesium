@@ -71,7 +71,7 @@ define([
          *
          * @memberof ModelMesh.prototype
          *
-         * @type {Array}
+         * @type {ModelMaterial[]}
          * @readonly
          */
         materials : {

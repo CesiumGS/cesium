@@ -4,19 +4,19 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/EllipsoidTerrainProvider',
         '../../Core/isArray',
-        '../../Scene/EllipsoidTerrainProvider',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        isArray,
         EllipsoidTerrainProvider,
-        createCommand,
-        knockout) {
+        isArray,
+        knockout,
+        createCommand) {
     "use strict";
 
     /**
@@ -51,14 +51,14 @@ define([
         /**
          * Gets or sets an array of ProviderViewModel instances available for imagery selection.
          * This property is observable.
-         * @type {Array}
+         * @type {ProviderViewModel[]}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
         /**
          * Gets or sets an array of ProviderViewModel instances available for terrain selection.
          * This property is observable.
-         * @type {Array}
+         * @type {ProviderViewModel[]}
          */
         this.terrainProviderViewModels = terrainProviderViewModels.slice(0);
 

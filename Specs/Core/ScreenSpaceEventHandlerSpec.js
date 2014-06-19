@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/ScreenSpaceEventHandler',
-         'Core/KeyboardEventModifier',
-         'Core/ScreenSpaceEventType',
-         'Core/Cartesian2'
-     ], function(
-         ScreenSpaceEventHandler,
-         KeyboardEventModifier,
-         ScreenSpaceEventType,
-         Cartesian2) {
+        'Core/ScreenSpaceEventHandler',
+        'Core/Cartesian2',
+        'Core/KeyboardEventModifier',
+        'Core/ScreenSpaceEventType'
+    ], function(
+        ScreenSpaceEventHandler,
+        Cartesian2,
+        KeyboardEventModifier,
+        ScreenSpaceEventType) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

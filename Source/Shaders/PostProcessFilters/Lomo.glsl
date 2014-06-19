@@ -149,6 +149,13 @@ vec3 colorTemperatureFilter(vec3 rgb, float colorTemperature)
     return applyTemperatureB(rgb, temperatureRgb);
 }
 
+// Workaround for IE11 as smoothstep() produces artefacts
+vec3 smoothVec3(vec3 edge0, vec3 edge1, vec3 x)
+{
+    vec3 t = clamp((x - edge0) / (edge1 - edge0), vec3(0.0001), vec3(1.0));
+    return t * t * (vec3(3.0) - vec3(2.0) * t);
+}
+
 // Apply a lomo grade
 vec3 lomoGradeFilter(vec3 rgb, float saturation, float colorTemperature, float finalMultiplier)
 {
@@ -156,7 +163,7 @@ vec3 lomoGradeFilter(vec3 rgb, float saturation, float colorTemperature, float f
     // Note that this will increase saturation
     // TODO: could work out a more direct operation in linear space
     vec3 sRGB = gammaCorrect(rgb, 2.2);
-    sRGB = smoothstep(vec3(0.0), vec3(1.0), sRGB);
+    sRGB = smoothVec3(vec3(0.0), vec3(1.0), sRGB);
     rgb = gammaCorrect(sRGB, 1.0 / 2.2);
     
     // Desaturate

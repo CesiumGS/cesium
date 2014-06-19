@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/Cartesian3',
+define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
@@ -56,7 +57,7 @@ define(['../Core/Cartesian3',
         /**
          * Gets the reference frame that the position is defined in.
          * @memberof PositionProperty.prototype
-         * @Type {ReferenceFrame}
+         * @type {ReferenceFrame}
          */
         referenceFrame : {
             get : DeveloperError.throwInstantiationError

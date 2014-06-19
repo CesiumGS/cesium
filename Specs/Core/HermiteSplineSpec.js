@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/HermiteSpline',
-         'Core/Cartesian3',
-         'Core/Math'
-     ], function(
-         HermiteSpline,
-         Cartesian3,
-         CesiumMath) {
+        'Core/HermiteSpline',
+        'Core/Cartesian3',
+        'Core/Math'
+    ], function(
+        HermiteSpline,
+        Cartesian3,
+        CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

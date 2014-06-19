@@ -1,60 +1,60 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Primitive',
-         'Core/RectangleGeometry',
-         'Core/Geometry',
-         'Core/GeometryAttribute',
-         'Core/GeometryInstance',
-         'Core/ColorGeometryInstanceAttribute',
-         'Core/ShowGeometryInstanceAttribute',
-         'Core/GeometryInstanceAttribute',
-         'Core/ComponentDatatype',
-         'Core/Cartesian3',
-         'Core/Matrix4',
-         'Core/Rectangle',
-         'Core/Ellipsoid',
-         'Core/PrimitiveType',
-         'Core/BoxGeometry',
-         'Renderer/ClearCommand',
-         'Scene/MaterialAppearance',
-         'Scene/PerInstanceColorAppearance',
-         'Scene/SceneMode',
-         'Scene/OrthographicFrustum',
-         'Specs/render',
-         'Specs/pick',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/createScene',
-         'Specs/destroyScene'
-     ], function(
-         Primitive,
-         RectangleGeometry,
-         Geometry,
-         GeometryAttribute,
-         GeometryInstance,
-         ColorGeometryInstanceAttribute,
-         ShowGeometryInstanceAttribute,
-         GeometryInstanceAttribute,
-         ComponentDatatype,
-         Cartesian3,
-         Matrix4,
-         Rectangle,
-         Ellipsoid,
-         PrimitiveType,
-         BoxGeometry,
-         ClearCommand,
-         MaterialAppearance,
-         PerInstanceColorAppearance,
-         SceneMode,
-         OrthographicFrustum,
-         render,
-         pick,
-         createContext,
-         destroyContext,
-         createFrameState,
-         createScene,
-         destroyScene) {
+        'Scene/Primitive',
+        'Core/BoxGeometry',
+        'Core/Cartesian3',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/ComponentDatatype',
+        'Core/Ellipsoid',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
+        'Core/GeometryInstance',
+        'Core/GeometryInstanceAttribute',
+        'Core/Matrix4',
+        'Core/PrimitiveType',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/ShowGeometryInstanceAttribute',
+        'Renderer/ClearCommand',
+        'Scene/MaterialAppearance',
+        'Scene/OrthographicFrustum',
+        'Scene/PerInstanceColorAppearance',
+        'Scene/SceneMode',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/createScene',
+        'Specs/destroyContext',
+        'Specs/destroyScene',
+        'Specs/pick',
+        'Specs/render'
+    ], function(
+        Primitive,
+        BoxGeometry,
+        Cartesian3,
+        ColorGeometryInstanceAttribute,
+        ComponentDatatype,
+        Ellipsoid,
+        Geometry,
+        GeometryAttribute,
+        GeometryInstance,
+        GeometryInstanceAttribute,
+        Matrix4,
+        PrimitiveType,
+        Rectangle,
+        RectangleGeometry,
+        ShowGeometryInstanceAttribute,
+        ClearCommand,
+        MaterialAppearance,
+        OrthographicFrustum,
+        PerInstanceColorAppearance,
+        SceneMode,
+        createContext,
+        createFrameState,
+        createScene,
+        destroyContext,
+        destroyScene,
+        pick,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -126,6 +126,7 @@ defineSuite([
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
         expect(primitive.vertexCacheOptimize).toEqual(false);
+        expect(primitive.interleave).toEqual(false);
         expect(primitive.releaseGeometryInstances).toEqual(true);
         expect(primitive.allow3DOnly).toEqual(false);
         expect(primitive.allowPicking).toEqual(true);
@@ -291,11 +292,7 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
         frameState.camera.update(frameState.mode, frameState.scene2D);
 
         frameState.camera.viewRectangle(rectangle1);
@@ -329,11 +326,8 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
+
         var frustum = new OrthographicFrustum();
         frustum.right = Ellipsoid.WGS84.maximumRadius * Math.PI;
         frustum.left = -frustum.right;
@@ -375,7 +369,7 @@ defineSuite([
         scene.camera.viewRectangle(rectangle1);
         scene.initializeFrame();
         scene.render();
-        var pixels = scene._context.readPixels();
+        var pixels = scene.context.readPixels();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
         expect(pixels[2]).toBeGreaterThanOrEqualTo(0);

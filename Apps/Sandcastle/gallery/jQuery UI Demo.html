@@ -37,8 +37,8 @@
 (function () {
     "use strict";
 
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-    var scene = widget.scene;
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    var scene = viewer.scene;
     // Create toolbar template
     $('#toolbar').html(
         '<span id="mode3D" class="aButton">3D globe</span> ' +

@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/createGuid',
+define([
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -289,7 +290,7 @@ define(['../Core/createGuid',
      * with {@link CompositeDynamicObjectCollection}
      * @memberof DynamicObject
      *
-     * @param propertyName The name of the property to add.
+     * @param {String} propertyName The name of the property to add.
      *
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is already a registered property.
@@ -317,7 +318,7 @@ define(['../Core/createGuid',
      * Removed a property previously added with addProperty.
      * @memberof DynamicObject
      *
-     * @param propertyName The name of the property to remove.
+     * @param {String} propertyName The name of the property to remove.
      *
      * @exception {DeveloperError} "propertyName" is a reserved property name.
      * @exception {DeveloperError} "propertyName" is not a registered property.

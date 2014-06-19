@@ -1,5 +1,8 @@
 /*global defineSuite*/
-defineSuite(['Core/createGuid'], function(createGuid) {
+defineSuite([
+        'Core/createGuid'
+    ], function(
+        createGuid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

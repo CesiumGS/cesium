@@ -11,9 +11,9 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/PixelDatatype',
-        '../Renderer/PixelFormat',
+        '../Core/PixelFormat',
         '../Renderer/RenderbufferFormat',
-        '../Renderer/BlendingState',
+        '../Scene/BlendingState',
         '../Shaders/PostProcessFilters/PassThrough',
         '../Shaders/ViewportQuadVS'
     ], function(
@@ -108,6 +108,7 @@ define([
                     ]
                 })
             },
+            indices : [0, 1, 2, 0, 2, 3],
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -179,8 +180,10 @@ define([
         // Setup the filter command.
         if (typeof this._filterCommand === 'undefined') {
             var filterCommand = this._filterCommand = new DrawCommand();
+
+            // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
             filterCommand.owner = this;
-            filterCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            filterCommand.primitiveType = PrimitiveType.TRIANGLES;
             filterCommand.vertexArray = getVertexArray(context);
             filterCommand.shaderProgram = context.shaderCache.getShaderProgram(ViewportQuadVS, this.postProcessFilter, attributeIndices);
             filterCommand.renderState = context.createRenderState({

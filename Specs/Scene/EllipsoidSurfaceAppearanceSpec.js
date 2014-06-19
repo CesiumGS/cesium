@@ -1,32 +1,32 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidSurfaceAppearance',
-         'Scene/Appearance',
-         'Scene/Material',
-         'Scene/Primitive',
-         'Core/RectangleGeometry',
-         'Core/Rectangle',
-         'Core/GeometryInstance',
-         'Core/ColorGeometryInstanceAttribute',
-         'Renderer/ClearCommand',
-         'Specs/render',
-         'Specs/createContext',
-         'Specs/destroyContext',
-         'Specs/createFrameState'
-     ], function(
-         EllipsoidSurfaceAppearance,
-         Appearance,
-         Material,
-         Primitive,
-         RectangleGeometry,
-         Rectangle,
-         GeometryInstance,
-         ColorGeometryInstanceAttribute,
-         ClearCommand,
-         render,
-         createContext,
-         destroyContext,
-         createFrameState) {
+        'Scene/EllipsoidSurfaceAppearance',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/GeometryInstance',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Renderer/ClearCommand',
+        'Scene/Appearance',
+        'Scene/Material',
+        'Scene/Primitive',
+        'Specs/createContext',
+        'Specs/createFrameState',
+        'Specs/destroyContext',
+        'Specs/render'
+    ], function(
+        EllipsoidSurfaceAppearance,
+        ColorGeometryInstanceAttribute,
+        GeometryInstance,
+        Rectangle,
+        RectangleGeometry,
+        ClearCommand,
+        Appearance,
+        Material,
+        Primitive,
+        createContext,
+        createFrameState,
+        destroyContext,
+        render) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -85,7 +85,7 @@ define([
 
     /**
      * The number of elements used to pack the object into an array.
-     * @Type {Number}
+     * @type {Number}
      */
     Matrix4.packedLength = 16;
 
@@ -94,7 +94,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} value The value to pack.
-     * @param {Array} array The array to pack into.
+     * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
     Matrix4.pack = function(value, array, startingIndex) {
@@ -132,7 +132,7 @@ define([
      * Retrieves an instance from a packed array.
      * @memberof Matrix4
      *
-     * @param {Array} array The packed array.
+     * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix4} [result] The object into which to store the result.
      */
@@ -209,7 +209,7 @@ define([
      * Creates a Matrix4 from 16 consecutive elements in an array.
      * @memberof Matrix4
      *
-     * @param {Array} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
+     * @param {Number[]} array The array whose 16 consecutive elements correspond to the positions of the matrix.  Assumes column-major order.
      * @param {Number} [startingIndex=0] The offset into the array of the first element, which corresponds to first column first row position in the matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
@@ -236,7 +236,7 @@ define([
      * @memberof Matrix4
      * @function
      *
-     * @param {Array} values The column-major order array.
+     * @param {Number[]} values The column-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
@@ -255,7 +255,7 @@ define([
      * The resulting matrix will be in column-major order.
      * @memberof Matrix4
      *
-     * @param {Array} values The row-major order array.
+     * @param {Number[]} values The row-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
@@ -912,13 +912,12 @@ define([
      * @memberof Matrix4
      *
      * @param {Object}[viewport = { x : 0.0, y : 0.0, width : 0.0, height : 0.0 }] The viewport's corners as shown in Example 1.
-     * @param {Number}[nearDepthRange = 0.0] The near plane distance in window coordinates.
-     * @param {Number}[farDepthRange = 1.0] The far plane distance in window coordinates.
+     * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
+     * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see czm_viewportTransformation
-     * @see Context#getViewport
      *
      * @example
      * // Example 1.  Create viewport transformation using an explicit viewport and depth range.
@@ -984,8 +983,8 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to use..
-     * @param {Array} [result] The Array onto which to store the result.
-     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @param {Number[]} [result] The Array onto which to store the result.
+     * @returns {Number[]} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @example
      * //create an array from an instance of Matrix4
@@ -1420,7 +1419,7 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the product for general 4x4
-     * matrices using {@link #multiply}.
+     * matrices using {@link Matrix4.multiply}.
      * @memberof Matrix4
      *
      * @param {Matrix4} left The first matrix.
@@ -2210,7 +2209,7 @@ define([
       * Computes the inverse of the provided matrix using Cramers Rule.
       * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
       * If the matrix is an affine transformation matrix, it is more efficient
-      * to invert it with {@link #inverseTransformation}.
+      * to invert it with {@link Matrix4.inverseTransformation}.
       * @memberof Matrix4
       *
       * @param {Matrix4} matrix The matrix to invert.
@@ -2337,7 +2336,7 @@ define([
      * column are the translation.  The bottom row is assumed to be [0, 0, 0, 1].
      * The matrix is not verified to be in the proper form.
      * This method is faster than computing the inverse for a general 4x4
-     * matrix using {@link #inverse}.
+     * matrix using {@link Matrix4.inverse}.
      * @memberof Matrix4
      *
      * @param {Matrix4} matrix The matrix to invert.

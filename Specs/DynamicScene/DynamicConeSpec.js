@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicCone',
-             'DynamicScene/ColorMaterialProperty',
-             'DynamicScene/ConstantProperty',
-             'Core/Color'
-         ], function(
-             DynamicCone,
-             ColorMaterialProperty,
-             ConstantProperty,
-             Color) {
+        'DynamicScene/DynamicCone',
+        'Core/Color',
+        'DynamicScene/ColorMaterialProperty',
+        'DynamicScene/ConstantProperty'
+    ], function(
+        DynamicCone,
+        Color,
+        ColorMaterialProperty,
+        ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
