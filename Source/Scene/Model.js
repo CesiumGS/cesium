@@ -1623,37 +1623,34 @@ define([
                 // Uniform parameters for this pass
                 for (var name in uniforms) {
                     if (uniforms.hasOwnProperty(name)) {
-                        // Only add active uniforms
-                        if (defined(activeUniforms[name])) {
-                            var parameterName = uniforms[name];
-                            var parameter = parameters[parameterName];
+                        var parameterName = uniforms[name];
+                        var parameter = parameters[parameterName];
 
-                            // GLTF_SPEC: In this implementation, material parameters with a
-                            // semantic or targeted via a source (for animation) are not
-                            // targetable for material animations.  Is this too strict?
-                            //
-                            // https://github.com/KhronosGroup/glTF/issues/142
+                        // GLTF_SPEC: In this implementation, material parameters with a
+                        // semantic or targeted via a source (for animation) are not
+                        // targetable for material animations.  Is this too strict?
+                        //
+                        // https://github.com/KhronosGroup/glTF/issues/142
 
-                            if (defined(instanceParameters[parameterName])) {
-                                // Parameter overrides by the instance technique
-                                var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
-                                uniformMap[name] = uv.func;
-                                uniformValues[parameterName] = uv;
-                            } else if (defined(parameter.semantic)) {
-                                if (parameter.semantic !== 'JOINT_MATRIX') {
-                                    // Map glTF semantic to Cesium automatic uniform
-                                    uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
-                                } else {
-                                    jointMatrixUniformName = name;
-                                }
-                            } else if (defined(parameter.source)) {
-                                uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
-                            } else if (defined(parameter.value)) {
-                                // Technique value that isn't overridden by a material
-                                var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
-                                uniformMap[name] = uv2.func;
-                                uniformValues[parameterName] = uv2;
+                        if (defined(instanceParameters[parameterName])) {
+                            // Parameter overrides by the instance technique
+                            var uv = gltfUniformFunctions[parameter.type](instanceParameters[parameterName], model);
+                            uniformMap[name] = uv.func;
+                            uniformValues[parameterName] = uv;
+                        } else if (defined(parameter.semantic)) {
+                            if (parameter.semantic !== 'JOINT_MATRIX') {
+                                // Map glTF semantic to Cesium automatic uniform
+                                uniformMap[name] = gltfSemanticUniforms[parameter.semantic](context.uniformState);
+                            } else {
+                                jointMatrixUniformName = name;
                             }
+                        } else if (defined(parameter.source)) {
+                            uniformMap[name] = getUniformFunctionFromSource(parameter.source, model);
+                        } else if (defined(parameter.value)) {
+                            // Technique value that isn't overridden by a material
+                            var uv2 = gltfUniformFunctions[parameter.type](parameter.value, model);
+                            uniformMap[name] = uv2.func;
+                            uniformValues[parameterName] = uv2;
                         }
                     }
                 }

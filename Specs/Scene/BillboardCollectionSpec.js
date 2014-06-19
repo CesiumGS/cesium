@@ -767,26 +767,6 @@ defineSuite([
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
     });
 
-    it('renders with a different buffer usage', function() {
-        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
-        billboards.add({
-            position : Cartesian3.ZERO,
-            imageIndex : 0
-        });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, billboards);
-        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
-    });
-
     it('renders using billboard show property', function() {
         billboards.textureAtlas = createTextureAtlas(context, [greenImage, blueImage]);
         var greenBillboard = billboards.add({
@@ -1000,30 +980,19 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var scene = createScene();
-        var b = scene.primitives.add(new BillboardCollection({
-            debugShowBoundingVolume : true
-        }));
-        b.textureAtlas = createTextureAtlas(context, [greenImage]);
-        b.add({
+        billboards.textureAtlas = createTextureAtlas(context, [greenImage]);
+        billboards.add({
             position : Cartesian3.ZERO,
-            imageIndex : 0
+            imageIndex : 0,
+            scale : 0.5 // bring bounding volume in view
         });
+        billboards.debugShowBoundingVolume = true;
 
-        var camera = scene.camera;
-        camera.position = new Cartesian3(2.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        scene.initializeFrame();
-        scene.render();
-        var pixels = scene.context.readPixels();
-        expect(pixels[0]).not.toEqual(0);
-        expect(pixels[1]).toEqual(0);
-        expect(pixels[2]).toEqual(0);
-        expect(pixels[3]).toEqual(255);
-
-        destroyScene(scene);
+        render(context, frameState, billboards);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('updates 10% of billboards', function() {
