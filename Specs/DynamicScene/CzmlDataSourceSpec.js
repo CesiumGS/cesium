@@ -512,7 +512,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(billboardPacket.billboard.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(billboardPacket);
@@ -699,7 +699,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(conePacket.cone.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(conePacket);
@@ -770,7 +770,7 @@ defineSuite([
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1));
+        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
@@ -888,14 +888,14 @@ defineSuite([
         var resultCartesian = dynamicObject.position.getValue(epoch);
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
 
-        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1));
+        resultCartesian = dynamicObject.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
         expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
     it('CZML sampled numbers work without epoch.', function() {
         var firstDate = Iso8601.MINIMUM_VALUE;
-        var midDate = JulianDate.addDays(firstDate, 1);
-        var lastDate = JulianDate.addDays(firstDate, 2);
+        var midDate = JulianDate.addDays(firstDate, 1, new JulianDate());
+        var lastDate = JulianDate.addDays(firstDate, 2, new JulianDate());
 
         var ellipsePacket = {
             ellipse : {
@@ -949,7 +949,7 @@ defineSuite([
         var dynamicObject = dataSource.dynamicObjects.getObjects()[0];
 
         var validTime = TimeInterval.fromIso8601(ellipsePacketInterval.ellipse.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         expect(dynamicObject.ellipse).toBeDefined();
         expect(dynamicObject.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
@@ -1011,7 +1011,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(ellipsoidPacketInterval.ellipsoid.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(ellipsoidPacketInterval);
@@ -1100,7 +1100,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(labelPacket.label.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(labelPacket);
@@ -1337,7 +1337,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pathPacket.path.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pathPacket);
@@ -1404,7 +1404,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pointPacket.point.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pointPacket);
@@ -1471,7 +1471,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(polygonPacket.polygon.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polygonPacket);
@@ -1529,7 +1529,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(polylinePacket.polyline.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(polylinePacket);
@@ -1634,7 +1634,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(pyramidPacket.pyramid.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(pyramidPacket);
@@ -1706,7 +1706,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601(vectorPacket.vector.interval).start;
-        var invalidTime = JulianDate.addSeconds(validTime, -1);
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
         var dataSource = new CzmlDataSource();
         dataSource.load(vectorPacket);

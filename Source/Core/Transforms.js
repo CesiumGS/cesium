@@ -254,6 +254,7 @@ define([
     var rateCoef = 1.1772758384668e-19;
     var wgs84WRPrecessing = 7.2921158553E-5;
     var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+    var dateInUtc = new JulianDate();
 
     /**
      * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
@@ -281,7 +282,7 @@ define([
         // We do not want to use the function like convertTaiToUtc in JulianDate because
         // we explicitly do not want to fail when inside the leap second.
 
-        var dateInUtc = JulianDate.addSeconds(date, -JulianDate.getTaiMinusUtc(date));
+        dateInUtc = JulianDate.addSeconds(date, -JulianDate.getTaiMinusUtc(date), dateInUtc);
         var utcDayNumber = dateInUtc.dayNumber;
         var utcSecondsIntoDay = dateInUtc.secondsOfDay;
 

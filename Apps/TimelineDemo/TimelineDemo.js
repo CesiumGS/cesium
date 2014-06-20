@@ -93,10 +93,10 @@ define([
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, JulianDate.addSeconds(startJulian, 60 * 60)), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
-        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(endJulian, -60 * 60), endJulian), 8, Color.LIME);
+        timeline.addTrack(new TimeInterval(startJulian, JulianDate.addSeconds(startJulian, 60 * 60, new JulianDate())), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(endJulian, -60 * 60, new JulianDate()), endJulian), 8, Color.LIME);
         var middle = JulianDate.getSecondsDifference(endJulian, startJulian) / 4;
-        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(startJulian, middle), JulianDate.addSeconds(startJulian, middle * 3)), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(startJulian, middle, new JulianDate()), JulianDate.addSeconds(startJulian, middle * 3, new JulianDate())), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         var clockViewModel = new ClockViewModel(clock);
         animationViewModel = new AnimationViewModel(clockViewModel);
@@ -215,7 +215,7 @@ define([
         dijit.byId('endTimeSel').set('value', 'T24:00:00');
 
         var today = JulianDate.now();
-        var tomorrow = JulianDate.addDays(today, 1);
+        var tomorrow = JulianDate.addDays(today, 1, new JulianDate());
         dijit.byId('startCal').set('value', JulianDate.toDate(today));
         dijit.byId('endCal').set('value', JulianDate.toDate(tomorrow));
     });

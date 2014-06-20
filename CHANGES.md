@@ -27,7 +27,7 @@ Beta Releases
   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
-  * All `Cartesain2`, `Cartesian3` and `Cartesian4` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * All `Cartesain2`, `Cartesian3`, `Cartesian4`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
   * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * Refactored `JulianDate` to be in line with other Core types.
     * Most functions now take result parameters.
@@ -65,6 +65,7 @@ Beta Releases
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
+* Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 
 ### b29 - 2014-06-02
 

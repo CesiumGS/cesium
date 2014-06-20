@@ -229,12 +229,12 @@ define([
                 this._endJulian = this._clock.stopTime;
             } else if (startOffset > 0) {
                 // if timeline start is before clock start, shift right
-                this._endJulian = JulianDate.addSeconds(this._endJulian, startOffset);
+                this._endJulian = JulianDate.addSeconds(this._endJulian, startOffset, new JulianDate());
                 this._startJulian = clockStart;
                 this._timeBarSecondsSpan = JulianDate.getSecondsDifference(this._endJulian, this._startJulian);
             } else if (endOffset < 0) {
                 // if timeline end is after clock end, shift left
-                this._startJulian = JulianDate.addSeconds(this._startJulian, endOffset);
+                this._startJulian = JulianDate.addSeconds(this._startJulian, endOffset, new JulianDate());
                 this._endJulian = clockEnd;
                 this._timeBarSecondsSpan = JulianDate.getSecondsDifference(this._endJulian, this._startJulian);
             }
@@ -260,7 +260,7 @@ define([
             centerSec += (centerSec - this._timeBarSecondsSpan * 0.5);
         }
         var centerSecFlip = this._timeBarSecondsSpan - centerSec;
-        this.zoomTo(JulianDate.addSeconds(this._startJulian, centerSec - (centerSec * amount)), JulianDate.addSeconds(this._endJulian, (centerSecFlip * amount) - centerSecFlip));
+        this.zoomTo(JulianDate.addSeconds(this._startJulian, centerSec - (centerSec * amount), new JulianDate()), JulianDate.addSeconds(this._endJulian, (centerSecFlip * amount) - centerSecFlip, new JulianDate()));
     };
 
     function twoDigits(num) {
@@ -307,11 +307,11 @@ define([
         if (duration < minimumDuration) {
             duration = minimumDuration;
             this._timeBarSecondsSpan = minimumDuration;
-            this._endJulian = JulianDate.addSeconds(this._startJulian, minimumDuration);
+            this._endJulian = JulianDate.addSeconds(this._startJulian, minimumDuration, new JulianDate());
         } else if (duration > maximumDuration) {
             duration = maximumDuration;
             this._timeBarSecondsSpan = maximumDuration;
-            this._endJulian = JulianDate.addSeconds(this._startJulian, maximumDuration);
+            this._endJulian = JulianDate.addSeconds(this._startJulian, maximumDuration, new JulianDate());
         }
 
         var timeBarWidth = this._timeBarEle.clientWidth;
@@ -335,7 +335,7 @@ define([
             epochJulian = JulianDate.fromIso8601(JulianDate.toDate(startJulian).toISOString().substring(0, 10) + 'T00:00:00Z');
         }
         // startTime: Seconds offset of the left side of the timeline from epochJulian.
-        var startTime = JulianDate.getSecondsDifference(this._startJulian, JulianDate.addSeconds(epochJulian, epsilonTime));
+        var startTime = JulianDate.getSecondsDifference(this._startJulian, JulianDate.addSeconds(epochJulian, epsilonTime, new JulianDate()));
         // endTime: Seconds offset of the right side of the timeline from epochJulian.
         var endTime = startTime + duration;
         this._epochJulian = epochJulian;
@@ -358,7 +358,7 @@ define([
         }
 
         // Width in pixels of a typical label, plus padding
-        this._rulerEle.innerHTML = this.makeLabel(JulianDate.addSeconds(this._endJulian, -minimumDuration));
+        this._rulerEle.innerHTML = this.makeLabel(JulianDate.addSeconds(this._endJulian, -minimumDuration, new JulianDate()));
         var sampleWidth = this._rulerEle.offsetWidth + 20;
         if (sampleWidth < 30) {
             // Workaround an apparent IE bug with measuring the width after going full-screen from inside an iframe.
@@ -454,12 +454,12 @@ define([
             tic = getStartTic(mainTic);
             var leapSecond = JulianDate.getTaiMinusUtc(epochJulian);
             while (tic <= endTime) {
-                var ticTime = JulianDate.addSeconds(startJulian, tic - startTime);
+                var ticTime = JulianDate.addSeconds(startJulian, tic - startTime, new JulianDate());
                 if (mainTic > 2.1) {
                     var ticLeap = JulianDate.getTaiMinusUtc(ticTime);
                     if (Math.abs(ticLeap - leapSecond) > 0.1) {
                         tic += (ticLeap - leapSecond);
-                        ticTime = JulianDate.addSeconds(startJulian, tic - startTime);
+                        ticTime = JulianDate.addSeconds(startJulian, tic - startTime, new JulianDate());
                     }
                 }
                 var ticLeft = Math.round(timeBarWidth * getAlpha(tic));
@@ -514,13 +514,13 @@ define([
         }
         if (defined(this._timelineDragLocation)) {
             this._setTimeBarTime(this._timelineDragLocation, this._timelineDragLocation * this._timeBarSecondsSpan / this._topDiv.clientWidth);
-            this.zoomTo(JulianDate.addSeconds(this._startJulian, this._timelineDrag), JulianDate.addSeconds(this._endJulian, this._timelineDrag));
+            this.zoomTo(JulianDate.addSeconds(this._startJulian, this._timelineDrag, new JulianDate()), JulianDate.addSeconds(this._endJulian, this._timelineDrag, new JulianDate()));
         }
     };
 
     Timeline.prototype._setTimeBarTime = function(xPos, seconds) {
         xPos = Math.round(xPos);
-        this._scrubJulian = JulianDate.addSeconds(this._startJulian, seconds);
+        this._scrubJulian = JulianDate.addSeconds(this._startJulian, seconds, new JulianDate());
         if (this._scrubElement) {
             var scrubX = xPos - 8;
             this._scrubElement.style.left = scrubX.toString() + 'px';
@@ -592,7 +592,7 @@ define([
                 timeline._mouseX = e.clientX;
                 if (dx !== 0) {
                     var dsec = dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth;
-                    timeline.zoomTo(JulianDate.addSeconds(timeline._startJulian, dsec), JulianDate.addSeconds(timeline._endJulian, dsec));
+                    timeline.zoomTo(JulianDate.addSeconds(timeline._startJulian, dsec, new JulianDate()), JulianDate.addSeconds(timeline._endJulian, dsec, new JulianDate()));
                 }
             } else if (timeline._mouseMode === timelineMouseMode.zoom) {
                 dx = timeline._mouseX - e.clientX;
@@ -690,14 +690,14 @@ define([
                     if ((newSpan > 0) && (timeline._touchState.spanX > 0)) {
                         // Zoom and slide
                         zoom = (timeline._touchState.spanX / newSpan);
-                        newStartTime = JulianDate.addSeconds(timeline._startJulian, ((timeline._touchState.centerX * timeline._timeBarSecondsSpan) - (newCenter * timeline._timeBarSecondsSpan * zoom)) / timeline._topDiv.clientWidth);
+                        newStartTime = JulianDate.addSeconds(timeline._startJulian, ((timeline._touchState.centerX * timeline._timeBarSecondsSpan) - (newCenter * timeline._timeBarSecondsSpan * zoom)) / timeline._topDiv.clientWidth, new JulianDate());
                     } else {
                         // Slide to newCenter
                         dx = timeline._touchState.centerX - newCenter;
-                        newStartTime = JulianDate.addSeconds(timeline._startJulian, dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth);
+                        newStartTime = JulianDate.addSeconds(timeline._startJulian, dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth, new JulianDate());
                     }
 
-                    timeline.zoomTo(newStartTime, JulianDate.addSeconds(newStartTime, timeline._timeBarSecondsSpan * zoom));
+                    timeline.zoomTo(newStartTime, JulianDate.addSeconds(newStartTime, timeline._timeBarSecondsSpan * zoom, new JulianDate()));
                     timeline._touchState.centerX = newCenter;
                     timeline._touchState.spanX = newSpan;
                 }
