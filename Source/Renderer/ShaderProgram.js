@@ -745,14 +745,20 @@ define([
                 if (activeUniform.name.indexOf('[') < 0) {
                     // Single uniform
                     var location = gl.getUniformLocation(program, uniformName);
-                    var uniformValue = gl.getUniform(program, location);
-                    var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
 
-                    uniformsByName[uniformName] = uniform;
-                    uniforms.push(uniform);
+                    // IE 11.0.9 needs this check since getUniformLocation can return null
+                    // if the uniform is not active (e.g., it is optimized out).  Looks like
+                    // getActiveUniform() above returns uniforms that are not actually active.
+                    if (location !== null) {
+                        var uniformValue = gl.getUniform(program, location);
+                        var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
 
-                    if (uniform._setSampler) {
-                        samplerUniforms.push(uniform);
+                        uniformsByName[uniformName] = uniform;
+                        uniforms.push(uniform);
+
+                        if (uniform._setSampler) {
+                            samplerUniforms.push(uniform);
+                        }
                     }
                 } else {
                     // Uniform array
@@ -783,16 +789,24 @@ define([
                         if (locations.length <= 1) {
                             value = uniformArray.value;
                             loc = gl.getUniformLocation(program, uniformName);
-                            locations.push(loc);
-                            value.push(gl.getUniform(program, loc));
+
+                            // Workaround for IE 11.0.9.  See above.
+                            if (loc !== null) {
+                                locations.push(loc);
+                                value.push(gl.getUniform(program, loc));
+                            }
                         }
                     } else {
                         locations = [];
                         value = [];
                         for ( var j = 0; j < activeUniform.size; ++j) {
                             loc = gl.getUniformLocation(program, uniformName + '[' + j + ']');
-                            locations.push(loc);
-                            value.push(gl.getUniform(program, loc));
+
+                            // Workaround for IE 11.0.9.  See above.
+                            if (loc !== null) {
+                                locations.push(loc);
+                                value.push(gl.getUniform(program, loc));
+                            }
                         }
                         uniformArray = new UniformArray(gl, activeUniform, uniformName, locations, value);
 

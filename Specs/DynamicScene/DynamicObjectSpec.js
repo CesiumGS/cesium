@@ -40,10 +40,10 @@ defineSuite([
         var dynamicObject = new DynamicObject();
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
         dynamicObject.availability = interval;
-        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1))).toEqual(false);
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
-        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.stop, 1))).toEqual(false);
+        expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.stop, 1, new JulianDate()))).toEqual(false);
     });
 
     it('definitionChanged works for all properties', function() {

@@ -1012,7 +1012,7 @@ define([
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
      * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
-     * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
+     * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.    Check context.elementIndexUint.
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
@@ -1044,7 +1044,7 @@ define([
         //>>includeEnd('debug');
 
         if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.elementIndexUint) {
-            throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
+            throw new DeveloperError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.');
         }
 
         var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
@@ -1163,8 +1163,8 @@ define([
     /**
      * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
      * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
      * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
@@ -1268,7 +1268,7 @@ define([
      *
      * @returns {CubeMap} The newly created cube map.
      *
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
      * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
      * @exception {DeveloperError} Each face in options.sources must have the same width and height.
      * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
@@ -1349,7 +1349,7 @@ define([
         //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
-            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:

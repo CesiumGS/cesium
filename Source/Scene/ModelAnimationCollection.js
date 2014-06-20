@@ -118,7 +118,7 @@ define([
      *   name : 'another animation name',
      *   startTime : startTime,
      *   delay : 0.0,                          // Play at startTime (default)
-     *   stopTime : JulianDate.addSeconds(startTime, 4.0),
+     *   stopTime : JulianDate.addSeconds(startTime, 4.0, new JulianDate()),
      *   removeOnStop : false,                 // Do not remove when animation stops (default)
      *   speedup : 2.0,                        // Play at double speed
      *   reverse : true,                       // Play in reverse
@@ -349,7 +349,7 @@ define([
             var runtimeAnimation = scheduledAnimation._runtimeAnimation;
 
             if (!defined(scheduledAnimation._startTime)) {
-                scheduledAnimation._startTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.delay);
+                scheduledAnimation._startTime = JulianDate.addSeconds(defaultValue(scheduledAnimation.startTime, sceneTime), scheduledAnimation.delay, new JulianDate());
             }
 
             if (!defined(scheduledAnimation._duration)) {
