@@ -174,6 +174,7 @@
 			<include name="**/*.js" />
 			<exclude name="*.js" />
 			<exclude name="Workers/**" />
+			<exclude name="ThirdParty/Workers/**" />
 			<exclude name="**/*.profile.js" />
 		</fileset>
 		<fileset dir="${sourceDirectory}">
@@ -435,13 +436,14 @@
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<srcfile prefix="include=Workers/" />
+			<srcfile prefix="include=" />
 			<targetfile prefix="out=" />
-			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/*.js" />
 			<mappedresources>
 				<fileset dir="${sourceDirectory}/Workers">
-					<include name="cesiumWorkerBootstrapper.js" />
-					<include name="transferTypedArrayTest.js" />
+				<include name="Workers/cesiumWorkerBootstrapper.js" />
+				<include name="Workers/transferTypedArrayTest.js" />
+				<include name="ThirdParty/Workers/*.js" />
 				</fileset>
 				<chainedmapper>
 					<flattenmapper />

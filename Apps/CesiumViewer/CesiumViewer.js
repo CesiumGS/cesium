@@ -5,6 +5,7 @@ define([
         'Core/getFilenameFromUri',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
+        'DynamicScene/KmlDataSource',
         'Scene/TileMapServiceImageryProvider',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerCesiumInspectorMixin',
@@ -17,6 +18,7 @@ define([
         getFilenameFromUri,
         CzmlDataSource,
         GeoJsonDataSource,
+        KmlDataSource,
         TileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
@@ -106,6 +108,9 @@ define([
             loadPromise = dataSource.loadUrl(source);
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             dataSource = new GeoJsonDataSource(getFilenameFromUri(source));
+            loadPromise = dataSource.loadUrl(source);
+        } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
+            dataSource = new KmlDataSource();
             loadPromise = dataSource.loadUrl(source);
         } else {
             showLoadError(source, 'Unknown format.');
