@@ -16,7 +16,6 @@ define([
         createFrameState,
         getQueryParameters) {
     "use strict";
-    /*global unescape*/
 
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties

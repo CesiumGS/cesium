@@ -1,6 +1,7 @@
 /*global define*/
 define(function() {
     "use strict";
+    /*global unescape*/
 
     function getQueryParameters() {
         var queryParameters = {};
