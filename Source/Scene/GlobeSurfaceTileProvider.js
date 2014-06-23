@@ -427,8 +427,8 @@ define([
 
     var southwestCornerScratch = new Cartesian3();
     var northeastCornerScratch = new Cartesian3();
-    var negativeUnitY = Cartesian3.negate(Cartesian3.UNIT_Y);
-    var negativeUnitZ = Cartesian3.negate(Cartesian3.UNIT_Z);
+    var negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
+    var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
 
     /**
