@@ -730,6 +730,12 @@ define([
             camera.setTransform(verticalTransform);
             camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
 
+            var magSqrd = Cartesian3.magnitudeSquared(originalPosition);
+            if (Cartesian3.magnitudeSquared(camera.position) > magSqrd) {
+                Cartesian3.normalize(camera.position, camera.position);
+                Cartesian3.multiplyByScalar(camera.position, Math.sqrt(magSqrd), camera.position);
+            }
+
             var angle = Cartesian3.angleBetween(originalPosition, camera.position);
             var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
             Cartesian3.normalize(axis, axis);
@@ -1118,6 +1124,12 @@ define([
         if (!Cartesian3.equals(camera.positionWC, originalPosition)) {
             camera.setTransform(verticalTransform);
             camera.worldToCameraCoordinatesPoint(originalPosition, originalPosition);
+
+            var magSqrd = Cartesian3.magnitudeSquared(originalPosition);
+            if (Cartesian3.magnitudeSquared(camera.position) > magSqrd) {
+                Cartesian3.normalize(camera.position, camera.position);
+                Cartesian3.multiplyByScalar(camera.position, Math.sqrt(magSqrd), camera.position);
+            }
 
             var angle = Cartesian3.angleBetween(originalPosition, camera.position);
             var axis = Cartesian3.cross(originalPosition, camera.position, originalPosition);
