@@ -228,19 +228,25 @@ defineSuite([
     });
 
     it('disable billboard scaleByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
+        });
         b.scaleByDistance = undefined;
         expect(b.scaleByDistance).not.toBeDefined();
     });
 
     it('disable billboard translucencyByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        });
         b.translucencyByDistance = undefined;
         expect(b.translucencyByDistance).not.toBeDefined();
     });
 
     it('disable billboard pixelOffsetScaleByDistance', function() {
-        var b = billboards.add();
+        var b = billboards.add({
+            pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
+        });
         b.pixelOffsetScaleByDistance = undefined;
         expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
     });
