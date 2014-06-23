@@ -158,7 +158,7 @@ define([
                 that._credit = new Credit(data.attribution);
             }
 
-            if (defined(data.extensions) && data.extensions.indexOf("vertexnormals") > -1) {
+            if (defined(data.extensions) && data.extensions.indexOf('vertexnormals') !== -1) {
                 that._hasVertexNormals = true;
             }
 
@@ -489,6 +489,47 @@ define([
             get : function() {
                 return this._ready;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not the provider includes a water mask.  The water mask
+         * indicates which areas of the globe are water rather than land, so they can be rendered
+         * as a reflective surface with animated waves.  This function should not be
+         * called before {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
+         */
+        hasWaterMask : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('hasWaterMask must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                return this._hasWaterMask;
+            }
+        },
+
+        /**
+         * Gets a value indicating whether or not the requested tiles includes vertex normals.
+         * This function should not be called before {@link CesiumTerrainProvider#ready} returns true.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Boolean}
+         * @exception {DeveloperError} This property must not be called before {@link CesiumTerrainProvider#ready}
+         */
+        hasVertexNormals : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug)
+                if (!this._ready) {
+                    throw new DeveloperError('hasVertexNormals must not be called before the terrain provider is ready.');
+                }
+                //>>includeEnd('debug');
+
+                // returns true if we can request vertex normals from the server
+                return this._hasVertexNormals && this.requestVertexNormals;
+            }
         }
     });
 
@@ -500,49 +541,6 @@ define([
      */
     CesiumTerrainProvider.prototype.getLevelMaximumGeometricError = function(level) {
         return this._levelZeroMaximumGeometricError / (1 << level);
-    };
-
-    /**
-     * Gets a value indicating whether or not the provider includes a water mask.  The water mask
-     * indicates which areas of the globe are water rather than land, so they can be rendered
-     * as a reflective surface with animated waves.
-     *
-     * @returns {Boolean} True if the provider has a water mask; otherwise, false.
-     *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
-     *            returns true.
-     */
-    CesiumTerrainProvider.prototype.hasWaterMask = function() {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('hasWaterMask must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        return this._hasWaterMask;
-    };
-
-    /**
-     * Gets a value indicating whether or not vertex normals can be requested from the server.
-     * This requires that the both the server supports vertex normals and that the client is
-     * configured to {@link CesiumTerrainProvider#requestVertexNormals}.
-     *
-     * @memberof CesiumTerrainProvider
-     *
-     * @returns {Boolean} True if the provider has vertex normals; otherwise, false.
-     *
-     * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
-     *            returns true.
-     */
-    CesiumTerrainProvider.prototype.hasVertexNormals = function() {
-        //>>includeStart('debug', pragmas.debug)
-        if (!this._ready) {
-            throw new DeveloperError('hasVertexNormals must not be called before the terrain provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        // returns true if we can request vertex normals from the server
-        return this._hasVertexNormals && this.requestVertexNormals;
     };
 
     function getChildMaskForTile(terrainProvider, level, x, y) {

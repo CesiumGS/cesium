@@ -39,7 +39,7 @@ define([
      * @param {Uint16Array} options.quantizedVertices The buffer containing the quantized mesh.
      * @param {Uint16Array} options.indices The indices specifying how the quantized vertices are linked
      *                      together into triangles.  Each three indices specifies one triangle.
-     * @param {Uint8Array} description.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
+     * @param {Uint8Array} options.encodedNormals The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Number} options.minimumHeight The minimum terrain height within the tile, in meters above the ellipsoid.
      * @param {Number} options.maximumHeight The maximum terrain height within the tile, in meters above the ellipsoid.
      * @param {BoundingSphere} options.boundingSphere A sphere bounding all of the vertices in the mesh.

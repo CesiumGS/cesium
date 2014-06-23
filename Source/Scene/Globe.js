@@ -651,7 +651,7 @@ define([
         }
 
         if (this._surface._terrainProvider.ready &&
-            this._surface._terrainProvider.hasWaterMask() &&
+            this._surface._terrainProvider.hasWaterMask &&
             this.oceanNormalMapUrl !== this._lastOceanNormalMapUrl) {
 
             this._lastOceanNormalMapUrl = this.oceanNormalMapUrl;
@@ -666,8 +666,8 @@ define([
         }
 
         // Initial compile or re-compile if uber-shader parameters changed
-        var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask();
-        var hasVertexNormals = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasVertexNormals();
+        var hasWaterMask = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasWaterMask;
+        var hasVertexNormals = this._surface._terrainProvider.ready && this._surface._terrainProvider.hasVertexNormals;
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
         var hasVertexNormalsChanged = this._hasVertexNormals !== hasVertexNormalsChanged;
         var hasEnableLightingChanged = this._enableLighting !== this.enableLighting;

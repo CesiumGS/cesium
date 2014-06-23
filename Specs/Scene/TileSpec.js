@@ -583,7 +583,7 @@ defineSuite([
                     },
                     tilingScheme :  realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
-                        return realTerrainProvider.hasWaterMask();
+                        return realTerrainProvider.hasWaterMask;
                     }
             };
 
@@ -620,7 +620,7 @@ defineSuite([
                     },
                     tilingScheme : realTerrainProvider.tilingScheme,
                     hasWaterMask : function() {
-                        return realTerrainProvider.hasWaterMask();
+                        return realTerrainProvider.hasWaterMask;
                     }
             };
 

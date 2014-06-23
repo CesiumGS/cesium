@@ -211,7 +211,7 @@ define([
         var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
         var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        if (terrainProvider.hasVertexNormals()) {
+        if (terrainProvider.hasVertexNormals) {
             stride = 8 * ComponentDatatype.getSizeInBytes(datatype);
             numTexCoordComponents = 4;
         } else {
