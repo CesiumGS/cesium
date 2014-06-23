@@ -35,10 +35,6 @@ require(['Cesium'], function(Cesium) {
         scene.primitives.removeAll();
         scene.animations.removeAll();
 
-        var controller = scene.screenSpaceCameraController;
-        controller.globe = scene.globe;
-        controller.enableTilt = true;
-
         scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
         clock.multiplier = 1.0;
@@ -129,10 +125,6 @@ require(['Cesium'], function(Cesium) {
         var camera = scene.camera;
         Cesium.Matrix4.clone(transform, camera.transform);
         camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
-
-        var controller = scene.screenSpaceCameraController;
-        controller.globe = Cesium.Ellipsoid.UNIT_SPHERE;
-        controller.enableTilt = false;
 
         // Zoom in
         camera.lookAt(

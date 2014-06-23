@@ -441,7 +441,7 @@ define([
 
         var camera = new Camera(this);
         this._camera = camera;
-        this._screenSpaceCameraController = new ScreenSpaceCameraController(canvas, camera);
+        this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
 
         // initial guess at frustums.
         var near = camera.frustum.near;

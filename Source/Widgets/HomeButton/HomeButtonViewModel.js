@@ -27,9 +27,6 @@ define([
 
     function viewHome(scene, duration) {
         var mode = scene.mode;
-        var controller = scene.screenSpaceCameraController;
-
-        controller.globe = scene.globe;
 
         if (defined(scene) && mode === SceneMode.MORPHING) {
             scene.completeMorph();

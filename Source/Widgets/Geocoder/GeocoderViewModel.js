@@ -240,10 +240,6 @@ define([
             viewModel._scene.camera.flyTo({
                 destination : position,
                 duration : viewModel._flightDuration,
-                onComplete : function() {
-                    var screenSpaceCameraController = viewModel._scene.screenSpaceCameraController;
-                    screenSpaceCameraController.globe = viewModel._scene.globe;
-                },
                 endTransform : Matrix4.IDENTITY,
                 convert : false
             });

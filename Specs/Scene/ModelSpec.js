@@ -86,10 +86,6 @@ defineSuite([
                 camera.transform = transform;
                 camera.constrainedAxis = Cartesian3.UNIT_Z;
 
-                var controller = scene.screenSpaceCameraController;
-                controller.ellipsoid = Ellipsoid.UNIT_SPHERE;
-                controller.enableTilt = false;
-
                 // Zoom in
                 var r = Math.max(model.boundingSphere.radius, camera.frustum.near);
                 camera.lookAt(

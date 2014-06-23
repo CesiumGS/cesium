@@ -48,7 +48,7 @@ Beta Releases
     * `date.lessThanOrEquals (right)` -> `JulianDate.lessThanOrEquals (left, right)`
     * `date.greaterThan (right)` -> `JulianDate.greaterThan (left, right)`
     * `date.greaterThanOrEquals (right)` -> `JulianDate.greaterThanOrEquals (left, right)`
-  * Renamed `ScreenSpaceCameraController.ellipsoid` to `ScreenSpaceCameraController.globe` whose type can now be `Globe` or `Ellipsoid`.
+  * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.

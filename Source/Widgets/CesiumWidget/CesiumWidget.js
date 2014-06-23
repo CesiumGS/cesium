@@ -194,7 +194,6 @@ define([
 
             var globe = new Globe(ellipsoid);
             scene.globe = globe;
-            scene.screenSpaceCameraController.globe = globe;
 
             var skyBox = options.skyBox;
             if (!defined(skyBox)) {

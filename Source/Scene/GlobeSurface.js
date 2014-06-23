@@ -410,7 +410,7 @@ define([
             }
         }
 
-        while (!defined(tile.pickTerrain) && defined(tile)) {
+        while (defined(tile) && !defined(tile.pickTerrain)) {
             tile = tile.parent;
         }
 
