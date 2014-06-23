@@ -78,7 +78,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
     });
@@ -91,13 +91,13 @@ defineSuite([
         var point = testObject.point = new DynamicPoint();
         point.show = new ConstantProperty(true);
 
-        visualizer.update(new JulianDate());
+        visualizer.update(JulianDate.now());
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
     });
 
     it('A DynamicPoint causes a Billboard to be created and updated.', function() {
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         var dynamicObjectCollection = new DynamicObjectCollection();
         visualizer = new DynamicPointVisualizer(scene, dynamicObjectCollection);
@@ -160,7 +160,7 @@ defineSuite([
         var billboardCollection = scene.primitives.get(0);
         expect(billboardCollection.length).toEqual(0);
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        var time = new JulianDate();
+        var time = JulianDate.now();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var point = testObject.point = new DynamicPoint();
@@ -186,7 +186,7 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
 
-        var time = new JulianDate();
+        var time = JulianDate.now();
         var point = testObject.point = new DynamicPoint();
 
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));

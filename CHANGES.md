@@ -7,7 +7,7 @@ Beta Releases
 ### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
-   * Replaced `CameraFlightPath.createAnimation` with `Camera.flyTo` and replaced `CameraFlightPath.createAnimationRectangle` with `Camera.flyToRectangle`.  Code that looked like:
+  * Replaced `CameraFlightPath.createAnimation` with `Camera.flyTo` and replaced `CameraFlightPath.createAnimationRectangle` with `Camera.flyToRectangle`.  Code that looked like:
 
             scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
                 destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
@@ -19,21 +19,42 @@ Beta Releases
                 destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
             });
 
-   * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
-   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
-   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
-   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
-   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
-   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
-   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
-   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
+  * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
+  * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
+  * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
+  * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+  * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
+  * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * All `Cartesain2`, `Cartesian3`, `Cartesian4`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
+  * Refactored `JulianDate` to be in line with other Core types.
+    * Most functions now take result parameters.
+    * The default constructor no longer creates a date at the current time, use `JulianDate.now()` instead.
+    * Removed `JulianDate.getJulianTimeFraction` and `JulianDate.compareTo`
+    * `new JulianDate()` -> `JulianDate.now()`
+    * `date.getJulianDayNumber()` -> `date.dayNumber`
+    * `date.getSecondsOfDay()` -> `secondsOfDay`
+    * `date.getTotalDays()` -> `JulianDate.getTotalDays(date)`
+    * `date.getSecondsDifference(arg1, arg2)` -> `JulianDate.getSecondsDifference(arg2, arg1)` (Note, order of arguments flipped)
+    * `date.getDaysDifference(arg1, arg2)` -> `JulianDate.getDaysDifference(arg2, arg1)` (Note, order of arguments flipped)
+    * `date.getTaiMinusUtc()` -> `JulianDate.getTaiMinusUtc(date)`
+    * `date.addSeconds(seconds)` -> `JulianDate.addSeconds(date, seconds)`
+    * `date.addMinutes(minutes)` -> `JulianDate.addMinutes(date, minutes)`
+    * `date.addHours(hours)` -> `JulianDate.addHours(date, hours)`
+    * `date.addDays(days)` -> `JulianDate.addDays(date, days)`
+    * `date.lessThan(right)` -> `JulianDate.lessThan(left, right)`
+    * `date.lessThanOrEquals (right)` -> `JulianDate.lessThanOrEquals (left, right)`
+    * `date.greaterThan (right)` -> `JulianDate.greaterThan (left, right)`
+    * `date.greaterThanOrEquals (right)` -> `JulianDate.greaterThanOrEquals (left, right)`
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
 * `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
 * Fixed support for embedded resources in glTF models.
-* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
 * `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
@@ -43,6 +64,7 @@ Beta Releases
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
+* Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * Added `Primitive.ready`.
 * Cesium can now render an unlimited number of imagery layers, no matter how few texture units are supported by the hardware.
 

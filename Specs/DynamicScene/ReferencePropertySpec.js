@@ -28,7 +28,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var time = new JulianDate();
+    var time = JulianDate.now();
 
     it('constructor sets expected values', function() {
         var collection = new DynamicObjectCollection();
@@ -76,6 +76,7 @@ defineSuite([
         var property = ReferenceProperty.fromString(collection, 'testId#billboard.scale');
         expect(property.referenceFrame).toBeUndefined();
         expect(property.isConstant).toEqual(true);
+        expect(property.resolvedProperty).toBe(testObject.billboard.scale);
         expect(property.getValue(time)).toEqual(5);
 
         var listener = jasmine.createSpy('listener');

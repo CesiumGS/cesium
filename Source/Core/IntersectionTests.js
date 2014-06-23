@@ -31,6 +31,7 @@ define([
      *
      * @param {Ray} ray The ray.
      * @param {Plane} plane The plane.
+     * @param {Cartesian3} [result] The object onto which to store the result.
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.rayPlane = function(ray, plane, result) {
@@ -42,6 +43,10 @@ define([
             throw new DeveloperError('plane is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         var origin = ray.origin;
         var direction = ray.direction;
@@ -261,6 +266,10 @@ define([
         return solutions;
     }
 
+    var firstAxisScratch = new Cartesian3();
+    var secondAxisScratch = new Cartesian3();
+    var thirdAxisScratch = new Cartesian3();
+    var referenceScratch = new Cartesian3();
     /**
      * Provides the point along the ray which is nearest to the ellipsoid.
      *
@@ -293,10 +302,10 @@ define([
         var f = ellipsoid.transformPositionToScaledSpace(direction);
 
         // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
-        var firstAxis = Cartesian3.normalize(f);
-        var reference = Cartesian3.mostOrthogonalAxis(f);
-        var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis));
-        var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis));
+        var firstAxis = Cartesian3.normalize(f, firstAxisScratch);
+        var reference = Cartesian3.mostOrthogonalAxis(f, referenceScratch);
+        var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis, secondAxisScratch), secondAxisScratch);
+        var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis, thirdAxisScratch), thirdAxisScratch);
         var B = new Matrix3(firstAxis.x, secondAxis.x, thirdAxis.x,
                             firstAxis.y, secondAxis.y, thirdAxis.y,
                             firstAxis.z, secondAxis.z, thirdAxis.z);
@@ -315,7 +324,7 @@ define([
         var b = Matrix3.multiplyByVector(temp, position);
 
         // Solve for the solutions to the expression in standard form:
-        var solutions = quadraticVectorExpression(A, Cartesian3.negate(b), 0.0, 0.0, 1.0);
+        var solutions = quadraticVectorExpression(A, Cartesian3.negate(b, firstAxisScratch), 0.0, 0.0, 1.0);
 
         var s;
         var altitude;
@@ -326,7 +335,7 @@ define([
 
             for ( var i = 0; i < length; ++i) {
                 s = Matrix3.multiplyByVector(D_I, Matrix3.multiplyByVector(B, solutions[i]));
-                var v = Cartesian3.normalize(Cartesian3.subtract(s, position));
+                var v = Cartesian3.normalize(Cartesian3.subtract(s, position, referenceScratch), referenceScratch);
                 var dotProduct = Cartesian3.dot(v, direction);
 
                 if (dotProduct > maximumValue) {
@@ -337,7 +346,7 @@ define([
 
             var surfacePoint = ellipsoid.cartesianToCartographic(closest);
             maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
-            altitude = Cartesian3.magnitude(Cartesian3.subtract(closest, position)) * Math.sqrt(1.0 - maximumValue * maximumValue);
+            altitude = Cartesian3.magnitude(Cartesian3.subtract(closest, position, referenceScratch)) * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             return ellipsoid.cartographicToCartesian(new Cartographic(surfacePoint.longitude, surfacePoint.latitude, altitude));
         }
@@ -380,6 +389,10 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
         var difference = Cartesian3.subtract(endPoint1, endPoint0, lineSegmentPlaneDifference);
         var normal = plane.normal;
         var nDotDiff = Cartesian3.dot(normal, difference);
@@ -398,9 +411,6 @@ define([
         }
 
         // intersection is endPoint0 + t * (endPoint1 - endPoint0)
-        if (!defined(result)) {
-            result = new Cartesian3();
-        }
         Cartesian3.multiplyByScalar(difference, t, result);
         Cartesian3.add(endPoint0, result, result);
         return result;

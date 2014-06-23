@@ -12,6 +12,7 @@ define([
         './Ellipsoid',
         './Iau2006XysData',
         './Iau2006XysSample',
+        './JulianDate',
         './Math',
         './Matrix3',
         './Matrix4',
@@ -29,6 +30,7 @@ define([
         Ellipsoid,
         Iau2006XysData,
         Iau2006XysSample,
+        JulianDate,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -252,6 +254,7 @@ define([
     var rateCoef = 1.1772758384668e-19;
     var wgs84WRPrecessing = 7.2921158553E-5;
     var twoPiOverSecondsInDay = CesiumMath.TWO_PI / 86400.0;
+    var dateInUtc = new JulianDate();
 
     /**
      * Computes a rotation matrix to transform a point or vector from True Equator Mean Equinox (TEME) axes to the
@@ -279,9 +282,9 @@ define([
         // We do not want to use the function like convertTaiToUtc in JulianDate because
         // we explicitly do not want to fail when inside the leap second.
 
-        var dateInUtc = date.addSeconds(-date.getTaiMinusUtc());
-        var utcDayNumber = dateInUtc.getJulianDayNumber();
-        var utcSecondsIntoDay = dateInUtc.getSecondsOfDay();
+        dateInUtc = JulianDate.addSeconds(date, -JulianDate.getTaiMinusUtc(date), dateInUtc);
+        var utcDayNumber = dateInUtc.dayNumber;
+        var utcSecondsIntoDay = dateInUtc.secondsOfDay;
 
         var t;
         var diffDays = utcDayNumber - 2451545;
@@ -361,10 +364,10 @@ define([
      * });
      */
     Transforms.preloadIcrfFixed = function(timeInterval) {
-        var startDayTT = timeInterval.start.getJulianDayNumber();
-        var startSecondTT = timeInterval.start.getSecondsOfDay() + ttMinusTai;
-        var stopDayTT = timeInterval.stop.getJulianDayNumber();
-        var stopSecondTT = timeInterval.stop.getSecondsOfDay() + ttMinusTai;
+        var startDayTT = timeInterval.start.dayNumber;
+        var startSecondTT = timeInterval.start.secondsOfDay + ttMinusTai;
+        var stopDayTT = timeInterval.stop.dayNumber;
+        var stopSecondTT = timeInterval.stop.secondsOfDay + ttMinusTai;
 
         var xysPromise = Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
         var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
@@ -454,10 +457,10 @@ define([
         // There is no external conversion to Terrestrial Time (TT).
         // So use International Atomic Time (TAI) and convert using offsets.
         // Here we are assuming that dayTT and secondTT are positive
-        var dayTT = date.getJulianDayNumber();
+        var dayTT = date.dayNumber;
         // It's possible here that secondTT could roll over 86400
         // This does not seem to affect the precision (unit tests check for this)
-        var secondTT = date.getSecondsOfDay() + ttMinusTai;
+        var secondTT = date.secondsOfDay + ttMinusTai;
 
         var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
         if (!defined(xys)) {
@@ -487,8 +490,8 @@ define([
         // Similar to TT conversions above
         // It's possible here that secondTT could roll over 86400
         // This does not seem to affect the precision (unit tests check for this)
-        var dateUt1day = date.getJulianDayNumber();
-        var dateUt1sec = date.getSecondsOfDay() - date.getTaiMinusUtc() + eop.ut1MinusUtc;
+        var dateUt1day = date.dayNumber;
+        var dateUt1sec = date.secondsOfDay - JulianDate.getTaiMinusUtc(date) + eop.ut1MinusUtc;
 
         // Compute Earth rotation angle
         // The IERS standard for era is
@@ -563,6 +566,10 @@ define([
             throw new DeveloperError('point is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         var tmp = pointToWindowCoordinatesTemp;
 

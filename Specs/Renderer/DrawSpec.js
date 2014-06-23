@@ -71,30 +71,37 @@ defineSuite([
     });
 
     it('draws a white point with an index buffer', function() {
+        // Use separate context to work around IE 11.0.9 bug
+        var cxt = createContext();
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = cxt.createShaderProgram(vs, fs);
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-        var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = cxt.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-        va = context.createVertexArray([{
+        va = cxt.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : cxt.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }], indexBuffer);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(cxt);
+        expect(cxt.readPixels()).toEqual([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        command.execute(cxt);
+        expect(cxt.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp = sp.destroy();
+        va = va.destroy();
+        destroyContext(cxt);
     });
 
     it('draws a red point with two vertex buffers', function() {

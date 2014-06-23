@@ -450,7 +450,7 @@ define([
         updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameState(this, 0.0, new JulianDate());
+        updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     };
 
@@ -518,7 +518,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {Globe}
-         * @readonly
          */
         globe : {
             get: function() {
@@ -1289,7 +1288,7 @@ define([
 
     function render(scene, time) {
         if (!defined(time)) {
-            time = new JulianDate();
+            time = JulianDate.now();
         }
 
         scene._preRender.raiseEvent(scene, time);
