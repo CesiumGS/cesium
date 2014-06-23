@@ -676,11 +676,12 @@ define([
 
         var constrainedAxis = Cartesian3.UNIT_Z;
 
+        var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
+        camera.setTransform(transform);
+
         var tangent = Cartesian3.cross(Cartesian3.UNIT_Z, Cartesian3.normalize(camera.position, rotateCVCartesian3), rotateCVCartesian3);
         var dot = Cartesian3.dot(camera.right, tangent);
 
-        var oldTransform = Matrix4.clone(camera.transform, rotateCVOldTransform);
-        camera.setTransform(transform);
         rotate3D(controller, startPosition, movement, frameState, constrainedAxis, false, true);
 
         camera.setTransform(verticalTransform);
@@ -1063,11 +1064,12 @@ define([
 
         var constrainedAxis = Cartesian3.UNIT_Z;
 
+        var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
+        camera.setTransform(transform);
+
         var tangent = Cartesian3.cross(Matrix4.getColumn(verticalTransform, 2, tilt3DNormal), Cartesian3.normalize(camera.position, tilt3DCartesian3), tilt3DCartesian3);
         var dot = Cartesian3.dot(camera.right, tangent);
 
-        var oldTransform = Matrix4.clone(camera.transform, tilt3DOldTransform);
-        camera.setTransform(transform);
         rotate3D(controller, startPosition, movement, frameState, constrainedAxis, false, true);
 
         camera.setTransform(verticalTransform);
