@@ -98,7 +98,7 @@ Beta Releases
 * Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
 * `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
 * Fixed support for embedded resources in glTF models.
-* Added 'PolylineGlowMaterialProperty' which enables data sources to use the PolylineGlow material.
+* Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Added `FrameRateMonitor` type.  It is used to monitor the frame rate achieved by a `Scene` and to raise a `lowFrameRate` event when it falls below a configurable threshold.
 * `Viewer` and `CesiumWidget` now provide more user-friendly error messages when an initialization or rendering error occurs.
@@ -108,6 +108,7 @@ Beta Releases
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
+* Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * Added `TimeIntervalCollection.isStartIncluded` and `TimeIntervalCollection.isStopIncluded`.
 
 ### b29 - 2014-06-02
