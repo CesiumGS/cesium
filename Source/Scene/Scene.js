@@ -518,7 +518,6 @@ define([
          * @memberof Scene.prototype
          *
          * @type {Globe}
-         * @readonly
          */
         globe : {
             get: function() {
