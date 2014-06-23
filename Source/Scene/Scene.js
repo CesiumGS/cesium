@@ -605,6 +605,8 @@ define([
          *
          * @type {TweenCollection}
          * @readonly
+         *
+         * @private
          */
         tweens : {
             get : function() {
