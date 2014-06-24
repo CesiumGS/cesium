@@ -1748,6 +1748,8 @@ define([
             result = pickMap2D(this, windowPosition, this._projection, result);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             result = pickMapColumbusView(this, windowPosition, this._projection, result);
+        } else {
+            return undefined;
         }
 
         return result;
