@@ -56,6 +56,7 @@ require(['Cesium'], function(Cesium) {
             camera.transform = transform;
             camera.constrainedAxis = Cesium.Cartesian3.UNIT_Z;
             var r = 1.25 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            var controller = scene.screenSpaceCameraController;
             controller.minimumZoomDistance = r * 0.25;
             camera.lookAt(new Cesium.Cartesian3(r, r, r), Cesium.Cartesian3.ZERO, Cesium.Cartesian3.UNIT_Z);
         });
