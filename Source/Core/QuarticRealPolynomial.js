@@ -20,7 +20,6 @@ define([
 
     /**
      * Provides the discriminant of the quartic equation from the supplied coefficients.
-     * @memberof QuarticRealPolynomial
      *
      * @param {Number} a The coefficient of the 4th order monomial.
      * @param {Number} b The coefficient of the 3rd order monomial.
@@ -247,7 +246,6 @@ define([
 
     /**
      * Provides the real valued roots of the quartic polynomial with the provided coefficients.
-     * @memberof QuarticRealPolynomial
      *
      * @param {Number} a The coefficient of the 4th order monomial.
      * @param {Number} b The coefficient of the 3rd order monomial.

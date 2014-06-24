@@ -9,9 +9,9 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/getTimestamp',
         '../Core/Queue',
+        '../Core/Visibility',
         './QuadtreeOccluders',
         './QuadtreeTile',
-        './QuadtreeTileLoadState',
         './SceneMode',
         './TileReplacementQueue'
     ], function(
@@ -24,9 +24,9 @@ define([
         EllipsoidalOccluder,
         getTimestamp,
         Queue,
+        Visibility,
         QuadtreeOccluders,
         QuadtreeTile,
-        QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
     "use strict";
@@ -40,6 +40,7 @@ define([
      *
      * @alias QuadtreePrimitive
      * @constructor
+     * @private
      *
      * @param {QuadtreeTileProvider} options.tileProvider The tile provider that loads, renders, and estimates
      *        the distance to individual tiles.
@@ -191,13 +192,13 @@ define([
      *        commands to this array during the update call.
      */
     QuadtreePrimitive.prototype.update = function(context, frameState, commandList) {
-        this._tileProvider.beginFrame(context, frameState, commandList);
+        this._tileProvider.beginUpdate(context, frameState, commandList);
 
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, commandList);
 
-        this._tileProvider.endFrame(context, frameState, commandList);
+        this._tileProvider.endUpdate(context, frameState, commandList);
     };
 
     /**
@@ -277,12 +278,12 @@ define([
             }
         }
 
-        var cameraPosition = frameState.camera.positionWC;
-
         var ellipsoid = primitive._tileProvider.tilingScheme.ellipsoid;
-        var cameraPositionCartographic = ellipsoid.cartesianToCartographic(cameraPosition, scratchCameraPositionCartographic);
 
-        primitive._occluders.ellipsoid.cameraPosition = cameraPosition;
+        primitive._occluders.ellipsoid.cameraPosition = frameState.camera.positionWC;
+
+        var tileProvider = primitive._tileProvider;
+        var occluders = primitive._occluders;
 
         var tile;
 
@@ -294,7 +295,7 @@ define([
             if (tile.needsLoading) {
                 queueTileLoad(primitive, tile);
             }
-            if (tile.renderable && isTileVisible(primitive, frameState, tile)) {
+            if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
                 traversalQueue.enqueue(tile);
             } else {
                 ++debug.tilesCulled;
@@ -321,7 +322,7 @@ define([
             // This one doesn't load children unless we refine to them.
             // We may want to revisit this in the future.
 
-            if (screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) < primitive.maximumScreenSpaceError) {
+            if (screenSpaceError(primitive, context, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile)) {
@@ -329,7 +330,7 @@ define([
                 var children = tile.children;
                 // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
-                    if (isTileVisible(primitive, frameState, children[i])) {
+                    if (tileProvider.computeTileVisibility(children[i], frameState, occluders) !== Visibility.NONE) {
                         traversalQueue.enqueue(children[i]);
                     } else {
                         ++debug.tilesCulled;
@@ -361,14 +362,14 @@ define([
         }
     }
 
-    function screenSpaceError(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+    function screenSpaceError(primitive, context, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
-            return screenSpaceError2D(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile);
+            return screenSpaceError2D(primitive, context, frameState, tile);
         }
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.getDistanceToTile(tile, frameState, cameraPosition, cameraPositionCartographic);
+        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
         tile._distance = distance;
 
         var height = context.drawingBufferHeight;
@@ -381,7 +382,7 @@ define([
         return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
     }
 
-    function screenSpaceError2D(primitive, context, frameState, cameraPosition, cameraPositionCartographic, tile) {
+    function screenSpaceError2D(primitive, context, frameState, tile) {
         var camera = frameState.camera;
         var frustum = camera.frustum;
         var width = context.drawingBufferWidth;
@@ -395,10 +396,6 @@ define([
     function addTileToRenderList(primitive, tile) {
         primitive._tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
-    }
-
-    function isTileVisible(primitive, frameState, tile) {
-        return primitive._tileProvider.isTileVisible(tile, frameState, primitive._occluders);
     }
 
     function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, frameState, tile) {
@@ -470,7 +467,7 @@ define([
         tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
-            tileProvider.renderTile(tilesToRender[i], context, frameState, commandList);
+            tileProvider.showTileThisFrame(tilesToRender[i], context, frameState, commandList);
         }
     }
 

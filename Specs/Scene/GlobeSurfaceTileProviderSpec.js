@@ -9,13 +9,16 @@ defineSuite([
         'Core/Rectangle',
         'Core/TerrainProvider',
         'Core/WebMercatorProjection',
+        'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
         'Scene/ImageryLayerCollection',
         'Scene/OrthographicFrustum',
+        'Scene/QuadtreeTile',
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
+        'Scene/terrainAttributeLocations',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -31,13 +34,16 @@ defineSuite([
         Rectangle,
         TerrainProvider,
         WebMercatorProjection,
+        BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
         ImageryLayerCollection,
         OrthographicFrustum,
+        QuadtreeTile,
         QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
+        terrainAttributeLocations,
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
@@ -89,8 +95,8 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.update(frameState.mode, frameState.scene2D);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.scene2D.projection);
+        frameState.camera.update(frameState.mode);
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.mapProjection);
     }
 
     beforeAll(function() {
@@ -120,7 +126,7 @@ defineSuite([
             function constructWithoutTerrainProvider() {
                 return new GlobeSurfaceTileProvider({
                     imageryLayers : new ImageryLayerCollection(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
                 });
             }
             expect(constructWithoutTerrainProvider).toThrowDeveloperError();
@@ -130,7 +136,7 @@ defineSuite([
             function constructWithoutImageryLayerCollection() {
                 return new GlobeSurfaceTileProvider({
                     terrainProvider : new EllipsoidTerrainProvider(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(TerrainProvider.attributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
@@ -271,7 +277,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
-        frameState.scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
+        frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         updateUntilDone(globe);
 
@@ -286,7 +292,7 @@ defineSuite([
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
         switchTo2D();
-        frameState.scene2D.projection = new WebMercatorProjection(Ellipsoid.WGS84);
+        frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         updateUntilDone(globe);
 
@@ -300,7 +306,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(globe);
@@ -315,7 +321,7 @@ defineSuite([
         layerCollection.removeAll();
         layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
 
-        frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+        frameState.camera.update(SceneMode.COLUMBUS_VIEW);
         frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
 
         updateUntilDone(globe);
@@ -351,7 +357,7 @@ defineSuite([
         runs(function() {
             expect(render(context, frameState, globe)).toBeGreaterThan(0);
 
-            frameState.camera.update(SceneMode.COLUMBUS_VIEW, { projection : new GeographicProjection(Ellipsoid.WGS84) });
+            frameState.camera.update(SceneMode.COLUMBUS_VIEW);
             frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
         });
 
@@ -512,6 +518,61 @@ defineSuite([
             }
 
             expect(tileCommandCount).toBeGreaterThan(0);
+        });
+    });
+
+    it('can render more imagery layers than the available texture units', function() {
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+
+        for (var i = 0; i < context.maximumTextureImageUnits + 1; ++i) {
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({url : 'Data/Images/Red16x16.png'}));
+        }
+
+        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+
+        updateUntilDone(globe);
+
+        runs(function() {
+            var commandList = [];
+            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+
+            var renderStateWithAlphaBlending = context.createRenderState({
+                blending : BlendingState.ALPHA_BLEND
+            });
+
+            var drawCommandsPerTile = {};
+
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
+
+                if (command.owner instanceof QuadtreeTile) {
+                    var tile = command.owner;
+                    var key = 'L' + tile.level + 'X' + tile.x + 'Y' + tile.y;
+                    if (!defined(drawCommandsPerTile[key])) {
+                        drawCommandsPerTile[key] = 0;
+
+                        // The first draw command for each tile should use a non-alpha-blending render state.
+                        expect(command.renderState.blending).not.toEqual(renderStateWithAlphaBlending.blending);
+                    } else {
+                        // Successive draw commands per tile should alpha blend.
+                        expect(command.renderState.blending).toEqual(renderStateWithAlphaBlending.blending);
+                        expect(command.uniformMap.u_initialColor().w).toEqual(0.0);
+                    }
+
+                    ++drawCommandsPerTile[key];
+                }
+            }
+
+            var tileCount = 0;
+            for (var tileID in drawCommandsPerTile) {
+                if (drawCommandsPerTile.hasOwnProperty(tileID)) {
+                    ++tileCount;
+                    expect(drawCommandsPerTile[tileID]).toBeGreaterThanOrEqualTo(2);
+                }
+            }
+
+            expect(tileCount).toBeGreaterThanOrEqualTo(1);
         });
     });
 

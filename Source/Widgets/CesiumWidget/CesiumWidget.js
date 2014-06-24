@@ -98,22 +98,25 @@ define([
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {Object} [options] Configuration options for the widget.
+     * @param {Object} [options] Object with the following properties:
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SkyBox} [options.skyBox] The skybox used to render the stars.  When <code>undefined</code>, the default stars are used.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
+     * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
+     *        to the bottom of the widget itself.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
-     * // and in the body, include: &lt;div id="cesiumContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: <div id="cesiumContainer"></div>
      *
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
@@ -135,7 +138,10 @@ define([
      *           positiveZ : 'stars/TychoSkymapII.t3_08192x04096_80_pz.jpg',
      *           negativeZ : 'stars/TychoSkymapII.t3_08192x04096_80_mz.jpg'
      *         }
-     *     })
+     *     }),
+     *     // Show Columbus View map with Web Mercator projection
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+     *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      */
     var CesiumWidget = function(container, options) {
@@ -168,9 +174,16 @@ define([
 
             var creditContainer = document.createElement('div');
             creditContainer.className = 'cesium-widget-credits';
-            widgetNode.appendChild(creditContainer);
 
-            var scene = new Scene(canvas, options.contextOptions, creditContainer);
+            var creditContainerContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : widgetNode;
+            creditContainerContainer.appendChild(creditContainer);
+
+            var scene = new Scene({
+                canvas : canvas,
+                contextOptions : options.contextOptions,
+                creditContainer : creditContainer,
+                mapProjection : options.mapProjection
+            });
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
             var ellipsoid = Ellipsoid.WGS84;
@@ -236,7 +249,7 @@ define([
             this._lastFrameTime = undefined;
             this._targetFrameRate = undefined;
 
-            if (options.sceneMode) {
+            if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
                     this._scene.morphTo2D(0);
                 }
@@ -254,14 +267,14 @@ define([
                 that._renderLoopRunning = false;
                 if (that._showRenderLoopErrors) {
                     var title = 'An error occurred while rendering.  Rendering has stopped.';
-                    var message = formatError(error);
-                    that.showErrorPanel(title, message);
-                    console.error(title + ' ' + message);
+                    var message = 'This may indicate an incompatibility with your hardware or web browser, or it may indicate a bug in the application.  Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
+                    that.showErrorPanel(title, message, error);
                 }
             });
         } catch (error) {
-            var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
-            this.showErrorPanel(title, error);
+            var title = 'Error constructing CesiumWidget.';
+            var message = 'Visit <a href="http://get.webgl.org">http://get.webgl.org</a> to verify that your web browser and hardware support WebGL.  Consider trying a different web browser or updating your video drivers.  Detailed error information is below:';
+            this.showErrorPanel(title, message, error);
             throw error;
         }
     };
@@ -420,12 +433,11 @@ define([
      * when a render loop error occurs, if showRenderLoopErrors was not false when the
      * widget was constructed.
      *
-     * @memberof CesiumWidget
-     *
-     * @param {String} title The title to be displayed on the error panel.
-     * @param {String} error The error to be displayed on the error panel.  Optional.
+     * @param {String} title The title to be displayed on the error panel.  This string is interpreted as text.
+     * @param {String} message A helpful, user-facing message to display prior to the detailed error information.  This string is interpreted as HTML.
+     * @param {String} [error] The error to be displayed on the error panel.  This string is formatted using {@link formatError} and then displayed as text.
      */
-    CesiumWidget.prototype.showErrorPanel = function(title, error) {
+    CesiumWidget.prototype.showErrorPanel = function(title, message, error) {
         var element = this._element;
         var overlay = document.createElement('div');
         overlay.className = 'cesium-widget-errorPanel';
@@ -439,24 +451,31 @@ define([
         errorHeader.appendChild(document.createTextNode(title));
         content.appendChild(errorHeader);
 
-        var resizeCallback;
-        if (defined(error)) {
-            var errorPanelScroller = document.createElement('div');
-            errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
-            content.appendChild(errorPanelScroller);
-            resizeCallback = function() {
-                errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
-            };
-            resizeCallback();
-            if (defined(window.addEventListener)) {
-                window.addEventListener('resize', resizeCallback, false);
-            }
-
-            var errorMessage = document.createElement('div');
-            errorMessage.className = 'cesium-widget-errorPanel-message';
-            errorMessage.appendChild(document.createTextNode(error));
-            errorPanelScroller.appendChild(errorMessage);
+        var errorPanelScroller = document.createElement('div');
+        errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
+        content.appendChild(errorPanelScroller);
+        var resizeCallback = function() {
+            errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
+        };
+        resizeCallback();
+        if (defined(window.addEventListener)) {
+            window.addEventListener('resize', resizeCallback, false);
         }
+
+        var errorMessage = document.createElement('div');
+        errorMessage.className = 'cesium-widget-errorPanel-message';
+        errorMessage.innerHTML = '<p>' + message + '</p>';
+        errorPanelScroller.appendChild(errorMessage);
+
+        var errorDetails = '(no error details available)';
+        if (defined(error)) {
+            errorDetails = formatError(error);
+        }
+
+        var errorMessageDetails = document.createElement('div');
+        errorMessageDetails.className = 'cesium-widget-errorPanel-message';
+        errorMessageDetails.appendChild(document.createTextNode(errorDetails));
+        errorPanelScroller.appendChild(errorMessageDetails);
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
@@ -476,10 +495,11 @@ define([
         buttonPanel.appendChild(okButton);
 
         element.appendChild(overlay);
+
+        console.error(title + '\n' + message + '\n' + errorDetails);
     };
 
     /**
-     * @memberof CesiumWidget
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {
@@ -489,7 +509,6 @@ define([
     /**
      * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.destroy = function() {
         this._scene = this._scene && this._scene.destroy();
@@ -501,7 +520,6 @@ define([
      * Updates the canvas size, camera aspect ratio, and viewport size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
@@ -540,7 +558,6 @@ define([
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
         this._scene.initializeFrame();

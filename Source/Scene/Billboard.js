@@ -82,7 +82,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._position = Cartesian3.clone(defaultValue(options.position, Cartesian3.ZERO));
         this._actualPosition = Cartesian3.clone(this._position); // For columbus view and 2D
-        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
+        this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO), new Cartesian2());
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
@@ -226,6 +226,7 @@ define([
          * scaleByDistance will be disabled.
          * @memberof Billboard.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a billboard's scaleByDistance to scale by 1.5 when the
@@ -233,6 +234,7 @@ define([
          * // the camera distance approaches 8.0e6 meters.
          * b.scaleByDistance = new Cesium.NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0);
          *
+         * @example
          * // Example 2.
          * // disable scaling by distance
          * b.scaleByDistance = undefined;
@@ -266,6 +268,7 @@ define([
          * translucencyByDistance will be disabled.
          * @memberof Billboard.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a billboard's translucency to 1.0 when the
@@ -273,6 +276,7 @@ define([
          * // the camera distance approaches 8.0e6 meters.
          * b.translucencyByDistance = new Cesium.NearFarScalar(1.5e2, 1.0, 8.0e6, 0.0);
          *
+         * @example
          * // Example 2.
          * // disable translucency by distance
          * b.translucencyByDistance = undefined;
@@ -306,6 +310,7 @@ define([
          * pixelOffsetScaleByDistance will be disabled.
          * @memberof Billboard.prototype
          * @type {NearFarScalar}
+         *
          * @example
          * // Example 1.
          * // Set a billboard's pixel offset scale to 0.0 when the
@@ -314,6 +319,7 @@ define([
          * b.pixelOffset = new Cesium.Cartesian2(0.0, 1.0);
          * b.pixelOffsetScaleByDistance = new Cesium.NearFarScalar(1.5e2, 0.0, 8.0e6, 10.0);
          *
+         * @example
          * // Example 2.
          * // disable pixel offset by distance
          * b.pixelOffsetScaleByDistance = undefined;
@@ -517,10 +523,12 @@ define([
          * (no intensity) to <code>1.0</code> (full intensity).
          * @memberof Billboard.prototype
          * @param {Color}
+         *
          * @example
          * // Example 1. Assign yellow.
          * b.color = Cesium.Color.YELLOW;
          *
+         * @example
          * // Example 2. Make a billboard 50% translucent.
          * b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
          */
@@ -576,11 +584,13 @@ define([
          * // Have the billboard up vector point north
          * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
          *
+         * @example
          * // Example 2.
          * // Have the billboard point east.
          * billboard.alignedAxis = Cartesian3.UNIT_Z;
          * billboard.rotation = -Cesium.Math.PI_OVER_TWO;
          *
+         * @example
          * // Example 3.
          * // Reset the aligned axis
          * billboard.alignedAxis = Cesium.Cartesian3.ZERO;
@@ -657,6 +667,7 @@ define([
 
         /**
          * The primitive to return when picking this billboard.
+         * @memberof Billboard.prototype
          * @private
          */
         pickPrimitive : {
@@ -756,10 +767,7 @@ define([
      * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
      * left to right, and <code>y</code> increases from bottom to top.
      *
-     * @memberof Billboard
-     *
      * @param {Scene} scene The scene.
-     *
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
@@ -794,10 +802,7 @@ define([
      * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
      * are equal.  Billboards in different collections can be equal.
      *
-     * @memberof Billboard
-     *
      * @param {Billboard} other The billboard to compare for equality.
-     *
      * @returns {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
      */
     Billboard.prototype.equals = function(other) {

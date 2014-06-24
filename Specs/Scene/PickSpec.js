@@ -56,7 +56,7 @@ defineSuite([
         camera.frustum.aspectRatio = 1.0;
 
         scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
     });
 
     afterEach(function() {
@@ -81,7 +81,7 @@ defineSuite([
     it('pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('is picked', function() {
@@ -118,7 +118,7 @@ defineSuite([
     it('drill pick (undefined window position)', function() {
         expect(function() {
             scene.pick(undefined);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('drill pick (all picked)', function() {
@@ -155,11 +155,11 @@ defineSuite([
     });
 
     it('pick in 2D', function() {
-        var ellipsoid = scene.scene2D.projection.ellipsoid;
+        var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
 
         var frustum = new OrthographicFrustum();
@@ -177,7 +177,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
@@ -185,12 +185,12 @@ defineSuite([
     });
 
     it('pick in 2D when rotated', function() {
-        var ellipsoid = scene.scene2D.projection.ellipsoid;
+        var ellipsoid = scene.mapProjection.ellipsoid;
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.up = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
+        camera.up = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
 
         var frustum = new OrthographicFrustum();
         frustum.right = maxRadii * Math.PI;
@@ -207,7 +207,7 @@ defineSuite([
                                        0.0, 0.0, 0.0, 1.0);
 
         scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = scene.mode.morphTime;
+        scene.morphTime = SceneMode.getMorphTime(scene.mode);
 
         var rectangle = createRectangle();
         var pickedObject = scene.pick(new Cartesian2(0, 0));

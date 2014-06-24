@@ -49,6 +49,7 @@ define([
      * @alias CesiumTerrainProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the Cesium terrain server.
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -122,7 +123,7 @@ define([
                         isBigEndian : false
                     };
                 that._hasWaterMask = true;
-            } else if (data.format === 'quantized-mesh-1.0') {
+            } else if (data.format.indexOf('quantized-mesh-1.') === 0) {
                 that._hasWaterMask = false;
             } else {
                 message = 'The tile format "' + data.format + '" is invalid or not supported.';
@@ -323,8 +324,6 @@ define([
      * {@link CesiumTerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
      *
-     * @memberof CesiumTerrainProvider
-     *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
@@ -371,7 +370,7 @@ define([
                 return undefined;
             }
         } else {
-            promise = loadArrayBuffer(url);
+            promise = loadTile(url);
         }
 
         var that = this;
@@ -449,8 +448,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.
      *
-     * @memberof CesiumTerrainProvider
-     *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error.
      */
@@ -462,8 +459,6 @@ define([
      * Gets a value indicating whether or not the provider includes a water mask.  The water mask
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.
-     *
-     * @memberof CesiumTerrainProvider
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.
      *

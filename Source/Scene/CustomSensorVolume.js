@@ -123,8 +123,6 @@ define([
          * coordinates, the sensor's principal direction is along the positive z-axis.  The clock angle, sometimes
          * called azimuth, is the angle in the sensor's X-Y plane measured from the positive X-axis toward the positive
          * Y-axis.  The cone angle, sometimes called elevation, is the angle out of the X-Y plane along the positive Z-axis.
-         * This matrix is available to GLSL vertex and fragment shaders via
-         * {@link czm_model} and derived uniforms.
          * <br /><br />
          * <div align='center'>
          * <img src='images/CustomSensorVolume.setModelMatrix.png' /><br />
@@ -133,8 +131,6 @@ define([
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
-         *
-         * @see czm_model
          *
          * @example
          * // The sensor's vertex is located on the surface at -75.59777 degrees longitude and 40.03883 degrees latitude.
@@ -167,14 +163,14 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
+         *
          * @example
          * // 1. Change the color of the default material to yellow
          * sensor.material.uniforms.color = new Cesium.Color(1.0, 1.0, 0.0, 1.0);
          *
          * // 2. Change material to horizontal stripes
          * sensor.material = Cesium.Material.fromType(Material.StripeType);
-         *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defined(options.material) ? options.material : Material.fromType(Material.ColorType);
         this._material = undefined;
@@ -240,8 +236,6 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof CustomSensorVolume
-     *
      * @see CustomSensorVolume#getDirections
      */
     CustomSensorVolume.prototype.setDirections = function(directions) {
@@ -252,14 +246,15 @@ define([
     /**
      * DOC_TBA
      *
-     * @memberof CustomSensorVolume
-     *
      * @see CustomSensorVolume#setDirections
      */
     CustomSensorVolume.prototype.getDirections = function() {
         return this._directions;
     };
 
+    var n0Scratch = new Cartesian3();
+    var n1Scratch = new Cartesian3();
+    var n2Scratch = new Cartesian3();
     function computePositions(customSensorVolume) {
         var directions = customSensorVolume._directions;
         var length = directions.length;
@@ -270,14 +265,14 @@ define([
 
         for ( var i = length - 2, j = length - 1, k = 0; k < length; i = j++, j = k++) {
             // PERFORMANCE_IDEA:  We can avoid redundant operations for adjacent edges.
-            var n0 = Cartesian3.fromSpherical(directions[i]);
-            var n1 = Cartesian3.fromSpherical(directions[j]);
-            var n2 = Cartesian3.fromSpherical(directions[k]);
+            var n0 = Cartesian3.fromSpherical(directions[i], n0Scratch);
+            var n1 = Cartesian3.fromSpherical(directions[j], n1Scratch);
+            var n2 = Cartesian3.fromSpherical(directions[k], n2Scratch);
 
             // Extend position so the volume encompasses the sensor's radius.
             var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
-            var p = Cartesian3.multiplyByScalar(n1, distance);
+            var p = Cartesian3.multiplyByScalar(n1, distance, new Cartesian3());
 
             positions[(j * 3)] = p.x;
             positions[(j * 3) + 1] = p.y;
@@ -291,6 +286,7 @@ define([
         return positions;
     }
 
+    var nScratch = new Cartesian3();
     function createVertexArray(customSensorVolume, context) {
         var positions = computePositions(customSensorVolume);
 
@@ -301,7 +297,7 @@ define([
         for ( var i = length - 1, j = 0; j < length; i = j++) {
             var p0 = new Cartesian3(positions[(i * 3)], positions[(i * 3) + 1], positions[(i * 3) + 2]);
             var p1 = new Cartesian3(positions[(j * 3)], positions[(j * 3) + 1], positions[(j * 3) + 2]);
-            var n = Cartesian3.normalize(Cartesian3.cross(p1, p0)); // Per-face normals
+            var n = Cartesian3.normalize(Cartesian3.cross(p1, p0, nScratch), nScratch); // Per-face normals
 
             vertices[k++] = 0.0; // Sensor vertex
             vertices[k++] = 0.0;
@@ -348,9 +344,12 @@ define([
     }
 
     /**
-     * DOC_TBA
-     *
-     * @memberof CustomSensorVolume
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
      *
      * @exception {DeveloperError} this.radius must be greater than or equal to zero.
      * @exception {DeveloperError} this.material must be defined.
@@ -547,7 +546,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.isDestroyed = function() {
         return false;
@@ -555,7 +553,6 @@ define([
 
     /**
      * DOC_TBA
-     * @memberof CustomSensorVolume
      */
     CustomSensorVolume.prototype.destroy = function() {
         this._frontFaceColorCommand.vertexArray = this._frontFaceColorCommand.vertexArray && this._frontFaceColorCommand.vertexArray.destroy();

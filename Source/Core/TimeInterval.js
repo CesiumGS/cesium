@@ -35,7 +35,7 @@ define([
      *
      * @example
      * // Construct an Timeinterval closed on one end with a Color payload.
-     * var interval = new Cesium.TimeInterval(Cesium.JulianDate.fromTotalDays(1000), Cesium.JulianDate.fromTotalDays(1001), true, false, Cesium.Color.WHITE);
+     * var interval = new Cesium.TimeInterval(Cesium.new JulianDate(1000), Cesium.new JulianDate(1001), true, false, Cesium.Color.WHITE);
      */
     var TimeInterval = function(start, stop, isStartIncluded, isStopIncluded, data) {
         //>>includeStart('debug', pragmas.debug);
@@ -86,13 +86,10 @@ define([
     /**
      * Creates an immutable TimeInterval from an ISO 8601 interval string.
      *
-     * @memberof TimeInterval
-     *
      * @param {String} iso8601String A valid ISO8601 interval.
      * @param {Boolean} [isStartIncluded=true] <code>true</code> if the start date is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
      * @param {Object} [data] The data associated with this interval.
-     *
      * @returns {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
      *
      * @see TimeInterval
@@ -114,12 +111,10 @@ define([
     /**
      * Compares the provided TimeIntervals and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [left] The first interval.
      * @param {TimeInterval} [right] The second interval.
-     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
+     * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     TimeInterval.equals = function(left, right, dataComparer) {
@@ -139,13 +134,11 @@ define([
      * Compares the provided TimeIntervals componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [left] The first TimeInterval.
      * @param {TimeInterval} [right] The second TimeInterval.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      */
     TimeInterval.equalsEpsilon = function(left, right, epsilon, dataComparer) {
@@ -171,8 +164,6 @@ define([
      * Creates a copy of this TimeInterval.
      *
      * @returns A new TimeInterval that is equal to this interval.
-     *
-     * @memberof TimeInterval
      */
     TimeInterval.prototype.clone = function() {
         return new TimeInterval(this.start, this.stop, this.isStartIncluded, this.isStopIncluded, this.data);
@@ -181,7 +172,8 @@ define([
     /**
      * An empty interval.
      *
-     * @memberof TimeInterval
+     * @type {TimeInterval}
+     * @constant
      */
     TimeInterval.EMPTY = freezeObject(new TimeInterval(new JulianDate(0, 0, TimeStandard.TAI), new JulianDate(0, 0, TimeStandard.TAI), false, false));
 
@@ -217,7 +209,7 @@ define([
         var isStartIncluded;
         var isStopIncluded;
 
-        if (otherStart.greaterThanOrEquals(thisStart) && thisStop.greaterThanOrEquals(otherStart)) {
+        if (JulianDate.greaterThanOrEquals(otherStart, thisStart) && JulianDate.greaterThanOrEquals(thisStop, otherStart)) {
 
             isStartIncluded = (!JulianDate.equals(otherStart, thisStart) && otherIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
@@ -225,7 +217,7 @@ define([
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
 
-            if (thisStop.greaterThanOrEquals(otherStop)) {
+            if (JulianDate.greaterThanOrEquals(thisStop, otherStop)) {
                 isStopIncluded = isStopIncluded || (!JulianDate.equals(otherStop, thisStop) && otherIsStopIncluded);
                 return new TimeInterval(otherStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
@@ -234,14 +226,14 @@ define([
             return new TimeInterval(otherStart, thisStop, isStartIncluded, isStopIncluded, outputData);
         }
 
-        if (otherStart.lessThanOrEquals(thisStart) && thisStart.lessThanOrEquals(otherStop)) {
+        if (JulianDate.lessThanOrEquals(otherStart, thisStart) && JulianDate.lessThanOrEquals(thisStart, otherStop)) {
 
             isStartIncluded = (JulianDate.equals(otherStart, thisStart) === false && thisIsStartIncluded) || (thisIsStartIncluded && otherIsStartIncluded);
 
             isStopIncluded = thisIsStopIncluded && otherIsStopIncluded;
 
             outputData = defined(mergeCallback) ? mergeCallback(this.data, other.data) : this.data;
-            if (thisStop.greaterThanOrEquals(otherStop)) {
+            if (JulianDate.greaterThanOrEquals(thisStop, otherStop)) {
                 isStopIncluded = isStopIncluded || (JulianDate.equals(otherStop, thisStop) === false && otherIsStopIncluded);
                 return new TimeInterval(thisStart, otherStop, isStartIncluded, isStopIncluded, outputData);
             }
@@ -256,10 +248,7 @@ define([
     /**
      * Returns <code>true</code> if this interval contains the specified date.
      *
-     * @memberof TimeInterval
-     *
      * @param {JulianDate} date The date to check for.
-     *
      * @returns {Boolean} <code>true</code> if the TimeInterval contains the specified date, <code>false</code> otherwise.
      */
     TimeInterval.prototype.contains = function(date) {
@@ -286,11 +275,9 @@ define([
     /**
      * Compares this TimeInterval against the provided TimeInterval componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equals = function(other, dataComparer) {
@@ -301,12 +288,10 @@ define([
      * Compares this TimeInterval against the provided TimeInterval componentwise and returns
      * <code>true</code> if they are within the provided epsilon,
      * <code>false</code> otherwise.
-     * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
      * @param {Function} [dataComparer] A function which compares the data of the two intervals.  If ommitted, reference equality is used.
-     *
      * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equalsEpsilon = function(other, epsilon, dataComparer) {

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Clock',
         'Core/EllipsoidTerrainProvider',
         'Core/ScreenSpaceEventHandler',
+        'Core/WebMercatorProjection',
         'Scene/Scene',
         'Scene/SceneMode',
         'Scene/SkyBox',
@@ -14,6 +15,7 @@ defineSuite([
         Clock,
         EllipsoidTerrainProvider,
         ScreenSpaceEventHandler,
+        WebMercatorProjection,
         Scene,
         SceneMode,
         SkyBox,
@@ -73,6 +75,15 @@ defineSuite([
         });
         widget.scene.completeMorph();
         expect(widget.scene.mode).toBe(SceneMode.SCENE2D);
+    });
+
+    it('can set map projection', function() {
+        var mapProjection = new WebMercatorProjection();
+
+        widget = new CesiumWidget(container, {
+            mapProjection : mapProjection
+        });
+        expect(widget.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set scene mode Columbus', function() {
@@ -146,7 +157,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -230,7 +241,17 @@ defineSuite([
 
         runs(function() {
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
-            expect(widget._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            var messages = widget._element.querySelectorAll('.cesium-widget-errorPanel-message');
+
+            var found = false;
+            for (var i = 0; i < messages.length; ++i) {
+                if (messages[i].textContent === error) {
+                    found = true;
+                }
+            }
+
+            expect(found).toBe(true);
 
             // click the OK button to dismiss the panel
             EventHelper.fireClick(widget._element.querySelector('.cesium-button'));

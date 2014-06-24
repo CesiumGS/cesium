@@ -10,6 +10,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PixelFormat',
@@ -34,6 +35,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        IndexDatatype,
         CesiumMath,
         Matrix4,
         PixelFormat,
@@ -56,10 +58,10 @@ define([
      * @alias Sun
      * @constructor
      *
+     * @see Scene.sun
+     *
      * @example
      * scene.sun = new Cesium.Sun();
-     *
-     * @see Scene.sun
      */
     var Sun = function() {
         /**
@@ -71,7 +73,7 @@ define([
         this.show = true;
 
         this._command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             boundingVolume : new BoundingSphere(),
             owner : this
         });
@@ -233,7 +235,9 @@ define([
                 normalize : true,
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE
             }];
-            command.vertexArray = context.createVertexArray(attributes);
+            // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+            var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 1, 2, 0, 2, 3]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            command.vertexArray = context.createVertexArray(attributes, indexBuffer);
             command.shaderProgram = context.createShaderProgram(SunVS, SunFS, attributeLocations);
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
@@ -291,8 +295,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Sun
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Sun#destroy
@@ -308,8 +310,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof Sun
      *
      * @returns {undefined}
      *

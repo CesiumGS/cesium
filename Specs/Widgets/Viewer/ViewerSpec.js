@@ -5,6 +5,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/EllipsoidTerrainProvider',
         'Core/JulianDate',
+        'Core/WebMercatorProjection',
         'DynamicScene/DataSourceCollection',
         'DynamicScene/DataSourceDisplay',
         'DynamicScene/DynamicClock',
@@ -26,6 +27,7 @@ defineSuite([
         ClockStep,
         EllipsoidTerrainProvider,
         JulianDate,
+        WebMercatorProjection,
         DataSourceCollection,
         DataSourceDisplay,
         DynamicClock,
@@ -286,7 +288,7 @@ defineSuite([
             depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
-            premultipliedAlpha : false,
+            premultipliedAlpha : true, // Workaround IE 11.0.8, which does not honor false.
             preserveDrawingBuffer : true
         };
         var contextOptions = {
@@ -316,6 +318,15 @@ defineSuite([
         });
         viewer.scene.completeMorph();
         expect(viewer.scene.mode).toBe(SceneMode.SCENE2D);
+    });
+
+    it('can set map projection', function() {
+        var mapProjection = new WebMercatorProjection();
+
+        viewer = new Viewer(container, {
+            mapProjection : mapProjection
+        });
+        expect(viewer.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set selectedImageryProviderViewModel', function() {
@@ -360,6 +371,14 @@ defineSuite([
             targetFrameRate : 23
         });
         expect(viewer.targetFrameRate).toBe(23);
+    });
+
+    it('can set dataSources at construction', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        expect(viewer.dataSources).toBe(collection);
     });
 
     it('throws if targetFrameRate less than 0', function() {
@@ -579,7 +598,17 @@ defineSuite([
 
         runs(function() {
             expect(viewer._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
-            expect(viewer._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            var messages = viewer._element.querySelectorAll('.cesium-widget-errorPanel-message');
+
+            var found = false;
+            for (var i = 0; i < messages.length; ++i) {
+                if (messages[i].textContent === error) {
+                    found = true;
+                }
+            }
+
+            expect(found).toBe(true);
 
             // click the OK button to dismiss the panel
             EventHelper.fireClick(viewer._element.querySelector('.cesium-button'));

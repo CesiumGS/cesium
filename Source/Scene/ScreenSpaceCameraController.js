@@ -237,7 +237,7 @@ define([
         this._lastInertiaWheelZoomMovement = undefined;
         this._lastInertiaTiltMovement = undefined;
 
-        this._animationCollection = new AnimationCollection();
+        this._animations = new AnimationCollection();
         this._animation = undefined;
 
         this._horizontalRotationAxis = undefined;
@@ -328,19 +328,19 @@ define([
                 movementState.motion.x = (lastMovement.endPosition.x - lastMovement.startPosition.x) * 0.5;
                 movementState.motion.y = (lastMovement.endPosition.y - lastMovement.startPosition.y) * 0.5;
 
-                Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
+                movementState.startPosition = Cartesian2.clone(lastMovement.startPosition, movementState.startPosition);
 
-                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
-                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+                movementState.endPosition = Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                movementState.endPosition = Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
 
                 movementState.active = true;
             } else {
-                Cartesian2.clone(movementState.endPosition, movementState.startPosition);
+                movementState.startPosition = Cartesian2.clone(movementState.endPosition, movementState.startPosition);
 
-                Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
-                Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
+                movementState.endPosition = Cartesian2.multiplyByScalar(movementState.motion, d, movementState.endPosition);
+                movementState.endPosition = Cartesian2.add(movementState.startPosition, movementState.endPosition, movementState.endPosition);
 
-                Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
+                movementState.motion = Cartesian3.clone(Cartesian2.ZERO, movementState.motion);
             }
 
             // If value from the decreasing exponential function is close to zero,
@@ -471,18 +471,18 @@ define([
         var start = twist2DStart;
         start.x = (2.0 / width) * movement.startPosition.x - 1.0;
         start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-        Cartesian2.normalize(start, start);
+        start = Cartesian2.normalize(start, start);
 
         var end = twist2DEnd;
         end.x = (2.0 / width) * movement.endPosition.x - 1.0;
         end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-        Cartesian2.normalize(end, end);
+        end = Cartesian2.normalize(end, end);
 
-        var startTheta = Math.acos(start.x);
+        var startTheta = CesiumMath.acosClamped(start.x);
         if (start.y < 0) {
             startTheta = CesiumMath.TWO_PI - startTheta;
         }
-        var endTheta = Math.acos(end.x);
+        var endTheta = CesiumMath.acosClamped(end.x);
         if (end.y < 0) {
             endTheta = CesiumMath.TWO_PI - endTheta;
         }
@@ -511,8 +511,9 @@ define([
     }
 
     function update2D(controller) {
+        var animations = controller._animations;
         if (controller._aggregator.anyButtonDown()) {
-            controller._animationCollection.removeAll();
+            animations.removeAll();
         }
 
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
@@ -527,14 +528,14 @@ define([
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !controller._animationCollection.contains(controller._animation)) {
+                !animations.contains(controller._animation)) {
             var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
             if (defined(animation)) {
-                controller._animation = controller._animationCollection.add(animation);
+                controller._animation = animations.add(animation);
             }
         }
 
-        controller._animationCollection.update();
+        animations.update();
     }
 
     var translateCVStartRay = new Ray();
@@ -634,11 +635,13 @@ define([
 
     function updateCV(controller) {
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
-                reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
+            var animations = controller._animations;
+
             if (controller._aggregator.anyButtonDown()) {
-                controller._animationCollection.removeAll();
+                animations.removeAll();
             }
 
             reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
@@ -648,14 +651,14 @@ define([
 
             if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                    !controller._animationCollection.contains(controller._animation)) {
+                    !animations.contains(controller._animation)) {
                 var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
                 if (defined(animation)) {
-                    controller._animation = controller._animationCollection.add(animation);
+                    controller._animation = animations.add(animation);
                 }
             }
 
-            controller._animationCollection.update();
+            animations.update();
         }
     }
 
@@ -759,6 +762,7 @@ define([
     var pan3DTemp1 = new Cartesian3();
     var pan3DTemp2 = new Cartesian3();
     var pan3DTemp3 = new Cartesian3();
+    var basis1Scratch = new Cartesian3();
     function pan3D(controller, movement) {
         var camera = controller._camera;
         var p0 = camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, pan3DP0);
@@ -784,7 +788,7 @@ define([
             }
         } else {
             var basis0 = camera.constrainedAxis;
-            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0);
+            var basis1 = Cartesian3.mostOrthogonalAxis(basis0, pan3DTemp0, basis1Scratch);
             Cartesian3.cross(basis1, basis0, basis1);
             Cartesian3.normalize(basis1, basis1);
             var basis2 = Cartesian3.cross(basis0, basis1, pan3DTemp1);
@@ -985,8 +989,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof ScreenSpaceCameraController
-     *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see ScreenSpaceCameraController#destroy
@@ -1002,8 +1004,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof ScreenSpaceCameraController
-     *
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -1014,7 +1014,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
-        this._animationCollection.removeAll();
+        this._animations.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();

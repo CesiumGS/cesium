@@ -17,6 +17,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/TerrainProvider',
+        '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -47,6 +48,7 @@ define([
         PrimitiveType,
         Rectangle,
         TerrainProvider,
+        Visibility,
         WebMercatorProjection,
         BufferUsage,
         DrawCommand,
@@ -98,6 +100,7 @@ define([
         this._imageryLayers = options.imageryLayers;
         this._surfaceShaderSet = options.surfaceShaderSet;
         this._renderState = undefined;
+        this._blendRenderState = undefined;
 
         this._errorEvent = new Event();
 
@@ -136,6 +139,7 @@ define([
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
+                //>>includeEnd('debug');
 
                 this._quadtree = value;
             }
@@ -207,17 +211,15 @@ define([
     });
 
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#renderTile}
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
-     * @memberof GlobeSurfaceTileProvider
-     * @function
      *
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.beginFrame = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(context, frameState, commandList) {
         function sortTileImageryByLayerIndex(a, b) {
             var aImagery = a.loadingImagery;
             if (!defined(aImagery)) {
@@ -255,17 +257,15 @@ define([
     };
 
     /**
-     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#renderTile}
+     * Called at the end of the update cycle for each render frame, after {@link QuadtreeTileProvider#showTileThisFrame}
      * and any other functions.
-     * @memberof GlobeSurfaceTileProvider
-     * @function
      *
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
      * @param {DrawCommand[]} commandList An array of rendering commands.  This method may push
      *        commands into this array.
      */
-    GlobeSurfaceTileProvider.prototype.endFrame = function(context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.endUpdate = function(context, frameState, commandList) {
         if (!defined(this._renderState)) {
             this._renderState = context.createRenderState({ // Write color and depth
                 cull : {
@@ -290,6 +290,9 @@ define([
             });
         }
 
+        this._renderState.depthTest.enabled = frameState.mode === SceneMode.SCENE3D || frameState.mode === SceneMode.COLUMBUS_VIEW;
+        this._blendRenderState.depthTest.enabled = this._renderState.depthTest.enabled;
+
         // And the tile render commands to the command list, sorted by texture count.
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
@@ -307,7 +310,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
-     * @memberof GlobeSurfaceTileProvider
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
      * @returns {Number} The maximum geometric error in meters.
@@ -320,8 +322,6 @@ define([
      * Loads, or continues loading, a given tile.  This function will continue to be called
      * until {@link QuadtreeTile#state} is no longer {@link QuadtreeTileLoadState#LOADING}.  This function should
      * not be called before {@link GlobeSurfaceTileProvider#ready} returns true.
-     *
-     * @memberof GlobeSurfaceTileProvider
      *
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The frame state.
@@ -336,18 +336,17 @@ define([
     var boundingSphereScratch = new BoundingSphere();
 
     /**
-     * Returns true if the tile is visible.  Tiles that are both visible and renderable will be rendered by a call to
-     * {@link GlobeSurfaceTileProvider#renderTile}
-     *
-     * @memberof GlobeSurfaceTileProvider
+     * Determines the visibility of a given tile.  The tile may be fully visible, partially visible, or not
+     * visible at all.  Tiles that are renderable and are at least partially visible will be shown by a call
+     * to {@link GlobeSurfaceTileProvider#showTileThisFrame}.
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information about the current frame.
      * @param {QuadtreeOccluders} occluders The objects that may occlude this tile.
      *
-     * @returns {Boolean} true if the tile is visible; otherwise, false.
+     * @returns {Visibility} The visibility of the tile.
      */
-    GlobeSurfaceTileProvider.prototype.isTileVisible = function(tile, frameState, occluders) {
+    GlobeSurfaceTileProvider.prototype.computeTileVisibility = function(tile, frameState, occluders) {
         var surfaceTile = tile.data;
 
         var cullingVolume = frameState.cullingVolume;
@@ -356,7 +355,7 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
+            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING) {
@@ -364,20 +363,25 @@ define([
             }
         }
 
-        if (cullingVolume.getVisibility(boundingVolume) === Intersect.OUTSIDE) {
-            return false;
+        var intersection = cullingVolume.getVisibility(boundingVolume);
+        if (intersection === Intersect.OUTSIDE) {
+            return Visibility.NONE;
         }
 
         if (frameState.mode === SceneMode.SCENE3D) {
             var occludeePointInScaledSpace = surfaceTile.occludeePointInScaledSpace;
             if (!defined(occludeePointInScaledSpace)) {
-                return true;
+                return intersection;
             }
 
-            return occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace);
+            if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+                return intersection;
+            }
+
+            return Visibility.NONE;
         }
 
-        return true;
+        return intersection;
     };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
@@ -389,16 +393,16 @@ define([
     var northeastScratch = new Cartesian3();
 
     /**
-     * Renders a given tile.
-     *
-     * @memberof GlobeSurfaceTileProvider
+     * Shows a specified tile in this frame.  The provider can cause the tile to be shown by adding
+     * render commands to the commandList, or use any other method as appropriate.  The tile is not
+     * expected to be visible next frame as well, unless this method is call next frame, too.
      *
      * @param {Object} tile The tile instance.
      * @param {Context} context The rendering context.
      * @param {FrameState} frameState The state information of the current rendering frame.
      * @param {DrawCommand[]} commandList The list of rendering commands.  This method may add additional commands to this list.
      */
-    GlobeSurfaceTileProvider.prototype.renderTile = function(tile, context, frameState, commandList) {
+    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, context, frameState, commandList) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
@@ -423,14 +427,12 @@ define([
 
     var southwestCornerScratch = new Cartesian3();
     var northeastCornerScratch = new Cartesian3();
-    var negativeUnitY = Cartesian3.negate(Cartesian3.UNIT_Y);
-    var negativeUnitZ = Cartesian3.negate(Cartesian3.UNIT_Z);
+    var negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
+    var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
 
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
-     *
-     * @memberof GlobeSurfaceTileProvider
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
@@ -439,7 +441,7 @@ define([
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    GlobeSurfaceTileProvider.prototype.getDistanceToTile = function(tile, frameState, cameraCartesianPosition, cameraCartographicPosition) {
+    GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
 
         var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
@@ -451,11 +453,11 @@ define([
         var maximumHeight = surfaceTile.maximumHeight;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.scene2D.projection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
+            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.getSouthwest(tile.rectangle), southwestCornerScratch);
             southwestCornerCartesian.z = southwestCornerCartesian.y;
             southwestCornerCartesian.y = southwestCornerCartesian.x;
             southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.scene2D.projection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
+            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.getNortheast(tile.rectangle), northeastCornerScratch);
             northeastCornerCartesian.z = northeastCornerCartesian.y;
             northeastCornerCartesian.y = northeastCornerCartesian.x;
             northeastCornerCartesian.x = 0.0;
@@ -465,6 +467,9 @@ define([
             northNormal = Cartesian3.UNIT_Z;
             maximumHeight = 0.0;
         }
+
+        var cameraCartesianPosition = frameState.camera.positionWC;
+        var cameraCartographicPosition = frameState.camera.positionCartographic;
 
         var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
@@ -509,8 +514,6 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof GlobeSurfaceTileProvider
-     *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see GlobeSurfaceTileProvider#destroy
@@ -526,8 +529,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @memberof GlobeSurfaceTileProvider
      *
      * @returns {undefined}
      *
@@ -782,7 +783,7 @@ define([
         var oneOverMercatorHeight = 0.0;
 
         if (frameState.mode !== SceneMode.SCENE3D) {
-            var projection = frameState.scene2D.projection;
+            var projection = frameState.mapProjection;
             var southwest = projection.project(Rectangle.getSouthwest(tile.rectangle), southwestScratch);
             var northeast = projection.project(Rectangle.getNortheast(tile.rectangle), northeastScratch);
 
@@ -983,7 +984,7 @@ define([
             var boundingVolume = command.boundingVolume;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.scene2D.projection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
+                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, surfaceTile.minimumHeight, surfaceTile.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {

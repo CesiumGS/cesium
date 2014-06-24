@@ -2,6 +2,7 @@
 defineSuite([
         'Core/BoundingRectangle',
         'Core/Color',
+        'Core/FeatureDetection',
         'Core/IndexDatatype',
         'Core/PrimitiveType',
         'Core/WindingOrder',
@@ -13,6 +14,7 @@ defineSuite([
     ], 'Renderer/Draw', function(
         BoundingRectangle,
         Color,
+        FeatureDetection,
         IndexDatatype,
         PrimitiveType,
         WindingOrder,
@@ -69,30 +71,37 @@ defineSuite([
     });
 
     it('draws a white point with an index buffer', function() {
+        // Use separate context to work around IE 11.0.9 bug
+        var cxt = createContext();
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
-        sp = context.createShaderProgram(vs, fs);
+        sp = cxt.createShaderProgram(vs, fs);
 
         // Two indices instead of one is a workaround for NVIDIA:
         //   http://www.khronos.org/message_boards/viewtopic.php?f=44&t=3719
-        var indexBuffer = context.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        var indexBuffer = cxt.createIndexBuffer(new Uint16Array([0, 0]), BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
 
-        va = context.createVertexArray([{
+        va = cxt.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : cxt.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }], indexBuffer);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(cxt);
+        expect(cxt.readPixels()).toEqual([0, 0, 0, 0]);
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
             shaderProgram : sp,
             vertexArray : va
         });
-        command.execute(context);
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        command.execute(cxt);
+        expect(cxt.readPixels()).toEqual([255, 255, 255, 255]);
+
+        sp = sp.destroy();
+        va = va.destroy();
+        destroyContext(cxt);
     });
 
     it('draws a red point with two vertex buffers', function() {
@@ -351,6 +360,11 @@ defineSuite([
     });
 
     it('draws with blend color', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // blendColor is not supported in IE 11.0.8
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -400,7 +414,7 @@ defineSuite([
 
         va = context.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, 1000, 1000, 0, 1, -1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
@@ -410,7 +424,7 @@ defineSuite([
 
         // 2 of 3:  Cull front faces - nothing is drawn
         var command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -425,7 +439,7 @@ defineSuite([
 
         // 3 of 3:  Cull back faces - nothing is culled
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -446,7 +460,7 @@ defineSuite([
 
         va = context.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, 1000, 1000, 0, 1, -1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
@@ -456,7 +470,7 @@ defineSuite([
 
         // 2 of 3:  Cull back faces with opposite winding order - nothing is drawn
         var command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -472,7 +486,7 @@ defineSuite([
 
         // 3 of 3:  Cull back faces with correct winding order - nothing is culled
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -494,12 +508,12 @@ defineSuite([
 
         va = context.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, 1000, 1000, 0, 1, -1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
         var command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -534,6 +548,12 @@ defineSuite([
     });
 
     it('draws with depth range', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // gl_DepthRange is not supported in IE 11.0.8.
+            // When needed, Cesium will fully workaround this with czm_depthRange.
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(gl_DepthRange.near, gl_DepthRange.far, 0.0, 1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -629,6 +649,11 @@ defineSuite([
             return;
         }
 
+        if (FeatureDetection.isInternetExplorer()) {
+            // sampleCoverage is not supported in IE 11.0.8
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
@@ -672,13 +697,17 @@ defineSuite([
     });
 
     it('draws with stencil test (front)', function() {
+        if (context.stencilBits === 0) {
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, 1000, 1000, 0, 1, -1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
@@ -697,7 +726,7 @@ defineSuite([
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
         var command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
@@ -707,7 +736,7 @@ defineSuite([
 
         // 3 of 4.  Render to stencil only, increment
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -730,7 +759,7 @@ defineSuite([
 
         // 4 of 4.  Render where stencil is set
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
@@ -740,13 +769,17 @@ defineSuite([
     });
 
     it('draws with stencil test (back)', function() {
+        if (context.stencilBits === 0) {
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);
 
         va = context.createVertexArray([{
             index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, 1000, 1000, 0, 1, -1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
+            vertexBuffer : context.createVertexBuffer(new Float32Array([-1000, -1000, 0, 1, 1000, -1000, 0, 1, -1000, 1000, 0, 1, 1000, 1000, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
         }]);
 
@@ -765,7 +798,7 @@ defineSuite([
 
         // 2 of 4.  Render where stencil is set - nothing is drawn
         var command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
@@ -775,7 +808,7 @@ defineSuite([
 
         // 3 of 4.  Render to stencil only, increment
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : context.createRenderState({
@@ -799,7 +832,7 @@ defineSuite([
 
         // 4 of 4.  Render where stencil is set
         command = new DrawCommand({
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLE_STRIP,
             shaderProgram : sp,
             vertexArray : va,
             renderState : rs
@@ -847,7 +880,7 @@ defineSuite([
     it('fails to draw (missing command)', function() {
         expect(function() {
             context.draw();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing shaderProgram)', function() {
@@ -855,7 +888,7 @@ defineSuite([
             context.draw({
                 primitiveType : PrimitiveType.POINTS
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing primitiveType)', function() {
@@ -867,7 +900,7 @@ defineSuite([
             context.draw({
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (primitiveType)', function() {
@@ -880,7 +913,7 @@ defineSuite([
                 primitiveType : 'invalid value',
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (missing vertexArray)', function() {
@@ -893,7 +926,7 @@ defineSuite([
                 primitiveType : PrimitiveType.POINTS,
                 shaderProgram : sp
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('fails to draw (negative offset)', function() {
@@ -909,6 +942,6 @@ defineSuite([
                 offset : -1,
                 count : 1
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

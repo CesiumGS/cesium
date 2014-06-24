@@ -456,7 +456,7 @@ define([
         /**
          * The number of depth bits per pixel in the default bound framebuffer.  The minimum is 16 bits; most
          * implementations will have 24 bits.
-         * @memberof Context.protoytpe
+         * @memberof Context.prototype
          * @type {Number}
          * @see {@link http://www.khronos.org/opengles/sdk/2.0/docs/man/glGet.xml|glGet} with <code>DEPTH_BITS</code>.
          */
@@ -972,11 +972,8 @@ define([
      * A vertex array defines the actual makeup of a vertex, e.g., positions, normals, texture coordinates,
      * etc., by interpreting the raw data in one or more vertex buffers.
      *
-     * @memberof Context
-     *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
-     *
      * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
      *
      * @exception {DeveloperError} The size in bytes must be greater than zero.
@@ -992,8 +989,7 @@ define([
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
      * var buffer = context.createVertexBuffer(16, BufferUsage.DYNAMIC_DRAW);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a dynamic vertex buffer from three floating-point values.
      * // The data copied to the vertex buffer is considered raw bytes until it is
      * // interpreted as vertices using a vertex array.
@@ -1011,15 +1007,12 @@ define([
      * <code>Context.draw</code> can render using the entire index buffer or a subset
      * of the index buffer defined by an offset and count.
      *
-     * @memberof Context
-     *
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
-     *
      * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
-     * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
+     * @exception {DeveloperError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.    Check context.elementIndexUint.
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
@@ -1038,8 +1031,7 @@ define([
      * var buffer = context.createIndexBuffer(16, BufferUsage.STREAM_DRAW,
      *     IndexDatatype.UNSIGNED_SHORT);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a static index buffer containing three unsigned shorts.
      * var buffer = context.createIndexBuffer(new Uint16Array([0, 1, 2]),
      *     BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT)
@@ -1052,7 +1044,7 @@ define([
         //>>includeEnd('debug');
 
         if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.elementIndexUint) {
-            throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
+            throw new DeveloperError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.  Check context.elementIndexUint.');
         }
 
         var bytesPerIndex = IndexDatatype.getSizeInBytes(indexDatatype);
@@ -1085,8 +1077,6 @@ define([
     /**
      * Creates a vertex array, which defines the attributes making up a vertex, and contains an optional index buffer
      * to select vertices for rendering.  Attributes are defined using object literals as shown in Example 1 below.
-     *
-     * @memberof Context
      *
      * @param {Object[]} [attributes] An optional array of attributes.
      * @param {IndexBuffer} [indexBuffer] An optional index buffer.
@@ -1122,8 +1112,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Create a vertex array with vertices from two different vertex buffers.
      * // Each vertex has a three-component position and three-component normal.
      * var positionBuffer = context.createVertexBuffer(12, BufferUsage.STATIC_DRAW);
@@ -1144,8 +1133,7 @@ define([
      * ];
      * var va = context.createVertexArray(attributes);
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3. Creates the same vertex layout as Example 2 using a single
      * // vertex buffer, instead of two.
      * var buffer = context.createVertexBuffer(24, BufferUsage.STATIC_DRAW);
@@ -1173,10 +1161,10 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
-     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {RuntimeError} When options.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.  Check context.depthTexture.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
      * @exception {DeveloperError} options requires a source field to create an initialized texture or width and height fields to create a blank texture.
      * @exception {DeveloperError} Width must be greater than zero.
      * @exception {DeveloperError} Width must be less than or equal to the maximum texture size.
@@ -1200,8 +1188,6 @@ define([
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
      * the texture is the same width and height as the framebuffer and contains its contents.
      *
-     * @memberof Context
-     *
      * @param {PixelFormat} [pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
      * @param {Number} [framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
      * @param {Number} [framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
@@ -1209,7 +1195,6 @@ define([
      * @param {Number} [height=canvas.clientHeight] The height of the texture in texels.
      * @param {Framebuffer} [framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
      *        parameter is not specified, the default framebuffer is used.
-     *
      * @returns {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
@@ -1279,13 +1264,11 @@ define([
     };
 
     /**
-     * options.source can be {ImageData}, {Image}, {Canvas}, or {Video}.
-     *
-     * @memberof Context
+     * options.source can be {@link ImageData}, {@link Image}, {@link Canvas}, or {@link Video}.
      *
      * @returns {CubeMap} The newly created cube map.
      *
-     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
+     * @exception {RuntimeError} When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.
      * @exception {DeveloperError} options.source requires positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ faces.
      * @exception {DeveloperError} Each face in options.sources must have the same width and height.
      * @exception {DeveloperError} options requires a source field to create an initialized cube map or width and height fields to create a blank cube map.
@@ -1366,7 +1349,7 @@ define([
         //>>includeEnd('debug');
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !this.floatingPointTexture) {
-            throw new RuntimeError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
+            throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
 
         // Use premultiplied alpha for opaque textures should perform better on Chrome:
@@ -1418,10 +1401,7 @@ define([
      * Framebuffers are used for render-to-texture effects; they allow us to render to
      * textures in one pass, and read from it in a later pass.
      *
-     * @memberof Context
-     *
      * @param {Object} [options] The initial framebuffer attachments as shown in the examplebelow.  The possible properties are <code>colorTextures</code>, <code>colorRenderbuffers</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
-     *
      * @returns {Framebuffer} The created framebuffer.
      *
      * @exception {DeveloperError} Cannot have both color texture and color renderbuffer attachments.
@@ -1502,8 +1482,6 @@ define([
      * state for a {@link DrawCommand} or {@link ClearCommand}.  All inputs states are optional.  Omitted states
      * use the defaults shown in the example below.
      *
-     * @memberof Context
-     *
      * @param {Object} [renderState] The states defining the render state as shown in the example below.
      *
      * @exception {RuntimeError} renderState.lineWidth is out of range.
@@ -1533,6 +1511,9 @@ define([
      * @exception {DeveloperError} renderState.viewport.width must be less than or equal to the maximum viewport width.
      * @exception {DeveloperError} renderState.viewport.height must be greater than or equal to zero.
      * @exception {DeveloperError} renderState.viewport.height must be less than or equal to the maximum viewport height.
+     *
+     * @see DrawCommand
+     * @see ClearCommand
      *
      * @example
      * var defaults = {
@@ -1608,15 +1589,11 @@ define([
      *         enabled : false,
      *         value : 1.0,
      *         invert : false
-     *      },
-     *     dither : true
+     *      }
      * };
      *
      * // Same as just context.createRenderState().
      * var rs = context.createRenderState(defaults);
-     *
-     * @see DrawCommand
-     * @see ClearCommand
      */
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);
@@ -1933,7 +1910,7 @@ define([
     }
 
     function computeAttributeSizeInBytes(attribute) {
-        return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
+        return ComponentDatatype.getSizeInBytes(attribute.componentDatatype) * attribute.componentsPerAttribute;
     }
 
     function interleaveAttributes(attributes) {
@@ -1950,7 +1927,7 @@ define([
                     defined(attributes[name].values)) {
                 names.push(name);
 
-                if (attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
                     attributes[name].componentDatatype = ComponentDatatype.FLOAT;
                     attributes[name].values = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, attributes[name].values);
                 }
@@ -1980,7 +1957,7 @@ define([
 
         // Sort attributes by the size of their components.  From left to right, a vertex stores floats, shorts, and then bytes.
         names.sort(function(left, right) {
-            return attributes[right].componentDatatype.sizeInBytes - attributes[left].componentDatatype.sizeInBytes;
+            return ComponentDatatype.getSizeInBytes(attributes[right].componentDatatype) - ComponentDatatype.getSizeInBytes(attributes[left].componentDatatype);
         });
 
         // Compute sizes and strides.
@@ -1998,7 +1975,7 @@ define([
         if (vertexSizeInBytes > 0) {
             // Pad each vertex to be a multiple of the largest component datatype so each
             // attribute can be addressed using typed arrays.
-            var maxComponentSizeInBytes = attributes[names[0]].componentDatatype.sizeInBytes; // Sorted large to small
+            var maxComponentSizeInBytes = ComponentDatatype.getSizeInBytes(attributes[names[0]].componentDatatype); // Sorted large to small
             var remainder = vertexSizeInBytes % maxComponentSizeInBytes;
             if (remainder !== 0) {
                 vertexSizeInBytes += (maxComponentSizeInBytes - remainder);
@@ -2013,7 +1990,7 @@ define([
 
             for (j = 0; j < namesLength; ++j) {
                 name = names[j];
-                var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
+                var sizeInBytes = ComponentDatatype.getSizeInBytes(attributes[name].componentDatatype);
 
                 views[name] = {
                     pointer : ComponentDatatype.createTypedArray(attributes[name].componentDatatype, buffer),
@@ -2069,8 +2046,6 @@ define([
      * <br />
      * If <code>options</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
      *
-     * @memberof Context
-     *
      * @param {Object} [options] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
      *
      * @exception {RuntimeError} Each attribute list must have the same number of vertices.
@@ -2093,8 +2068,7 @@ define([
      *     attributeLocations : GeometryPipeline.createAttributeLocations(geometry),
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
@@ -2104,8 +2078,7 @@ define([
      *     interleave         : true
      * });
      *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
+     * @example
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
@@ -2168,7 +2141,7 @@ define([
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;
-                    if (componentDatatype.value === ComponentDatatype.DOUBLE.value) {
+                    if (componentDatatype === ComponentDatatype.DOUBLE) {
                         componentDatatype = ComponentDatatype.FLOAT;
                     }
 
@@ -2236,6 +2209,8 @@ define([
                         ]
                     })
                 },
+                // Workaround Internet Explorer 11.0.8 lack of TRIANGLE_FAN
+                indices : new Uint16Array([0, 1, 2, 0, 2, 3]),
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
@@ -2256,7 +2231,7 @@ define([
 
         return new DrawCommand({
             vertexArray : vertexArray,
-            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            primitiveType : PrimitiveType.TRIANGLES,
             renderState : overrides.renderState,
             shaderProgram : this.createShaderProgram(ViewportQuadVS, fragmentShaderSource, viewportQuadAttributeLocations),
             uniformMap : overrides.uniformMap,
@@ -2272,16 +2247,13 @@ define([
     /**
      * Gets the object associated with a pick color.
      *
-     * @memberof Context
-     *
-     * @param {Color} The pick color.
-     *
+     * @param {Color} pickColor The pick color.
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
+     *
+     * @see Context#createPickId
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
-     *
-     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
@@ -2320,10 +2292,7 @@ define([
      * The ID has an RGBA color value unique to this context.  You must call destroy()
      * on the pick ID when destroying the input object.
      *
-     * @memberof Context
-     *
      * @param {Object} object The object to associate with the pick ID.
-     *
      * @returns {Object} A PickId object with a <code>color</code> property.
      *
      * @exception {RuntimeError} Out of unique Pick IDs.

@@ -38,12 +38,9 @@ define([
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
      * HTML element at the same screen position as an object in the scene.
      *
-     * @memberof SceneTransforms
-     *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -86,12 +83,9 @@ define([
      * Transforms a position in WGS84 coordinates to drawing buffer coordinates.  This may produce different
      * results from SceneTransforms.wgs84ToWindowCoordinates when the browser zoom is not 100%, or on high-DPI displays.
      *
-     * @memberof SceneTransforms
-     *
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     *
      * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
@@ -142,7 +136,7 @@ define([
             return Cartesian3.clone(position, result);
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         projection.ellipsoid.cartesianToCartographic(position, positionInCartographic);
         if (!defined(positionInCartographic)) {
             result = undefined;

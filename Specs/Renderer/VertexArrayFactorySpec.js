@@ -114,7 +114,7 @@ defineSuite([
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
-        expect(va.getAttribute(0).strideInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(0).strideInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
 
         expect(va.getAttribute(0).vertexBuffer.usage).toEqual(BufferUsage.STATIC_DRAW);
     });
@@ -189,7 +189,7 @@ defineSuite([
 
         var position = geometry.attributes.customPosition;
         var normal = geometry.attributes.customNormal;
-        var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + normal.componentDatatype.sizeInBytes * normal.componentsPerAttribute;
+        var expectedStride = ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute + ComponentDatatype.getSizeInBytes(normal.componentDatatype) * normal.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
@@ -200,7 +200,7 @@ defineSuite([
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
-        expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(1).offsetInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
@@ -234,7 +234,7 @@ defineSuite([
 
         var position = geometry.attributes.position;
         var colors = geometry.attributes.colors;
-        var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + colors.componentDatatype.sizeInBytes * colors.componentsPerAttribute;
+        var expectedStride = ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute + ComponentDatatype.getSizeInBytes(colors.componentDatatype) * colors.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
@@ -245,7 +245,7 @@ defineSuite([
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(colors.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(colors.componentsPerAttribute);
-        expect(va.getAttribute(1).offsetInBytes).toEqual(position.componentDatatype.sizeInBytes * position.componentsPerAttribute);
+        expect(va.getAttribute(1).offsetInBytes).toEqual(ComponentDatatype.getSizeInBytes(position.componentDatatype) * position.componentsPerAttribute);
         expect(va.getAttribute(1).strideInBytes).toEqual(expectedStride);
 
         expect(va.getAttribute(0).vertexBuffer).toBe(va.getAttribute(1).vertexBuffer);
@@ -597,7 +597,7 @@ defineSuite([
                 geometry : geometry,
                 interleave : true
             });
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('throws with duplicate indices', function() {
@@ -625,6 +625,6 @@ defineSuite([
                     normal : 0
                 }
             });
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

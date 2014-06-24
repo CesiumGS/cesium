@@ -14,7 +14,6 @@ define([
      * <code>type</code> parameter of {@link http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml|drawElements}.
      *
      * @alias IndexDatatype
-     * @enumeration
      */
     var IndexDatatype = {
         /**
@@ -49,7 +48,6 @@ define([
      * Returns the size, in bytes, of the corresponding datatype.
      *
      * @param {IndexDatatype} indexDatatype The index datatype to get the size of.
-     *
      * @returns {Number} The size in bytes.
      *
      * @example
@@ -75,7 +73,6 @@ define([
      * Validates that the provided index datatype is a valid {@link IndexDatatype}.
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
-     *
      * @returns {Boolean} <code>true</code> if the provided index datatype is a valid value; otherwise, <code>false</code>.
      *
      * @example
@@ -96,7 +93,6 @@ define([
      *
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
      * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
-     *
      * @returns {Uint16Aray|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @example

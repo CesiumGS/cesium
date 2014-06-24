@@ -37,11 +37,12 @@ define([
      * @alias CylinderOutlineGeometry
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
-     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom surfaces of the cylinder.
+     * @param {Number} [options.slices=128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surfaces of the cylinder.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
      * @exception {DeveloperError} options.topRadius must be greater than 0.
@@ -97,7 +98,6 @@ define([
 
     /**
      * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
-     * @memberof CylinderOutlineGeometry
      *
      * @param {CylinderOutlineGeometry} cylinderGeometry A description of the cylinder outline.
      * @returns {Geometry} The computed vertices and indices.

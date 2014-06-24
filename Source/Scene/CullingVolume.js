@@ -17,7 +17,7 @@ define([
      * @alias CullingVolume
      * @constructor
      *
-     * @param Array planes An array of clipping planes.
+     * @param {Cartesian4[]} planes An array of clipping planes.
      */
     var CullingVolume = function(planes) {
         /**
@@ -32,7 +32,6 @@ define([
 
     /**
      * Determines whether a bounding volume intersects the culling volume.
-     * @memberof CullingVolume
      *
      * @param {Object} boundingVolume The bounding volume whose intersection with the culling volume is to be tested.
      * @returns {Intersect}  Intersect.OUTSIDE, Intersect.INTERSECTING, or Intersect.INSIDE.

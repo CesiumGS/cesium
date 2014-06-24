@@ -33,6 +33,7 @@ define([
      * @alias OpenStreetMapImageryProvider
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
@@ -126,7 +127,7 @@ define([
 
         /**
          * Gets the proxy used by this provider.
-         * @memberof OpenStreetMapImageryProvider
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Proxy}
          */
         proxy : {
@@ -228,7 +229,7 @@ define([
         /**
          * Gets the rectangle, in radians, of the imagery provided by this instance.  This function should
          * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
-         * @memberof OpenStreetMapImageryProviderr.prototype
+         * @memberof OpenStreetMapImageryProvider.prototype
          * @type {Rectangle}
          */
         rectangle : {
@@ -318,12 +319,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof OpenStreetMapImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -336,12 +334,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link OpenStreetMapImageryProvider#ready} returns true.
      *
-     * @memberof OpenStreetMapImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

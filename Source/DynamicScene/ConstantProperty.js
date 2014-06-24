@@ -2,13 +2,11 @@
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/Event',
         '../Core/isArray'
     ], function(
         defineProperties,
         DeveloperError,
-        Enumeration,
         Event,
         isArray) {
     "use strict";
@@ -39,7 +37,9 @@ define([
          * Gets a value indicating if this property is constant.
          * This property always returns <code>true</code>.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Boolean}
+         * @readonly
          */
         isConstant : {
             value : true
@@ -49,7 +49,9 @@ define([
          * The definition is changed whenever setValue is called with data different
          * than the current value.
          * @memberof ConstantProperty.prototype
+         *
          * @type {Event}
+         * @readonly
          */
         definitionChanged : {
             get : function() {
@@ -60,7 +62,6 @@ define([
 
     /**
      * Gets the value of the property.
-     * @memberof ConstantProperty
      *
      * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -73,7 +74,6 @@ define([
     /**
      * Sets the value of the property.
      * If the value is a non-basic type, then it must provide clone and equals functions.
-     * @memberof ConstantProperty
      *
      * @param {Object} value The property value.
      *
@@ -84,7 +84,7 @@ define([
         var oldValue = this._value;
         var simple = this._simple;
         if ((simple && oldValue !== value) || (!simple && !oldValue.equals(value))) {
-            simple = typeof value !== 'object' || isArray(value) || value instanceof Enumeration;
+            simple = typeof value !== 'object' || isArray(value);
 
             //>>includeStart('debug', pragmas.debug);
             if (!simple) {
@@ -106,7 +106,6 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof ConstantProperty
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

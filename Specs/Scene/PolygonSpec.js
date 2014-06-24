@@ -56,7 +56,11 @@ defineSuite([
 
     beforeEach(function() {
         us = context.uniformState;
-        us.update(context, createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
+        us.update(context, createFrameState(createCamera({
+            eye : new Cartesian3(1.02, 0.0, 0.0),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        })));
     });
 
     afterEach(function() {
@@ -314,7 +318,7 @@ defineSuite([
 
         var camera = scene.camera;
         camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3(), new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         scene.initializeFrame();
@@ -407,7 +411,7 @@ defineSuite([
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var positions = [
             Cartographic.fromDegrees(-1.0, -1.0, 0.0),

@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/JulianDate',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/ReferenceFrame',
@@ -15,6 +16,8 @@ define([
         '../Scene/SceneMode',
         './CompositePositionProperty',
         './ConstantPositionProperty',
+        './MaterialProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
@@ -23,6 +26,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        JulianDate,
         Matrix3,
         Matrix4,
         ReferenceFrame,
@@ -33,6 +37,8 @@ define([
         SceneMode,
         CompositePositionProperty,
         ConstantPositionProperty,
+        MaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
@@ -48,7 +54,7 @@ define([
             result[r++] = tmp;
         }
 
-        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
+        var steppedOnNow = !defined(updateTime) || JulianDate.lessThanOrEquals(updateTime, start) || JulianDate.greaterThanOrEquals(updateTime, stop);
 
         //Iterate over all interval times and add the ones that fall in our
         //time range.  Note that times can contain data outside of
@@ -63,14 +69,14 @@ define([
         var sampleStepSize;
 
         while (t < len) {
-            if (!steppedOnNow && current.greaterThanOrEquals(updateTime)) {
+            if (!steppedOnNow && JulianDate.greaterThanOrEquals(current, updateTime)) {
                 tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
                 }
                 steppedOnNow = true;
             }
-            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(updateTime)) {
+            if (JulianDate.greaterThan(current, start) && JulianDate.lessThan(current, loopStop) && !current.equals(updateTime)) {
                 tmp = property.getValueInReferenceFrame(current, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
@@ -80,7 +86,7 @@ define([
             if (t < (len - 1)) {
                 if (maximumStep > 0 && !sampling) {
                     var next = times[t + 1];
-                    var secondsUntilNext = current.getSecondsDifference(next);
+                    var secondsUntilNext = JulianDate.getSecondsDifference(next, current);
                     sampling = secondsUntilNext > maximumStep;
 
                     if (sampling) {
@@ -92,7 +98,7 @@ define([
                 }
 
                 if (sampling && sampleStepsTaken < sampleStepsToTake) {
-                    current = current.addSeconds(sampleStepSize);
+                    current = JulianDate.addSeconds(current, sampleStepSize, new JulianDate());
                     sampleStepsTaken++;
                     continue;
                 }
@@ -117,9 +123,9 @@ define([
         var index = startingIndex;
         var time = start;
         var stepSize = Math.max(maximumStep, 60);
-        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
-        while (time.lessThan(stop)) {
-            if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
+        var steppedOnNow = !defined(updateTime) || JulianDate.lessThanOrEquals(updateTime, start) || JulianDate.greaterThanOrEquals(updateTime, stop);
+        while (JulianDate.lessThan(time, stop)) {
+            if (!steppedOnNow && JulianDate.greaterThanOrEquals(time, updateTime)) {
                 steppedOnNow = true;
                 tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[index]);
                 if (defined(tmp)) {
@@ -133,7 +139,7 @@ define([
                 index++;
             }
             i++;
-            time = start.addSeconds(stepSize * i);
+            time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -157,7 +163,7 @@ define([
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = interval.start.addSeconds(interval.start.getSecondsDifference(interval.stop) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2, new JulianDate());
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
@@ -190,16 +196,20 @@ define([
                 var intervalStop = interval.stop;
 
                 var sampleStart = start;
-                if (intervalStart.greaterThan(sampleStart)) {
+                if (JulianDate.greaterThan(intervalStart, sampleStart)) {
                     sampleStart = intervalStart;
                 }
 
                 var sampleStop = stop;
-                if (intervalStop.lessThan(sampleStop)) {
+                if (JulianDate.lessThan(intervalStop, sampleStop)) {
                     sampleStop = intervalStop;
                 }
 
                 var intervalProperty = interval.data;
+                if (intervalProperty instanceof ReferenceProperty) {
+                    intervalProperty = intervalProperty.resolvedProperty;
+                }
+
                 if (intervalProperty instanceof SampledPositionProperty) {
                     index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
@@ -220,6 +230,10 @@ define([
     function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
         if (!defined(result)) {
             result = [];
+        }
+
+        if (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
         var length = 0;
@@ -307,25 +321,25 @@ define([
             //we won't have to draw anything anyway.
             if (show) {
                 if (hasTrailTime) {
-                    sampleStart = time.addSeconds(-trailTime);
+                    sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
                 }
                 if (hasLeadTime) {
-                    sampleStop = time.addSeconds(leadTime);
+                    sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
                 }
 
                 if (hasAvailability) {
                     var start = availability.start;
                     var stop = availability.stop;
 
-                    if (!hasTrailTime || start.greaterThan(sampleStart)) {
+                    if (!hasTrailTime || JulianDate.greaterThan(start, sampleStart)) {
                         sampleStart = start;
                     }
 
-                    if (!hasLeadTime || stop.lessThan(sampleStop)) {
+                    if (!hasLeadTime || JulianDate.lessThan(stop, sampleStop)) {
                         sampleStop = stop;
                     }
                 }
-                show = sampleStart.lessThan(sampleStop);
+                show = JulianDate.lessThan(sampleStart, sampleStop);
             }
         }
 
@@ -340,7 +354,6 @@ define([
             return;
         }
 
-        var uniforms;
         if (!defined(pathVisualizerIndex)) {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
@@ -360,13 +373,12 @@ define([
                 material = Material.fromType(Material.PolylineOutlineType);
                 polyline.material = material;
             }
-            uniforms = material.uniforms;
+            var uniforms = material.uniforms;
             Color.clone(Color.WHITE, uniforms.color);
             Color.clone(Color.BLACK, uniforms.outlineColor);
             uniforms.outlineWidth = 0;
         } else {
             polyline = this._polylineCollection.get(pathVisualizerIndex);
-            uniforms = polyline.material.uniforms;
         }
 
         polyline.show = true;
@@ -381,21 +393,7 @@ define([
         }
 
         polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, maxStepSize, polyline.positions);
-
-        property = dynamicPath._color;
-        if (defined(property)) {
-            uniforms.color = property.getValue(time, uniforms.color);
-        }
-
-        property = dynamicPath._outlineColor;
-        if (defined(property)) {
-            uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
-        }
-
-        property = dynamicPath._outlineWidth;
-        if (defined(property)) {
-            uniforms.outlineWidth = property.getValue(time);
-        }
+        polyline.material = MaterialProperty.getValue(time, dynamicPath._material, polyline.material);
 
         property = dynamicPath._width;
         if (defined(property)) {
@@ -449,7 +447,6 @@ define([
     /**
      * Updates all of the primitives created by this visualizer to match their
      * DynamicObject counterpart at the given time.
-     * @memberof DynamicPathVisualizer
      *
      * @param {JulianDate} time The time to update to.
      * @returns {Boolean} This function always returns true.
@@ -485,7 +482,7 @@ define([
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
-                frameToVisualize = positionProperty._referenceFrame;
+                frameToVisualize = positionProperty.referenceFrame;
             }
 
             var currentUpdater = this._updaters[frameToVisualize];
@@ -515,7 +512,6 @@ define([
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
-     * @memberof DynamicPathVisualizer
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -525,7 +521,6 @@ define([
 
     /**
      * Removes and destroys all primitives created by this instance.
-     * @memberof DynamicPathVisualizer
      */
     DynamicPathVisualizer.prototype.destroy = function() {
         var dynamicObjectCollection = this._dynamicObjectCollection;

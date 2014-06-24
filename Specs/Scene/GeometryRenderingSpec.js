@@ -186,8 +186,8 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.update(frameState.mode, frameState.scene2D);
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
+        frameState.camera.update(frameState.mode);
 
         viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
@@ -245,7 +245,7 @@ defineSuite([
         primitive.update(context, frameState, []);
 
         frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
+        frameState.morphTime = SceneMode.getMorphTime(frameState.mode);
 
         var frustum = new OrthographicFrustum();
         frustum.right = ellipsoid.maximumRadius * Math.PI;
@@ -253,7 +253,7 @@ defineSuite([
         frustum.top = frustum.right;
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
-        frameState.camera.update(frameState.mode, frameState.scene2D);
+        frameState.camera.update(frameState.mode);
 
         viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
         context.uniformState.update(context, frameState);

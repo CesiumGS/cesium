@@ -2,6 +2,7 @@
 defineSuite([
         'Core/Cartesian3',
         'Core/Color',
+        'Core/FeatureDetection',
         'Core/PixelFormat',
         'Core/PrimitiveType',
         'Renderer/BufferUsage',
@@ -16,6 +17,7 @@ defineSuite([
     ], 'Renderer/CubeMap', function(
         Cartesian3,
         Color,
+        FeatureDetection,
         PixelFormat,
         PrimitiveType,
         BufferUsage,
@@ -231,6 +233,11 @@ defineSuite([
     });
 
     it('draws with a cube map with premultiplied alpha', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            // Workaround IE 11.0.8, which does not support premultiplied alpha
+            return;
+        }
+
         cubeMap = context.createCubeMap({
             source : {
                 positiveX : blueAlphaImage,
@@ -954,7 +961,7 @@ defineSuite([
                     height : 16,
                     pixelDatatype : PixelDatatype.FLOAT
                 });
-            }).toThrow();
+            }).toThrowDeveloperError();
         }
     });
 

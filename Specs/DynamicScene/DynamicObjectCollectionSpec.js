@@ -297,7 +297,7 @@ defineSuite([
 
         expect(function() {
             dynamicObjectCollection.add(dynamicObject2);
-        }).toThrow();
+        }).toThrowRuntimeError();
     });
 
     it('remove throws with undefined DynamicObject', function() {

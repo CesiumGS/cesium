@@ -344,7 +344,7 @@ define([
         scissorRectangle.width = Math.min(size.x, width);
         scissorRectangle.height = Math.min(size.y, height);
 
-        Cartesian2.clone(sunPositionWC, this._uCenter);
+        this._uCenter = Cartesian2.clone(sunPositionWC, this._uCenter);
         this._uRadius = Math.max(size.x, size.y) * 0.5;
 
         // create down sampled render state

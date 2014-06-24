@@ -1,13 +1,11 @@
 /*global define*/
-define([
-        '../Core/Enumeration'
-    ], function(
-        Enumeration) {
+define([], function() {
     "use strict";
 
     /**
      * The state of a {@link QuadtreeTile} in the tile load pipeline.
      * @exports QuadtreeTileLoadState
+     * @private
      */
     var QuadtreeTileLoadState = {
         /**
@@ -16,7 +14,7 @@ define([
          * @constant
          * @default 0
          */
-        START : new Enumeration(0, 'START'),
+        START : 0,
 
         /**
          * Loading is in progress.
@@ -24,7 +22,7 @@ define([
          * @constant
          * @default 1
          */
-        LOADING : new Enumeration(1, 'LOADING'),
+        LOADING : 1,
 
         /**
          * Loading is complete.
@@ -32,7 +30,7 @@ define([
          * @constant
          * @default 2
          */
-        DONE : new Enumeration(2, 'DONE'),
+        DONE : 2,
 
         /**
          * The tile has failed to load.
@@ -40,7 +38,7 @@ define([
          * @constant
          * @default 3
          */
-        FAILED : new Enumeration(3, 'FAILED')
+        FAILED : 3
     };
 
     return QuadtreeTileLoadState;

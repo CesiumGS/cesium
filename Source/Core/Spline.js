@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
         defaultValue,
         defined,
@@ -43,12 +43,10 @@ define([
 
     /**
      * Evaluates the curve at a given time.
-     * @memberof Spline
      * @function
      *
      * @param {Number} time The time at which to evaluate the curve.
      * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
-     *
      * @returns {Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
@@ -60,7 +58,6 @@ define([
     /**
      * Finds an index <code>i</code> in <code>times</code> such that the parameter
      * <code>time</code> is in the interval <code>[times[i], times[i + 1]]</code>.
-     * @memberof Spline
      *
      * @param {Number} time The time.
      * @param {Number} startIndex The index from which to start the search.

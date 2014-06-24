@@ -34,7 +34,6 @@ define([
      * @param {Object} [object1] The first object to merge.
      * @param {Object} [object2] The second object to merge.
      * @param {Boolean} [deep=false] Perform a recursive merge.
-     *
      * @returns {Object} The combined object containing all properties from both objects.
      *
      * @exports combine

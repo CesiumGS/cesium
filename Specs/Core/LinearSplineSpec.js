@@ -76,7 +76,7 @@ defineSuite([
 
         var time = (times[1] + times[0]) * 0.5;
         var t = (time - times[0]) / (times[1] - times[0]);
-        expect(ls.evaluate(time)).toEqual(Cartesian3.lerp(points[0], points[1], t));
+        expect(ls.evaluate(time)).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
 
     it('evaluate with result parameter', function() {

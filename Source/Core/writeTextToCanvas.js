@@ -18,6 +18,7 @@ define([
      * If text is blank, returns undefined.
      *
      * @param {String} text The text to write.
+     * @param {Object} [options] Object with the following properties:
      * @param {String} [options.font='10px sans-serif'] The CSS font to use.
      * @param {String} [options.textBaseline='bottom'] The baseline of the text.
      * @param {Boolean} [options.fill=true] Whether to fill the text.
@@ -25,7 +26,6 @@ define([
      * @param {Color} [options.fillColor=Color.WHITE] The fill color.
      * @param {Color} [options.strokeColor=Color.BLACK] The stroke color.
      * @param {Color} [options.strokeWidth=1] The stroke width.
-     *
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.

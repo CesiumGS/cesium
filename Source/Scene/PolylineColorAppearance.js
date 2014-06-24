@@ -27,6 +27,7 @@ define([
      * @alias PolylineColorAppearance
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
@@ -189,7 +190,7 @@ define([
     /**
      * Procedurally creates the full GLSL fragment shader source.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns String The full GLSL fragment shader source.
      */
@@ -198,7 +199,7 @@ define([
     /**
      * Determines if the geometry is translucent based on {@link PolylineColorAppearance#translucent}.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Boolean} <code>true</code> if the appearance is translucent.
      */
@@ -209,7 +210,7 @@ define([
      * it can contain a subset of render state properties identical to <code>renderState</code>
      * passed to {@link Context#createRenderState}.
      *
-     * @memberof PolylineColorAppearance
+     * @function
      *
      * @returns {Object} The render state.
      */

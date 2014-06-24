@@ -3,6 +3,7 @@ defineSuite([
         'Scene/QuadtreePrimitive',
         'Core/defineProperties',
         'Core/GeographicTilingScheme',
+        'Core/Visibility',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -11,6 +12,7 @@ defineSuite([
         QuadtreePrimitive,
         defineProperties,
         GeographicTilingScheme,
+        Visibility,
         QuadtreeTileLoadState,
         createContext,
         createFrameState,
@@ -49,8 +51,8 @@ defineSuite([
     function createSpyTileProvider() {
         var result = jasmine.createSpyObj('tileProvider', [
             'getQuadtree', 'setQuadtree', 'getReady', 'getTilingScheme', 'getErrorEvent',
-            'beginFrame', 'endFrame', 'getLevelMaximumGeometricError', 'loadTile',
-            'isTileVisible', 'renderTile', 'getDistanceToTile', 'isDestroyed', 'destroy']);
+            'beginUpdate', 'endUpdate', 'getLevelMaximumGeometricError', 'loadTile',
+            'computeTileVisibility', 'showTileThisFrame', 'computeDistanceToTile', 'isDestroyed', 'destroy']);
 
         defineProperties(result, {
             quadtree : {
@@ -74,7 +76,7 @@ defineSuite([
         return result;
     }
 
-    it('calls beginFrame, loadTile, and endFrame', function() {
+    it('calls beginUpdate, loadTile, and endUpdate', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
 
@@ -84,15 +86,15 @@ defineSuite([
 
         quadtree.update(context, frameState, []);
 
-        expect(tileProvider.beginFrame).toHaveBeenCalled();
+        expect(tileProvider.beginUpdate).toHaveBeenCalled();
         expect(tileProvider.loadTile).toHaveBeenCalled();
-        expect(tileProvider.endFrame).toHaveBeenCalled();
+        expect(tileProvider.endUpdate).toHaveBeenCalled();
     });
 
-    it('renders the root tiles when they are ready and visible', function() {
+    it('shows the root tiles when they are ready and visible', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
-        tileProvider.isTileVisible.andReturn(true);
+        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
         tileProvider.loadTile.andCallFake(function(context, frameState, tile) {
             tile.renderable = true;
         });
@@ -104,13 +106,13 @@ defineSuite([
         quadtree.update(context, frameState, []);
         quadtree.update(context, frameState, []);
 
-        expect(tileProvider.renderTile).toHaveBeenCalled();
+        expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
     });
 
     it('stops loading a tile that moves to the DONE state', function() {
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.andReturn(true);
-        tileProvider.isTileVisible.andReturn(true);
+        tileProvider.computeTileVisibility.andReturn(Visibility.FULL);
 
         var calls = 0;
         tileProvider.loadTile.andCallFake(function(context, frameState, tile) {

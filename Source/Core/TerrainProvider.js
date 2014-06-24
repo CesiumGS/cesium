@@ -76,8 +76,6 @@ define([
      * same list of indices.  The total number of vertices must be less than or equal
      * to 65536.
      *
-     * @memberof TerrainProvider
-     *
      * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
      * @param {Number} height The number of vertices in the regular grid in the vertical direction.
      * @returns {Uint16Array} The list of indices.
@@ -135,9 +133,9 @@ define([
     /**
      * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
      *
-     * @param ellipsoid The ellipsoid to which the terrain is attached.
-     * @param tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
-     * @param numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+     * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
+     * @param {Number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+     * @param {Number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
      * @returns {Number} An estimated geometric error.
      */
     TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
@@ -148,7 +146,6 @@ define([
      * Requests the geometry for a given tile.  This function should not be called before
      * {@link TerrainProvider#ready} returns true.  The result must include terrain data and
      * may optionally include a water mask and an indication of which child tiles are available.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
@@ -166,7 +163,6 @@ define([
     /**
      * Gets the maximum geometric error allowed in a tile at a given level.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
      * @function
      *
      * @param {Number} level The tile level for which to get the maximum geometric error.
@@ -179,7 +175,6 @@ define([
      * indicates which areas of the globe are water rather than land, so they can be rendered
      * as a reflective surface with animated waves.  This function should not be
      * called before {@link TerrainProvider#ready} returns true.
-     * @memberof TerrainProvider
      * @function
      *
      * @returns {Boolean} True if the provider has a water mask; otherwise, false.

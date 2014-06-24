@@ -178,6 +178,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         viewportCartesian4 : {
@@ -250,6 +251,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         inverseTranposeModel : {
@@ -392,6 +394,7 @@ define([
         },
 
         /**
+         * @memberof UniformState.prototype
          * @private
          */
         inverseProjectionOIT : {
@@ -436,7 +439,8 @@ define([
         },
 
         /**
-         * The model-view relative to eye matrix used to define the {@link czm_modelViewRelativeToEye} GLSL uniform.
+         * Model-view relative to eye matrix.
+         *
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
@@ -519,7 +523,8 @@ define([
         },
 
         /**
-         * The model-view-projection relative to eye matrix used to define the {@link czm_modelViewProjectionRelativeToEye} GLSL uniform.
+         * Model-view-projection relative to eye matrix.
+         *
          * @memberof UniformState.prototype
          * @type {Matrix4}
          */
@@ -696,7 +701,7 @@ define([
         },
 
         /**
-         * The high bits of the camera position used to define the {@link czm_encodedCameraPositionMCHigh} GLSL uniform.
+         * The high bits of the camera position.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
@@ -708,7 +713,7 @@ define([
         },
 
         /**
-         * The low bits of the camera position used to define the {@link czm_encodedCameraPositionMCLow} GLSL uniform.
+         * The low bits of the camera position.
          * @memberof UniformState.prototype
          * @type {Cartesian3}
          */
@@ -801,7 +806,7 @@ define([
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
-        var position = Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
+        var position = Simon1994PlanetaryPositions.computeSunPositionInEarthInertialFrame(frameState.time, uniformState._sunPositionWC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
 
         Cartesian3.normalize(position, uniformState._sunDirectionWC);
@@ -809,12 +814,12 @@ define([
         position = Matrix3.multiplyByVector(uniformState.viewRotation3D, position, uniformState._sunDirectionEC);
         Cartesian3.normalize(position, position);
 
-        position = Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
+        position = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(frameState.time, uniformState._moonDirectionEC);
         Matrix3.multiplyByVector(transformMatrix, position, position);
         Matrix3.multiplyByVector(uniformState.viewRotation3D, position, position);
         Cartesian3.normalize(position, position);
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var ellipsoid = projection.ellipsoid;
         var sunCartographic = ellipsoid.cartesianToCartographic(uniformState._sunPositionWC, sunCartographicScratch);
         projection.project(sunCartographic, uniformState._sunPositionColumbusView);
@@ -824,8 +829,6 @@ define([
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
-     *
-     * @memberof UniformState
      *
      * @param {Object} frustum The frustum to synchronize with.
      */
@@ -843,13 +846,11 @@ define([
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
      *
-     * @memberof UniformState
-     *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
     UniformState.prototype.update = function(context, frameState) {
         this._mode = frameState.mode;
-        this._mapProjection = frameState.scene2D.projection;
+        this._mapProjection = frameState.mapProjection;
 
         var canvas = context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;

@@ -26,7 +26,6 @@ define([
      * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
      * @param {Number} level The terrain level-of-detail from which to query terrain heights.
      * @param {Cartographic[]} positions The positions to update with terrain heights.
-     *
      * @returns {Promise} A promise that resolves to the provided list of positions when terrain the query has completed.
      *
      * @example
@@ -57,6 +56,24 @@ define([
         }
         //>>includeEnd('debug');
 
+        var deferred = when.defer();
+
+        function doSamplingWhenReady() {
+            if (terrainProvider.ready) {
+                when(doSampling(terrainProvider, level, positions), function(updatedPositions) {
+                    deferred.resolve(updatedPositions);
+                });
+            } else {
+                setTimeout(doSamplingWhenReady, 10);
+            }
+        }
+
+        doSamplingWhenReady();
+
+        return deferred.promise;
+    };
+
+    function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var i;
@@ -98,7 +115,7 @@ define([
         return when.all(tilePromises, function() {
             return positions;
         });
-    };
+    }
 
     function createInterpolateFunction(tileRequest) {
         var tilePositions = tileRequest.positions;

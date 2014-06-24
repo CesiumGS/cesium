@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
@@ -35,6 +36,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -79,6 +81,7 @@ define([
      * @alias Primitive
      * @constructor
      *
+     * @param {Object} [options] Object with the following properties:
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
@@ -89,6 +92,9 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     *
+     * @see GeometryInstance
+     * @see Appearance
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -161,9 +167,6 @@ define([
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      * scene.primitives.add(primitive);
-     *
-     * @see GeometryInstance
-     * @see Appearance
      */
     var Primitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -200,8 +203,7 @@ define([
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
          * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
-         * shaders via {@link czm_model} and derived uniforms.
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
          *
@@ -210,8 +212,6 @@ define([
          * @example
          * var origin = Cesium.Cartesian3.fromDegrees(-95.0, 40.0, 200000.0);
          * p.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(origin);
-         *
-         * @see czm_model
          */
         this.modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
         this._modelMatrix = new Matrix4();
@@ -386,7 +386,7 @@ define([
          * @type {Boolean}
          * @readonly
          */
-        complete : {
+        ready : {
             get : function() {
                 return this._state === PrimitiveState.COMPLETE;
             }
@@ -583,12 +583,19 @@ define([
         return pickColors;
     }
 
-    var numberOfCreationWorkers = 3;
+    var numberOfCreationWorkers = Math.max(FeatureDetection.hardwareConcurrency - 1, 1);
     var createGeometryTaskProcessors;
     var combineGeometryTaskProcessor = new TaskProcessor('combineGeometry', Number.POSITIVE_INFINITY);
 
     /**
-     * @private
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType..
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
@@ -600,7 +607,7 @@ define([
             return;
         }
 
-        var projection = frameState.scene2D.projection;
+        var projection = frameState.mapProjection;
         var colorCommand;
         var pickCommand;
         var geometry;
@@ -960,7 +967,7 @@ define([
                         typedArray.set(value, k * componentsPerAttribute);
                     }
 
-                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                    var offsetInBytes = offset * componentsPerAttribute * ComponentDatatype.getSizeInBytes(componentDatatype);
                     vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                 }
                 attribute.dirty = false;
@@ -979,7 +986,16 @@ define([
             }
         }
 
-        var boundingSphere = this.getBoundingSphere(frameState.mode);
+        var boundingSphere;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSphere = this._boundingSphereWC;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSphere = this._boundingSphereCV;
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
+            boundingSphere = this._boundingSphere2D;
+        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
+            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
+        }
 
         var passes = frameState.passes;
         if (passes.render) {
@@ -1031,7 +1047,6 @@ define([
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
      * @param {Object} id The id of the {@link GeometryInstance}.
-     *
      * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
@@ -1092,38 +1107,11 @@ define([
     };
 
     /**
-     * Returns the bounding sphere for this primitive in the current scene mode.  This function may returned undefined
-     * before the primitive {@link Primitive#isReady}.
-     *
-     * @memberof Primitive
-     *
-     * @param {SceneMode} sceneMode The scene mode (3D, 2D, Columbus View) for which to obtain the bounding sphere.
-     *
-     * @returns {BoundingSphere} The bounding sphere of the primitive, or undefined if the primitive's bounding sphere
-     *          has not yet been computed.
-     */
-    Primitive.prototype.getBoundingSphere = function(sceneMode) {
-        var boundingSphere;
-        if (sceneMode === SceneMode.SCENE3D) {
-            boundingSphere = this._boundingSphereWC;
-        } else if (sceneMode === SceneMode.COLUMBUS_VIEW) {
-            boundingSphere = this._boundingSphereCV;
-        } else if (sceneMode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
-            boundingSphere = this._boundingSphere2D;
-        } else if (defined(this._boundingSphereWC) && defined(this._boundingSphereCV)) {
-            boundingSphere = BoundingSphere.union(this._boundingSphereWC, this._boundingSphereCV);
-        }
-        return boundingSphere;
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <p>
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * </p>
-     *
-     * @memberof Primitive
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
@@ -1141,8 +1129,6 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
-     *
-     * @memberof Primitive
      *
      * @returns {undefined}
      *

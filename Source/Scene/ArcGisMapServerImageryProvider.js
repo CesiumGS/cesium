@@ -7,9 +7,12 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/jsonp',
+        '../Core/Rectangle',
         '../Core/TileProviderError',
+        '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './DiscardMissingTileImagePolicy',
@@ -22,9 +25,12 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        GeographicProjection,
         GeographicTilingScheme,
         jsonp,
+        Rectangle,
         TileProviderError,
+        WebMercatorProjection,
         WebMercatorTilingScheme,
         when,
         DiscardMissingTileImagePolicy,
@@ -38,6 +44,7 @@ define([
      * @alias ArcGisMapServerImageryProvider
      * @constructor
      *
+     * @param {Object} options Object with the following properties:
      * @param {String} options.url The URL of the ArcGIS MapServer service.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -90,6 +97,7 @@ define([
         this._tilingScheme = undefined;
         this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
+        this._rectangle = undefined;
 
         this._errorEvent = new Event();
 
@@ -105,6 +113,7 @@ define([
                 that._tileWidth = 256;
                 that._tileHeight = 256;
                 that._tilingScheme = new GeographicTilingScheme();
+                that._rectangle = that._tilingScheme.rectangle;
                 that._useTiles = false;
             } else {
                 that._tileWidth = tileInfo.rows;
@@ -120,6 +129,28 @@ define([
                     return;
                 }
                 that._maximumLevel = data.tileInfo.lods.length - 1;
+
+                if (defined(data.fullExtent)) {
+                    var projection = that._tilingScheme.projection;
+
+                    if (defined(data.fullExtent.spatialReference) && defined(data.fullExtent.spatialReference.wkid)) {
+                        if (data.fullExtent.spatialReference.wkid === 102100) {
+                            projection = new WebMercatorProjection();
+                        } else if (data.fullExtent.spatialReference.wkid === 4326) {
+                            projection = new GeographicProjection();
+                        } else {
+                            var extentMessage = 'fullExtent.spatialReference WKID ' + data.fullExtent.spatialReference.wkid + ' is not supported.';
+                            metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, extentMessage, undefined, undefined, undefined, requestMetadata);
+                            return;
+                        }
+                    }
+
+                    var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
+                    var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                    that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
+                } else {
+                    that._rectangle = that._tilingScheme.rectangle;
+                }
 
                 // Install the default tile discard policy if none has been supplied.
                 if (!defined(that._tileDiscardPolicy)) {
@@ -307,7 +338,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                return this._tilingScheme.rectangle;
+                return this._rectangle;
             }
         },
 
@@ -373,7 +404,9 @@ define([
          * will return the value of `options.usePreCachedTilesIfAvailable`, even if the MapServer does
          * not have pre-cached tiles.
          * @memberof ArcGisMapServerImageryProvider.prototype
-         * @returns {Boolean}
+         *
+         * @type {Boolean}
+         * @default true
          */
         usingPrecachedTiles : {
             get : function() {
@@ -388,7 +421,9 @@ define([
          * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
          * and texture upload time are reduced.
          * @memberof ArcGisMapServerImageryProvider.prototype
+         *
          * @type {Boolean}
+         * @default true
          */
         hasAlphaChannel : {
             get : function() {
@@ -401,12 +436,9 @@ define([
     /**
      * Gets the credits to be displayed when a given tile is displayed.
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level;
-     *
      * @returns {Credit[]} The credits to be displayed when the tile is displayed.
      *
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
@@ -419,12 +451,9 @@ define([
      * Requests the image for a given tile.  This function should
      * not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
      *
-     * @memberof ArcGisMapServerImageryProvider
-     *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     *
      * @returns {Promise} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an

@@ -132,7 +132,7 @@ defineSuite([
                 indices : [],
                 primitiveType : PrimitiveType.POINTS
             }));
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors', function() {
@@ -172,7 +172,7 @@ defineSuite([
     it('createLineSegmentsForVectors throws without geometry.attributes.position', function() {
         expect(function() {
             GeometryPipeline.createLineSegmentsForVectors();
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('createLineSegmentsForVectors throws when geometry.attributes does not have an attributeName property', function() {
@@ -339,7 +339,7 @@ defineSuite([
             });
 
             geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
@@ -568,7 +568,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('projectTo2D', function() {
@@ -700,7 +700,7 @@ defineSuite([
 
         expect(function() {
             return GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D');
-        }).toThrow();
+        }).toThrowDeveloperError();
     });
 
     it('encodeAttribute encodes positions', function() {
@@ -1327,13 +1327,13 @@ defineSuite([
         var normals = geometry.attributes.normal.values;
         expect(normals.length).toEqual(4*3);
 
-        var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1));
+        var a = Cartesian3.normalize(new Cartesian3(-1, 0, 1), new Cartesian3());
 
         expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
         expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
         expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
 
-        a = Cartesian3.normalize(new Cartesian3(1, 0, 1));
+        a = Cartesian3.normalize(new Cartesian3(1, 0, 1), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
     });
 
@@ -1355,23 +1355,23 @@ defineSuite([
         var normals = geometry.attributes.normal.values;
         expect(normals.length).toEqual(7*3);
 
-        var a = Cartesian3.normalize(new Cartesian3(-1, -1, -1));
+        var a = Cartesian3.normalize(new Cartesian3(-1, -1, -1), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        a = Cartesian3.normalize(new Cartesian3(0, -1, -1));
+        a = Cartesian3.normalize(new Cartesian3(0, -1, -1), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON7);
 
-        a = Cartesian3.normalize(new Cartesian3(-1, -1, 0));
+        a = Cartesian3.normalize(new Cartesian3(-1, -1, 0), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON7);
 
-        a = Cartesian3.normalize(new Cartesian3(-1, 0, -1));
+        a = Cartesian3.normalize(new Cartesian3(-1, 0, -1), new Cartesian3());
         expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
 
-        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z), CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON7);
     });
 
     it('computeBinormalAndTangent throws when geometry is undefined', function() {
@@ -2207,8 +2207,8 @@ defineSuite([
 
         for (var i = 0; i < positions.length; i += 3) {
             expect(Cartesian3.fromArray(normals, i)).toEqual(Cartesian3.UNIT_Z);
-            expect(Cartesian3.fromArray(binormals, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_Y));
-            expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_X));
+            expect(Cartesian3.fromArray(binormals, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()));
+            expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()));
         }
     });
 

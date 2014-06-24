@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        './Enumeration'
-    ], function(
-        Enumeration) {
+define(function() {
     "use strict";
 
     /**
@@ -14,17 +11,17 @@ define([
         /**
          * 0x0900. Vertices are in clockwise order.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          */
-        CLOCKWISE : new Enumeration(0x0900, 'CLOCKWISE'), // WebGL: CW
+        CLOCKWISE : 0x0900, // WebGL: CW
         /**
          * 0x0901. Vertices are in counter-clockwise order.
          *
-         * @type {Enumeration}
+         * @type {Number}
          * @constant
          */
-        COUNTER_CLOCKWISE : new Enumeration(0x0901, 'COUNTER_CLOCKWISE'), // WebGL: CCW
+        COUNTER_CLOCKWISE : 0x0901, // WebGL: CCW
 
         /**
          * @private
