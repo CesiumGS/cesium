@@ -42,7 +42,7 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
     var GeocoderViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -58,7 +58,7 @@ define([
 
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
-        this._flightDuration = defaultValue(options.flightDuration, 1500);
+        this._flightDuration = defaultValue(options.flightDuration, 1.5);
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
@@ -111,11 +111,11 @@ define([
         });
 
         /**
-         * Gets or sets the the duration of the camera flight in milliseconds.
+         * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
          *
          * @type {Number}
-         * @default 1500
+         * @default 1.5
          */
         this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {

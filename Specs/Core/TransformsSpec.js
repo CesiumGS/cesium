@@ -215,7 +215,10 @@ defineSuite([
 
             runs(function() {
                 Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
-                var preloadInterval = new TimeInterval(start, stop);
+                var preloadInterval = new TimeInterval({
+                    start : start,
+                    stop : stop
+                });
                 when(Transforms.preloadIcrfFixed(preloadInterval), function() {
                     ready = true;
                 }, function() {

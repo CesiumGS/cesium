@@ -25,7 +25,7 @@ define([
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The Scene instance to use.
-     * @param {Number} [duration] The time, in milliseconds, it takes to complete the camera flight home.
+     * @param {Number} [duration] The time, in seconds, it takes to complete the camera flight home.
      */
     var HomeButton = function(container, scene, duration) {
         //>>includeStart('debug', pragmas.debug);

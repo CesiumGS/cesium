@@ -33,7 +33,7 @@ require(['Cesium'], function(Cesium) {
 
     function reset() {
         scene.primitives.removeAll();
-        scene.animations.removeAll();
+        scene.tweens.removeAll();
 
         scene.camera.setTransform(Cesium.Matrix4.IDENTITY);
 
@@ -156,7 +156,7 @@ require(['Cesium'], function(Cesium) {
         var vm = viewer.homeButton.viewModel;
         vm.duration = 0.0;
         vm.command();
-        vm.duration = 3000.0;
+        vm.duration = 3.0;
 
         clock.multiplier = 3 * 60 * 60;
         scene.preRender.addEventListener(icrf);

@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/EasingFunction',
         '../Core/HermiteSpline',
         '../Core/LinearSpline',
         '../Core/Math',
@@ -14,7 +15,6 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
-        '../ThirdParty/Tween',
         './PerspectiveFrustum',
         './PerspectiveOffCenterFrustum',
         './SceneMode'
@@ -26,6 +26,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        EasingFunction,
         HermiteSpline,
         LinearSpline,
         CesiumMath,
@@ -33,14 +34,13 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
-        Tween,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
     "use strict";
 
     /**
-     * Creates animations for camera flights.
+     * Creates tweens for camera flights.
      * <br /><br />
      * Mouse interaction is disabled during flights.
      *
@@ -396,7 +396,7 @@ define([
     var scratchCartographic = new Cartographic();
     var scratchDestination = new Cartesian3();
 
-    CameraFlightPath.createAnimation = function(scene, options) {
+    CameraFlightPath.createTween = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var destination = options.destination;
         var direction = options.direction;
@@ -416,7 +416,9 @@ define([
 
         if (scene.frameState.mode === SceneMode.MORPHING) {
             return {
-                duration : 0
+                startObject : {},
+                stopObject: {},
+                duration : 0.0
             };
         }
 
@@ -430,7 +432,7 @@ define([
             destination = projection.project(scratchCartographic, scratchDestination);
         }
 
-        var duration = defaultValue(options.duration, 3000.0);
+        var duration = defaultValue(options.duration, 3.0);
         var controller = scene.screenSpaceCameraController;
         controller.enableInputs = false;
 
@@ -444,8 +446,8 @@ define([
             };
             return wrapped;
         };
-        var onComplete = wrapCallback(options.onComplete);
-        var onCancel = wrapCallback(options.onCancel);
+        var complete = wrapCallback(options.complete);
+        var cancel = wrapCallback(options.cancel);
 
         var transform = options.endTransform;
         if (defined(transform)) {
@@ -456,20 +458,24 @@ define([
         if (frameState.mode === SceneMode.SCENE2D) {
             if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
-                    duration : 0,
-                    onComplete : onComplete,
-                    onCancel: onCancel
+                    startObject : {},
+                    stopObject: {},
+                    duration : 0.0,
+                    complete : complete,
+                    cancel: cancel
                 };
             }
         } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
-                duration : 0,
-                onComplete : onComplete,
-                onCancel: onCancel
+                startObject : {},
+                stopObject: {},
+                duration : 0.0,
+                complete : complete,
+                cancel: cancel
             };
         }
 
-        if (duration <= 0) {
+        if (duration <= 0.0) {
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
@@ -508,14 +514,16 @@ define([
                     frustum.bottom = -frustum.top;
                 }
 
-                if (typeof onComplete === 'function') {
-                    onComplete();
+                if (typeof complete === 'function') {
+                    complete();
                 }
             };
             return {
-                duration : 0,
-                onComplete : newOnComplete,
-                onCancel: onCancel
+                startObject : {},
+                stopObject: {},
+                duration : 0.0,
+                complete : newOnComplete,
+                cancel: cancel
             };
         }
 
@@ -530,20 +538,20 @@ define([
 
         return {
             duration : duration,
-            easingFunction : Tween.Easing.Sinusoidal.InOut,
-            startValue : {
+            easingFunction : EasingFunction.SINUSOIDAL_IN_OUT,
+            startObject : {
                 time : 0.0
             },
-            stopValue : {
+            stopObject : {
                 time : duration
             },
-            onUpdate : update,
-            onComplete : onComplete,
-            onCancel: onCancel
+            update : update,
+            complete : complete,
+            cancel: cancel
         };
     };
 
-    CameraFlightPath.createAnimationRectangle = function(scene, options) {
+    CameraFlightPath.createTweenRectangle = function(scene, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var rectangle = options.destination;
 
@@ -563,7 +571,7 @@ define([
 
         createAnimationoptions.destination = c3destination;
         createAnimationoptions.convert = false;
-        return this.createAnimation(scene, createAnimationoptions);
+        return this.createTween(scene, createAnimationoptions);
     };
 
     return CameraFlightPath;

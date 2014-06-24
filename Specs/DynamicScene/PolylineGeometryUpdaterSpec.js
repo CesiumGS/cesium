@@ -187,8 +187,17 @@ defineSuite([
         var time3 = new JulianDate(20, 0);
 
         var show = new TimeIntervalCollectionProperty();
-        show.intervals.addInterval(new TimeInterval(time1, time2, true, true, false));
-        show.intervals.addInterval(new TimeInterval(time2, time3, false, true, true));
+        show.intervals.addInterval(new TimeInterval({
+            start : time1,
+            stop : time2,
+            data : false
+        }));
+        show.intervals.addInterval(new TimeInterval({
+            start : time2,
+            stop : time3,
+            isStartIncluded : false,
+            data : true
+        }));
 
         var colorMaterial = new ColorMaterialProperty();
         colorMaterial.color = new SampledProperty(Color);
@@ -216,8 +225,18 @@ defineSuite([
 
         function makeProperty(value1, value2) {
             var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval(time1, time2, true, false, value1));
-            property.intervals.addInterval(new TimeInterval(time2, time3, true, false, value2));
+            property.intervals.addInterval(new TimeInterval({
+                start : time1,
+                stop : time2,
+                isStopIncluded : false,
+                data : value1
+            }));
+            property.intervals.addInterval(new TimeInterval({
+                start : time2,
+                stop : time3,
+                isStopIncluded : false,
+                data : value2
+            }));
             return property;
         }
 
@@ -228,7 +247,11 @@ defineSuite([
         polyline.show = makeProperty(true, false);
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(new TimeInterval(time1, time3, true, false));
+        dynamicObject.availability.addInterval(new TimeInterval({
+            start : time1,
+            stop : time3,
+            isStopIncluded : false
+        }));
 
         var updater = new PolylineGeometryUpdater(dynamicObject);
         var primitives = new PrimitiveCollection();

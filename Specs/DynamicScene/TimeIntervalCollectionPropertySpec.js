@@ -22,8 +22,17 @@ defineSuite([
     });
 
     it('works with basic types', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, 5);
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, 6);
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : 5
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : 6
+        });
 
         var property = new TimeIntervalCollectionProperty();
         property.intervals.addInterval(interval1);
@@ -35,8 +44,17 @@ defineSuite([
     });
 
     it('works with clonable objects', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionProperty();
         property.intervals.addInterval(interval1);
@@ -52,8 +70,17 @@ defineSuite([
     });
 
     it('works with a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var property = new TimeIntervalCollectionProperty();
         property.intervals.addInterval(interval1);
@@ -77,8 +104,17 @@ defineSuite([
     });
 
     it('equals works for differing basic type intervals', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, 5);
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, 6);
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : 5
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : 6
+        });
 
         var left = new TimeIntervalCollectionProperty();
         left.intervals.addInterval(interval1);
@@ -93,8 +129,17 @@ defineSuite([
     });
 
     it('equals works for differing complex type intervals', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new Cartesian3(4, 5, 6)
+        });
 
         var left = new TimeIntervalCollectionProperty();
         left.intervals.addInterval(interval1);
@@ -109,7 +154,11 @@ defineSuite([
     });
 
     it('raises definitionChanged event', function() {
-        var interval = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new Cartesian3(1, 2, 3));
+        var interval = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new Cartesian3(1, 2, 3)
+        });
 
         var property = new TimeIntervalCollectionProperty();
         var listener = jasmine.createSpy('listener');
