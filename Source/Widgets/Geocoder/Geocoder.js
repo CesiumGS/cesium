@@ -39,7 +39,7 @@ define([
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The Scene's primary ellipsoid.
-     * @param {Number} [options.flightDuration=1500] The duration of the camera flight to an entered location, in milliseconds.
+     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
      */
     var Geocoder = function(options) {
         //>>includeStart('debug', pragmas.debug);

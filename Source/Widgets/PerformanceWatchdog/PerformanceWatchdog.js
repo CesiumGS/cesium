@@ -23,28 +23,26 @@ define([
      * @alias PerformanceWatchdog
      * @constructor
      *
-     * @param {Element|String} description.container The DOM element or ID that will contain the widget.
-     * @param {Scene} description.scene The {@link Scene} for which to monitor performance.
-     * @param {String} [description.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+     * @param {Object} [options] Object with the following properties:
+     * @param {Element|String} options.container The DOM element or ID that will contain the widget.
+     * @param {Scene} options.scene The {@link Scene} for which to monitor performance.
+     * @param {String} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
      *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
      *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
-     *
-     * @exception {DeveloperError} description.container is required.
-     * @exception {DeveloperError} description.scene is required.
      */
-    var PerformanceWatchdog = function(description) {
+    var PerformanceWatchdog = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.container)) {
-            throw new DeveloperError('description.container is required.');
+        if (!defined(options) || !defined(options.container)) {
+            throw new DeveloperError('options.container is required.');
         }
-        if (!defined(description.scene)) {
-            throw new DeveloperError('description.scene is required.');
+        if (!defined(options.scene)) {
+            throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        var container = getElement(description.container);
+        var container = getElement(options.container);
 
-        var viewModel = new PerformanceWatchdogViewModel(description);
+        var viewModel = new PerformanceWatchdogViewModel(options);
 
         var element = document.createElement('div');
         element.className = 'cesium-performance-watchdog-message-area';

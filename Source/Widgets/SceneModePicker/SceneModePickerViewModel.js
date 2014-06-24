@@ -27,7 +27,7 @@ define([
      * @constructor
      *
      * @param {Scene} scene The Scene to morph
-     * @param {Number} [duration=2000] The duration of scene morph animations, in milliseconds
+     * @param {Number} [duration=2.0] The duration of scene morph animations, in seconds
      */
     var SceneModePickerViewModel = function(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -48,7 +48,7 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(scene.morphStart, morphStart);
 
-        this._duration = defaultValue(duration, 2000);
+        this._duration = defaultValue(duration, 2.0);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
@@ -135,7 +135,7 @@ define([
         },
 
         /**
-         * Gets or sets the the duration of scene mode transition animations in milliseconds.
+         * Gets or sets the the duration of scene mode transition animations in seconds.
          * A value of zero causes the scene to instantly change modes.
          * @memberof SceneModePickerViewModel.prototype
          * @type {Number}
@@ -146,7 +146,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (value < 0.0) {
                     throw new DeveloperError('duration value must be positive.');
                 }
                 //>>includeEnd('debug');

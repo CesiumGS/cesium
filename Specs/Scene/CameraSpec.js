@@ -14,7 +14,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
-        'Scene/AnimationCollection',
+        'Scene/TweenCollection',
         'Scene/CameraFlightPath',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
@@ -34,7 +34,7 @@ defineSuite([
         Rectangle,
         Transforms,
         WebMercatorProjection,
-        AnimationCollection,
+        TweenCollection,
         CameraFlightPath,
         OrthographicFrustum,
         PerspectiveFrustum,
@@ -63,7 +63,7 @@ defineSuite([
         this.drawingBufferWidth = 1024;
         this.drawingBufferHeight = 768;
         this.mapProjection = defaultValue(projection, new GeographicProjection());
-        this.animations = new AnimationCollection();
+        this.tweens = new TweenCollection();
     };
 
     beforeEach(function() {
@@ -1327,12 +1327,12 @@ defineSuite([
 
     it('create animation throws without a duration', function() {
         expect(function() {
-            camera.createCorrectPositionAnimation();
+            camera.createCorrectPositionTween();
         }).toThrowDeveloperError();
     });
 
     it('does not animate in 3D', function() {
-        expect(camera.createCorrectPositionAnimation(50.0)).not.toBeDefined();
+        expect(camera.createCorrectPositionTween(0.05)).not.toBeDefined();
     });
 
     it('animates position to visible map in 2D', function() {
@@ -1351,16 +1351,16 @@ defineSuite([
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
-        var animationCollection = new AnimationCollection();
+        var tweens = new TweenCollection();
 
         camera.moveUp(dy);
         camera.moveRight(dx);
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        var animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        var animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(camera.position.x).toEqual(max.x);
@@ -1369,11 +1369,11 @@ defineSuite([
         camera.moveDown(dy);
         camera.moveLeft(dx);
 
-        correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        correctAnimation = camera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(camera.position.x).toEqual(-max.x);
@@ -1395,18 +1395,18 @@ defineSuite([
         var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
         var factor = 1000.0;
         var dx = max.x * factor;
-        var animationCollection = new AnimationCollection();
+        var tweens = new TweenCollection();
 
         camera.zoomOut(dx);
 
         var right = frustum.right;
         var top = frustum.top;
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        var animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        var animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(frustum.right).toBeLessThan(right);
@@ -1433,16 +1433,16 @@ defineSuite([
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
-        var animationCollection = new AnimationCollection();
+        var tweens = new TweenCollection();
 
         camera.moveUp(dy);
         camera.moveRight(dx);
 
-        var correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = camera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        var animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        var animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(camera.position.x).toEqualEpsilon(max.x, CesiumMath.EPSILON6);
@@ -1451,11 +1451,11 @@ defineSuite([
         camera.moveDown(dy);
         camera.moveLeft(dx);
 
-        correctAnimation = camera.createCorrectPositionAnimation(50.0);
+        correctAnimation = camera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(camera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
@@ -1485,16 +1485,16 @@ defineSuite([
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
-        var animationCollection = new AnimationCollection();
+        var tweens = new TweenCollection();
 
         mercatorCamera.moveUp(dy);
         mercatorCamera.moveRight(dx);
 
-        var correctAnimation = mercatorCamera.createCorrectPositionAnimation(50.0);
+        var correctAnimation = mercatorCamera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        var animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        var animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(mercatorCamera.position.x).toEqualEpsilon(max.x, CesiumMath.EPSILON6);
@@ -1503,11 +1503,11 @@ defineSuite([
         mercatorCamera.moveDown(dy);
         mercatorCamera.moveLeft(dx);
 
-        correctAnimation = mercatorCamera.createCorrectPositionAnimation(50.0);
+        correctAnimation = mercatorCamera.createCorrectPositionTween(0.05);
         expect(correctAnimation).toBeDefined();
-        animation = animationCollection.add(correctAnimation);
-        while(animationCollection.contains(animation)) {
-            animationCollection.update();
+        animation = tweens.add(correctAnimation);
+        while(tweens.contains(animation)) {
+            tweens.update();
         }
 
         expect(mercatorCamera.position.x).toEqualEpsilon(-max.x, CesiumMath.EPSILON6);
@@ -1515,8 +1515,10 @@ defineSuite([
     });
 
     it('flyTo uses CameraFlightPath', function() {
-        spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            duration : 0
+        spyOn(CameraFlightPath, 'createTween').andReturn({
+            startObject : {},
+            stopObject: {},
+            duration : 0.0
         });
 
         var options = {
@@ -1524,12 +1526,14 @@ defineSuite([
         };
         camera.flyTo(options);
 
-        expect(CameraFlightPath.createAnimation).toHaveBeenCalledWith(scene, options);
+        expect(CameraFlightPath.createTween).toHaveBeenCalledWith(scene, options);
     });
 
-    it('flyToRectangle uses createAnimationRectangle', function() {
-        spyOn(CameraFlightPath, 'createAnimationRectangle').andReturn({
-            duration : 0
+    it('flyToRectangle uses createTweenRectangle', function() {
+        spyOn(CameraFlightPath, 'createTweenRectangle').andReturn({
+            startObject : {},
+            stopObject: {},
+            duration : 0.0
         });
 
         var options = {
@@ -1537,7 +1541,7 @@ defineSuite([
         };
         camera.flyToRectangle(options);
 
-        expect(CameraFlightPath.createAnimationRectangle).toHaveBeenCalledWith(scene, options);
+        expect(CameraFlightPath.createTweenRectangle).toHaveBeenCalledWith(scene, options);
     });
 
 });

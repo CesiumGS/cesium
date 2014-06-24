@@ -29,25 +29,26 @@ define([
      * @alias PerformanceWatchdogViewModel
      * @constructor
      *
-     * @param {Scene} description.scene The Scene instance for which to monitor performance.
-     * @param {String} [description.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
+     * @param {Object} [options] Object with the following properties:
+     * @param {Scene} options.scene The Scene instance for which to monitor performance.
+     * @param {String} [options.lowFrameRateMessage='This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.'] The
      *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
      *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
      */
-    var PerformanceWatchdogViewModel = function(description) {
+    var PerformanceWatchdogViewModel = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(description) || !defined(description.scene)) {
-            throw new DeveloperError('description.scene is required.');
+        if (!defined(options) || !defined(options.scene)) {
+            throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._scene = description.scene;
+        this._scene = options.scene;
 
         /**
          * Gets or sets the message to display when a low frame rate is detected.  This string will be interpreted as HTML.
          * @type {String}
          */
-        this.lowFrameRateMessage = defaultValue(description.lowFrameRateMessage, 'This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.');
+        this.lowFrameRateMessage = defaultValue(options.lowFrameRateMessage, 'This application appears to be performing poorly on your system.  Please try using a different web browser or updating your video drivers.');
 
         /**
          * Gets or sets a value indicating whether the low frame rate message has previously been dismissed by the user.  If it has
@@ -70,7 +71,7 @@ define([
             that.lowFrameRateMessageDismissed = true;
         });
 
-        var monitor = FrameRateMonitor.fromScene(description.scene);
+        var monitor = FrameRateMonitor.fromScene(options.scene);
 
         this._unsubscribeLowFrameRate = monitor.lowFrameRate.addEventListener(function() {
             if (!that.lowFrameRateMessageDismissed) {

@@ -19,6 +19,19 @@ Beta Releases
                 destination : Cesium.Cartesian3.fromDegrees(-117.16, 32.71, 15000.0)
             });
 
+  * In `Camera.flyTo` and `Camera.flyToRectangle`:
+    * `options.duration` is now in seconds, not milliseconds.
+    * Renamed `options.endReferenceFrame` to `options.endTransform`.
+    * Renamed `options.onComplete` to `options.complete`.
+    * Renamed `options.onCancel` to `options.cancel`.
+  * The following are now in seconds, not milliseconds.
+    * `Scene.morphToColumbusView`, `Scene.morphTo2D`, and `Scene.morphTo3D` parameter `duration`.
+    * `HomeButton` constructor parameter `options.duration`, `HomeButtonViewModel` constructor parameter `duration`, and `HomeButtonViewModel.duration`.
+    * `SceneModePicker` constructor parameter `duration`, `SceneModePickerViewModel` constructor parameter `duration`, and `SceneModePickerViewModel.duration`.
+    * `Geocoder` and `GeocoderViewModel` constructor parameter `options.flightDuration` and `GeocoderViewModel.flightDuration`.
+    * `ScreenSpaceCameraController.bounceAnimationTime`.
+    * `FrameRateMonitor` constructor parameter `options.samplingWindow`, `options.quietPeriod`, and `options.warmupPeriod`.
+  * Removed `Scene.animations` and `AnimationCollection` from the public Cesium API.
   * Renamed `options.endReferenceFrame` to `options.endTransform` in `Camera.flyTo` and `Camera.flyToRectangle`.
   * Renamed `Simon1994PlanetaryPositions` functions `ComputeSunPositionInEarthInertialFrame` and `ComputeMoonPositionInEarthInertialFrame` to `computeSunPositionInEarthInertialFrame` and `computeMoonPositionInEarthInertialFrame`, respectively.
   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
@@ -92,7 +105,8 @@ Beta Releases
                 isStopIncluded : true
             });
   * `TimeIntervalCollection.empty` was renamed to `TimeIntervalCollection.isEmpty`
-
+  * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
+  * Removed `Camera.createCorrectPositionAnimation`.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
@@ -106,8 +120,8 @@ Beta Releases
 * `Viewer` and `CesiumWidget` now take a new optional parameter, `creditContainer`.
 * Added `PerformanceWatchdog` widget and `viewerPerformanceWatchdogMixin`.
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
-* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `Viewer` can now optionally be constructed with a `DataSourceCollection`.  Previously, it always created one itself internally.
+* Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
 * Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * Added `TimeIntervalCollection.isStartIncluded` and `TimeIntervalCollection.isStopIncluded`.
