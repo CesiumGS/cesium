@@ -6,6 +6,13 @@ var connect = require('connect');
 var http = require('http');
 var url=require('url');
 
+function extractProxyUrl(requestUrl) {
+  var queryStringStart = requestUrl.indexOf('?');
+  var proxyUrl = requestUrl.substring(queryStringStart + 1);
+  proxyUrl = unescape(proxyUrl);
+  return proxyUrl;
+}
+
 function proxyMiddleware(request, response, next) {
   if (request.url.indexOf('/proxy') === 0) {
     //TODO handle case of no url - return 400 'No url specified.''
@@ -22,13 +29,6 @@ function proxyMiddleware(request, response, next) {
   } else {
     next();
   }
-}
-
-function extractProxyUrl(requestUrl) {
-  var queryStringStart = requestUrl.indexOf('?');
-  var proxyUrl = requestUrl.substring(queryStringStart + 1);
-  proxyUrl = unescape(proxyUrl);
-  return proxyUrl;
 }
 
 var app = connect();
