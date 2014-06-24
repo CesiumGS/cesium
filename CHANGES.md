@@ -37,7 +37,7 @@ Beta Releases
   * Replaced `Scene.scene2D.projection` property with read-only `Scene.mapProjection`.  Set this with the `mapProjection` option for the `Viewer`, `CesiumWidget`, or `Scene` constructors.
   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
   * Replaced `color`, `outlineColor`, and `outlineWidth` in `DynamicPath` with a `material` property.
-  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`. 
+  * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`.
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
   * All `Cartesian2`, `Cartesian3`, `Cartesian4`, `TimeInterval`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
@@ -111,7 +111,7 @@ Beta Releases
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Added `HermitePolynomialApproximation.interpolate` for performing interpolation when derivative information is available.
-* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.  
+* `SampledProperty` and `SampledPositionProperty` can now store derivative information for each sample value. This allows for more accurate interpolation when using `HermitePolynomialApproximation`.
 * Fixed support for embedded resources in glTF models.
 * Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
