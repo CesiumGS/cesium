@@ -444,6 +444,44 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with VertexNormals', function() {
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                return loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.vertexnormals.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnVertexNormalTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : baseUrl,
+                requestVertexNormals : true
+            });
+
+            waitsFor(function() {
+                return terrainProvider.ready;
+            });
+
+            var loadedData;
+
+            runs(function() {
+                var promise = terrainProvider.requestTileGeometry(0, 0, 0);
+
+                when(promise, function(terrainData) {
+                    loadedData = terrainData;
+                });
+            });
+
+            waitsFor(function() {
+                return defined(loadedData);
+            }, 'request to complete');
+
+            runs(function() {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(loadedData._encodedNormals).toBeDefined();
+            });
+        });
+
         it('returns undefined if too many requests are already in progress', function() {
             var baseUrl = 'made/up/url';
 
