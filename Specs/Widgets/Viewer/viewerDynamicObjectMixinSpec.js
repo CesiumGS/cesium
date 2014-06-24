@@ -90,8 +90,10 @@ defineSuite([
         expect(viewer.trackedObject).toBe(dynamicObject);
 
         //Needed to avoid actually creating a flight when we issue the home command.
-        spyOn(CameraFlightPath, 'createAnimation').andReturn({
-            duration : 0
+        spyOn(CameraFlightPath, 'createTween').andReturn({
+            startObject : {},
+            stopObject: {},
+            duration : 0.0
         });
 
         viewer.homeButton.viewModel.command();

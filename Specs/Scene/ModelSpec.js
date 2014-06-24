@@ -518,7 +518,7 @@ defineSuite([
         expect(a).toBeDefined();
         expect(a.name).toEqual('animation_1');
         expect(a.startTime).not.toBeDefined();
-        expect(a.startOffset).toEqual(0.0);
+        expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
         expect(a.removeOnStop).toEqual(false);
         expect(a.speedup).toEqual(1.0);
@@ -628,14 +628,14 @@ defineSuite([
         });
     });
 
-    it('Animates with a startOffset', function() {
+    it('Animates with a delay', function() {
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
 
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            startOffset : 1.0
+            delay : 1.0
         });
 
         var spyStart = jasmine.createSpy('listener');

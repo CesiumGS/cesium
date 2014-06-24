@@ -17,7 +17,7 @@ define([
         '../Core/Matrix4',
         '../Core/Ray',
         '../Core/Transforms',
-        './AnimationCollection',
+        './TweenCollection',
         './CameraEventAggregator',
         './CameraEventType',
         './SceneMode'
@@ -39,7 +39,7 @@ define([
         Matrix4,
         Ray,
         Transforms,
-        AnimationCollection,
+        TweenCollection,
         CameraEventAggregator,
         CameraEventType,
         SceneMode) {
@@ -143,11 +143,11 @@ define([
          */
         this.maximumMovementRatio = 0.1;
         /**
-         * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
+         * Sets the duration, in seconds, of the bounce back animations in 2D and Columbus view.
          * @type {Number}
-         * @default 3000.0
+         * @default 3.0
          */
-        this.bounceAnimationTime = 3000.0;
+        this.bounceAnimationTime = 3.0;
         /**
          * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
          * @type {Number}
@@ -237,8 +237,8 @@ define([
         this._lastInertiaWheelZoomMovement = undefined;
         this._lastInertiaTiltMovement = undefined;
 
-        this._animations = new AnimationCollection();
-        this._animation = undefined;
+        this._tweens = new TweenCollection();
+        this._tween = undefined;
 
         this._horizontalRotationAxis = undefined;
 
@@ -511,9 +511,9 @@ define([
     }
 
     function update2D(controller) {
-        var animations = controller._animations;
+        var tweens = controller._tweens;
         if (controller._aggregator.anyButtonDown()) {
-            animations.removeAll();
+            tweens.removeAll();
         }
 
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._camera.transform)) {
@@ -528,14 +528,14 @@ define([
         if (!controller._aggregator.anyButtonDown() &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !animations.contains(controller._animation)) {
-            var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
-            if (defined(animation)) {
-                controller._animation = animations.add(animation);
+                !tweens.contains(controller._tween)) {
+            var tween = controller._camera.createCorrectPositionTween(controller.bounceAnimationTime);
+            if (defined(tween)) {
+                controller._tween = tweens.add(tween);
             }
         }
 
-        animations.update();
+        tweens.update();
     }
 
     var translateCVStartRay = new Ray();
@@ -638,10 +638,10 @@ define([
             reactToInput(controller, controller.enableRotate, controller.rotateEventTypes, rotate3D, controller.inertiaSpin, '_lastInertiaSpinMovement');
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom3D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         } else {
-            var animations = controller._animations;
+            var tweens = controller._tweens;
 
             if (controller._aggregator.anyButtonDown()) {
-                animations.removeAll();
+                tweens.removeAll();
             }
 
             reactToInput(controller, controller.enableTilt, controller.tiltEventTypes, rotateCV, controller.inertiaSpin, '_lastInertiaTiltMovement');
@@ -651,14 +651,14 @@ define([
 
             if (!controller._aggregator.anyButtonDown() && (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                     (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                    !animations.contains(controller._animation)) {
-                var animation = controller._camera.createCorrectPositionAnimation(controller.bounceAnimationTime);
-                if (defined(animation)) {
-                    controller._animation = animations.add(animation);
+                    !tweens.contains(controller._tween)) {
+                var tween = controller._camera.createCorrectPositionTween(controller.bounceAnimationTime);
+                if (defined(tween)) {
+                    controller._tween = tweens.add(tween);
                 }
             }
 
-            animations.update();
+            tweens.update();
         }
     }
 
@@ -1014,7 +1014,7 @@ define([
      * controller = controller && controller.destroy();
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
-        this._animations.removeAll();
+        this._tweens.removeAll();
         this._spinHandler = this._spinHandler && this._spinHandler.destroy();
         this._translateHandler = this._translateHandler && this._translateHandler.destroy();
         this._lookHandler = this._lookHandler && this._lookHandler.destroy();
