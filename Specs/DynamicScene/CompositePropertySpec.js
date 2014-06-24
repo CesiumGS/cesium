@@ -24,8 +24,17 @@ defineSuite([
     });
 
     it('works without a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new ConstantProperty(new Cartesian3(1, 2, 3))
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new ConstantProperty(new Cartesian3(4, 5, 6))
+        });
 
         var property = new CompositeProperty();
         property.intervals.addInterval(interval1);
@@ -42,8 +51,17 @@ defineSuite([
     });
 
     it('works with a result parameter', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new ConstantProperty(new Cartesian3(1, 2, 3))
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new ConstantProperty(new Cartesian3(4, 5, 6))
+        });
 
         var property = new CompositeProperty();
         property.intervals.addInterval(interval1);
@@ -61,8 +79,17 @@ defineSuite([
     });
 
     it('equals works', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new ConstantProperty(new Cartesian3(1, 2, 3))
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new ConstantProperty(new Cartesian3(4, 5, 6))
+        });
 
         var left = new CompositeProperty();
         left.intervals.addInterval(interval1);
@@ -77,8 +104,17 @@ defineSuite([
     });
 
     it('raises definitionChanged event in all cases', function() {
-        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
-        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(10, 0),
+            stop : new JulianDate(12, 0),
+            data : new ConstantProperty(new Cartesian3(1, 2, 3))
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(12, 0),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new ConstantProperty(new Cartesian3(4, 5, 6))
+        });
 
         var property = new CompositeProperty();
         var listener = jasmine.createSpy('listener');
@@ -106,8 +142,17 @@ defineSuite([
     });
 
     it('does not raise definitionChanged for an overwritten interval', function() {
-        var interval1 = new TimeInterval(new JulianDate(11, 0), new JulianDate(13, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
-        var interval2 = new TimeInterval(new JulianDate(10, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+        var interval1 = new TimeInterval({
+            start : new JulianDate(11, 0),
+            stop : new JulianDate(13, 0),
+            data : new ConstantProperty(new Cartesian3(1, 2, 3))
+        });
+        var interval2 = new TimeInterval({
+            start : new JulianDate(10),
+            stop : new JulianDate(14, 0),
+            isStartIncluded : false,
+            data : new ConstantProperty(new Cartesian3(4, 5, 6))
+        });
 
         var property = new CompositeProperty();
         var listener = jasmine.createSpy('listener');

@@ -247,9 +247,13 @@ defineSuite([
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-01/2012-08-02'
+        }));
         dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-05/2012-08-06'
+        }));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
@@ -265,9 +269,13 @@ defineSuite([
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2012-08-01/9999-12-31T24:00:00Z'
+        }));
         dynamicObject2.availability = new TimeIntervalCollection();
-        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
+        dynamicObject2.availability.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '0000-01-01T00:00:00Z/2012-08-06'
+        }));
         dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();

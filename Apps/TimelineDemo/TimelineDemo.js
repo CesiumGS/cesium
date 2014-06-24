@@ -93,10 +93,21 @@ define([
         timeline.addEventListener('settime', handleSetTime, false);
         timeline.addEventListener('setzoom', handleSetZoom, false);
 
-        timeline.addTrack(new TimeInterval(startJulian, JulianDate.addSeconds(startJulian, 60 * 60, new JulianDate())), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
-        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(endJulian, -60 * 60, new JulianDate()), endJulian), 8, Color.LIME);
+        timeline.addTrack(new TimeInterval({
+            start : startJulian,
+            stop : JulianDate.addSeconds(startJulian, 60 * 60, new JulianDate())
+        }), 8, Color.RED, new Color(0.55, 0.55, 0.55, 0.25));
+
+        timeline.addTrack(new TimeInterval({
+            start : JulianDate.addSeconds(endJulian, -60 * 60, new JulianDate()),
+            stop : endJulian
+        }), 8, Color.LIME);
+
         var middle = JulianDate.getSecondsDifference(endJulian, startJulian) / 4;
-        timeline.addTrack(new TimeInterval(JulianDate.addSeconds(startJulian, middle, new JulianDate()), JulianDate.addSeconds(startJulian, middle * 3, new JulianDate())), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
+        timeline.addTrack(new TimeInterval({
+            start : JulianDate.addSeconds(startJulian, middle, new JulianDate()),
+            stop : JulianDate.addSeconds(startJulian, middle * 3, new JulianDate())
+        }), 8, Color.DEEPSKYBLUE, new Color(0.55, 0.55, 0.55, 0.25));
 
         var clockViewModel = new ClockViewModel(clock);
         animationViewModel = new AnimationViewModel(clockViewModel);

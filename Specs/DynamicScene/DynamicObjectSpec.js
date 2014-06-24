@@ -3,11 +3,13 @@ defineSuite([
         'DynamicScene/DynamicObject',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
         'DynamicScene/ConstantProperty'
     ], function(
         DynamicObject,
         JulianDate,
         TimeInterval,
+        TimeIntervalCollection,
         ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -38,8 +40,12 @@ defineSuite([
 
     it('isAvailable works.', function() {
         var dynamicObject = new DynamicObject();
-        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        dynamicObject.availability = interval;
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(interval);
+        dynamicObject.availability = intervals;
         expect(dynamicObject.isAvailable(JulianDate.addSeconds(interval.start, -1, new JulianDate()))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
@@ -59,7 +65,7 @@ defineSuite([
         var newValue;
         var oldValue;
         //We loop through twice to ensure that oldValue is properly passed in.
-        for ( var x = 0; x < 2; x++) {
+        for (var x = 0; x < 2; x++) {
             for (i = 0; i < propertyNamesLength; i++) {
                 name = propertyNames[i];
                 newValue = new ConstantProperty(1);
@@ -72,11 +78,15 @@ defineSuite([
 
     it('merge always overwrites availability', function() {
         var dynamicObject = new DynamicObject();
-        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        var interval = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
         dynamicObject.availability = interval;
 
         var dynamicObject2 = new DynamicObject();
-        var interval2 = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        var interval2 = TimeInterval.fromIso8601({
+            iso8601 : '2000-01-01/2001-01-01'
+        });
         dynamicObject2.availability = interval2;
 
         dynamicObject.merge(dynamicObject2);

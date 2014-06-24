@@ -85,11 +85,31 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.color.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.cellAlpha.intervals.addInterval(new TimeInterval(start, stop, true, true, 1.0));
-        property.lineCount.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(3.4, 5.0)));
-        property.lineThickness.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
-        property.lineOffset.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(0.7, 0.8)));
+        property.color.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.cellAlpha.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 1.0
+        }));
+        property.lineCount.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(3.4, 5.0)
+        }));
+        property.lineThickness.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(2, 3)
+        }));
+        property.lineOffset.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(0.7, 0.8)
+        }));
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
