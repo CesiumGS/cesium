@@ -346,8 +346,9 @@ define([
 
         var primitives = this._primitives;
         var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            primitives[i].update(context, frameState, commandList);
+        for (var i = 0; i < primitives.length; ++i) {
+            var primitive = primitives[i];
+            primitive.update(context, frameState, commandList);
         }
     };
 
