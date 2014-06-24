@@ -1,18 +1,13 @@
-/*global require,__dirname*/
+/*global require,__dirname,unescape,console*/
 /*jshint es3:false*/
+'use strict';
+
 var connect = require('connect');
 var http = require('http');
 var url=require('url');
 
-var app = connect();
-app.use(proxyMiddleware);
-app.use(connect.static(__dirname));
-app.listen(8080);
-
-console.log("Cessium node.js server running, try me at http://localhost:8080/HelloWorld.html");
-
 function proxyMiddleware(request, response, next) {
-  if (request.url.indexOf("/proxy") === 0) {
+  if (request.url.indexOf('/proxy') === 0) {
     //TODO handle case of no url - return 400 'No url specified.''
     var proxyUrl = extractProxyUrl(request.url);
     
@@ -27,11 +22,18 @@ function proxyMiddleware(request, response, next) {
   } else {
     next();
   }
-};
+}
 
 function extractProxyUrl(requestUrl) {
-  var queryStringStart = requestUrl.indexOf("?");
+  var queryStringStart = requestUrl.indexOf('?');
   var proxyUrl = requestUrl.substring(queryStringStart + 1);
   proxyUrl = unescape(proxyUrl);
   return proxyUrl;
 }
+
+var app = connect();
+app.use(proxyMiddleware);
+app.use(connect.static(__dirname));
+app.listen(8080);
+
+console.log('Cessium node.js server running, try me at http://localhost:8080/HelloWorld.html');
