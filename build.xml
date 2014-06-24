@@ -440,13 +440,12 @@
 			<targetfile prefix="out=" />
 			<globmapper from="*" to="${relativeCombineOutputDirectory}/*.js" />
 			<mappedresources>
-				<fileset dir="${sourceDirectory}/Workers">
-				<include name="Workers/cesiumWorkerBootstrapper.js" />
-				<include name="Workers/transferTypedArrayTest.js" />
-				<include name="ThirdParty/Workers/*.js" />
+				<fileset dir="${sourceDirectory}">
+					<include name="Workers/cesiumWorkerBootstrapper.js" />
+					<include name="Workers/transferTypedArrayTest.js" />
+					<include name="ThirdParty/Workers/*.js" />
 				</fileset>
 				<chainedmapper>
-					<flattenmapper />
 					<globmapper from="*.js" to="*" />
 				</chainedmapper>
 			</mappedresources>
