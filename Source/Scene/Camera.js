@@ -1189,13 +1189,13 @@ define([
                 var dot = Cartesian3.dot(p, constrainedAxis);
                 var angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle > 0 && angle > angleToAxis) {
-                    angle = angleToAxis;
+                    angle = angleToAxis - CesiumMath.EPSILON4;
                 }
 
                 dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis, rotateVertScratchNegate));
                 angleToAxis = CesiumMath.acosClamped(dot);
                 if (angle < 0 && -angle > angleToAxis) {
-                    angle = -angleToAxis;
+                    angle = -angleToAxis + CesiumMath.EPSILON4;
                 }
 
                 var tangent = Cartesian3.cross(constrainedAxis, p, rotateVertScratchTan);
