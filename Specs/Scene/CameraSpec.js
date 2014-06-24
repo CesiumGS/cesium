@@ -1195,6 +1195,29 @@ defineSuite([
         expect(p).toBeUndefined();
     });
 
+    it('pick map in morph', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var maxRadii = ellipsoid.maximumRadius;
+
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii, new Cartesian3());
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.near = 100;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.MORPHING);
+
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
+        var p = camera.pickEllipsoid(windowCoord);
+        expect(p).toBeUndefined();
+    });
+
     it('set position cartographic throws without a cartographic', function() {
         expect(function() {
             camera.setPositionCartographic();
