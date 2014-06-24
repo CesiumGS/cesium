@@ -58,9 +58,9 @@ Beta Releases
     * `date.addHours(hours)` -> `JulianDate.addHours(date, hours)`
     * `date.addDays(days)` -> `JulianDate.addDays(date, days)`
     * `date.lessThan(right)` -> `JulianDate.lessThan(left, right)`
-    * `date.lessThanOrEquals (right)` -> `JulianDate.lessThanOrEquals (left, right)`
-    * `date.greaterThan (right)` -> `JulianDate.greaterThan (left, right)`
-    * `date.greaterThanOrEquals (right)` -> `JulianDate.greaterThanOrEquals (left, right)`
+    * `date.lessThanOrEquals(right)` -> `JulianDate.lessThanOrEquals(left, right)`
+    * `date.greaterThan(right)` -> `JulianDate.greaterThan(left, right)`
+    * `date.greaterThanOrEquals(right)` -> `JulianDate.greaterThanOrEquals(left, right)`
   * Refactored `TimeInterval` to be in line with other Core types.
     * The constructor no longer requires parameters and now takes a single options parameter. Code that looked like:
 
@@ -104,6 +104,7 @@ Beta Releases
                 isStartIncluded : false,
                 isStopIncluded : true
             });
+
   * `TimeIntervalCollection.empty` was renamed to `TimeIntervalCollection.isEmpty`
   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
   * Removed `Camera.createCorrectPositionAnimation`.
