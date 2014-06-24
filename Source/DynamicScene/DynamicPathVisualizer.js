@@ -43,7 +43,7 @@ define([
         TimeIntervalCollectionPositionProperty) {
     "use strict";
 
-    var scatchTimeInterval = new TimeInterval();
+    var scratchTimeInterval = new TimeInterval();
     var subSampleCompositePropertyScatch = new TimeInterval();
     var subSampleIntervalPropertyScatch = new TimeInterval();
 
@@ -162,7 +162,7 @@ define([
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!TimeInterval.intersect(interval, subSampleIntervalPropertyScatch, scatchTimeInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleIntervalPropertyScatch, scratchTimeInterval).isEmpty) {
                 var time = interval.start;
                 if (!interval.isStartIncluded) {
                     if (interval.isStopIncluded) {
@@ -197,7 +197,7 @@ define([
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!TimeInterval.intersect(interval, subSampleCompositePropertyScatch, scatchTimeInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleCompositePropertyScatch, scratchTimeInterval).isEmpty) {
                 var intervalStart = interval.start;
                 var intervalStop = interval.stop;
 

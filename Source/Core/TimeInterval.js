@@ -132,7 +132,7 @@ define([
      * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.iso8601] Am ISO 8601 interval.
+     * @param {String} [options.iso8601] An ISO 8601 interval.
      * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
      * @param {Object} [options.data] Arbitrary data associated with this interval.
@@ -150,20 +150,26 @@ define([
         //>>includeEnd('debug');
 
         var dates = options.iso8601.split('/');
+        var start = JulianDate.fromIso8601(dates[0]);
+        var stop = JulianDate.fromIso8601(dates[1]);
+        var isStartIncluded = defaultValue(options.isStartIncluded, true);
+        var isStopIncluded = defaultValue(options.isStopIncluded, true);
+        var data = options.data;
+
         if (!defined(result)) {
-            scratchInterval.start = JulianDate.fromIso8601(dates[0]);
-            scratchInterval.stop = JulianDate.fromIso8601(dates[1]);
-            scratchInterval.isStartIncluded = defaultValue(options.isStartIncluded, true);
-            scratchInterval.isStopIncluded = defaultValue(options.isStopIncluded, true);
-            scratchInterval.data = options.data;
+            scratchInterval.start = start;
+            scratchInterval.stop = stop;
+            scratchInterval.isStartIncluded = isStartIncluded;
+            scratchInterval.isStopIncluded = isStopIncluded;
+            scratchInterval.data = data;
             return new TimeInterval(scratchInterval);
         }
 
-        result.start = JulianDate.fromIso8601(dates[0]);
-        result.stop = JulianDate.fromIso8601(dates[1]);
-        result.isStartIncluded = defaultValue(options.isStartIncluded, true);
-        result.isStopIncluded = defaultValue(options.isStopIncluded, true);
-        result.data = options.data;
+        result.start = start;
+        result.stop = stop;
+        result.isStartIncluded = isStartIncluded;
+        result.isStopIncluded = isStopIncluded;
+        result.data = data;
         return result;
     };
 
@@ -244,7 +250,7 @@ define([
      * @param {TimeInterval} [right] The second interval.
      * @param {TimeInterval} result An existing instance to use for the result.
      * @param {TimeInterval~MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
-     * @returns {TimeInterval} The modified result parameter or a new instance if none was provided.
+     * @returns {TimeInterval} The modified result parameter.
      */
     TimeInterval.intersect = function(left, right, result, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);

@@ -91,6 +91,7 @@ Beta Releases
                 isStartIncluded : false,
                 isStopIncluded : true
             });
+  * `TimeIntervalCollection.empty` was renamed to `TimeIntervalCollection.isEmpty`
 
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.

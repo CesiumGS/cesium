@@ -298,142 +298,145 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!interval.isEmpty) {
-            var comparison, index;
-            var intervals = this._intervals;
+        if (interval.isEmpty) {
+            return;
+        }
 
-            // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
-            if (intervals.length === 0 || JulianDate.greaterThan(interval.start, intervals[intervals.length - 1].stop)) {
-                intervals.push(interval);
-                this._changedEvent.raiseEvent(this);
-                return;
+        var comparison;
+        var index;
+        var intervals = this._intervals;
+
+        // Handle the common case quickly: we're adding a new interval which is after all existing intervals.
+        if (intervals.length === 0 || JulianDate.greaterThan(interval.start, intervals[intervals.length - 1].stop)) {
+            intervals.push(interval);
+            this._changedEvent.raiseEvent(this);
+            return;
+        }
+
+        // Keep the list sorted by the start date
+        index = binarySearch(intervals, interval, compareIntervalStartTimes);
+        if (index < 0) {
+            index = ~index;
+        } else {
+            // interval's start date exactly equals the start date of at least one interval in the collection.
+            // It could actually equal the start date of two intervals if one of them does not actually
+            // include the date.  In that case, the binary search could have found either.  We need to
+            // look at the surrounding intervals and their IsStartIncluded properties in order to make sure
+            // we're working with the correct interval.
+            if (index > 0 && interval.isStartIncluded && intervals[index - 1].isStartIncluded && intervals[index - 1].start.equals(interval.start)) {
+                --index;
+            } else if (index < intervals.length && !interval.isStartIncluded && intervals[index].isStartIncluded && intervals[index].start.equals(interval.start)) {
+                ++index;
             }
+        }
 
-            // Keep the list sorted by the start date
-            index = binarySearch(intervals, interval, compareIntervalStartTimes);
-            if (index < 0) {
-                index = ~index;
-            } else {
-                // interval's start date exactly equals the start date of at least one interval in the collection.
-                // It could actually equal the start date of two intervals if one of them does not actually
-                // include the date.  In that case, the binary search could have found either.  We need to
-                // look at the surrounding intervals and their IsStartIncluded properties in order to make sure
-                // we're working with the correct interval.
-                if (index > 0 && interval.isStartIncluded && intervals[index - 1].isStartIncluded && intervals[index - 1].start.equals(interval.start)) {
-                    --index;
-                } else if (index < intervals.length && !interval.isStartIncluded && intervals[index].isStartIncluded && intervals[index].start.equals(interval.start)) {
-                    ++index;
-                }
-            }
-
-            if (index > 0) {
-                // Not the first thing in the list, so see if the interval before this one
-                // overlaps this one.
-                comparison = JulianDate.compare(intervals[index - 1].stop, interval.start);
-                if (comparison > 0 || (comparison === 0 && (intervals[index - 1].isStopIncluded || interval.isStartIncluded))) {
-                    // There is an overlap
-                    if (defined(dataComparer) ? dataComparer(intervals[index - 1].data, interval.data) : (intervals[index - 1].data === interval.data)) {
-                        // Overlapping intervals have the same data, so combine them
-                        if (JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)) {
-                            interval = new TimeInterval({
-                                start : intervals[index - 1].start,
-                                stop : interval.stop,
-                                isStartIncluded : intervals[index - 1].isStartIncluded,
-                                isStopIncluded : interval.isStopIncluded,
-                                data : interval.data
-                            });
-                        } else {
-                            interval = new TimeInterval({
-                                start : intervals[index - 1].start,
-                                stop : intervals[index - 1].stop,
-                                isStartIncluded : intervals[index - 1].isStartIncluded,
-                                isStopIncluded : intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
-                                data : interval.data
-                            });
-                        }
-                        intervals.splice(index - 1, 1);
-                        --index;
-                    } else {
-                        // Overlapping intervals have different data.  The new interval
-                        // being added 'wins' so truncate the previous interval.
-                        // If the existing interval extends past the end of the new one,
-                        // split the existing interval into two intervals.
-                        comparison = JulianDate.compare(intervals[index - 1].stop, interval.stop);
-                        if (comparison > 0 || (comparison === 0 && intervals[index - 1].isStopIncluded && !interval.isStopIncluded)) {
-                            intervals.splice(index - 1, 1, new TimeInterval({
-                                start : intervals[index - 1].start,
-                                stop : interval.start,
-                                isStartIncluded : intervals[index - 1].isStartIncluded,
-                                isStopIncluded : !interval.isStartIncluded,
-                                data : intervals[index - 1].data
-                            }), new TimeInterval({
-                                start : interval.stop,
-                                stop : intervals[index - 1].stop,
-                                isStartIncluded : !interval.isStopIncluded,
-                                isStopIncluded : intervals[index - 1].isStopIncluded,
-                                data : intervals[index - 1].data
-                            }));
-                        } else {
-                            intervals[index - 1] = new TimeInterval({
-                                start : intervals[index - 1].start,
-                                stop : interval.start,
-                                isStartIncluded : intervals[index - 1].isStartIncluded,
-                                isStopIncluded : !interval.isStartIncluded,
-                                data : intervals[index - 1].data
-                            });
-                        }
-                    }
-                }
-            }
-
-            while (index < intervals.length) {
-                // Not the last thing in the list, so see if the intervals after this one overlap this one.
-                comparison = JulianDate.compare(interval.stop, intervals[index].start);
-                if (comparison > 0 || (comparison === 0 && (interval.isStopIncluded || intervals[index].isStartIncluded))) {
-                    // There is an overlap
-                    if (defined(dataComparer) ? dataComparer(intervals[index].data, interval.data) : intervals[index].data === interval.data) {
-                        // Overlapping intervals have the same data, so combine them
+        if (index > 0) {
+            // Not the first thing in the list, so see if the interval before this one
+            // overlaps this one.
+            comparison = JulianDate.compare(intervals[index - 1].stop, interval.start);
+            if (comparison > 0 || (comparison === 0 && (intervals[index - 1].isStopIncluded || interval.isStartIncluded))) {
+                // There is an overlap
+                if (defined(dataComparer) ? dataComparer(intervals[index - 1].data, interval.data) : (intervals[index - 1].data === interval.data)) {
+                    // Overlapping intervals have the same data, so combine them
+                    if (JulianDate.greaterThan(interval.stop, intervals[index - 1].stop)) {
                         interval = new TimeInterval({
-                            start : interval.start,
-                            stop : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
-                            isStartIncluded : interval.isStartIncluded,
-                            isStopIncluded : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
+                            start : intervals[index - 1].start,
+                            stop : interval.stop,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : interval.isStopIncluded,
                             data : interval.data
                         });
-                        intervals.splice(index, 1);
                     } else {
-                        // Overlapping intervals have different data.  The new interval
-                        // being added 'wins' so truncate the next interval.
-                        intervals[index] = new TimeInterval({
-                            start : interval.stop,
-                            stop : intervals[index].stop,
-                            isStartIncluded : !interval.isStopIncluded,
-                            isStopIncluded : intervals[index].isStopIncluded,
-                            data : intervals[index].data
+                        interval = new TimeInterval({
+                            start : intervals[index - 1].start,
+                            stop : intervals[index - 1].stop,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : intervals[index - 1].isStopIncluded || (interval.stop.equals(intervals[index - 1].stop) && interval.isStopIncluded),
+                            data : interval.data
                         });
-                        if (intervals[index].isEmpty) {
-                            intervals.splice(index, 1);
-                        } else {
-                            // Found a partial span, so it is not possible for the next
-                            // interval to be spanned at all.  Stop looking.
-                            break;
-                        }
                     }
+                    intervals.splice(index - 1, 1);
+                    --index;
                 } else {
-                    // Found the last one we're spanning, so stop looking.
-                    break;
+                    // Overlapping intervals have different data.  The new interval
+                    // being added 'wins' so truncate the previous interval.
+                    // If the existing interval extends past the end of the new one,
+                    // split the existing interval into two intervals.
+                    comparison = JulianDate.compare(intervals[index - 1].stop, interval.stop);
+                    if (comparison > 0 || (comparison === 0 && intervals[index - 1].isStopIncluded && !interval.isStopIncluded)) {
+                        intervals.splice(index - 1, 1, new TimeInterval({
+                            start : intervals[index - 1].start,
+                            stop : interval.start,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : !interval.isStartIncluded,
+                            data : intervals[index - 1].data
+                        }), new TimeInterval({
+                            start : interval.stop,
+                            stop : intervals[index - 1].stop,
+                            isStartIncluded : !interval.isStopIncluded,
+                            isStopIncluded : intervals[index - 1].isStopIncluded,
+                            data : intervals[index - 1].data
+                        }));
+                    } else {
+                        intervals[index - 1] = new TimeInterval({
+                            start : intervals[index - 1].start,
+                            stop : interval.start,
+                            isStartIncluded : intervals[index - 1].isStartIncluded,
+                            isStopIncluded : !interval.isStartIncluded,
+                            data : intervals[index - 1].data
+                        });
+                    }
                 }
             }
-
-            // Add the new interval
-            intervals.splice(index, 0, interval);
-            this._changedEvent.raiseEvent(this);
         }
+
+        while (index < intervals.length) {
+            // Not the last thing in the list, so see if the intervals after this one overlap this one.
+            comparison = JulianDate.compare(interval.stop, intervals[index].start);
+            if (comparison > 0 || (comparison === 0 && (interval.isStopIncluded || intervals[index].isStartIncluded))) {
+                // There is an overlap
+                if (defined(dataComparer) ? dataComparer(intervals[index].data, interval.data) : intervals[index].data === interval.data) {
+                    // Overlapping intervals have the same data, so combine them
+                    interval = new TimeInterval({
+                        start : interval.start,
+                        stop : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].stop : interval.stop,
+                        isStartIncluded : interval.isStartIncluded,
+                        isStopIncluded : JulianDate.greaterThan(intervals[index].stop, interval.stop) ? intervals[index].isStopIncluded : interval.isStopIncluded,
+                        data : interval.data
+                    });
+                    intervals.splice(index, 1);
+                } else {
+                    // Overlapping intervals have different data.  The new interval
+                    // being added 'wins' so truncate the next interval.
+                    intervals[index] = new TimeInterval({
+                        start : interval.stop,
+                        stop : intervals[index].stop,
+                        isStartIncluded : !interval.isStopIncluded,
+                        isStopIncluded : intervals[index].isStopIncluded,
+                        data : intervals[index].data
+                    });
+                    if (intervals[index].isEmpty) {
+                        intervals.splice(index, 1);
+                    } else {
+                        // Found a partial span, so it is not possible for the next
+                        // interval to be spanned at all.  Stop looking.
+                        break;
+                    }
+                }
+            } else {
+                // Found the last one we're spanning, so stop looking.
+                break;
+            }
+        }
+
+        // Add the new interval
+        intervals.splice(index, 0, interval);
+        this._changedEvent.raiseEvent(this);
     };
 
     /**
      * Removes the specified interval from this interval collection, creating a hole over the specified interval.
-     * The Data property of the input interval is ignored.
+     * The data property of the input interval is ignored.
      *
      * @param {TimeInterval} interval The interval to remove.
      * @returns <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
