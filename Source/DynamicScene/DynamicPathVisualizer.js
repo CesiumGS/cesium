@@ -44,8 +44,8 @@ define([
     "use strict";
 
     var scratchTimeInterval = new TimeInterval();
-    var subSampleCompositePropertyScatch = new TimeInterval();
-    var subSampleIntervalPropertyScatch = new TimeInterval();
+    var subSampleCompositePropertyScratch = new TimeInterval();
+    var subSampleIntervalPropertyScratch = new TimeInterval();
 
     function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var times = property._property._times;
@@ -155,14 +155,14 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        subSampleIntervalPropertyScatch.start = start;
-        subSampleIntervalPropertyScatch.stop = stop;
+        subSampleIntervalPropertyScratch.start = start;
+        subSampleIntervalPropertyScratch.stop = stop;
 
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!TimeInterval.intersect(interval, subSampleIntervalPropertyScatch, scratchTimeInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleIntervalPropertyScratch, scratchTimeInterval).isEmpty) {
                 var time = interval.start;
                 if (!interval.isStartIncluded) {
                     if (interval.isStopIncluded) {
@@ -190,14 +190,14 @@ define([
     }
 
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        subSampleCompositePropertyScatch.start = start;
-        subSampleCompositePropertyScatch.stop = stop;
+        subSampleCompositePropertyScratch.start = start;
+        subSampleCompositePropertyScratch.stop = stop;
 
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!TimeInterval.intersect(interval, subSampleCompositePropertyScatch, scratchTimeInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleCompositePropertyScratch, scratchTimeInterval).isEmpty) {
                 var intervalStart = interval.start;
                 var intervalStop = interval.stop;
 
