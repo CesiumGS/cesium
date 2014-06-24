@@ -131,8 +131,8 @@ define([
     /**
      * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
      *
-     * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.iso8601] An ISO 8601 interval.
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.iso8601 An ISO 8601 interval.
      * @param {Boolean} [options.isStartIncluded=true] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [options.isStopIncluded=true] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
      * @param {Object} [options.data] Arbitrary data associated with this interval.
