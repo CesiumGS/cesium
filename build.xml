@@ -433,17 +433,40 @@
 			<arg value="${rjsOptions}" />
 			<arg value="pragmas.debug=${pragmas.debug}" />
 			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
+			<arg value="baseUrl=Workers" />
 			<arg value="skipModuleInsertion=true" />
 			<arg value="wrap=false" />
-			<srcfile prefix="include=" />
+			<srcfile prefix="include=./" />
 			<targetfile prefix="out=" />
-			<globmapper from="*" to="${relativeCombineOutputDirectory}/*.js" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
 			<mappedresources>
 				<fileset dir="${sourceDirectory}/Workers">
-				<include name="Workers/cesiumWorkerBootstrapper.js" />
-				<include name="Workers/transferTypedArrayTest.js" />
-				<include name="ThirdParty/Workers/*.js" />
+					<include name="cesiumWorkerBootstrapper.js" />
+					<include name="transferTypedArrayTest.js" />
+					<include name="ThirdParty/Workers/*.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
+
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="pragmas.debug=${pragmas.debug}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=ThirdParty/Workers" />
+			<arg value="skipModuleInsertion=true" />
+			<arg value="wrap=false" />
+			<srcfile prefix="include=./" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/ThirdParty/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/ThirdParty/Workers">
+					<include name="*.js" />
 				</fileset>
 				<chainedmapper>
 					<flattenmapper />
