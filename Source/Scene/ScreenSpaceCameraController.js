@@ -543,34 +543,37 @@ define([
     var translatCVDifference = new Cartesian3();
     var translateCVOrigin = new Cartesian3();
     var translateCVPlane = new Plane(Cartesian3.ZERO, 0.0);
+    var translateCVStartMouse = new Cartesian2();
+    var translateCVEndMouse = new Cartesian2();
 
     function translateCV(controller, startPosition, movement, frameState) {
         var camera = controller._scene.camera;
-        var startRay = camera.getPickRay(movement.startPosition, translateCVStartRay);
-        var endRay = camera.getPickRay(movement.endPosition, translateCVEndRay);
+        var startMouse = Cartesian3.clone(movement.startPosition, translateCVStartMouse);
+        var endMouse = Cartesian3.clone(movement.endPosition, translateCVEndMouse);
+        var startRay = camera.getPickRay(startMouse, translateCVStartRay);
 
         var origin = Cartesian3.clone(Cartesian3.ZERO, translateCVOrigin);
         var normal = Cartesian3.UNIT_X;
 
-        var startPlanePos;
-
         if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
-            startPlanePos = controller._globe.pick(startRay, frameState, translateCVStartPos);
-            if (defined(startPlanePos)) {
-                origin.x = startPlanePos.x;
+            var intersection = controller._globe.pick(startRay, frameState, translateCVStartPos);
+            if (defined(intersection)) {
+                origin.x = intersection.x;
             }
         }
 
-        if (!defined(startPlanePos)) {
-            var position = startRay.origin;
-            var direction = startRay.direction;
-
-            var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-            startPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVStartPos);
-            Cartesian3.add(position, startPlanePos, startPlanePos);
+        if (origin.x > camera.position.z) {
+            var tempY = startMouse.y;
+            startMouse.y = endMouse.y;
+            endMouse.y = tempY;
         }
 
         var plane = Plane.fromPointNormal(origin, normal, translateCVPlane);
+
+        startRay = camera.getPickRay(startMouse, translateCVStartRay);
+        var startPlanePos = IntersectionTests.rayPlane(startRay, plane, translateCVStartPos);
+
+        var endRay = camera.getPickRay(endMouse, translateCVEndRay);
         var endPlanePos = IntersectionTests.rayPlane(endRay, plane, translateCVEndPos);
 
         if (!defined(startPlanePos) || !defined(endPlanePos)) {
@@ -753,24 +756,37 @@ define([
 
     var zoomCVWindowPos = new Cartesian2();
     var zoomCVWindowRay = new Ray();
+    var zoomCVIntersection = new Cartesian3();
+
     function zoomCV(controller, startPosition, movement, frameState) {
         if (defined(movement.distance)) {
             movement = movement.distance;
         }
 
         var canvas = controller._scene.canvas;
+        var camera = controller._scene.camera;
 
         var windowPosition = zoomCVWindowPos;
         windowPosition.x = canvas.clientWidth / 2;
         windowPosition.y = canvas.clientHeight / 2;
-        var ray = controller._scene.camera.getPickRay(windowPosition, zoomCVWindowRay);
-        var normal = Cartesian3.UNIT_X;
+        var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
 
-        var position = ray.origin;
-        var direction = ray.direction;
-        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+        var intersection;
+        if (defined(controller._globe) && camera.position.z < controller.minimumPickingTerrainHeight) {
+            intersection = controller._globe.pick(ray, frameState, zoomCVIntersection);
+        }
 
-        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, scalar);
+        var distance;
+        if (defined(intersection)) {
+            distance = Cartesian3.distance(ray.origin, intersection);
+        } else {
+            var normal = Cartesian3.UNIT_X;
+            var position = ray.origin;
+            var direction = ray.direction;
+            distance = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
+        }
+
+        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, distance);
     }
 
     function updateCV(controller, frameState) {
@@ -985,11 +1001,28 @@ define([
 
         var camera = controller._scene.camera;
         var ellipsoid = controller._ellipsoid;
+        var canvas = controller._scene.canvas;
 
+        var windowPosition = zoomCVWindowPos;
+        windowPosition.x = canvas.clientWidth / 2;
+        windowPosition.y = canvas.clientHeight / 2;
+        var ray = camera.getPickRay(windowPosition, zoomCVWindowRay);
+
+        var intersection;
         var height = ellipsoid.cartesianToCartographic(camera.position).height;
-        var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
+        if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
+            intersection = controller._globe.pick(ray, frameState, zoomCVIntersection);
+        }
 
-        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, height, Cartesian3.dot(unitPosition, camera.direction));
+        var distance;
+        if (defined(intersection)) {
+            distance = Cartesian3.distance(ray.origin, intersection);
+        } else {
+            distance = height;
+        }
+
+        var unitPosition = Cartesian3.normalize(camera.position, zoom3DUnitPosition);
+        handleZoom(controller, startPosition, movement, frameState, controller._zoomFactor, distance, Cartesian3.dot(unitPosition, camera.direction));
     }
 
     var tilt3DWindowPos = new Cartesian2();
