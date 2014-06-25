@@ -4,65 +4,92 @@
     <title>Cesium</title>
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
     <style>
-    body { font-family: sans-serif; }
-    li { margin-top: 5px; }
-    .outer > li { margin-top: 1.4em; }
-    .smallFont { font-size: 60%; }
+        body {
+            font-family: sans-serif;
+        }
+
+        li {
+            margin-top: 5px;
+        }
+
+        ul {
+            list-style: none;
+        }
     </style>
 </head>
-
 <body>
-
-<ul class="outer">
-    <li>
-        Apps
+    <div>
+        <img src="logo.png" " style='width:50%; max-width:300px' />
         <ul>
             <li>
-                <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a>
-                (<a href="Build/Apps/CesiumViewer/index.html">built version</a>)
-            </li>
+                <b>Local links</b> - The below links are included as part of each Cesium release.
+                <ul>
+                    <li>
+                        <a href="Build/Documentation/index.html">Documentation</a> - The complete API documentation and reference.
+                    </li>
+                    <li>
+                        <a href="Apps/HelloWorld.html">Hello World</a> - The simplest possible Cesium application.
+                        (<a href="Build/HelloWorld.html">Built version</a>)
+                    </li>
+                    <li>
+                        <a href="Apps/CesiumViewer/index.html">Cesium Viewer</a> - A simple Cesium reference application.
+                        (<a href="Build/Apps/CesiumViewer/index.html">Built version</a>)
+                    </li>
+                    <li>
+                        <a href="Apps/Sandcastle/index.html">Sandcastle</a> - Cesium's live code editor and example gallery. Browse examples highlighting features of the Cesium API and edit and run them all in your web browser. Cesium applications created in Sandcastle can even be saved and downloaded.
+                    </li>
+                </ul>
             <li>
-                <a href="Apps/HelloWorld.html">Hello World</a>
-                (<a href="Build/HelloWorld.html">built version</a>)
-            </li>
-            <li>
-                <a href="Apps/Sandcastle/index.html">Sandcastle</a>
-            </li>
-            <li>
-                <a href="Apps/TimelineDemo/index.html">Timeline Demo</a>
+                <b>Unit Tests</b> - For making sure Cesium works on the current system and browser.
+                <ul>
+                    <li>
+                        <a href="Specs/SpecRunner.html">Run all tests</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?webglValidation">Run with WebGL validation</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?category=WebGL">Run only WebGL tests</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?category=All&amp;not=WebGL">Run only non-WebGL tests</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?built=true">Run all tests against combined file</a>
+                    </li>
+                    <li>
+                        <a href="Specs/SpecRunner.html?built=true&release=true">Run all tests against combined file with debug code removed</a>
+                    </li>
+                    <li>
+                        <a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">Run all tests with code coverage</a>
+                    </li>
+                </ul>
             </li>
         </ul>
-    </li>
-    <li>
-        Tests
-        <ul>
-            <li>
-                <a href="Specs/SpecRunner.html">Run all tests</a>
-                <span class="smallFont">(<a href="Specs/SpecRunner.html?webglValidation">Run with WebGL validation</a>)</span>
-            </li>
-            <li>
-                <a href="Specs/SpecRunner.html?category=none">Select a test to run</a>
-            </li>
-            <li>
-                <a href="Specs/SpecRunner.html?category=WebGL">Run only WebGL tests</a>
-            </li>
-            <li>
-                <a href="Specs/SpecRunner.html?category=All&amp;not=WebGL">Run only non-WebGL tests</a>
-            </li>
-            <li>
-                <a href="Specs/SpecRunner.html?built=true">Run all tests against combined file</a>
-                <span class="smallFont">(<a href="Specs/SpecRunner.html?built=true&release=true">Run all tests against combined file with debug code removed</a>)</span>
-            </li>
-            <li>
-                <a href="Instrumented/jscoverage.html?../Specs/SpecRunner.html%3FbaseUrl%3D..%2FInstrumented">Run all tests with code coverage</a>
-                (build 'instrumentForCoverage' first.)
-            </li>
+        </li>
+        <li>
+            <b>External links</b> - get the most out of Cesium
+            <ul>
+                <li><a href="//cesiumjs.org">Homepage</a> - The official Cesium homepage</li>
+                <li><a href="//cesiumjs.org/tutorials.html">Tutorials</a> - Step by step guides for learning to use Cesium</li>
+                <li><a href="//cesiumjs.org/forum.html">Forum</a> - Our forum and mailing list, questions and feedback welcome from all skill levels</li>
+                <li><a href="//github.com/AnalyticalGraphicsInc/cesium">GitHub</a> - The official Cesium GitHub repository</li>
+                <li><a href="//cesiumjs.org/demos.html">Showcases</a> - Demos and articles showcasing projects used Cesium</li>
+                <li><a href="http://webglreport.com/">WebGL Report</a> - Provides technical information about WebGL capabilities supported by your browser</li>
+            </ul>
+        </li>
         </ul>
-    </li>
-    <li>
-        <a href="Build/Documentation/index.html">Documentation</a>
-    </li>
-</ul>
-
+    </div>
+    <script type="text/javascript">
+        if (window.location.protocol === 'file:') {
+            document.body.innerHTML = ""
+            document.write('<p><b>This file must be hosted in a web server.</br>');
+            document.write('See our <a href="https://cesiumjs.org/2013/04/12/Cesium-up-and-running/">Getting Started</a> ');
+            document.write('tutorial for a step-by-step guide.</b></p>');
+        }
+    </script>
 </body>
 </html>
