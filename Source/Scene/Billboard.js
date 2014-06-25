@@ -743,7 +743,7 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
         var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
