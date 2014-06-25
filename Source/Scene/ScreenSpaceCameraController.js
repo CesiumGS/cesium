@@ -260,6 +260,8 @@ define([
 
         this._tiltCenterMousePosition = new Cartesian2();
         this._tiltCenter = new Cartesian3();
+        this._rotateMousePosition = new Cartesian2();
+        this._rotateStartPosition = new Cartesian3();
 
         // Constants, Make any of these public?
         this._zoomFactor = 5.0;
@@ -834,19 +836,38 @@ define([
             return;
         }
 
+        var magnitude;
+        var radii;
+        var ellipsoid;
+
+        if (Cartesian2.equals(startPosition, controller._rotateMousePosition)) {
+            magnitude = Cartesian3.magnitude(controller._rotateStartPosition);
+            radii = scratchRadii;
+            radii.x = radii.y = radii.z = magnitude;
+            ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+            pan3D(controller, startPosition, movement, frameState, ellipsoid);
+            return;
+        }
+
         var height = controller._ellipsoid.cartesianToCartographic(camera.positionWC, scratchCartographic).height;
         if (defined(controller._globe) && height < controller.minimumPickingTerrainHeight) {
             var startRay = camera.getPickRay(movement.startPosition, scratchStartRay);
             var mousePos = controller._globe.pick(startRay, frameState, scratchMousePos);
             if (defined(mousePos)) {
-                var magnitude = Cartesian3.magnitude(mousePos);
-                var radii = scratchRadii;
+                magnitude = Cartesian3.magnitude(mousePos);
+                radii = scratchRadii;
                 radii.x = radii.y = radii.z = magnitude;
-                var ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
+                ellipsoid = Ellipsoid.fromCartesian3(radii, scratchEllipsoid);
                 pan3D(controller, startPosition, movement, frameState, ellipsoid);
+
+                Cartesian2.clone(startPosition, controller._rotateMousePosition);
+                Cartesian3.clone(mousePos, controller._rotateStartPosition);
             }
         } else if (defined(camera.pickEllipsoid(movement.startPosition, controller._ellipsoid, spin3DPick))) {
             pan3D(controller, startPosition, movement, frameState, controller._ellipsoid);
+
+            Cartesian2.clone(startPosition, controller._rotateMousePosition);
+            Cartesian3.clone(spin3DPick, controller._rotateStartPosition);
         }
     }
 
