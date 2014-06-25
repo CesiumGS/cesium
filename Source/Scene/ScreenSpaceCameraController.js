@@ -702,41 +702,6 @@ define([
         var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 2.0;
         var deltaTheta = rotateRate * thetaWindowRatio * Math.PI;
 
-        if (defined(camera.constrainedAxis) && !defined(transform)) {
-            var positionNormal = Cartesian3.normalize(camera.position, rotate3DScratchCartesian3);
-            var northParallel = Cartesian3.equalsEpsilon(positionNormal, camera.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = Cartesian3.equalsEpsilon(positionNormal, Cartesian3.negate(camera.constrainedAxis, rotate3DNegateScratch), CesiumMath.EPSILON2);
-
-            if (!northParallel && !southParallel) {
-                var up;
-                if (Cartesian3.dot(camera.position, camera.direction) + 1 < CesiumMath.EPSILON4) {
-                    up = camera.up;
-                } else {
-                    up = camera.direction;
-                }
-
-                var east;
-                if (Cartesian3.equalsEpsilon(camera.constrainedAxis, positionNormal, CesiumMath.EPSILON2)) {
-                    east = camera.right;
-                } else {
-                    east = Cartesian3.cross(camera.constrainedAxis, positionNormal, rotate3DScratchCartesian3);
-                    Cartesian3.normalize(east, east);
-                }
-
-                var rDotE = Cartesian3.dot(camera.right, east);
-                var signRDotE = (CesiumMath.sign(rDotE) < 0.0) ? -1.0 : 1.0;
-                rDotE = Math.abs(rDotE);
-                var uDotA = Cartesian3.dot(up, camera.constrainedAxis);
-                var uDotE = Cartesian3.dot(up, east);
-                var signInnerSum = ((uDotA > 0.0 && uDotE > 0.0) || (uDotA < 0.0 && uDotE < 0.0)) ? -1.0 : 1.0;
-                uDotA = Math.abs(uDotA);
-
-                var originalDeltaTheta = deltaTheta;
-                deltaTheta = signRDotE * (deltaTheta * uDotA - signInnerSum * deltaPhi * (1.0 - rDotE));
-                deltaPhi = signRDotE * (deltaPhi * rDotE + signInnerSum * originalDeltaTheta * (1.0 - uDotA));
-            }
-        }
-
         camera.rotateRight(deltaPhi, transform);
         camera.rotateUp(deltaTheta, transform);
 

@@ -867,10 +867,10 @@ defineSuite([
         MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
-        expect(camera.position).toEqualEpsilon(Cartesian3.multiplyByScalar(axis, Cartesian3.magnitude(camera.position), new Cartesian3()), CesiumMath.EPSILON8);
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(axis, new Cartesian3()), CesiumMath.EPSILON14);
+        expect(camera.position.z).toEqualEpsilon(Cartesian3.magnitude(camera.position), CesiumMath.EPSILON1);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(axis, new Cartesian3()), CesiumMath.EPSILON4);
         expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
-        expect(camera.right).toEqualEpsilon(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), CesiumMath.EPSILON14);
+        expect(camera.right).toEqualEpsilon(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), CesiumMath.EPSILON4);
     });
 
     it('pans with constrained axis and is tilted', function() {
@@ -911,9 +911,9 @@ defineSuite([
         MockCanvas.moveMouse(canvas, MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
-        expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
+        expect(Cartesian3.dot(Cartesian3.normalize(camera.position, new Cartesian3()), axis)).toEqualEpsilon(1.0, CesiumMath.EPSILON2);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON4);
         expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction, new Cartesian3()), CesiumMath.EPSILON15);
     });
 
