@@ -5,16 +5,22 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Matrix3',
+        '../Core/Matrix4',
+        '../Core/Quaternion',
         '../Core/ReferenceFrame',
-        '../Core/Transforms'
+        '../Core/Transforms',
+        '../DynamicScene/DynamicObject'
     ], function(
         Cartesian3,
         defined,
         defineProperties,
         DeveloperError,
         Matrix3,
+        Matrix4,
+        Quaternion,
         ReferenceFrame,
-        Transforms) {
+        Transforms,
+        DynamicObject) {
     "use strict";
 
     /**
@@ -116,16 +122,52 @@ define([
             return Cartesian3.clone(value, result);
         }
 
+        var referenceFramePosition;
+        var referenceFrameReferenceFrame;
+        var referenceFramePositionValue;
+        var referenceFrameOrientation;
+        var referenceFrameOrientationValue;
+        var scratch;
+        var flim;
+
+        if (inputFrame instanceof DynamicObject) {
+            referenceFramePosition = inputFrame.position;
+            referenceFrameReferenceFrame = referenceFramePosition.referenceFrame;
+            referenceFramePositionValue = referenceFramePosition.getValueInReferenceFrame(time, referenceFrameReferenceFrame, new Cartesian3());
+
+            referenceFrameOrientation = inputFrame.orientation;
+            referenceFrameOrientationValue = referenceFrameOrientation.getValue(time, new Quaternion());
+            scratch = Matrix3.multiplyByVector(Matrix3.fromQuaternion(referenceFrameOrientationValue, scratchMatrix3), value, new Cartesian3());
+
+            flim = Cartesian3.add(referenceFramePositionValue, scratch, new Cartesian3());
+            return PositionProperty.convertToReferenceFrame(time, flim, referenceFrameReferenceFrame, outputFrame, result);
+        }
+
+        if (outputFrame instanceof DynamicObject) {
+            referenceFramePosition = outputFrame.position;
+            referenceFrameReferenceFrame = referenceFramePosition.referenceFrame;
+            referenceFramePositionValue = referenceFramePosition.getValueInReferenceFrame(time, referenceFrameReferenceFrame, new Cartesian3());
+
+            referenceFrameOrientation = outputFrame.orientation;
+            referenceFrameOrientationValue = referenceFrameOrientation.getValue(time, new Quaternion());
+            scratch = Matrix3.multiplyByVector(Matrix3.fromQuaternion(referenceFrameOrientationValue, scratchMatrix3), value, new Cartesian3());
+
+            flim = Cartesian3.subtract(referenceFramePositionValue, scratch, new Cartesian3());
+            return PositionProperty.convertToReferenceFrame(time, flim, referenceFrameReferenceFrame, outputFrame, result);
+        }
+
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
         if (!defined(icrfToFixed)) {
             icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
-        if (inputFrame === ReferenceFrame.INERTIAL) {
+        if (inputFrame === ReferenceFrame.INERTIAL && outputFrame === ReferenceFrame.FIXED) {
             return Matrix3.multiplyByVector(icrfToFixed, value, result);
         }
-        if (inputFrame === ReferenceFrame.FIXED) {
+        if (inputFrame === ReferenceFrame.FIXED && outputFrame === ReferenceFrame.INERTIAL) {
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
+
+        throw new DeveloperError('Unknown reference frame.');
     };
 
     return PositionProperty;
