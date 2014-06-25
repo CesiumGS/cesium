@@ -76,7 +76,9 @@ define([
         viewProjectionScratch = Matrix4.multiply(camera.frustum.projectionMatrix, camera.viewMatrix, viewProjectionScratch);
         Matrix4.multiplyByVector(viewProjectionScratch, actualPosition, positionCC);
 
-        return SceneTransforms.clipToWindowCoordinates(scene, positionCC, result);
+        result = SceneTransforms.clipToWindowCoordinates(scene, positionCC, result);
+        result.y = scene.canvas.clientHeight - result.y;
+        return result;
     };
 
     /**

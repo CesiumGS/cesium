@@ -757,8 +757,8 @@ define([
 
     /**
      * Computes the screen-space position of the billboard's origin, taking into account eye and pixel offsets.
-     * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from bottom to top.
+     * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+     * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
      * @returns {Cartesian2} The screen-space position of the billboard.
@@ -788,7 +788,9 @@ define([
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
+        return windowCoordinates;
     };
 
     /**
