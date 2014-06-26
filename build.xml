@@ -84,13 +84,16 @@
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
 			<include name="HelloWorld.html" />
-			<include name="index.html" />
 			<include name="logo.png" />
 			<include name="favicon.ico" />
 			<include name="server.js" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<mappedresources>
+				<fileset file="index.release.html" />
+				<globmapper from="index.release.html" to="index.html" />
+			</mappedresources>
 		</zip>
 	</target>
 
