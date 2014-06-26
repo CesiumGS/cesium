@@ -108,6 +108,7 @@ Beta Releases
   * `TimeIntervalCollection.empty` was renamed to `TimeIntervalCollection.isEmpty`
   * `ModelAnimationCollection.add` and `ModelAnimationCollection.addAll` renamed `options.startOffset` to `options.delay`.  Also renamed `ModelAnimation.startOffset` to `ModelAnimation.delay`.
   * Removed `Camera.createCorrectPositionAnimation`.
+  * The build process now requires Node.js to be installed on the system.
 * `DynamicObject.id` can now include period characters.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
@@ -126,6 +127,7 @@ Beta Releases
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
 * Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * Added `TimeIntervalCollection.isStartIncluded` and `TimeIntervalCollection.isStopIncluded`.
+* The development web server has been rewritten in Node.js, and is now included as part of each release.
 
 ### b29 - 2014-06-02
 
