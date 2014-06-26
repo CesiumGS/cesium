@@ -267,26 +267,10 @@ define([
             if (this._mode === SceneMode.SCENE2D) {
                 var distance = Math.max(camera.frustum.right - camera.frustum.left, camera.frustum.top - camera.frustum.bottom);
                 Cartesian3.fromElements(0.0, 0.0, distance, offset2D);
-                Cartesian3.clone(offset2D, offset3D);
-                offset3D.y -= 0.01; // avoid gimbal lock
-
                 Cartesian3.clone(camera.up, up2D);
-                Cartesian3.cross(up2D, offset3D, offset3DCrossScratch);
-                Cartesian3.cross(offset3D, offset3DCrossScratch, up3D);
-                Cartesian3.normalize(up3D, up3D);
             } else if (this._mode === SceneMode.SCENE3D || this._mode === SceneMode.COLUMBUS_VIEW) {
                 Cartesian3.clone(camera.position, offset3D);
-                Cartesian3.fromElements(0.0, 0.0, Cartesian3.magnitude(offset3D), offset2D);
-
                 Cartesian3.clone(camera.up, up3D);
-                Cartesian3.fromElements(up3D.x, up3D.y, 0.0, up2D);
-                if (Cartesian3.equalsEpsilon(up2D, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
-                    Cartesian3.clone(this._defaultUp2D, up2D);
-                } else if (Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z) > 0) {
-                    Cartesian3.negate(up2D, up2D);
-                }
-
-                Cartesian3.normalize(up2D, up2D);
             }
         }
 
