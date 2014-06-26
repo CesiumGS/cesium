@@ -311,7 +311,9 @@
 		</exec>
 		<fail message="Node.js is required to run this part of the build.  Install from http://nodejs.org/">
 			<condition>
-				<isfailure code="${node.exec.result}" />
+				<not>
+					<equals arg1="${node.exec.result}" arg2="0" />
+				</not>
 			</condition>
 		</fail>
 	</target>
