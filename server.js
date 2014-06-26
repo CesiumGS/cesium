@@ -8,6 +8,33 @@
     var url = require('url');
     var request = require('request');
 
+    var yargs = require('yargs').options({
+        'port' : {
+            'default' : 8080,
+            'description' : 'Port to listen on.'
+        },
+        'public' : {
+            'type' : 'boolean',
+            'description' : 'Run a public server that listens on all interfaces.'
+        },
+        'upstream-proxy' : {
+            'description' : 'A standard proxy server that will be used to retrieve data.  Specify a URL including port, e.g. "http://proxy:8000".'
+        },
+        'bypass-upstream-proxy-hosts' : {
+            'description' : 'A comma separated list of hosts that will bypass the specified upstream_proxy, e.g. "lanhost1,lanhost2"'
+        },
+        'help' : {
+            'alias' : 'h',
+            'type' : 'boolean',
+            'description' : 'Show this help.'
+        }
+    });
+    var argv = yargs.argv;
+
+    if (argv.help) {
+        return yargs.showHelp();
+    }
+
     // eventually this mime type configuration will need to change
     // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
     var mime = express.static.mime;
@@ -47,6 +74,14 @@
         return result;
     }
 
+    var upstreamProxy = argv['upstream-proxy'];
+    var bypassUpstreamProxyHosts = {};
+    if (argv['bypass-upstream-proxy-hosts']) {
+        argv['bypass-upstream-proxy-hosts'].split(',').forEach(function(host) {
+            bypassUpstreamProxyHosts[host.toLowerCase()] = true;
+        });
+    }
+
     app.get('/proxy/*', function(req, res, next) {
         // look for request like http://localhost:8080/proxy/http://example.com/file?query=1
         var remoteUrl = getRemoteUrlFromParam(req);
@@ -66,14 +101,18 @@
             remoteUrl.protocol = 'http:';
         }
 
-        remoteUrl = url.format(remoteUrl);
+        var proxy;
+        if (upstreamProxy && !(remoteUrl.host in bypassUpstreamProxyHosts)) {
+            proxy = upstreamProxy;
+        }
 
         // encoding : null means "body" passed to the callback will be raw bytes
 
         request.get({
-            url : remoteUrl,
+            url : url.format(remoteUrl),
             headers : filterHeaders(req, req.headers),
-            encoding : null
+            encoding : null,
+            proxy : proxy
         }, function(error, response, body) {
             var code = 500;
 
@@ -86,7 +125,7 @@
         });
     });
 
-    app.listen(8080);
+    app.listen(argv.port, argv.public ? undefined : 'localhost');
 
-    console.log('Cesium development server running.  Connect to http://localhost:8080.');
+    console.log('Cesium development server running.  Connect to http://localhost:%d.', argv.port);
 })();
