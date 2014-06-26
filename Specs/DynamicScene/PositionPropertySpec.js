@@ -3,6 +3,7 @@ defineSuite([
         'DynamicScene/PositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Math',
         'Core/Quaternion',
         'Core/ReferenceFrame',
         'DynamicScene/ConstantPositionProperty',
@@ -12,6 +13,7 @@ defineSuite([
         PositionProperty,
         Cartesian3,
         JulianDate,
+        CesiumMath,
         Quaternion,
         ReferenceFrame,
         ConstantPositionProperty,
@@ -20,49 +22,57 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    //Results of the below tests were verified against STK Components.
     var time = JulianDate.now();
 
-    it('Works with unrotated positions', function() {
+    it('Works without orientation', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100, 200, 300));
-        referenceFrame.orientation = new ConstantProperty(Quaternion.IDENTITY);
 
-        var time = new JulianDate();
         var value = new Cartesian3(1, 2, 3);
-        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame, ReferenceFrame.FIXED, new Cartesian3());
+        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame, ReferenceFrame.FIXED);
 
         expect(result).toEqual(new Cartesian3(101, 202, 303));
+    });
+
+    it('Works with orientation', function() {
+        var referenceFrame = new DynamicObject();
+        referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100, 200, 300));
+        referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
+
+        var value = new Cartesian3(1, 2, 3);
+        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame, ReferenceFrame.FIXED);
+
+        expect(result).toEqual(new Cartesian3(98, 201, 303));
     });
 
     it('Works with chained reference frames', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100, 200, 300));
-        referenceFrame.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
 
         var referenceFrame2 = new DynamicObject();
         referenceFrame2.position = new ConstantPositionProperty(new Cartesian3(200, 400, 600), referenceFrame);
-        referenceFrame2.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        referenceFrame2.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(1, 0, 0, 1)));
 
-        var time = new JulianDate();
         var value = new Cartesian3(1, 2, 3);
-        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame2, ReferenceFrame.FIXED, new Cartesian3());
+        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame2, ReferenceFrame.FIXED);
 
-        expect(result).toEqual(new Cartesian3(301, 602, 903));
+        expect(result).toEqualEpsilon(new Cartesian3(-297, 401, 902), CesiumMath.EPSILON12);
     });
 
     it('Works with custom input and output frames', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100, 200, 300));
-        referenceFrame.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
 
         var referenceFrame2 = new DynamicObject();
-        referenceFrame2.position = new ConstantPositionProperty(new Cartesian3(100, 200, 300), referenceFrame);
-        referenceFrame2.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        referenceFrame2.position = new ConstantPositionProperty(new Cartesian3(200, 400, 600), referenceFrame);
+        referenceFrame2.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(1, 0, 0, 1)));
 
-        var time = new JulianDate();
         var value = new Cartesian3(1, 2, 3);
-        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame2, referenceFrame, new Cartesian3());
+        var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame2, referenceFrame);
 
-        expect(result).toEqual(new Cartesian3(101, 202, 303));
+        expect(result).toEqual(new Cartesian3(197, 399, 602), CesiumMath.EPSILON7);
     });
 });

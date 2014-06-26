@@ -106,6 +106,8 @@ define([
     PositionProperty.prototype.equals = DeveloperError.throwInstantiationError;
 
     var scratchMatrix3 = new Matrix3();
+    var framePositionValue = new Cartesian3();
+    var frameOrientationValue = new Quaternion();
 
     /**
      * @private
@@ -122,38 +124,42 @@ define([
             return Cartesian3.clone(value, result);
         }
 
-        var referenceFramePosition;
-        var referenceFrameReferenceFrame;
-        var referenceFramePositionValue;
-        var referenceFrameOrientation;
-        var referenceFrameOrientationValue;
-        var scratch;
-        var flim;
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
 
         if (inputFrame instanceof DynamicObject) {
-            referenceFramePosition = inputFrame.position;
-            referenceFrameReferenceFrame = referenceFramePosition.referenceFrame;
-            referenceFramePositionValue = referenceFramePosition.getValueInReferenceFrame(time, referenceFrameReferenceFrame, new Cartesian3());
+            var inFramePosition = inputFrame.position;
+            var inFrameReferenceFrame = inFramePosition.referenceFrame;
+            var inFramePositionValue = inFramePosition.getValueInReferenceFrame(time, inFrameReferenceFrame, framePositionValue);
 
-            referenceFrameOrientation = inputFrame.orientation;
-            referenceFrameOrientationValue = referenceFrameOrientation.getValue(time, new Quaternion());
-            scratch = Matrix3.multiplyByVector(Matrix3.fromQuaternion(referenceFrameOrientationValue, scratchMatrix3), value, new Cartesian3());
-
-            flim = Cartesian3.add(referenceFramePositionValue, scratch, new Cartesian3());
-            return PositionProperty.convertToReferenceFrame(time, flim, referenceFrameReferenceFrame, outputFrame, result);
+            var inFrameOrientationProperty = inputFrame.orientation;
+            if (defined(inFrameOrientationProperty)) {
+                var inFrameOrientation = inFrameOrientationProperty.getValue(time, frameOrientationValue);
+                Matrix3.fromQuaternion(inFrameOrientation, scratchMatrix3);
+                Matrix3.multiplyByVector(scratchMatrix3, value, result);
+                Cartesian3.add(inFramePositionValue, result, result);
+            } else {
+                Cartesian3.add(inFramePositionValue, value, result);
+            }
+            return PositionProperty.convertToReferenceFrame(time, result, inFrameReferenceFrame, outputFrame, result);
         }
 
         if (outputFrame instanceof DynamicObject) {
-            referenceFramePosition = outputFrame.position;
-            referenceFrameReferenceFrame = referenceFramePosition.referenceFrame;
-            referenceFramePositionValue = referenceFramePosition.getValueInReferenceFrame(time, referenceFrameReferenceFrame, new Cartesian3());
+            var outFramePosition = outputFrame.position;
+            var outFrameReferenceFrame = outFramePosition.referenceFrame;
+            var outFramePositionValue = outFramePosition.getValueInReferenceFrame(time, outFrameReferenceFrame, framePositionValue);
 
-            referenceFrameOrientation = outputFrame.orientation;
-            referenceFrameOrientationValue = referenceFrameOrientation.getValue(time, new Quaternion());
-            scratch = Matrix3.multiplyByVector(Matrix3.fromQuaternion(referenceFrameOrientationValue, scratchMatrix3), value, new Cartesian3());
-
-            flim = Cartesian3.subtract(referenceFramePositionValue, scratch, new Cartesian3());
-            return PositionProperty.convertToReferenceFrame(time, flim, referenceFrameReferenceFrame, outputFrame, result);
+            var outFrameOrientationProperty = outputFrame.orientation;
+            if (defined(outFrameOrientationProperty)) {
+                var outFrameOrientation = outFrameOrientationProperty.getValue(time, frameOrientationValue);
+                Matrix3.fromQuaternion(Quaternion.conjugate(outFrameOrientation), scratchMatrix3);
+                Matrix3.multiplyByVector(scratchMatrix3, value, result);
+                Cartesian3.subtract(outFramePositionValue, result, result);
+            } else {
+                Cartesian3.subtract(outFramePositionValue, value, result);
+            }
+            return PositionProperty.convertToReferenceFrame(time, result, outFrameReferenceFrame, outputFrame, result);
         }
 
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
@@ -166,8 +172,6 @@ define([
         if (inputFrame === ReferenceFrame.FIXED && outputFrame === ReferenceFrame.INERTIAL) {
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
-
-        throw new DeveloperError('Unknown reference frame.');
     };
 
     return PositionProperty;
