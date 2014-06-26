@@ -126,7 +126,6 @@
 	<!-- properties controlling how to run the server-->
 	<property name="runServer.public" value="false" />
 	<property name="runServer.port" value="8080" />
-	<property name="runServer.allowedHosts" value="localhost,*.arcgisonline.com,tile.openstreetmap.org,otile1.mqcdn.com,oatile1.mqcdn.com,tile.stamen.com,*.virtualearth.net,mesonet.agron.iastate.edu" />
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
@@ -307,66 +306,15 @@
 		</exec>
 	</target>
 
-	<target name="setNodePathValue">
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
-			<os family="windows" />
-		</condition>
-
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
-			<os family="mac" />
-		</condition>
-
-		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
-			<os family="unix" />
-		</condition>
-	</target>
-
-	<target name="setNodePath">
+	<target name="checkForNode">
 		<exec executable="node" failonerror="false" failifexecutionfails="false" resultproperty="node.exec.result">
 			<arg value="--version" />
 		</exec>
-
-		<!-- use node from path if return code is zero -->
-		<condition property="nodePath" value="node">
-			<equals arg1="${node.exec.result}" arg2="0" />
-		</condition>
-
-		<!-- otherwise on windows use the windows binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
-			<and>
-				<os family="windows" />
-				<not>
-					<isset property="nodePath" />
-				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise on mac use the mac binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/mac/node">
-			<and>
-				<os family="mac" />
-				<not>
-					<isset property="nodePath" />
-				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise on linux use the linux binary -->
-		<condition property="nodePath" value="${toolsDirectory}/nodejs-0.6.17/linux/node">
-			<and>
-				<os family="unix" />
-				<not>
-					<isset property="nodePath" />
-				</not>
-			</and>
-		</condition>
-
-		<!-- otherwise use node from path -->
-		<condition property="nodePath" value="node">
-			<not>
-				<isset property="nodePath" />
-			</not>
-		</condition>
+		<fail message="Node.js is required to run this part of the build.  Install from http://nodejs.org/">
+			<condition>
+				<isfailure code="${node.exec.result}" />
+			</condition>
+		</fail>
 	</target>
 
 	<target name="combineJavaScript.create">
@@ -410,7 +358,7 @@
 	</target>
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
+		<exec executable="node" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -426,7 +374,7 @@
 
 	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check" unless="no.combineCesiumWorkers.create">
 		<!-- create standalone worker files -->
-		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+		<apply executable="node" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -451,7 +399,7 @@
 		</apply>
 
 		<!-- create combined worker layer files -->
-		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+		<apply executable="node" dir="${sourceDirectory}" relative="true" force="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -519,15 +467,15 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="checkForNode,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
-	<target name="minifyCSS" depends="setNodePath">
+	<target name="minifyCSS" depends="checkForNode">
 		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false" overwrite="true">
 			<fileset dir="${sourceDirectory}">
 				<include name="**/*.css" />
 			</fileset>
 		</copy>
-		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
+		<apply executable="node" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -540,8 +488,14 @@
 		</apply>
 	</target>
 
-	<target name="generateDocumentation" depends="setNodePath" description="Generates HTML documentation.">
-		<exec executable="${nodePath}" dir="${basedir}" failonerror="true">
+	<target name="npmInstall">
+		<exec executable="npm" dir="${basedir}" failonerror="true">
+			<arg value="install" />
+		</exec>
+	</target>
+
+	<target name="generateDocumentation" depends="checkForNode,npmInstall" description="Generates HTML documentation.">
+		<exec executable="node" dir="${basedir}" failonerror="true">
 			<env key="CESIUM_VERSION" value="${version}" />
 			<arg value="node_modules/jsdoc/jsdoc.js" />
 			<arg line="--configure Tools/jsdoc/conf.json" />
@@ -552,20 +506,15 @@
 		</copy>
 	</target>
 
-	<target name="runServer" description="Runs a local web server.">
-		<taskdef name="server" classname="com.agi.ServerTask">
-			<classpath>
-				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
-			</classpath>
-		</taskdef>
-
-		<!--
-		 Other server options:
-		 upstreamProxyHost: a standard proxy server that the local server will use to retrieve data
-		 upstreamProxyPort: the port number of the upstream proxy, default 80
-		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
-		-->
-		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" mimeTypesPath="${webProxyDirectory}/mime.properties" />
+	<target name="runServer" depends="checkForNode,npmInstall" description="Runs a local web server.">
+		<condition property="runServer.arg.public" value="--public" else="">
+			<istrue value="${runServer.public}" />
+		</condition>
+		<exec executable="node" dir="${basedir}" failonerror="true">
+			<arg value="server.js" />
+			<arg line="${runServer.arg.public}" />
+			<arg line="--port ${runServer.port}" />
+		</exec>
 	</target>
 
 	<target name="runPublicServer" description="Runs a public web server.">
@@ -578,14 +527,14 @@
 		<antcall target="buildCesiumViewer" />
 	</target>
 
-	<target name="buildCesiumViewer" depends="setNodePath">
+	<target name="buildCesiumViewer" depends="checkForNode">
 		<property name="cesiumViewerDirectory" location="Apps/CesiumViewer" />
 		<property name="cesiumViewerOutputDirectory" location="${buildDirectory}/Apps/CesiumViewer" />
 		<mkdir dir="${cesiumViewerOutputDirectory}" />
 		<property name="relativeCesiumViewerOutputDirectory" location="${cesiumViewerOutputDirectory}" relative="true" basedir="${cesiumViewerDirectory}" />
 
 		<!-- mainConfigFile is relative to the build.js file -->
-		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
+		<exec executable="node" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
@@ -596,7 +545,7 @@
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
 
-		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
+		<exec executable="node" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
