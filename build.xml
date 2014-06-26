@@ -487,11 +487,25 @@
 		</apply>
 	</target>
 
-	<target name="npmInstall">
+	<condition property="os.windows">
+		<os family="windows" />
+	</condition>
+
+	<target name="npmInstall.nonWindows" unless="os.windows">
 		<exec executable="npm" dir="${basedir}" failonerror="true">
 			<arg value="install" />
 		</exec>
 	</target>
+
+	<target name="npmInstall.windows" if="os.windows">
+		<exec executable="cmd" dir="${basedir}" failonerror="true">
+			<arg value="/c" />
+			<arg value="npm.cmd" />
+			<arg value="install" />
+		</exec>
+	</target>
+
+	<target name="npmInstall" depends="npmInstall.windows,npmInstall.nonWindows" />
 
 	<target name="generateDocumentation" depends="checkForNode,npmInstall" description="Generates HTML documentation.">
 		<exec executable="node" dir="${basedir}" failonerror="true">
