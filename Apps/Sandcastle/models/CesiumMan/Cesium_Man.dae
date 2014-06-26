@@ -2,12 +2,12 @@
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
     <asset>
         <contributor>
-            <authoring_tool>modo 801 [Build 71715], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
-            <comments>Plug-in: [Build 71715]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: Yes; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: No; Save Animation: Yes; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 120; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
+            <authoring_tool>modo 801 [Build 71114], Microsoft Windows 7 Service Pack 1 (6.1.7601 Service Pack 1)</authoring_tool>
+            <comments>Plug-in: [Build 71114]; Use Absolute Path: No; Merge Reference Items: No; Save Hidden Items: No; Save Cameras: No; Save Lights: Yes; Save Locators: Yes; Save Triangles as Triangles: Yes; Order Vertex Maps Alphabetically: Yes; Bake Matrices: No; Save Vertex Normals: Yes; Save UV Texture Coordinates: Yes; Save Vertex Colors: No; Save Vertex Weights: No; Save Animation: Yes; Sample Animation: No; Sample Animation Start: 0; Sample Animation End: 120; Save modo Profile: No; Save Maya Profile: No; Save 3ds Max Profile: No; Formatted Arrays: No;</comments>
             <source_data>file:///C:/Users/bcoker/Documents/Models/Miscellaneous/Cesium/Cesium%20Man/Cesium%20Man.lxo</source_data>
         </contributor>
-        <created>2014-06-17T17:46:57Z</created>
-        <modified>2014-06-17T17:46:57Z</modified>
+        <created>2014-06-26T17:48:32Z</created>
+        <modified>2014-06-26T17:48:32Z</modified>
         <up_axis>Y_UP</up_axis>
     </asset>
     <library_animations>
@@ -1589,7 +1589,7 @@
                 </technique_common>
             </source>
             <source id="locator074Node_rotation076Y.ANGLE-intangents">
-                <float_array id="locator074Node_rotation076Y.ANGLE-intangents-array" count="18">-0.0833333 47.7547 0.166667 9.43645 0.416667 -34.4729 0.666667 -45.8369 0.916667 -48.0073 1.16667 -31.4153 1.41667 -2.24956 1.66667 28.7383 1.91667 47.7547</float_array>
+                <float_array id="locator074Node_rotation076Y.ANGLE-intangents-array" count="18">-0.0833333 47.7547 0.166667 9.43645 0.416667 -34.4729 0.666667 -45.8369 0.916667 -48.0073 1.16667 -31.4153 1.41667 -2.24956 1.66667 28.7382 1.91667 47.7547</float_array>
                 <technique_common>
                     <accessor count="9" source="#locator074Node_rotation076Y.ANGLE-intangents-array" stride="2">
                         <param name="X" type="float" />
@@ -1797,7 +1797,7 @@
                 </technique_common>
             </source>
             <source id="locator079Node_rotation081Y.ANGLE-intangents">
-                <float_array id="locator079Node_rotation081Y.ANGLE-intangents-array" count="18">-0.0833333 16.5684 0.166667 19.8689 0.416667 -19.2823 0.666667 0.54782 0.916667 13.3567 1.16667 22.5032 1.41667 16.145 1.66667 14.5435 1.91667 16.5684</float_array>
+                <float_array id="locator079Node_rotation081Y.ANGLE-intangents-array" count="18">-0.0833333 16.5684 0.166667 19.8689 0.416667 -19.2823 0.666667 0.547821 0.916667 13.3567 1.16667 22.5032 1.41667 16.145 1.66667 14.5435 1.91667 16.5684</float_array>
                 <technique_common>
                     <accessor count="9" source="#locator079Node_rotation081Y.ANGLE-intangents-array" stride="2">
                         <param name="X" type="float" />
@@ -3418,7 +3418,7 @@
                 </technique_common>
             </source>
             <source id="locator111Node_rotation113X.ANGLE-outtangents">
-                <float_array id="locator111Node_rotation113X.ANGLE-outtangents-array" count="18">0.0833333 -7.78946 0.333333 -96.4975 0.583333 -62.6097 0.833333 36.2779 1.08333 -15.7425 1.33333 33.3956 1.58333 4.95527 1.83333 0.0610439 2.08333 -7.78946</float_array>
+                <float_array id="locator111Node_rotation113X.ANGLE-outtangents-array" count="18">0.0833333 -7.78946 0.333333 -96.4975 0.583333 -62.6097 0.833333 36.2779 1.08333 -15.7425 1.33333 33.3956 1.58333 4.95527 1.83333 0.0610437 2.08333 -7.78946</float_array>
                 <technique_common>
                     <accessor count="9" source="#locator111Node_rotation113X.ANGLE-outtangents-array" stride="2">
                         <param name="X" type="float" />
@@ -3834,7 +3834,7 @@
                 </technique_common>
             </source>
             <source id="locator119Node_rotation121X.ANGLE-outtangents">
-                <float_array id="locator119Node_rotation121X.ANGLE-outtangents-array" count="18">0.0833333 -48.4797 0.333333 -13.4264 0.583333 -20.6986 0.833333 0.593142 1.08333 -8.22865 1.33333 -10.676 1.58333 -31.6918 1.83333 -44.8513 2.08333 -48.4797</float_array>
+                <float_array id="locator119Node_rotation121X.ANGLE-outtangents-array" count="18">0.0833333 -48.4797 0.333333 -13.4264 0.583333 -20.6986 0.833333 0.593141 1.08333 -8.22865 1.33333 -10.676 1.58333 -31.6918 1.83333 -44.8513 2.08333 -48.4797</float_array>
                 <technique_common>
                     <accessor count="9" source="#locator119Node_rotation121X.ANGLE-outtangents-array" stride="2">
                         <param name="X" type="float" />
@@ -5473,11 +5473,8 @@
         </animation>
     </library_animations>
     <library_images>
-        <image id="Image0001" name="Image0001">
-            <init_from>Cesium_Logo.png</init_from>
-        </image>
         <image id="Image0002" name="Image0002">
-            <init_from>Cesium_Man.jpg</init_from>
+            <init_from>./Cesium_Man.jpg</init_from>
         </image>
     </library_images>
     <library_materials>
@@ -5569,13 +5566,6 @@
                 </ambient>
             </technique_common>
         </light>
-        <light id="Light-sunLight011" name="Directional_Light">
-            <technique_common>
-                <directional>
-                    <color sid="directional_light_rgb">1 1 1</color>
-                </directional>
-            </technique_common>
-        </light>
     </library_lights>
     <library_controllers>
         <controller id="Controller-mesh019" name="Cesium_Man">
@@ -5590,7 +5580,7 @@
                     </technique_common>
                 </source>
                 <source id="Controller-mesh019-matrices" name="matrices">
-                    <float_array id="Controller-mesh019-matrices-array" count="304">0.000112526 8.35701e-005 -1 -0.00505674 -0.997135 0.0756447 -0.000105882 -0.0513633 0.0756447 0.997135 9.18427e-005 -0.677054 0 0 0 1 -0.00027049 -1.87349e-005 -1 -0.00496823 -0.998184 -0.0602299 0.000271127 0.0606108 -0.0602299 0.998185 -2.40931e-006 -0.821842 0 0 0 1 -0.000269161 7.12066e-006 -1 -0.00499603 -0.986267 0.165159 0.000266641 -0.181539 0.165159 0.986267 -3.74316e-005 -1.05861 0 0 0 1 -5.22132e-005 2.33778e-006 -1 -0.004992 -0.999261 0.0384331 5.22645e-005 -0.0372414 0.0384331 0.999261 3.29338e-007 -1.13741 0 0 0 1 5.3759e-005 2.94897e-006 1 0.0049857 0.999936 0.0113262 -5.37889e-005 -0.0219778 -0.0113262 0.999936 -2.3399e-006 -1.18983 0 0 0 1 -0.998566 0.0017941 0.0535097 -0.00104013 -0.022524 0.892615 -0.450257 -1.00199 -0.0485713 -0.450817 -0.891294 0.398406 0 0 0 1 -0.998499 0.0445266 -0.0318919 -0.0493288 -0.0253089 -0.891505 -0.452303 0.996267 -0.0485714 -0.450817 0.891294 0.407319 0 0 0 1 -0.859631 0.0229709 -0.510398 -0.194899 0.26177 0.877707 -0.401381 -0.96739 0.43876 -0.478647 -0.760517 0.231774 0 0 0 1 -0.794244 -0.602433 0.0790639 0.544501 0.420317 -0.638726 -0.644486 0.817089 0.43876 -0.478647 0.760517 0.23938 0 0 0 1 -0.755946 0.0217524 -0.654272 -0.26613 0.320054 0.884136 -0.340396 -0.949612 0.571061 -0.466724 -0.675321 0.0634742 0 0 0 1 -0.552271 -0.827077 -0.104596 0.806912 0.60736 -0.313229 -0.730069 0.558202 0.571061 -0.466724 0.675321 0.0702276 0 0 0 1 -0.188464 -0.0658376 0.979871 0.116461 -0.967728 -0.157503 -0.196712 0.105267 0.167283 -0.985321 -0.0340292 0.598605 0 0 0 1 -0.200029 -0.0002354 0.97979 -0.0568762 -0.965401 -0.170705 -0.197132 0.140149 0.167302 -0.985322 0.0339187 0.598944 0 0 0 1 -0.0237071 0.00123422 0.999718 0.0832542 -0.964275 0.263885 -0.0231924 -0.028993 -0.263839 -0.964553 -0.00506582 0.356964 0 0 0 1 -0.0210029 0.011125 0.999718 -0.0745262 -0.964339 0.263653 -0.0231936 -0.0252906 -0.263837 -0.964553 0.00519076 0.357016 0 0 0 1 -0.0363756 0.00174211 0.999337 0.0831208 -0.751375 0.65926 -0.0284991 -0.0623897 -0.658872 -0.751913 -0.022672 0.0596154 0 0 0 1 -0.00630007 0.0361103 0.999328 -0.0765749 -0.752239 0.658272 -0.0285287 -0.0577995 -0.65886 -0.751914 0.0230164 0.0598438 0 0 0 1 -0.112324 -0.0401385 -0.992861 -0.0801076 0.0613714 0.996996 -0.0472488 -0.0268185 0.991775 -0.0662404 -0.109524 -0.0345128 0 0 0 1 0.105353 -0.0560068 -0.992856 0.0723898 0.0718731 0.99623 -0.0485706 -0.0194678 0.991834 -0.0662426 0.108982 -0.0334203 0 0 0 1</float_array>
+                    <float_array id="Controller-mesh019-matrices-array" count="304">0.00011252 8.35732e-005 -1 -0.00505675 -0.997135 0.0756447 -0.000105876 -0.0513633 0.0756447 0.997135 9.18453e-005 -0.677054 0 0 0 1 -0.000270496 -1.87318e-005 -1 -0.00496823 -0.998184 -0.0602299 0.000271133 0.0606108 -0.0602299 0.998185 -2.40588e-006 -0.821842 0 0 0 1 -0.000269167 7.12375e-006 -1 -0.00499604 -0.986267 0.165159 0.000266647 -0.181539 0.165159 0.986267 -3.74296e-005 -1.05861 0 0 0 1 -5.22191e-005 2.34086e-006 -1 -0.004992 -0.999261 0.0384331 5.22705e-005 -0.0372414 0.0384331 0.999261 3.32194e-007 -1.13741 0 0 0 1 5.37649e-005 2.94589e-006 1 0.0049857 0.999936 0.0113262 -5.37948e-005 -0.0219778 -0.0113262 0.999936 -2.33675e-006 -1.18983 0 0 0 1 -0.998566 0.0017941 0.0535097 -0.00104013 -0.022524 0.892615 -0.450257 -1.00199 -0.0485713 -0.450817 -0.891294 0.398406 0 0 0 1 -0.998499 0.0445266 -0.0318919 -0.0493288 -0.0253089 -0.891505 -0.452303 0.996267 -0.0485713 -0.450817 0.891294 0.407319 0 0 0 1 -0.859631 0.0229709 -0.510398 -0.194899 0.26177 0.877707 -0.401381 -0.96739 0.43876 -0.478647 -0.760517 0.231774 0 0 0 1 -0.794244 -0.602433 0.0790639 0.544501 0.420317 -0.638726 -0.644486 0.817089 0.43876 -0.478647 0.760517 0.23938 0 0 0 1 -0.755946 0.0217524 -0.654272 -0.26613 0.320054 0.884136 -0.340396 -0.949612 0.571061 -0.466724 -0.675321 0.0634742 0 0 0 1 -0.552271 -0.827077 -0.104596 0.806912 0.60736 -0.313229 -0.730069 0.558202 0.571061 -0.466724 0.675321 0.0702276 0 0 0 1 -0.188464 -0.0658376 0.979871 0.116461 -0.967728 -0.157503 -0.196712 0.105267 0.167283 -0.985321 -0.0340292 0.598605 0 0 0 1 -0.200029 -0.000235403 0.97979 -0.0568762 -0.965401 -0.170705 -0.197132 0.140149 0.167302 -0.985322 0.0339187 0.598944 0 0 0 1 -0.0237071 0.00123422 0.999718 0.0832542 -0.964275 0.263885 -0.0231924 -0.028993 -0.263839 -0.964553 -0.00506582 0.356964 0 0 0 1 -0.0210029 0.011125 0.999718 -0.0745262 -0.964339 0.263653 -0.0231936 -0.0252906 -0.263837 -0.964553 0.00519076 0.357016 0 0 0 1 -0.0363756 0.00174211 0.999337 0.0831208 -0.751375 0.65926 -0.0284991 -0.0623897 -0.658872 -0.751913 -0.022672 0.0596154 0 0 0 1 -0.00630006 0.0361103 0.999328 -0.0765749 -0.752239 0.658272 -0.0285287 -0.0577995 -0.65886 -0.751914 0.0230164 0.0598438 0 0 0 1 -0.112324 -0.0401385 -0.992861 -0.0801076 0.0613714 0.996996 -0.0472488 -0.0268185 0.991775 -0.0662404 -0.109524 -0.0345128 0 0 0 1 0.105353 -0.0560068 -0.992856 0.0723898 0.0718731 0.99623 -0.0485706 -0.0194678 0.991834 -0.0662426 0.108982 -0.0334203 0 0 0 1</float_array>
                     <technique_common>
                         <accessor count="19" source="#Controller-mesh019-matrices-array" stride="16">
                             <param name="float4x4" type="float4x4" />
@@ -5892,20 +5882,6 @@
                         </technique_common>
                     </bind_material>
                 </instance_controller>
-            </node>
-            <node id="Camera-camera002Node" name="Camera" type="NODE">
-                <translate sid="translation003">-1.45784 1.23875 3.30226</translate>
-                <rotate sid="rotation004Y">0 1 0 -383.195</rotate>
-                <rotate sid="rotation004X">1 0 0 -7.56294</rotate>
-                <rotate sid="rotation004Z">0 0 1 -1.86779</rotate>
-                <instance_camera url="#Camera-camera002" />
-            </node>
-            <node id="Light-sunLight011Node" name="Directional_Light" type="NODE">
-                <translate sid="translation012">-2 2 2</translate>
-                <rotate sid="rotation013Y">0 1 0 -45</rotate>
-                <rotate sid="rotation013X">1 0 0 -30</rotate>
-                <rotate sid="rotation013Z">0 0 1 0</rotate>
-                <instance_light url="#Light-sunLight011" />
             </node>
         </visual_scene>
     </library_visual_scenes>
