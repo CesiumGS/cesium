@@ -631,10 +631,10 @@ defineSuite([
     it('rotate past constrained axis stops at constained axis', function() {
         camera.constrainedAxis = Cartesian3.UNIT_Y;
         camera.rotateUp(Math.PI);
-        expect(camera.up).toEqualEpsilon(Cartesian3.negate(dir, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.direction).toEqualEpsilon(up, CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
-        expect(camera.position).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.negate(dir, new Cartesian3()), CesiumMath.EPSILON4);
+        expect(camera.direction).toEqualEpsilon(up, CesiumMath.EPSILON4);
+        expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON4);
+        expect(camera.position).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON4);
     });
 
     it('zooms out 2D', function() {
@@ -1192,6 +1192,29 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = camera.pickEllipsoid(Cartesian2.ZERO);
+        expect(p).toBeUndefined();
+    });
+
+    it('pick map in morph', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var maxRadii = ellipsoid.maximumRadius;
+
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii, new Cartesian3());
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var frustum = new PerspectiveFrustum();
+        frustum.fovy = CesiumMath.toRadians(60.0);
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.near = 100;
+        frustum.far = 60.0 * maxRadii;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.MORPHING);
+
+        var windowCoord = new Cartesian2(scene.canvas.clientWidth * 0.5, scene.canvas.clientHeight * 0.5);
+        var p = camera.pickEllipsoid(windowCoord);
         expect(p).toBeUndefined();
     });
 
