@@ -928,7 +928,7 @@ defineSuite([
             var label = labels.add({
                 text : 'abc',
                 position : Cartesian3.ZERO,
-                eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
+                eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
             });
             labels.update(context, frameState, []);
             var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
