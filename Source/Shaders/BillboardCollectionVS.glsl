@@ -55,8 +55,6 @@ void main()
     vec2 pixelOffset = pixelOffsetAndTranslate.xy;
     vec2 translate = pixelOffsetAndTranslate.zw;
     
-    pixelOffset.y = -pixelOffset.y;
-    
     ///////////////////////////////////////////////////////////////////////////
     
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
