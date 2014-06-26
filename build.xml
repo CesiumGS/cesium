@@ -74,8 +74,8 @@
 				<include name="Cesium/**" />
 				<include name="CesiumUnminified/**" />
 				<include name="Documentation/**" />
-                <include name="Apps/**" />
-                <exclude name="Apps/TimelineDemo/**" />
+				<include name="Apps/**" />
+				<exclude name="Apps/TimelineDemo/**" />
 				<include name="*.html" />
 			</zipfileset>
 			<include name="Apps/**" />
@@ -85,8 +85,8 @@
 			<include name="ThirdParty/**" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
-            <include name="logo.png" />
-            <include name="favicon.ico" />
+			<include name="logo.png" />
+			<include name="favicon.ico" />
 			<include name="server.js" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
