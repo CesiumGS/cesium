@@ -26,7 +26,6 @@
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
-				<include name="server.js" />
 			</fileset>
 		</copy>
 
@@ -76,8 +75,9 @@
 				<include name="Cesium/**" />
 				<include name="Documentation/**" />
 				<include name="*.html" />
-				<include name="server.js" />
 			</fileset>
+			<include name="server.js" />
+			<include name="package.json" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
@@ -90,7 +90,6 @@
 				<include name="Documentation/**" />
 				<include name="Apps/**" />
 				<include name="*.html" />
-				<include name="server.js" />
 			</zipfileset>
 			<include name="Apps/**" />
 			<include name="Examples/**" />
@@ -100,6 +99,7 @@
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
 			<include name="server.js" />
+			<include name="package.json" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
@@ -264,7 +264,6 @@
 
 				<include name="Apps/**/*.js" />
 				<exclude name="Apps/Sandcastle/ThirdParty/**" />
-				<exclude name="Apps/server.js" />
 
 				<include name="Specs/**/*.js" />
 				<exclude name="Specs/SpecRunner.js" />
@@ -507,6 +506,7 @@
 	</target>
 
 	<target name="runServer" depends="checkForNode,npmInstall" description="Runs a local web server.">
+		<echo>The local web server can also be launched directly by running: node server.js</echo>
 		<condition property="runServer.arg.public" value="--public" else="">
 			<istrue value="${runServer.public}" />
 		</condition>
