@@ -152,7 +152,10 @@ define([
         if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
             stopTime = Iso8601.MAXIMUM_VALUE;
         }
-        return new TimeInterval(startTime, stopTime, true, true);
+        return new TimeInterval({
+            start : startTime,
+            stop : stopTime
+        });
     };
 
     /**

@@ -59,7 +59,7 @@ define([
         if (typeof date === 'string') {
             return JulianDate.fromIso8601(date);
         }
-        return JulianDate.addSeconds(epoch, date);
+        return JulianDate.addSeconds(epoch, date, new JulianDate());
     }
 
     var timesSpliceArgs = [];

@@ -137,7 +137,11 @@ defineSuite([
         var dynamicObject = createBasicWall();
         var updater = new WallGeometryUpdater(dynamicObject);
         dynamicObject.wall.minimumHeights = new TimeIntervalCollectionProperty();
-        dynamicObject.wall.minimumHeights.intervals.addInterval(new TimeInterval(time, time2, true, true, []));
+        dynamicObject.wall.minimumHeights.intervals.addInterval(new TimeInterval({
+            start : time,
+            stop : time2,
+            data : []
+        }));
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -145,7 +149,11 @@ defineSuite([
         var dynamicObject = createBasicWall();
         var updater = new WallGeometryUpdater(dynamicObject);
         dynamicObject.wall.maximumHeights = new TimeIntervalCollectionProperty();
-        dynamicObject.wall.maximumHeights.intervals.addInterval(new TimeInterval(time, time2, true, true, []));
+        dynamicObject.wall.maximumHeights.intervals.addInterval(new TimeInterval({
+            start : time,
+            stop : time2,
+            data : []
+        }));
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -232,8 +240,17 @@ defineSuite([
 
     it('Attributes have expected values at creation time', function() {
         var fill = new TimeIntervalCollectionProperty();
-        fill.intervals.addInterval(new TimeInterval(time, time2, true, true, false));
-        fill.intervals.addInterval(new TimeInterval(time2, time3, false, true, true));
+        fill.intervals.addInterval(new TimeInterval({
+            start : time,
+            stop : time2,
+            data : false
+        }));
+        fill.intervals.addInterval(new TimeInterval({
+            start : time2,
+            stop : time3,
+            isStartIncluded : false,
+            data : false
+        }));
 
         var colorMaterial = new ColorMaterialProperty();
         colorMaterial.color = new SampledProperty(Color);
@@ -242,8 +259,17 @@ defineSuite([
         colorMaterial.color.addSample(time3, Color.RED);
 
         var outline = new TimeIntervalCollectionProperty();
-        outline.intervals.addInterval(new TimeInterval(time, time2, true, true, false));
-        outline.intervals.addInterval(new TimeInterval(time2, time3, false, true, true));
+        outline.intervals.addInterval(new TimeInterval({
+            start : time,
+            stop : time2,
+            data : false
+        }));
+        outline.intervals.addInterval(new TimeInterval({
+            start : time2,
+            stop : time3,
+            isStartIncluded : false,
+            data : false
+        }));
 
         var outlineColor = new SampledProperty(Color);
         outlineColor.addSample(time, Color.BLUE);
@@ -272,8 +298,18 @@ defineSuite([
     it('dynamic updater sets properties', function() {
         function makeProperty(value1, value2) {
             var property = new TimeIntervalCollectionProperty();
-            property.intervals.addInterval(new TimeInterval(time, time2, true, false, value1));
-            property.intervals.addInterval(new TimeInterval(time2, time3, true, false, value2));
+            property.intervals.addInterval(new TimeInterval({
+                start : time,
+                stop : time2,
+                isStopIncluded : false,
+                data : value1
+            }));
+            property.intervals.addInterval(new TimeInterval({
+                start : time2,
+                stop : time3,
+                isStopIncluded : false,
+                data : value2
+            }));
             return property;
         }
 
@@ -289,7 +325,11 @@ defineSuite([
         wall.outlineColor = makeProperty(Color.RED, Color.BLUE);
 
         dynamicObject.availability = new TimeIntervalCollection();
-        dynamicObject.availability.addInterval(new TimeInterval(time, time3, true, false));
+        dynamicObject.availability.addInterval(new TimeInterval({
+            start : time,
+            stop : time3,
+            isStopIncluded : false
+        }));
 
         var updater = new WallGeometryUpdater(dynamicObject);
         var primitives = new PrimitiveCollection();

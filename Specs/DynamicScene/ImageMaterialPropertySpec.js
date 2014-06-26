@@ -54,8 +54,16 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.image.intervals.addInterval(new TimeInterval(start, stop, true, true, 'http://test.invalid/image.png'));
-        property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
+        property.image.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 'http://test.invalid/image.png'
+        }));
+        property.repeat.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(2, 3)
+        }));
 
         var result = property.getValue(start);
         expect(result.image).toEqual('http://test.invalid/image.png');
@@ -138,13 +146,21 @@ defineSuite([
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
         property.image = new TimeIntervalCollectionProperty();
-        property.image.intervals.addInterval(new TimeInterval(start, stop, true, true, 'http://test.invalid/image.png'));
+        property.image.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 'http://test.invalid/image.png'
+        }));
         expect(property.isConstant).toBe(false);
 
         property.image = undefined;
         expect(property.isConstant).toBe(true);
         property.repeat = new TimeIntervalCollectionProperty();
-        property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
+        property.repeat.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : new Cartesian2(2, 3)
+        }));
         expect(property.isConstant).toBe(false);
     });
 });

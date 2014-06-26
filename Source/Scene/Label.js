@@ -62,12 +62,10 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(options.translucencyByDistance) &&
-                options.translucencyByDistance.far <= options.translucencyByDistance.near) {
+        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
-        if (defined(options.pixelOffsetScaleByDistance) &&
-                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
         //>>includeEnd('debug');
@@ -103,22 +101,22 @@ define([
          * @memberof Label.prototype
          * @type {Boolean}
          */
-        show: {
-            get: function() {
+        show : {
+            get : function() {
                 return this._show;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._show) {
+                if (this._show !== value) {
                     this._show = value;
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.show = value;
@@ -133,11 +131,11 @@ define([
          * @memberof Label.prototype
          * @type {Cartesian3}
          */
-        position: {
+        position : {
             get : function() {
                 return this._position;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -149,7 +147,7 @@ define([
                     Cartesian3.clone(value, position);
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.position = value;
@@ -164,18 +162,18 @@ define([
          * @memberof Label.prototype
          * @type {String}
          */
-        text: {
-            get: function() {
+        text : {
+            get : function() {
                 return this._text;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._text) {
+                if (this._text !== value) {
                     this._text = value;
                     rebindAllGlyphs(this);
                 }
@@ -188,11 +186,11 @@ define([
          * @type {String}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles|HTML canvas 2D context text styles}
          */
-        font: {
+        font : {
             get : function() {
                 return this._font;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -262,7 +260,7 @@ define([
          * @type {Number}
          * @see {@link http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles|HTML canvas 2D context fill and stroke styles}
          */
-        outlineWidth: {
+        outlineWidth : {
             get : function() {
                 return this._outlineWidth;
             },
@@ -285,7 +283,7 @@ define([
          * @memberof Label.prototype
          * @type {LabelStyle}
          */
-        style: {
+        style : {
             get : function() {
                 return this._style;
             },
@@ -319,7 +317,7 @@ define([
          * @memberof Label.prototype
          * @type {Cartesian2}
          */
-        pixelOffset: {
+        pixelOffset : {
             get : function() {
                 return this._pixelOffset;
             },
@@ -332,8 +330,15 @@ define([
 
                 var pixelOffset = this._pixelOffset;
                 if (!Cartesian2.equals(pixelOffset, value)) {
-                    pixelOffset = Cartesian2.clone(value, pixelOffset);
-                    repositionAllGlyphs(this);
+                    Cartesian2.clone(value, pixelOffset);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.pixelOffset = value;
+                        }
+                    }
                 }
             }
         },
@@ -365,18 +370,24 @@ define([
                 return this._translucencyByDistance;
             },
             set : function(value) {
-                if (NearFarScalar.equals(this._translucencyByDistance, value)) {
-                    return;
-                }
-
                 //>>includeStart('debug', pragmas.debug);
-                if (value.far <= value.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                this._translucencyByDistance = NearFarScalar.clone(value, this._translucencyByDistance);
-                rebindAllGlyphs(this);
+                var translucencyByDistance = this._translucencyByDistance;
+                if (!NearFarScalar.equals(translucencyByDistance, value)) {
+                    this._translucencyByDistance = NearFarScalar.clone(value, translucencyByDistance);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.translucencyByDistance = value;
+                        }
+                    }
+                }
             }
         },
 
@@ -408,18 +419,24 @@ define([
                 return this._pixelOffsetScaleByDistance;
             },
             set : function(value) {
-                if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, value)) {
-                    return;
-                }
-
                 //>>includeStart('debug', pragmas.debug);
-                if (value.far <= value.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, this._pixelOffsetScaleByDistance);
-                rebindAllGlyphs(this);
+                var pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+                if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
+                    this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, pixelOffsetScaleByDistance);
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.pixelOffsetScaleByDistance = value;
+                        }
+                    }
+                }
             }
         },
 
@@ -461,7 +478,7 @@ define([
                     Cartesian3.clone(value, eyeOffset);
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.eyeOffset = value;
@@ -485,7 +502,7 @@ define([
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
          * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
          */
-        horizontalOrigin: {
+        horizontalOrigin : {
             get : function() {
                 return this._horizontalOrigin;
             },
@@ -517,7 +534,7 @@ define([
          * l.horizontalOrigin = Cesium.HorizontalOrigin.RIGHT;
          * l.verticalOrigin = Cesium.VerticalOrigin.TOP;
          */
-        verticalOrigin: {
+        verticalOrigin : {
             get : function() {
                 return this._verticalOrigin;
             },
@@ -530,6 +547,15 @@ define([
 
                 if (this._verticalOrigin !== value) {
                     this._verticalOrigin = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.verticalOrigin = value;
+                        }
+                    }
+
                     repositionAllGlyphs(this);
                 }
             }
@@ -556,7 +582,7 @@ define([
             get : function() {
                 return this._scale;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -567,7 +593,7 @@ define([
                     this._scale = value;
 
                     var glyphs = this._glyphs;
-                    for ( var i = 0, len = glyphs.length; i < len; i++) {
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
                             glyph.billboard.scale = value;
@@ -589,12 +615,15 @@ define([
                 return this._id;
             },
             set : function(value) {
-                this._id = value;
-                var glyphs = this._glyphs;
-                for (var i = 0, len = glyphs.length; i < len; i++) {
-                    var glyph = glyphs[i];
-                    if (defined(glyph.billboard)) {
-                        glyph.billboard.id = value;
+                if (this._id !== value) {
+                    this._id = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.id = value;
+                        }
                     }
                 }
             }

@@ -17,6 +17,7 @@ define([
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './MaterialProperty',
+        './ReferenceProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty'
     ], function(
@@ -37,9 +38,14 @@ define([
         CompositePositionProperty,
         ConstantPositionProperty,
         MaterialProperty,
+        ReferenceProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
     "use strict";
+
+    var scratchTimeInterval = new TimeInterval();
+    var subSampleCompositePropertyScratch = new TimeInterval();
+    var subSampleIntervalPropertyScratch = new TimeInterval();
 
     function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var times = property._property._times;
@@ -96,7 +102,7 @@ define([
                 }
 
                 if (sampling && sampleStepsTaken < sampleStepsToTake) {
-                    current = JulianDate.addSeconds(current, sampleStepSize);
+                    current = JulianDate.addSeconds(current, sampleStepSize, new JulianDate());
                     sampleStepsTaken++;
                     continue;
                 }
@@ -137,7 +143,7 @@ define([
                 index++;
             }
             i++;
-            time = JulianDate.addSeconds(start, stepSize * i);
+            time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
         }
         //Always sample stop.
         tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -149,19 +155,20 @@ define([
     }
 
     function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        var sampleInterval = new TimeInterval(start, stop, true, true);
+        subSampleIntervalPropertyScratch.start = start;
+        subSampleIntervalPropertyScratch.stop = stop;
 
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!interval.intersect(sampleInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleIntervalPropertyScratch, scratchTimeInterval).isEmpty) {
                 var time = interval.start;
                 if (!interval.isStartIncluded) {
                     if (interval.isStopIncluded) {
                         time = interval.stop;
                     } else {
-                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2);
+                        time = JulianDate.addSeconds(interval.start, JulianDate.getSecondsDifference(interval.stop, interval.start) / 2, new JulianDate());
                     }
                 }
                 var tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
@@ -183,13 +190,14 @@ define([
     }
 
     function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
-        var sampleInterval = new TimeInterval(start, stop, true, true);
+        subSampleCompositePropertyScratch.start = start;
+        subSampleCompositePropertyScratch.stop = stop;
 
         var index = startingIndex;
         var intervals = property.intervals;
         for (var i = 0; i < intervals.length; i++) {
             var interval = intervals.get(i);
-            if (!interval.intersect(sampleInterval).isEmpty) {
+            if (!TimeInterval.intersect(interval, subSampleCompositePropertyScratch, scratchTimeInterval).isEmpty) {
                 var intervalStart = interval.start;
                 var intervalStop = interval.stop;
 
@@ -204,6 +212,10 @@ define([
                 }
 
                 var intervalProperty = interval.data;
+                if (intervalProperty instanceof ReferenceProperty) {
+                    intervalProperty = intervalProperty.resolvedProperty;
+                }
+
                 if (intervalProperty instanceof SampledPositionProperty) {
                     index = subSampleSampledProperty(intervalProperty, sampleStart, sampleStop, updateTime, referenceFrame, maximumStep, index, result);
                 } else if (intervalProperty instanceof CompositePositionProperty) {
@@ -224,6 +236,10 @@ define([
     function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
         if (!defined(result)) {
             result = [];
+        }
+
+        if (property instanceof ReferenceProperty) {
+            property = property.resolvedProperty;
         }
 
         var length = 0;
@@ -311,10 +327,10 @@ define([
             //we won't have to draw anything anyway.
             if (show) {
                 if (hasTrailTime) {
-                    sampleStart = JulianDate.addSeconds(time, -trailTime);
+                    sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
                 }
                 if (hasLeadTime) {
-                    sampleStop = JulianDate.addSeconds(time, leadTime);
+                    sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
                 }
 
                 if (hasAvailability) {
@@ -472,7 +488,7 @@ define([
 
             var frameToVisualize = ReferenceFrame.FIXED;
             if (this._scene.mode === SceneMode.SCENE3D) {
-                frameToVisualize = positionProperty._referenceFrame;
+                frameToVisualize = positionProperty.referenceFrame;
             }
 
             var currentUpdater = this._updaters[frameToVisualize];

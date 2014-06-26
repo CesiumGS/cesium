@@ -78,11 +78,31 @@ defineSuite([
 
         var start = new JulianDate(1, 0);
         var stop = new JulianDate(2, 0);
-        property.orientation.intervals.addInterval(new TimeInterval(start, stop, true, true, false));
-        property.evenColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.RED));
-        property.oddColor.intervals.addInterval(new TimeInterval(start, stop, true, true, Color.BLUE));
-        property.offset.intervals.addInterval(new TimeInterval(start, stop, true, true, 10));
-        property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, 20));
+        property.orientation.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : false
+        }));
+        property.evenColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.RED
+        }));
+        property.oddColor.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : Color.BLUE
+        }));
+        property.offset.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 10
+        }));
+        property.repeat.intervals.addInterval(new TimeInterval({
+            start : start,
+            stop : stop,
+            data : 20
+        }));
 
         expect(property.isConstant).toBe(false);
 

@@ -79,7 +79,7 @@ define([
      *
      * @param {Scene} scene The scene instance to use.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
-     * @param {Number} [duration=1500] The duration of the camera flight in milliseconds
+     * @param {Number} [duration=1.5] The duration of the camera flight in seconds.
      */
     var HomeButtonViewModel = function(scene, ellipsoid, duration) {
         //>>includeStart('debug', pragmas.debug);
@@ -89,7 +89,7 @@ define([
         //>>includeEnd('debug');
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        duration = defaultValue(duration, 1500);
+        duration = defaultValue(duration, 1.5);
 
         this._scene = scene;
         this._ellipsoid = ellipsoid;
@@ -148,7 +148,7 @@ define([
         },
 
         /**
-         * Gets or sets the the duration of the camera flight in milliseconds.
+         * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to home view.
          * @memberof HomeButtonViewModel.prototype
          *

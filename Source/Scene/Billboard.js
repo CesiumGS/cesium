@@ -69,12 +69,10 @@ define([
         if (defined(options.scaleByDistance) && options.scaleByDistance.far <= options.scaleByDistance.near) {
             throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
         }
-        if (defined(options.translucencyByDistance) &&
-                options.translucencyByDistance.far <= options.translucencyByDistance.near) {
+        if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
         }
-        if (defined(options.pixelOffsetScaleByDistance) &&
-                options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
+        if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
         }
         //>>includeEnd('debug');
@@ -138,18 +136,18 @@ define([
          * @memberof Billboard.prototype
          * @type {Boolean}
          */
-        show: {
-            get: function() {
+        show : {
+            get : function() {
                 return this._show;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                if (value !== this._show) {
+                if (this._show !== value) {
                     this._show = value;
                     makeDirty(this, SHOW_INDEX);
                 }
@@ -161,11 +159,11 @@ define([
         * @memberof Billboard.prototype
         * @type {Cartesian3}
         */
-        position: {
-            get: function() {
+        position : {
+            get : function() {
                 return this._position;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug)
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -198,11 +196,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Cartesian2}
          */
-        pixelOffset: {
-            get: function() {
+        pixelOffset : {
+            get : function() {
                 return this._pixelOffset;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -239,23 +237,22 @@ define([
          * // disable scaling by distance
          * b.scaleByDistance = undefined;
          */
-        scaleByDistance: {
-            get: function() {
+        scaleByDistance : {
+            get : function() {
                 return this._scaleByDistance;
             },
-            set: function(scale) {
-                if (NearFarScalar.equals(this._scaleByDistance, scale)) {
-                    return;
-                }
-
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (scale.far <= scale.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                makeDirty(this, SCALE_BY_DISTANCE_INDEX);
-                this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
+                var scaleByDistance = this._scaleByDistance;
+                if (!NearFarScalar.equals(scaleByDistance, value)) {
+                    this._scaleByDistance = NearFarScalar.clone(value, scaleByDistance);
+                    makeDirty(this, SCALE_BY_DISTANCE_INDEX);
+                }
             }
         },
 
@@ -281,23 +278,22 @@ define([
          * // disable translucency by distance
          * b.translucencyByDistance = undefined;
          */
-        translucencyByDistance: {
-            get: function() {
+        translucencyByDistance : {
+            get : function() {
                 return this._translucencyByDistance;
             },
-            set: function(translucency) {
-                if (NearFarScalar.equals(this._translucencyByDistance, translucency)) {
-                    return;
-                }
-
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (translucency.far <= translucency.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
-                this._translucencyByDistance = NearFarScalar.clone(translucency, this._translucencyByDistance);
+                var translucencyByDistance = this._translucencyByDistance;
+                if (!NearFarScalar.equals(translucencyByDistance, value)) {
+                    this._translucencyByDistance = NearFarScalar.clone(value, translucencyByDistance);
+                    makeDirty(this, TRANSLUCENCY_BY_DISTANCE_INDEX);
+                }
             }
         },
 
@@ -324,23 +320,22 @@ define([
          * // disable pixel offset by distance
          * b.pixelOffsetScaleByDistance = undefined;
          */
-        pixelOffsetScaleByDistance: {
-            get: function() {
+        pixelOffsetScaleByDistance : {
+            get : function() {
                 return this._pixelOffsetScaleByDistance;
             },
-            set: function(pixelOffsetScale) {
-                if (NearFarScalar.equals(this._pixelOffsetScaleByDistance, pixelOffsetScale)) {
-                    return;
-                }
-
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (pixelOffsetScale.far <= pixelOffsetScale.near) {
+                if (defined(value) && value.far <= value.near) {
                     throw new DeveloperError('far distance must be greater than near distance.');
                 }
                 //>>includeEnd('debug');
 
-                makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
-                this._pixelOffsetScaleByDistance = NearFarScalar.clone(pixelOffsetScale, this._pixelOffsetScaleByDistance);
+                var pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
+                if (!NearFarScalar.equals(pixelOffsetScaleByDistance, value)) {
+                    this._pixelOffsetScaleByDistance = NearFarScalar.clone(value, pixelOffsetScaleByDistance);
+                    makeDirty(this, PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX);
+                }
             }
         },
 
@@ -366,11 +361,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Cartesian3}
          */
-        eyeOffset: {
-            get: function() {
+        eyeOffset : {
+            get : function() {
                 return this._eyeOffset;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -399,11 +394,11 @@ define([
          * b.horizontalOrigin = Cesium.HorizontalOrigin.LEFT;
          * b.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
          */
-        horizontalOrigin: {
-            get: function() {
+        horizontalOrigin : {
+            get : function() {
                 return this._horizontalOrigin;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -432,10 +427,10 @@ define([
          * b.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
          */
         verticalOrigin : {
-            get: function() {
+            get : function() {
                 return this._verticalOrigin;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -463,11 +458,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Number}
          */
-        scale: {
-            get: function() {
+        scale : {
+            get : function() {
                 return this._scale;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -486,11 +481,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Number}
          */
-        imageIndex: {
-            get: function(){
+        imageIndex : {
+            get : function() {
                 return this._imageIndex;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (typeof value !== 'number') {
                     throw new DeveloperError('value is required and must be a number.');
@@ -503,7 +498,6 @@ define([
                 }
             }
         },
-
 
         /**
          * Gets and sets the color that is multiplied with the billboard's texture.  This has two common use cases.  First,
@@ -532,11 +526,11 @@ define([
          * // Example 2. Make a billboard 50% translucent.
          * b.color = new Cesium.Color(1.0, 1.0, 1.0, 0.5);
          */
-        color: {
-            get: function() {
+        color : {
+            get : function() {
                 return this._color;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -556,11 +550,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Number}
          */
-        rotation: {
-            get: function() {
+        rotation : {
+            get : function() {
                 return this._rotation;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
@@ -595,20 +589,20 @@ define([
          * // Reset the aligned axis
          * billboard.alignedAxis = Cesium.Cartesian3.ZERO;
          */
-        alignedAxis: {
-            get: function() {
+        alignedAxis : {
+            get : function() {
                 return this._alignedAxis;
             },
-            set: function(value) {
+            set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
                     throw new DeveloperError('value is required.');
                 }
                 //>>includeEnd('debug');
 
-                var axis = this._alignedAxis;
-                if (!Cartesian3.equals(axis, value)) {
-                    Cartesian3.clone(value, axis);
+                var alignedAxis = this._alignedAxis;
+                if (!Cartesian3.equals(alignedAxis, value)) {
+                    Cartesian3.clone(value, alignedAxis);
                     makeDirty(this, ALIGNED_AXIS_INDEX);
                 }
             }
@@ -619,11 +613,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Number}
          */
-        width: {
-            get: function() {
+        width : {
+            get : function() {
                 return this._width;
             },
-            set: function(value) {
+            set : function(value) {
                 if (this._width !== value) {
                     this._width = value;
                     makeDirty(this, IMAGE_INDEX_INDEX);
@@ -636,11 +630,11 @@ define([
          * @memberof Billboard.prototype
          * @type {Number}
          */
-        height: {
-            get: function() {
+        height : {
+            get : function() {
                 return this._height;
             },
-            set: function(value) {
+            set : function(value) {
                 if (this._height !== value) {
                     this._height = value;
                     makeDirty(this, IMAGE_INDEX_INDEX);
@@ -718,7 +712,6 @@ define([
         makeDirty(this, POSITION_INDEX);
     };
 
-
     var tempCartesian3 = new Cartesian4();
     Billboard._computeActualPosition = function(position, frameState, modelMatrix) {
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -729,7 +722,7 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scracthMatrix4 = new Matrix4();
+    var scratchMatrix4 = new Matrix4();
     var scratchCartesian4 = new Cartesian4();
     var scrachEyeOffset = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
@@ -740,7 +733,7 @@ define([
         var projection = camera.frustum.projectionMatrix;
 
         // Model to eye coordinates
-        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scracthMatrix4);
+        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
         var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
 
         // Apply eye offset, e.g., czm_eyeOffset

@@ -52,9 +52,9 @@ defineSuite([
             scene : scene
         });
 
-        expect(monitor.samplingWindow).toBe(5000);
-        expect(monitor.quietPeriod).toBe(2000);
-        expect(monitor.warmupPeriod).toBe(5000);
+        expect(monitor.samplingWindow).toBe(5.0);
+        expect(monitor.quietPeriod).toBe(2.0);
+        expect(monitor.warmupPeriod).toBe(5.0);
         expect(monitor.minimumFrameRateDuringWarmup).toBe(4);
         expect(monitor.minimumFrameRateAfterWarmup).toBe(8);
         expect(monitor.scene).toBe(scene);
@@ -65,16 +65,16 @@ defineSuite([
     it('honors parameters to the constructor', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            samplingWindow : 3000,
-            quietPeriod : 1000,
-            warmupPeriod : 6000,
+            samplingWindow : 3.0,
+            quietPeriod : 1.0,
+            warmupPeriod : 6.0,
             minimumFrameRateDuringWarmup : 1,
             minimumFrameRateAfterWarmup : 2
         });
 
-        expect(monitor.samplingWindow).toBe(3000);
-        expect(monitor.quietPeriod).toBe(1000);
-        expect(monitor.warmupPeriod).toBe(6000);
+        expect(monitor.samplingWindow).toBe(3.0);
+        expect(monitor.quietPeriod).toBe(1.0);
+        expect(monitor.warmupPeriod).toBe(6.0);
         expect(monitor.minimumFrameRateDuringWarmup).toBe(1);
         expect(monitor.minimumFrameRateAfterWarmup).toBe(2);
         expect(monitor.scene).toBe(scene);
@@ -83,9 +83,9 @@ defineSuite([
     it('raises the lowFrameRate event on low frame rate', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
+            quietPeriod : 0.001,
+            warmupPeriod : 0.001,
+            samplingWindow : 0.001,
             minimumFrameRateDuringWarmup : 1000,
             minimumFrameRateAfterWarmup : 1000
         });
@@ -115,9 +115,9 @@ defineSuite([
     it('does not monitor frame rate while paused', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
+            quietPeriod : 0.001,
+            warmupPeriod : 0.001,
+            samplingWindow : 0.001,
             minimumFrameRateDuringWarmup : 1000,
             minimumFrameRateAfterWarmup : 1000
         });
@@ -153,9 +153,9 @@ defineSuite([
     it('pausing multiple times requires unpausing multiple times', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
+            quietPeriod : 0.001,
+            warmupPeriod : 0.001,
+            samplingWindow : 0.001,
             minimumFrameRateDuringWarmup : 1000,
             minimumFrameRateAfterWarmup : 1000
         });
@@ -193,9 +193,9 @@ defineSuite([
     it('does not report a low frame rate during the quiet period', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            quietPeriod : 1000,
-            warmupPeriod : 1,
-            samplingWindow : 1,
+            quietPeriod : 1.0,
+            warmupPeriod : 0.001,
+            samplingWindow : 0.001,
             minimumFrameRateDuringWarmup : 1000,
             minimumFrameRateAfterWarmup : 1000
         });
@@ -218,9 +218,9 @@ defineSuite([
     it('the nominalFrameRate event is raised after the warmup period if the frame rate returns to nominal', function() {
         monitor = new FrameRateMonitor({
             scene : scene,
-            quietPeriod : 1,
-            warmupPeriod : 1,
-            samplingWindow : 1,
+            quietPeriod : 0.001,
+            warmupPeriod : 0.001,
+            samplingWindow : 0.001,
             minimumFrameRateDuringWarmup : 10,
             minimumFrameRateAfterWarmup : 10
         });
