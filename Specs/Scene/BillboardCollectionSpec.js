@@ -1152,7 +1152,7 @@ defineSuite([
         billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            pixelOffset : new Cartesian2(1.0, -2.0)
+            pixelOffset : new Cartesian2(1.0, 2.0)
         });
         billboards.update(context, frameState, []);
         var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
