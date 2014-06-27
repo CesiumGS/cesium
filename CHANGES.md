@@ -107,6 +107,8 @@ Beta Releases
   * Removed `Camera.createCorrectPositionAnimation`.
   * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
+  * `Billboard.pixelOffset` and `Label.pixelOffset` now have their origin at the top left corner.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * `DynamicObject.id` can now include period characters.
 * Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.

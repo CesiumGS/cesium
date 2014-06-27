@@ -717,14 +717,14 @@ define([
         var i = billboard._index * 4;
         var pixelOffset = billboard.pixelOffset;
         var translate = billboard._translate;
-        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x + translate.x, pixelOffset.y + translate.y);
+        billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffset.x + translate.x), Math.abs(-pixelOffset.y + translate.y));
         var allPurposeWriters = vafWriters[allPassPurpose];
 
         var writer = allPurposeWriters[attributeLocations.pixelOffsetAndTranslate];
-        writer(i + 0, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
-        writer(i + 1, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
-        writer(i + 2, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
-        writer(i + 3, pixelOffset.x, pixelOffset.y, translate.x, translate.y);
+        writer(i + 0, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
+        writer(i + 1, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
+        writer(i + 2, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
+        writer(i + 3, pixelOffset.x, -pixelOffset.y, translate.x, translate.y);
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {

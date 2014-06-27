@@ -1163,7 +1163,7 @@ defineSuite([
         billboards.textureAtlas = createTextureAtlas(context, [whiteImage]);
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            eyeOffset : new Cartesian3(5.0, 5.0, 0.0)
+            eyeOffset : new Cartesian3(5.0, -5.0, 0.0)
         });
         billboards.update(context, frameState, []);
         var fakeScene = {context : context, frameState : frameState, canvas: context._canvas};
@@ -1341,5 +1341,42 @@ defineSuite([
         bs.center = new Cartesian3(0.0, bs.center.x, bs.center.y);
         expect(bs.center).toEqualEpsilon(actual.center, CesiumMath.EPSILON8);
         expect(bs.radius).toBeLessThan(actual.radius);
+    });
+
+    it('computes bounding sphere with pixel offset', function() {
+        var atlas = createTextureAtlas(context, [greenImage]);
+        billboards.textureAtlas = atlas;
+
+        var projection = frameState.mapProjection;
+        var ellipsoid = projection.ellipsoid;
+
+        var one = billboards.add({
+            imageIndex : 0,
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, -50.0, 0.0)),
+            pixelOffset : new Cartesian2(0.0, 200.0)
+        });
+        var two = billboards.add({
+            imageIndex : 0,
+            position : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0)),
+            pixelOffset : new Cartesian2(0.0, 200.0)
+        });
+
+        var commandList = [];
+        billboards.update(context, frameState, commandList);
+        var actual = commandList[0].boundingVolume;
+
+        var positions = [one.position, two.position];
+        var bs = BoundingSphere.fromPoints(positions);
+
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var diff = Cartesian3.subtract(actual.center, frameState.camera.position, new Cartesian3());
+        var vectorProjection = Cartesian3.multiplyByScalar(frameState.camera.direction, Cartesian3.dot(diff, frameState.camera.direction), new Cartesian3());
+        var distance = Math.max(0.0, Cartesian3.magnitude(vectorProjection) - bs.radius);
+
+        var pixelSize = frameState.camera.frustum.getPixelSize(dimensions, distance);
+        bs.radius += pixelSize.y * 0.25 * Math.max(greenImage.width, greenImage.height) + pixelSize.y * one.pixelOffset.y;
+
+        expect(actual.center).toEqual(bs.center);
+        expect(actual.radius).toBeGreaterThan(bs.radius);
     });
 }, 'WebGL');
