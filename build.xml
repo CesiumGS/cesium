@@ -21,17 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
 
-	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
-		<copy todir="${buildDirectory}">
-			<fileset dir="Apps/">
-				<include name="HelloWorld.html" />
-				<include name="index.html" />
-			</fileset>
-		</copy>
-
-		<replace file="${buildDirectory}/HelloWorld.html" token="../Build/" value="" />
-		<replace file="${buildDirectory}/index.html" token="../Build/" value="" />
-	</target>
+	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script." />
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
 		<antcall target="combine">
@@ -71,38 +61,25 @@
 
 	<target name="makeZipFile" depends="release" description="Builds zip files containing all release files.">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
-			<fileset dir="${buildDirectory}">
-				<include name="Cesium/**" />
-				<include name="Documentation/**" />
-				<include name="*.html" />
-			</fileset>
-			<include name="server.js" />
-			<include name="package.json" />
-			<include name="LICENSE.md" />
-			<include name="CHANGES.md" />
-			<include name="README.md" />
-		</zip>
-
-		<zip destfile="Cesium-full-${version}.zip" basedir="${basedir}">
 			<zipfileset dir="${buildDirectory}" prefix="Build">
+				<include name="Apps/**" />
+				<exclude name="Apps/TimelineDemo/**" />
 				<include name="Cesium/**" />
 				<include name="CesiumUnminified/**" />
 				<include name="Documentation/**" />
-				<include name="Apps/**" />
-				<include name="*.html" />
 			</zipfileset>
 			<include name="Apps/**" />
-			<include name="Examples/**" />
 			<include name="Source/**" />
 			<include name="Specs/**" />
 			<include name="ThirdParty/**" />
-			<include name="HelloWorld.html" />
-			<include name="index.html" />
+			<include name="logo.png" />
+			<include name="favicon.ico" />
 			<include name="server.js" />
 			<include name="package.json" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
+			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
 
