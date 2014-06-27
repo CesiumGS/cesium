@@ -523,6 +523,56 @@ defineSuite([
         height : height
     });
 
+    it('pointToGLWindowCoordinates works at the center', function() {
+        var view = Matrix4.fromCamera({
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        });
+        var mvpMatrix = Matrix4.multiply(perspective, view);
+
+        var expected = new Cartesian2(width * 0.5, height * 0.5);
+        var returnedResult = Transforms.pointToGLWindowCoordinates(mvpMatrix, vpTransform, Cartesian3.ZERO);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('pointToGLWindowCoordinates works with a result parameter', function() {
+        var view = Matrix4.fromCamera({
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            target : Cartesian3.ZERO,
+            up : Cartesian3.UNIT_Z
+        });
+        var mvpMatrix = Matrix4.multiply(perspective, view);
+
+        var expected = new Cartesian2(width * 0.5, height * 0.5);
+        var result = new Cartesian2();
+        var returnedResult = Transforms.pointToGLWindowCoordinates(mvpMatrix, vpTransform, Cartesian3.ZERO, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('pointToGLWindowCoordinates works at the lower left', function() {
+        var z = -perspective[Matrix4.COLUMN3ROW2] / perspective[Matrix4.COLUMN2ROW2];
+        var x = z / perspective[Matrix4.COLUMN0ROW0];
+        var y = z / perspective[Matrix4.COLUMN1ROW1];
+        var point = new Cartesian3(x, y, z);
+
+        var expected = new Cartesian2(0.0, 0.0);
+        var returnedResult = Transforms.pointToGLWindowCoordinates(perspective, vpTransform, point);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
+    });
+
+    it('pointToGLWindowCoordinates works at the upper right', function() {
+        var z = -perspective[Matrix4.COLUMN3ROW2] / perspective[Matrix4.COLUMN2ROW2];
+        var x = -z / perspective[Matrix4.COLUMN0ROW0];
+        var y = -z / perspective[Matrix4.COLUMN1ROW1];
+        var point = new Cartesian3(x, y, z);
+        var expected = new Cartesian2(width, height);
+
+        var returnedResult = Transforms.pointToGLWindowCoordinates(perspective, vpTransform, point);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
+    });
+
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
             eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
@@ -557,7 +607,7 @@ defineSuite([
         var y = z / perspective[Matrix4.COLUMN1ROW1];
         var point = new Cartesian3(x, y, z);
 
-        var expected = new Cartesian2(0.0, 0.0);
+        var expected = new Cartesian2(0.0, height);
         var returnedResult = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
     });
@@ -567,7 +617,7 @@ defineSuite([
         var x = -z / perspective[Matrix4.COLUMN0ROW0];
         var y = -z / perspective[Matrix4.COLUMN1ROW1];
         var point = new Cartesian3(x, y, z);
-        var expected = new Cartesian2(width, height);
+        var expected = new Cartesian2(width, 0.0);
 
         var returnedResult = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
