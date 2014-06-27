@@ -25,7 +25,7 @@ defineSuite([
     //Results of the below tests were verified against STK Components.
     var time = JulianDate.now();
 
-    it('Works without orientation', function() {
+    it('Works with custom input referenceFrame without orientation', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
 
@@ -35,7 +35,7 @@ defineSuite([
         expect(result).toEqual(new Cartesian3(100001, 200002, 300003));
     });
 
-    it('Works with orientation', function() {
+    it('Works with custom input referenceFrame with orientation', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
         referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
@@ -46,7 +46,7 @@ defineSuite([
         expect(result).toEqual(new Cartesian3(99998, 200001, 300003));
     });
 
-    it('Works with chained reference frames', function() {
+    it('Works with custom chained input reference', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
         referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
@@ -58,10 +58,31 @@ defineSuite([
         var value = new Cartesian3(1, 2, 3);
         var result = PositionProperty.convertToReferenceFrame(time, value, referenceFrame2, ReferenceFrame.FIXED);
 
-        expect(result).toEqual(new Cartesian3(99603, 200201, 300602));
+        expect(result).toEqual(new Cartesian3(99601, 200197, 300602));
     });
 
-    it('Works with rotated chained reference frames', function() {
+    it('Works with custom ouput referenceFrame without orientation', function() {
+        var referenceFrame = new DynamicObject();
+        referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
+
+        var value = new Cartesian3(100001, 200002, 300003);
+        var result = PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.FIXED, referenceFrame);
+
+        expect(result).toEqual(new Cartesian3(1, 2, 3));
+    });
+
+    it('Works with custom ouput referenceFrame with orientation', function() {
+        var referenceFrame = new DynamicObject();
+        referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
+        referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
+
+        var value = new Cartesian3(99998, 200001, 300003);
+        var result = PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.FIXED, referenceFrame);
+
+        expect(result).toEqual(new Cartesian3(1, 2, 3));
+    });
+
+    it('Works with custom chained ouput referenceFrame', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
         referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
@@ -70,13 +91,13 @@ defineSuite([
         referenceFrame2.position = new ConstantPositionProperty(new Cartesian3(200, 400, 600), referenceFrame);
         referenceFrame2.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(1, 0, 0, 1)));
 
-        var value = new Cartesian3(1, 2, 3);
+        var value = new Cartesian3(99601, 200197, 300602);
         var result = PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.FIXED, referenceFrame2);
 
-        expect(result).toEqual(new Cartesian3(99601, 200197, 300602));
+        expect(result).toEqual(new Cartesian3(1, 2, 3));
     });
 
-    it('Works with custom input and output frames', function() {
+    it('Works with custom input and output referenceFrames', function() {
         var referenceFrame = new DynamicObject();
         referenceFrame.position = new ConstantPositionProperty(new Cartesian3(100000, 200000, 300000));
         referenceFrame.orientation = new ConstantProperty(Quaternion.normalize(new Quaternion(0, 0, 1, 1)));
