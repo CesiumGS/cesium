@@ -75,7 +75,7 @@ require(['Cesium'], function(Cesium) {
             billboards.add({
                 show : true, // default
                 position : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
-                pixelOffset : new Cesium.Cartesian2(0, 50), // default: (0, 0)
+                pixelOffset : new Cesium.Cartesian2(0, -50), // default: (0, 0)
                 eyeOffset : new Cesium.Cartesian3(0.0, 0.0, 0.0), // default
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER, // default
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
@@ -237,7 +237,7 @@ require(['Cesium'], function(Cesium) {
                 imageIndex : 0,
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
-                pixelOffset : new Cesium.Cartesian2(0.0, facilityHeight),
+                pixelOffset : new Cesium.Cartesian2(0.0, -facilityHeight),
                 pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.0),
                 translucencyByDistance : new Cesium.NearFarScalar(1.0e3, 1.0, 1.5e6, 0.1)
             });
