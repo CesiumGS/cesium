@@ -90,10 +90,7 @@
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
-			<mappedresources>
-				<fileset file="index.release.html" />
-				<globmapper from="index.release.html" to="index.html" />
-			</mappedresources>
+			<zipfileset file="index.release.html" fullpath="index.html" />
 		</zip>
 	</target>
 
