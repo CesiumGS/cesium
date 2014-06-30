@@ -109,6 +109,7 @@ Beta Releases
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
   * Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
   * `Billboard.pixelOffset` and `Label.pixelOffset` now have their origin at the top left corner.
+  * Enumeration values of `SceneMode` have better correspondence with mode names to help with debugging.
   * The build process now requires Node.js to be installed on the system.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * `DynamicObject.id` can now include period characters.
@@ -129,7 +130,6 @@ Beta Releases
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
 * The development web server has been rewritten in Node.js, and is now included as part of each release.
-* Enumeration values of `SceneMode` have better correspondence with mode names to help with debugging.
 
 ### b29 - 2014-06-02
 
