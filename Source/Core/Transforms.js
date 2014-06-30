@@ -495,9 +495,9 @@ define([
      * @example
      * scene.preRender.addEventListener(function(scene, time) {
      *   var icrfToFixed = Cesium.Transforms.computeIcrfToFixedMatrix(time);
-     *     if (Cesium.defined(icrfToFixed)) {
-     *         scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
-     *     }
+     *   if (Cesium.defined(icrfToFixed)) {
+     *     scene.camera.transform = Cesium.Matrix4.fromRotationTranslation(icrfToFixed, Cesium.Cartesian3.ZERO);
+     *   }
      * });
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
@@ -678,6 +678,10 @@ define([
             throw new DeveloperError('point is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
 
         var tmp = pointToWindowCoordinatesTemp;
 
