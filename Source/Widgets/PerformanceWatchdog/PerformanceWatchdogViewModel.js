@@ -8,8 +8,8 @@ define([
         '../../Core/Event',
         '../../Core/getTimestamp',
         '../../Scene/FrameRateMonitor',
-        '../createCommand',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../createCommand'
     ], function(
         defaultValue,
         defined,
@@ -19,8 +19,8 @@ define([
         Event,
         getTimestamp,
         FrameRateMonitor,
-        createCommand,
-        knockout) {
+        knockout,
+        createCommand) {
     "use strict";
 
     /**

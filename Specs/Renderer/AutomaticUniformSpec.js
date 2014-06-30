@@ -866,7 +866,7 @@ defineSuite([
     it('has czm_sceneMode', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_sceneMode == 2.0); ' +   // 3D
+            '  gl_FragColor = vec4(czm_sceneMode == 3.0); ' +   // 3D
             '}';
         verifyDraw(fs);
     });
@@ -874,7 +874,7 @@ defineSuite([
     it('has czm_sceneMode2D', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_sceneMode2D == 0.0); ' +
+            '  gl_FragColor = vec4(czm_sceneMode2D == 2.0); ' +
             '}';
         verifyDraw(fs);
     });
@@ -890,7 +890,7 @@ defineSuite([
     it('has czm_sceneMode3D', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_sceneMode3D == 2.0); ' +
+            '  gl_FragColor = vec4(czm_sceneMode3D == 3.0); ' +
             '}';
         verifyDraw(fs);
     });
@@ -898,7 +898,7 @@ defineSuite([
     it('has czm_sceneModeMorphing', function() {
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_sceneModeMorphing == 3.0); ' +
+            '  gl_FragColor = vec4(czm_sceneModeMorphing == 0.0); ' +
             '}';
         verifyDraw(fs);
     });

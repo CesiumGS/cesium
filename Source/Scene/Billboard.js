@@ -183,13 +183,13 @@ define([
         /**
          * Gets and sets the pixel offset in screen space from the origin of this billboard.  This is commonly used
          * to align multiple billboards and labels at the same position, e.g., an image and text.  The
-         * screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-         * left to right, and <code>y</code> increases from bottom to top.
+         * screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+         * left to right, and <code>y</code> increases from top to bottom.
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
          * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, -25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The billboard's origin is indicated by the yellow point.
          * </div>
@@ -726,6 +726,8 @@ define([
     var scratchCartesian4 = new Cartesian4();
     var scrachEyeOffset = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
+    var scratchComputePixelOffset = new Cartesian2();
+
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene) {
         // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
         var camera = scene.frameState.camera;
@@ -743,9 +745,11 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToWindowCoordinates(scene, positionCC, new Cartesian2());
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, new Cartesian2());
 
         // Apply pixel offset
+        pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
+        pixelOffset.y = -pixelOffset.y;
         var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
@@ -757,8 +761,8 @@ define([
 
     /**
      * Computes the screen-space position of the billboard's origin, taking into account eye and pixel offsets.
-     * The screen space origin is the bottom, left corner of the canvas; <code>x</code> increases from
-     * left to right, and <code>y</code> increases from bottom to top.
+     * The screen space origin is the top, left corner of the canvas; <code>x</code> increases from
+     * left to right, and <code>y</code> increases from top to bottom.
      *
      * @param {Scene} scene The scene.
      * @returns {Cartesian2} The screen-space position of the billboard.
@@ -788,7 +792,9 @@ define([
         Cartesian2.add(scratchPixelOffset, this._translate, scratchPixelOffset);
 
         var modelMatrix = billboardCollection.modelMatrix;
-        return Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, this._actualPosition, this._eyeOffset, scratchPixelOffset, scene);
+        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
+        return windowCoordinates;
     };
 
     /**
