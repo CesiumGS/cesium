@@ -99,7 +99,8 @@ define([
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
-     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.
+     * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
+                                     the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -229,8 +230,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         });
 
         var dataSourceCollection = options.dataSources;
+        var destroyDataSourceCollection = false;
         if (!defined(dataSourceCollection)) {
             dataSourceCollection = new DataSourceCollection();
+            destroyDataSourceCollection = true;
         }
 
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
@@ -442,6 +445,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._selectionIndicator = selectionIndicator;
         this._infoBox = infoBox;
         this._dataSourceCollection = dataSourceCollection;
+        this._destroyDataSourceCollection = destroyDataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
         this._clockViewModel = clockViewModel;
         this._toolbar = toolbar;
@@ -875,7 +879,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         this._cesiumWidget = this._cesiumWidget.destroy();
 
-        this._dataSourceCollection = this._dataSourceCollection.destroy();
+        if (this._destroyDataSourceCollection) {
+            this._dataSourceCollection = this._dataSourceCollection.destroy();
+        }
 
         return destroyObject(this);
     };

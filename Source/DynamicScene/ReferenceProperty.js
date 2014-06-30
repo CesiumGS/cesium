@@ -3,15 +3,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/RuntimeError',
         '../Core/Event',
+        '../Core/RuntimeError',
         './Property'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
-        RuntimeError,
         Event,
+        RuntimeError,
         Property) {
     "use strict";
 

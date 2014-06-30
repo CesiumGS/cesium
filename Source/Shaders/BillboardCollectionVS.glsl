@@ -43,7 +43,7 @@ float getNearFarScalar(vec4 nearFarScalar, float cameraDistSq)
 
 void main() 
 {
-    // Modifying this shader may also require modifications to Billboard.computeScreenSpacePosition
+    // Modifying this shader may also require modifications to Billboard._computeScreenSpacePosition
     
     // unpack attributes
     vec3 eyeOffset = eyeOffsetAndScale.xyz;

@@ -381,6 +381,22 @@ defineSuite([
         expect(viewer.dataSources).toBe(collection);
     });
 
+    it('default DataSourceCollection is destroyed when Viewer is destroyed', function() {
+        viewer = new Viewer(container);
+        var dataSources = viewer.dataSources;
+        viewer.destroy();
+        expect(dataSources.isDestroyed()).toBe(true);
+    });
+
+    it('specified DataSourceCollection is not destroyed when Viewer is destroyed', function() {
+        var collection = new DataSourceCollection();
+        viewer = new Viewer(container, {
+            dataSources : collection
+        });
+        viewer.destroy();
+        expect(collection.isDestroyed()).toBe(false);
+    });
+
     it('throws if targetFrameRate less than 0', function() {
         viewer = new Viewer(container);
         expect(function() {

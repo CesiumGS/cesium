@@ -4,17 +4,17 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../ThirdParty/knockout',
         '../getElement',
-        './PerformanceWatchdogViewModel',
-        '../../ThirdParty/knockout'
+        './PerformanceWatchdogViewModel'
     ], function(
         defined,
         defineProperties,
         destroyObject,
         DeveloperError,
+        knockout,
         getElement,
-        PerformanceWatchdogViewModel,
-        knockout) {
+        PerformanceWatchdogViewModel) {
     "use strict";
 
     /**
