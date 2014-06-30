@@ -3,12 +3,22 @@ Change Log
 
 Beta Releases
 -------------
+### 1.0 - 2014-08-01
+
+* Breaking changes
+  * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
+* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
+* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
+* Modified the default camera tilt mouse behavior to tilt about the point clicked.
+* Added camera collision detection with terrain to the default mouse interaction.
 
 ### b30 - 2014-07-01
 
 * Breaking changes ([why so many?](https://groups.google.com/forum/#!topic/cesium-dev/Y_mG11IZD9k))
   * CZML property references now use a `#` symbol to separate identifier from property path. `objectId.position` should now be `objectId#position`.
   * All `Cartesian2`, `Cartesian3`, `Cartesian4`, `TimeInterval`, and `JulianDate` functions that take a `result` parameter now require the parameter (except for functions starting with `from`).
+  * Modified `Transforms.pointToWindowCoordinates` and `SceneTransforms.wgs84ToWindowCoordinates` to return window coordinates with origin at the top left corner.
+  * `Billboard.pixelOffset` and `Label.pixelOffset` now have their origin at the top left corner.
   * Replaced `CameraFlightPath.createAnimation` with `Camera.flyTo` and replaced `CameraFlightPath.createAnimationRectangle` with `Camera.flyToRectangle`.  Code that looked like:
 
             scene.animations.add(Cesium.CameraFlightPath.createAnimation(scene, {
@@ -105,9 +115,11 @@ Beta Releases
   * `Scene` constructor function now takes an `options` parameter instead of individual parameters.
   * `CesiumWidget.showErrorPanel` now takes a `message` parameter in between the previous `title` and `error` parameters.
   * Removed `Camera.createCorrectPositionAnimation`.
-  * Removed `ScreenSpaceCameraController.ellipsoid`. The behavior that depended on the ellipsoid is now determined based on the scene state.
   * Moved `LeapSecond.leapSeconds` to `JulianDate.leapSeconds`.
   * `Event.removeEventListener` no longer throws `DeveloperError` if the `listener` does not exist; it now returns `false`.
+  * Enumeration values of `SceneMode` have better correspondence with mode names to help with debugging.
+  * The build process now requires [Node.js](http://nodejs.org/) to be installed on the system.
+* Cesium now supports Internet Explorer 11.0.9 on desktops.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * `ReferenceProperty` can now handle sub-properties, for example, `myObject#billboard.scale`.
 * `DynamicObject.id` can now include period characters.
 * Added `PolylineGlowMaterialProperty` which enables data sources to use the PolylineGlow material.
@@ -122,15 +134,10 @@ Beta Releases
 * Fixed a problem that could rarely lead to the camera's `tilt` property being `NaN`.
 * `GeoJsonDataSource` no longer uses the `name` or `title` property of the feature as the dynamic object's name if the value of the property is null.
 * Added `TimeIntervalCollection.isStartIncluded` and `TimeIntervalCollection.isStopIncluded`.
-* Improved Internet Explorer 11 support including fixes for 3D models and geometries.  For the best results, use the new [IE Developer Channel](http://devchannel.modern.ie/) for development.
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
-* Added the following methods to `IntersectionTests`: `rayTriangle`, `lineSegmentTriangle`, `raySphere`, and `lineSegmentSphere`.
-* Fixed camera rotation near the camera's constrained axis.
-* Added `Globe.getHeight` and `Globe.pick` for finding the terrain height at a given Cartographic coordinate and picking the terrain with a ray.
-* Modified the default camera tilt mouse behavior to tilt about the point clicked.
-* Added camera collision detection with terrain to the default mouse interaction.
+* The development web server has been rewritten in Node.js, and is now included as part of each release.
 
 ### b29 - 2014-06-02
 

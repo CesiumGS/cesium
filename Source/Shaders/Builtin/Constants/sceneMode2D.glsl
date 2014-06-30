@@ -8,4 +8,4 @@
  * @see czm_sceneMode3D
  * @see czm_sceneModeMorphing
  */
-const float czm_sceneMode2D = 0.0;
+const float czm_sceneMode2D = 2.0;

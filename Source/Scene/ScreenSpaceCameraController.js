@@ -21,10 +21,10 @@ define([
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Transforms',
-        './TweenCollection',
         './CameraEventAggregator',
         './CameraEventType',
-        './SceneMode'
+        './SceneMode',
+        './TweenCollection'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -47,10 +47,10 @@ define([
         Quaternion,
         Ray,
         Transforms,
-        TweenCollection,
         CameraEventAggregator,
         CameraEventType,
-        SceneMode) {
+        SceneMode,
+        TweenCollection) {
     "use strict";
 
     /**

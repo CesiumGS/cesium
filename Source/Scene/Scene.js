@@ -27,7 +27,6 @@ define([
         '../Renderer/ClearCommand',
         '../Renderer/Context',
         '../Renderer/PassState',
-        './TweenCollection',
         './Camera',
         './CreditDisplay',
         './CullingVolume',
@@ -47,7 +46,8 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
-        './SunPostProcess'
+        './SunPostProcess',
+        './TweenCollection'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -76,7 +76,6 @@ define([
         ClearCommand,
         Context,
         PassState,
-        TweenCollection,
         Camera,
         CreditDisplay,
         CullingVolume,
@@ -96,7 +95,8 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
-        SunPostProcess) {
+        SunPostProcess,
+        TweenCollection) {
     "use strict";
 
     /**
