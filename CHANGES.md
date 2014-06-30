@@ -130,6 +130,7 @@ Beta Releases
 * Added `Cesium.VERSION` to the combined `Cesium.js` file.
 * Made general improvements to the [reference documentation](http://cesiumjs.org/refdoc.html).
 * Updated third-party [Tween.js](https://github.com/sole/tween.js/) from r7 to r13.
+* Updated third-party JSDoc 3.3.0-alpha5 to 3.3.0-alpha9.
 * The development web server has been rewritten in Node.js, and is now included as part of each release.
 
 ### b29 - 2014-06-02
