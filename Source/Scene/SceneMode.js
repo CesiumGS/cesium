@@ -11,12 +11,12 @@ define(function() {
      */
     var SceneMode = {
         /**
-         * 2D mode.  The map is viewed top-down with an orthographic projection.
+         * Morphing between mode, e.g., 3D to 2D.
          *
          * @type {Number}
          * @constant
          */
-        SCENE2D : 0,
+        MORPHING : 0,
 
         /**
          * Columbus View mode.  A 2.5D perspective view where the map is laid out
@@ -28,20 +28,21 @@ define(function() {
         COLUMBUS_VIEW : 1,
 
         /**
+         * 2D mode.  The map is viewed top-down with an orthographic projection.
+         *
+         * @type {Number}
+         * @constant
+         */
+        SCENE2D : 2,
+
+        /**
          * 3D mode.  A traditional 3D perspective view of the globe.
          *
          * @type {Number}
          * @constant
          */
-        SCENE3D : 2,
+        SCENE3D : 3
 
-        /**
-         * Morphing between mode, e.g., 3D to 2D.
-         *
-         * @type {Number}
-         * @constant
-         */
-        MORPHING : 3
     };
 
     /**
