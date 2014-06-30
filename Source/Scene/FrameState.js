@@ -13,6 +13,8 @@ define([
      *
      * @alias FrameState
      * @constructor
+     * 
+     * @private
      */
     var FrameState = function(creditDisplay) {
         /**
